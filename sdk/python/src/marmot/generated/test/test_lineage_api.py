@@ -23,76 +23,76 @@ class TestLineageApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_lineage_assets_id_get(self) -> None:
-        """Test case for lineage_assets_id_get
-
-        Get asset lineage
-        """
-
-    def test_lineage_assets_id_get_sync(self) -> None:
-        """Test case for lineage_assets_id_get (synchronous)
-
-        Get asset lineage
-        """
-
-    async def test_lineage_batch_post(self) -> None:
-        """Test case for lineage_batch_post
-
-        Batch create lineage edges
-        """
-
-    def test_lineage_batch_post_sync(self) -> None:
-        """Test case for lineage_batch_post (synchronous)
-
-        Batch create lineage edges
-        """
-
-    async def test_lineage_direct_id_delete(self) -> None:
-        """Test case for lineage_direct_id_delete
+    async def test_delete_lineage_direct_id(self) -> None:
+        """Test case for delete_lineage_direct_id
 
         Delete direct lineage
         """
 
-    def test_lineage_direct_id_delete_sync(self) -> None:
-        """Test case for lineage_direct_id_delete (synchronous)
+    def test_delete_lineage_direct_id_sync(self) -> None:
+        """Test case for delete_lineage_direct_id (synchronous)
 
         Delete direct lineage
         """
 
-    async def test_lineage_direct_id_get(self) -> None:
-        """Test case for lineage_direct_id_get
+    async def test_get_lineage_assets_id(self) -> None:
+        """Test case for get_lineage_assets_id
+
+        Get asset lineage
+        """
+
+    def test_get_lineage_assets_id_sync(self) -> None:
+        """Test case for get_lineage_assets_id (synchronous)
+
+        Get asset lineage
+        """
+
+    async def test_get_lineage_direct_id(self) -> None:
+        """Test case for get_lineage_direct_id
 
         Get direct lineage by ID
         """
 
-    def test_lineage_direct_id_get_sync(self) -> None:
-        """Test case for lineage_direct_id_get (synchronous)
+    def test_get_lineage_direct_id_sync(self) -> None:
+        """Test case for get_lineage_direct_id (synchronous)
 
         Get direct lineage by ID
         """
 
-    async def test_lineage_direct_post(self) -> None:
-        """Test case for lineage_direct_post
-
-        Create direct lineage
-        """
-
-    def test_lineage_direct_post_sync(self) -> None:
-        """Test case for lineage_direct_post (synchronous)
-
-        Create direct lineage
-        """
-
-    async def test_lineage_post(self) -> None:
-        """Test case for lineage_post
+    async def test_post_lineage(self) -> None:
+        """Test case for post_lineage
 
         Ingest OpenLineage event
         """
 
-    def test_lineage_post_sync(self) -> None:
-        """Test case for lineage_post (synchronous)
+    def test_post_lineage_sync(self) -> None:
+        """Test case for post_lineage (synchronous)
 
         Ingest OpenLineage event
+        """
+
+    async def test_post_lineage_batch(self) -> None:
+        """Test case for post_lineage_batch
+
+        Batch create lineage edges
+        """
+
+    def test_post_lineage_batch_sync(self) -> None:
+        """Test case for post_lineage_batch (synchronous)
+
+        Batch create lineage edges
+        """
+
+    async def test_post_lineage_direct(self) -> None:
+        """Test case for post_lineage_direct
+
+        Create direct lineage
+        """
+
+    def test_post_lineage_direct_sync(self) -> None:
+        """Test case for post_lineage_direct (synchronous)
+
+        Create direct lineage
         """
 
 

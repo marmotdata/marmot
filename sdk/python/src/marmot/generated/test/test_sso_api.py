@@ -23,64 +23,64 @@ class TestSsoApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_sso_team_mappings_get(self) -> None:
-        """Test case for sso_team_mappings_get
-
-        List SSO team mappings
-        """
-
-    def test_sso_team_mappings_get_sync(self) -> None:
-        """Test case for sso_team_mappings_get (synchronous)
-
-        List SSO team mappings
-        """
-
-    async def test_sso_team_mappings_id_delete(self) -> None:
-        """Test case for sso_team_mappings_id_delete
+    async def test_delete_sso_team_mappings_id(self) -> None:
+        """Test case for delete_sso_team_mappings_id
 
         Delete an SSO team mapping
         """
 
-    def test_sso_team_mappings_id_delete_sync(self) -> None:
-        """Test case for sso_team_mappings_id_delete (synchronous)
+    def test_delete_sso_team_mappings_id_sync(self) -> None:
+        """Test case for delete_sso_team_mappings_id (synchronous)
 
         Delete an SSO team mapping
         """
 
-    async def test_sso_team_mappings_id_get(self) -> None:
-        """Test case for sso_team_mappings_id_get
+    async def test_get_sso_team_mappings(self) -> None:
+        """Test case for get_sso_team_mappings
+
+        List SSO team mappings
+        """
+
+    def test_get_sso_team_mappings_sync(self) -> None:
+        """Test case for get_sso_team_mappings (synchronous)
+
+        List SSO team mappings
+        """
+
+    async def test_get_sso_team_mappings_id(self) -> None:
+        """Test case for get_sso_team_mappings_id
 
         Get an SSO team mapping
         """
 
-    def test_sso_team_mappings_id_get_sync(self) -> None:
-        """Test case for sso_team_mappings_id_get (synchronous)
+    def test_get_sso_team_mappings_id_sync(self) -> None:
+        """Test case for get_sso_team_mappings_id (synchronous)
 
         Get an SSO team mapping
         """
 
-    async def test_sso_team_mappings_id_put(self) -> None:
-        """Test case for sso_team_mappings_id_put
-
-        Update an SSO team mapping
-        """
-
-    def test_sso_team_mappings_id_put_sync(self) -> None:
-        """Test case for sso_team_mappings_id_put (synchronous)
-
-        Update an SSO team mapping
-        """
-
-    async def test_sso_team_mappings_post(self) -> None:
-        """Test case for sso_team_mappings_post
+    async def test_post_sso_team_mappings(self) -> None:
+        """Test case for post_sso_team_mappings
 
         Create an SSO team mapping
         """
 
-    def test_sso_team_mappings_post_sync(self) -> None:
-        """Test case for sso_team_mappings_post (synchronous)
+    def test_post_sso_team_mappings_sync(self) -> None:
+        """Test case for post_sso_team_mappings (synchronous)
 
         Create an SSO team mapping
+        """
+
+    async def test_put_sso_team_mappings_id(self) -> None:
+        """Test case for put_sso_team_mappings_id
+
+        Update an SSO team mapping
+        """
+
+    def test_put_sso_team_mappings_id_sync(self) -> None:
+        """Test case for put_sso_team_mappings_id (synchronous)
+
+        Update an SSO team mapping
         """
 
 

@@ -50,7 +50,998 @@ class AssetsApi:
         self.api_client = api_client
 
     @validate_call
-    async def assets_by_glossary_term_term_id_get(
+    async def delete_assets_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete an asset
+
+        Delete an asset from the system
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_assets_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete an asset
+
+        Delete an asset from the system
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_assets_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an asset
+
+        Delete an asset from the system
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_assets_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete an asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete an asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_assets_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/assets/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_assets_tags_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Remove tag from asset
+
+        Remove a tag from an existing asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param tag_request: Tag to remove (required)
+        :type tag_request: TagRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_tags_id_serialize(
+            id=id,
+            tag_request=tag_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_assets_tags_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Remove tag from asset
+
+        Remove a tag from an existing asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param tag_request: Tag to remove (required)
+        :type tag_request: TagRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_tags_id_serialize(
+            id=id,
+            tag_request=tag_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_assets_tags_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove tag from asset
+
+        Remove a tag from an existing asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param tag_request: Tag to remove (required)
+        :type tag_request: TagRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_tags_id_serialize(
+            id=id,
+            tag_request=tag_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_assets_tags_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Remove tag from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_tags_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_tags_id(
+                id=id,
+                tag_request=tag_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_tags_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Remove tag from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_tags_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_tags_id_with_http_info(
+                id=id,
+                tag_request=tag_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_tags_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove tag from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_tags_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_tags_id_without_preload_content(
+                id=id,
+                tag_request=tag_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_assets_tags_id_serialize(
+        self,
+        id,
+        tag_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if tag_request is not None:
+            _body_params = tag_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/assets/tags/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_assets_terms_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[AssetTerm]:
+        """Remove glossary term from asset
+
+        Remove a glossary term association from an asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param remove_term_request: Term ID to remove (required)
+        :type remove_term_request: RemoveTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_terms_id_serialize(
+            id=id,
+            remove_term_request=remove_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[AssetTerm]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_assets_terms_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[AssetTerm]]:
+        """Remove glossary term from asset
+
+        Remove a glossary term association from an asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param remove_term_request: Term ID to remove (required)
+        :type remove_term_request: RemoveTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_terms_id_serialize(
+            id=id,
+            remove_term_request=remove_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[AssetTerm]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_assets_terms_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove glossary term from asset
+
+        Remove a glossary term association from an asset
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param remove_term_request: Term ID to remove (required)
+        :type remove_term_request: RemoveTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_assets_terms_id_serialize(
+            id=id,
+            remove_term_request=remove_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[AssetTerm]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_assets_terms_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[AssetTerm]:
+        """Remove glossary term from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_terms_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_terms_id(
+                id=id,
+                remove_term_request=remove_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_terms_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[AssetTerm]]:
+        """Remove glossary term from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_terms_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_terms_id_with_http_info(
+                id=id,
+                remove_term_request=remove_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_assets_terms_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove glossary term from asset (synchronous)
+
+        Synchronous variant of :meth:`delete_assets_terms_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_assets_terms_id_without_preload_content(
+                id=id,
+                remove_term_request=remove_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_assets_terms_id_serialize(
+        self,
+        id,
+        remove_term_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if remove_term_request is not None:
+            _body_params = remove_term_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/assets/terms/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_assets_by_glossary_term_term_id(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -95,7 +1086,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_by_glossary_term_term_id_get_serialize(
+        _param = self._get_assets_by_glossary_term_term_id_serialize(
             term_id=term_id,
             limit=limit,
             offset=offset,
@@ -117,7 +1108,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_by_glossary_term_term_id_get_with_http_info(
+    async def get_assets_by_glossary_term_term_id_with_http_info(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -162,7 +1153,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_by_glossary_term_term_id_get_serialize(
+        _param = self._get_assets_by_glossary_term_term_id_serialize(
             term_id=term_id,
             limit=limit,
             offset=offset,
@@ -184,7 +1175,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_by_glossary_term_term_id_get_without_preload_content(
+    async def get_assets_by_glossary_term_term_id_without_preload_content(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -229,7 +1220,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_by_glossary_term_term_id_get_serialize(
+        _param = self._get_assets_by_glossary_term_term_id_serialize(
             term_id=term_id,
             limit=limit,
             offset=offset,
@@ -247,7 +1238,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_by_glossary_term_term_id_get_sync(
+    def get_assets_by_glossary_term_term_id_sync(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -262,11 +1253,11 @@ class AssetsApi:
     ) -> dict[str, object]:
         """Get assets by glossary term (synchronous)
 
-        Synchronous variant of :meth:`assets_by_glossary_term_term_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_by_glossary_term_term_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_by_glossary_term_term_id_get(
+            self.get_assets_by_glossary_term_term_id(
                 term_id=term_id,
                 limit=limit,
                 offset=offset,
@@ -279,7 +1270,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_by_glossary_term_term_id_get_sync_with_http_info(
+    def get_assets_by_glossary_term_term_id_sync_with_http_info(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -294,11 +1285,11 @@ class AssetsApi:
     ) -> ApiResponse[dict[str, object]]:
         """Get assets by glossary term (synchronous)
 
-        Synchronous variant of :meth:`assets_by_glossary_term_term_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_by_glossary_term_term_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_by_glossary_term_term_id_get_with_http_info(
+            self.get_assets_by_glossary_term_term_id_with_http_info(
                 term_id=term_id,
                 limit=limit,
                 offset=offset,
@@ -311,7 +1302,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_by_glossary_term_term_id_get_sync_without_preload_content(
+    def get_assets_by_glossary_term_term_id_sync_without_preload_content(
         self,
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
@@ -326,11 +1317,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get assets by glossary term (synchronous)
 
-        Synchronous variant of :meth:`assets_by_glossary_term_term_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_by_glossary_term_term_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_by_glossary_term_term_id_get_without_preload_content(
+            self.get_assets_by_glossary_term_term_id_without_preload_content(
                 term_id=term_id,
                 limit=limit,
                 offset=offset,
@@ -342,7 +1333,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_by_glossary_term_term_id_get_serialize(
+    def _get_assets_by_glossary_term_term_id_serialize(
         self,
         term_id,
         limit,
@@ -387,7 +1378,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/by-glossary-term/{term_id}",
+            resource_path="/api/v1/assets/by-glossary-term/{term_id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -401,337 +1392,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_documentation_batch_post(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BatchDocumentationResponse:
-        """Batch create documentation
-
-        Create or update documentation for multiple assets
-
-        :param batch_documentation_request: Batch documentation request (required)
-        :type batch_documentation_request: BatchDocumentationRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_batch_post_serialize(
-            batch_documentation_request=batch_documentation_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchDocumentationResponse",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_documentation_batch_post_with_http_info(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BatchDocumentationResponse]:
-        """Batch create documentation
-
-        Create or update documentation for multiple assets
-
-        :param batch_documentation_request: Batch documentation request (required)
-        :type batch_documentation_request: BatchDocumentationRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_batch_post_serialize(
-            batch_documentation_request=batch_documentation_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchDocumentationResponse",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_documentation_batch_post_without_preload_content(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Batch create documentation
-
-        Create or update documentation for multiple assets
-
-        :param batch_documentation_request: Batch documentation request (required)
-        :type batch_documentation_request: BatchDocumentationRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_batch_post_serialize(
-            batch_documentation_request=batch_documentation_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchDocumentationResponse",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_documentation_batch_post_sync(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BatchDocumentationResponse:
-        """Batch create documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_batch_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_batch_post(
-                batch_documentation_request=batch_documentation_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_documentation_batch_post_sync_with_http_info(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BatchDocumentationResponse]:
-        """Batch create documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_batch_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_batch_post_with_http_info(
-                batch_documentation_request=batch_documentation_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_documentation_batch_post_sync_without_preload_content(
-        self,
-        batch_documentation_request: Annotated[
-            BatchDocumentationRequest, Field(description="Batch documentation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Batch create documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_batch_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_batch_post_without_preload_content(
-                batch_documentation_request=batch_documentation_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_documentation_batch_post_serialize(
-        self,
-        batch_documentation_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if batch_documentation_request is not None:
-            _body_params = batch_documentation_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/assets/documentation/batch",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_documentation_mrn_get(
+    async def get_assets_documentation_mrn(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -770,7 +1431,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_documentation_mrn_get_serialize(
+        _param = self._get_assets_documentation_mrn_serialize(
             mrn=mrn,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -791,7 +1452,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_documentation_mrn_get_with_http_info(
+    async def get_assets_documentation_mrn_with_http_info(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -830,7 +1491,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_documentation_mrn_get_serialize(
+        _param = self._get_assets_documentation_mrn_serialize(
             mrn=mrn,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -851,7 +1512,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_documentation_mrn_get_without_preload_content(
+    async def get_assets_documentation_mrn_without_preload_content(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -890,7 +1551,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_documentation_mrn_get_serialize(
+        _param = self._get_assets_documentation_mrn_serialize(
             mrn=mrn,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -907,7 +1568,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_documentation_mrn_get_sync(
+    def get_assets_documentation_mrn_sync(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -920,11 +1581,11 @@ class AssetsApi:
     ) -> list[Documentation]:
         """Get asset documentation (synchronous)
 
-        Synchronous variant of :meth:`assets_documentation_mrn_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_documentation_mrn`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_documentation_mrn_get(
+            self.get_assets_documentation_mrn(
                 mrn=mrn,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -935,7 +1596,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_documentation_mrn_get_sync_with_http_info(
+    def get_assets_documentation_mrn_sync_with_http_info(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -948,11 +1609,11 @@ class AssetsApi:
     ) -> ApiResponse[list[Documentation]]:
         """Get asset documentation (synchronous)
 
-        Synchronous variant of :meth:`assets_documentation_mrn_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_documentation_mrn_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_documentation_mrn_get_with_http_info(
+            self.get_assets_documentation_mrn_with_http_info(
                 mrn=mrn,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -963,7 +1624,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_documentation_mrn_get_sync_without_preload_content(
+    def get_assets_documentation_mrn_sync_without_preload_content(
         self,
         mrn: Annotated[StrictStr, Field(description="Asset MRN")],
         _request_timeout: None
@@ -976,11 +1637,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get asset documentation (synchronous)
 
-        Synchronous variant of :meth:`assets_documentation_mrn_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_documentation_mrn_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_documentation_mrn_get_without_preload_content(
+            self.get_assets_documentation_mrn_without_preload_content(
                 mrn=mrn,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -990,7 +1651,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_documentation_mrn_get_serialize(
+    def _get_assets_documentation_mrn_serialize(
         self,
         mrn,
         _request_auth,
@@ -1027,7 +1688,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/documentation/{mrn}",
+            resource_path="/api/v1/assets/documentation/{mrn}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1041,650 +1702,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_documentation_post(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Documentation:
-        """Create asset documentation
-
-        Create or update documentation for an asset
-
-        :param documentation_create_request: Documentation creation request (required)
-        :type documentation_create_request: DocumentationCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_post_serialize(
-            documentation_create_request=documentation_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Documentation",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_documentation_post_with_http_info(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Documentation]:
-        """Create asset documentation
-
-        Create or update documentation for an asset
-
-        :param documentation_create_request: Documentation creation request (required)
-        :type documentation_create_request: DocumentationCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_post_serialize(
-            documentation_create_request=documentation_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Documentation",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_documentation_post_without_preload_content(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create asset documentation
-
-        Create or update documentation for an asset
-
-        :param documentation_create_request: Documentation creation request (required)
-        :type documentation_create_request: DocumentationCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_documentation_post_serialize(
-            documentation_create_request=documentation_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Documentation",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_documentation_post_sync(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Documentation:
-        """Create asset documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_post(
-                documentation_create_request=documentation_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_documentation_post_sync_with_http_info(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Documentation]:
-        """Create asset documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_post_with_http_info(
-                documentation_create_request=documentation_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_documentation_post_sync_without_preload_content(
-        self,
-        documentation_create_request: Annotated[
-            DocumentationCreateRequest, Field(description="Documentation creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create asset documentation (synchronous)
-
-        Synchronous variant of :meth:`assets_documentation_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_documentation_post_without_preload_content(
-                documentation_create_request=documentation_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_documentation_post_serialize(
-        self,
-        documentation_create_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if documentation_create_request is not None:
-            _body_params = documentation_create_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/assets/documentation",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete an asset
-
-        Delete an asset from the system
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete an asset
-
-        Delete an asset from the system
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an asset
-
-        Delete an asset from the system
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/assets/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_id_get(
+    async def get_assets_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1723,7 +1741,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_get_serialize(
+        _param = self._get_assets_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1744,7 +1762,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_id_get_with_http_info(
+    async def get_assets_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1783,7 +1801,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_get_serialize(
+        _param = self._get_assets_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1804,7 +1822,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_id_get_without_preload_content(
+    async def get_assets_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1843,7 +1861,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_get_serialize(
+        _param = self._get_assets_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1860,7 +1878,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_id_get_sync(
+    def get_assets_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1873,11 +1891,11 @@ class AssetsApi:
     ) -> Asset:
         """Get an asset by ID (synchronous)
 
-        Synchronous variant of :meth:`assets_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_get(
+            self.get_assets_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1888,7 +1906,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_get_sync_with_http_info(
+    def get_assets_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1901,11 +1919,11 @@ class AssetsApi:
     ) -> ApiResponse[Asset]:
         """Get an asset by ID (synchronous)
 
-        Synchronous variant of :meth:`assets_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_get_with_http_info(
+            self.get_assets_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1916,7 +1934,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_get_sync_without_preload_content(
+    def get_assets_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -1929,11 +1947,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get an asset by ID (synchronous)
 
-        Synchronous variant of :meth:`assets_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_get_without_preload_content(
+            self.get_assets_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1943,7 +1961,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_id_get_serialize(
+    def _get_assets_id_serialize(
         self,
         id,
         _request_auth,
@@ -1980,7 +1998,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/{id}",
+            resource_path="/api/v1/assets/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1994,361 +2012,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_id_put(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Update an asset
-
-        Update an existing asset's information
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param update_asset_request: Asset update request (required)
-        :type update_asset_request: UpdateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_put_serialize(
-            id=id,
-            update_asset_request=update_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_id_put_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Update an asset
-
-        Update an existing asset's information
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param update_asset_request: Asset update request (required)
-        :type update_asset_request: UpdateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_put_serialize(
-            id=id,
-            update_asset_request=update_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_id_put_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update an asset
-
-        Update an existing asset's information
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param update_asset_request: Asset update request (required)
-        :type update_asset_request: UpdateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_id_put_serialize(
-            id=id,
-            update_asset_request=update_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_id_put_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Update an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_put`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_put(
-                id=id,
-                update_asset_request=update_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_id_put_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Update an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_put_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_put_with_http_info(
-                id=id,
-                update_asset_request=update_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_id_put_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        update_asset_request: Annotated[
-            UpdateAssetRequest, Field(description="Asset update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update an asset (synchronous)
-
-        Synchronous variant of :meth:`assets_id_put_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_id_put_without_preload_content(
-                id=id,
-                update_asset_request=update_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_id_put_serialize(
-        self,
-        id,
-        update_asset_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if update_asset_request is not None:
-            _body_params = update_asset_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="PUT",
-            resource_path="/assets/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_id_run_history_get(
+    async def get_assets_id_run_history(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2393,7 +2057,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_get_serialize(
+        _param = self._get_assets_id_run_history_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -2417,7 +2081,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_id_run_history_get_with_http_info(
+    async def get_assets_id_run_history_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2462,7 +2126,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_get_serialize(
+        _param = self._get_assets_id_run_history_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -2486,7 +2150,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_id_run_history_get_without_preload_content(
+    async def get_assets_id_run_history_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2531,7 +2195,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_get_serialize(
+        _param = self._get_assets_id_run_history_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -2551,7 +2215,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_id_run_history_get_sync(
+    def get_assets_id_run_history_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2566,11 +2230,11 @@ class AssetsApi:
     ) -> RunHistoryResponse:
         """Get asset run history (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_id_run_history`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_get(
+            self.get_assets_id_run_history(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -2583,7 +2247,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_run_history_get_sync_with_http_info(
+    def get_assets_id_run_history_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2598,11 +2262,11 @@ class AssetsApi:
     ) -> ApiResponse[RunHistoryResponse]:
         """Get asset run history (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_id_run_history_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_get_with_http_info(
+            self.get_assets_id_run_history_with_http_info(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -2615,7 +2279,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_run_history_get_sync_without_preload_content(
+    def get_assets_id_run_history_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         limit: Annotated[StrictInt | None, Field(description="Number of items per page")] = None,
@@ -2630,11 +2294,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get asset run history (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_id_run_history_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_get_without_preload_content(
+            self.get_assets_id_run_history_without_preload_content(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -2646,7 +2310,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_id_run_history_get_serialize(
+    def _get_assets_id_run_history_serialize(
         self,
         id,
         limit,
@@ -2691,7 +2355,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/{id}/run-history",
+            resource_path="/api/v1/assets/run-history/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2705,7 +2369,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_id_run_history_histogram_get(
+    async def get_assets_id_run_history_histogram(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2747,7 +2411,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_histogram_get_serialize(
+        _param = self._get_assets_id_run_history_histogram_serialize(
             id=id,
             period=period,
             _request_auth=_request_auth,
@@ -2770,7 +2434,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_id_run_history_histogram_get_with_http_info(
+    async def get_assets_id_run_history_histogram_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2812,7 +2476,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_histogram_get_serialize(
+        _param = self._get_assets_id_run_history_histogram_serialize(
             id=id,
             period=period,
             _request_auth=_request_auth,
@@ -2835,7 +2499,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_id_run_history_histogram_get_without_preload_content(
+    async def get_assets_id_run_history_histogram_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2877,7 +2541,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_id_run_history_histogram_get_serialize(
+        _param = self._get_assets_id_run_history_histogram_serialize(
             id=id,
             period=period,
             _request_auth=_request_auth,
@@ -2896,7 +2560,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_id_run_history_histogram_get_sync(
+    def get_assets_id_run_history_histogram_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2910,11 +2574,11 @@ class AssetsApi:
     ) -> HistogramResponse:
         """Get asset run history histogram (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_histogram_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_id_run_history_histogram`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_histogram_get(
+            self.get_assets_id_run_history_histogram(
                 id=id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -2926,7 +2590,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_run_history_histogram_get_sync_with_http_info(
+    def get_assets_id_run_history_histogram_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2940,11 +2604,11 @@ class AssetsApi:
     ) -> ApiResponse[HistogramResponse]:
         """Get asset run history histogram (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_histogram_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_id_run_history_histogram_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_histogram_get_with_http_info(
+            self.get_assets_id_run_history_histogram_with_http_info(
                 id=id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -2956,7 +2620,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_id_run_history_histogram_get_sync_without_preload_content(
+    def get_assets_id_run_history_histogram_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         period: Annotated[StrictStr | None, Field(description="Time period (7d, 30d, 90d)")] = None,
@@ -2970,11 +2634,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get asset run history histogram (synchronous)
 
-        Synchronous variant of :meth:`assets_id_run_history_histogram_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_id_run_history_histogram_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_id_run_history_histogram_get_without_preload_content(
+            self.get_assets_id_run_history_histogram_without_preload_content(
                 id=id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -2985,7 +2649,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_id_run_history_histogram_get_serialize(
+    def _get_assets_id_run_history_histogram_serialize(
         self,
         id,
         period,
@@ -3026,7 +2690,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/{id}/run-history/histogram",
+            resource_path="/api/v1/assets/run-history-histogram/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3040,7 +2704,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_lookup_type_service_name_get(
+    async def get_assets_lookup_type_service_name(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3085,7 +2749,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_lookup_type_service_name_get_serialize(
+        _param = self._get_assets_lookup_type_service_name_serialize(
             type=type,
             service=service,
             name=name,
@@ -3108,7 +2772,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_lookup_type_service_name_get_with_http_info(
+    async def get_assets_lookup_type_service_name_with_http_info(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3153,7 +2817,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_lookup_type_service_name_get_serialize(
+        _param = self._get_assets_lookup_type_service_name_serialize(
             type=type,
             service=service,
             name=name,
@@ -3176,7 +2840,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_lookup_type_service_name_get_without_preload_content(
+    async def get_assets_lookup_type_service_name_without_preload_content(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3221,7 +2885,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_lookup_type_service_name_get_serialize(
+        _param = self._get_assets_lookup_type_service_name_serialize(
             type=type,
             service=service,
             name=name,
@@ -3240,7 +2904,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_lookup_type_service_name_get_sync(
+    def get_assets_lookup_type_service_name_sync(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3255,11 +2919,11 @@ class AssetsApi:
     ) -> Asset:
         """Lookup asset by type, service, and name (synchronous)
 
-        Synchronous variant of :meth:`assets_lookup_type_service_name_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_lookup_type_service_name`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_lookup_type_service_name_get(
+            self.get_assets_lookup_type_service_name(
                 type=type,
                 service=service,
                 name=name,
@@ -3272,7 +2936,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_lookup_type_service_name_get_sync_with_http_info(
+    def get_assets_lookup_type_service_name_sync_with_http_info(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3287,11 +2951,11 @@ class AssetsApi:
     ) -> ApiResponse[Asset]:
         """Lookup asset by type, service, and name (synchronous)
 
-        Synchronous variant of :meth:`assets_lookup_type_service_name_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_lookup_type_service_name_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_lookup_type_service_name_get_with_http_info(
+            self.get_assets_lookup_type_service_name_with_http_info(
                 type=type,
                 service=service,
                 name=name,
@@ -3304,7 +2968,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_lookup_type_service_name_get_sync_without_preload_content(
+    def get_assets_lookup_type_service_name_sync_without_preload_content(
         self,
         type: Annotated[StrictStr, Field(description="Asset type")],
         service: Annotated[StrictStr, Field(description="Service/Provider name")],
@@ -3319,11 +2983,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Lookup asset by type, service, and name (synchronous)
 
-        Synchronous variant of :meth:`assets_lookup_type_service_name_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_lookup_type_service_name_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_lookup_type_service_name_get_without_preload_content(
+            self.get_assets_lookup_type_service_name_without_preload_content(
                 type=type,
                 service=service,
                 name=name,
@@ -3335,7 +2999,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_lookup_type_service_name_get_serialize(
+    def _get_assets_lookup_type_service_name_serialize(
         self,
         type,
         service,
@@ -3378,7 +3042,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/lookup/{type}/{service}/{name}",
+            resource_path="/api/v1/assets/lookup/{type}/{service}/{name}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3392,7 +3056,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_match_pattern_get(
+    async def get_assets_match_pattern(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3434,7 +3098,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_match_pattern_get_serialize(
+        _param = self._get_assets_match_pattern_serialize(
             pattern=pattern,
             type=type,
             _request_auth=_request_auth,
@@ -3456,7 +3120,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_match_pattern_get_with_http_info(
+    async def get_assets_match_pattern_with_http_info(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3498,7 +3162,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_match_pattern_get_serialize(
+        _param = self._get_assets_match_pattern_serialize(
             pattern=pattern,
             type=type,
             _request_auth=_request_auth,
@@ -3520,7 +3184,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_match_pattern_get_without_preload_content(
+    async def get_assets_match_pattern_without_preload_content(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3562,7 +3226,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_match_pattern_get_serialize(
+        _param = self._get_assets_match_pattern_serialize(
             pattern=pattern,
             type=type,
             _request_auth=_request_auth,
@@ -3580,7 +3244,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_match_pattern_get_sync(
+    def get_assets_match_pattern_sync(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3594,11 +3258,11 @@ class AssetsApi:
     ) -> list[Asset]:
         """Match asset pattern (synchronous)
 
-        Synchronous variant of :meth:`assets_match_pattern_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_match_pattern`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_match_pattern_get(
+            self.get_assets_match_pattern(
                 pattern=pattern,
                 type=type,
                 _request_timeout=_request_timeout,
@@ -3610,7 +3274,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_match_pattern_get_sync_with_http_info(
+    def get_assets_match_pattern_sync_with_http_info(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3624,11 +3288,11 @@ class AssetsApi:
     ) -> ApiResponse[list[Asset]]:
         """Match asset pattern (synchronous)
 
-        Synchronous variant of :meth:`assets_match_pattern_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_match_pattern_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_match_pattern_get_with_http_info(
+            self.get_assets_match_pattern_with_http_info(
                 pattern=pattern,
                 type=type,
                 _request_timeout=_request_timeout,
@@ -3640,7 +3304,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_match_pattern_get_sync_without_preload_content(
+    def get_assets_match_pattern_sync_without_preload_content(
         self,
         pattern: Annotated[StrictStr, Field(description="Asset pattern to match")],
         type: Annotated[StrictStr, Field(description="Asset type")],
@@ -3654,11 +3318,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Match asset pattern (synchronous)
 
-        Synchronous variant of :meth:`assets_match_pattern_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_match_pattern_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_match_pattern_get_without_preload_content(
+            self.get_assets_match_pattern_without_preload_content(
                 pattern=pattern,
                 type=type,
                 _request_timeout=_request_timeout,
@@ -3669,7 +3333,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_match_pattern_get_serialize(
+    def _get_assets_match_pattern_serialize(
         self,
         pattern,
         type,
@@ -3711,7 +3375,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/match-pattern",
+            resource_path="/api/v1/assets/match-pattern/",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3725,7 +3389,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_my_assets_get(
+    async def get_assets_my_assets(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3767,7 +3431,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_my_assets_get_serialize(
+        _param = self._get_assets_my_assets_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -3789,7 +3453,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_my_assets_get_with_http_info(
+    async def get_assets_my_assets_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3831,7 +3495,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_my_assets_get_serialize(
+        _param = self._get_assets_my_assets_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -3853,7 +3517,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_my_assets_get_without_preload_content(
+    async def get_assets_my_assets_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3895,7 +3559,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_my_assets_get_serialize(
+        _param = self._get_assets_my_assets_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -3913,7 +3577,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_my_assets_get_sync(
+    def get_assets_my_assets_sync(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3927,11 +3591,11 @@ class AssetsApi:
     ) -> AssetSearchResponse:
         """Get user's assets (synchronous)
 
-        Synchronous variant of :meth:`assets_my_assets_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_my_assets`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_my_assets_get(
+            self.get_assets_my_assets(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -3943,7 +3607,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_my_assets_get_sync_with_http_info(
+    def get_assets_my_assets_sync_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3957,11 +3621,11 @@ class AssetsApi:
     ) -> ApiResponse[AssetSearchResponse]:
         """Get user's assets (synchronous)
 
-        Synchronous variant of :meth:`assets_my_assets_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_my_assets_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_my_assets_get_with_http_info(
+            self.get_assets_my_assets_with_http_info(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -3973,7 +3637,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_my_assets_get_sync_without_preload_content(
+    def get_assets_my_assets_sync_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
@@ -3987,11 +3651,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get user's assets (synchronous)
 
-        Synchronous variant of :meth:`assets_my_assets_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_my_assets_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_my_assets_get_without_preload_content(
+            self.get_assets_my_assets_without_preload_content(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -4002,7 +3666,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_my_assets_get_serialize(
+    def _get_assets_my_assets_serialize(
         self,
         limit,
         offset,
@@ -4044,7 +3708,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/my-assets",
+            resource_path="/api/v1/assets/my-assets",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -4058,340 +3722,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_post(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Create a new asset
-
-        Create a new asset in the system
-
-        :param create_asset_request: Asset creation request (required)
-        :type create_asset_request: CreateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_post_serialize(
-            create_asset_request=create_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Asset",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_post_with_http_info(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Create a new asset
-
-        Create a new asset in the system
-
-        :param create_asset_request: Asset creation request (required)
-        :type create_asset_request: CreateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_post_serialize(
-            create_asset_request=create_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Asset",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_post_without_preload_content(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new asset
-
-        Create a new asset in the system
-
-        :param create_asset_request: Asset creation request (required)
-        :type create_asset_request: CreateAssetRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_post_serialize(
-            create_asset_request=create_asset_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Asset",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_post_sync(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Create a new asset (synchronous)
-
-        Synchronous variant of :meth:`assets_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_post(
-                create_asset_request=create_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_post_sync_with_http_info(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Create a new asset (synchronous)
-
-        Synchronous variant of :meth:`assets_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_post_with_http_info(
-                create_asset_request=create_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_post_sync_without_preload_content(
-        self,
-        create_asset_request: Annotated[
-            CreateAssetRequest, Field(description="Asset creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new asset (synchronous)
-
-        Synchronous variant of :meth:`assets_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_post_without_preload_content(
-                create_asset_request=create_asset_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_post_serialize(
-        self,
-        create_asset_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_asset_request is not None:
-            _body_params = create_asset_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/assets",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_preview_id_get(
+    async def get_assets_preview_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4430,7 +3761,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_preview_id_get_serialize(
+        _param = self._get_assets_preview_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -4454,7 +3785,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_preview_id_get_with_http_info(
+    async def get_assets_preview_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4493,7 +3824,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_preview_id_get_serialize(
+        _param = self._get_assets_preview_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -4517,7 +3848,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_preview_id_get_without_preload_content(
+    async def get_assets_preview_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4556,7 +3887,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_preview_id_get_serialize(
+        _param = self._get_assets_preview_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -4576,7 +3907,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_preview_id_get_sync(
+    def get_assets_preview_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4589,11 +3920,11 @@ class AssetsApi:
     ) -> PreviewResponse:
         """Get preview data for an asset (synchronous)
 
-        Synchronous variant of :meth:`assets_preview_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_preview_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_preview_id_get(
+            self.get_assets_preview_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4604,7 +3935,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_preview_id_get_sync_with_http_info(
+    def get_assets_preview_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4617,11 +3948,11 @@ class AssetsApi:
     ) -> ApiResponse[PreviewResponse]:
         """Get preview data for an asset (synchronous)
 
-        Synchronous variant of :meth:`assets_preview_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_preview_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_preview_id_get_with_http_info(
+            self.get_assets_preview_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4632,7 +3963,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_preview_id_get_sync_without_preload_content(
+    def get_assets_preview_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         _request_timeout: None
@@ -4645,11 +3976,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get preview data for an asset (synchronous)
 
-        Synchronous variant of :meth:`assets_preview_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_preview_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_preview_id_get_without_preload_content(
+            self.get_assets_preview_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4659,7 +3990,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_preview_id_get_serialize(
+    def _get_assets_preview_id_serialize(
         self,
         id,
         _request_auth,
@@ -4696,7 +4027,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/preview/{id}",
+            resource_path="/api/v1/assets/preview/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -4710,9 +4041,9 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_qualified_name_qualified_name_get(
+    async def get_assets_qualified_name_qualified_name(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4725,8 +4056,8 @@ class AssetsApi:
 
         Get detailed information about a specific asset using its qualified name
 
-        :param qualified_name: Asset qualified name (required)
-        :type qualified_name: str
+        :param name: Asset qualified name (required)
+        :type name: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4749,8 +4080,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_qualified_name_qualified_name_get_serialize(
-            qualified_name=qualified_name,
+        _param = self._get_assets_qualified_name_qualified_name_serialize(
+            name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -4770,9 +4101,9 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_qualified_name_qualified_name_get_with_http_info(
+    async def get_assets_qualified_name_qualified_name_with_http_info(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4785,8 +4116,8 @@ class AssetsApi:
 
         Get detailed information about a specific asset using its qualified name
 
-        :param qualified_name: Asset qualified name (required)
-        :type qualified_name: str
+        :param name: Asset qualified name (required)
+        :type name: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4809,8 +4140,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_qualified_name_qualified_name_get_serialize(
-            qualified_name=qualified_name,
+        _param = self._get_assets_qualified_name_qualified_name_serialize(
+            name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -4830,9 +4161,9 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_qualified_name_qualified_name_get_without_preload_content(
+    async def get_assets_qualified_name_qualified_name_without_preload_content(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4845,8 +4176,8 @@ class AssetsApi:
 
         Get detailed information about a specific asset using its qualified name
 
-        :param qualified_name: Asset qualified name (required)
-        :type qualified_name: str
+        :param name: Asset qualified name (required)
+        :type name: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4869,8 +4200,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_qualified_name_qualified_name_get_serialize(
-            qualified_name=qualified_name,
+        _param = self._get_assets_qualified_name_qualified_name_serialize(
+            name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -4886,9 +4217,9 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_qualified_name_qualified_name_get_sync(
+    def get_assets_qualified_name_qualified_name_sync(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4899,12 +4230,12 @@ class AssetsApi:
     ) -> Asset:
         """Get an asset by qualified name (synchronous)
 
-        Synchronous variant of :meth:`assets_qualified_name_qualified_name_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_qualified_name_qualified_name`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_qualified_name_qualified_name_get(
-                qualified_name=qualified_name,
+            self.get_assets_qualified_name_qualified_name(
+                name=name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -4914,9 +4245,9 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_qualified_name_qualified_name_get_sync_with_http_info(
+    def get_assets_qualified_name_qualified_name_sync_with_http_info(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4927,12 +4258,12 @@ class AssetsApi:
     ) -> ApiResponse[Asset]:
         """Get an asset by qualified name (synchronous)
 
-        Synchronous variant of :meth:`assets_qualified_name_qualified_name_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_qualified_name_qualified_name_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_qualified_name_qualified_name_get_with_http_info(
-                qualified_name=qualified_name,
+            self.get_assets_qualified_name_qualified_name_with_http_info(
+                name=name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -4942,9 +4273,9 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_qualified_name_qualified_name_get_sync_without_preload_content(
+    def get_assets_qualified_name_qualified_name_sync_without_preload_content(
         self,
-        qualified_name: Annotated[StrictStr, Field(description="Asset qualified name")],
+        name: Annotated[StrictStr, Field(description="Asset qualified name")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -4955,12 +4286,12 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get an asset by qualified name (synchronous)
 
-        Synchronous variant of :meth:`assets_qualified_name_qualified_name_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_qualified_name_qualified_name_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_qualified_name_qualified_name_get_without_preload_content(
-                qualified_name=qualified_name,
+            self.get_assets_qualified_name_qualified_name_without_preload_content(
+                name=name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -4969,9 +4300,9 @@ class AssetsApi:
             )
         )
 
-    def _assets_qualified_name_qualified_name_get_serialize(
+    def _get_assets_qualified_name_qualified_name_serialize(
         self,
-        qualified_name,
+        name,
         _request_auth,
         _content_type,
         _headers,
@@ -4990,8 +4321,8 @@ class AssetsApi:
         _body_params: bytes | None = None
 
         # process the path parameters
-        if qualified_name is not None:
-            _path_params["qualifiedName"] = qualified_name
+        if name is not None:
+            _path_params["name"] = name
         # process the query parameters
         # process the header parameters
         # process the form parameters
@@ -5006,7 +4337,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/qualified-name/{qualifiedName}",
+            resource_path="/api/v1/assets/qualified-name/{name}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -5020,7 +4351,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_search_get(
+    async def get_assets_search(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5079,7 +4410,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_search_get_serialize(
+        _param = self._get_assets_search_serialize(
             q=q,
             types=types,
             services=services,
@@ -5106,7 +4437,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_search_get_with_http_info(
+    async def get_assets_search_with_http_info(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5165,7 +4496,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_search_get_serialize(
+        _param = self._get_assets_search_serialize(
             q=q,
             types=types,
             services=services,
@@ -5192,7 +4523,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_search_get_without_preload_content(
+    async def get_assets_search_without_preload_content(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5251,7 +4582,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_search_get_serialize(
+        _param = self._get_assets_search_serialize(
             q=q,
             types=types,
             services=services,
@@ -5274,7 +4605,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_search_get_sync(
+    def get_assets_search_sync(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5295,11 +4626,11 @@ class AssetsApi:
     ) -> AssetSearchResponse:
         """Search assets (synchronous)
 
-        Synchronous variant of :meth:`assets_search_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_search`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_search_get(
+            self.get_assets_search(
                 q=q,
                 types=types,
                 services=services,
@@ -5316,7 +4647,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_search_get_sync_with_http_info(
+    def get_assets_search_sync_with_http_info(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5337,11 +4668,11 @@ class AssetsApi:
     ) -> ApiResponse[AssetSearchResponse]:
         """Search assets (synchronous)
 
-        Synchronous variant of :meth:`assets_search_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_search_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_search_get_with_http_info(
+            self.get_assets_search_with_http_info(
                 q=q,
                 types=types,
                 services=services,
@@ -5358,7 +4689,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_search_get_sync_without_preload_content(
+    def get_assets_search_sync_without_preload_content(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
         types: Annotated[list[StrictStr] | None, Field(description="Filter by asset types")] = None,
@@ -5379,11 +4710,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Search assets (synchronous)
 
-        Synchronous variant of :meth:`assets_search_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_search_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_search_get_without_preload_content(
+            self.get_assets_search_without_preload_content(
                 q=q,
                 types=types,
                 services=services,
@@ -5399,7 +4730,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_search_get_serialize(
+    def _get_assets_search_serialize(
         self,
         q,
         types,
@@ -5465,7 +4796,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/search",
+            resource_path="/api/v1/assets/search",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -5479,7 +4810,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_metadata_fields_get(
+    async def get_assets_suggestions_metadata_fields(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5515,7 +4846,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_fields_get_serialize(
+        _param = self._get_assets_suggestions_metadata_fields_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5534,7 +4865,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_suggestions_metadata_fields_get_with_http_info(
+    async def get_assets_suggestions_metadata_fields_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5570,7 +4901,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_fields_get_serialize(
+        _param = self._get_assets_suggestions_metadata_fields_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5589,7 +4920,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_metadata_fields_get_without_preload_content(
+    async def get_assets_suggestions_metadata_fields_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5625,7 +4956,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_fields_get_serialize(
+        _param = self._get_assets_suggestions_metadata_fields_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5640,7 +4971,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_suggestions_metadata_fields_get_sync(
+    def get_assets_suggestions_metadata_fields_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5652,11 +4983,11 @@ class AssetsApi:
     ) -> list[MetadataFieldSuggestion]:
         """Get metadata field suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_fields_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_fields`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_fields_get(
+            self.get_assets_suggestions_metadata_fields(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5666,7 +4997,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_metadata_fields_get_sync_with_http_info(
+    def get_assets_suggestions_metadata_fields_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5678,11 +5009,11 @@ class AssetsApi:
     ) -> ApiResponse[list[MetadataFieldSuggestion]]:
         """Get metadata field suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_fields_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_fields_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_fields_get_with_http_info(
+            self.get_assets_suggestions_metadata_fields_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5692,7 +5023,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_metadata_fields_get_sync_without_preload_content(
+    def get_assets_suggestions_metadata_fields_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -5704,11 +5035,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get metadata field suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_fields_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_fields_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_fields_get_without_preload_content(
+            self.get_assets_suggestions_metadata_fields_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5717,7 +5048,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_suggestions_metadata_fields_get_serialize(
+    def _get_assets_suggestions_metadata_fields_serialize(
         self,
         _request_auth,
         _content_type,
@@ -5751,7 +5082,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/suggestions/metadata/fields",
+            resource_path="/api/v1/assets/suggestions/metadata/fields",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -5765,7 +5096,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_metadata_values_get(
+    async def get_assets_suggestions_metadata_values(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -5812,7 +5143,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_values_get_serialize(
+        _param = self._get_assets_suggestions_metadata_values_serialize(
             var_field=var_field,
             prefix=prefix,
             limit=limit,
@@ -5835,7 +5166,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_suggestions_metadata_values_get_with_http_info(
+    async def get_assets_suggestions_metadata_values_with_http_info(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -5882,7 +5213,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_values_get_serialize(
+        _param = self._get_assets_suggestions_metadata_values_serialize(
             var_field=var_field,
             prefix=prefix,
             limit=limit,
@@ -5905,7 +5236,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_metadata_values_get_without_preload_content(
+    async def get_assets_suggestions_metadata_values_without_preload_content(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -5952,7 +5283,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_metadata_values_get_serialize(
+        _param = self._get_assets_suggestions_metadata_values_serialize(
             var_field=var_field,
             prefix=prefix,
             limit=limit,
@@ -5971,7 +5302,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_suggestions_metadata_values_get_sync(
+    def get_assets_suggestions_metadata_values_sync(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -5988,11 +5319,11 @@ class AssetsApi:
     ) -> list[MetadataValueSuggestion]:
         """Get metadata value suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_values_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_values`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_values_get(
+            self.get_assets_suggestions_metadata_values(
                 var_field=var_field,
                 prefix=prefix,
                 limit=limit,
@@ -6005,7 +5336,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_metadata_values_get_sync_with_http_info(
+    def get_assets_suggestions_metadata_values_sync_with_http_info(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -6022,11 +5353,11 @@ class AssetsApi:
     ) -> ApiResponse[list[MetadataValueSuggestion]]:
         """Get metadata value suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_values_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_values_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_values_get_with_http_info(
+            self.get_assets_suggestions_metadata_values_with_http_info(
                 var_field=var_field,
                 prefix=prefix,
                 limit=limit,
@@ -6039,7 +5370,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_metadata_values_get_sync_without_preload_content(
+    def get_assets_suggestions_metadata_values_sync_without_preload_content(
         self,
         var_field: Annotated[StrictStr, Field(description="Metadata field name")],
         prefix: Annotated[StrictStr | None, Field(description="Value prefix to filter by")] = None,
@@ -6056,11 +5387,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get metadata value suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_metadata_values_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_suggestions_metadata_values_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_metadata_values_get_without_preload_content(
+            self.get_assets_suggestions_metadata_values_without_preload_content(
                 var_field=var_field,
                 prefix=prefix,
                 limit=limit,
@@ -6072,7 +5403,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_suggestions_metadata_values_get_serialize(
+    def _get_assets_suggestions_metadata_values_serialize(
         self,
         var_field,
         prefix,
@@ -6118,7 +5449,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/suggestions/metadata/values",
+            resource_path="/api/v1/assets/suggestions/metadata/values",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6132,7 +5463,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_tags_get(
+    async def get_assets_suggestions_tags(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6176,7 +5507,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_tags_get_serialize(
+        _param = self._get_assets_suggestions_tags_serialize(
             prefix=prefix,
             limit=limit,
             _request_auth=_request_auth,
@@ -6197,7 +5528,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_suggestions_tags_get_with_http_info(
+    async def get_assets_suggestions_tags_with_http_info(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6241,7 +5572,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_tags_get_serialize(
+        _param = self._get_assets_suggestions_tags_serialize(
             prefix=prefix,
             limit=limit,
             _request_auth=_request_auth,
@@ -6262,7 +5593,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_suggestions_tags_get_without_preload_content(
+    async def get_assets_suggestions_tags_without_preload_content(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6306,7 +5637,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_suggestions_tags_get_serialize(
+        _param = self._get_assets_suggestions_tags_serialize(
             prefix=prefix,
             limit=limit,
             _request_auth=_request_auth,
@@ -6323,7 +5654,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_suggestions_tags_get_sync(
+    def get_assets_suggestions_tags_sync(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6339,11 +5670,11 @@ class AssetsApi:
     ) -> list[str]:
         """Get tag suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_tags_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_suggestions_tags`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_tags_get(
+            self.get_assets_suggestions_tags(
                 prefix=prefix,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -6355,7 +5686,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_tags_get_sync_with_http_info(
+    def get_assets_suggestions_tags_sync_with_http_info(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6371,11 +5702,11 @@ class AssetsApi:
     ) -> ApiResponse[list[str]]:
         """Get tag suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_tags_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_suggestions_tags_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_tags_get_with_http_info(
+            self.get_assets_suggestions_tags_with_http_info(
                 prefix=prefix,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -6387,7 +5718,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_suggestions_tags_get_sync_without_preload_content(
+    def get_assets_suggestions_tags_sync_without_preload_content(
         self,
         prefix: Annotated[StrictStr | None, Field(description="Tag prefix to filter by")] = None,
         limit: Annotated[
@@ -6403,11 +5734,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get tag suggestions (synchronous)
 
-        Synchronous variant of :meth:`assets_suggestions_tags_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_suggestions_tags_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_suggestions_tags_get_without_preload_content(
+            self.get_assets_suggestions_tags_without_preload_content(
                 prefix=prefix,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -6418,7 +5749,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_suggestions_tags_get_serialize(
+    def _get_assets_suggestions_tags_serialize(
         self,
         prefix,
         limit,
@@ -6460,7 +5791,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/suggestions/tags",
+            resource_path="/api/v1/assets/suggestions/tags",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6474,7 +5805,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_summary_get(
+    async def get_assets_summary(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6510,7 +5841,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_summary_get_serialize(
+        _param = self._get_assets_summary_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6529,7 +5860,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_summary_get_with_http_info(
+    async def get_assets_summary_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6565,7 +5896,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_summary_get_serialize(
+        _param = self._get_assets_summary_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6584,7 +5915,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_summary_get_without_preload_content(
+    async def get_assets_summary_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6620,7 +5951,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_summary_get_serialize(
+        _param = self._get_assets_summary_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6635,7 +5966,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_summary_get_sync(
+    def get_assets_summary_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6647,11 +5978,11 @@ class AssetsApi:
     ) -> AssetSummaryResponse:
         """Get asset summary (synchronous)
 
-        Synchronous variant of :meth:`assets_summary_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_summary`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_summary_get(
+            self.get_assets_summary(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -6661,7 +5992,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_summary_get_sync_with_http_info(
+    def get_assets_summary_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6673,11 +6004,11 @@ class AssetsApi:
     ) -> ApiResponse[AssetSummaryResponse]:
         """Get asset summary (synchronous)
 
-        Synchronous variant of :meth:`assets_summary_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_summary_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_summary_get_with_http_info(
+            self.get_assets_summary_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -6687,7 +6018,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_summary_get_sync_without_preload_content(
+    def get_assets_summary_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -6699,11 +6030,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get asset summary (synchronous)
 
-        Synchronous variant of :meth:`assets_summary_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_summary_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_summary_get_without_preload_content(
+            self.get_assets_summary_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -6712,7 +6043,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_summary_get_serialize(
+    def _get_assets_summary_serialize(
         self,
         _request_auth,
         _content_type,
@@ -6746,7 +6077,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/assets/summary",
+            resource_path="/api/v1/assets/summary",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6760,10 +6091,9 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_tags_id_delete(
+    async def get_assets_terms_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -6771,15 +6101,13 @@ class AssetsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Remove tag from asset
+    ) -> list[AssetTerm]:
+        """Get asset's glossary terms
 
-        Remove a tag from an existing asset
+        Retrieve all glossary terms associated with an asset
 
         :param id: Asset ID (required)
         :type id: str
-        :param tag_request: Tag to remove (required)
-        :type tag_request: TagRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6802,9 +6130,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_delete_serialize(
+        _param = self._get_assets_terms_id_serialize(
             id=id,
-            tag_request=tag_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6812,8 +6139,7 @@ class AssetsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
+            "200": "List[AssetTerm]",
             "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -6824,10 +6150,9 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_tags_id_delete_with_http_info(
+    async def get_assets_terms_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -6835,15 +6160,13 @@ class AssetsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Remove tag from asset
+    ) -> ApiResponse[list[AssetTerm]]:
+        """Get asset's glossary terms
 
-        Remove a tag from an existing asset
+        Retrieve all glossary terms associated with an asset
 
         :param id: Asset ID (required)
         :type id: str
-        :param tag_request: Tag to remove (required)
-        :type tag_request: TagRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6866,9 +6189,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_delete_serialize(
+        _param = self._get_assets_terms_id_serialize(
             id=id,
-            tag_request=tag_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6876,8 +6198,7 @@ class AssetsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
+            "200": "List[AssetTerm]",
             "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -6888,10 +6209,9 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_tags_id_delete_without_preload_content(
+    async def get_assets_terms_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -6900,14 +6220,12 @@ class AssetsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Remove tag from asset
+        """Get asset's glossary terms
 
-        Remove a tag from an existing asset
+        Retrieve all glossary terms associated with an asset
 
         :param id: Asset ID (required)
         :type id: str
-        :param tag_request: Tag to remove (required)
-        :type tag_request: TagRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6930,9 +6248,8 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_delete_serialize(
+        _param = self._get_assets_terms_id_serialize(
             id=id,
-            tag_request=tag_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -6940,18 +6257,16 @@ class AssetsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Asset",
-            "400": "ErrorResponse",
+            "200": "List[AssetTerm]",
             "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def assets_tags_id_delete_sync(
+    def get_assets_terms_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -6959,16 +6274,15 @@ class AssetsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Asset:
-        """Remove tag from asset (synchronous)
+    ) -> list[AssetTerm]:
+        """Get asset's glossary terms (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`get_assets_terms_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_delete(
+            self.get_assets_terms_id(
                 id=id,
-                tag_request=tag_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -6978,10 +6292,9 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_tags_id_delete_sync_with_http_info(
+    def get_assets_terms_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -6989,16 +6302,15 @@ class AssetsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Asset]:
-        """Remove tag from asset (synchronous)
+    ) -> ApiResponse[list[AssetTerm]]:
+        """Get asset's glossary terms (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_assets_terms_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_delete_with_http_info(
+            self.get_assets_terms_id_with_http_info(
                 id=id,
-                tag_request=tag_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -7008,10 +6320,9 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_tags_id_delete_sync_without_preload_content(
+    def get_assets_terms_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
-        tag_request: Annotated[TagRequest, Field(description="Tag to remove")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -7020,15 +6331,14 @@ class AssetsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Remove tag from asset (synchronous)
+        """Get asset's glossary terms (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_assets_terms_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_delete_without_preload_content(
+            self.get_assets_terms_id_without_preload_content(
                 id=id,
-                tag_request=tag_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -7037,10 +6347,9 @@ class AssetsApi:
             )
         )
 
-    def _assets_tags_id_delete_serialize(
+    def _get_assets_terms_id_serialize(
         self,
         id,
-        tag_request,
         _request_auth,
         _content_type,
         _headers,
@@ -7065,8 +6374,331 @@ class AssetsApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if tag_request is not None:
-            _body_params = tag_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/assets/terms/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_assets(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Create a new asset
+
+        Create a new asset in the system
+
+        :param create_asset_request: Asset creation request (required)
+        :type create_asset_request: CreateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_serialize(
+            create_asset_request=create_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Asset",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_assets_with_http_info(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Create a new asset
+
+        Create a new asset in the system
+
+        :param create_asset_request: Asset creation request (required)
+        :type create_asset_request: CreateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_serialize(
+            create_asset_request=create_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Asset",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_assets_without_preload_content(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new asset
+
+        Create a new asset in the system
+
+        :param create_asset_request: Asset creation request (required)
+        :type create_asset_request: CreateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_serialize(
+            create_asset_request=create_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Asset",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_assets_sync(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Create a new asset (synchronous)
+
+        Synchronous variant of :meth:`post_assets`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets(
+                create_asset_request=create_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_sync_with_http_info(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Create a new asset (synchronous)
+
+        Synchronous variant of :meth:`post_assets_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_with_http_info(
+                create_asset_request=create_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_sync_without_preload_content(
+        self,
+        create_asset_request: Annotated[
+            CreateAssetRequest, Field(description="Asset creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new asset (synchronous)
+
+        Synchronous variant of :meth:`post_assets_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_without_preload_content(
+                create_asset_request=create_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_assets_serialize(
+        self,
+        create_asset_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_asset_request is not None:
+            _body_params = create_asset_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
@@ -7084,8 +6716,8 @@ class AssetsApi:
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/assets/tags/{id}",
+            method="POST",
+            resource_path="/api/v1/assets/",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -7099,7 +6731,667 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_tags_id_post(
+    async def post_assets_documentation(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Documentation:
+        """Create asset documentation
+
+        Create or update documentation for an asset
+
+        :param documentation_create_request: Documentation creation request (required)
+        :type documentation_create_request: DocumentationCreateRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_serialize(
+            documentation_create_request=documentation_create_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Documentation",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_assets_documentation_with_http_info(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Documentation]:
+        """Create asset documentation
+
+        Create or update documentation for an asset
+
+        :param documentation_create_request: Documentation creation request (required)
+        :type documentation_create_request: DocumentationCreateRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_serialize(
+            documentation_create_request=documentation_create_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Documentation",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_assets_documentation_without_preload_content(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create asset documentation
+
+        Create or update documentation for an asset
+
+        :param documentation_create_request: Documentation creation request (required)
+        :type documentation_create_request: DocumentationCreateRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_serialize(
+            documentation_create_request=documentation_create_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Documentation",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_assets_documentation_sync(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Documentation:
+        """Create asset documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation(
+                documentation_create_request=documentation_create_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_documentation_sync_with_http_info(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Documentation]:
+        """Create asset documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation_with_http_info(
+                documentation_create_request=documentation_create_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_documentation_sync_without_preload_content(
+        self,
+        documentation_create_request: Annotated[
+            DocumentationCreateRequest, Field(description="Documentation creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create asset documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation_without_preload_content(
+                documentation_create_request=documentation_create_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_assets_documentation_serialize(
+        self,
+        documentation_create_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if documentation_create_request is not None:
+            _body_params = documentation_create_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/assets/documentation/",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_assets_documentation_batch(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> BatchDocumentationResponse:
+        """Batch create documentation
+
+        Create or update documentation for multiple assets
+
+        :param batch_documentation_request: Batch documentation request (required)
+        :type batch_documentation_request: BatchDocumentationRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_batch_serialize(
+            batch_documentation_request=batch_documentation_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "BatchDocumentationResponse",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_assets_documentation_batch_with_http_info(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[BatchDocumentationResponse]:
+        """Batch create documentation
+
+        Create or update documentation for multiple assets
+
+        :param batch_documentation_request: Batch documentation request (required)
+        :type batch_documentation_request: BatchDocumentationRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_batch_serialize(
+            batch_documentation_request=batch_documentation_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "BatchDocumentationResponse",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_assets_documentation_batch_without_preload_content(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Batch create documentation
+
+        Create or update documentation for multiple assets
+
+        :param batch_documentation_request: Batch documentation request (required)
+        :type batch_documentation_request: BatchDocumentationRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_assets_documentation_batch_serialize(
+            batch_documentation_request=batch_documentation_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "BatchDocumentationResponse",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_assets_documentation_batch_sync(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> BatchDocumentationResponse:
+        """Batch create documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation_batch`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation_batch(
+                batch_documentation_request=batch_documentation_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_documentation_batch_sync_with_http_info(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[BatchDocumentationResponse]:
+        """Batch create documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation_batch_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation_batch_with_http_info(
+                batch_documentation_request=batch_documentation_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_assets_documentation_batch_sync_without_preload_content(
+        self,
+        batch_documentation_request: Annotated[
+            BatchDocumentationRequest, Field(description="Batch documentation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Batch create documentation (synchronous)
+
+        Synchronous variant of :meth:`post_assets_documentation_batch_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_assets_documentation_batch_without_preload_content(
+                batch_documentation_request=batch_documentation_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_assets_documentation_batch_serialize(
+        self,
+        batch_documentation_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if batch_documentation_request is not None:
+            _body_params = batch_documentation_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/assets/documentation/batch",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_assets_tags_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7141,7 +7433,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_post_serialize(
+        _param = self._post_assets_tags_id_serialize(
             id=id,
             tag_request=tag_request,
             _request_auth=_request_auth,
@@ -7163,7 +7455,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_tags_id_post_with_http_info(
+    async def post_assets_tags_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7205,7 +7497,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_post_serialize(
+        _param = self._post_assets_tags_id_serialize(
             id=id,
             tag_request=tag_request,
             _request_auth=_request_auth,
@@ -7227,7 +7519,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_tags_id_post_without_preload_content(
+    async def post_assets_tags_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7269,7 +7561,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_tags_id_post_serialize(
+        _param = self._post_assets_tags_id_serialize(
             id=id,
             tag_request=tag_request,
             _request_auth=_request_auth,
@@ -7287,7 +7579,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_tags_id_post_sync(
+    def post_assets_tags_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7301,11 +7593,11 @@ class AssetsApi:
     ) -> Asset:
         """Add tag to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_assets_tags_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_post(
+            self.post_assets_tags_id(
                 id=id,
                 tag_request=tag_request,
                 _request_timeout=_request_timeout,
@@ -7317,7 +7609,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_tags_id_post_sync_with_http_info(
+    def post_assets_tags_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7331,11 +7623,11 @@ class AssetsApi:
     ) -> ApiResponse[Asset]:
         """Add tag to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_assets_tags_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_post_with_http_info(
+            self.post_assets_tags_id_with_http_info(
                 id=id,
                 tag_request=tag_request,
                 _request_timeout=_request_timeout,
@@ -7347,7 +7639,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_tags_id_post_sync_without_preload_content(
+    def post_assets_tags_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         tag_request: Annotated[TagRequest, Field(description="Tag to add")],
@@ -7361,11 +7653,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Add tag to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_tags_id_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_assets_tags_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_tags_id_post_without_preload_content(
+            self.post_assets_tags_id_without_preload_content(
                 id=id,
                 tag_request=tag_request,
                 _request_timeout=_request_timeout,
@@ -7376,7 +7668,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_tags_id_post_serialize(
+    def _post_assets_tags_id_serialize(
         self,
         id,
         tag_request,
@@ -7424,7 +7716,7 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/assets/tags/{id}",
+            resource_path="/api/v1/assets/tags/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -7438,653 +7730,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_terms_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[AssetTerm]:
-        """Remove glossary term from asset
-
-        Remove a glossary term association from an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param remove_term_request: Term ID to remove (required)
-        :type remove_term_request: RemoveTermRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_delete_serialize(
-            id=id,
-            remove_term_request=remove_term_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_terms_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[AssetTerm]]:
-        """Remove glossary term from asset
-
-        Remove a glossary term association from an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param remove_term_request: Term ID to remove (required)
-        :type remove_term_request: RemoveTermRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_delete_serialize(
-            id=id,
-            remove_term_request=remove_term_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_terms_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Remove glossary term from asset
-
-        Remove a glossary term association from an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param remove_term_request: Term ID to remove (required)
-        :type remove_term_request: RemoveTermRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_delete_serialize(
-            id=id,
-            remove_term_request=remove_term_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_terms_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[AssetTerm]:
-        """Remove glossary term from asset (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_delete(
-                id=id,
-                remove_term_request=remove_term_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_terms_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[AssetTerm]]:
-        """Remove glossary term from asset (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_delete_with_http_info(
-                id=id,
-                remove_term_request=remove_term_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_terms_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        remove_term_request: Annotated[RemoveTermRequest, Field(description="Term ID to remove")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Remove glossary term from asset (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_delete_without_preload_content(
-                id=id,
-                remove_term_request=remove_term_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_terms_id_delete_serialize(
-        self,
-        id,
-        remove_term_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if remove_term_request is not None:
-            _body_params = remove_term_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/assets/terms/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_terms_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[AssetTerm]:
-        """Get asset's glossary terms
-
-        Retrieve all glossary terms associated with an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def assets_terms_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[AssetTerm]]:
-        """Get asset's glossary terms
-
-        Retrieve all glossary terms associated with an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def assets_terms_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get asset's glossary terms
-
-        Retrieve all glossary terms associated with an asset
-
-        :param id: Asset ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._assets_terms_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[AssetTerm]",
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def assets_terms_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[AssetTerm]:
-        """Get asset's glossary terms (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_get(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_terms_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[AssetTerm]]:
-        """Get asset's glossary terms (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def assets_terms_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Asset ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get asset's glossary terms (synchronous)
-
-        Synchronous variant of :meth:`assets_terms_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.assets_terms_id_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _assets_terms_id_get_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/assets/terms/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def assets_terms_id_post(
+    async def post_assets_terms_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8126,7 +7772,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_terms_id_post_serialize(
+        _param = self._post_assets_terms_id_serialize(
             id=id,
             add_terms_request=add_terms_request,
             _request_auth=_request_auth,
@@ -8148,7 +7794,7 @@ class AssetsApi:
         ).data
 
     @validate_call
-    async def assets_terms_id_post_with_http_info(
+    async def post_assets_terms_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8190,7 +7836,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_terms_id_post_serialize(
+        _param = self._post_assets_terms_id_serialize(
             id=id,
             add_terms_request=add_terms_request,
             _request_auth=_request_auth,
@@ -8212,7 +7858,7 @@ class AssetsApi:
         )
 
     @validate_call
-    async def assets_terms_id_post_without_preload_content(
+    async def post_assets_terms_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8254,7 +7900,7 @@ class AssetsApi:
         :return: Returns the result object.
         """
 
-        _param = self._assets_terms_id_post_serialize(
+        _param = self._post_assets_terms_id_serialize(
             id=id,
             add_terms_request=add_terms_request,
             _request_auth=_request_auth,
@@ -8272,7 +7918,7 @@ class AssetsApi:
         return response_data.response
 
     @validate_call
-    def assets_terms_id_post_sync(
+    def post_assets_terms_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8286,11 +7932,11 @@ class AssetsApi:
     ) -> list[AssetTerm]:
         """Add glossary terms to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_terms_id_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_assets_terms_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.assets_terms_id_post(
+            self.post_assets_terms_id(
                 id=id,
                 add_terms_request=add_terms_request,
                 _request_timeout=_request_timeout,
@@ -8302,7 +7948,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_terms_id_post_sync_with_http_info(
+    def post_assets_terms_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8316,11 +7962,11 @@ class AssetsApi:
     ) -> ApiResponse[list[AssetTerm]]:
         """Add glossary terms to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_terms_id_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_assets_terms_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_terms_id_post_with_http_info(
+            self.post_assets_terms_id_with_http_info(
                 id=id,
                 add_terms_request=add_terms_request,
                 _request_timeout=_request_timeout,
@@ -8332,7 +7978,7 @@ class AssetsApi:
         )
 
     @validate_call
-    def assets_terms_id_post_sync_without_preload_content(
+    def post_assets_terms_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset ID")],
         add_terms_request: Annotated[AddTermsRequest, Field(description="Term IDs to add")],
@@ -8346,11 +7992,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Add glossary terms to asset (synchronous)
 
-        Synchronous variant of :meth:`assets_terms_id_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_assets_terms_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.assets_terms_id_post_without_preload_content(
+            self.post_assets_terms_id_without_preload_content(
                 id=id,
                 add_terms_request=add_terms_request,
                 _request_timeout=_request_timeout,
@@ -8361,7 +8007,7 @@ class AssetsApi:
             )
         )
 
-    def _assets_terms_id_post_serialize(
+    def _post_assets_terms_id_serialize(
         self,
         id,
         add_terms_request,
@@ -8409,7 +8055,361 @@ class AssetsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/assets/terms/{id}",
+            resource_path="/api/v1/assets/terms/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def put_assets_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Update an asset
+
+        Update an existing asset's information
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param update_asset_request: Asset update request (required)
+        :type update_asset_request: UpdateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_assets_id_serialize(
+            id=id,
+            update_asset_request=update_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def put_assets_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Update an asset
+
+        Update an existing asset's information
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param update_asset_request: Asset update request (required)
+        :type update_asset_request: UpdateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_assets_id_serialize(
+            id=id,
+            update_asset_request=update_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def put_assets_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update an asset
+
+        Update an existing asset's information
+
+        :param id: Asset ID (required)
+        :type id: str
+        :param update_asset_request: Asset update request (required)
+        :type update_asset_request: UpdateAssetRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_assets_id_serialize(
+            id=id,
+            update_asset_request=update_asset_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Asset",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def put_assets_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Asset:
+        """Update an asset (synchronous)
+
+        Synchronous variant of :meth:`put_assets_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_assets_id(
+                id=id,
+                update_asset_request=update_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def put_assets_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Asset]:
+        """Update an asset (synchronous)
+
+        Synchronous variant of :meth:`put_assets_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_assets_id_with_http_info(
+                id=id,
+                update_asset_request=update_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def put_assets_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Asset ID")],
+        update_asset_request: Annotated[
+            UpdateAssetRequest, Field(description="Asset update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update an asset (synchronous)
+
+        Synchronous variant of :meth:`put_assets_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_assets_id_without_preload_content(
+                id=id,
+                update_asset_request=update_asset_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _put_assets_id_serialize(
+        self,
+        id,
+        update_asset_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if update_asset_request is not None:
+            _body_params = update_asset_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="PUT",
+            resource_path="/api/v1/assets/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

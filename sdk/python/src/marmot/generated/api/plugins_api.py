@@ -34,7 +34,7 @@ class PluginsApi:
         self.api_client = api_client
 
     @validate_call
-    async def plugins_aws_credentials_status_get(
+    async def get_plugins(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -43,10 +43,9 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> AWSCredentialStatus:
-        """Get AWS credential detection status
+    ) -> ListPluginsResponse:
+        """List registered plugins
 
-        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -70,7 +69,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_aws_credentials_status_get_serialize(
+        _param = self._get_plugins_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -78,7 +77,7 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "AWSCredentialStatus",
+            "200": "ListPluginsResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -88,7 +87,7 @@ class PluginsApi:
         ).data
 
     @validate_call
-    async def plugins_aws_credentials_status_get_with_http_info(
+    async def get_plugins_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -97,10 +96,9 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[AWSCredentialStatus]:
-        """Get AWS credential detection status
+    ) -> ApiResponse[ListPluginsResponse]:
+        """List registered plugins
 
-        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -124,7 +122,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_aws_credentials_status_get_serialize(
+        _param = self._get_plugins_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -132,7 +130,7 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "AWSCredentialStatus",
+            "200": "ListPluginsResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -142,7 +140,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def plugins_aws_credentials_status_get_without_preload_content(
+    async def get_plugins_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -152,9 +150,8 @@ class PluginsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get AWS credential detection status
+        """List registered plugins
 
-        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -178,7 +175,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_aws_credentials_status_get_serialize(
+        _param = self._get_plugins_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -186,13 +183,13 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "AWSCredentialStatus",
+            "200": "ListPluginsResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def plugins_aws_credentials_status_get_sync(
+    def get_plugins_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -201,14 +198,14 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> AWSCredentialStatus:
-        """Get AWS credential detection status (synchronous)
+    ) -> ListPluginsResponse:
+        """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`plugins_aws_credentials_status_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_plugins`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_aws_credentials_status_get(
+            self.get_plugins(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -218,7 +215,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def plugins_aws_credentials_status_get_sync_with_http_info(
+    def get_plugins_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -227,14 +224,14 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[AWSCredentialStatus]:
-        """Get AWS credential detection status (synchronous)
+    ) -> ApiResponse[ListPluginsResponse]:
+        """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`plugins_aws_credentials_status_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_plugins_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_aws_credentials_status_get_with_http_info(
+            self.get_plugins_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -244,7 +241,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def plugins_aws_credentials_status_get_sync_without_preload_content(
+    def get_plugins_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -254,13 +251,13 @@ class PluginsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get AWS credential detection status (synchronous)
+        """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`plugins_aws_credentials_status_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_plugins_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_aws_credentials_status_get_without_preload_content(
+            self.get_plugins_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -269,7 +266,7 @@ class PluginsApi:
             )
         )
 
-    def _plugins_aws_credentials_status_get_serialize(
+    def _get_plugins_serialize(
         self,
         _request_auth,
         _content_type,
@@ -303,7 +300,7 @@ class PluginsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/plugins/aws/credentials/status",
+            resource_path="/api/v1/plugins",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -317,7 +314,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def plugins_get(
+    async def get_plugins_aws_credentials_status(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -326,9 +323,10 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ListPluginsResponse:
-        """List registered plugins
+    ) -> AWSCredentialStatus:
+        """Get AWS credential detection status
 
+        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -352,7 +350,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_get_serialize(
+        _param = self._get_plugins_aws_credentials_status_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -360,7 +358,7 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "ListPluginsResponse",
+            "200": "AWSCredentialStatus",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -370,7 +368,7 @@ class PluginsApi:
         ).data
 
     @validate_call
-    async def plugins_get_with_http_info(
+    async def get_plugins_aws_credentials_status_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -379,9 +377,10 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ListPluginsResponse]:
-        """List registered plugins
+    ) -> ApiResponse[AWSCredentialStatus]:
+        """Get AWS credential detection status
 
+        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -405,7 +404,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_get_serialize(
+        _param = self._get_plugins_aws_credentials_status_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -413,7 +412,7 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "ListPluginsResponse",
+            "200": "AWSCredentialStatus",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -423,7 +422,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def plugins_get_without_preload_content(
+    async def get_plugins_aws_credentials_status_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -433,8 +432,9 @@ class PluginsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List registered plugins
+        """Get AWS credential detection status
 
+        Detects if AWS credentials are available from environment or config files
 
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -458,7 +458,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._plugins_get_serialize(
+        _param = self._get_plugins_aws_credentials_status_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -466,13 +466,13 @@ class PluginsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "ListPluginsResponse",
+            "200": "AWSCredentialStatus",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def plugins_get_sync(
+    def get_plugins_aws_credentials_status_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -481,14 +481,14 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ListPluginsResponse:
-        """List registered plugins (synchronous)
+    ) -> AWSCredentialStatus:
+        """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`plugins_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_plugins_aws_credentials_status`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_get(
+            self.get_plugins_aws_credentials_status(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -498,7 +498,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def plugins_get_sync_with_http_info(
+    def get_plugins_aws_credentials_status_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -507,14 +507,14 @@ class PluginsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ListPluginsResponse]:
-        """List registered plugins (synchronous)
+    ) -> ApiResponse[AWSCredentialStatus]:
+        """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`plugins_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_plugins_aws_credentials_status_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_get_with_http_info(
+            self.get_plugins_aws_credentials_status_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -524,7 +524,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def plugins_get_sync_without_preload_content(
+    def get_plugins_aws_credentials_status_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -534,13 +534,13 @@ class PluginsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List registered plugins (synchronous)
+        """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`plugins_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_plugins_aws_credentials_status_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.plugins_get_without_preload_content(
+            self.get_plugins_aws_credentials_status_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -549,7 +549,7 @@ class PluginsApi:
             )
         )
 
-    def _plugins_get_serialize(
+    def _get_plugins_aws_credentials_status_serialize(
         self,
         _request_auth,
         _content_type,
@@ -583,7 +583,7 @@ class PluginsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/plugins",
+            resource_path="/api/v1/plugins/aws/credentials/status",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

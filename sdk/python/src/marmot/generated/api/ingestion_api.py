@@ -40,7 +40,317 @@ class IngestionApi:
         self.api_client = api_client
 
     @validate_call
-    async def ingestion_runs_get(
+    async def delete_ingestion_schedules_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_ingestion_schedules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_ingestion_schedules_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_ingestion_schedules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_ingestion_schedules_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_ingestion_schedules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_ingestion_schedules_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`delete_ingestion_schedules_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_ingestion_schedules_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_ingestion_schedules_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`delete_ingestion_schedules_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_ingestion_schedules_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_ingestion_schedules_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`delete_ingestion_schedules_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_ingestion_schedules_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_ingestion_schedules_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/ingestion/schedules/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_ingestion_runs(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -87,7 +397,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_get_serialize(
+        _param = self._get_ingestion_runs_serialize(
             schedule_id=schedule_id,
             status=status,
             limit=limit,
@@ -111,7 +421,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_runs_get_with_http_info(
+    async def get_ingestion_runs_with_http_info(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -158,7 +468,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_get_serialize(
+        _param = self._get_ingestion_runs_serialize(
             schedule_id=schedule_id,
             status=status,
             limit=limit,
@@ -182,7 +492,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_get_without_preload_content(
+    async def get_ingestion_runs_without_preload_content(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -229,7 +539,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_get_serialize(
+        _param = self._get_ingestion_runs_serialize(
             schedule_id=schedule_id,
             status=status,
             limit=limit,
@@ -249,7 +559,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_runs_get_sync(
+    def get_ingestion_runs_sync(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -265,11 +575,11 @@ class IngestionApi:
     ) -> ListJobRunsResponse:
         """List ingestion job runs (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ingestion_runs`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_get(
+            self.get_ingestion_runs(
                 schedule_id=schedule_id,
                 status=status,
                 limit=limit,
@@ -283,7 +593,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_get_sync_with_http_info(
+    def get_ingestion_runs_sync_with_http_info(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -299,11 +609,11 @@ class IngestionApi:
     ) -> ApiResponse[ListJobRunsResponse]:
         """List ingestion job runs (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ingestion_runs_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_get_with_http_info(
+            self.get_ingestion_runs_with_http_info(
                 schedule_id=schedule_id,
                 status=status,
                 limit=limit,
@@ -317,7 +627,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_get_sync_without_preload_content(
+    def get_ingestion_runs_sync_without_preload_content(
         self,
         schedule_id: Annotated[StrictStr | None, Field(description="Filter by schedule ID")] = None,
         status: Annotated[StrictStr | None, Field(description="Filter by status")] = None,
@@ -333,11 +643,11 @@ class IngestionApi:
     ) -> RESTResponseType:
         """List ingestion job runs (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ingestion_runs_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_get_without_preload_content(
+            self.get_ingestion_runs_without_preload_content(
                 schedule_id=schedule_id,
                 status=status,
                 limit=limit,
@@ -350,7 +660,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_runs_get_serialize(
+    def _get_ingestion_runs_serialize(
         self,
         schedule_id,
         status,
@@ -400,7 +710,7 @@ class IngestionApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/ingestion/runs",
+            resource_path="/api/v1/ingestion/runs",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -414,7 +724,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_id_cancel_post(
+    async def get_ingestion_runs_id(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -424,8 +734,8 @@ class IngestionApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Cancel a running job
+    ) -> JobRun:
+        """Get a job run by ID
 
 
         :param id: Job run ID (required)
@@ -452,7 +762,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_cancel_post_serialize(
+        _param = self._get_ingestion_runs_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -461,7 +771,7 @@ class IngestionApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
+            "200": "JobRun",
             "401": "ErrorResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
@@ -474,7 +784,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_runs_id_cancel_post_with_http_info(
+    async def get_ingestion_runs_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -484,8 +794,8 @@ class IngestionApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Cancel a running job
+    ) -> ApiResponse[JobRun]:
+        """Get a job run by ID
 
 
         :param id: Job run ID (required)
@@ -512,7 +822,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_cancel_post_serialize(
+        _param = self._get_ingestion_runs_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -521,7 +831,7 @@ class IngestionApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
+            "200": "JobRun",
             "401": "ErrorResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
@@ -534,7 +844,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_id_cancel_post_without_preload_content(
+    async def get_ingestion_runs_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -545,7 +855,7 @@ class IngestionApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Cancel a running job
+        """Get a job run by ID
 
 
         :param id: Job run ID (required)
@@ -572,7 +882,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_cancel_post_serialize(
+        _param = self._get_ingestion_runs_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -581,7 +891,7 @@ class IngestionApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
+            "200": "JobRun",
             "401": "ErrorResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
@@ -590,7 +900,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_runs_id_cancel_post_sync(
+    def get_ingestion_runs_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -600,14 +910,14 @@ class IngestionApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Cancel a running job (synchronous)
+    ) -> JobRun:
+        """Get a job run by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_cancel_post`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ingestion_runs_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_cancel_post(
+            self.get_ingestion_runs_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -618,7 +928,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_id_cancel_post_sync_with_http_info(
+    def get_ingestion_runs_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -628,14 +938,14 @@ class IngestionApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Cancel a running job (synchronous)
+    ) -> ApiResponse[JobRun]:
+        """Get a job run by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_cancel_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ingestion_runs_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_cancel_post_with_http_info(
+            self.get_ingestion_runs_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -646,7 +956,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_id_cancel_post_sync_without_preload_content(
+    def get_ingestion_runs_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         _request_timeout: None
@@ -657,13 +967,13 @@ class IngestionApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Cancel a running job (synchronous)
+        """Get a job run by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_cancel_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ingestion_runs_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_cancel_post_without_preload_content(
+            self.get_ingestion_runs_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -673,7 +983,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_runs_id_cancel_post_serialize(
+    def _get_ingestion_runs_id_serialize(
         self,
         id,
         _request_auth,
@@ -703,14 +1013,14 @@ class IngestionApi:
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/ingestion/runs/{id}/cancel",
+            method="GET",
+            resource_path="/api/v1/ingestion/runs/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -724,7 +1034,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_id_entities_get(
+    async def get_ingestion_runs_id_entities(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -768,7 +1078,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_entities_get_serialize(
+        _param = self._get_ingestion_runs_id_entities_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -792,7 +1102,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_runs_id_entities_get_with_http_info(
+    async def get_ingestion_runs_id_entities_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -836,7 +1146,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_entities_get_serialize(
+        _param = self._get_ingestion_runs_id_entities_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -860,7 +1170,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_id_entities_get_without_preload_content(
+    async def get_ingestion_runs_id_entities_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -904,7 +1214,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_runs_id_entities_get_serialize(
+        _param = self._get_ingestion_runs_id_entities_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -924,7 +1234,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_runs_id_entities_get_sync(
+    def get_ingestion_runs_id_entities_sync(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -939,11 +1249,11 @@ class IngestionApi:
     ) -> dict[str, object]:
         """Get entities for a job run (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_entities_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ingestion_runs_id_entities`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_entities_get(
+            self.get_ingestion_runs_id_entities(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -956,7 +1266,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_id_entities_get_sync_with_http_info(
+    def get_ingestion_runs_id_entities_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -971,11 +1281,11 @@ class IngestionApi:
     ) -> ApiResponse[dict[str, object]]:
         """Get entities for a job run (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_entities_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ingestion_runs_id_entities_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_entities_get_with_http_info(
+            self.get_ingestion_runs_id_entities_with_http_info(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -988,7 +1298,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_runs_id_entities_get_sync_without_preload_content(
+    def get_ingestion_runs_id_entities_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Job run ID")],
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1003,11 +1313,11 @@ class IngestionApi:
     ) -> RESTResponseType:
         """Get entities for a job run (synchronous)
 
-        Synchronous variant of :meth:`ingestion_runs_id_entities_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ingestion_runs_id_entities_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_runs_id_entities_get_without_preload_content(
+            self.get_ingestion_runs_id_entities_without_preload_content(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -1019,7 +1329,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_runs_id_entities_get_serialize(
+    def _get_ingestion_runs_id_entities_serialize(
         self,
         id,
         limit,
@@ -1064,7 +1374,7 @@ class IngestionApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/ingestion/runs/{id}/entities",
+            resource_path="/api/v1/ingestion/runs/{id}/entities",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1078,317 +1388,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_runs_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JobRun:
-        """Get a job run by ID
-
-
-        :param id: Job run ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_runs_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def ingestion_runs_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JobRun]:
-        """Get a job run by ID
-
-
-        :param id: Job run ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_runs_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def ingestion_runs_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get a job run by ID
-
-
-        :param id: Job run ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_runs_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def ingestion_runs_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JobRun:
-        """Get a job run by ID (synchronous)
-
-        Synchronous variant of :meth:`ingestion_runs_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_runs_id_get(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_runs_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JobRun]:
-        """Get a job run by ID (synchronous)
-
-        Synchronous variant of :meth:`ingestion_runs_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_runs_id_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_runs_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Job run ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get a job run by ID (synchronous)
-
-        Synchronous variant of :meth:`ingestion_runs_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_runs_id_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _ingestion_runs_id_get_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/ingestion/runs/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def ingestion_schedules_get(
+    async def get_ingestion_schedules(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1432,7 +1432,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_get_serialize(
+        _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
             limit=limit,
             offset=offset,
@@ -1455,7 +1455,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_schedules_get_with_http_info(
+    async def get_ingestion_schedules_with_http_info(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1499,7 +1499,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_get_serialize(
+        _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
             limit=limit,
             offset=offset,
@@ -1522,7 +1522,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_schedules_get_without_preload_content(
+    async def get_ingestion_schedules_without_preload_content(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1566,7 +1566,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_get_serialize(
+        _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
             limit=limit,
             offset=offset,
@@ -1585,7 +1585,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_schedules_get_sync(
+    def get_ingestion_schedules_sync(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1600,11 +1600,11 @@ class IngestionApi:
     ) -> ListSchedulesResponse:
         """List ingestion schedules (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ingestion_schedules`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_get(
+            self.get_ingestion_schedules(
                 enabled=enabled,
                 limit=limit,
                 offset=offset,
@@ -1617,7 +1617,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_get_sync_with_http_info(
+    def get_ingestion_schedules_sync_with_http_info(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1632,11 +1632,11 @@ class IngestionApi:
     ) -> ApiResponse[ListSchedulesResponse]:
         """List ingestion schedules (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ingestion_schedules_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_get_with_http_info(
+            self.get_ingestion_schedules_with_http_info(
                 enabled=enabled,
                 limit=limit,
                 offset=offset,
@@ -1649,7 +1649,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_get_sync_without_preload_content(
+    def get_ingestion_schedules_sync_without_preload_content(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
@@ -1664,11 +1664,11 @@ class IngestionApi:
     ) -> RESTResponseType:
         """List ingestion schedules (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ingestion_schedules_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_get_without_preload_content(
+            self.get_ingestion_schedules_without_preload_content(
                 enabled=enabled,
                 limit=limit,
                 offset=offset,
@@ -1680,7 +1680,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_schedules_get_serialize(
+    def _get_ingestion_schedules_serialize(
         self,
         enabled,
         limit,
@@ -1726,7 +1726,7 @@ class IngestionApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/ingestion/schedules",
+            resource_path="/api/v1/ingestion/schedules",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1740,317 +1740,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_schedules_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def ingestion_schedules_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def ingestion_schedules_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def ingestion_schedules_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _ingestion_schedules_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/ingestion/schedules/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def ingestion_schedules_id_get(
+    async def get_ingestion_schedules_id(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2088,7 +1778,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_get_serialize(
+        _param = self._get_ingestion_schedules_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2110,7 +1800,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_schedules_id_get_with_http_info(
+    async def get_ingestion_schedules_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2148,7 +1838,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_get_serialize(
+        _param = self._get_ingestion_schedules_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2170,7 +1860,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_schedules_id_get_without_preload_content(
+    async def get_ingestion_schedules_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2208,7 +1898,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_get_serialize(
+        _param = self._get_ingestion_schedules_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2226,7 +1916,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_schedules_id_get_sync(
+    def get_ingestion_schedules_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2239,11 +1929,11 @@ class IngestionApi:
     ) -> Schedule:
         """Get an ingestion schedule by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ingestion_schedules_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_get(
+            self.get_ingestion_schedules_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2254,7 +1944,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_id_get_sync_with_http_info(
+    def get_ingestion_schedules_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2267,11 +1957,11 @@ class IngestionApi:
     ) -> ApiResponse[Schedule]:
         """Get an ingestion schedule by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ingestion_schedules_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_get_with_http_info(
+            self.get_ingestion_schedules_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2282,7 +1972,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_id_get_sync_without_preload_content(
+    def get_ingestion_schedules_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         _request_timeout: None
@@ -2295,11 +1985,11 @@ class IngestionApi:
     ) -> RESTResponseType:
         """Get an ingestion schedule by ID (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ingestion_schedules_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_get_without_preload_content(
+            self.get_ingestion_schedules_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2309,7 +1999,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_schedules_id_get_serialize(
+    def _get_ingestion_schedules_id_serialize(
         self,
         id,
         _request_auth,
@@ -2346,7 +2036,7 @@ class IngestionApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/ingestion/schedules/{id}",
+            resource_path="/api/v1/ingestion/schedules/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2360,7 +2050,1284 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_schedules_id_put(
+    async def post_ingestion_runs_id_cancel(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Cancel a running job
+
+
+        :param id: Job run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_runs_id_cancel_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_ingestion_runs_id_cancel_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Cancel a running job
+
+
+        :param id: Job run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_runs_id_cancel_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_ingestion_runs_id_cancel_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cancel a running job
+
+
+        :param id: Job run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_runs_id_cancel_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_ingestion_runs_id_cancel_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Cancel a running job (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_runs_id_cancel`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_runs_id_cancel(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_runs_id_cancel_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Cancel a running job (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_runs_id_cancel_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_runs_id_cancel_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_runs_id_cancel_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Job run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cancel a running job (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_runs_id_cancel_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_runs_id_cancel_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_ingestion_runs_id_cancel_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/ingestion/runs/{id}/cancel",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_ingestion_schedules(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Schedule:
+        """Create a new ingestion schedule
+
+
+        :param create_schedule_request: Schedule configuration (required)
+        :type create_schedule_request: CreateScheduleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_serialize(
+            create_schedule_request=create_schedule_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Schedule",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_ingestion_schedules_with_http_info(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Schedule]:
+        """Create a new ingestion schedule
+
+
+        :param create_schedule_request: Schedule configuration (required)
+        :type create_schedule_request: CreateScheduleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_serialize(
+            create_schedule_request=create_schedule_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Schedule",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_ingestion_schedules_without_preload_content(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new ingestion schedule
+
+
+        :param create_schedule_request: Schedule configuration (required)
+        :type create_schedule_request: CreateScheduleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_serialize(
+            create_schedule_request=create_schedule_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Schedule",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_ingestion_schedules_sync(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Schedule:
+        """Create a new ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules(
+                create_schedule_request=create_schedule_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_schedules_sync_with_http_info(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Schedule]:
+        """Create a new ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules_with_http_info(
+                create_schedule_request=create_schedule_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_schedules_sync_without_preload_content(
+        self,
+        create_schedule_request: Annotated[
+            CreateScheduleRequest, Field(description="Schedule configuration")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules_without_preload_content(
+                create_schedule_request=create_schedule_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_ingestion_schedules_serialize(
+        self,
+        create_schedule_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_schedule_request is not None:
+            _body_params = create_schedule_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/ingestion/schedules",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_ingestion_schedules_id_trigger(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> JobRun:
+        """Manually trigger an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_id_trigger_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "JobRun",
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_ingestion_schedules_id_trigger_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[JobRun]:
+        """Manually trigger an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_id_trigger_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "JobRun",
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_ingestion_schedules_id_trigger_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Manually trigger an ingestion schedule
+
+
+        :param id: Schedule ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_schedules_id_trigger_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "JobRun",
+            "401": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_ingestion_schedules_id_trigger_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> JobRun:
+        """Manually trigger an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules_id_trigger`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules_id_trigger(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_schedules_id_trigger_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[JobRun]:
+        """Manually trigger an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules_id_trigger_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules_id_trigger_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_schedules_id_trigger_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Schedule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Manually trigger an ingestion schedule (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_schedules_id_trigger_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_schedules_id_trigger_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_ingestion_schedules_id_trigger_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/ingestion/schedules/{id}/trigger",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_ingestion_validate(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ValidateConfigResponse:
+        """Validate plugin configuration
+
+
+        :param validate_config_request: Config to validate (required)
+        :type validate_config_request: ValidateConfigRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_validate_serialize(
+            validate_config_request=validate_config_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ValidateConfigResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_ingestion_validate_with_http_info(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ValidateConfigResponse]:
+        """Validate plugin configuration
+
+
+        :param validate_config_request: Config to validate (required)
+        :type validate_config_request: ValidateConfigRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_validate_serialize(
+            validate_config_request=validate_config_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ValidateConfigResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_ingestion_validate_without_preload_content(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Validate plugin configuration
+
+
+        :param validate_config_request: Config to validate (required)
+        :type validate_config_request: ValidateConfigRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_validate_serialize(
+            validate_config_request=validate_config_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ValidateConfigResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_ingestion_validate_sync(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ValidateConfigResponse:
+        """Validate plugin configuration (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_validate`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_validate(
+                validate_config_request=validate_config_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_validate_sync_with_http_info(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ValidateConfigResponse]:
+        """Validate plugin configuration (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_validate_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_validate_with_http_info(
+                validate_config_request=validate_config_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_validate_sync_without_preload_content(
+        self,
+        validate_config_request: Annotated[
+            ValidateConfigRequest, Field(description="Config to validate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Validate plugin configuration (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_validate_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_validate_without_preload_content(
+                validate_config_request=validate_config_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_ingestion_validate_serialize(
+        self,
+        validate_config_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if validate_config_request is not None:
+            _body_params = validate_config_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/ingestion/validate",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def put_ingestion_schedules_id(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2403,7 +3370,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_put_serialize(
+        _param = self._put_ingestion_schedules_id_serialize(
             id=id,
             update_schedule_request=update_schedule_request,
             _request_auth=_request_auth,
@@ -2427,7 +3394,7 @@ class IngestionApi:
         ).data
 
     @validate_call
-    async def ingestion_schedules_id_put_with_http_info(
+    async def put_ingestion_schedules_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2470,7 +3437,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_put_serialize(
+        _param = self._put_ingestion_schedules_id_serialize(
             id=id,
             update_schedule_request=update_schedule_request,
             _request_auth=_request_auth,
@@ -2494,7 +3461,7 @@ class IngestionApi:
         )
 
     @validate_call
-    async def ingestion_schedules_id_put_without_preload_content(
+    async def put_ingestion_schedules_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2537,7 +3504,7 @@ class IngestionApi:
         :return: Returns the result object.
         """
 
-        _param = self._ingestion_schedules_id_put_serialize(
+        _param = self._put_ingestion_schedules_id_serialize(
             id=id,
             update_schedule_request=update_schedule_request,
             _request_auth=_request_auth,
@@ -2557,7 +3524,7 @@ class IngestionApi:
         return response_data.response
 
     @validate_call
-    def ingestion_schedules_id_put_sync(
+    def put_ingestion_schedules_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2573,11 +3540,11 @@ class IngestionApi:
     ) -> Schedule:
         """Update an ingestion schedule (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_ingestion_schedules_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_put(
+            self.put_ingestion_schedules_id(
                 id=id,
                 update_schedule_request=update_schedule_request,
                 _request_timeout=_request_timeout,
@@ -2589,7 +3556,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_id_put_sync_with_http_info(
+    def put_ingestion_schedules_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2605,11 +3572,11 @@ class IngestionApi:
     ) -> ApiResponse[Schedule]:
         """Update an ingestion schedule (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_ingestion_schedules_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_put_with_http_info(
+            self.put_ingestion_schedules_id_with_http_info(
                 id=id,
                 update_schedule_request=update_schedule_request,
                 _request_timeout=_request_timeout,
@@ -2621,7 +3588,7 @@ class IngestionApi:
         )
 
     @validate_call
-    def ingestion_schedules_id_put_sync_without_preload_content(
+    def put_ingestion_schedules_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Schedule ID")],
         update_schedule_request: Annotated[
@@ -2637,11 +3604,11 @@ class IngestionApi:
     ) -> RESTResponseType:
         """Update an ingestion schedule (synchronous)
 
-        Synchronous variant of :meth:`ingestion_schedules_id_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_ingestion_schedules_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ingestion_schedules_id_put_without_preload_content(
+            self.put_ingestion_schedules_id_without_preload_content(
                 id=id,
                 update_schedule_request=update_schedule_request,
                 _request_timeout=_request_timeout,
@@ -2652,7 +3619,7 @@ class IngestionApi:
             )
         )
 
-    def _ingestion_schedules_id_put_serialize(
+    def _put_ingestion_schedules_id_serialize(
         self,
         id,
         update_schedule_request,
@@ -2700,974 +3667,7 @@ class IngestionApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/ingestion/schedules/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def ingestion_schedules_id_trigger_post(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JobRun:
-        """Manually trigger an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_trigger_post_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def ingestion_schedules_id_trigger_post_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JobRun]:
-        """Manually trigger an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_trigger_post_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def ingestion_schedules_id_trigger_post_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Manually trigger an ingestion schedule
-
-
-        :param id: Schedule ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_id_trigger_post_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "JobRun",
-            "401": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def ingestion_schedules_id_trigger_post_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JobRun:
-        """Manually trigger an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_trigger_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_trigger_post(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_id_trigger_post_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JobRun]:
-        """Manually trigger an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_trigger_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_trigger_post_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_id_trigger_post_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Schedule ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Manually trigger an ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_id_trigger_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_id_trigger_post_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _ingestion_schedules_id_trigger_post_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/ingestion/schedules/{id}/trigger",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def ingestion_schedules_post(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Schedule:
-        """Create a new ingestion schedule
-
-
-        :param create_schedule_request: Schedule configuration (required)
-        :type create_schedule_request: CreateScheduleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_post_serialize(
-            create_schedule_request=create_schedule_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Schedule",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def ingestion_schedules_post_with_http_info(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Schedule]:
-        """Create a new ingestion schedule
-
-
-        :param create_schedule_request: Schedule configuration (required)
-        :type create_schedule_request: CreateScheduleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_post_serialize(
-            create_schedule_request=create_schedule_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Schedule",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def ingestion_schedules_post_without_preload_content(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new ingestion schedule
-
-
-        :param create_schedule_request: Schedule configuration (required)
-        :type create_schedule_request: CreateScheduleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_schedules_post_serialize(
-            create_schedule_request=create_schedule_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Schedule",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def ingestion_schedules_post_sync(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Schedule:
-        """Create a new ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_post(
-                create_schedule_request=create_schedule_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_post_sync_with_http_info(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Schedule]:
-        """Create a new ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_post_with_http_info(
-                create_schedule_request=create_schedule_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_schedules_post_sync_without_preload_content(
-        self,
-        create_schedule_request: Annotated[
-            CreateScheduleRequest, Field(description="Schedule configuration")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new ingestion schedule (synchronous)
-
-        Synchronous variant of :meth:`ingestion_schedules_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_schedules_post_without_preload_content(
-                create_schedule_request=create_schedule_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _ingestion_schedules_post_serialize(
-        self,
-        create_schedule_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_schedule_request is not None:
-            _body_params = create_schedule_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/ingestion/schedules",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def ingestion_validate_post(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ValidateConfigResponse:
-        """Validate plugin configuration
-
-
-        :param validate_config_request: Config to validate (required)
-        :type validate_config_request: ValidateConfigRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_validate_post_serialize(
-            validate_config_request=validate_config_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "ValidateConfigResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def ingestion_validate_post_with_http_info(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ValidateConfigResponse]:
-        """Validate plugin configuration
-
-
-        :param validate_config_request: Config to validate (required)
-        :type validate_config_request: ValidateConfigRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_validate_post_serialize(
-            validate_config_request=validate_config_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "ValidateConfigResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def ingestion_validate_post_without_preload_content(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Validate plugin configuration
-
-
-        :param validate_config_request: Config to validate (required)
-        :type validate_config_request: ValidateConfigRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._ingestion_validate_post_serialize(
-            validate_config_request=validate_config_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "ValidateConfigResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def ingestion_validate_post_sync(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ValidateConfigResponse:
-        """Validate plugin configuration (synchronous)
-
-        Synchronous variant of :meth:`ingestion_validate_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_validate_post(
-                validate_config_request=validate_config_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_validate_post_sync_with_http_info(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ValidateConfigResponse]:
-        """Validate plugin configuration (synchronous)
-
-        Synchronous variant of :meth:`ingestion_validate_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_validate_post_with_http_info(
-                validate_config_request=validate_config_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def ingestion_validate_post_sync_without_preload_content(
-        self,
-        validate_config_request: Annotated[
-            ValidateConfigRequest, Field(description="Config to validate")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Validate plugin configuration (synchronous)
-
-        Synchronous variant of :meth:`ingestion_validate_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.ingestion_validate_post_without_preload_content(
-                validate_config_request=validate_config_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _ingestion_validate_post_serialize(
-        self,
-        validate_config_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if validate_config_request is not None:
-            _body_params = validate_config_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/ingestion/validate",
+            resource_path="/api/v1/ingestion/schedules/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

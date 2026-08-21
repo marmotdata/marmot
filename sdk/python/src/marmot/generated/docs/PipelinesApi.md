@@ -1,16 +1,16 @@
 # marmot.generated.PipelinesApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**pipelines_pipeline_name_delete**](PipelinesApi.md#pipelines_pipeline_name_delete) | **DELETE** /pipelines/{pipelineName} | Destroy pipeline
+[**delete_pipelines_pipeline_name**](PipelinesApi.md#delete_pipelines_pipeline_name) | **DELETE** /api/v1/pipelines/{pipelineName} | Destroy pipeline
 
 
-# **pipelines_pipeline_name_delete**
-> DestroyRunResponse pipelines_pipeline_name_delete(pipeline_name)
+# **delete_pipelines_pipeline_name**
+> DestroyRunResponse delete_pipelines_pipeline_name(pipeline_name)
 
-**Synchronous variant:** `pipelines_pipeline_name_delete_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `delete_pipelines_pipeline_name_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Destroy pipeline
 
@@ -27,10 +27,10 @@ from marmot.generated.models.destroy_run_response import DestroyRunResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -58,11 +58,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Destroy pipeline
-        api_response = await api_instance.pipelines_pipeline_name_delete(pipeline_name)
-        print("The response of PipelinesApi->pipelines_pipeline_name_delete:\n")
+        api_response = await api_instance.delete_pipelines_pipeline_name(pipeline_name)
+        print("The response of PipelinesApi->delete_pipelines_pipeline_name:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling PipelinesApi->pipelines_pipeline_name_delete: %s\n" % e)
+        print("Exception when calling PipelinesApi->delete_pipelines_pipeline_name: %s\n" % e)
 ```
 
 

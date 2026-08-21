@@ -23,98 +23,98 @@ class TestMetricsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_metrics_assets_by_owner_get(self) -> None:
-        """Test case for metrics_assets_by_owner_get
-
-        Get assets by owner
-        """
-
-    def test_metrics_assets_by_owner_get_sync(self) -> None:
-        """Test case for metrics_assets_by_owner_get (synchronous)
-
-        Get assets by owner
-        """
-
-    async def test_metrics_assets_by_provider_get(self) -> None:
-        """Test case for metrics_assets_by_provider_get
-
-        Get assets by provider
-        """
-
-    def test_metrics_assets_by_provider_get_sync(self) -> None:
-        """Test case for metrics_assets_by_provider_get (synchronous)
-
-        Get assets by provider
-        """
-
-    async def test_metrics_assets_by_type_get(self) -> None:
-        """Test case for metrics_assets_by_type_get
-
-        Get assets by type
-        """
-
-    def test_metrics_assets_by_type_get_sync(self) -> None:
-        """Test case for metrics_assets_by_type_get (synchronous)
-
-        Get assets by type
-        """
-
-    async def test_metrics_assets_total_get(self) -> None:
-        """Test case for metrics_assets_total_get
-
-        Get total assets count
-        """
-
-    def test_metrics_assets_total_get_sync(self) -> None:
-        """Test case for metrics_assets_total_get (synchronous)
-
-        Get total assets count
-        """
-
-    async def test_metrics_assets_with_schemas_get(self) -> None:
-        """Test case for metrics_assets_with_schemas_get
-
-        Get assets with schemas count
-        """
-
-    def test_metrics_assets_with_schemas_get_sync(self) -> None:
-        """Test case for metrics_assets_with_schemas_get (synchronous)
-
-        Get assets with schemas count
-        """
-
-    async def test_metrics_get(self) -> None:
-        """Test case for metrics_get
+    async def test_get_metrics(self) -> None:
+        """Test case for get_metrics
 
         Get metrics for UI
         """
 
-    def test_metrics_get_sync(self) -> None:
-        """Test case for metrics_get (synchronous)
+    def test_get_metrics_sync(self) -> None:
+        """Test case for get_metrics (synchronous)
 
         Get metrics for UI
         """
 
-    async def test_metrics_top_assets_get(self) -> None:
-        """Test case for metrics_top_assets_get
+    async def test_get_metrics_assets_by_owner(self) -> None:
+        """Test case for get_metrics_assets_by_owner
+
+        Get assets by owner
+        """
+
+    def test_get_metrics_assets_by_owner_sync(self) -> None:
+        """Test case for get_metrics_assets_by_owner (synchronous)
+
+        Get assets by owner
+        """
+
+    async def test_get_metrics_assets_by_provider(self) -> None:
+        """Test case for get_metrics_assets_by_provider
+
+        Get assets by provider
+        """
+
+    def test_get_metrics_assets_by_provider_sync(self) -> None:
+        """Test case for get_metrics_assets_by_provider (synchronous)
+
+        Get assets by provider
+        """
+
+    async def test_get_metrics_assets_by_type(self) -> None:
+        """Test case for get_metrics_assets_by_type
+
+        Get assets by type
+        """
+
+    def test_get_metrics_assets_by_type_sync(self) -> None:
+        """Test case for get_metrics_assets_by_type (synchronous)
+
+        Get assets by type
+        """
+
+    async def test_get_metrics_assets_total(self) -> None:
+        """Test case for get_metrics_assets_total
+
+        Get total assets count
+        """
+
+    def test_get_metrics_assets_total_sync(self) -> None:
+        """Test case for get_metrics_assets_total (synchronous)
+
+        Get total assets count
+        """
+
+    async def test_get_metrics_assets_with_schemas(self) -> None:
+        """Test case for get_metrics_assets_with_schemas
+
+        Get assets with schemas count
+        """
+
+    def test_get_metrics_assets_with_schemas_sync(self) -> None:
+        """Test case for get_metrics_assets_with_schemas (synchronous)
+
+        Get assets with schemas count
+        """
+
+    async def test_get_metrics_top_assets(self) -> None:
+        """Test case for get_metrics_top_assets
 
         Get top viewed assets
         """
 
-    def test_metrics_top_assets_get_sync(self) -> None:
-        """Test case for metrics_top_assets_get (synchronous)
+    def test_get_metrics_top_assets_sync(self) -> None:
+        """Test case for get_metrics_top_assets (synchronous)
 
         Get top viewed assets
         """
 
-    async def test_metrics_top_queries_get(self) -> None:
-        """Test case for metrics_top_queries_get
+    async def test_get_metrics_top_queries(self) -> None:
+        """Test case for get_metrics_top_queries
 
         Get top search queries
         """
 
-    def test_metrics_top_queries_get_sync(self) -> None:
-        """Test case for metrics_top_queries_get (synchronous)
+    def test_get_metrics_top_queries_sync(self) -> None:
+        """Test case for get_metrics_top_queries (synchronous)
 
         Get top search queries
         """

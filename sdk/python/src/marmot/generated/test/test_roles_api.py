@@ -23,88 +23,88 @@ class TestRolesApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_permissions_get(self) -> None:
-        """Test case for permissions_get
-
-        List all permissions
-        """
-
-    def test_permissions_get_sync(self) -> None:
-        """Test case for permissions_get (synchronous)
-
-        List all permissions
-        """
-
-    async def test_roles_get(self) -> None:
-        """Test case for roles_get
-
-        List roles
-        """
-
-    def test_roles_get_sync(self) -> None:
-        """Test case for roles_get (synchronous)
-
-        List roles
-        """
-
-    async def test_roles_id_delete(self) -> None:
-        """Test case for roles_id_delete
+    async def test_delete_roles_id(self) -> None:
+        """Test case for delete_roles_id
 
         Delete a role
         """
 
-    def test_roles_id_delete_sync(self) -> None:
-        """Test case for roles_id_delete (synchronous)
+    def test_delete_roles_id_sync(self) -> None:
+        """Test case for delete_roles_id (synchronous)
 
         Delete a role
         """
 
-    async def test_roles_id_get(self) -> None:
-        """Test case for roles_id_get
+    async def test_get_permissions(self) -> None:
+        """Test case for get_permissions
+
+        List all permissions
+        """
+
+    def test_get_permissions_sync(self) -> None:
+        """Test case for get_permissions (synchronous)
+
+        List all permissions
+        """
+
+    async def test_get_roles(self) -> None:
+        """Test case for get_roles
+
+        List roles
+        """
+
+    def test_get_roles_sync(self) -> None:
+        """Test case for get_roles (synchronous)
+
+        List roles
+        """
+
+    async def test_get_roles_id(self) -> None:
+        """Test case for get_roles_id
 
         Get a role
         """
 
-    def test_roles_id_get_sync(self) -> None:
-        """Test case for roles_id_get (synchronous)
+    def test_get_roles_id_sync(self) -> None:
+        """Test case for get_roles_id (synchronous)
 
         Get a role
         """
 
-    async def test_roles_id_patch(self) -> None:
-        """Test case for roles_id_patch
+    async def test_patch_roles_id(self) -> None:
+        """Test case for patch_roles_id
 
         Update a role
         """
 
-    def test_roles_id_patch_sync(self) -> None:
-        """Test case for roles_id_patch (synchronous)
+    def test_patch_roles_id_sync(self) -> None:
+        """Test case for patch_roles_id (synchronous)
 
         Update a role
         """
 
-    async def test_roles_id_permissions_post(self) -> None:
-        """Test case for roles_id_permissions_post
-
-        Replace role permissions
-        """
-
-    def test_roles_id_permissions_post_sync(self) -> None:
-        """Test case for roles_id_permissions_post (synchronous)
-
-        Replace role permissions
-        """
-
-    async def test_roles_post(self) -> None:
-        """Test case for roles_post
+    async def test_post_roles(self) -> None:
+        """Test case for post_roles
 
         Create a role
         """
 
-    def test_roles_post_sync(self) -> None:
-        """Test case for roles_post (synchronous)
+    def test_post_roles_sync(self) -> None:
+        """Test case for post_roles (synchronous)
 
         Create a role
+        """
+
+    async def test_post_roles_id_permissions(self) -> None:
+        """Test case for post_roles_id_permissions
+
+        Replace role permissions
+        """
+
+    def test_post_roles_id_permissions_sync(self) -> None:
+        """Test case for post_roles_id_permissions (synchronous)
+
+        Replace role permissions
         """
 
 

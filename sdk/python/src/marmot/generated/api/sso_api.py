@@ -37,7 +37,317 @@ class SsoApi:
         self.api_client = api_client
 
     @validate_call
-    async def sso_team_mappings_get(
+    async def delete_sso_team_mappings_id(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Delete an SSO team mapping
+
+        Delete an SSO team mapping by its ID
+
+        :param id: SSO mapping ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_sso_team_mappings_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_sso_team_mappings_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Delete an SSO team mapping
+
+        Delete an SSO team mapping by its ID
+
+        :param id: SSO mapping ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_sso_team_mappings_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_sso_team_mappings_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an SSO team mapping
+
+        Delete an SSO team mapping by its ID
+
+        :param id: SSO mapping ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_sso_team_mappings_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_sso_team_mappings_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Delete an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`delete_sso_team_mappings_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_sso_team_mappings_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_sso_team_mappings_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Delete an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`delete_sso_team_mappings_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_sso_team_mappings_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_sso_team_mappings_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`delete_sso_team_mappings_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_sso_team_mappings_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_sso_team_mappings_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/sso/team-mappings/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_sso_team_mappings(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -76,7 +386,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_get_serialize(
+        _param = self._get_sso_team_mappings_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -96,7 +406,7 @@ class SsoApi:
         ).data
 
     @validate_call
-    async def sso_team_mappings_get_with_http_info(
+    async def get_sso_team_mappings_with_http_info(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -135,7 +445,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_get_serialize(
+        _param = self._get_sso_team_mappings_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -155,7 +465,7 @@ class SsoApi:
         )
 
     @validate_call
-    async def sso_team_mappings_get_without_preload_content(
+    async def get_sso_team_mappings_without_preload_content(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -194,7 +504,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_get_serialize(
+        _param = self._get_sso_team_mappings_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -210,7 +520,7 @@ class SsoApi:
         return response_data.response
 
     @validate_call
-    def sso_team_mappings_get_sync(
+    def get_sso_team_mappings_sync(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -223,11 +533,11 @@ class SsoApi:
     ) -> ListSSOMappingsResponse:
         """List SSO team mappings (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_sso_team_mappings`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_get(
+            self.get_sso_team_mappings(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -238,7 +548,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_get_sync_with_http_info(
+    def get_sso_team_mappings_sync_with_http_info(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -251,11 +561,11 @@ class SsoApi:
     ) -> ApiResponse[ListSSOMappingsResponse]:
         """List SSO team mappings (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_sso_team_mappings_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_get_with_http_info(
+            self.get_sso_team_mappings_with_http_info(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -266,7 +576,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_get_sync_without_preload_content(
+    def get_sso_team_mappings_sync_without_preload_content(
         self,
         provider: Annotated[StrictStr | None, Field(description="Filter by SSO provider")] = None,
         _request_timeout: None
@@ -279,11 +589,11 @@ class SsoApi:
     ) -> RESTResponseType:
         """List SSO team mappings (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_sso_team_mappings_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_get_without_preload_content(
+            self.get_sso_team_mappings_without_preload_content(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -293,7 +603,7 @@ class SsoApi:
             )
         )
 
-    def _sso_team_mappings_get_serialize(
+    def _get_sso_team_mappings_serialize(
         self,
         provider,
         _request_auth,
@@ -331,7 +641,7 @@ class SsoApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/sso/team-mappings",
+            resource_path="/api/v1/sso/team-mappings",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -345,317 +655,7 @@ class SsoApi:
         )
 
     @validate_call
-    async def sso_team_mappings_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Delete an SSO team mapping
-
-        Delete an SSO team mapping by its ID
-
-        :param id: SSO mapping ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def sso_team_mappings_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Delete an SSO team mapping
-
-        Delete an SSO team mapping by its ID
-
-        :param id: SSO mapping ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def sso_team_mappings_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an SSO team mapping
-
-        Delete an SSO team mapping by its ID
-
-        :param id: SSO mapping ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def sso_team_mappings_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Delete an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_team_mappings_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Delete an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_team_mappings_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="SSO mapping ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _sso_team_mappings_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/sso/team-mappings/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def sso_team_mappings_id_get(
+    async def get_sso_team_mappings_id(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -694,7 +694,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_get_serialize(
+        _param = self._get_sso_team_mappings_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -715,7 +715,7 @@ class SsoApi:
         ).data
 
     @validate_call
-    async def sso_team_mappings_id_get_with_http_info(
+    async def get_sso_team_mappings_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -754,7 +754,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_get_serialize(
+        _param = self._get_sso_team_mappings_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -775,7 +775,7 @@ class SsoApi:
         )
 
     @validate_call
-    async def sso_team_mappings_id_get_without_preload_content(
+    async def get_sso_team_mappings_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -814,7 +814,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_get_serialize(
+        _param = self._get_sso_team_mappings_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -831,7 +831,7 @@ class SsoApi:
         return response_data.response
 
     @validate_call
-    def sso_team_mappings_id_get_sync(
+    def get_sso_team_mappings_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -844,11 +844,11 @@ class SsoApi:
     ) -> SSOTeamMapping:
         """Get an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_sso_team_mappings_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_get(
+            self.get_sso_team_mappings_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -859,7 +859,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_id_get_sync_with_http_info(
+    def get_sso_team_mappings_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -872,11 +872,11 @@ class SsoApi:
     ) -> ApiResponse[SSOTeamMapping]:
         """Get an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_sso_team_mappings_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_get_with_http_info(
+            self.get_sso_team_mappings_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -887,7 +887,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_id_get_sync_without_preload_content(
+    def get_sso_team_mappings_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         _request_timeout: None
@@ -900,11 +900,11 @@ class SsoApi:
     ) -> RESTResponseType:
         """Get an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_sso_team_mappings_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_get_without_preload_content(
+            self.get_sso_team_mappings_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -914,7 +914,7 @@ class SsoApi:
             )
         )
 
-    def _sso_team_mappings_id_get_serialize(
+    def _get_sso_team_mappings_id_serialize(
         self,
         id,
         _request_auth,
@@ -951,7 +951,7 @@ class SsoApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/sso/team-mappings/{id}",
+            resource_path="/api/v1/sso/team-mappings/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -965,7 +965,340 @@ class SsoApi:
         )
 
     @validate_call
-    async def sso_team_mappings_id_put(
+    async def post_sso_team_mappings(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SSOTeamMapping:
+        """Create an SSO team mapping
+
+        Create a new SSO group to team mapping
+
+        :param create_sso_mapping_request: SSO mapping creation request (required)
+        :type create_sso_mapping_request: CreateSSOMappingRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_sso_team_mappings_serialize(
+            create_sso_mapping_request=create_sso_mapping_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SSOTeamMapping",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_sso_team_mappings_with_http_info(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SSOTeamMapping]:
+        """Create an SSO team mapping
+
+        Create a new SSO group to team mapping
+
+        :param create_sso_mapping_request: SSO mapping creation request (required)
+        :type create_sso_mapping_request: CreateSSOMappingRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_sso_team_mappings_serialize(
+            create_sso_mapping_request=create_sso_mapping_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SSOTeamMapping",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_sso_team_mappings_without_preload_content(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create an SSO team mapping
+
+        Create a new SSO group to team mapping
+
+        :param create_sso_mapping_request: SSO mapping creation request (required)
+        :type create_sso_mapping_request: CreateSSOMappingRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_sso_team_mappings_serialize(
+            create_sso_mapping_request=create_sso_mapping_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SSOTeamMapping",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_sso_team_mappings_sync(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SSOTeamMapping:
+        """Create an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`post_sso_team_mappings`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_sso_team_mappings(
+                create_sso_mapping_request=create_sso_mapping_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_sso_team_mappings_sync_with_http_info(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SSOTeamMapping]:
+        """Create an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`post_sso_team_mappings_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_sso_team_mappings_with_http_info(
+                create_sso_mapping_request=create_sso_mapping_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_sso_team_mappings_sync_without_preload_content(
+        self,
+        create_sso_mapping_request: Annotated[
+            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create an SSO team mapping (synchronous)
+
+        Synchronous variant of :meth:`post_sso_team_mappings_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_sso_team_mappings_without_preload_content(
+                create_sso_mapping_request=create_sso_mapping_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_sso_team_mappings_serialize(
+        self,
+        create_sso_mapping_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_sso_mapping_request is not None:
+            _body_params = create_sso_mapping_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/sso/team-mappings",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def put_sso_team_mappings_id(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1009,7 +1342,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_put_serialize(
+        _param = self._put_sso_team_mappings_id_serialize(
             id=id,
             update_sso_mapping_request=update_sso_mapping_request,
             _request_auth=_request_auth,
@@ -1032,7 +1365,7 @@ class SsoApi:
         ).data
 
     @validate_call
-    async def sso_team_mappings_id_put_with_http_info(
+    async def put_sso_team_mappings_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1076,7 +1409,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_put_serialize(
+        _param = self._put_sso_team_mappings_id_serialize(
             id=id,
             update_sso_mapping_request=update_sso_mapping_request,
             _request_auth=_request_auth,
@@ -1099,7 +1432,7 @@ class SsoApi:
         )
 
     @validate_call
-    async def sso_team_mappings_id_put_without_preload_content(
+    async def put_sso_team_mappings_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1143,7 +1476,7 @@ class SsoApi:
         :return: Returns the result object.
         """
 
-        _param = self._sso_team_mappings_id_put_serialize(
+        _param = self._put_sso_team_mappings_id_serialize(
             id=id,
             update_sso_mapping_request=update_sso_mapping_request,
             _request_auth=_request_auth,
@@ -1162,7 +1495,7 @@ class SsoApi:
         return response_data.response
 
     @validate_call
-    def sso_team_mappings_id_put_sync(
+    def put_sso_team_mappings_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1178,11 +1511,11 @@ class SsoApi:
     ) -> MessageResponse:
         """Update an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_sso_team_mappings_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_put(
+            self.put_sso_team_mappings_id(
                 id=id,
                 update_sso_mapping_request=update_sso_mapping_request,
                 _request_timeout=_request_timeout,
@@ -1194,7 +1527,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_id_put_sync_with_http_info(
+    def put_sso_team_mappings_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1210,11 +1543,11 @@ class SsoApi:
     ) -> ApiResponse[MessageResponse]:
         """Update an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_sso_team_mappings_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_put_with_http_info(
+            self.put_sso_team_mappings_id_with_http_info(
                 id=id,
                 update_sso_mapping_request=update_sso_mapping_request,
                 _request_timeout=_request_timeout,
@@ -1226,7 +1559,7 @@ class SsoApi:
         )
 
     @validate_call
-    def sso_team_mappings_id_put_sync_without_preload_content(
+    def put_sso_team_mappings_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="SSO mapping ID")],
         update_sso_mapping_request: Annotated[
@@ -1242,11 +1575,11 @@ class SsoApi:
     ) -> RESTResponseType:
         """Update an SSO team mapping (synchronous)
 
-        Synchronous variant of :meth:`sso_team_mappings_id_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_sso_team_mappings_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.sso_team_mappings_id_put_without_preload_content(
+            self.put_sso_team_mappings_id_without_preload_content(
                 id=id,
                 update_sso_mapping_request=update_sso_mapping_request,
                 _request_timeout=_request_timeout,
@@ -1257,7 +1590,7 @@ class SsoApi:
             )
         )
 
-    def _sso_team_mappings_id_put_serialize(
+    def _put_sso_team_mappings_id_serialize(
         self,
         id,
         update_sso_mapping_request,
@@ -1305,340 +1638,7 @@ class SsoApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/sso/team-mappings/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def sso_team_mappings_post(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> SSOTeamMapping:
-        """Create an SSO team mapping
-
-        Create a new SSO group to team mapping
-
-        :param create_sso_mapping_request: SSO mapping creation request (required)
-        :type create_sso_mapping_request: CreateSSOMappingRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_post_serialize(
-            create_sso_mapping_request=create_sso_mapping_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "SSOTeamMapping",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def sso_team_mappings_post_with_http_info(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[SSOTeamMapping]:
-        """Create an SSO team mapping
-
-        Create a new SSO group to team mapping
-
-        :param create_sso_mapping_request: SSO mapping creation request (required)
-        :type create_sso_mapping_request: CreateSSOMappingRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_post_serialize(
-            create_sso_mapping_request=create_sso_mapping_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "SSOTeamMapping",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def sso_team_mappings_post_without_preload_content(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create an SSO team mapping
-
-        Create a new SSO group to team mapping
-
-        :param create_sso_mapping_request: SSO mapping creation request (required)
-        :type create_sso_mapping_request: CreateSSOMappingRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_team_mappings_post_serialize(
-            create_sso_mapping_request=create_sso_mapping_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "SSOTeamMapping",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def sso_team_mappings_post_sync(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> SSOTeamMapping:
-        """Create an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_post(
-                create_sso_mapping_request=create_sso_mapping_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_team_mappings_post_sync_with_http_info(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[SSOTeamMapping]:
-        """Create an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_post_with_http_info(
-                create_sso_mapping_request=create_sso_mapping_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_team_mappings_post_sync_without_preload_content(
-        self,
-        create_sso_mapping_request: Annotated[
-            CreateSSOMappingRequest, Field(description="SSO mapping creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create an SSO team mapping (synchronous)
-
-        Synchronous variant of :meth:`sso_team_mappings_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_team_mappings_post_without_preload_content(
-                create_sso_mapping_request=create_sso_mapping_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _sso_team_mappings_post_serialize(
-        self,
-        create_sso_mapping_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_sso_mapping_request is not None:
-            _body_params = create_sso_mapping_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/sso/team-mappings",
+            resource_path="/api/v1/sso/team-mappings/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

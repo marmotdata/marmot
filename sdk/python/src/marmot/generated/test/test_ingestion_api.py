@@ -23,136 +23,136 @@ class TestIngestionApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_ingestion_runs_get(self) -> None:
-        """Test case for ingestion_runs_get
-
-        List ingestion job runs
-        """
-
-    def test_ingestion_runs_get_sync(self) -> None:
-        """Test case for ingestion_runs_get (synchronous)
-
-        List ingestion job runs
-        """
-
-    async def test_ingestion_runs_id_cancel_post(self) -> None:
-        """Test case for ingestion_runs_id_cancel_post
-
-        Cancel a running job
-        """
-
-    def test_ingestion_runs_id_cancel_post_sync(self) -> None:
-        """Test case for ingestion_runs_id_cancel_post (synchronous)
-
-        Cancel a running job
-        """
-
-    async def test_ingestion_runs_id_entities_get(self) -> None:
-        """Test case for ingestion_runs_id_entities_get
-
-        Get entities for a job run
-        """
-
-    def test_ingestion_runs_id_entities_get_sync(self) -> None:
-        """Test case for ingestion_runs_id_entities_get (synchronous)
-
-        Get entities for a job run
-        """
-
-    async def test_ingestion_runs_id_get(self) -> None:
-        """Test case for ingestion_runs_id_get
-
-        Get a job run by ID
-        """
-
-    def test_ingestion_runs_id_get_sync(self) -> None:
-        """Test case for ingestion_runs_id_get (synchronous)
-
-        Get a job run by ID
-        """
-
-    async def test_ingestion_schedules_get(self) -> None:
-        """Test case for ingestion_schedules_get
-
-        List ingestion schedules
-        """
-
-    def test_ingestion_schedules_get_sync(self) -> None:
-        """Test case for ingestion_schedules_get (synchronous)
-
-        List ingestion schedules
-        """
-
-    async def test_ingestion_schedules_id_delete(self) -> None:
-        """Test case for ingestion_schedules_id_delete
+    async def test_delete_ingestion_schedules_id(self) -> None:
+        """Test case for delete_ingestion_schedules_id
 
         Delete an ingestion schedule
         """
 
-    def test_ingestion_schedules_id_delete_sync(self) -> None:
-        """Test case for ingestion_schedules_id_delete (synchronous)
+    def test_delete_ingestion_schedules_id_sync(self) -> None:
+        """Test case for delete_ingestion_schedules_id (synchronous)
 
         Delete an ingestion schedule
         """
 
-    async def test_ingestion_schedules_id_get(self) -> None:
-        """Test case for ingestion_schedules_id_get
+    async def test_get_ingestion_runs(self) -> None:
+        """Test case for get_ingestion_runs
+
+        List ingestion job runs
+        """
+
+    def test_get_ingestion_runs_sync(self) -> None:
+        """Test case for get_ingestion_runs (synchronous)
+
+        List ingestion job runs
+        """
+
+    async def test_get_ingestion_runs_id(self) -> None:
+        """Test case for get_ingestion_runs_id
+
+        Get a job run by ID
+        """
+
+    def test_get_ingestion_runs_id_sync(self) -> None:
+        """Test case for get_ingestion_runs_id (synchronous)
+
+        Get a job run by ID
+        """
+
+    async def test_get_ingestion_runs_id_entities(self) -> None:
+        """Test case for get_ingestion_runs_id_entities
+
+        Get entities for a job run
+        """
+
+    def test_get_ingestion_runs_id_entities_sync(self) -> None:
+        """Test case for get_ingestion_runs_id_entities (synchronous)
+
+        Get entities for a job run
+        """
+
+    async def test_get_ingestion_schedules(self) -> None:
+        """Test case for get_ingestion_schedules
+
+        List ingestion schedules
+        """
+
+    def test_get_ingestion_schedules_sync(self) -> None:
+        """Test case for get_ingestion_schedules (synchronous)
+
+        List ingestion schedules
+        """
+
+    async def test_get_ingestion_schedules_id(self) -> None:
+        """Test case for get_ingestion_schedules_id
 
         Get an ingestion schedule by ID
         """
 
-    def test_ingestion_schedules_id_get_sync(self) -> None:
-        """Test case for ingestion_schedules_id_get (synchronous)
+    def test_get_ingestion_schedules_id_sync(self) -> None:
+        """Test case for get_ingestion_schedules_id (synchronous)
 
         Get an ingestion schedule by ID
         """
 
-    async def test_ingestion_schedules_id_put(self) -> None:
-        """Test case for ingestion_schedules_id_put
+    async def test_post_ingestion_runs_id_cancel(self) -> None:
+        """Test case for post_ingestion_runs_id_cancel
 
-        Update an ingestion schedule
+        Cancel a running job
         """
 
-    def test_ingestion_schedules_id_put_sync(self) -> None:
-        """Test case for ingestion_schedules_id_put (synchronous)
+    def test_post_ingestion_runs_id_cancel_sync(self) -> None:
+        """Test case for post_ingestion_runs_id_cancel (synchronous)
 
-        Update an ingestion schedule
+        Cancel a running job
         """
 
-    async def test_ingestion_schedules_id_trigger_post(self) -> None:
-        """Test case for ingestion_schedules_id_trigger_post
-
-        Manually trigger an ingestion schedule
-        """
-
-    def test_ingestion_schedules_id_trigger_post_sync(self) -> None:
-        """Test case for ingestion_schedules_id_trigger_post (synchronous)
-
-        Manually trigger an ingestion schedule
-        """
-
-    async def test_ingestion_schedules_post(self) -> None:
-        """Test case for ingestion_schedules_post
+    async def test_post_ingestion_schedules(self) -> None:
+        """Test case for post_ingestion_schedules
 
         Create a new ingestion schedule
         """
 
-    def test_ingestion_schedules_post_sync(self) -> None:
-        """Test case for ingestion_schedules_post (synchronous)
+    def test_post_ingestion_schedules_sync(self) -> None:
+        """Test case for post_ingestion_schedules (synchronous)
 
         Create a new ingestion schedule
         """
 
-    async def test_ingestion_validate_post(self) -> None:
-        """Test case for ingestion_validate_post
+    async def test_post_ingestion_schedules_id_trigger(self) -> None:
+        """Test case for post_ingestion_schedules_id_trigger
+
+        Manually trigger an ingestion schedule
+        """
+
+    def test_post_ingestion_schedules_id_trigger_sync(self) -> None:
+        """Test case for post_ingestion_schedules_id_trigger (synchronous)
+
+        Manually trigger an ingestion schedule
+        """
+
+    async def test_post_ingestion_validate(self) -> None:
+        """Test case for post_ingestion_validate
 
         Validate plugin configuration
         """
 
-    def test_ingestion_validate_post_sync(self) -> None:
-        """Test case for ingestion_validate_post (synchronous)
+    def test_post_ingestion_validate_sync(self) -> None:
+        """Test case for post_ingestion_validate (synchronous)
 
         Validate plugin configuration
+        """
+
+    async def test_put_ingestion_schedules_id(self) -> None:
+        """Test case for put_ingestion_schedules_id
+
+        Update an ingestion schedule
+        """
+
+    def test_put_ingestion_schedules_id_sync(self) -> None:
+        """Test case for put_ingestion_schedules_id (synchronous)
+
+        Update an ingestion schedule
         """
 
 

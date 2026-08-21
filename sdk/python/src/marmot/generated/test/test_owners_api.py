@@ -23,14 +23,14 @@ class TestOwnersApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_owners_search_get(self) -> None:
-        """Test case for owners_search_get
+    async def test_get_owners_search(self) -> None:
+        """Test case for get_owners_search
 
         Search owners
         """
 
-    def test_owners_search_get_sync(self) -> None:
-        """Test case for owners_search_get (synchronous)
+    def test_get_owners_search_sync(self) -> None:
+        """Test case for get_owners_search (synchronous)
 
         Search owners
         """

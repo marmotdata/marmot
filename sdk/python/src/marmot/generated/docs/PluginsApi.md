@@ -1,35 +1,33 @@
 # marmot.generated.PluginsApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**plugins_aws_credentials_status_get**](PluginsApi.md#plugins_aws_credentials_status_get) | **GET** /plugins/aws/credentials/status | Get AWS credential detection status
-[**plugins_get**](PluginsApi.md#plugins_get) | **GET** /plugins | List registered plugins
+[**get_plugins**](PluginsApi.md#get_plugins) | **GET** /api/v1/plugins | List registered plugins
+[**get_plugins_aws_credentials_status**](PluginsApi.md#get_plugins_aws_credentials_status) | **GET** /api/v1/plugins/aws/credentials/status | Get AWS credential detection status
 
 
-# **plugins_aws_credentials_status_get**
-> AWSCredentialStatus plugins_aws_credentials_status_get()
+# **get_plugins**
+> ListPluginsResponse get_plugins()
 
-**Synchronous variant:** `plugins_aws_credentials_status_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_plugins_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
-Get AWS credential detection status
-
-Detects if AWS credentials are available from environment or config files
+List registered plugins
 
 ### Example
 
 
 ```python
 import marmot.generated
-from marmot.generated.models.aws_credential_status import AWSCredentialStatus
+from marmot.generated.models.list_plugins_response import ListPluginsResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 
@@ -39,12 +37,12 @@ async with marmot.generated.ApiClient(configuration) as api_client:
     api_instance = marmot.generated.PluginsApi(api_client)
 
     try:
-        # Get AWS credential detection status
-        api_response = await api_instance.plugins_aws_credentials_status_get()
-        print("The response of PluginsApi->plugins_aws_credentials_status_get:\n")
+        # List registered plugins
+        api_response = await api_instance.get_plugins()
+        print("The response of PluginsApi->get_plugins:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling PluginsApi->plugins_aws_credentials_status_get: %s\n" % e)
+        print("Exception when calling PluginsApi->get_plugins: %s\n" % e)
 ```
 
 
@@ -55,7 +53,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**AWSCredentialStatus**](AWSCredentialStatus.md)
+[**ListPluginsResponse**](ListPluginsResponse.md)
 
 ### Authorization
 
@@ -74,26 +72,28 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **plugins_get**
-> ListPluginsResponse plugins_get()
+# **get_plugins_aws_credentials_status**
+> AWSCredentialStatus get_plugins_aws_credentials_status()
 
-**Synchronous variant:** `plugins_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_plugins_aws_credentials_status_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
-List registered plugins
+Get AWS credential detection status
+
+Detects if AWS credentials are available from environment or config files
 
 ### Example
 
 
 ```python
 import marmot.generated
-from marmot.generated.models.list_plugins_response import ListPluginsResponse
+from marmot.generated.models.aws_credential_status import AWSCredentialStatus
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 
@@ -103,12 +103,12 @@ async with marmot.generated.ApiClient(configuration) as api_client:
     api_instance = marmot.generated.PluginsApi(api_client)
 
     try:
-        # List registered plugins
-        api_response = await api_instance.plugins_get()
-        print("The response of PluginsApi->plugins_get:\n")
+        # Get AWS credential detection status
+        api_response = await api_instance.get_plugins_aws_credentials_status()
+        print("The response of PluginsApi->get_plugins_aws_credentials_status:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling PluginsApi->plugins_get: %s\n" % e)
+        print("Exception when calling PluginsApi->get_plugins_aws_credentials_status: %s\n" % e)
 ```
 
 
@@ -119,7 +119,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**ListPluginsResponse**](ListPluginsResponse.md)
+[**AWSCredentialStatus**](AWSCredentialStatus.md)
 
 ### Authorization
 

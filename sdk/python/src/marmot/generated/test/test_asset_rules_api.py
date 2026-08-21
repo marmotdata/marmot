@@ -23,100 +23,100 @@ class TestAssetRulesApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_asset_rules_assets_id_get(self) -> None:
-        """Test case for asset_rules_assets_id_get
-
-        Get assets matched by a rule
-        """
-
-    def test_asset_rules_assets_id_get_sync(self) -> None:
-        """Test case for asset_rules_assets_id_get (synchronous)
-
-        Get assets matched by a rule
-        """
-
-    async def test_asset_rules_id_delete(self) -> None:
-        """Test case for asset_rules_id_delete
+    async def test_delete_asset_rules_id(self) -> None:
+        """Test case for delete_asset_rules_id
 
         Delete an asset rule
         """
 
-    def test_asset_rules_id_delete_sync(self) -> None:
-        """Test case for asset_rules_id_delete (synchronous)
+    def test_delete_asset_rules_id_sync(self) -> None:
+        """Test case for delete_asset_rules_id (synchronous)
 
         Delete an asset rule
         """
 
-    async def test_asset_rules_id_get(self) -> None:
-        """Test case for asset_rules_id_get
+    async def test_get_asset_rules_assets_id(self) -> None:
+        """Test case for get_asset_rules_assets_id
+
+        Get assets matched by a rule
+        """
+
+    def test_get_asset_rules_assets_id_sync(self) -> None:
+        """Test case for get_asset_rules_assets_id (synchronous)
+
+        Get assets matched by a rule
+        """
+
+    async def test_get_asset_rules_id(self) -> None:
+        """Test case for get_asset_rules_id
 
         Get an asset rule
         """
 
-    def test_asset_rules_id_get_sync(self) -> None:
-        """Test case for asset_rules_id_get (synchronous)
+    def test_get_asset_rules_id_sync(self) -> None:
+        """Test case for get_asset_rules_id (synchronous)
 
         Get an asset rule
         """
 
-    async def test_asset_rules_id_put(self) -> None:
-        """Test case for asset_rules_id_put
-
-        Update an asset rule
-        """
-
-    def test_asset_rules_id_put_sync(self) -> None:
-        """Test case for asset_rules_id_put (synchronous)
-
-        Update an asset rule
-        """
-
-    async def test_asset_rules_list_get(self) -> None:
-        """Test case for asset_rules_list_get
+    async def test_get_asset_rules_list(self) -> None:
+        """Test case for get_asset_rules_list
 
         List asset rules
         """
 
-    def test_asset_rules_list_get_sync(self) -> None:
-        """Test case for asset_rules_list_get (synchronous)
+    def test_get_asset_rules_list_sync(self) -> None:
+        """Test case for get_asset_rules_list (synchronous)
 
         List asset rules
         """
 
-    async def test_asset_rules_post(self) -> None:
-        """Test case for asset_rules_post
-
-        Create an asset rule
-        """
-
-    def test_asset_rules_post_sync(self) -> None:
-        """Test case for asset_rules_post (synchronous)
-
-        Create an asset rule
-        """
-
-    async def test_asset_rules_preview_post(self) -> None:
-        """Test case for asset_rules_preview_post
-
-        Preview an asset rule
-        """
-
-    def test_asset_rules_preview_post_sync(self) -> None:
-        """Test case for asset_rules_preview_post (synchronous)
-
-        Preview an asset rule
-        """
-
-    async def test_asset_rules_search_get(self) -> None:
-        """Test case for asset_rules_search_get
+    async def test_get_asset_rules_search(self) -> None:
+        """Test case for get_asset_rules_search
 
         Search asset rules
         """
 
-    def test_asset_rules_search_get_sync(self) -> None:
-        """Test case for asset_rules_search_get (synchronous)
+    def test_get_asset_rules_search_sync(self) -> None:
+        """Test case for get_asset_rules_search (synchronous)
 
         Search asset rules
+        """
+
+    async def test_post_asset_rules(self) -> None:
+        """Test case for post_asset_rules
+
+        Create an asset rule
+        """
+
+    def test_post_asset_rules_sync(self) -> None:
+        """Test case for post_asset_rules (synchronous)
+
+        Create an asset rule
+        """
+
+    async def test_post_asset_rules_preview(self) -> None:
+        """Test case for post_asset_rules_preview
+
+        Preview an asset rule
+        """
+
+    def test_post_asset_rules_preview_sync(self) -> None:
+        """Test case for post_asset_rules_preview (synchronous)
+
+        Preview an asset rule
+        """
+
+    async def test_put_asset_rules_id(self) -> None:
+        """Test case for put_asset_rules_id
+
+        Update an asset rule
+        """
+
+    def test_put_asset_rules_id_sync(self) -> None:
+        """Test case for put_asset_rules_id (synchronous)
+
+        Update an asset rule
         """
 
 

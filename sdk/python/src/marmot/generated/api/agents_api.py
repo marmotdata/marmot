@@ -37,7 +37,7 @@ class AgentsApi:
         self.api_client = api_client
 
     @validate_call
-    async def agents_asset_id_activity_get(
+    async def get_agents_asset_id_activity(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -80,7 +80,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_activity_get_serialize(
+        _param = self._get_agents_asset_id_activity_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -100,7 +100,7 @@ class AgentsApi:
         ).data
 
     @validate_call
-    async def agents_asset_id_activity_get_with_http_info(
+    async def get_agents_asset_id_activity_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -143,7 +143,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_activity_get_serialize(
+        _param = self._get_agents_asset_id_activity_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -163,7 +163,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_asset_id_activity_get_without_preload_content(
+    async def get_agents_asset_id_activity_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -206,7 +206,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_activity_get_serialize(
+        _param = self._get_agents_asset_id_activity_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -222,7 +222,7 @@ class AgentsApi:
         return response_data.response
 
     @validate_call
-    def agents_asset_id_activity_get_sync(
+    def get_agents_asset_id_activity_sync(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -238,11 +238,11 @@ class AgentsApi:
     ) -> ActivityResponse:
         """Agent activity (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_activity_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_agents_asset_id_activity`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_activity_get(
+            self.get_agents_asset_id_activity(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -254,7 +254,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_activity_get_sync_with_http_info(
+    def get_agents_asset_id_activity_sync_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -270,11 +270,11 @@ class AgentsApi:
     ) -> ApiResponse[ActivityResponse]:
         """Agent activity (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_activity_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_agents_asset_id_activity_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_activity_get_with_http_info(
+            self.get_agents_asset_id_activity_with_http_info(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -286,7 +286,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_activity_get_sync_without_preload_content(
+    def get_agents_asset_id_activity_sync_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -302,11 +302,11 @@ class AgentsApi:
     ) -> RESTResponseType:
         """Agent activity (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_activity_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_agents_asset_id_activity_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_activity_get_without_preload_content(
+            self.get_agents_asset_id_activity_without_preload_content(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -317,7 +317,7 @@ class AgentsApi:
             )
         )
 
-    def _agents_asset_id_activity_get_serialize(
+    def _get_agents_asset_id_activity_serialize(
         self,
         asset_id,
         period,
@@ -358,7 +358,7 @@ class AgentsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/agents/{asset_id}/activity",
+            resource_path="/api/v1/agents/{asset_id}/activity",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -372,7 +372,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_asset_id_runs_get(
+    async def get_agents_asset_id_runs(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -420,7 +420,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_runs_get_serialize(
+        _param = self._get_agents_asset_id_runs_serialize(
             asset_id=asset_id,
             period=period,
             limit=limit,
@@ -441,7 +441,7 @@ class AgentsApi:
         ).data
 
     @validate_call
-    async def agents_asset_id_runs_get_with_http_info(
+    async def get_agents_asset_id_runs_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -489,7 +489,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_runs_get_serialize(
+        _param = self._get_agents_asset_id_runs_serialize(
             asset_id=asset_id,
             period=period,
             limit=limit,
@@ -510,7 +510,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_asset_id_runs_get_without_preload_content(
+    async def get_agents_asset_id_runs_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -558,7 +558,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_runs_get_serialize(
+        _param = self._get_agents_asset_id_runs_serialize(
             asset_id=asset_id,
             period=period,
             limit=limit,
@@ -575,7 +575,7 @@ class AgentsApi:
         return response_data.response
 
     @validate_call
-    def agents_asset_id_runs_get_sync(
+    def get_agents_asset_id_runs_sync(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -594,11 +594,11 @@ class AgentsApi:
     ) -> RunsResponse:
         """List agent runs (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_runs_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_agents_asset_id_runs`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_runs_get(
+            self.get_agents_asset_id_runs(
                 asset_id=asset_id,
                 period=period,
                 limit=limit,
@@ -611,7 +611,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_runs_get_sync_with_http_info(
+    def get_agents_asset_id_runs_sync_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -630,11 +630,11 @@ class AgentsApi:
     ) -> ApiResponse[RunsResponse]:
         """List agent runs (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_runs_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_agents_asset_id_runs_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_runs_get_with_http_info(
+            self.get_agents_asset_id_runs_with_http_info(
                 asset_id=asset_id,
                 period=period,
                 limit=limit,
@@ -647,7 +647,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_runs_get_sync_without_preload_content(
+    def get_agents_asset_id_runs_sync_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -666,11 +666,11 @@ class AgentsApi:
     ) -> RESTResponseType:
         """List agent runs (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_runs_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_agents_asset_id_runs_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_runs_get_without_preload_content(
+            self.get_agents_asset_id_runs_without_preload_content(
                 asset_id=asset_id,
                 period=period,
                 limit=limit,
@@ -682,7 +682,7 @@ class AgentsApi:
             )
         )
 
-    def _agents_asset_id_runs_get_serialize(
+    def _get_agents_asset_id_runs_serialize(
         self,
         asset_id,
         period,
@@ -727,7 +727,7 @@ class AgentsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/agents/{asset_id}/runs",
+            resource_path="/api/v1/agents/{asset_id}/runs",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -741,7 +741,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_asset_id_stats_get(
+    async def get_agents_asset_id_stats(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -784,7 +784,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_stats_get_serialize(
+        _param = self._get_agents_asset_id_stats_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -804,7 +804,7 @@ class AgentsApi:
         ).data
 
     @validate_call
-    async def agents_asset_id_stats_get_with_http_info(
+    async def get_agents_asset_id_stats_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -847,7 +847,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_stats_get_serialize(
+        _param = self._get_agents_asset_id_stats_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -867,7 +867,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_asset_id_stats_get_without_preload_content(
+    async def get_agents_asset_id_stats_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -910,7 +910,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_asset_id_stats_get_serialize(
+        _param = self._get_agents_asset_id_stats_serialize(
             asset_id=asset_id,
             period=period,
             _request_auth=_request_auth,
@@ -926,7 +926,7 @@ class AgentsApi:
         return response_data.response
 
     @validate_call
-    def agents_asset_id_stats_get_sync(
+    def get_agents_asset_id_stats_sync(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -942,11 +942,11 @@ class AgentsApi:
     ) -> Stats:
         """Agent stats (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_stats_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_agents_asset_id_stats`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_stats_get(
+            self.get_agents_asset_id_stats(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -958,7 +958,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_stats_get_sync_with_http_info(
+    def get_agents_asset_id_stats_sync_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -974,11 +974,11 @@ class AgentsApi:
     ) -> ApiResponse[Stats]:
         """Agent stats (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_stats_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_agents_asset_id_stats_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_stats_get_with_http_info(
+            self.get_agents_asset_id_stats_with_http_info(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -990,7 +990,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_asset_id_stats_get_sync_without_preload_content(
+    def get_agents_asset_id_stats_sync_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Agent asset id")],
         period: Annotated[
@@ -1006,11 +1006,11 @@ class AgentsApi:
     ) -> RESTResponseType:
         """Agent stats (synchronous)
 
-        Synchronous variant of :meth:`agents_asset_id_stats_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_agents_asset_id_stats_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_asset_id_stats_get_without_preload_content(
+            self.get_agents_asset_id_stats_without_preload_content(
                 asset_id=asset_id,
                 period=period,
                 _request_timeout=_request_timeout,
@@ -1021,7 +1021,7 @@ class AgentsApi:
             )
         )
 
-    def _agents_asset_id_stats_get_serialize(
+    def _get_agents_asset_id_stats_serialize(
         self,
         asset_id,
         period,
@@ -1062,7 +1062,7 @@ class AgentsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/agents/{asset_id}/stats",
+            resource_path="/api/v1/agents/{asset_id}/stats",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1076,7 +1076,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_runs_post(
+    async def post_agents_runs(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1114,7 +1114,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_runs_post_serialize(
+        _param = self._post_agents_runs_serialize(
             record_run_request=record_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1133,7 +1133,7 @@ class AgentsApi:
         ).data
 
     @validate_call
-    async def agents_runs_post_with_http_info(
+    async def post_agents_runs_with_http_info(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1171,7 +1171,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_runs_post_serialize(
+        _param = self._post_agents_runs_serialize(
             record_run_request=record_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1190,7 +1190,7 @@ class AgentsApi:
         )
 
     @validate_call
-    async def agents_runs_post_without_preload_content(
+    async def post_agents_runs_without_preload_content(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1228,7 +1228,7 @@ class AgentsApi:
         :return: Returns the result object.
         """
 
-        _param = self._agents_runs_post_serialize(
+        _param = self._post_agents_runs_serialize(
             record_run_request=record_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1243,7 +1243,7 @@ class AgentsApi:
         return response_data.response
 
     @validate_call
-    def agents_runs_post_sync(
+    def post_agents_runs_sync(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1256,11 +1256,11 @@ class AgentsApi:
     ) -> AgentRun:
         """Record agent run (synchronous)
 
-        Synchronous variant of :meth:`agents_runs_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_agents_runs`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.agents_runs_post(
+            self.post_agents_runs(
                 record_run_request=record_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1271,7 +1271,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_runs_post_sync_with_http_info(
+    def post_agents_runs_sync_with_http_info(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1284,11 +1284,11 @@ class AgentsApi:
     ) -> ApiResponse[AgentRun]:
         """Record agent run (synchronous)
 
-        Synchronous variant of :meth:`agents_runs_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_agents_runs_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_runs_post_with_http_info(
+            self.post_agents_runs_with_http_info(
                 record_run_request=record_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1299,7 +1299,7 @@ class AgentsApi:
         )
 
     @validate_call
-    def agents_runs_post_sync_without_preload_content(
+    def post_agents_runs_sync_without_preload_content(
         self,
         record_run_request: Annotated[RecordRunRequest, Field(description="Agent run record")],
         _request_timeout: None
@@ -1312,11 +1312,11 @@ class AgentsApi:
     ) -> RESTResponseType:
         """Record agent run (synchronous)
 
-        Synchronous variant of :meth:`agents_runs_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_agents_runs_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.agents_runs_post_without_preload_content(
+            self.post_agents_runs_without_preload_content(
                 record_run_request=record_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1326,7 +1326,7 @@ class AgentsApi:
             )
         )
 
-    def _agents_runs_post_serialize(
+    def _post_agents_runs_serialize(
         self,
         record_run_request,
         _request_auth,
@@ -1371,7 +1371,7 @@ class AgentsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/agents/runs",
+            resource_path="/api/v1/agents/runs",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

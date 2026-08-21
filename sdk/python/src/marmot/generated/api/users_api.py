@@ -42,293 +42,7 @@ class UsersApi:
         self.api_client = api_client
 
     @validate_call
-    async def users_apikeys_get(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[APIKey]:
-        """List API keys
-
-        Get all API keys for a user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_apikeys_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[APIKey]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_apikeys_get_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[APIKey]]:
-        """List API keys
-
-        Get all API keys for a user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_apikeys_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[APIKey]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_apikeys_get_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List API keys
-
-        Get all API keys for a user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_apikeys_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[APIKey]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_apikeys_get_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[APIKey]:
-        """List API keys (synchronous)
-
-        Synchronous variant of :meth:`users_apikeys_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_apikeys_get(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_apikeys_get_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[APIKey]]:
-        """List API keys (synchronous)
-
-        Synchronous variant of :meth:`users_apikeys_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_apikeys_get_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_apikeys_get_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List API keys (synchronous)
-
-        Synchronous variant of :meth:`users_apikeys_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_apikeys_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_apikeys_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/users/apikeys",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_apikeys_id_delete(
+    async def delete_users_apikeys_id(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -367,7 +81,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_id_delete_serialize(
+        _param = self._delete_users_apikeys_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -387,7 +101,7 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_apikeys_id_delete_with_http_info(
+    async def delete_users_apikeys_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -426,7 +140,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_id_delete_serialize(
+        _param = self._delete_users_apikeys_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -446,7 +160,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_apikeys_id_delete_without_preload_content(
+    async def delete_users_apikeys_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -485,7 +199,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_id_delete_serialize(
+        _param = self._delete_users_apikeys_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -501,7 +215,7 @@ class UsersApi:
         return response_data.response
 
     @validate_call
-    def users_apikeys_id_delete_sync(
+    def delete_users_apikeys_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -514,11 +228,11 @@ class UsersApi:
     ) -> None:
         """Delete API key (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_users_apikeys_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_id_delete(
+            self.delete_users_apikeys_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -529,7 +243,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_apikeys_id_delete_sync_with_http_info(
+    def delete_users_apikeys_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -542,11 +256,11 @@ class UsersApi:
     ) -> ApiResponse[None]:
         """Delete API key (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_users_apikeys_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_id_delete_with_http_info(
+            self.delete_users_apikeys_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -557,7 +271,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_apikeys_id_delete_sync_without_preload_content(
+    def delete_users_apikeys_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="API key ID")],
         _request_timeout: None
@@ -570,11 +284,11 @@ class UsersApi:
     ) -> RESTResponseType:
         """Delete API key (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_users_apikeys_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_id_delete_without_preload_content(
+            self.delete_users_apikeys_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -584,7 +298,7 @@ class UsersApi:
             )
         )
 
-    def _users_apikeys_id_delete_serialize(
+    def _delete_users_apikeys_id_serialize(
         self,
         id,
         _request_auth,
@@ -621,7 +335,7 @@ class UsersApi:
 
         return self.api_client.param_serialize(
             method="DELETE",
-            resource_path="/users/apikeys/{id}",
+            resource_path="/api/v1/users/apikeys/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -635,11 +349,9 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_apikeys_post(
+    async def delete_users_id(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -647,13 +359,13 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> APIKey:
-        """Create API key
+    ) -> None:
+        """Delete a user
 
-        Create a new API key for a user
+        Delete a user from the system
 
-        :param create_api_key_request: API key creation request (required)
-        :type create_api_key_request: CreateAPIKeyRequest
+        :param id: User ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -676,8 +388,8 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_post_serialize(
-            create_api_key_request=create_api_key_request,
+        _param = self._delete_users_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -685,8 +397,9 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "APIKey",
-            "400": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -696,11 +409,9 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_apikeys_post_with_http_info(
+    async def delete_users_id_with_http_info(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -708,13 +419,13 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[APIKey]:
-        """Create API key
+    ) -> ApiResponse[None]:
+        """Delete a user
 
-        Create a new API key for a user
+        Delete a user from the system
 
-        :param create_api_key_request: API key creation request (required)
-        :type create_api_key_request: CreateAPIKeyRequest
+        :param id: User ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -737,8 +448,8 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_post_serialize(
-            create_api_key_request=create_api_key_request,
+        _param = self._delete_users_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -746,8 +457,9 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "APIKey",
-            "400": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -757,11 +469,9 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_apikeys_post_without_preload_content(
+    async def delete_users_id_without_preload_content(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -770,12 +480,12 @@ class UsersApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create API key
+        """Delete a user
 
-        Create a new API key for a user
+        Delete a user from the system
 
-        :param create_api_key_request: API key creation request (required)
-        :type create_api_key_request: CreateAPIKeyRequest
+        :param id: User ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -798,8 +508,8 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_apikeys_post_serialize(
-            create_api_key_request=create_api_key_request,
+        _param = self._delete_users_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -807,18 +517,17 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "APIKey",
-            "400": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def users_apikeys_post_sync(
+    def delete_users_id_sync(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -826,15 +535,15 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> APIKey:
-        """Create API key (synchronous)
+    ) -> None:
+        """Delete a user (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_post`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_users_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_post(
-                create_api_key_request=create_api_key_request,
+            self.delete_users_id(
+                id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -844,11 +553,9 @@ class UsersApi:
         )
 
     @validate_call
-    def users_apikeys_post_sync_with_http_info(
+    def delete_users_id_sync_with_http_info(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -856,15 +563,15 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[APIKey]:
-        """Create API key (synchronous)
+    ) -> ApiResponse[None]:
+        """Delete a user (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_users_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_post_with_http_info(
-                create_api_key_request=create_api_key_request,
+            self.delete_users_id_with_http_info(
+                id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -874,11 +581,9 @@ class UsersApi:
         )
 
     @validate_call
-    def users_apikeys_post_sync_without_preload_content(
+    def delete_users_id_sync_without_preload_content(
         self,
-        create_api_key_request: Annotated[
-            CreateAPIKeyRequest, Field(description="API key creation request")
-        ],
+        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -887,14 +592,14 @@ class UsersApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create API key (synchronous)
+        """Delete a user (synchronous)
 
-        Synchronous variant of :meth:`users_apikeys_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_users_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_apikeys_post_without_preload_content(
-                create_api_key_request=create_api_key_request,
+            self.delete_users_id_without_preload_content(
+                id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -903,9 +608,9 @@ class UsersApi:
             )
         )
 
-    def _users_apikeys_post_serialize(
+    def _delete_users_id_serialize(
         self,
-        create_api_key_request,
+        id,
         _request_auth,
         _content_type,
         _headers,
@@ -924,31 +629,23 @@ class UsersApi:
         _body_params: bytes | None = None
 
         # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
         # process the query parameters
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if create_api_key_request is not None:
-            _body_params = create_api_key_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/users/apikeys",
+            method="DELETE",
+            resource_path="/api/v1/users/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -962,7 +659,335 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_get(
+    async def delete_users_oauth_unlink_id_provider(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Unlink OAuth account
+
+        Unlink an OAuth account from a user
+
+        :param id: User ID (required)
+        :type id: str
+        :param provider: OAuth provider (required)
+        :type provider: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_users_oauth_unlink_id_provider_serialize(
+            id=id,
+            provider=provider,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_users_oauth_unlink_id_provider_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Unlink OAuth account
+
+        Unlink an OAuth account from a user
+
+        :param id: User ID (required)
+        :type id: str
+        :param provider: OAuth provider (required)
+        :type provider: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_users_oauth_unlink_id_provider_serialize(
+            id=id,
+            provider=provider,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_users_oauth_unlink_id_provider_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Unlink OAuth account
+
+        Unlink an OAuth account from a user
+
+        :param id: User ID (required)
+        :type id: str
+        :param provider: OAuth provider (required)
+        :type provider: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_users_oauth_unlink_id_provider_serialize(
+            id=id,
+            provider=provider,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_users_oauth_unlink_id_provider_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Unlink OAuth account (synchronous)
+
+        Synchronous variant of :meth:`delete_users_oauth_unlink_id_provider`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_users_oauth_unlink_id_provider(
+                id=id,
+                provider=provider,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_users_oauth_unlink_id_provider_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Unlink OAuth account (synchronous)
+
+        Synchronous variant of :meth:`delete_users_oauth_unlink_id_provider_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_users_oauth_unlink_id_provider_with_http_info(
+                id=id,
+                provider=provider,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_users_oauth_unlink_id_provider_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="User ID")],
+        provider: Annotated[StrictStr, Field(description="OAuth provider")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Unlink OAuth account (synchronous)
+
+        Synchronous variant of :meth:`delete_users_oauth_unlink_id_provider_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_users_oauth_unlink_id_provider_without_preload_content(
+                id=id,
+                provider=provider,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_users_oauth_unlink_id_provider_serialize(
+        self,
+        id,
+        provider,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if provider is not None:
+            _path_params["provider"] = provider
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/users/oauth/unlink/{id}/{provider}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_users(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1015,7 +1040,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_get_serialize(
+        _param = self._get_users_serialize(
             limit=limit,
             offset=offset,
             query=query,
@@ -1039,7 +1064,7 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_get_with_http_info(
+    async def get_users_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1092,7 +1117,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_get_serialize(
+        _param = self._get_users_serialize(
             limit=limit,
             offset=offset,
             query=query,
@@ -1116,7 +1141,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_get_without_preload_content(
+    async def get_users_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1169,7 +1194,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_get_serialize(
+        _param = self._get_users_serialize(
             limit=limit,
             offset=offset,
             query=query,
@@ -1189,7 +1214,7 @@ class UsersApi:
         return response_data.response
 
     @validate_call
-    def users_get_sync(
+    def get_users_sync(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1208,11 +1233,11 @@ class UsersApi:
     ) -> ListUsersResponse:
         """List users (synchronous)
 
-        Synchronous variant of :meth:`users_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_users`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_get(
+            self.get_users(
                 limit=limit,
                 offset=offset,
                 query=query,
@@ -1227,7 +1252,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_get_sync_with_http_info(
+    def get_users_sync_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1246,11 +1271,11 @@ class UsersApi:
     ) -> ApiResponse[ListUsersResponse]:
         """List users (synchronous)
 
-        Synchronous variant of :meth:`users_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_users_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_get_with_http_info(
+            self.get_users_with_http_info(
                 limit=limit,
                 offset=offset,
                 query=query,
@@ -1265,7 +1290,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_get_sync_without_preload_content(
+    def get_users_sync_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -1284,11 +1309,11 @@ class UsersApi:
     ) -> RESTResponseType:
         """List users (synchronous)
 
-        Synchronous variant of :meth:`users_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_users_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_get_without_preload_content(
+            self.get_users_without_preload_content(
                 limit=limit,
                 offset=offset,
                 query=query,
@@ -1302,7 +1327,7 @@ class UsersApi:
             )
         )
 
-    def _users_get_serialize(
+    def _get_users_serialize(
         self,
         limit,
         offset,
@@ -1358,7 +1383,7 @@ class UsersApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/users",
+            resource_path="/api/v1/users",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1372,9 +1397,8 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_delete(
+    async def get_users_apikeys(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1382,13 +1406,11 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete a user
+    ) -> list[APIKey]:
+        """List API keys
 
-        Delete a user from the system
+        Get all API keys for a user
 
-        :param id: User ID (required)
-        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1411,8 +1433,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_delete_serialize(
-            id=id,
+        _param = self._get_users_apikeys_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1420,8 +1441,7 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
+            "200": "List[APIKey]",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -1432,9 +1452,8 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_id_delete_with_http_info(
+    async def get_users_apikeys_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1442,13 +1461,11 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete a user
+    ) -> ApiResponse[list[APIKey]]:
+        """List API keys
 
-        Delete a user from the system
+        Get all API keys for a user
 
-        :param id: User ID (required)
-        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1471,8 +1488,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_delete_serialize(
-            id=id,
+        _param = self._get_users_apikeys_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1480,8 +1496,7 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
+            "200": "List[APIKey]",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -1492,9 +1507,8 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_delete_without_preload_content(
+    async def get_users_apikeys_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1503,12 +1517,10 @@ class UsersApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete a user
+        """List API keys
 
-        Delete a user from the system
+        Get all API keys for a user
 
-        :param id: User ID (required)
-        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1531,8 +1543,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_delete_serialize(
-            id=id,
+        _param = self._get_users_apikeys_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1540,17 +1551,15 @@ class UsersApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
+            "200": "List[APIKey]",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def users_id_delete_sync(
+    def get_users_apikeys_sync(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1558,15 +1567,14 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete a user (synchronous)
+    ) -> list[APIKey]:
+        """List API keys (synchronous)
 
-        Synchronous variant of :meth:`users_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`get_users_apikeys`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_delete(
-                id=id,
+            self.get_users_apikeys(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1576,9 +1584,8 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_delete_sync_with_http_info(
+    def get_users_apikeys_sync_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1586,15 +1593,14 @@ class UsersApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete a user (synchronous)
+    ) -> ApiResponse[list[APIKey]]:
+        """List API keys (synchronous)
 
-        Synchronous variant of :meth:`users_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_users_apikeys_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_delete_with_http_info(
-                id=id,
+            self.get_users_apikeys_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1604,9 +1610,8 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_delete_sync_without_preload_content(
+    def get_users_apikeys_sync_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1615,14 +1620,13 @@ class UsersApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete a user (synchronous)
+        """List API keys (synchronous)
 
-        Synchronous variant of :meth:`users_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_users_apikeys_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_delete_without_preload_content(
-                id=id,
+            self.get_users_apikeys_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1631,9 +1635,8 @@ class UsersApi:
             )
         )
 
-    def _users_id_delete_serialize(
+    def _get_users_apikeys_serialize(
         self,
-        id,
         _request_auth,
         _content_type,
         _headers,
@@ -1652,8 +1655,6 @@ class UsersApi:
         _body_params: bytes | None = None
 
         # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
         # process the query parameters
         # process the header parameters
         # process the form parameters
@@ -1667,8 +1668,8 @@ class UsersApi:
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/users/{id}",
+            method="GET",
+            resource_path="/api/v1/users/apikeys",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1682,7 +1683,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_get(
+    async def get_users_id(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1721,7 +1722,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_get_serialize(
+        _param = self._get_users_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1742,7 +1743,7 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_id_get_with_http_info(
+    async def get_users_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1781,7 +1782,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_get_serialize(
+        _param = self._get_users_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1802,7 +1803,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_get_without_preload_content(
+    async def get_users_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1841,7 +1842,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_get_serialize(
+        _param = self._get_users_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1858,7 +1859,7 @@ class UsersApi:
         return response_data.response
 
     @validate_call
-    def users_id_get_sync(
+    def get_users_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1871,11 +1872,11 @@ class UsersApi:
     ) -> User:
         """Get a user by ID (synchronous)
 
-        Synchronous variant of :meth:`users_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_users_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_get(
+            self.get_users_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1886,7 +1887,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_get_sync_with_http_info(
+    def get_users_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1899,11 +1900,11 @@ class UsersApi:
     ) -> ApiResponse[User]:
         """Get a user by ID (synchronous)
 
-        Synchronous variant of :meth:`users_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_users_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_get_with_http_info(
+            self.get_users_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1914,7 +1915,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_get_sync_without_preload_content(
+    def get_users_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         _request_timeout: None
@@ -1927,11 +1928,11 @@ class UsersApi:
     ) -> RESTResponseType:
         """Get a user by ID (synchronous)
 
-        Synchronous variant of :meth:`users_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_users_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_get_without_preload_content(
+            self.get_users_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1941,7 +1942,7 @@ class UsersApi:
             )
         )
 
-    def _users_id_get_serialize(
+    def _get_users_id_serialize(
         self,
         id,
         _request_auth,
@@ -1978,7 +1979,7 @@ class UsersApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/users/{id}",
+            resource_path="/api/v1/users/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1992,7 +1993,1913 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_put(
+    async def get_users_me(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> User:
+        """Get current user profile
+
+        Get detailed information about the currently authenticated user
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_users_me_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_users_me_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[User]:
+        """Get current user profile
+
+        Get detailed information about the currently authenticated user
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_users_me_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_users_me_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get current user profile
+
+        Get detailed information about the currently authenticated user
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_users_me_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_users_me_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> User:
+        """Get current user profile (synchronous)
+
+        Synchronous variant of :meth:`get_users_me`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_users_me(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_users_me_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[User]:
+        """Get current user profile (synchronous)
+
+        Synchronous variant of :meth:`get_users_me_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_users_me_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_users_me_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get current user profile (synchronous)
+
+        Synchronous variant of :meth:`get_users_me_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_users_me_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_users_me_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/users/me",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_users(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> User:
+        """Create a new user
+
+        Create a new user in the system
+
+        :param create_user_input: User creation request (required)
+        :type create_user_input: CreateUserInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_serialize(
+            create_user_input=create_user_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_users_with_http_info(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[User]:
+        """Create a new user
+
+        Create a new user in the system
+
+        :param create_user_input: User creation request (required)
+        :type create_user_input: CreateUserInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_serialize(
+            create_user_input=create_user_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_users_without_preload_content(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new user
+
+        Create a new user in the system
+
+        :param create_user_input: User creation request (required)
+        :type create_user_input: CreateUserInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_serialize(
+            create_user_input=create_user_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "User",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_users_sync(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> User:
+        """Create a new user (synchronous)
+
+        Synchronous variant of :meth:`post_users`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users(
+                create_user_input=create_user_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_sync_with_http_info(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[User]:
+        """Create a new user (synchronous)
+
+        Synchronous variant of :meth:`post_users_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_with_http_info(
+                create_user_input=create_user_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_sync_without_preload_content(
+        self,
+        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a new user (synchronous)
+
+        Synchronous variant of :meth:`post_users_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_without_preload_content(
+                create_user_input=create_user_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_users_serialize(
+        self,
+        create_user_input,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_user_input is not None:
+            _body_params = create_user_input
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/users",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_users_apikeys(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> APIKey:
+        """Create API key
+
+        Create a new API key for a user
+
+        :param create_api_key_request: API key creation request (required)
+        :type create_api_key_request: CreateAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_apikeys_serialize(
+            create_api_key_request=create_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "APIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_users_apikeys_with_http_info(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[APIKey]:
+        """Create API key
+
+        Create a new API key for a user
+
+        :param create_api_key_request: API key creation request (required)
+        :type create_api_key_request: CreateAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_apikeys_serialize(
+            create_api_key_request=create_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "APIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_users_apikeys_without_preload_content(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create API key
+
+        Create a new API key for a user
+
+        :param create_api_key_request: API key creation request (required)
+        :type create_api_key_request: CreateAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_apikeys_serialize(
+            create_api_key_request=create_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "APIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_users_apikeys_sync(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> APIKey:
+        """Create API key (synchronous)
+
+        Synchronous variant of :meth:`post_users_apikeys`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_apikeys(
+                create_api_key_request=create_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_apikeys_sync_with_http_info(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[APIKey]:
+        """Create API key (synchronous)
+
+        Synchronous variant of :meth:`post_users_apikeys_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_apikeys_with_http_info(
+                create_api_key_request=create_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_apikeys_sync_without_preload_content(
+        self,
+        create_api_key_request: Annotated[
+            CreateAPIKeyRequest, Field(description="API key creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create API key (synchronous)
+
+        Synchronous variant of :meth:`post_users_apikeys_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_apikeys_without_preload_content(
+                create_api_key_request=create_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_users_apikeys_serialize(
+        self,
+        create_api_key_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_api_key_request is not None:
+            _body_params = create_api_key_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/users/apikeys",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_users_login(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TokenResponse:
+        """Login user
+
+        Authenticate a user with username/email and password
+
+        :param login_request: Login credentials (required)
+        :type login_request: LoginRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_login_serialize(
+            login_request=login_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_users_login_with_http_info(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TokenResponse]:
+        """Login user
+
+        Authenticate a user with username/email and password
+
+        :param login_request: Login credentials (required)
+        :type login_request: LoginRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_login_serialize(
+            login_request=login_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_users_login_without_preload_content(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Login user
+
+        Authenticate a user with username/email and password
+
+        :param login_request: Login credentials (required)
+        :type login_request: LoginRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_login_serialize(
+            login_request=login_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_users_login_sync(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TokenResponse:
+        """Login user (synchronous)
+
+        Synchronous variant of :meth:`post_users_login`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_login(
+                login_request=login_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_login_sync_with_http_info(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TokenResponse]:
+        """Login user (synchronous)
+
+        Synchronous variant of :meth:`post_users_login_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_login_with_http_info(
+                login_request=login_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_login_sync_without_preload_content(
+        self,
+        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Login user (synchronous)
+
+        Synchronous variant of :meth:`post_users_login_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_login_without_preload_content(
+                login_request=login_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_users_login_serialize(
+        self,
+        login_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if login_request is not None:
+            _body_params = login_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = []
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/users/login",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_users_oauth_link(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Link OAuth account
+
+        Link an OAuth account to an existing user
+
+        :param o_auth_link_request: OAuth account link request (required)
+        :type o_auth_link_request: OAuthLinkRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_oauth_link_serialize(
+            o_auth_link_request=o_auth_link_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_users_oauth_link_with_http_info(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Link OAuth account
+
+        Link an OAuth account to an existing user
+
+        :param o_auth_link_request: OAuth account link request (required)
+        :type o_auth_link_request: OAuthLinkRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_oauth_link_serialize(
+            o_auth_link_request=o_auth_link_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_users_oauth_link_without_preload_content(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Link OAuth account
+
+        Link an OAuth account to an existing user
+
+        :param o_auth_link_request: OAuth account link request (required)
+        :type o_auth_link_request: OAuthLinkRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_oauth_link_serialize(
+            o_auth_link_request=o_auth_link_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": None,
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_users_oauth_link_sync(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Link OAuth account (synchronous)
+
+        Synchronous variant of :meth:`post_users_oauth_link`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_oauth_link(
+                o_auth_link_request=o_auth_link_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_oauth_link_sync_with_http_info(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Link OAuth account (synchronous)
+
+        Synchronous variant of :meth:`post_users_oauth_link_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_oauth_link_with_http_info(
+                o_auth_link_request=o_auth_link_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_oauth_link_sync_without_preload_content(
+        self,
+        o_auth_link_request: Annotated[
+            OAuthLinkRequest, Field(description="OAuth account link request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Link OAuth account (synchronous)
+
+        Synchronous variant of :meth:`post_users_oauth_link_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_oauth_link_without_preload_content(
+                o_auth_link_request=o_auth_link_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_users_oauth_link_serialize(
+        self,
+        o_auth_link_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if o_auth_link_request is not None:
+            _body_params = o_auth_link_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/users/oauth/link",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_users_update_password(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TokenResponse:
+        """Update user password
+
+        Update current user's password
+
+        :param update_password_request: Password update request (required)
+        :type update_password_request: UpdatePasswordRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_update_password_serialize(
+            update_password_request=update_password_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_users_update_password_with_http_info(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TokenResponse]:
+        """Update user password
+
+        Update current user's password
+
+        :param update_password_request: Password update request (required)
+        :type update_password_request: UpdatePasswordRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_update_password_serialize(
+            update_password_request=update_password_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_users_update_password_without_preload_content(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update user password
+
+        Update current user's password
+
+        :param update_password_request: Password update request (required)
+        :type update_password_request: UpdatePasswordRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_users_update_password_serialize(
+            update_password_request=update_password_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TokenResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_users_update_password_sync(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TokenResponse:
+        """Update user password (synchronous)
+
+        Synchronous variant of :meth:`post_users_update_password`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_update_password(
+                update_password_request=update_password_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_update_password_sync_with_http_info(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TokenResponse]:
+        """Update user password (synchronous)
+
+        Synchronous variant of :meth:`post_users_update_password_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_update_password_with_http_info(
+                update_password_request=update_password_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_users_update_password_sync_without_preload_content(
+        self,
+        update_password_request: Annotated[
+            UpdatePasswordRequest, Field(description="Password update request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update user password (synchronous)
+
+        Synchronous variant of :meth:`post_users_update_password_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_users_update_password_without_preload_content(
+                update_password_request=update_password_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_users_update_password_serialize(
+        self,
+        update_password_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if update_password_request is not None:
+            _body_params = update_password_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/users/update-password",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def put_users_id(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2034,7 +3941,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_put_serialize(
+        _param = self._put_users_id_serialize(
             id=id,
             update_user_input=update_user_input,
             _request_auth=_request_auth,
@@ -2056,7 +3963,7 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_id_put_with_http_info(
+    async def put_users_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2098,7 +4005,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_put_serialize(
+        _param = self._put_users_id_serialize(
             id=id,
             update_user_input=update_user_input,
             _request_auth=_request_auth,
@@ -2120,7 +4027,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_id_put_without_preload_content(
+    async def put_users_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2162,7 +4069,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_id_put_serialize(
+        _param = self._put_users_id_serialize(
             id=id,
             update_user_input=update_user_input,
             _request_auth=_request_auth,
@@ -2180,7 +4087,7 @@ class UsersApi:
         return response_data.response
 
     @validate_call
-    def users_id_put_sync(
+    def put_users_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2194,11 +4101,11 @@ class UsersApi:
     ) -> User:
         """Update a user (synchronous)
 
-        Synchronous variant of :meth:`users_id_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_users_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_put(
+            self.put_users_id(
                 id=id,
                 update_user_input=update_user_input,
                 _request_timeout=_request_timeout,
@@ -2210,7 +4117,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_put_sync_with_http_info(
+    def put_users_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2224,11 +4131,11 @@ class UsersApi:
     ) -> ApiResponse[User]:
         """Update a user (synchronous)
 
-        Synchronous variant of :meth:`users_id_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_users_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_put_with_http_info(
+            self.put_users_id_with_http_info(
                 id=id,
                 update_user_input=update_user_input,
                 _request_timeout=_request_timeout,
@@ -2240,7 +4147,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_id_put_sync_without_preload_content(
+    def put_users_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="User ID")],
         update_user_input: Annotated[UpdateUserInput, Field(description="User update request")],
@@ -2254,11 +4161,11 @@ class UsersApi:
     ) -> RESTResponseType:
         """Update a user (synchronous)
 
-        Synchronous variant of :meth:`users_id_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_users_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_id_put_without_preload_content(
+            self.put_users_id_without_preload_content(
                 id=id,
                 update_user_input=update_user_input,
                 _request_timeout=_request_timeout,
@@ -2269,7 +4176,7 @@ class UsersApi:
             )
         )
 
-    def _users_id_put_serialize(
+    def _put_users_id_serialize(
         self,
         id,
         update_user_input,
@@ -2317,7 +4224,7 @@ class UsersApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/users/{id}",
+            resource_path="/api/v1/users/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2331,1584 +4238,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_login_post(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TokenResponse:
-        """Login user
-
-        Authenticate a user with username/email and password
-
-        :param login_request: Login credentials (required)
-        :type login_request: LoginRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_login_post_serialize(
-            login_request=login_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_login_post_with_http_info(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TokenResponse]:
-        """Login user
-
-        Authenticate a user with username/email and password
-
-        :param login_request: Login credentials (required)
-        :type login_request: LoginRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_login_post_serialize(
-            login_request=login_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_login_post_without_preload_content(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Login user
-
-        Authenticate a user with username/email and password
-
-        :param login_request: Login credentials (required)
-        :type login_request: LoginRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_login_post_serialize(
-            login_request=login_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_login_post_sync(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TokenResponse:
-        """Login user (synchronous)
-
-        Synchronous variant of :meth:`users_login_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_login_post(
-                login_request=login_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_login_post_sync_with_http_info(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TokenResponse]:
-        """Login user (synchronous)
-
-        Synchronous variant of :meth:`users_login_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_login_post_with_http_info(
-                login_request=login_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_login_post_sync_without_preload_content(
-        self,
-        login_request: Annotated[LoginRequest, Field(description="Login credentials")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Login user (synchronous)
-
-        Synchronous variant of :meth:`users_login_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_login_post_without_preload_content(
-                login_request=login_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_login_post_serialize(
-        self,
-        login_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if login_request is not None:
-            _body_params = login_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = []
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/users/login",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_me_get(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> User:
-        """Get current user profile
-
-        Get detailed information about the currently authenticated user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_me_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_me_get_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[User]:
-        """Get current user profile
-
-        Get detailed information about the currently authenticated user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_me_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_me_get_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get current user profile
-
-        Get detailed information about the currently authenticated user
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_me_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_me_get_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> User:
-        """Get current user profile (synchronous)
-
-        Synchronous variant of :meth:`users_me_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_me_get(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_me_get_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[User]:
-        """Get current user profile (synchronous)
-
-        Synchronous variant of :meth:`users_me_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_me_get_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_me_get_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get current user profile (synchronous)
-
-        Synchronous variant of :meth:`users_me_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_me_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_me_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/users/me",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_oauth_link_post(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Link OAuth account
-
-        Link an OAuth account to an existing user
-
-        :param o_auth_link_request: OAuth account link request (required)
-        :type o_auth_link_request: OAuthLinkRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_link_post_serialize(
-            o_auth_link_request=o_auth_link_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_oauth_link_post_with_http_info(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Link OAuth account
-
-        Link an OAuth account to an existing user
-
-        :param o_auth_link_request: OAuth account link request (required)
-        :type o_auth_link_request: OAuthLinkRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_link_post_serialize(
-            o_auth_link_request=o_auth_link_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_oauth_link_post_without_preload_content(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Link OAuth account
-
-        Link an OAuth account to an existing user
-
-        :param o_auth_link_request: OAuth account link request (required)
-        :type o_auth_link_request: OAuthLinkRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_link_post_serialize(
-            o_auth_link_request=o_auth_link_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_oauth_link_post_sync(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Link OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_link_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_link_post(
-                o_auth_link_request=o_auth_link_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_oauth_link_post_sync_with_http_info(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Link OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_link_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_link_post_with_http_info(
-                o_auth_link_request=o_auth_link_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_oauth_link_post_sync_without_preload_content(
-        self,
-        o_auth_link_request: Annotated[
-            OAuthLinkRequest, Field(description="OAuth account link request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Link OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_link_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_link_post_without_preload_content(
-                o_auth_link_request=o_auth_link_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_oauth_link_post_serialize(
-        self,
-        o_auth_link_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if o_auth_link_request is not None:
-            _body_params = o_auth_link_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/users/oauth/link",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_oauth_unlink_id_provider_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Unlink OAuth account
-
-        Unlink an OAuth account from a user
-
-        :param id: User ID (required)
-        :type id: str
-        :param provider: OAuth provider (required)
-        :type provider: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_unlink_id_provider_delete_serialize(
-            id=id,
-            provider=provider,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_oauth_unlink_id_provider_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Unlink OAuth account
-
-        Unlink an OAuth account from a user
-
-        :param id: User ID (required)
-        :type id: str
-        :param provider: OAuth provider (required)
-        :type provider: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_unlink_id_provider_delete_serialize(
-            id=id,
-            provider=provider,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_oauth_unlink_id_provider_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Unlink OAuth account
-
-        Unlink an OAuth account from a user
-
-        :param id: User ID (required)
-        :type id: str
-        :param provider: OAuth provider (required)
-        :type provider: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_oauth_unlink_id_provider_delete_serialize(
-            id=id,
-            provider=provider,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "400": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_oauth_unlink_id_provider_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Unlink OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_unlink_id_provider_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_unlink_id_provider_delete(
-                id=id,
-                provider=provider,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_oauth_unlink_id_provider_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Unlink OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_unlink_id_provider_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_unlink_id_provider_delete_with_http_info(
-                id=id,
-                provider=provider,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_oauth_unlink_id_provider_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="User ID")],
-        provider: Annotated[StrictStr, Field(description="OAuth provider")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Unlink OAuth account (synchronous)
-
-        Synchronous variant of :meth:`users_oauth_unlink_id_provider_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_oauth_unlink_id_provider_delete_without_preload_content(
-                id=id,
-                provider=provider,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_oauth_unlink_id_provider_delete_serialize(
-        self,
-        id,
-        provider,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        if provider is not None:
-            _path_params["provider"] = provider
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/users/oauth/unlink/{id}/{provider}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_post(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> User:
-        """Create a new user
-
-        Create a new user in the system
-
-        :param create_user_input: User creation request (required)
-        :type create_user_input: CreateUserInput
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_post_serialize(
-            create_user_input=create_user_input,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_post_with_http_info(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[User]:
-        """Create a new user
-
-        Create a new user in the system
-
-        :param create_user_input: User creation request (required)
-        :type create_user_input: CreateUserInput
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_post_serialize(
-            create_user_input=create_user_input,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_post_without_preload_content(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new user
-
-        Create a new user in the system
-
-        :param create_user_input: User creation request (required)
-        :type create_user_input: CreateUserInput
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_post_serialize(
-            create_user_input=create_user_input,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "User",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_post_sync(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> User:
-        """Create a new user (synchronous)
-
-        Synchronous variant of :meth:`users_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_post(
-                create_user_input=create_user_input,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_post_sync_with_http_info(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[User]:
-        """Create a new user (synchronous)
-
-        Synchronous variant of :meth:`users_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_post_with_http_info(
-                create_user_input=create_user_input,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_post_sync_without_preload_content(
-        self,
-        create_user_input: Annotated[CreateUserInput, Field(description="User creation request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a new user (synchronous)
-
-        Synchronous variant of :meth:`users_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_post_without_preload_content(
-                create_user_input=create_user_input,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_post_serialize(
-        self,
-        create_user_input,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_user_input is not None:
-            _body_params = create_user_input
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/users",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_preferences_put(
+    async def put_users_preferences(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -3947,7 +4277,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_preferences_put_serialize(
+        _param = self._put_users_preferences_serialize(
             request_body=request_body,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -3967,7 +4297,7 @@ class UsersApi:
         ).data
 
     @validate_call
-    async def users_preferences_put_with_http_info(
+    async def put_users_preferences_with_http_info(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -4006,7 +4336,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_preferences_put_serialize(
+        _param = self._put_users_preferences_serialize(
             request_body=request_body,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -4026,7 +4356,7 @@ class UsersApi:
         )
 
     @validate_call
-    async def users_preferences_put_without_preload_content(
+    async def put_users_preferences_without_preload_content(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -4065,7 +4395,7 @@ class UsersApi:
         :return: Returns the result object.
         """
 
-        _param = self._users_preferences_put_serialize(
+        _param = self._put_users_preferences_serialize(
             request_body=request_body,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -4081,7 +4411,7 @@ class UsersApi:
         return response_data.response
 
     @validate_call
-    def users_preferences_put_sync(
+    def put_users_preferences_sync(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -4094,11 +4424,11 @@ class UsersApi:
     ) -> None:
         """Update user preferences (synchronous)
 
-        Synchronous variant of :meth:`users_preferences_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_users_preferences`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.users_preferences_put(
+            self.put_users_preferences(
                 request_body=request_body,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4109,7 +4439,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_preferences_put_sync_with_http_info(
+    def put_users_preferences_sync_with_http_info(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -4122,11 +4452,11 @@ class UsersApi:
     ) -> ApiResponse[None]:
         """Update user preferences (synchronous)
 
-        Synchronous variant of :meth:`users_preferences_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_users_preferences_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_preferences_put_with_http_info(
+            self.put_users_preferences_with_http_info(
                 request_body=request_body,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4137,7 +4467,7 @@ class UsersApi:
         )
 
     @validate_call
-    def users_preferences_put_sync_without_preload_content(
+    def put_users_preferences_sync_without_preload_content(
         self,
         request_body: Annotated[dict[str, Any], Field(description="User preferences")],
         _request_timeout: None
@@ -4150,11 +4480,11 @@ class UsersApi:
     ) -> RESTResponseType:
         """Update user preferences (synchronous)
 
-        Synchronous variant of :meth:`users_preferences_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_users_preferences_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.users_preferences_put_without_preload_content(
+            self.put_users_preferences_without_preload_content(
                 request_body=request_body,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -4164,7 +4494,7 @@ class UsersApi:
             )
         )
 
-    def _users_preferences_put_serialize(
+    def _put_users_preferences_serialize(
         self,
         request_body,
         _request_auth,
@@ -4209,337 +4539,7 @@ class UsersApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/users/preferences",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def users_update_password_post(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TokenResponse:
-        """Update user password
-
-        Update current user's password
-
-        :param update_password_request: Password update request (required)
-        :type update_password_request: UpdatePasswordRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_update_password_post_serialize(
-            update_password_request=update_password_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def users_update_password_post_with_http_info(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TokenResponse]:
-        """Update user password
-
-        Update current user's password
-
-        :param update_password_request: Password update request (required)
-        :type update_password_request: UpdatePasswordRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_update_password_post_serialize(
-            update_password_request=update_password_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def users_update_password_post_without_preload_content(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update user password
-
-        Update current user's password
-
-        :param update_password_request: Password update request (required)
-        :type update_password_request: UpdatePasswordRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._users_update_password_post_serialize(
-            update_password_request=update_password_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "TokenResponse",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def users_update_password_post_sync(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TokenResponse:
-        """Update user password (synchronous)
-
-        Synchronous variant of :meth:`users_update_password_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_update_password_post(
-                update_password_request=update_password_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_update_password_post_sync_with_http_info(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TokenResponse]:
-        """Update user password (synchronous)
-
-        Synchronous variant of :meth:`users_update_password_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_update_password_post_with_http_info(
-                update_password_request=update_password_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def users_update_password_post_sync_without_preload_content(
-        self,
-        update_password_request: Annotated[
-            UpdatePasswordRequest, Field(description="Password update request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update user password (synchronous)
-
-        Synchronous variant of :meth:`users_update_password_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.users_update_password_post_without_preload_content(
-                update_password_request=update_password_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _users_update_password_post_serialize(
-        self,
-        update_password_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if update_password_request is not None:
-            _body_params = update_password_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/users/update-password",
+            resource_path="/api/v1/users/preferences",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

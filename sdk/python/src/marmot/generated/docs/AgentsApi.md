@@ -1,19 +1,19 @@
 # marmot.generated.AgentsApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**agents_asset_id_activity_get**](AgentsApi.md#agents_asset_id_activity_get) | **GET** /agents/{asset_id}/activity | Agent activity
-[**agents_asset_id_runs_get**](AgentsApi.md#agents_asset_id_runs_get) | **GET** /agents/{asset_id}/runs | List agent runs
-[**agents_asset_id_stats_get**](AgentsApi.md#agents_asset_id_stats_get) | **GET** /agents/{asset_id}/stats | Agent stats
-[**agents_runs_post**](AgentsApi.md#agents_runs_post) | **POST** /agents/runs | Record agent run
+[**get_agents_asset_id_activity**](AgentsApi.md#get_agents_asset_id_activity) | **GET** /api/v1/agents/{asset_id}/activity | Agent activity
+[**get_agents_asset_id_runs**](AgentsApi.md#get_agents_asset_id_runs) | **GET** /api/v1/agents/{asset_id}/runs | List agent runs
+[**get_agents_asset_id_stats**](AgentsApi.md#get_agents_asset_id_stats) | **GET** /api/v1/agents/{asset_id}/stats | Agent stats
+[**post_agents_runs**](AgentsApi.md#post_agents_runs) | **POST** /api/v1/agents/runs | Record agent run
 
 
-# **agents_asset_id_activity_get**
-> ActivityResponse agents_asset_id_activity_get(asset_id, period=period)
+# **get_agents_asset_id_activity**
+> ActivityResponse get_agents_asset_id_activity(asset_id, period=period)
 
-**Synchronous variant:** `agents_asset_id_activity_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_agents_asset_id_activity_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Agent activity
 
@@ -28,10 +28,10 @@ from marmot.generated.models.activity_response import ActivityResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -60,11 +60,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Agent activity
-        api_response = await api_instance.agents_asset_id_activity_get(asset_id, period=period)
-        print("The response of AgentsApi->agents_asset_id_activity_get:\n")
+        api_response = await api_instance.get_agents_asset_id_activity(asset_id, period=period)
+        print("The response of AgentsApi->get_agents_asset_id_activity:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AgentsApi->agents_asset_id_activity_get: %s\n" % e)
+        print("Exception when calling AgentsApi->get_agents_asset_id_activity: %s\n" % e)
 ```
 
 
@@ -98,10 +98,10 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **agents_asset_id_runs_get**
-> RunsResponse agents_asset_id_runs_get(asset_id, period=period, limit=limit)
+# **get_agents_asset_id_runs**
+> RunsResponse get_agents_asset_id_runs(asset_id, period=period, limit=limit)
 
-**Synchronous variant:** `agents_asset_id_runs_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_agents_asset_id_runs_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 List agent runs
 
@@ -116,10 +116,10 @@ from marmot.generated.models.runs_response import RunsResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -149,11 +149,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # List agent runs
-        api_response = await api_instance.agents_asset_id_runs_get(asset_id, period=period, limit=limit)
-        print("The response of AgentsApi->agents_asset_id_runs_get:\n")
+        api_response = await api_instance.get_agents_asset_id_runs(asset_id, period=period, limit=limit)
+        print("The response of AgentsApi->get_agents_asset_id_runs:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AgentsApi->agents_asset_id_runs_get: %s\n" % e)
+        print("Exception when calling AgentsApi->get_agents_asset_id_runs: %s\n" % e)
 ```
 
 
@@ -188,10 +188,10 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **agents_asset_id_stats_get**
-> Stats agents_asset_id_stats_get(asset_id, period=period)
+# **get_agents_asset_id_stats**
+> Stats get_agents_asset_id_stats(asset_id, period=period)
 
-**Synchronous variant:** `agents_asset_id_stats_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_agents_asset_id_stats_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Agent stats
 
@@ -206,10 +206,10 @@ from marmot.generated.models.stats import Stats
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -238,11 +238,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Agent stats
-        api_response = await api_instance.agents_asset_id_stats_get(asset_id, period=period)
-        print("The response of AgentsApi->agents_asset_id_stats_get:\n")
+        api_response = await api_instance.get_agents_asset_id_stats(asset_id, period=period)
+        print("The response of AgentsApi->get_agents_asset_id_stats:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AgentsApi->agents_asset_id_stats_get: %s\n" % e)
+        print("Exception when calling AgentsApi->get_agents_asset_id_stats: %s\n" % e)
 ```
 
 
@@ -276,10 +276,10 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **agents_runs_post**
-> AgentRun agents_runs_post(record_run_request)
+# **post_agents_runs**
+> AgentRun post_agents_runs(record_run_request)
 
-**Synchronous variant:** `agents_runs_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `post_agents_runs_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Record agent run
 
@@ -295,10 +295,10 @@ from marmot.generated.models.record_run_request import RecordRunRequest
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -326,11 +326,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Record agent run
-        api_response = await api_instance.agents_runs_post(record_run_request)
-        print("The response of AgentsApi->agents_runs_post:\n")
+        api_response = await api_instance.post_agents_runs(record_run_request)
+        print("The response of AgentsApi->post_agents_runs:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AgentsApi->agents_runs_post: %s\n" % e)
+        print("Exception when calling AgentsApi->post_agents_runs: %s\n" % e)
 ```
 
 

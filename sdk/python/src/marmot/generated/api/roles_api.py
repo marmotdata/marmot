@@ -39,579 +39,7 @@ class RolesApi:
         self.api_client = api_client
 
     @validate_call
-    async def permissions_get(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[RolePermission]:
-        """List all permissions
-
-        List all defined permissions grouped by resource type
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._permissions_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[RolePermission]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def permissions_get_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[RolePermission]]:
-        """List all permissions
-
-        List all defined permissions grouped by resource type
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._permissions_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[RolePermission]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def permissions_get_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List all permissions
-
-        List all defined permissions grouped by resource type
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._permissions_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[RolePermission]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def permissions_get_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[RolePermission]:
-        """List all permissions (synchronous)
-
-        Synchronous variant of :meth:`permissions_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.permissions_get(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def permissions_get_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[RolePermission]]:
-        """List all permissions (synchronous)
-
-        Synchronous variant of :meth:`permissions_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.permissions_get_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def permissions_get_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List all permissions (synchronous)
-
-        Synchronous variant of :meth:`permissions_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.permissions_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _permissions_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/permissions",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def roles_get(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[Role]:
-        """List roles
-
-        List all active roles with user counts and permissions
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[Role]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def roles_get_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[Role]]:
-        """List roles
-
-        List all active roles with user counts and permissions
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[Role]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def roles_get_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List roles
-
-        List all active roles with user counts and permissions
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[Role]",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def roles_get_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[Role]:
-        """List roles (synchronous)
-
-        Synchronous variant of :meth:`roles_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_get(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def roles_get_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[Role]]:
-        """List roles (synchronous)
-
-        Synchronous variant of :meth:`roles_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_get_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def roles_get_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List roles (synchronous)
-
-        Synchronous variant of :meth:`roles_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _roles_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/roles",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def roles_id_delete(
+    async def delete_roles_id(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -650,7 +78,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_delete_serialize(
+        _param = self._delete_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -671,7 +99,7 @@ class RolesApi:
         ).data
 
     @validate_call
-    async def roles_id_delete_with_http_info(
+    async def delete_roles_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -710,7 +138,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_delete_serialize(
+        _param = self._delete_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -731,7 +159,7 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_delete_without_preload_content(
+    async def delete_roles_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -770,7 +198,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_delete_serialize(
+        _param = self._delete_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -787,7 +215,7 @@ class RolesApi:
         return response_data.response
 
     @validate_call
-    def roles_id_delete_sync(
+    def delete_roles_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -800,11 +228,11 @@ class RolesApi:
     ) -> None:
         """Delete a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_roles_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_delete(
+            self.delete_roles_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -815,7 +243,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_delete_sync_with_http_info(
+    def delete_roles_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -828,11 +256,11 @@ class RolesApi:
     ) -> ApiResponse[None]:
         """Delete a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_roles_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_delete_with_http_info(
+            self.delete_roles_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -843,7 +271,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_delete_sync_without_preload_content(
+    def delete_roles_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -856,11 +284,11 @@ class RolesApi:
     ) -> RESTResponseType:
         """Delete a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_roles_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_delete_without_preload_content(
+            self.delete_roles_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -870,7 +298,7 @@ class RolesApi:
             )
         )
 
-    def _roles_id_delete_serialize(
+    def _delete_roles_id_serialize(
         self,
         id,
         _request_auth,
@@ -907,7 +335,7 @@ class RolesApi:
 
         return self.api_client.param_serialize(
             method="DELETE",
-            resource_path="/roles/{id}",
+            resource_path="/api/v1/roles/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -921,7 +349,579 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_get(
+    async def get_permissions(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[RolePermission]:
+        """List all permissions
+
+        List all defined permissions grouped by resource type
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_permissions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[RolePermission]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_permissions_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[RolePermission]]:
+        """List all permissions
+
+        List all defined permissions grouped by resource type
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_permissions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[RolePermission]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_permissions_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List all permissions
+
+        List all defined permissions grouped by resource type
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_permissions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[RolePermission]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_permissions_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[RolePermission]:
+        """List all permissions (synchronous)
+
+        Synchronous variant of :meth:`get_permissions`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_permissions(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_permissions_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[RolePermission]]:
+        """List all permissions (synchronous)
+
+        Synchronous variant of :meth:`get_permissions_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_permissions_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_permissions_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List all permissions (synchronous)
+
+        Synchronous variant of :meth:`get_permissions_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_permissions_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_permissions_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/permissions",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_roles(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[Role]:
+        """List roles
+
+        List all active roles with user counts and permissions
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_roles_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[Role]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_roles_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[Role]]:
+        """List roles
+
+        List all active roles with user counts and permissions
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_roles_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[Role]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_roles_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List roles
+
+        List all active roles with user counts and permissions
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_roles_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[Role]",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_roles_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[Role]:
+        """List roles (synchronous)
+
+        Synchronous variant of :meth:`get_roles`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_roles(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_roles_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[Role]]:
+        """List roles (synchronous)
+
+        Synchronous variant of :meth:`get_roles_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_roles_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_roles_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List roles (synchronous)
+
+        Synchronous variant of :meth:`get_roles_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_roles_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_roles_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/roles",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_roles_id(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -960,7 +960,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_get_serialize(
+        _param = self._get_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -980,7 +980,7 @@ class RolesApi:
         ).data
 
     @validate_call
-    async def roles_id_get_with_http_info(
+    async def get_roles_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -1019,7 +1019,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_get_serialize(
+        _param = self._get_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1039,7 +1039,7 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_get_without_preload_content(
+    async def get_roles_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -1078,7 +1078,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_get_serialize(
+        _param = self._get_roles_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1094,7 +1094,7 @@ class RolesApi:
         return response_data.response
 
     @validate_call
-    def roles_id_get_sync(
+    def get_roles_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -1107,11 +1107,11 @@ class RolesApi:
     ) -> Role:
         """Get a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_roles_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_get(
+            self.get_roles_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1122,7 +1122,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_get_sync_with_http_info(
+    def get_roles_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -1135,11 +1135,11 @@ class RolesApi:
     ) -> ApiResponse[Role]:
         """Get a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_roles_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_get_with_http_info(
+            self.get_roles_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1150,7 +1150,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_get_sync_without_preload_content(
+    def get_roles_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         _request_timeout: None
@@ -1163,11 +1163,11 @@ class RolesApi:
     ) -> RESTResponseType:
         """Get a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_roles_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_get_without_preload_content(
+            self.get_roles_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1177,7 +1177,7 @@ class RolesApi:
             )
         )
 
-    def _roles_id_get_serialize(
+    def _get_roles_id_serialize(
         self,
         id,
         _request_auth,
@@ -1214,7 +1214,7 @@ class RolesApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/roles/{id}",
+            resource_path="/api/v1/roles/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1228,7 +1228,7 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_patch(
+    async def patch_roles_id(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1272,7 +1272,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_patch_serialize(
+        _param = self._patch_roles_id_serialize(
             id=id,
             v1_roles_update_role_request=v1_roles_update_role_request,
             _request_auth=_request_auth,
@@ -1295,7 +1295,7 @@ class RolesApi:
         ).data
 
     @validate_call
-    async def roles_id_patch_with_http_info(
+    async def patch_roles_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1339,7 +1339,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_patch_serialize(
+        _param = self._patch_roles_id_serialize(
             id=id,
             v1_roles_update_role_request=v1_roles_update_role_request,
             _request_auth=_request_auth,
@@ -1362,7 +1362,7 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_patch_without_preload_content(
+    async def patch_roles_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1406,7 +1406,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_patch_serialize(
+        _param = self._patch_roles_id_serialize(
             id=id,
             v1_roles_update_role_request=v1_roles_update_role_request,
             _request_auth=_request_auth,
@@ -1425,7 +1425,7 @@ class RolesApi:
         return response_data.response
 
     @validate_call
-    def roles_id_patch_sync(
+    def patch_roles_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1441,11 +1441,11 @@ class RolesApi:
     ) -> Role:
         """Update a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_patch`. It calls the asynchronous
+        Synchronous variant of :meth:`patch_roles_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_patch(
+            self.patch_roles_id(
                 id=id,
                 v1_roles_update_role_request=v1_roles_update_role_request,
                 _request_timeout=_request_timeout,
@@ -1457,7 +1457,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_patch_sync_with_http_info(
+    def patch_roles_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1473,11 +1473,11 @@ class RolesApi:
     ) -> ApiResponse[Role]:
         """Update a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_patch_with_http_info`. It calls the
+        Synchronous variant of :meth:`patch_roles_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_patch_with_http_info(
+            self.patch_roles_id_with_http_info(
                 id=id,
                 v1_roles_update_role_request=v1_roles_update_role_request,
                 _request_timeout=_request_timeout,
@@ -1489,7 +1489,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_patch_sync_without_preload_content(
+    def patch_roles_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_update_role_request: Annotated[
@@ -1505,11 +1505,11 @@ class RolesApi:
     ) -> RESTResponseType:
         """Update a role (synchronous)
 
-        Synchronous variant of :meth:`roles_id_patch_without_preload_content`. It calls
+        Synchronous variant of :meth:`patch_roles_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_patch_without_preload_content(
+            self.patch_roles_id_without_preload_content(
                 id=id,
                 v1_roles_update_role_request=v1_roles_update_role_request,
                 _request_timeout=_request_timeout,
@@ -1520,7 +1520,7 @@ class RolesApi:
             )
         )
 
-    def _roles_id_patch_serialize(
+    def _patch_roles_id_serialize(
         self,
         id,
         v1_roles_update_role_request,
@@ -1568,7 +1568,7 @@ class RolesApi:
 
         return self.api_client.param_serialize(
             method="PATCH",
-            resource_path="/roles/{id}",
+            resource_path="/api/v1/roles/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1582,7 +1582,337 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_permissions_post(
+    async def post_roles(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Role:
+        """Create a role
+
+        Create a new role with optional initial permissions
+
+        :param v1_roles_create_role_request: Role creation request (required)
+        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_roles_serialize(
+            v1_roles_create_role_request=v1_roles_create_role_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Role",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_roles_with_http_info(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Role]:
+        """Create a role
+
+        Create a new role with optional initial permissions
+
+        :param v1_roles_create_role_request: Role creation request (required)
+        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_roles_serialize(
+            v1_roles_create_role_request=v1_roles_create_role_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Role",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_roles_without_preload_content(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a role
+
+        Create a new role with optional initial permissions
+
+        :param v1_roles_create_role_request: Role creation request (required)
+        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_roles_serialize(
+            v1_roles_create_role_request=v1_roles_create_role_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Role",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_roles_sync(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Role:
+        """Create a role (synchronous)
+
+        Synchronous variant of :meth:`post_roles`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_roles(
+                v1_roles_create_role_request=v1_roles_create_role_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_roles_sync_with_http_info(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Role]:
+        """Create a role (synchronous)
+
+        Synchronous variant of :meth:`post_roles_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_roles_with_http_info(
+                v1_roles_create_role_request=v1_roles_create_role_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_roles_sync_without_preload_content(
+        self,
+        v1_roles_create_role_request: Annotated[
+            V1RolesCreateRoleRequest, Field(description="Role creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a role (synchronous)
+
+        Synchronous variant of :meth:`post_roles_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_roles_without_preload_content(
+                v1_roles_create_role_request=v1_roles_create_role_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_roles_serialize(
+        self,
+        v1_roles_create_role_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if v1_roles_create_role_request is not None:
+            _body_params = v1_roles_create_role_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/roles",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_roles_id_permissions(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1626,7 +1956,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_permissions_post_serialize(
+        _param = self._post_roles_id_permissions_serialize(
             id=id,
             v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
             _request_auth=_request_auth,
@@ -1649,7 +1979,7 @@ class RolesApi:
         ).data
 
     @validate_call
-    async def roles_id_permissions_post_with_http_info(
+    async def post_roles_id_permissions_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1693,7 +2023,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_permissions_post_serialize(
+        _param = self._post_roles_id_permissions_serialize(
             id=id,
             v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
             _request_auth=_request_auth,
@@ -1716,7 +2046,7 @@ class RolesApi:
         )
 
     @validate_call
-    async def roles_id_permissions_post_without_preload_content(
+    async def post_roles_id_permissions_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1760,7 +2090,7 @@ class RolesApi:
         :return: Returns the result object.
         """
 
-        _param = self._roles_id_permissions_post_serialize(
+        _param = self._post_roles_id_permissions_serialize(
             id=id,
             v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
             _request_auth=_request_auth,
@@ -1779,7 +2109,7 @@ class RolesApi:
         return response_data.response
 
     @validate_call
-    def roles_id_permissions_post_sync(
+    def post_roles_id_permissions_sync(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1795,11 +2125,11 @@ class RolesApi:
     ) -> Role:
         """Replace role permissions (synchronous)
 
-        Synchronous variant of :meth:`roles_id_permissions_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_roles_id_permissions`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_permissions_post(
+            self.post_roles_id_permissions(
                 id=id,
                 v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
                 _request_timeout=_request_timeout,
@@ -1811,7 +2141,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_permissions_post_sync_with_http_info(
+    def post_roles_id_permissions_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1827,11 +2157,11 @@ class RolesApi:
     ) -> ApiResponse[Role]:
         """Replace role permissions (synchronous)
 
-        Synchronous variant of :meth:`roles_id_permissions_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_roles_id_permissions_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_permissions_post_with_http_info(
+            self.post_roles_id_permissions_with_http_info(
                 id=id,
                 v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
                 _request_timeout=_request_timeout,
@@ -1843,7 +2173,7 @@ class RolesApi:
         )
 
     @validate_call
-    def roles_id_permissions_post_sync_without_preload_content(
+    def post_roles_id_permissions_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Role ID")],
         v1_roles_replace_permissions_request: Annotated[
@@ -1859,11 +2189,11 @@ class RolesApi:
     ) -> RESTResponseType:
         """Replace role permissions (synchronous)
 
-        Synchronous variant of :meth:`roles_id_permissions_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_roles_id_permissions_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.roles_id_permissions_post_without_preload_content(
+            self.post_roles_id_permissions_without_preload_content(
                 id=id,
                 v1_roles_replace_permissions_request=v1_roles_replace_permissions_request,
                 _request_timeout=_request_timeout,
@@ -1874,7 +2204,7 @@ class RolesApi:
             )
         )
 
-    def _roles_id_permissions_post_serialize(
+    def _post_roles_id_permissions_serialize(
         self,
         id,
         v1_roles_replace_permissions_request,
@@ -1922,337 +2252,7 @@ class RolesApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/roles/{id}/permissions",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def roles_post(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Role:
-        """Create a role
-
-        Create a new role with optional initial permissions
-
-        :param v1_roles_create_role_request: Role creation request (required)
-        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_post_serialize(
-            v1_roles_create_role_request=v1_roles_create_role_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Role",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def roles_post_with_http_info(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Role]:
-        """Create a role
-
-        Create a new role with optional initial permissions
-
-        :param v1_roles_create_role_request: Role creation request (required)
-        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_post_serialize(
-            v1_roles_create_role_request=v1_roles_create_role_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Role",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def roles_post_without_preload_content(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a role
-
-        Create a new role with optional initial permissions
-
-        :param v1_roles_create_role_request: Role creation request (required)
-        :type v1_roles_create_role_request: V1RolesCreateRoleRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._roles_post_serialize(
-            v1_roles_create_role_request=v1_roles_create_role_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Role",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def roles_post_sync(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Role:
-        """Create a role (synchronous)
-
-        Synchronous variant of :meth:`roles_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_post(
-                v1_roles_create_role_request=v1_roles_create_role_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def roles_post_sync_with_http_info(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Role]:
-        """Create a role (synchronous)
-
-        Synchronous variant of :meth:`roles_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_post_with_http_info(
-                v1_roles_create_role_request=v1_roles_create_role_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def roles_post_sync_without_preload_content(
-        self,
-        v1_roles_create_role_request: Annotated[
-            V1RolesCreateRoleRequest, Field(description="Role creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a role (synchronous)
-
-        Synchronous variant of :meth:`roles_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.roles_post_without_preload_content(
-                v1_roles_create_role_request=v1_roles_create_role_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _roles_post_serialize(
-        self,
-        v1_roles_create_role_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if v1_roles_create_role_request is not None:
-            _body_params = v1_roles_create_role_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/roles",
+            resource_path="/api/v1/roles/{id}/permissions",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

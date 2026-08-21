@@ -40,7 +40,651 @@ class TeamsApi:
         self.api_client = api_client
 
     @validate_call
-    async def teams_get(
+    async def delete_teams_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Delete a team
+
+        Delete a team by its ID
+
+        :param id: Team ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_teams_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Delete a team
+
+        Delete a team by its ID
+
+        :param id: Team ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_teams_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete a team
+
+        Delete a team by its ID
+
+        :param id: Team ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_teams_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Delete a team (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_teams_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Delete a team (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_teams_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete a team (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_teams_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/teams/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_teams_id_members_user_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Remove a team member
+
+        Remove a user from a team
+
+        :param id: Team ID (required)
+        :type id: str
+        :param user_id: User ID (required)
+        :type user_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_members_user_id_serialize(
+            id=id,
+            user_id=user_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_teams_id_members_user_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Remove a team member
+
+        Remove a user from a team
+
+        :param id: Team ID (required)
+        :type id: str
+        :param user_id: User ID (required)
+        :type user_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_members_user_id_serialize(
+            id=id,
+            user_id=user_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_teams_id_members_user_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove a team member
+
+        Remove a user from a team
+
+        :param id: Team ID (required)
+        :type id: str
+        :param user_id: User ID (required)
+        :type user_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_teams_id_members_user_id_serialize(
+            id=id,
+            user_id=user_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "MessageResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_teams_id_members_user_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> MessageResponse:
+        """Remove a team member (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id_members_user_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id_members_user_id(
+                id=id,
+                user_id=user_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_teams_id_members_user_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[MessageResponse]:
+        """Remove a team member (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id_members_user_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id_members_user_id_with_http_info(
+                id=id,
+                user_id=user_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_teams_id_members_user_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Team ID")],
+        user_id: Annotated[StrictStr, Field(description="User ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove a team member (synchronous)
+
+        Synchronous variant of :meth:`delete_teams_id_members_user_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_teams_id_members_user_id_without_preload_content(
+                id=id,
+                user_id=user_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_teams_id_members_user_id_serialize(
+        self,
+        id,
+        user_id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if user_id is not None:
+            _path_params["userId"] = user_id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/teams/{id}/members/{userId}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_teams(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -82,7 +726,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_get_serialize(
+        _param = self._get_teams_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -103,7 +747,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_get_with_http_info(
+    async def get_teams_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -145,7 +789,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_get_serialize(
+        _param = self._get_teams_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -166,7 +810,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_get_without_preload_content(
+    async def get_teams_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -208,7 +852,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_get_serialize(
+        _param = self._get_teams_serialize(
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -225,7 +869,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_get_sync(
+    def get_teams_sync(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -239,11 +883,11 @@ class TeamsApi:
     ) -> ListTeamsResponse:
         """List teams (synchronous)
 
-        Synchronous variant of :meth:`teams_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_teams`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_get(
+            self.get_teams(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -255,7 +899,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_get_sync_with_http_info(
+    def get_teams_sync_with_http_info(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -269,11 +913,11 @@ class TeamsApi:
     ) -> ApiResponse[ListTeamsResponse]:
         """List teams (synchronous)
 
-        Synchronous variant of :meth:`teams_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_teams_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_get_with_http_info(
+            self.get_teams_with_http_info(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -285,7 +929,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_get_sync_without_preload_content(
+    def get_teams_sync_without_preload_content(
         self,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
@@ -299,11 +943,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """List teams (synchronous)
 
-        Synchronous variant of :meth:`teams_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_teams_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_get_without_preload_content(
+            self.get_teams_without_preload_content(
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -314,7 +958,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_get_serialize(
+    def _get_teams_serialize(
         self,
         limit,
         offset,
@@ -356,7 +1000,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/teams",
+            resource_path="/api/v1/teams",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -370,320 +1014,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Delete a team
-
-        Delete a team by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def teams_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Delete a team
-
-        Delete a team by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def teams_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete a team
-
-        Delete a team by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def teams_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Delete a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Delete a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _teams_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/teams/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def teams_id_get(
+    async def get_teams_id(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -722,7 +1053,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_get_serialize(
+        _param = self._get_teams_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -743,7 +1074,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_get_with_http_info(
+    async def get_teams_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -782,7 +1113,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_get_serialize(
+        _param = self._get_teams_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -803,7 +1134,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_get_without_preload_content(
+    async def get_teams_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -842,7 +1173,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_get_serialize(
+        _param = self._get_teams_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -859,7 +1190,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_id_get_sync(
+    def get_teams_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -872,11 +1203,11 @@ class TeamsApi:
     ) -> Team:
         """Get a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_teams_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_get(
+            self.get_teams_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -887,7 +1218,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_get_sync_with_http_info(
+    def get_teams_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -900,11 +1231,11 @@ class TeamsApi:
     ) -> ApiResponse[Team]:
         """Get a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_teams_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_get_with_http_info(
+            self.get_teams_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -915,7 +1246,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_get_sync_without_preload_content(
+    def get_teams_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -928,11 +1259,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """Get a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_teams_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_get_without_preload_content(
+            self.get_teams_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -942,7 +1273,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_get_serialize(
+    def _get_teams_id_serialize(
         self,
         id,
         _request_auth,
@@ -979,7 +1310,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/teams/{id}",
+            resource_path="/api/v1/teams/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -993,7 +1324,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_get(
+    async def get_teams_id_members(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1032,7 +1363,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_get_serialize(
+        _param = self._get_teams_id_members_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1052,7 +1383,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_members_get_with_http_info(
+    async def get_teams_id_members_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1091,7 +1422,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_get_serialize(
+        _param = self._get_teams_id_members_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1111,7 +1442,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_get_without_preload_content(
+    async def get_teams_id_members_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1150,7 +1481,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_get_serialize(
+        _param = self._get_teams_id_members_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1166,7 +1497,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_id_members_get_sync(
+    def get_teams_id_members_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1179,11 +1510,11 @@ class TeamsApi:
     ) -> ListMembersResponse:
         """List team members (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_teams_id_members`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_get(
+            self.get_teams_id_members(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1194,7 +1525,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_get_sync_with_http_info(
+    def get_teams_id_members_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1207,11 +1538,11 @@ class TeamsApi:
     ) -> ApiResponse[ListMembersResponse]:
         """List team members (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_teams_id_members_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_get_with_http_info(
+            self.get_teams_id_members_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1222,7 +1553,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_get_sync_without_preload_content(
+    def get_teams_id_members_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         _request_timeout: None
@@ -1235,11 +1566,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """List team members (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_teams_id_members_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_get_without_preload_content(
+            self.get_teams_id_members_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1249,7 +1580,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_members_get_serialize(
+    def _get_teams_id_members_serialize(
         self,
         id,
         _request_auth,
@@ -1286,7 +1617,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/teams/{id}/members",
+            resource_path="/api/v1/teams/{id}/members",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1300,7 +1631,340 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_post(
+    async def post_teams(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Team:
+        """Create a team
+
+        Create a new team
+
+        :param create_team_request: Team creation request (required)
+        :type create_team_request: CreateTeamRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_teams_serialize(
+            create_team_request=create_team_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Team",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_teams_with_http_info(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Team]:
+        """Create a team
+
+        Create a new team
+
+        :param create_team_request: Team creation request (required)
+        :type create_team_request: CreateTeamRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_teams_serialize(
+            create_team_request=create_team_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Team",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_teams_without_preload_content(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a team
+
+        Create a new team
+
+        :param create_team_request: Team creation request (required)
+        :type create_team_request: CreateTeamRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_teams_serialize(
+            create_team_request=create_team_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "Team",
+            "400": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_teams_sync(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> Team:
+        """Create a team (synchronous)
+
+        Synchronous variant of :meth:`post_teams`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_teams(
+                create_team_request=create_team_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_teams_sync_with_http_info(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[Team]:
+        """Create a team (synchronous)
+
+        Synchronous variant of :meth:`post_teams_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_teams_with_http_info(
+                create_team_request=create_team_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_teams_sync_without_preload_content(
+        self,
+        create_team_request: Annotated[
+            CreateTeamRequest, Field(description="Team creation request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create a team (synchronous)
+
+        Synchronous variant of :meth:`post_teams_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_teams_without_preload_content(
+                create_team_request=create_team_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_teams_serialize(
+        self,
+        create_team_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_team_request is not None:
+            _body_params = create_team_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/teams",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_teams_id_members(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1344,7 +2008,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_post_serialize(
+        _param = self._post_teams_id_members_serialize(
             id=id,
             add_member_request=add_member_request,
             _request_auth=_request_auth,
@@ -1368,7 +2032,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_members_post_with_http_info(
+    async def post_teams_id_members_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1412,7 +2076,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_post_serialize(
+        _param = self._post_teams_id_members_serialize(
             id=id,
             add_member_request=add_member_request,
             _request_auth=_request_auth,
@@ -1436,7 +2100,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_post_without_preload_content(
+    async def post_teams_id_members_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1480,7 +2144,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_post_serialize(
+        _param = self._post_teams_id_members_serialize(
             id=id,
             add_member_request=add_member_request,
             _request_auth=_request_auth,
@@ -1500,7 +2164,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_id_members_post_sync(
+    def post_teams_id_members_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1516,11 +2180,11 @@ class TeamsApi:
     ) -> MessageResponse:
         """Add a team member (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_teams_id_members`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_post(
+            self.post_teams_id_members(
                 id=id,
                 add_member_request=add_member_request,
                 _request_timeout=_request_timeout,
@@ -1532,7 +2196,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_post_sync_with_http_info(
+    def post_teams_id_members_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1548,11 +2212,11 @@ class TeamsApi:
     ) -> ApiResponse[MessageResponse]:
         """Add a team member (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_teams_id_members_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_post_with_http_info(
+            self.post_teams_id_members_with_http_info(
                 id=id,
                 add_member_request=add_member_request,
                 _request_timeout=_request_timeout,
@@ -1564,7 +2228,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_post_sync_without_preload_content(
+    def post_teams_id_members_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         add_member_request: Annotated[
@@ -1580,11 +2244,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """Add a team member (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_teams_id_members_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_post_without_preload_content(
+            self.post_teams_id_members_without_preload_content(
                 id=id,
                 add_member_request=add_member_request,
                 _request_timeout=_request_timeout,
@@ -1595,7 +2259,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_members_post_serialize(
+    def _post_teams_id_members_serialize(
         self,
         id,
         add_member_request,
@@ -1643,7 +2307,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/teams/{id}/members",
+            resource_path="/api/v1/teams/{id}/members",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1657,7 +2321,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_convert_to_manual_post(
+    async def post_teams_id_members_user_id_convert_to_manual(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1699,7 +2363,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_convert_to_manual_post_serialize(
+        _param = self._post_teams_id_members_user_id_convert_to_manual_serialize(
             id=id,
             user_id=user_id,
             _request_auth=_request_auth,
@@ -1721,7 +2385,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_members_user_id_convert_to_manual_post_with_http_info(
+    async def post_teams_id_members_user_id_convert_to_manual_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1763,7 +2427,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_convert_to_manual_post_serialize(
+        _param = self._post_teams_id_members_user_id_convert_to_manual_serialize(
             id=id,
             user_id=user_id,
             _request_auth=_request_auth,
@@ -1785,7 +2449,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_convert_to_manual_post_without_preload_content(
+    async def post_teams_id_members_user_id_convert_to_manual_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1827,7 +2491,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_convert_to_manual_post_serialize(
+        _param = self._post_teams_id_members_user_id_convert_to_manual_serialize(
             id=id,
             user_id=user_id,
             _request_auth=_request_auth,
@@ -1845,7 +2509,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_id_members_user_id_convert_to_manual_post_sync(
+    def post_teams_id_members_user_id_convert_to_manual_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1859,11 +2523,11 @@ class TeamsApi:
     ) -> MessageResponse:
         """Convert member to manual (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_convert_to_manual_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_teams_id_members_user_id_convert_to_manual`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_convert_to_manual_post(
+            self.post_teams_id_members_user_id_convert_to_manual(
                 id=id,
                 user_id=user_id,
                 _request_timeout=_request_timeout,
@@ -1875,7 +2539,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_convert_to_manual_post_sync_with_http_info(
+    def post_teams_id_members_user_id_convert_to_manual_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1889,11 +2553,11 @@ class TeamsApi:
     ) -> ApiResponse[MessageResponse]:
         """Convert member to manual (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_convert_to_manual_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_teams_id_members_user_id_convert_to_manual_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_convert_to_manual_post_with_http_info(
+            self.post_teams_id_members_user_id_convert_to_manual_with_http_info(
                 id=id,
                 user_id=user_id,
                 _request_timeout=_request_timeout,
@@ -1905,7 +2569,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_convert_to_manual_post_sync_without_preload_content(
+    def post_teams_id_members_user_id_convert_to_manual_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -1919,11 +2583,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """Convert member to manual (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_convert_to_manual_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_teams_id_members_user_id_convert_to_manual_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_convert_to_manual_post_without_preload_content(
+            self.post_teams_id_members_user_id_convert_to_manual_without_preload_content(
                 id=id,
                 user_id=user_id,
                 _request_timeout=_request_timeout,
@@ -1934,7 +2598,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_members_user_id_convert_to_manual_post_serialize(
+    def _post_teams_id_members_user_id_convert_to_manual_serialize(
         self,
         id,
         user_id,
@@ -1974,7 +2638,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/teams/{id}/members/{userId}/convert-to-manual",
+            resource_path="/api/v1/teams/{id}/members/{userId}/convert-to-manual",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1988,10 +2652,10 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_delete(
+    async def put_teams_id(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2000,14 +2664,14 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> MessageResponse:
-        """Remove a team member
+        """Update a team
 
-        Remove a user from a team
+        Update a team's fields by its ID
 
         :param id: Team ID (required)
         :type id: str
-        :param user_id: User ID (required)
-        :type user_id: str
+        :param update_team_request: Team update request (required)
+        :type update_team_request: UpdateTeamRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2030,9 +2694,9 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_delete_serialize(
+        _param = self._put_teams_id_serialize(
             id=id,
-            user_id=user_id,
+            update_team_request=update_team_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2041,7 +2705,10 @@ class TeamsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "MessageResponse",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -2052,10 +2719,10 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_members_user_id_delete_with_http_info(
+    async def put_teams_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2064,14 +2731,14 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[MessageResponse]:
-        """Remove a team member
+        """Update a team
 
-        Remove a user from a team
+        Update a team's fields by its ID
 
         :param id: Team ID (required)
         :type id: str
-        :param user_id: User ID (required)
-        :type user_id: str
+        :param update_team_request: Team update request (required)
+        :type update_team_request: UpdateTeamRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2094,9 +2761,9 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_delete_serialize(
+        _param = self._put_teams_id_serialize(
             id=id,
-            user_id=user_id,
+            update_team_request=update_team_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2105,7 +2772,10 @@ class TeamsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "MessageResponse",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -2116,10 +2786,10 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_delete_without_preload_content(
+    async def put_teams_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2128,14 +2798,14 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Remove a team member
+        """Update a team
 
-        Remove a user from a team
+        Update a team's fields by its ID
 
         :param id: Team ID (required)
         :type id: str
-        :param user_id: User ID (required)
-        :type user_id: str
+        :param update_team_request: Team update request (required)
+        :type update_team_request: UpdateTeamRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2158,9 +2828,9 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_delete_serialize(
+        _param = self._put_teams_id_serialize(
             id=id,
-            user_id=user_id,
+            update_team_request=update_team_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2169,17 +2839,20 @@ class TeamsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "MessageResponse",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def teams_id_members_user_id_delete_sync(
+    def put_teams_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2188,15 +2861,15 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> MessageResponse:
-        """Remove a team member (synchronous)
+        """Update a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`put_teams_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_delete(
+            self.put_teams_id(
                 id=id,
-                user_id=user_id,
+                update_team_request=update_team_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -2206,10 +2879,10 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_delete_sync_with_http_info(
+    def put_teams_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2218,15 +2891,15 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[MessageResponse]:
-        """Remove a team member (synchronous)
+        """Update a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_teams_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_delete_with_http_info(
+            self.put_teams_id_with_http_info(
                 id=id,
-                user_id=user_id,
+                update_team_request=update_team_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -2236,10 +2909,10 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_delete_sync_without_preload_content(
+    def put_teams_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
-        user_id: Annotated[StrictStr, Field(description="User ID")],
+        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2248,15 +2921,15 @@ class TeamsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Remove a team member (synchronous)
+        """Update a team (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_teams_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_delete_without_preload_content(
+            self.put_teams_id_without_preload_content(
                 id=id,
-                user_id=user_id,
+                update_team_request=update_team_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -2265,10 +2938,10 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_members_user_id_delete_serialize(
+    def _put_teams_id_serialize(
         self,
         id,
-        user_id,
+        update_team_request,
         _request_auth,
         _content_type,
         _headers,
@@ -2289,23 +2962,31 @@ class TeamsApi:
         # process the path parameters
         if id is not None:
             _path_params["id"] = id
-        if user_id is not None:
-            _path_params["userId"] = user_id
         # process the query parameters
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if update_team_request is not None:
+            _body_params = update_team_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/teams/{id}/members/{userId}",
+            method="PUT",
+            resource_path="/api/v1/teams/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2319,7 +3000,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_role_put(
+    async def put_teams_id_members_user_id_role(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2366,7 +3047,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_role_put_serialize(
+        _param = self._put_teams_id_members_user_id_role_serialize(
             id=id,
             user_id=user_id,
             update_member_role_request=update_member_role_request,
@@ -2390,7 +3071,7 @@ class TeamsApi:
         ).data
 
     @validate_call
-    async def teams_id_members_user_id_role_put_with_http_info(
+    async def put_teams_id_members_user_id_role_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2437,7 +3118,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_role_put_serialize(
+        _param = self._put_teams_id_members_user_id_role_serialize(
             id=id,
             user_id=user_id,
             update_member_role_request=update_member_role_request,
@@ -2461,7 +3142,7 @@ class TeamsApi:
         )
 
     @validate_call
-    async def teams_id_members_user_id_role_put_without_preload_content(
+    async def put_teams_id_members_user_id_role_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2508,7 +3189,7 @@ class TeamsApi:
         :return: Returns the result object.
         """
 
-        _param = self._teams_id_members_user_id_role_put_serialize(
+        _param = self._put_teams_id_members_user_id_role_serialize(
             id=id,
             user_id=user_id,
             update_member_role_request=update_member_role_request,
@@ -2528,7 +3209,7 @@ class TeamsApi:
         return response_data.response
 
     @validate_call
-    def teams_id_members_user_id_role_put_sync(
+    def put_teams_id_members_user_id_role_sync(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2545,11 +3226,11 @@ class TeamsApi:
     ) -> MessageResponse:
         """Update member role (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_role_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_teams_id_members_user_id_role`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_role_put(
+            self.put_teams_id_members_user_id_role(
                 id=id,
                 user_id=user_id,
                 update_member_role_request=update_member_role_request,
@@ -2562,7 +3243,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_role_put_sync_with_http_info(
+    def put_teams_id_members_user_id_role_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2579,11 +3260,11 @@ class TeamsApi:
     ) -> ApiResponse[MessageResponse]:
         """Update member role (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_role_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_teams_id_members_user_id_role_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_role_put_with_http_info(
+            self.put_teams_id_members_user_id_role_with_http_info(
                 id=id,
                 user_id=user_id,
                 update_member_role_request=update_member_role_request,
@@ -2596,7 +3277,7 @@ class TeamsApi:
         )
 
     @validate_call
-    def teams_id_members_user_id_role_put_sync_without_preload_content(
+    def put_teams_id_members_user_id_role_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Team ID")],
         user_id: Annotated[StrictStr, Field(description="User ID")],
@@ -2613,11 +3294,11 @@ class TeamsApi:
     ) -> RESTResponseType:
         """Update member role (synchronous)
 
-        Synchronous variant of :meth:`teams_id_members_user_id_role_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_teams_id_members_user_id_role_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.teams_id_members_user_id_role_put_without_preload_content(
+            self.put_teams_id_members_user_id_role_without_preload_content(
                 id=id,
                 user_id=user_id,
                 update_member_role_request=update_member_role_request,
@@ -2629,7 +3310,7 @@ class TeamsApi:
             )
         )
 
-    def _teams_id_members_user_id_role_put_serialize(
+    def _put_teams_id_members_user_id_role_serialize(
         self,
         id,
         user_id,
@@ -2680,688 +3361,7 @@ class TeamsApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/teams/{id}/members/{userId}/role",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def teams_id_put(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Update a team
-
-        Update a team's fields by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param update_team_request: Team update request (required)
-        :type update_team_request: UpdateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_put_serialize(
-            id=id,
-            update_team_request=update_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "400": "ErrorResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def teams_id_put_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Update a team
-
-        Update a team's fields by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param update_team_request: Team update request (required)
-        :type update_team_request: UpdateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_put_serialize(
-            id=id,
-            update_team_request=update_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "400": "ErrorResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def teams_id_put_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update a team
-
-        Update a team's fields by its ID
-
-        :param id: Team ID (required)
-        :type id: str
-        :param update_team_request: Team update request (required)
-        :type update_team_request: UpdateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_id_put_serialize(
-            id=id,
-            update_team_request=update_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "MessageResponse",
-            "400": "ErrorResponse",
-            "403": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def teams_id_put_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> MessageResponse:
-        """Update a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_put`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_put(
-                id=id,
-                update_team_request=update_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_id_put_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[MessageResponse]:
-        """Update a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_put_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_put_with_http_info(
-                id=id,
-                update_team_request=update_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_id_put_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Team ID")],
-        update_team_request: Annotated[UpdateTeamRequest, Field(description="Team update request")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update a team (synchronous)
-
-        Synchronous variant of :meth:`teams_id_put_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_id_put_without_preload_content(
-                id=id,
-                update_team_request=update_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _teams_id_put_serialize(
-        self,
-        id,
-        update_team_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if update_team_request is not None:
-            _body_params = update_team_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="PUT",
-            resource_path="/teams/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def teams_post(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Team:
-        """Create a team
-
-        Create a new team
-
-        :param create_team_request: Team creation request (required)
-        :type create_team_request: CreateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_post_serialize(
-            create_team_request=create_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Team",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def teams_post_with_http_info(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Team]:
-        """Create a team
-
-        Create a new team
-
-        :param create_team_request: Team creation request (required)
-        :type create_team_request: CreateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_post_serialize(
-            create_team_request=create_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Team",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def teams_post_without_preload_content(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a team
-
-        Create a new team
-
-        :param create_team_request: Team creation request (required)
-        :type create_team_request: CreateTeamRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._teams_post_serialize(
-            create_team_request=create_team_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "Team",
-            "400": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def teams_post_sync(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Team:
-        """Create a team (synchronous)
-
-        Synchronous variant of :meth:`teams_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_post(
-                create_team_request=create_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_post_sync_with_http_info(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Team]:
-        """Create a team (synchronous)
-
-        Synchronous variant of :meth:`teams_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_post_with_http_info(
-                create_team_request=create_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def teams_post_sync_without_preload_content(
-        self,
-        create_team_request: Annotated[
-            CreateTeamRequest, Field(description="Team creation request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create a team (synchronous)
-
-        Synchronous variant of :meth:`teams_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.teams_post_without_preload_content(
-                create_team_request=create_team_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _teams_post_serialize(
-        self,
-        create_team_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_team_request is not None:
-            _body_params = create_team_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/teams",
+            resource_path="/api/v1/teams/{id}/members/{userId}/role",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

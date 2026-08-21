@@ -23,232 +23,232 @@ class TestProductsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_products_assets_id_asset_id_delete(self) -> None:
-        """Test case for products_assets_id_asset_id_delete
+    async def test_delete_products_assets_id_asset_id(self) -> None:
+        """Test case for delete_products_assets_id_asset_id
 
         Remove data product asset
         """
 
-    def test_products_assets_id_asset_id_delete_sync(self) -> None:
-        """Test case for products_assets_id_asset_id_delete (synchronous)
+    def test_delete_products_assets_id_asset_id_sync(self) -> None:
+        """Test case for delete_products_assets_id_asset_id (synchronous)
 
         Remove data product asset
         """
 
-    async def test_products_assets_id_get(self) -> None:
-        """Test case for products_assets_id_get
-
-        Get data product assets
-        """
-
-    def test_products_assets_id_get_sync(self) -> None:
-        """Test case for products_assets_id_get (synchronous)
-
-        Get data product assets
-        """
-
-    async def test_products_assets_id_post(self) -> None:
-        """Test case for products_assets_id_post
-
-        Add data product assets
-        """
-
-    def test_products_assets_id_post_sync(self) -> None:
-        """Test case for products_assets_id_post (synchronous)
-
-        Add data product assets
-        """
-
-    async def test_products_id_delete(self) -> None:
-        """Test case for products_id_delete
+    async def test_delete_products_id(self) -> None:
+        """Test case for delete_products_id
 
         Delete data product
         """
 
-    def test_products_id_delete_sync(self) -> None:
-        """Test case for products_id_delete (synchronous)
+    def test_delete_products_id_sync(self) -> None:
+        """Test case for delete_products_id (synchronous)
 
         Delete data product
         """
 
-    async def test_products_id_get(self) -> None:
-        """Test case for products_id_get
-
-        Get data product
-        """
-
-    def test_products_id_get_sync(self) -> None:
-        """Test case for products_id_get (synchronous)
-
-        Get data product
-        """
-
-    async def test_products_id_put(self) -> None:
-        """Test case for products_id_put
-
-        Update data product
-        """
-
-    def test_products_id_put_sync(self) -> None:
-        """Test case for products_id_put (synchronous)
-
-        Update data product
-        """
-
-    async def test_products_images_id_get(self) -> None:
-        """Test case for products_images_id_get
-
-        List product images
-        """
-
-    def test_products_images_id_get_sync(self) -> None:
-        """Test case for products_images_id_get (synchronous)
-
-        List product images
-        """
-
-    async def test_products_images_id_purpose_delete(self) -> None:
-        """Test case for products_images_id_purpose_delete
+    async def test_delete_products_images_id_purpose(self) -> None:
+        """Test case for delete_products_images_id_purpose
 
         Delete product image
         """
 
-    def test_products_images_id_purpose_delete_sync(self) -> None:
-        """Test case for products_images_id_purpose_delete (synchronous)
+    def test_delete_products_images_id_purpose_sync(self) -> None:
+        """Test case for delete_products_images_id_purpose (synchronous)
 
         Delete product image
         """
 
-    async def test_products_images_id_purpose_get(self) -> None:
-        """Test case for products_images_id_purpose_get
-
-        Get product image
-        """
-
-    def test_products_images_id_purpose_get_sync(self) -> None:
-        """Test case for products_images_id_purpose_get (synchronous)
-
-        Get product image
-        """
-
-    async def test_products_images_id_purpose_post(self) -> None:
-        """Test case for products_images_id_purpose_post
-
-        Upload product image
-        """
-
-    def test_products_images_id_purpose_post_sync(self) -> None:
-        """Test case for products_images_id_purpose_post (synchronous)
-
-        Upload product image
-        """
-
-    async def test_products_list_get(self) -> None:
-        """Test case for products_list_get
-
-        List data products
-        """
-
-    def test_products_list_get_sync(self) -> None:
-        """Test case for products_list_get (synchronous)
-
-        List data products
-        """
-
-    async def test_products_post(self) -> None:
-        """Test case for products_post
-
-        Create data product
-        """
-
-    def test_products_post_sync(self) -> None:
-        """Test case for products_post (synchronous)
-
-        Create data product
-        """
-
-    async def test_products_resolved_assets_id_get(self) -> None:
-        """Test case for products_resolved_assets_id_get
-
-        Get resolved data product assets
-        """
-
-    def test_products_resolved_assets_id_get_sync(self) -> None:
-        """Test case for products_resolved_assets_id_get (synchronous)
-
-        Get resolved data product assets
-        """
-
-    async def test_products_rule_preview_post(self) -> None:
-        """Test case for products_rule_preview_post
-
-        Preview data product rule
-        """
-
-    def test_products_rule_preview_post_sync(self) -> None:
-        """Test case for products_rule_preview_post (synchronous)
-
-        Preview data product rule
-        """
-
-    async def test_products_rules_id_get(self) -> None:
-        """Test case for products_rules_id_get
-
-        Get data product rules
-        """
-
-    def test_products_rules_id_get_sync(self) -> None:
-        """Test case for products_rules_id_get (synchronous)
-
-        Get data product rules
-        """
-
-    async def test_products_rules_id_post(self) -> None:
-        """Test case for products_rules_id_post
-
-        Create data product rule
-        """
-
-    def test_products_rules_id_post_sync(self) -> None:
-        """Test case for products_rules_id_post (synchronous)
-
-        Create data product rule
-        """
-
-    async def test_products_rules_id_rule_id_delete(self) -> None:
-        """Test case for products_rules_id_rule_id_delete
+    async def test_delete_products_rules_id_rule_id(self) -> None:
+        """Test case for delete_products_rules_id_rule_id
 
         Delete data product rule
         """
 
-    def test_products_rules_id_rule_id_delete_sync(self) -> None:
-        """Test case for products_rules_id_rule_id_delete (synchronous)
+    def test_delete_products_rules_id_rule_id_sync(self) -> None:
+        """Test case for delete_products_rules_id_rule_id (synchronous)
 
         Delete data product rule
         """
 
-    async def test_products_rules_id_rule_id_put(self) -> None:
-        """Test case for products_rules_id_rule_id_put
+    async def test_get_products_assets_id(self) -> None:
+        """Test case for get_products_assets_id
 
-        Update data product rule
+        Get data product assets
         """
 
-    def test_products_rules_id_rule_id_put_sync(self) -> None:
-        """Test case for products_rules_id_rule_id_put (synchronous)
+    def test_get_products_assets_id_sync(self) -> None:
+        """Test case for get_products_assets_id (synchronous)
 
-        Update data product rule
+        Get data product assets
         """
 
-    async def test_products_search_get(self) -> None:
-        """Test case for products_search_get
+    async def test_get_products_id(self) -> None:
+        """Test case for get_products_id
+
+        Get data product
+        """
+
+    def test_get_products_id_sync(self) -> None:
+        """Test case for get_products_id (synchronous)
+
+        Get data product
+        """
+
+    async def test_get_products_images_id(self) -> None:
+        """Test case for get_products_images_id
+
+        List product images
+        """
+
+    def test_get_products_images_id_sync(self) -> None:
+        """Test case for get_products_images_id (synchronous)
+
+        List product images
+        """
+
+    async def test_get_products_images_id_purpose(self) -> None:
+        """Test case for get_products_images_id_purpose
+
+        Get product image
+        """
+
+    def test_get_products_images_id_purpose_sync(self) -> None:
+        """Test case for get_products_images_id_purpose (synchronous)
+
+        Get product image
+        """
+
+    async def test_get_products_list(self) -> None:
+        """Test case for get_products_list
+
+        List data products
+        """
+
+    def test_get_products_list_sync(self) -> None:
+        """Test case for get_products_list (synchronous)
+
+        List data products
+        """
+
+    async def test_get_products_resolved_assets_id(self) -> None:
+        """Test case for get_products_resolved_assets_id
+
+        Get resolved data product assets
+        """
+
+    def test_get_products_resolved_assets_id_sync(self) -> None:
+        """Test case for get_products_resolved_assets_id (synchronous)
+
+        Get resolved data product assets
+        """
+
+    async def test_get_products_rules_id(self) -> None:
+        """Test case for get_products_rules_id
+
+        Get data product rules
+        """
+
+    def test_get_products_rules_id_sync(self) -> None:
+        """Test case for get_products_rules_id (synchronous)
+
+        Get data product rules
+        """
+
+    async def test_get_products_search(self) -> None:
+        """Test case for get_products_search
 
         Search data products
         """
 
-    def test_products_search_get_sync(self) -> None:
-        """Test case for products_search_get (synchronous)
+    def test_get_products_search_sync(self) -> None:
+        """Test case for get_products_search (synchronous)
 
         Search data products
+        """
+
+    async def test_post_products(self) -> None:
+        """Test case for post_products
+
+        Create data product
+        """
+
+    def test_post_products_sync(self) -> None:
+        """Test case for post_products (synchronous)
+
+        Create data product
+        """
+
+    async def test_post_products_assets_id(self) -> None:
+        """Test case for post_products_assets_id
+
+        Add data product assets
+        """
+
+    def test_post_products_assets_id_sync(self) -> None:
+        """Test case for post_products_assets_id (synchronous)
+
+        Add data product assets
+        """
+
+    async def test_post_products_images_id_purpose(self) -> None:
+        """Test case for post_products_images_id_purpose
+
+        Upload product image
+        """
+
+    def test_post_products_images_id_purpose_sync(self) -> None:
+        """Test case for post_products_images_id_purpose (synchronous)
+
+        Upload product image
+        """
+
+    async def test_post_products_rule_preview(self) -> None:
+        """Test case for post_products_rule_preview
+
+        Preview data product rule
+        """
+
+    def test_post_products_rule_preview_sync(self) -> None:
+        """Test case for post_products_rule_preview (synchronous)
+
+        Preview data product rule
+        """
+
+    async def test_post_products_rules_id(self) -> None:
+        """Test case for post_products_rules_id
+
+        Create data product rule
+        """
+
+    def test_post_products_rules_id_sync(self) -> None:
+        """Test case for post_products_rules_id (synchronous)
+
+        Create data product rule
+        """
+
+    async def test_put_products_id(self) -> None:
+        """Test case for put_products_id
+
+        Update data product
+        """
+
+    def test_put_products_id_sync(self) -> None:
+        """Test case for put_products_id (synchronous)
+
+        Update data product
+        """
+
+    async def test_put_products_rules_id_rule_id(self) -> None:
+        """Test case for put_products_rules_id_rule_id
+
+        Update data product rule
+        """
+
+    def test_put_products_rules_id_rule_id_sync(self) -> None:
+        """Test case for put_products_rules_id_rule_id (synchronous)
+
+        Update data product rule
         """
 
 

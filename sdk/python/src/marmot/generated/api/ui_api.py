@@ -33,7 +33,7 @@ class UiApi:
         self.api_client = api_client
 
     @validate_call
-    async def ui_config_get(
+    async def get_ui_config(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -69,7 +69,7 @@ class UiApi:
         :return: Returns the result object.
         """
 
-        _param = self._ui_config_get_serialize(
+        _param = self._get_ui_config_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -87,7 +87,7 @@ class UiApi:
         ).data
 
     @validate_call
-    async def ui_config_get_with_http_info(
+    async def get_ui_config_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -123,7 +123,7 @@ class UiApi:
         :return: Returns the result object.
         """
 
-        _param = self._ui_config_get_serialize(
+        _param = self._get_ui_config_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -141,7 +141,7 @@ class UiApi:
         )
 
     @validate_call
-    async def ui_config_get_without_preload_content(
+    async def get_ui_config_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -177,7 +177,7 @@ class UiApi:
         :return: Returns the result object.
         """
 
-        _param = self._ui_config_get_serialize(
+        _param = self._get_ui_config_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -191,7 +191,7 @@ class UiApi:
         return response_data.response
 
     @validate_call
-    def ui_config_get_sync(
+    def get_ui_config_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -203,11 +203,11 @@ class UiApi:
     ) -> UIConfigResponse:
         """Get UI configuration (synchronous)
 
-        Synchronous variant of :meth:`ui_config_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_ui_config`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.ui_config_get(
+            self.get_ui_config(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -217,7 +217,7 @@ class UiApi:
         )
 
     @validate_call
-    def ui_config_get_sync_with_http_info(
+    def get_ui_config_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -229,11 +229,11 @@ class UiApi:
     ) -> ApiResponse[UIConfigResponse]:
         """Get UI configuration (synchronous)
 
-        Synchronous variant of :meth:`ui_config_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_ui_config_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ui_config_get_with_http_info(
+            self.get_ui_config_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -243,7 +243,7 @@ class UiApi:
         )
 
     @validate_call
-    def ui_config_get_sync_without_preload_content(
+    def get_ui_config_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -255,11 +255,11 @@ class UiApi:
     ) -> RESTResponseType:
         """Get UI configuration (synchronous)
 
-        Synchronous variant of :meth:`ui_config_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_ui_config_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.ui_config_get_without_preload_content(
+            self.get_ui_config_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -268,7 +268,7 @@ class UiApi:
             )
         )
 
-    def _ui_config_get_serialize(
+    def _get_ui_config_serialize(
         self,
         _request_auth,
         _content_type,
@@ -302,7 +302,7 @@ class UiApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/ui/config",
+            resource_path="/api/v1/ui/config",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

@@ -23,14 +23,14 @@ class TestSearchApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_search_get(self) -> None:
-        """Test case for search_get
+    async def test_get_search(self) -> None:
+        """Test case for get_search
 
         Unified search
         """
 
-    def test_search_get_sync(self) -> None:
-        """Test case for search_get (synchronous)
+    def test_get_search_sync(self) -> None:
+        """Test case for get_search (synchronous)
 
         Unified search
         """

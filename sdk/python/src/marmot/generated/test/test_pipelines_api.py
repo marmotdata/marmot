@@ -23,14 +23,14 @@ class TestPipelinesApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_pipelines_pipeline_name_delete(self) -> None:
-        """Test case for pipelines_pipeline_name_delete
+    async def test_delete_pipelines_pipeline_name(self) -> None:
+        """Test case for delete_pipelines_pipeline_name
 
         Destroy pipeline
         """
 
-    def test_pipelines_pipeline_name_delete_sync(self) -> None:
-        """Test case for pipelines_pipeline_name_delete (synchronous)
+    def test_delete_pipelines_pipeline_name_sync(self) -> None:
+        """Test case for delete_pipelines_pipeline_name (synchronous)
 
         Destroy pipeline
         """

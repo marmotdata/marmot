@@ -23,124 +23,124 @@ class TestTeamsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_teams_get(self) -> None:
-        """Test case for teams_get
-
-        List teams
-        """
-
-    def test_teams_get_sync(self) -> None:
-        """Test case for teams_get (synchronous)
-
-        List teams
-        """
-
-    async def test_teams_id_delete(self) -> None:
-        """Test case for teams_id_delete
+    async def test_delete_teams_id(self) -> None:
+        """Test case for delete_teams_id
 
         Delete a team
         """
 
-    def test_teams_id_delete_sync(self) -> None:
-        """Test case for teams_id_delete (synchronous)
+    def test_delete_teams_id_sync(self) -> None:
+        """Test case for delete_teams_id (synchronous)
 
         Delete a team
         """
 
-    async def test_teams_id_get(self) -> None:
-        """Test case for teams_id_get
-
-        Get a team
-        """
-
-    def test_teams_id_get_sync(self) -> None:
-        """Test case for teams_id_get (synchronous)
-
-        Get a team
-        """
-
-    async def test_teams_id_members_get(self) -> None:
-        """Test case for teams_id_members_get
-
-        List team members
-        """
-
-    def test_teams_id_members_get_sync(self) -> None:
-        """Test case for teams_id_members_get (synchronous)
-
-        List team members
-        """
-
-    async def test_teams_id_members_post(self) -> None:
-        """Test case for teams_id_members_post
-
-        Add a team member
-        """
-
-    def test_teams_id_members_post_sync(self) -> None:
-        """Test case for teams_id_members_post (synchronous)
-
-        Add a team member
-        """
-
-    async def test_teams_id_members_user_id_convert_to_manual_post(self) -> None:
-        """Test case for teams_id_members_user_id_convert_to_manual_post
-
-        Convert member to manual
-        """
-
-    def test_teams_id_members_user_id_convert_to_manual_post_sync(self) -> None:
-        """Test case for teams_id_members_user_id_convert_to_manual_post (synchronous)
-
-        Convert member to manual
-        """
-
-    async def test_teams_id_members_user_id_delete(self) -> None:
-        """Test case for teams_id_members_user_id_delete
+    async def test_delete_teams_id_members_user_id(self) -> None:
+        """Test case for delete_teams_id_members_user_id
 
         Remove a team member
         """
 
-    def test_teams_id_members_user_id_delete_sync(self) -> None:
-        """Test case for teams_id_members_user_id_delete (synchronous)
+    def test_delete_teams_id_members_user_id_sync(self) -> None:
+        """Test case for delete_teams_id_members_user_id (synchronous)
 
         Remove a team member
         """
 
-    async def test_teams_id_members_user_id_role_put(self) -> None:
-        """Test case for teams_id_members_user_id_role_put
+    async def test_get_teams(self) -> None:
+        """Test case for get_teams
 
-        Update member role
+        List teams
         """
 
-    def test_teams_id_members_user_id_role_put_sync(self) -> None:
-        """Test case for teams_id_members_user_id_role_put (synchronous)
+    def test_get_teams_sync(self) -> None:
+        """Test case for get_teams (synchronous)
 
-        Update member role
+        List teams
         """
 
-    async def test_teams_id_put(self) -> None:
-        """Test case for teams_id_put
+    async def test_get_teams_id(self) -> None:
+        """Test case for get_teams_id
 
-        Update a team
+        Get a team
         """
 
-    def test_teams_id_put_sync(self) -> None:
-        """Test case for teams_id_put (synchronous)
+    def test_get_teams_id_sync(self) -> None:
+        """Test case for get_teams_id (synchronous)
 
-        Update a team
+        Get a team
         """
 
-    async def test_teams_post(self) -> None:
-        """Test case for teams_post
+    async def test_get_teams_id_members(self) -> None:
+        """Test case for get_teams_id_members
+
+        List team members
+        """
+
+    def test_get_teams_id_members_sync(self) -> None:
+        """Test case for get_teams_id_members (synchronous)
+
+        List team members
+        """
+
+    async def test_post_teams(self) -> None:
+        """Test case for post_teams
 
         Create a team
         """
 
-    def test_teams_post_sync(self) -> None:
-        """Test case for teams_post (synchronous)
+    def test_post_teams_sync(self) -> None:
+        """Test case for post_teams (synchronous)
 
         Create a team
+        """
+
+    async def test_post_teams_id_members(self) -> None:
+        """Test case for post_teams_id_members
+
+        Add a team member
+        """
+
+    def test_post_teams_id_members_sync(self) -> None:
+        """Test case for post_teams_id_members (synchronous)
+
+        Add a team member
+        """
+
+    async def test_post_teams_id_members_user_id_convert_to_manual(self) -> None:
+        """Test case for post_teams_id_members_user_id_convert_to_manual
+
+        Convert member to manual
+        """
+
+    def test_post_teams_id_members_user_id_convert_to_manual_sync(self) -> None:
+        """Test case for post_teams_id_members_user_id_convert_to_manual (synchronous)
+
+        Convert member to manual
+        """
+
+    async def test_put_teams_id(self) -> None:
+        """Test case for put_teams_id
+
+        Update a team
+        """
+
+    def test_put_teams_id_sync(self) -> None:
+        """Test case for put_teams_id (synchronous)
+
+        Update a team
+        """
+
+    async def test_put_teams_id_members_user_id_role(self) -> None:
+        """Test case for put_teams_id_members_user_id_role
+
+        Update member role
+        """
+
+    def test_put_teams_id_members_user_id_role_sync(self) -> None:
+        """Test case for put_teams_id_members_user_id_role (synchronous)
+
+        Update member role
         """
 
 

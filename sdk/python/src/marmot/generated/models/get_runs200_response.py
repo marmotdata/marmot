@@ -23,9 +23,9 @@ from typing_extensions import Self
 from marmot.generated.models.plugin_run import PluginRun
 
 
-class RunsGet200Response(BaseModel):
+class GetRuns200Response(BaseModel):
     """
-    RunsGet200Response
+    GetRuns200Response
     """
 
     limit: StrictInt | None = None
@@ -52,7 +52,7 @@ class RunsGet200Response(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self | None:
-        """Create an instance of RunsGet200Response from a JSON string"""
+        """Create an instance of GetRuns200Response from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> dict[str, Any]:
@@ -83,7 +83,7 @@ class RunsGet200Response(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
-        """Create an instance of RunsGet200Response from a dict"""
+        """Create an instance of GetRuns200Response from a dict"""
         if obj is None:
             return None
 

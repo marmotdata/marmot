@@ -33,7 +33,7 @@ class OwnersApi:
         self.api_client = api_client
 
     @validate_call
-    async def owners_search_get(
+    async def get_owners_search(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -75,7 +75,7 @@ class OwnersApi:
         :return: Returns the result object.
         """
 
-        _param = self._owners_search_get_serialize(
+        _param = self._get_owners_search_serialize(
             q=q,
             limit=limit,
             _request_auth=_request_auth,
@@ -97,7 +97,7 @@ class OwnersApi:
         ).data
 
     @validate_call
-    async def owners_search_get_with_http_info(
+    async def get_owners_search_with_http_info(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -139,7 +139,7 @@ class OwnersApi:
         :return: Returns the result object.
         """
 
-        _param = self._owners_search_get_serialize(
+        _param = self._get_owners_search_serialize(
             q=q,
             limit=limit,
             _request_auth=_request_auth,
@@ -161,7 +161,7 @@ class OwnersApi:
         )
 
     @validate_call
-    async def owners_search_get_without_preload_content(
+    async def get_owners_search_without_preload_content(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -203,7 +203,7 @@ class OwnersApi:
         :return: Returns the result object.
         """
 
-        _param = self._owners_search_get_serialize(
+        _param = self._get_owners_search_serialize(
             q=q,
             limit=limit,
             _request_auth=_request_auth,
@@ -221,7 +221,7 @@ class OwnersApi:
         return response_data.response
 
     @validate_call
-    def owners_search_get_sync(
+    def get_owners_search_sync(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -235,11 +235,11 @@ class OwnersApi:
     ) -> SearchOwnersResponse:
         """Search owners (synchronous)
 
-        Synchronous variant of :meth:`owners_search_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_owners_search`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.owners_search_get(
+            self.get_owners_search(
                 q=q,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -251,7 +251,7 @@ class OwnersApi:
         )
 
     @validate_call
-    def owners_search_get_sync_with_http_info(
+    def get_owners_search_sync_with_http_info(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -265,11 +265,11 @@ class OwnersApi:
     ) -> ApiResponse[SearchOwnersResponse]:
         """Search owners (synchronous)
 
-        Synchronous variant of :meth:`owners_search_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_owners_search_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.owners_search_get_with_http_info(
+            self.get_owners_search_with_http_info(
                 q=q,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -281,7 +281,7 @@ class OwnersApi:
         )
 
     @validate_call
-    def owners_search_get_sync_without_preload_content(
+    def get_owners_search_sync_without_preload_content(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         limit: Annotated[StrictInt | None, Field(description="Maximum number of results")] = None,
@@ -295,11 +295,11 @@ class OwnersApi:
     ) -> RESTResponseType:
         """Search owners (synchronous)
 
-        Synchronous variant of :meth:`owners_search_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_owners_search_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.owners_search_get_without_preload_content(
+            self.get_owners_search_without_preload_content(
                 q=q,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -310,7 +310,7 @@ class OwnersApi:
             )
         )
 
-    def _owners_search_get_serialize(
+    def _get_owners_search_serialize(
         self,
         q,
         limit,
@@ -352,7 +352,7 @@ class OwnersApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/owners/search",
+            resource_path="/api/v1/owners/search",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

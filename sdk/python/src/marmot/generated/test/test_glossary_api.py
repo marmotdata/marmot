@@ -23,100 +23,100 @@ class TestGlossaryApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_glossary_ancestors_id_get(self) -> None:
-        """Test case for glossary_ancestors_id_get
-
-        Get ancestor terms
-        """
-
-    def test_glossary_ancestors_id_get_sync(self) -> None:
-        """Test case for glossary_ancestors_id_get (synchronous)
-
-        Get ancestor terms
-        """
-
-    async def test_glossary_children_id_get(self) -> None:
-        """Test case for glossary_children_id_get
-
-        Get child terms
-        """
-
-    def test_glossary_children_id_get_sync(self) -> None:
-        """Test case for glossary_children_id_get (synchronous)
-
-        Get child terms
-        """
-
-    async def test_glossary_id_delete(self) -> None:
-        """Test case for glossary_id_delete
+    async def test_delete_glossary_id(self) -> None:
+        """Test case for delete_glossary_id
 
         Delete glossary term
         """
 
-    def test_glossary_id_delete_sync(self) -> None:
-        """Test case for glossary_id_delete (synchronous)
+    def test_delete_glossary_id_sync(self) -> None:
+        """Test case for delete_glossary_id (synchronous)
 
         Delete glossary term
         """
 
-    async def test_glossary_id_get(self) -> None:
-        """Test case for glossary_id_get
+    async def test_get_glossary_ancestors_id(self) -> None:
+        """Test case for get_glossary_ancestors_id
+
+        Get ancestor terms
+        """
+
+    def test_get_glossary_ancestors_id_sync(self) -> None:
+        """Test case for get_glossary_ancestors_id (synchronous)
+
+        Get ancestor terms
+        """
+
+    async def test_get_glossary_children_id(self) -> None:
+        """Test case for get_glossary_children_id
+
+        Get child terms
+        """
+
+    def test_get_glossary_children_id_sync(self) -> None:
+        """Test case for get_glossary_children_id (synchronous)
+
+        Get child terms
+        """
+
+    async def test_get_glossary_id(self) -> None:
+        """Test case for get_glossary_id
 
         Get glossary term
         """
 
-    def test_glossary_id_get_sync(self) -> None:
-        """Test case for glossary_id_get (synchronous)
+    def test_get_glossary_id_sync(self) -> None:
+        """Test case for get_glossary_id (synchronous)
 
         Get glossary term
         """
 
-    async def test_glossary_id_put(self) -> None:
-        """Test case for glossary_id_put
-
-        Update glossary term
-        """
-
-    def test_glossary_id_put_sync(self) -> None:
-        """Test case for glossary_id_put (synchronous)
-
-        Update glossary term
-        """
-
-    async def test_glossary_list_get(self) -> None:
-        """Test case for glossary_list_get
+    async def test_get_glossary_list(self) -> None:
+        """Test case for get_glossary_list
 
         List glossary terms
         """
 
-    def test_glossary_list_get_sync(self) -> None:
-        """Test case for glossary_list_get (synchronous)
+    def test_get_glossary_list_sync(self) -> None:
+        """Test case for get_glossary_list (synchronous)
 
         List glossary terms
         """
 
-    async def test_glossary_post(self) -> None:
-        """Test case for glossary_post
-
-        Create glossary term
-        """
-
-    def test_glossary_post_sync(self) -> None:
-        """Test case for glossary_post (synchronous)
-
-        Create glossary term
-        """
-
-    async def test_glossary_search_get(self) -> None:
-        """Test case for glossary_search_get
+    async def test_get_glossary_search(self) -> None:
+        """Test case for get_glossary_search
 
         Search glossary terms
         """
 
-    def test_glossary_search_get_sync(self) -> None:
-        """Test case for glossary_search_get (synchronous)
+    def test_get_glossary_search_sync(self) -> None:
+        """Test case for get_glossary_search (synchronous)
 
         Search glossary terms
+        """
+
+    async def test_post_glossary(self) -> None:
+        """Test case for post_glossary
+
+        Create glossary term
+        """
+
+    def test_post_glossary_sync(self) -> None:
+        """Test case for post_glossary (synchronous)
+
+        Create glossary term
+        """
+
+    async def test_put_glossary_id(self) -> None:
+        """Test case for put_glossary_id
+
+        Update glossary term
+        """
+
+    def test_put_glossary_id_sync(self) -> None:
+        """Test case for put_glossary_id (synchronous)
+
+        Update glossary term
         """
 
 

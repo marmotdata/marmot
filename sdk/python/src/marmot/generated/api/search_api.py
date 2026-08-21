@@ -33,7 +33,7 @@ class SearchApi:
         self.api_client = api_client
 
     @validate_call
-    async def search_get(
+    async def get_search(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -84,7 +84,7 @@ class SearchApi:
         :return: Returns the result object.
         """
 
-        _param = self._search_get_serialize(
+        _param = self._get_search_serialize(
             q=q,
             types=types,
             limit=limit,
@@ -108,7 +108,7 @@ class SearchApi:
         ).data
 
     @validate_call
-    async def search_get_with_http_info(
+    async def get_search_with_http_info(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -159,7 +159,7 @@ class SearchApi:
         :return: Returns the result object.
         """
 
-        _param = self._search_get_serialize(
+        _param = self._get_search_serialize(
             q=q,
             types=types,
             limit=limit,
@@ -183,7 +183,7 @@ class SearchApi:
         )
 
     @validate_call
-    async def search_get_without_preload_content(
+    async def get_search_without_preload_content(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -234,7 +234,7 @@ class SearchApi:
         :return: Returns the result object.
         """
 
-        _param = self._search_get_serialize(
+        _param = self._get_search_serialize(
             q=q,
             types=types,
             limit=limit,
@@ -254,7 +254,7 @@ class SearchApi:
         return response_data.response
 
     @validate_call
-    def search_get_sync(
+    def get_search_sync(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -273,11 +273,11 @@ class SearchApi:
     ) -> SearchResponse:
         """Unified search (synchronous)
 
-        Synchronous variant of :meth:`search_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_search`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.search_get(
+            self.get_search(
                 q=q,
                 types=types,
                 limit=limit,
@@ -291,7 +291,7 @@ class SearchApi:
         )
 
     @validate_call
-    def search_get_sync_with_http_info(
+    def get_search_sync_with_http_info(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -310,11 +310,11 @@ class SearchApi:
     ) -> ApiResponse[SearchResponse]:
         """Unified search (synchronous)
 
-        Synchronous variant of :meth:`search_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_search_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.search_get_with_http_info(
+            self.get_search_with_http_info(
                 q=q,
                 types=types,
                 limit=limit,
@@ -328,7 +328,7 @@ class SearchApi:
         )
 
     @validate_call
-    def search_get_sync_without_preload_content(
+    def get_search_sync_without_preload_content(
         self,
         q: Annotated[StrictStr, Field(description="Search query")],
         types: Annotated[
@@ -347,11 +347,11 @@ class SearchApi:
     ) -> RESTResponseType:
         """Unified search (synchronous)
 
-        Synchronous variant of :meth:`search_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_search_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.search_get_without_preload_content(
+            self.get_search_without_preload_content(
                 q=q,
                 types=types,
                 limit=limit,
@@ -364,7 +364,7 @@ class SearchApi:
             )
         )
 
-    def _search_get_serialize(
+    def _get_search_serialize(
         self,
         q,
         types,
@@ -416,7 +416,7 @@ class SearchApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/search",
+            resource_path="/api/v1/search",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

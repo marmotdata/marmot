@@ -23,50 +23,50 @@ class TestAgentsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_agents_asset_id_activity_get(self) -> None:
-        """Test case for agents_asset_id_activity_get
+    async def test_get_agents_asset_id_activity(self) -> None:
+        """Test case for get_agents_asset_id_activity
 
         Agent activity
         """
 
-    def test_agents_asset_id_activity_get_sync(self) -> None:
-        """Test case for agents_asset_id_activity_get (synchronous)
+    def test_get_agents_asset_id_activity_sync(self) -> None:
+        """Test case for get_agents_asset_id_activity (synchronous)
 
         Agent activity
         """
 
-    async def test_agents_asset_id_runs_get(self) -> None:
-        """Test case for agents_asset_id_runs_get
+    async def test_get_agents_asset_id_runs(self) -> None:
+        """Test case for get_agents_asset_id_runs
 
         List agent runs
         """
 
-    def test_agents_asset_id_runs_get_sync(self) -> None:
-        """Test case for agents_asset_id_runs_get (synchronous)
+    def test_get_agents_asset_id_runs_sync(self) -> None:
+        """Test case for get_agents_asset_id_runs (synchronous)
 
         List agent runs
         """
 
-    async def test_agents_asset_id_stats_get(self) -> None:
-        """Test case for agents_asset_id_stats_get
+    async def test_get_agents_asset_id_stats(self) -> None:
+        """Test case for get_agents_asset_id_stats
 
         Agent stats
         """
 
-    def test_agents_asset_id_stats_get_sync(self) -> None:
-        """Test case for agents_asset_id_stats_get (synchronous)
+    def test_get_agents_asset_id_stats_sync(self) -> None:
+        """Test case for get_agents_asset_id_stats (synchronous)
 
         Agent stats
         """
 
-    async def test_agents_runs_post(self) -> None:
-        """Test case for agents_runs_post
+    async def test_post_agents_runs(self) -> None:
+        """Test case for post_agents_runs
 
         Record agent run
         """
 
-    def test_agents_runs_post_sync(self) -> None:
-        """Test case for agents_runs_post (synchronous)
+    def test_post_agents_runs_sync(self) -> None:
+        """Test case for post_agents_runs (synchronous)
 
         Record agent run
         """

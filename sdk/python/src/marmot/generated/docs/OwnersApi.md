@@ -1,16 +1,16 @@
 # marmot.generated.OwnersApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**owners_search_get**](OwnersApi.md#owners_search_get) | **GET** /owners/search | Search owners
+[**get_owners_search**](OwnersApi.md#get_owners_search) | **GET** /api/v1/owners/search | Search owners
 
 
-# **owners_search_get**
-> SearchOwnersResponse owners_search_get(q, limit=limit)
+# **get_owners_search**
+> SearchOwnersResponse get_owners_search(q, limit=limit)
 
-**Synchronous variant:** `owners_search_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_owners_search_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Search owners
 
@@ -27,10 +27,10 @@ from marmot.generated.models.search_owners_response import SearchOwnersResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -59,11 +59,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Search owners
-        api_response = await api_instance.owners_search_get(q, limit=limit)
-        print("The response of OwnersApi->owners_search_get:\n")
+        api_response = await api_instance.get_owners_search(q, limit=limit)
+        print("The response of OwnersApi->get_owners_search:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling OwnersApi->owners_search_get: %s\n" % e)
+        print("Exception when calling OwnersApi->get_owners_search: %s\n" % e)
 ```
 
 

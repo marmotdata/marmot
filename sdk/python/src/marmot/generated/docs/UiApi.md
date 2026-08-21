@@ -1,16 +1,16 @@
 # marmot.generated.UiApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**ui_config_get**](UiApi.md#ui_config_get) | **GET** /ui/config | Get UI configuration
+[**get_ui_config**](UiApi.md#get_ui_config) | **GET** /api/v1/ui/config | Get UI configuration
 
 
-# **ui_config_get**
-> UIConfigResponse ui_config_get()
+# **get_ui_config**
+> UIConfigResponse get_ui_config()
 
-**Synchronous variant:** `ui_config_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_ui_config_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Get UI configuration
 
@@ -25,10 +25,10 @@ from marmot.generated.models.ui_config_response import UIConfigResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 
@@ -39,11 +39,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Get UI configuration
-        api_response = await api_instance.ui_config_get()
-        print("The response of UiApi->ui_config_get:\n")
+        api_response = await api_instance.get_ui_config()
+        print("The response of UiApi->get_ui_config:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling UiApi->ui_config_get: %s\n" % e)
+        print("Exception when calling UiApi->get_ui_config: %s\n" % e)
 ```
 
 

@@ -44,7 +44,7 @@ class ProductsApi:
         self.api_client = api_client
 
     @validate_call
-    async def products_assets_id_asset_id_delete(
+    async def delete_products_assets_id_asset_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -86,7 +86,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_asset_id_delete_serialize(
+        _param = self._delete_products_assets_id_asset_id_serialize(
             id=id,
             asset_id=asset_id,
             _request_auth=_request_auth,
@@ -109,7 +109,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_assets_id_asset_id_delete_with_http_info(
+    async def delete_products_assets_id_asset_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -151,7 +151,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_asset_id_delete_serialize(
+        _param = self._delete_products_assets_id_asset_id_serialize(
             id=id,
             asset_id=asset_id,
             _request_auth=_request_auth,
@@ -174,7 +174,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_assets_id_asset_id_delete_without_preload_content(
+    async def delete_products_assets_id_asset_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -216,7 +216,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_asset_id_delete_serialize(
+        _param = self._delete_products_assets_id_asset_id_serialize(
             id=id,
             asset_id=asset_id,
             _request_auth=_request_auth,
@@ -235,7 +235,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_assets_id_asset_id_delete_sync(
+    def delete_products_assets_id_asset_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -249,11 +249,11 @@ class ProductsApi:
     ) -> dict[str, str]:
         """Remove data product asset (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_asset_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_products_assets_id_asset_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_asset_id_delete(
+            self.delete_products_assets_id_asset_id(
                 id=id,
                 asset_id=asset_id,
                 _request_timeout=_request_timeout,
@@ -265,7 +265,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_asset_id_delete_sync_with_http_info(
+    def delete_products_assets_id_asset_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -279,11 +279,11 @@ class ProductsApi:
     ) -> ApiResponse[dict[str, str]]:
         """Remove data product asset (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_asset_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_products_assets_id_asset_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_asset_id_delete_with_http_info(
+            self.delete_products_assets_id_asset_id_with_http_info(
                 id=id,
                 asset_id=asset_id,
                 _request_timeout=_request_timeout,
@@ -295,7 +295,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_asset_id_delete_sync_without_preload_content(
+    def delete_products_assets_id_asset_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
@@ -309,11 +309,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Remove data product asset (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_asset_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_products_assets_id_asset_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_asset_id_delete_without_preload_content(
+            self.delete_products_assets_id_asset_id_without_preload_content(
                 id=id,
                 asset_id=asset_id,
                 _request_timeout=_request_timeout,
@@ -324,7 +324,7 @@ class ProductsApi:
             )
         )
 
-    def _products_assets_id_asset_id_delete_serialize(
+    def _delete_products_assets_id_asset_id_serialize(
         self,
         id,
         asset_id,
@@ -364,7 +364,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="DELETE",
-            resource_path="/products/assets/{id}/{assetId}",
+            resource_path="/api/v1/products/assets/{id}/{assetId}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -378,7 +378,985 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_assets_id_get(
+    async def delete_products_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete data product
+
+        Delete a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_products_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete data product
+
+        Delete a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_products_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete data product
+
+        Delete a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_products_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete data product (synchronous)
+
+        Synchronous variant of :meth:`delete_products_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete data product (synchronous)
+
+        Synchronous variant of :meth:`delete_products_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete data product (synchronous)
+
+        Synchronous variant of :meth:`delete_products_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_products_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/products/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_products_images_id_purpose(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete product image
+
+        Delete an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_products_images_id_purpose_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete product image
+
+        Delete an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_products_images_id_purpose_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete product image
+
+        Delete an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_products_images_id_purpose_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete product image (synchronous)
+
+        Synchronous variant of :meth:`delete_products_images_id_purpose`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_images_id_purpose(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_images_id_purpose_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete product image (synchronous)
+
+        Synchronous variant of :meth:`delete_products_images_id_purpose_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_images_id_purpose_with_http_info(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_images_id_purpose_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete product image (synchronous)
+
+        Synchronous variant of :meth:`delete_products_images_id_purpose_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_images_id_purpose_without_preload_content(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_products_images_id_purpose_serialize(
+        self,
+        id,
+        purpose,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if purpose is not None:
+            _path_params["purpose"] = purpose
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/products/images/{id}/{purpose}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_products_rules_id_rule_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete data product rule
+
+        Delete a membership rule from a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param rule_id: Rule ID (required)
+        :type rule_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_rules_id_rule_id_serialize(
+            id=id,
+            rule_id=rule_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_products_rules_id_rule_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete data product rule
+
+        Delete a membership rule from a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param rule_id: Rule ID (required)
+        :type rule_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_rules_id_rule_id_serialize(
+            id=id,
+            rule_id=rule_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_products_rules_id_rule_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete data product rule
+
+        Delete a membership rule from a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param rule_id: Rule ID (required)
+        :type rule_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_products_rules_id_rule_id_serialize(
+            id=id,
+            rule_id=rule_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_products_rules_id_rule_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Delete data product rule (synchronous)
+
+        Synchronous variant of :meth:`delete_products_rules_id_rule_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_rules_id_rule_id(
+                id=id,
+                rule_id=rule_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_rules_id_rule_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Delete data product rule (synchronous)
+
+        Synchronous variant of :meth:`delete_products_rules_id_rule_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_rules_id_rule_id_with_http_info(
+                id=id,
+                rule_id=rule_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_products_rules_id_rule_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete data product rule (synchronous)
+
+        Synchronous variant of :meth:`delete_products_rules_id_rule_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_products_rules_id_rule_id_without_preload_content(
+                id=id,
+                rule_id=rule_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_products_rules_id_rule_id_serialize(
+        self,
+        id,
+        rule_id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if rule_id is not None:
+            _path_params["ruleId"] = rule_id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/products/rules/{id}/{ruleId}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_assets_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -425,7 +1403,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_get_serialize(
+        _param = self._get_products_assets_id_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -449,7 +1427,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_assets_id_get_with_http_info(
+    async def get_products_assets_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -496,7 +1474,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_get_serialize(
+        _param = self._get_products_assets_id_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -520,7 +1498,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_assets_id_get_without_preload_content(
+    async def get_products_assets_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -567,7 +1545,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_get_serialize(
+        _param = self._get_products_assets_id_serialize(
             id=id,
             limit=limit,
             offset=offset,
@@ -587,7 +1565,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_assets_id_get_sync(
+    def get_products_assets_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -604,11 +1582,11 @@ class ProductsApi:
     ) -> DataProductAssetsResult:
         """Get data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_products_assets_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_get(
+            self.get_products_assets_id(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -621,7 +1599,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_get_sync_with_http_info(
+    def get_products_assets_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -638,11 +1616,11 @@ class ProductsApi:
     ) -> ApiResponse[DataProductAssetsResult]:
         """Get data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_products_assets_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_get_with_http_info(
+            self.get_products_assets_id_with_http_info(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -655,7 +1633,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_get_sync_without_preload_content(
+    def get_products_assets_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         limit: Annotated[
@@ -672,11 +1650,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Get data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_products_assets_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_get_without_preload_content(
+            self.get_products_assets_id_without_preload_content(
                 id=id,
                 limit=limit,
                 offset=offset,
@@ -688,7 +1666,7 @@ class ProductsApi:
             )
         )
 
-    def _products_assets_id_get_serialize(
+    def _get_products_assets_id_serialize(
         self,
         id,
         limit,
@@ -733,7 +1711,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/products/assets/{id}",
+            resource_path="/api/v1/products/assets/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -747,7 +1725,2748 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_assets_id_post(
+    async def get_products_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProduct:
+        """Get data product
+
+        Get a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProduct",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProduct]:
+        """Get data product
+
+        Get a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProduct",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product
+
+        Get a data product by ID
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProduct",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProduct:
+        """Get data product (synchronous)
+
+        Synchronous variant of :meth:`get_products_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProduct]:
+        """Get data product (synchronous)
+
+        Synchronous variant of :meth:`get_products_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product (synchronous)
+
+        Synchronous variant of :meth:`get_products_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_images_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, object]:
+        """List product images
+
+        List all images for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, object]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_images_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, object]]:
+        """List product images
+
+        List all images for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, object]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_images_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List product images
+
+        List all images for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, object]",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_images_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, object]:
+        """List product images (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_images_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, object]]:
+        """List product images (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_images_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List product images (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_images_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/images/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_images_id_purpose(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> bytes:
+        """Get product image
+
+        Get an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "bytes",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_images_id_purpose_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[bytes]:
+        """Get product image
+
+        Get an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "bytes",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_images_id_purpose_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get product image
+
+        Get an icon or header image for a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param purpose: Image purpose (icon or header) (required)
+        :type purpose: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_images_id_purpose_serialize(
+            id=id,
+            purpose=purpose,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "bytes",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_images_id_purpose_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> bytes:
+        """Get product image (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id_purpose`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id_purpose(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_images_id_purpose_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[bytes]:
+        """Get product image (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id_purpose_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id_purpose_with_http_info(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_images_id_purpose_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get product image (synchronous)
+
+        Synchronous variant of :meth:`get_products_images_id_purpose_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_images_id_purpose_without_preload_content(
+                id=id,
+                purpose=purpose,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_images_id_purpose_serialize(
+        self,
+        id,
+        purpose,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if purpose is not None:
+            _path_params["purpose"] = purpose
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(
+                ["image/jpeg", "image/png", "image/gif", "image/webp"]
+            )
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/images/{id}/{purpose}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_list(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductListResult:
+        """List data products
+
+        Retrieve a paginated list of data products
+
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_list_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_list_with_http_info(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductListResult]:
+        """List data products
+
+        Retrieve a paginated list of data products
+
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_list_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_list_without_preload_content(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List data products
+
+        Retrieve a paginated list of data products
+
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_list_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_list_sync(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductListResult:
+        """List data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_list`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_list(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_list_sync_with_http_info(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductListResult]:
+        """List data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_list_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_list_with_http_info(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_list_sync_without_preload_content(
+        self,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_list_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_list_without_preload_content(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_list_serialize(
+        self,
+        limit,
+        offset,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        if offset is not None:
+            _query_params.append(("offset", offset))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/list",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_resolved_assets_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductResolvedAssets:
+        """Get resolved data product assets
+
+        Get all assets of a data product, both manually added and matched by rules
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_resolved_assets_id_serialize(
+            id=id,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductResolvedAssets",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_resolved_assets_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductResolvedAssets]:
+        """Get resolved data product assets
+
+        Get all assets of a data product, both manually added and matched by rules
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_resolved_assets_id_serialize(
+            id=id,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductResolvedAssets",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_resolved_assets_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get resolved data product assets
+
+        Get all assets of a data product, both manually added and matched by rules
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_resolved_assets_id_serialize(
+            id=id,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductResolvedAssets",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_resolved_assets_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductResolvedAssets:
+        """Get resolved data product assets (synchronous)
+
+        Synchronous variant of :meth:`get_products_resolved_assets_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_resolved_assets_id(
+                id=id,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_resolved_assets_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductResolvedAssets]:
+        """Get resolved data product assets (synchronous)
+
+        Synchronous variant of :meth:`get_products_resolved_assets_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_resolved_assets_id_with_http_info(
+                id=id,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_resolved_assets_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get resolved data product assets (synchronous)
+
+        Synchronous variant of :meth:`get_products_resolved_assets_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_resolved_assets_id_without_preload_content(
+                id=id,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_resolved_assets_id_serialize(
+        self,
+        id,
+        limit,
+        offset,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        if offset is not None:
+            _query_params.append(("offset", offset))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/resolved-assets/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_rules_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductRulesResponse:
+        """Get data product rules
+
+        Get the membership rules of a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_rules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_rules_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductRulesResponse]:
+        """Get data product rules
+
+        Get the membership rules of a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_rules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_rules_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product rules
+
+        Get the membership rules of a data product
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_rules_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_rules_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductRulesResponse:
+        """Get data product rules (synchronous)
+
+        Synchronous variant of :meth:`get_products_rules_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_rules_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_rules_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductRulesResponse]:
+        """Get data product rules (synchronous)
+
+        Synchronous variant of :meth:`get_products_rules_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_rules_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_rules_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product rules (synchronous)
+
+        Synchronous variant of :meth:`get_products_rules_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_rules_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_rules_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/rules/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_search(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductListResult:
+        """Search data products
+
+        Search data products by name, description, and tags
+
+        :param q: Search query
+        :type q: str
+        :param tags: Comma-separated list of tags to filter by
+        :type tags: str
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_search_serialize(
+            q=q,
+            tags=tags,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_search_with_http_info(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductListResult]:
+        """Search data products
+
+        Search data products by name, description, and tags
+
+        :param q: Search query
+        :type q: str
+        :param tags: Comma-separated list of tags to filter by
+        :type tags: str
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_search_serialize(
+            q=q,
+            tags=tags,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_search_without_preload_content(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Search data products
+
+        Search data products by name, description, and tags
+
+        :param q: Search query
+        :type q: str
+        :param tags: Comma-separated list of tags to filter by
+        :type tags: str
+        :param limit: Maximum number of data products to return
+        :type limit: int
+        :param offset: Number of data products to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_search_serialize(
+            q=q,
+            tags=tags,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductListResult",
+            "400": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_search_sync(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductListResult:
+        """Search data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_search`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_search(
+                q=q,
+                tags=tags,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_search_sync_with_http_info(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductListResult]:
+        """Search data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_search_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_search_with_http_info(
+                q=q,
+                tags=tags,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_search_sync_without_preload_content(
+        self,
+        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of data products to return")
+        ] = None,
+        offset: Annotated[
+            StrictInt | None, Field(description="Number of data products to skip")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Search data products (synchronous)
+
+        Synchronous variant of :meth:`get_products_search_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_search_without_preload_content(
+                q=q,
+                tags=tags,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_search_serialize(
+        self,
+        q,
+        tags,
+        limit,
+        offset,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if q is not None:
+            _query_params.append(("q", q))
+
+        if tags is not None:
+            _query_params.append(("tags", tags))
+
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        if offset is not None:
+            _query_params.append(("offset", offset))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/search",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_products(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProduct:
+        """Create data product
+
+        Create a new data product with owners and optional membership rules
+
+        :param create_data_product_request: Data product to create (required)
+        :type create_data_product_request: CreateDataProductRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_products_serialize(
+            create_data_product_request=create_data_product_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "DataProduct",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_products_with_http_info(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProduct]:
+        """Create data product
+
+        Create a new data product with owners and optional membership rules
+
+        :param create_data_product_request: Data product to create (required)
+        :type create_data_product_request: CreateDataProductRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_products_serialize(
+            create_data_product_request=create_data_product_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "DataProduct",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_products_without_preload_content(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create data product
+
+        Create a new data product with owners and optional membership rules
+
+        :param create_data_product_request: Data product to create (required)
+        :type create_data_product_request: CreateDataProductRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_products_serialize(
+            create_data_product_request=create_data_product_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "DataProduct",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "409": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_products_sync(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProduct:
+        """Create data product (synchronous)
+
+        Synchronous variant of :meth:`post_products`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_products(
+                create_data_product_request=create_data_product_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_products_sync_with_http_info(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProduct]:
+        """Create data product (synchronous)
+
+        Synchronous variant of :meth:`post_products_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_products_with_http_info(
+                create_data_product_request=create_data_product_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_products_sync_without_preload_content(
+        self,
+        create_data_product_request: Annotated[
+            CreateDataProductRequest, Field(description="Data product to create")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create data product (synchronous)
+
+        Synchronous variant of :meth:`post_products_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_products_without_preload_content(
+                create_data_product_request=create_data_product_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_products_serialize(
+        self,
+        create_data_product_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_data_product_request is not None:
+            _body_params = create_data_product_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/products/",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_products_assets_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -791,7 +4510,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_post_serialize(
+        _param = self._post_products_assets_id_serialize(
             id=id,
             add_data_product_assets_request=add_data_product_assets_request,
             _request_auth=_request_auth,
@@ -815,7 +4534,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_assets_id_post_with_http_info(
+    async def post_products_assets_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -859,7 +4578,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_post_serialize(
+        _param = self._post_products_assets_id_serialize(
             id=id,
             add_data_product_assets_request=add_data_product_assets_request,
             _request_auth=_request_auth,
@@ -883,7 +4602,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_assets_id_post_without_preload_content(
+    async def post_products_assets_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -927,7 +4646,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_assets_id_post_serialize(
+        _param = self._post_products_assets_id_serialize(
             id=id,
             add_data_product_assets_request=add_data_product_assets_request,
             _request_auth=_request_auth,
@@ -947,7 +4666,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_assets_id_post_sync(
+    def post_products_assets_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -963,11 +4682,11 @@ class ProductsApi:
     ) -> dict[str, str]:
         """Add data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_products_assets_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_post(
+            self.post_products_assets_id(
                 id=id,
                 add_data_product_assets_request=add_data_product_assets_request,
                 _request_timeout=_request_timeout,
@@ -979,7 +4698,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_post_sync_with_http_info(
+    def post_products_assets_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -995,11 +4714,11 @@ class ProductsApi:
     ) -> ApiResponse[dict[str, str]]:
         """Add data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_products_assets_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_post_with_http_info(
+            self.post_products_assets_id_with_http_info(
                 id=id,
                 add_data_product_assets_request=add_data_product_assets_request,
                 _request_timeout=_request_timeout,
@@ -1011,7 +4730,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_assets_id_post_sync_without_preload_content(
+    def post_products_assets_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         add_data_product_assets_request: Annotated[
@@ -1027,11 +4746,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Add data product assets (synchronous)
 
-        Synchronous variant of :meth:`products_assets_id_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_products_assets_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_assets_id_post_without_preload_content(
+            self.post_products_assets_id_without_preload_content(
                 id=id,
                 add_data_product_assets_request=add_data_product_assets_request,
                 _request_timeout=_request_timeout,
@@ -1042,7 +4761,7 @@ class ProductsApi:
             )
         )
 
-    def _products_assets_id_post_serialize(
+    def _post_products_assets_id_serialize(
         self,
         id,
         add_data_product_assets_request,
@@ -1090,7 +4809,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/products/assets/{id}",
+            resource_path="/api/v1/products/assets/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1104,1964 +4823,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete data product
-
-        Delete a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete data product
-
-        Delete a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete data product
-
-        Delete a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/products/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Get data product
-
-        Get a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Get data product
-
-        Get a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get data product
-
-        Get a data product by ID
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Get data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_get(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Get data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_id_get_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_id_put(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Update data product
-
-        Update an existing data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param update_data_product_request: Fields to update (required)
-        :type update_data_product_request: UpdateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_put_serialize(
-            id=id,
-            update_data_product_request=update_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_id_put_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Update data product
-
-        Update an existing data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param update_data_product_request: Fields to update (required)
-        :type update_data_product_request: UpdateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_put_serialize(
-            id=id,
-            update_data_product_request=update_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_id_put_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update data product
-
-        Update an existing data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param update_data_product_request: Fields to update (required)
-        :type update_data_product_request: UpdateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_id_put_serialize(
-            id=id,
-            update_data_product_request=update_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProduct",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_id_put_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Update data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_put`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_put(
-                id=id,
-                update_data_product_request=update_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_put_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Update data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_put_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_put_with_http_info(
-                id=id,
-                update_data_product_request=update_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_id_put_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        update_data_product_request: Annotated[
-            UpdateDataProductRequest, Field(description="Fields to update")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Update data product (synchronous)
-
-        Synchronous variant of :meth:`products_id_put_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_id_put_without_preload_content(
-                id=id,
-                update_data_product_request=update_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_id_put_serialize(
-        self,
-        id,
-        update_data_product_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if update_data_product_request is not None:
-            _body_params = update_data_product_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="PUT",
-            resource_path="/products/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_images_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, object]:
-        """List product images
-
-        List all images for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_images_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, object]]:
-        """List product images
-
-        List all images for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_images_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List product images
-
-        List all images for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_images_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, object]:
-        """List product images (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_get(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, object]]:
-        """List product images (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List product images (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_images_id_get_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/images/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_images_id_purpose_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete product image
-
-        Delete an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_delete_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_images_id_purpose_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete product image
-
-        Delete an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_delete_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_images_id_purpose_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete product image
-
-        Delete an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_delete_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_images_id_purpose_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_delete(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_purpose_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_delete_with_http_info(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_purpose_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_delete_without_preload_content(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_images_id_purpose_delete_serialize(
-        self,
-        id,
-        purpose,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        if purpose is not None:
-            _path_params["purpose"] = purpose
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/products/images/{id}/{purpose}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_images_id_purpose_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> bytes:
-        """Get product image
-
-        Get an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_get_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "bytes",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_images_id_purpose_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[bytes]:
-        """Get product image
-
-        Get an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_get_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "bytes",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_images_id_purpose_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get product image
-
-        Get an icon or header image for a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param purpose: Image purpose (icon or header) (required)
-        :type purpose: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_images_id_purpose_get_serialize(
-            id=id,
-            purpose=purpose,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "bytes",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_images_id_purpose_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> bytes:
-        """Get product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_get(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_purpose_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[bytes]:
-        """Get product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_get_with_http_info(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_images_id_purpose_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get product image (synchronous)
-
-        Synchronous variant of :meth:`products_images_id_purpose_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_images_id_purpose_get_without_preload_content(
-                id=id,
-                purpose=purpose,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_images_id_purpose_get_serialize(
-        self,
-        id,
-        purpose,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        if purpose is not None:
-            _path_params["purpose"] = purpose
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(
-                ["image/jpeg", "image/png", "image/gif", "image/webp"]
-            )
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/images/{id}/{purpose}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_images_id_purpose_post(
+    async def post_products_images_id_purpose(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3108,7 +4870,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_images_id_purpose_post_serialize(
+        _param = self._post_products_images_id_purpose_serialize(
             id=id,
             purpose=purpose,
             file=file,
@@ -3132,7 +4894,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_images_id_purpose_post_with_http_info(
+    async def post_products_images_id_purpose_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3179,7 +4941,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_images_id_purpose_post_serialize(
+        _param = self._post_products_images_id_purpose_serialize(
             id=id,
             purpose=purpose,
             file=file,
@@ -3203,7 +4965,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_images_id_purpose_post_without_preload_content(
+    async def post_products_images_id_purpose_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3250,7 +5012,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_images_id_purpose_post_serialize(
+        _param = self._post_products_images_id_purpose_serialize(
             id=id,
             purpose=purpose,
             file=file,
@@ -3270,7 +5032,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_images_id_purpose_post_sync(
+    def post_products_images_id_purpose_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3287,11 +5049,11 @@ class ProductsApi:
     ) -> ProductImageMeta:
         """Upload product image (synchronous)
 
-        Synchronous variant of :meth:`products_images_id_purpose_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_products_images_id_purpose`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_images_id_purpose_post(
+            self.post_products_images_id_purpose(
                 id=id,
                 purpose=purpose,
                 file=file,
@@ -3304,7 +5066,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_images_id_purpose_post_sync_with_http_info(
+    def post_products_images_id_purpose_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3321,11 +5083,11 @@ class ProductsApi:
     ) -> ApiResponse[ProductImageMeta]:
         """Upload product image (synchronous)
 
-        Synchronous variant of :meth:`products_images_id_purpose_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_products_images_id_purpose_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_images_id_purpose_post_with_http_info(
+            self.post_products_images_id_purpose_with_http_info(
                 id=id,
                 purpose=purpose,
                 file=file,
@@ -3338,7 +5100,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_images_id_purpose_post_sync_without_preload_content(
+    def post_products_images_id_purpose_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         purpose: Annotated[StrictStr, Field(description="Image purpose (icon or header)")],
@@ -3355,11 +5117,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Upload product image (synchronous)
 
-        Synchronous variant of :meth:`products_images_id_purpose_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_products_images_id_purpose_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_images_id_purpose_post_without_preload_content(
+            self.post_products_images_id_purpose_without_preload_content(
                 id=id,
                 purpose=purpose,
                 file=file,
@@ -3371,7 +5133,7 @@ class ProductsApi:
             )
         )
 
-    def _products_images_id_purpose_post_serialize(
+    def _post_products_images_id_purpose_serialize(
         self,
         id,
         purpose,
@@ -3424,7 +5186,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/products/images/{id}/{purpose}",
+            resource_path="/api/v1/products/images/{id}/{purpose}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3438,1066 +5200,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_list_get(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductListResult:
-        """List data products
-
-        Retrieve a paginated list of data products
-
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_list_get_serialize(
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_list_get_with_http_info(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductListResult]:
-        """List data products
-
-        Retrieve a paginated list of data products
-
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_list_get_serialize(
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_list_get_without_preload_content(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List data products
-
-        Retrieve a paginated list of data products
-
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_list_get_serialize(
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_list_get_sync(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductListResult:
-        """List data products (synchronous)
-
-        Synchronous variant of :meth:`products_list_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_list_get(
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_list_get_sync_with_http_info(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductListResult]:
-        """List data products (synchronous)
-
-        Synchronous variant of :meth:`products_list_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_list_get_with_http_info(
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_list_get_sync_without_preload_content(
-        self,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List data products (synchronous)
-
-        Synchronous variant of :meth:`products_list_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_list_get_without_preload_content(
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_list_get_serialize(
-        self,
-        limit,
-        offset,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        if limit is not None:
-            _query_params.append(("limit", limit))
-
-        if offset is not None:
-            _query_params.append(("offset", offset))
-
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/list",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_post(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Create data product
-
-        Create a new data product with owners and optional membership rules
-
-        :param create_data_product_request: Data product to create (required)
-        :type create_data_product_request: CreateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_post_serialize(
-            create_data_product_request=create_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "DataProduct",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_post_with_http_info(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Create data product
-
-        Create a new data product with owners and optional membership rules
-
-        :param create_data_product_request: Data product to create (required)
-        :type create_data_product_request: CreateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_post_serialize(
-            create_data_product_request=create_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "DataProduct",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_post_without_preload_content(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create data product
-
-        Create a new data product with owners and optional membership rules
-
-        :param create_data_product_request: Data product to create (required)
-        :type create_data_product_request: CreateDataProductRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_post_serialize(
-            create_data_product_request=create_data_product_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "201": "DataProduct",
-            "400": "ErrorResponse",
-            "401": "ErrorResponse",
-            "409": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_post_sync(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProduct:
-        """Create data product (synchronous)
-
-        Synchronous variant of :meth:`products_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_post(
-                create_data_product_request=create_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_post_sync_with_http_info(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProduct]:
-        """Create data product (synchronous)
-
-        Synchronous variant of :meth:`products_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_post_with_http_info(
-                create_data_product_request=create_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_post_sync_without_preload_content(
-        self,
-        create_data_product_request: Annotated[
-            CreateDataProductRequest, Field(description="Data product to create")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Create data product (synchronous)
-
-        Synchronous variant of :meth:`products_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_post_without_preload_content(
-                create_data_product_request=create_data_product_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_post_serialize(
-        self,
-        create_data_product_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if create_data_product_request is not None:
-            _body_params = create_data_product_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/products/",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_resolved_assets_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductResolvedAssets:
-        """Get resolved data product assets
-
-        Get all assets of a data product, both manually added and matched by rules
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param limit: Maximum number of assets to return
-        :type limit: int
-        :param offset: Number of assets to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_resolved_assets_id_get_serialize(
-            id=id,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductResolvedAssets",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_resolved_assets_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductResolvedAssets]:
-        """Get resolved data product assets
-
-        Get all assets of a data product, both manually added and matched by rules
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param limit: Maximum number of assets to return
-        :type limit: int
-        :param offset: Number of assets to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_resolved_assets_id_get_serialize(
-            id=id,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductResolvedAssets",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_resolved_assets_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get resolved data product assets
-
-        Get all assets of a data product, both manually added and matched by rules
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param limit: Maximum number of assets to return
-        :type limit: int
-        :param offset: Number of assets to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_resolved_assets_id_get_serialize(
-            id=id,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductResolvedAssets",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_resolved_assets_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductResolvedAssets:
-        """Get resolved data product assets (synchronous)
-
-        Synchronous variant of :meth:`products_resolved_assets_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_resolved_assets_id_get(
-                id=id,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_resolved_assets_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductResolvedAssets]:
-        """Get resolved data product assets (synchronous)
-
-        Synchronous variant of :meth:`products_resolved_assets_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_resolved_assets_id_get_with_http_info(
-                id=id,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_resolved_assets_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of assets to return")
-        ] = None,
-        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get resolved data product assets (synchronous)
-
-        Synchronous variant of :meth:`products_resolved_assets_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_resolved_assets_id_get_without_preload_content(
-                id=id,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_resolved_assets_id_get_serialize(
-        self,
-        id,
-        limit,
-        offset,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        if limit is not None:
-            _query_params.append(("limit", limit))
-
-        if offset is not None:
-            _query_params.append(("offset", offset))
-
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/resolved-assets/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_rule_preview_post(
+    async def post_products_rule_preview(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4543,7 +5246,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rule_preview_post_serialize(
+        _param = self._post_products_rule_preview_serialize(
             data_product_rule_request=data_product_rule_request,
             limit=limit,
             _request_auth=_request_auth,
@@ -4565,7 +5268,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_rule_preview_post_with_http_info(
+    async def post_products_rule_preview_with_http_info(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4611,7 +5314,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rule_preview_post_serialize(
+        _param = self._post_products_rule_preview_serialize(
             data_product_rule_request=data_product_rule_request,
             limit=limit,
             _request_auth=_request_auth,
@@ -4633,7 +5336,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rule_preview_post_without_preload_content(
+    async def post_products_rule_preview_without_preload_content(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4679,7 +5382,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rule_preview_post_serialize(
+        _param = self._post_products_rule_preview_serialize(
             data_product_rule_request=data_product_rule_request,
             limit=limit,
             _request_auth=_request_auth,
@@ -4697,7 +5400,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_rule_preview_post_sync(
+    def post_products_rule_preview_sync(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4715,11 +5418,11 @@ class ProductsApi:
     ) -> DataProductRulePreview:
         """Preview data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rule_preview_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_products_rule_preview`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_rule_preview_post(
+            self.post_products_rule_preview(
                 data_product_rule_request=data_product_rule_request,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -4731,7 +5434,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rule_preview_post_sync_with_http_info(
+    def post_products_rule_preview_sync_with_http_info(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4749,11 +5452,11 @@ class ProductsApi:
     ) -> ApiResponse[DataProductRulePreview]:
         """Preview data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rule_preview_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_products_rule_preview_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rule_preview_post_with_http_info(
+            self.post_products_rule_preview_with_http_info(
                 data_product_rule_request=data_product_rule_request,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -4765,7 +5468,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rule_preview_post_sync_without_preload_content(
+    def post_products_rule_preview_sync_without_preload_content(
         self,
         data_product_rule_request: Annotated[
             DataProductRuleRequest, Field(description="Rule to preview")
@@ -4783,11 +5486,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Preview data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rule_preview_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_products_rule_preview_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rule_preview_post_without_preload_content(
+            self.post_products_rule_preview_without_preload_content(
                 data_product_rule_request=data_product_rule_request,
                 limit=limit,
                 _request_timeout=_request_timeout,
@@ -4798,7 +5501,7 @@ class ProductsApi:
             )
         )
 
-    def _products_rule_preview_post_serialize(
+    def _post_products_rule_preview_serialize(
         self,
         data_product_rule_request,
         limit,
@@ -4847,7 +5550,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/products/rule-preview",
+            resource_path="/api/v1/products/rule-preview",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -4861,320 +5564,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductRulesResponse:
-        """Get data product rules
-
-        Get the membership rules of a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_rules_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductRulesResponse",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_rules_id_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductRulesResponse]:
-        """Get data product rules
-
-        Get the membership rules of a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_rules_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductRulesResponse",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_rules_id_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get data product rules
-
-        Get the membership rules of a data product
-
-        :param id: Data Product ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_rules_id_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductRulesResponse",
-            "400": "ErrorResponse",
-            "404": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_rules_id_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductRulesResponse:
-        """Get data product rules (synchronous)
-
-        Synchronous variant of :meth:`products_rules_id_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_rules_id_get(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_rules_id_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductRulesResponse]:
-        """Get data product rules (synchronous)
-
-        Synchronous variant of :meth:`products_rules_id_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_rules_id_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_rules_id_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Data Product ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get data product rules (synchronous)
-
-        Synchronous variant of :meth:`products_rules_id_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_rules_id_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_rules_id_get_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/rules/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_rules_id_post(
+    async def post_products_rules_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5218,7 +5608,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_post_serialize(
+        _param = self._post_products_rules_id_serialize(
             id=id,
             data_product_rule_request=data_product_rule_request,
             _request_auth=_request_auth,
@@ -5241,7 +5631,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_rules_id_post_with_http_info(
+    async def post_products_rules_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5285,7 +5675,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_post_serialize(
+        _param = self._post_products_rules_id_serialize(
             id=id,
             data_product_rule_request=data_product_rule_request,
             _request_auth=_request_auth,
@@ -5308,7 +5698,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_post_without_preload_content(
+    async def post_products_rules_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5352,7 +5742,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_post_serialize(
+        _param = self._post_products_rules_id_serialize(
             id=id,
             data_product_rule_request=data_product_rule_request,
             _request_auth=_request_auth,
@@ -5371,7 +5761,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_rules_id_post_sync(
+    def post_products_rules_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5387,11 +5777,11 @@ class ProductsApi:
     ) -> DataProductRule:
         """Create data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_products_rules_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_post(
+            self.post_products_rules_id(
                 id=id,
                 data_product_rule_request=data_product_rule_request,
                 _request_timeout=_request_timeout,
@@ -5403,7 +5793,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_post_sync_with_http_info(
+    def post_products_rules_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5419,11 +5809,11 @@ class ProductsApi:
     ) -> ApiResponse[DataProductRule]:
         """Create data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_products_rules_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_post_with_http_info(
+            self.post_products_rules_id_with_http_info(
                 id=id,
                 data_product_rule_request=data_product_rule_request,
                 _request_timeout=_request_timeout,
@@ -5435,7 +5825,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_post_sync_without_preload_content(
+    def post_products_rules_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         data_product_rule_request: Annotated[
@@ -5451,11 +5841,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Create data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_products_rules_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_post_without_preload_content(
+            self.post_products_rules_id_without_preload_content(
                 id=id,
                 data_product_rule_request=data_product_rule_request,
                 _request_timeout=_request_timeout,
@@ -5466,7 +5856,7 @@ class ProductsApi:
             )
         )
 
-    def _products_rules_id_post_serialize(
+    def _post_products_rules_id_serialize(
         self,
         id,
         data_product_rule_request,
@@ -5514,7 +5904,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/products/rules/{id}",
+            resource_path="/api/v1/products/rules/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -5528,10 +5918,12 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_rule_id_delete(
+    async def put_products_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5539,15 +5931,15 @@ class ProductsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete data product rule
+    ) -> DataProduct:
+        """Update data product
 
-        Delete a membership rule from a data product
+        Update an existing data product
 
         :param id: Data Product ID (required)
         :type id: str
-        :param rule_id: Rule ID (required)
-        :type rule_id: str
+        :param update_data_product_request: Fields to update (required)
+        :type update_data_product_request: UpdateDataProductRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5570,9 +5962,9 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_delete_serialize(
+        _param = self._put_products_id_serialize(
             id=id,
-            rule_id=rule_id,
+            update_data_product_request=update_data_product_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5580,9 +5972,10 @@ class ProductsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
+            "200": "DataProduct",
             "400": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -5593,10 +5986,12 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_rules_id_rule_id_delete_with_http_info(
+    async def put_products_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5604,15 +5999,15 @@ class ProductsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete data product rule
+    ) -> ApiResponse[DataProduct]:
+        """Update data product
 
-        Delete a membership rule from a data product
+        Update an existing data product
 
         :param id: Data Product ID (required)
         :type id: str
-        :param rule_id: Rule ID (required)
-        :type rule_id: str
+        :param update_data_product_request: Fields to update (required)
+        :type update_data_product_request: UpdateDataProductRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5635,9 +6030,9 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_delete_serialize(
+        _param = self._put_products_id_serialize(
             id=id,
-            rule_id=rule_id,
+            update_data_product_request=update_data_product_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5645,9 +6040,10 @@ class ProductsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
+            "200": "DataProduct",
             "400": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -5658,10 +6054,12 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_rule_id_delete_without_preload_content(
+    async def put_products_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5670,14 +6068,14 @@ class ProductsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete data product rule
+        """Update data product
 
-        Delete a membership rule from a data product
+        Update an existing data product
 
         :param id: Data Product ID (required)
         :type id: str
-        :param rule_id: Rule ID (required)
-        :type rule_id: str
+        :param update_data_product_request: Fields to update (required)
+        :type update_data_product_request: UpdateDataProductRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5700,9 +6098,9 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_delete_serialize(
+        _param = self._put_products_id_serialize(
             id=id,
-            rule_id=rule_id,
+            update_data_product_request=update_data_product_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -5710,19 +6108,22 @@ class ProductsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
+            "200": "DataProduct",
             "400": "ErrorResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def products_rules_id_rule_id_delete_sync(
+    def put_products_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5730,16 +6131,16 @@ class ProductsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Delete data product rule (synchronous)
+    ) -> DataProduct:
+        """Update data product (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`put_products_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_delete(
+            self.put_products_id(
                 id=id,
-                rule_id=rule_id,
+                update_data_product_request=update_data_product_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5749,10 +6150,12 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_rule_id_delete_sync_with_http_info(
+    def put_products_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5760,16 +6163,16 @@ class ProductsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Delete data product rule (synchronous)
+    ) -> ApiResponse[DataProduct]:
+        """Update data product (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_products_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_delete_with_http_info(
+            self.put_products_id_with_http_info(
                 id=id,
-                rule_id=rule_id,
+                update_data_product_request=update_data_product_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5779,10 +6182,12 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_rule_id_delete_sync_without_preload_content(
+    def put_products_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
-        rule_id: Annotated[StrictStr, Field(description="Rule ID")],
+        update_data_product_request: Annotated[
+            UpdateDataProductRequest, Field(description="Fields to update")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -5791,15 +6196,15 @@ class ProductsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete data product rule (synchronous)
+        """Update data product (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_products_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_delete_without_preload_content(
+            self.put_products_id_without_preload_content(
                 id=id,
-                rule_id=rule_id,
+                update_data_product_request=update_data_product_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -5808,10 +6213,10 @@ class ProductsApi:
             )
         )
 
-    def _products_rules_id_rule_id_delete_serialize(
+    def _put_products_id_serialize(
         self,
         id,
-        rule_id,
+        update_data_product_request,
         _request_auth,
         _content_type,
         _headers,
@@ -5832,23 +6237,31 @@ class ProductsApi:
         # process the path parameters
         if id is not None:
             _path_params["id"] = id
-        if rule_id is not None:
-            _path_params["ruleId"] = rule_id
         # process the query parameters
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if update_data_product_request is not None:
+            _body_params = update_data_product_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/products/rules/{id}/{ruleId}",
+            method="PUT",
+            resource_path="/api/v1/products/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -5862,7 +6275,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_rule_id_put(
+    async def put_products_rules_id_rule_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -5909,7 +6322,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_put_serialize(
+        _param = self._put_products_rules_id_rule_id_serialize(
             id=id,
             rule_id=rule_id,
             data_product_rule_request=data_product_rule_request,
@@ -5933,7 +6346,7 @@ class ProductsApi:
         ).data
 
     @validate_call
-    async def products_rules_id_rule_id_put_with_http_info(
+    async def put_products_rules_id_rule_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -5980,7 +6393,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_put_serialize(
+        _param = self._put_products_rules_id_rule_id_serialize(
             id=id,
             rule_id=rule_id,
             data_product_rule_request=data_product_rule_request,
@@ -6004,7 +6417,7 @@ class ProductsApi:
         )
 
     @validate_call
-    async def products_rules_id_rule_id_put_without_preload_content(
+    async def put_products_rules_id_rule_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -6051,7 +6464,7 @@ class ProductsApi:
         :return: Returns the result object.
         """
 
-        _param = self._products_rules_id_rule_id_put_serialize(
+        _param = self._put_products_rules_id_rule_id_serialize(
             id=id,
             rule_id=rule_id,
             data_product_rule_request=data_product_rule_request,
@@ -6071,7 +6484,7 @@ class ProductsApi:
         return response_data.response
 
     @validate_call
-    def products_rules_id_rule_id_put_sync(
+    def put_products_rules_id_rule_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -6088,11 +6501,11 @@ class ProductsApi:
     ) -> DataProductRule:
         """Update data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_put`. It calls the asynchronous
+        Synchronous variant of :meth:`put_products_rules_id_rule_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_put(
+            self.put_products_rules_id_rule_id(
                 id=id,
                 rule_id=rule_id,
                 data_product_rule_request=data_product_rule_request,
@@ -6105,7 +6518,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_rule_id_put_sync_with_http_info(
+    def put_products_rules_id_rule_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -6122,11 +6535,11 @@ class ProductsApi:
     ) -> ApiResponse[DataProductRule]:
         """Update data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_put_with_http_info`. It calls the
+        Synchronous variant of :meth:`put_products_rules_id_rule_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_put_with_http_info(
+            self.put_products_rules_id_rule_id_with_http_info(
                 id=id,
                 rule_id=rule_id,
                 data_product_rule_request=data_product_rule_request,
@@ -6139,7 +6552,7 @@ class ProductsApi:
         )
 
     @validate_call
-    def products_rules_id_rule_id_put_sync_without_preload_content(
+    def put_products_rules_id_rule_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
         rule_id: Annotated[StrictStr, Field(description="Rule ID")],
@@ -6156,11 +6569,11 @@ class ProductsApi:
     ) -> RESTResponseType:
         """Update data product rule (synchronous)
 
-        Synchronous variant of :meth:`products_rules_id_rule_id_put_without_preload_content`. It calls
+        Synchronous variant of :meth:`put_products_rules_id_rule_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.products_rules_id_rule_id_put_without_preload_content(
+            self.put_products_rules_id_rule_id_without_preload_content(
                 id=id,
                 rule_id=rule_id,
                 data_product_rule_request=data_product_rule_request,
@@ -6172,7 +6585,7 @@ class ProductsApi:
             )
         )
 
-    def _products_rules_id_rule_id_put_serialize(
+    def _put_products_rules_id_rule_id_serialize(
         self,
         id,
         rule_id,
@@ -6223,420 +6636,7 @@ class ProductsApi:
 
         return self.api_client.param_serialize(
             method="PUT",
-            resource_path="/products/rules/{id}/{ruleId}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def products_search_get(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductListResult:
-        """Search data products
-
-        Search data products by name, description, and tags
-
-        :param q: Search query
-        :type q: str
-        :param tags: Comma-separated list of tags to filter by
-        :type tags: str
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_search_get_serialize(
-            q=q,
-            tags=tags,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def products_search_get_with_http_info(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductListResult]:
-        """Search data products
-
-        Search data products by name, description, and tags
-
-        :param q: Search query
-        :type q: str
-        :param tags: Comma-separated list of tags to filter by
-        :type tags: str
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_search_get_serialize(
-            q=q,
-            tags=tags,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def products_search_get_without_preload_content(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Search data products
-
-        Search data products by name, description, and tags
-
-        :param q: Search query
-        :type q: str
-        :param tags: Comma-separated list of tags to filter by
-        :type tags: str
-        :param limit: Maximum number of data products to return
-        :type limit: int
-        :param offset: Number of data products to skip
-        :type offset: int
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._products_search_get_serialize(
-            q=q,
-            tags=tags,
-            limit=limit,
-            offset=offset,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "DataProductListResult",
-            "400": "ErrorResponse",
-            "500": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def products_search_get_sync(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataProductListResult:
-        """Search data products (synchronous)
-
-        Synchronous variant of :meth:`products_search_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_search_get(
-                q=q,
-                tags=tags,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_search_get_sync_with_http_info(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataProductListResult]:
-        """Search data products (synchronous)
-
-        Synchronous variant of :meth:`products_search_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_search_get_with_http_info(
-                q=q,
-                tags=tags,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def products_search_get_sync_without_preload_content(
-        self,
-        q: Annotated[StrictStr | None, Field(description="Search query")] = None,
-        tags: Annotated[
-            StrictStr | None, Field(description="Comma-separated list of tags to filter by")
-        ] = None,
-        limit: Annotated[
-            StrictInt | None, Field(description="Maximum number of data products to return")
-        ] = None,
-        offset: Annotated[
-            StrictInt | None, Field(description="Number of data products to skip")
-        ] = None,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Search data products (synchronous)
-
-        Synchronous variant of :meth:`products_search_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.products_search_get_without_preload_content(
-                q=q,
-                tags=tags,
-                limit=limit,
-                offset=offset,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _products_search_get_serialize(
-        self,
-        q,
-        tags,
-        limit,
-        offset,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        if q is not None:
-            _query_params.append(("q", q))
-
-        if tags is not None:
-            _query_params.append(("tags", tags))
-
-        if limit is not None:
-            _query_params.append(("limit", limit))
-
-        if offset is not None:
-            _query_params.append(("offset", offset))
-
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/products/search",
+            resource_path="/api/v1/products/rules/{id}/{ruleId}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

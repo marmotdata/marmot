@@ -35,7 +35,7 @@ class AuthApi:
         self.api_client = api_client
 
     @validate_call
-    async def auth_provider_callback_get(
+    async def get_auth_provider_callback(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -82,7 +82,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_callback_get_serialize(
+        _param = self._get_auth_provider_callback_serialize(
             provider=provider,
             code=code,
             state=state,
@@ -106,7 +106,7 @@ class AuthApi:
         ).data
 
     @validate_call
-    async def auth_provider_callback_get_with_http_info(
+    async def get_auth_provider_callback_with_http_info(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -153,7 +153,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_callback_get_serialize(
+        _param = self._get_auth_provider_callback_serialize(
             provider=provider,
             code=code,
             state=state,
@@ -177,7 +177,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def auth_provider_callback_get_without_preload_content(
+    async def get_auth_provider_callback_without_preload_content(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -224,7 +224,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_callback_get_serialize(
+        _param = self._get_auth_provider_callback_serialize(
             provider=provider,
             code=code,
             state=state,
@@ -244,7 +244,7 @@ class AuthApi:
         return response_data.response
 
     @validate_call
-    def auth_provider_callback_get_sync(
+    def get_auth_provider_callback_sync(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -261,11 +261,11 @@ class AuthApi:
     ) -> None:
         """Handle OAuth callback (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_callback_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_auth_provider_callback`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_callback_get(
+            self.get_auth_provider_callback(
                 provider=provider,
                 code=code,
                 state=state,
@@ -278,7 +278,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_provider_callback_get_sync_with_http_info(
+    def get_auth_provider_callback_sync_with_http_info(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -295,11 +295,11 @@ class AuthApi:
     ) -> ApiResponse[None]:
         """Handle OAuth callback (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_callback_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_auth_provider_callback_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_callback_get_with_http_info(
+            self.get_auth_provider_callback_with_http_info(
                 provider=provider,
                 code=code,
                 state=state,
@@ -312,7 +312,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_provider_callback_get_sync_without_preload_content(
+    def get_auth_provider_callback_sync_without_preload_content(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -329,11 +329,11 @@ class AuthApi:
     ) -> RESTResponseType:
         """Handle OAuth callback (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_callback_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_auth_provider_callback_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_callback_get_without_preload_content(
+            self.get_auth_provider_callback_without_preload_content(
                 provider=provider,
                 code=code,
                 state=state,
@@ -345,7 +345,7 @@ class AuthApi:
             )
         )
 
-    def _auth_provider_callback_get_serialize(
+    def _get_auth_provider_callback_serialize(
         self,
         provider,
         code,
@@ -404,7 +404,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def auth_provider_login_get(
+    async def get_auth_provider_login(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -445,7 +445,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_login_get_serialize(
+        _param = self._get_auth_provider_login_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -466,7 +466,7 @@ class AuthApi:
         ).data
 
     @validate_call
-    async def auth_provider_login_get_with_http_info(
+    async def get_auth_provider_login_with_http_info(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -507,7 +507,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_login_get_serialize(
+        _param = self._get_auth_provider_login_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -528,7 +528,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def auth_provider_login_get_without_preload_content(
+    async def get_auth_provider_login_without_preload_content(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -569,7 +569,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_provider_login_get_serialize(
+        _param = self._get_auth_provider_login_serialize(
             provider=provider,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -586,7 +586,7 @@ class AuthApi:
         return response_data.response
 
     @validate_call
-    def auth_provider_login_get_sync(
+    def get_auth_provider_login_sync(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -601,11 +601,11 @@ class AuthApi:
     ) -> None:
         """Initiate OAuth login (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_login_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_auth_provider_login`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_login_get(
+            self.get_auth_provider_login(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -616,7 +616,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_provider_login_get_sync_with_http_info(
+    def get_auth_provider_login_sync_with_http_info(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -631,11 +631,11 @@ class AuthApi:
     ) -> ApiResponse[None]:
         """Initiate OAuth login (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_login_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_auth_provider_login_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_login_get_with_http_info(
+            self.get_auth_provider_login_with_http_info(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -646,7 +646,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_provider_login_get_sync_without_preload_content(
+    def get_auth_provider_login_sync_without_preload_content(
         self,
         provider: Annotated[
             StrictStr, Field(description="OAuth provider (okta, google, github, etc.)")
@@ -661,11 +661,11 @@ class AuthApi:
     ) -> RESTResponseType:
         """Initiate OAuth login (synchronous)
 
-        Synchronous variant of :meth:`auth_provider_login_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_auth_provider_login_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_provider_login_get_without_preload_content(
+            self.get_auth_provider_login_without_preload_content(
                 provider=provider,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -675,7 +675,7 @@ class AuthApi:
             )
         )
 
-    def _auth_provider_login_get_serialize(
+    def _get_auth_provider_login_serialize(
         self,
         provider,
         _request_auth,
@@ -726,7 +726,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def auth_providers_get(
+    async def get_auth_providers(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -762,7 +762,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_providers_get_serialize(
+        _param = self._get_auth_providers_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -780,7 +780,7 @@ class AuthApi:
         ).data
 
     @validate_call
-    async def auth_providers_get_with_http_info(
+    async def get_auth_providers_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -816,7 +816,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_providers_get_serialize(
+        _param = self._get_auth_providers_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -834,7 +834,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def auth_providers_get_without_preload_content(
+    async def get_auth_providers_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -870,7 +870,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._auth_providers_get_serialize(
+        _param = self._get_auth_providers_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -884,7 +884,7 @@ class AuthApi:
         return response_data.response
 
     @validate_call
-    def auth_providers_get_sync(
+    def get_auth_providers_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -896,11 +896,11 @@ class AuthApi:
     ) -> AuthConfig:
         """Get auth configuration (synchronous)
 
-        Synchronous variant of :meth:`auth_providers_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_auth_providers`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.auth_providers_get(
+            self.get_auth_providers(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -910,7 +910,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_providers_get_sync_with_http_info(
+    def get_auth_providers_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -922,11 +922,11 @@ class AuthApi:
     ) -> ApiResponse[AuthConfig]:
         """Get auth configuration (synchronous)
 
-        Synchronous variant of :meth:`auth_providers_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_auth_providers_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_providers_get_with_http_info(
+            self.get_auth_providers_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -936,7 +936,7 @@ class AuthApi:
         )
 
     @validate_call
-    def auth_providers_get_sync_without_preload_content(
+    def get_auth_providers_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -948,11 +948,11 @@ class AuthApi:
     ) -> RESTResponseType:
         """Get auth configuration (synchronous)
 
-        Synchronous variant of :meth:`auth_providers_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_auth_providers_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.auth_providers_get_without_preload_content(
+            self.get_auth_providers_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -961,7 +961,7 @@ class AuthApi:
             )
         )
 
-    def _auth_providers_get_serialize(
+    def _get_auth_providers_serialize(
         self,
         _request_auth,
         _content_type,
@@ -1009,7 +1009,290 @@ class AuthApi:
         )
 
     @validate_call
-    async def oauth_token_post(
+    async def get_sso_providers(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SSOProvidersResponse:
+        """List configured SSO providers (admin)
+
+        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_sso_providers_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SSOProvidersResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_sso_providers_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SSOProvidersResponse]:
+        """List configured SSO providers (admin)
+
+        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_sso_providers_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SSOProvidersResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_sso_providers_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List configured SSO providers (admin)
+
+        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_sso_providers_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SSOProvidersResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_sso_providers_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SSOProvidersResponse:
+        """List configured SSO providers (admin) (synchronous)
+
+        Synchronous variant of :meth:`get_sso_providers`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_sso_providers(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_sso_providers_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SSOProvidersResponse]:
+        """List configured SSO providers (admin) (synchronous)
+
+        Synchronous variant of :meth:`get_sso_providers_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_sso_providers_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_sso_providers_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List configured SSO providers (admin) (synchronous)
+
+        Synchronous variant of :meth:`get_sso_providers_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_sso_providers_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_sso_providers_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/sso-providers",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_oauth_token(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1064,7 +1347,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._oauth_token_post_serialize(
+        _param = self._post_oauth_token_serialize(
             grant_type=grant_type,
             subject_token=subject_token,
             subject_token_type=subject_token_type,
@@ -1088,7 +1371,7 @@ class AuthApi:
         ).data
 
     @validate_call
-    async def oauth_token_post_with_http_info(
+    async def post_oauth_token_with_http_info(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1143,7 +1426,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._oauth_token_post_serialize(
+        _param = self._post_oauth_token_serialize(
             grant_type=grant_type,
             subject_token=subject_token,
             subject_token_type=subject_token_type,
@@ -1167,7 +1450,7 @@ class AuthApi:
         )
 
     @validate_call
-    async def oauth_token_post_without_preload_content(
+    async def post_oauth_token_without_preload_content(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1222,7 +1505,7 @@ class AuthApi:
         :return: Returns the result object.
         """
 
-        _param = self._oauth_token_post_serialize(
+        _param = self._post_oauth_token_serialize(
             grant_type=grant_type,
             subject_token=subject_token,
             subject_token_type=subject_token_type,
@@ -1242,7 +1525,7 @@ class AuthApi:
         return response_data.response
 
     @validate_call
-    def oauth_token_post_sync(
+    def post_oauth_token_sync(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1267,11 +1550,11 @@ class AuthApi:
     ) -> TokenExchangeResponse:
         """OAuth token endpoint (synchronous)
 
-        Synchronous variant of :meth:`oauth_token_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_oauth_token`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.oauth_token_post(
+            self.post_oauth_token(
                 grant_type=grant_type,
                 subject_token=subject_token,
                 subject_token_type=subject_token_type,
@@ -1284,7 +1567,7 @@ class AuthApi:
         )
 
     @validate_call
-    def oauth_token_post_sync_with_http_info(
+    def post_oauth_token_sync_with_http_info(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1309,11 +1592,11 @@ class AuthApi:
     ) -> ApiResponse[TokenExchangeResponse]:
         """OAuth token endpoint (synchronous)
 
-        Synchronous variant of :meth:`oauth_token_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_oauth_token_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.oauth_token_post_with_http_info(
+            self.post_oauth_token_with_http_info(
                 grant_type=grant_type,
                 subject_token=subject_token,
                 subject_token_type=subject_token_type,
@@ -1326,7 +1609,7 @@ class AuthApi:
         )
 
     @validate_call
-    def oauth_token_post_sync_without_preload_content(
+    def post_oauth_token_sync_without_preload_content(
         self,
         grant_type: Annotated[
             StrictStr,
@@ -1351,11 +1634,11 @@ class AuthApi:
     ) -> RESTResponseType:
         """OAuth token endpoint (synchronous)
 
-        Synchronous variant of :meth:`oauth_token_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_oauth_token_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.oauth_token_post_without_preload_content(
+            self.post_oauth_token_without_preload_content(
                 grant_type=grant_type,
                 subject_token=subject_token,
                 subject_token_type=subject_token_type,
@@ -1367,7 +1650,7 @@ class AuthApi:
             )
         )
 
-    def _oauth_token_post_serialize(
+    def _post_oauth_token_serialize(
         self,
         grant_type,
         subject_token,
@@ -1421,289 +1704,6 @@ class AuthApi:
         return self.api_client.param_serialize(
             method="POST",
             resource_path="/oauth/token",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def sso_providers_get(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> SSOProvidersResponse:
-        """List configured SSO providers (admin)
-
-        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_providers_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "SSOProvidersResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def sso_providers_get_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[SSOProvidersResponse]:
-        """List configured SSO providers (admin)
-
-        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_providers_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "SSOProvidersResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def sso_providers_get_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List configured SSO providers (admin)
-
-        Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._sso_providers_get_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "SSOProvidersResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def sso_providers_get_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> SSOProvidersResponse:
-        """List configured SSO providers (admin) (synchronous)
-
-        Synchronous variant of :meth:`sso_providers_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_providers_get(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_providers_get_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[SSOProvidersResponse]:
-        """List configured SSO providers (admin) (synchronous)
-
-        Synchronous variant of :meth:`sso_providers_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_providers_get_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def sso_providers_get_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List configured SSO providers (admin) (synchronous)
-
-        Synchronous variant of :meth:`sso_providers_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.sso_providers_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _sso_providers_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/sso-providers",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

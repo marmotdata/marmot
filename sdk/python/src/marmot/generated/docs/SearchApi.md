@@ -1,16 +1,16 @@
 # marmot.generated.SearchApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**search_get**](SearchApi.md#search_get) | **GET** /search | Unified search
+[**get_search**](SearchApi.md#get_search) | **GET** /api/v1/search | Unified search
 
 
-# **search_get**
-> SearchResponse search_get(q, types=types, limit=limit, offset=offset)
+# **get_search**
+> SearchResponse get_search(q, types=types, limit=limit, offset=offset)
 
-**Synchronous variant:** `search_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_search_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Unified search
 
@@ -27,10 +27,10 @@ from marmot.generated.models.search_response import SearchResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -61,11 +61,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Unified search
-        api_response = await api_instance.search_get(q, types=types, limit=limit, offset=offset)
-        print("The response of SearchApi->search_get:\n")
+        api_response = await api_instance.get_search(q, types=types, limit=limit, offset=offset)
+        print("The response of SearchApi->get_search:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling SearchApi->search_get: %s\n" % e)
+        print("Exception when calling SearchApi->get_search: %s\n" % e)
 ```
 
 

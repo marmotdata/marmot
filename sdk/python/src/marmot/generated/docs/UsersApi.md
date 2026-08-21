@@ -1,114 +1,29 @@
 # marmot.generated.UsersApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**users_apikeys_get**](UsersApi.md#users_apikeys_get) | **GET** /users/apikeys | List API keys
-[**users_apikeys_id_delete**](UsersApi.md#users_apikeys_id_delete) | **DELETE** /users/apikeys/{id} | Delete API key
-[**users_apikeys_post**](UsersApi.md#users_apikeys_post) | **POST** /users/apikeys | Create API key
-[**users_get**](UsersApi.md#users_get) | **GET** /users | List users
-[**users_id_delete**](UsersApi.md#users_id_delete) | **DELETE** /users/{id} | Delete a user
-[**users_id_get**](UsersApi.md#users_id_get) | **GET** /users/{id} | Get a user by ID
-[**users_id_put**](UsersApi.md#users_id_put) | **PUT** /users/{id} | Update a user
-[**users_login_post**](UsersApi.md#users_login_post) | **POST** /users/login | Login user
-[**users_me_get**](UsersApi.md#users_me_get) | **GET** /users/me | Get current user profile
-[**users_oauth_link_post**](UsersApi.md#users_oauth_link_post) | **POST** /users/oauth/link | Link OAuth account
-[**users_oauth_unlink_id_provider_delete**](UsersApi.md#users_oauth_unlink_id_provider_delete) | **DELETE** /users/oauth/unlink/{id}/{provider} | Unlink OAuth account
-[**users_post**](UsersApi.md#users_post) | **POST** /users | Create a new user
-[**users_preferences_put**](UsersApi.md#users_preferences_put) | **PUT** /users/preferences | Update user preferences
-[**users_update_password_post**](UsersApi.md#users_update_password_post) | **POST** /users/update-password | Update user password
+[**delete_users_apikeys_id**](UsersApi.md#delete_users_apikeys_id) | **DELETE** /api/v1/users/apikeys/{id} | Delete API key
+[**delete_users_id**](UsersApi.md#delete_users_id) | **DELETE** /api/v1/users/{id} | Delete a user
+[**delete_users_oauth_unlink_id_provider**](UsersApi.md#delete_users_oauth_unlink_id_provider) | **DELETE** /api/v1/users/oauth/unlink/{id}/{provider} | Unlink OAuth account
+[**get_users**](UsersApi.md#get_users) | **GET** /api/v1/users | List users
+[**get_users_apikeys**](UsersApi.md#get_users_apikeys) | **GET** /api/v1/users/apikeys | List API keys
+[**get_users_id**](UsersApi.md#get_users_id) | **GET** /api/v1/users/{id} | Get a user by ID
+[**get_users_me**](UsersApi.md#get_users_me) | **GET** /api/v1/users/me | Get current user profile
+[**post_users**](UsersApi.md#post_users) | **POST** /api/v1/users | Create a new user
+[**post_users_apikeys**](UsersApi.md#post_users_apikeys) | **POST** /api/v1/users/apikeys | Create API key
+[**post_users_login**](UsersApi.md#post_users_login) | **POST** /api/v1/users/login | Login user
+[**post_users_oauth_link**](UsersApi.md#post_users_oauth_link) | **POST** /api/v1/users/oauth/link | Link OAuth account
+[**post_users_update_password**](UsersApi.md#post_users_update_password) | **POST** /api/v1/users/update-password | Update user password
+[**put_users_id**](UsersApi.md#put_users_id) | **PUT** /api/v1/users/{id} | Update a user
+[**put_users_preferences**](UsersApi.md#put_users_preferences) | **PUT** /api/v1/users/preferences | Update user preferences
 
 
-# **users_apikeys_get**
-> List[APIKey] users_apikeys_get()
+# **delete_users_apikeys_id**
+> delete_users_apikeys_id(id)
 
-**Synchronous variant:** `users_apikeys_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-List API keys
-
-Get all API keys for a user
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.models.api_key import APIKey
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-
-    try:
-        # List API keys
-        api_response = await api_instance.users_apikeys_get()
-        print("The response of UsersApi->users_apikeys_get:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_apikeys_get: %s\n" % e)
-```
-
-
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**List[APIKey]**](APIKey.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_apikeys_id_delete**
-> users_apikeys_id_delete(id)
-
-**Synchronous variant:** `users_apikeys_id_delete_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `delete_users_apikeys_id_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Delete API key
 
@@ -124,10 +39,10 @@ import marmot.generated
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -155,9 +70,9 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Delete API key
-        await api_instance.users_apikeys_id_delete(id)
+        await api_instance.delete_users_apikeys_id(id)
     except Exception as e:
-        print("Exception when calling UsersApi->users_apikeys_id_delete: %s\n" % e)
+        print("Exception when calling UsersApi->delete_users_apikeys_id: %s\n" % e)
 ```
 
 
@@ -191,14 +106,14 @@ void (empty response body)
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_apikeys_post**
-> APIKey users_apikeys_post(create_api_key_request)
+# **delete_users_id**
+> delete_users_id(id)
 
-**Synchronous variant:** `users_apikeys_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `delete_users_id_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
-Create API key
+Delete a user
 
-Create a new API key for a user
+Delete a user from the system
 
 ### Example
 
@@ -207,15 +122,13 @@ Create a new API key for a user
 
 ```python
 import marmot.generated
-from marmot.generated.models.api_key import APIKey
-from marmot.generated.models.create_api_key_request import CreateAPIKeyRequest
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -239,15 +152,13 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 async with marmot.generated.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = marmot.generated.UsersApi(api_client)
-    create_api_key_request = marmot.generated.CreateAPIKeyRequest() # CreateAPIKeyRequest | API key creation request
+    id = 'id_example' # str | User ID
 
     try:
-        # Create API key
-        api_response = await api_instance.users_apikeys_post(create_api_key_request)
-        print("The response of UsersApi->users_apikeys_post:\n")
-        pprint(api_response)
+        # Delete a user
+        await api_instance.delete_users_id(id)
     except Exception as e:
-        print("Exception when calling UsersApi->users_apikeys_post: %s\n" % e)
+        print("Exception when calling UsersApi->delete_users_id: %s\n" % e)
 ```
 
 
@@ -257,11 +168,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **create_api_key_request** | [**CreateAPIKeyRequest**](CreateAPIKeyRequest.md)| API key creation request | 
+ **id** | **str**| User ID | 
 
 ### Return type
 
-[**APIKey**](APIKey.md)
+void (empty response body)
 
 ### Authorization
 
@@ -269,22 +180,111 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 ### HTTP response details
 
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | OK |  -  |
+**204** | No Content |  -  |
+**404** | Not Found |  -  |
+**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **delete_users_oauth_unlink_id_provider**
+> delete_users_oauth_unlink_id_provider(id, provider)
+
+**Synchronous variant:** `delete_users_oauth_unlink_id_provider_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Unlink OAuth account
+
+Unlink an OAuth account from a user
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    id = 'id_example' # str | User ID
+    provider = 'provider_example' # str | OAuth provider
+
+    try:
+        # Unlink OAuth account
+        await api_instance.delete_users_oauth_unlink_id_provider(id, provider)
+    except Exception as e:
+        print("Exception when calling UsersApi->delete_users_oauth_unlink_id_provider: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **str**| User ID | 
+ **provider** | **str**| OAuth provider | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**204** | No Content |  -  |
 **400** | Bad Request |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_get**
-> ListUsersResponse users_get(limit=limit, offset=offset, query=query, role_ids=role_ids, active=active)
+# **get_users**
+> ListUsersResponse get_users(limit=limit, offset=offset, query=query, role_ids=role_ids, active=active)
 
-**Synchronous variant:** `users_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_users_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 List users
 
@@ -301,10 +301,10 @@ from marmot.generated.models.list_users_response import ListUsersResponse
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -336,11 +336,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # List users
-        api_response = await api_instance.users_get(limit=limit, offset=offset, query=query, role_ids=role_ids, active=active)
-        print("The response of UsersApi->users_get:\n")
+        api_response = await api_instance.get_users(limit=limit, offset=offset, query=query, role_ids=role_ids, active=active)
+        print("The response of UsersApi->get_users:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling UsersApi->users_get: %s\n" % e)
+        print("Exception when calling UsersApi->get_users: %s\n" % e)
 ```
 
 
@@ -378,14 +378,14 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_id_delete**
-> users_id_delete(id)
+# **get_users_apikeys**
+> List[APIKey] get_users_apikeys()
 
-**Synchronous variant:** `users_id_delete_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_users_apikeys_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
-Delete a user
+List API keys
 
-Delete a user from the system
+Get all API keys for a user
 
 ### Example
 
@@ -394,13 +394,14 @@ Delete a user from the system
 
 ```python
 import marmot.generated
+from marmot.generated.models.api_key import APIKey
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -424,27 +425,25 @@ configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
 async with marmot.generated.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = marmot.generated.UsersApi(api_client)
-    id = 'id_example' # str | User ID
 
     try:
-        # Delete a user
-        await api_instance.users_id_delete(id)
+        # List API keys
+        api_response = await api_instance.get_users_apikeys()
+        print("The response of UsersApi->get_users_apikeys:\n")
+        pprint(api_response)
     except Exception as e:
-        print("Exception when calling UsersApi->users_id_delete: %s\n" % e)
+        print("Exception when calling UsersApi->get_users_apikeys: %s\n" % e)
 ```
 
 
 
 ### Parameters
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **str**| User ID | 
+This endpoint does not need any parameter.
 
 ### Return type
 
-void (empty response body)
+[**List[APIKey]**](APIKey.md)
 
 ### Authorization
 
@@ -459,16 +458,15 @@ void (empty response body)
 
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** | No Content |  -  |
-**404** | Not Found |  -  |
+**200** | OK |  -  |
 **500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_id_get**
-> User users_id_get(id)
+# **get_users_id**
+> User get_users_id(id)
 
-**Synchronous variant:** `users_id_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_users_id_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Get a user by ID
 
@@ -485,10 +483,10 @@ from marmot.generated.models.user import User
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -516,11 +514,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Get a user by ID
-        api_response = await api_instance.users_id_get(id)
-        print("The response of UsersApi->users_id_get:\n")
+        api_response = await api_instance.get_users_id(id)
+        print("The response of UsersApi->get_users_id:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling UsersApi->users_id_get: %s\n" % e)
+        print("Exception when calling UsersApi->get_users_id: %s\n" % e)
 ```
 
 
@@ -555,10 +553,527 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_id_put**
-> User users_id_put(id, update_user_input)
+# **get_users_me**
+> User get_users_me()
 
-**Synchronous variant:** `users_id_put_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_users_me_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Get current user profile
+
+Get detailed information about the currently authenticated user
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.user import User
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+
+    try:
+        # Get current user profile
+        api_response = await api_instance.get_users_me()
+        print("The response of UsersApi->get_users_me:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling UsersApi->get_users_me: %s\n" % e)
+```
+
+
+
+### Parameters
+
+This endpoint does not need any parameter.
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_users**
+> User post_users(create_user_input)
+
+**Synchronous variant:** `post_users_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Create a new user
+
+Create a new user in the system
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.create_user_input import CreateUserInput
+from marmot.generated.models.user import User
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    create_user_input = marmot.generated.CreateUserInput() # CreateUserInput | User creation request
+
+    try:
+        # Create a new user
+        api_response = await api_instance.post_users(create_user_input)
+        print("The response of UsersApi->post_users:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling UsersApi->post_users: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **create_user_input** | [**CreateUserInput**](CreateUserInput.md)| User creation request | 
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+**409** | Conflict |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_users_apikeys**
+> APIKey post_users_apikeys(create_api_key_request)
+
+**Synchronous variant:** `post_users_apikeys_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Create API key
+
+Create a new API key for a user
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.api_key import APIKey
+from marmot.generated.models.create_api_key_request import CreateAPIKeyRequest
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    create_api_key_request = marmot.generated.CreateAPIKeyRequest() # CreateAPIKeyRequest | API key creation request
+
+    try:
+        # Create API key
+        api_response = await api_instance.post_users_apikeys(create_api_key_request)
+        print("The response of UsersApi->post_users_apikeys:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling UsersApi->post_users_apikeys: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **create_api_key_request** | [**CreateAPIKeyRequest**](CreateAPIKeyRequest.md)| API key creation request | 
+
+### Return type
+
+[**APIKey**](APIKey.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_users_login**
+> TokenResponse post_users_login(login_request)
+
+**Synchronous variant:** `post_users_login_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Login user
+
+Authenticate a user with username/email and password
+
+### Example
+
+
+```python
+import marmot.generated
+from marmot.generated.models.login_request import LoginRequest
+from marmot.generated.models.token_response import TokenResponse
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    login_request = marmot.generated.LoginRequest() # LoginRequest | Login credentials
+
+    try:
+        # Login user
+        api_response = await api_instance.post_users_login(login_request)
+        print("The response of UsersApi->post_users_login:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling UsersApi->post_users_login: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **login_request** | [**LoginRequest**](LoginRequest.md)| Login credentials | 
+
+### Return type
+
+[**TokenResponse**](TokenResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_users_oauth_link**
+> post_users_oauth_link(o_auth_link_request)
+
+**Synchronous variant:** `post_users_oauth_link_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Link OAuth account
+
+Link an OAuth account to an existing user
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.o_auth_link_request import OAuthLinkRequest
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    o_auth_link_request = marmot.generated.OAuthLinkRequest() # OAuthLinkRequest | OAuth account link request
+
+    try:
+        # Link OAuth account
+        await api_instance.post_users_oauth_link(o_auth_link_request)
+    except Exception as e:
+        print("Exception when calling UsersApi->post_users_oauth_link: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **o_auth_link_request** | [**OAuthLinkRequest**](OAuthLinkRequest.md)| OAuth account link request | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_users_update_password**
+> TokenResponse post_users_update_password(update_password_request)
+
+**Synchronous variant:** `post_users_update_password_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Update user password
+
+Update current user's password
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.token_response import TokenResponse
+from marmot.generated.models.update_password_request import UpdatePasswordRequest
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.UsersApi(api_client)
+    update_password_request = marmot.generated.UpdatePasswordRequest() # UpdatePasswordRequest | Password update request
+
+    try:
+        # Update user password
+        api_response = await api_instance.post_users_update_password(update_password_request)
+        print("The response of UsersApi->post_users_update_password:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling UsersApi->post_users_update_password: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **update_password_request** | [**UpdatePasswordRequest**](UpdatePasswordRequest.md)| Password update request | 
+
+### Return type
+
+[**TokenResponse**](TokenResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **put_users_id**
+> User put_users_id(id, update_user_input)
+
+**Synchronous variant:** `put_users_id_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Update a user
 
@@ -576,10 +1091,10 @@ from marmot.generated.models.user import User
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -608,11 +1123,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Update a user
-        api_response = await api_instance.users_id_put(id, update_user_input)
-        print("The response of UsersApi->users_id_put:\n")
+        api_response = await api_instance.put_users_id(id, update_user_input)
+        print("The response of UsersApi->put_users_id:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling UsersApi->users_id_put: %s\n" % e)
+        print("Exception when calling UsersApi->put_users_id: %s\n" % e)
 ```
 
 
@@ -648,434 +1163,10 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **users_login_post**
-> TokenResponse users_login_post(login_request)
+# **put_users_preferences**
+> put_users_preferences(request_body)
 
-**Synchronous variant:** `users_login_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Login user
-
-Authenticate a user with username/email and password
-
-### Example
-
-
-```python
-import marmot.generated
-from marmot.generated.models.login_request import LoginRequest
-from marmot.generated.models.token_response import TokenResponse
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-    login_request = marmot.generated.LoginRequest() # LoginRequest | Login credentials
-
-    try:
-        # Login user
-        api_response = await api_instance.users_login_post(login_request)
-        print("The response of UsersApi->users_login_post:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_login_post: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **login_request** | [**LoginRequest**](LoginRequest.md)| Login credentials | 
-
-### Return type
-
-[**TokenResponse**](TokenResponse.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**400** | Bad Request |  -  |
-**401** | Unauthorized |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_me_get**
-> User users_me_get()
-
-**Synchronous variant:** `users_me_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Get current user profile
-
-Get detailed information about the currently authenticated user
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.models.user import User
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-
-    try:
-        # Get current user profile
-        api_response = await api_instance.users_me_get()
-        print("The response of UsersApi->users_me_get:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_me_get: %s\n" % e)
-```
-
-
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**User**](User.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**401** | Unauthorized |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_oauth_link_post**
-> users_oauth_link_post(o_auth_link_request)
-
-**Synchronous variant:** `users_oauth_link_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Link OAuth account
-
-Link an OAuth account to an existing user
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.models.o_auth_link_request import OAuthLinkRequest
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-    o_auth_link_request = marmot.generated.OAuthLinkRequest() # OAuthLinkRequest | OAuth account link request
-
-    try:
-        # Link OAuth account
-        await api_instance.users_oauth_link_post(o_auth_link_request)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_oauth_link_post: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **o_auth_link_request** | [**OAuthLinkRequest**](OAuthLinkRequest.md)| OAuth account link request | 
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**400** | Bad Request |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_oauth_unlink_id_provider_delete**
-> users_oauth_unlink_id_provider_delete(id, provider)
-
-**Synchronous variant:** `users_oauth_unlink_id_provider_delete_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Unlink OAuth account
-
-Unlink an OAuth account from a user
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-    id = 'id_example' # str | User ID
-    provider = 'provider_example' # str | OAuth provider
-
-    try:
-        # Unlink OAuth account
-        await api_instance.users_oauth_unlink_id_provider_delete(id, provider)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_oauth_unlink_id_provider_delete: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **str**| User ID | 
- **provider** | **str**| OAuth provider | 
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**204** | No Content |  -  |
-**400** | Bad Request |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_post**
-> User users_post(create_user_input)
-
-**Synchronous variant:** `users_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Create a new user
-
-Create a new user in the system
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.models.create_user_input import CreateUserInput
-from marmot.generated.models.user import User
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-    create_user_input = marmot.generated.CreateUserInput() # CreateUserInput | User creation request
-
-    try:
-        # Create a new user
-        api_response = await api_instance.users_post(create_user_input)
-        print("The response of UsersApi->users_post:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_post: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **create_user_input** | [**CreateUserInput**](CreateUserInput.md)| User creation request | 
-
-### Return type
-
-[**User**](User.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**400** | Bad Request |  -  |
-**409** | Conflict |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_preferences_put**
-> users_preferences_put(request_body)
-
-**Synchronous variant:** `users_preferences_put_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `put_users_preferences_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Update user preferences
 
@@ -1091,10 +1182,10 @@ import marmot.generated
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -1122,9 +1213,9 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Update user preferences
-        await api_instance.users_preferences_put(request_body)
+        await api_instance.put_users_preferences(request_body)
     except Exception as e:
-        print("Exception when calling UsersApi->users_preferences_put: %s\n" % e)
+        print("Exception when calling UsersApi->put_users_preferences: %s\n" % e)
 ```
 
 
@@ -1155,97 +1246,6 @@ void (empty response body)
 |-------------|-------------|------------------|
 **200** | OK |  -  |
 **400** | Bad Request |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **users_update_password_post**
-> TokenResponse users_update_password_post(update_password_request)
-
-**Synchronous variant:** `users_update_password_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Update user password
-
-Update current user's password
-
-### Example
-
-* Api Key Authentication (ApiKeyAuth):
-* Api Key Authentication (BearerAuth):
-
-```python
-import marmot.generated
-from marmot.generated.models.token_response import TokenResponse
-from marmot.generated.models.update_password_request import UpdatePasswordRequest
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure API key authorization: ApiKeyAuth
-configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
-
-# Configure API key authorization: BearerAuth
-configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
-
-# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.UsersApi(api_client)
-    update_password_request = marmot.generated.UpdatePasswordRequest() # UpdatePasswordRequest | Password update request
-
-    try:
-        # Update user password
-        api_response = await api_instance.users_update_password_post(update_password_request)
-        print("The response of UsersApi->users_update_password_post:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->users_update_password_post: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **update_password_request** | [**UpdatePasswordRequest**](UpdatePasswordRequest.md)| Password update request | 
-
-### Return type
-
-[**TokenResponse**](TokenResponse.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**400** | Bad Request |  -  |
-**401** | Unauthorized |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

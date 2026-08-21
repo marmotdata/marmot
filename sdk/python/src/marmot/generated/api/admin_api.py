@@ -34,7 +34,7 @@ class AdminApi:
         self.api_client = api_client
 
     @validate_call
-    async def admin_search_reindex_get(
+    async def get_admin_search_reindex(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -70,7 +70,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_get_serialize(
+        _param = self._get_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -90,7 +90,7 @@ class AdminApi:
         ).data
 
     @validate_call
-    async def admin_search_reindex_get_with_http_info(
+    async def get_admin_search_reindex_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -126,7 +126,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_get_serialize(
+        _param = self._get_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -146,7 +146,7 @@ class AdminApi:
         )
 
     @validate_call
-    async def admin_search_reindex_get_without_preload_content(
+    async def get_admin_search_reindex_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -182,7 +182,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_get_serialize(
+        _param = self._get_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -198,7 +198,7 @@ class AdminApi:
         return response_data.response
 
     @validate_call
-    def admin_search_reindex_get_sync(
+    def get_admin_search_reindex_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -210,11 +210,11 @@ class AdminApi:
     ) -> ReindexStatusResponse:
         """Get reindex status (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_admin_search_reindex`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_get(
+            self.get_admin_search_reindex(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -224,7 +224,7 @@ class AdminApi:
         )
 
     @validate_call
-    def admin_search_reindex_get_sync_with_http_info(
+    def get_admin_search_reindex_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -236,11 +236,11 @@ class AdminApi:
     ) -> ApiResponse[ReindexStatusResponse]:
         """Get reindex status (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_admin_search_reindex_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_get_with_http_info(
+            self.get_admin_search_reindex_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -250,7 +250,7 @@ class AdminApi:
         )
 
     @validate_call
-    def admin_search_reindex_get_sync_without_preload_content(
+    def get_admin_search_reindex_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -262,11 +262,11 @@ class AdminApi:
     ) -> RESTResponseType:
         """Get reindex status (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_admin_search_reindex_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_get_without_preload_content(
+            self.get_admin_search_reindex_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -275,7 +275,7 @@ class AdminApi:
             )
         )
 
-    def _admin_search_reindex_get_serialize(
+    def _get_admin_search_reindex_serialize(
         self,
         _request_auth,
         _content_type,
@@ -309,7 +309,7 @@ class AdminApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/admin/search/reindex",
+            resource_path="/api/v1/admin/search/reindex",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -323,7 +323,7 @@ class AdminApi:
         )
 
     @validate_call
-    async def admin_search_reindex_post(
+    async def post_admin_search_reindex(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -359,7 +359,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_post_serialize(
+        _param = self._post_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -381,7 +381,7 @@ class AdminApi:
         ).data
 
     @validate_call
-    async def admin_search_reindex_post_with_http_info(
+    async def post_admin_search_reindex_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -417,7 +417,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_post_serialize(
+        _param = self._post_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -439,7 +439,7 @@ class AdminApi:
         )
 
     @validate_call
-    async def admin_search_reindex_post_without_preload_content(
+    async def post_admin_search_reindex_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -475,7 +475,7 @@ class AdminApi:
         :return: Returns the result object.
         """
 
-        _param = self._admin_search_reindex_post_serialize(
+        _param = self._post_admin_search_reindex_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -493,7 +493,7 @@ class AdminApi:
         return response_data.response
 
     @validate_call
-    def admin_search_reindex_post_sync(
+    def post_admin_search_reindex_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -505,11 +505,11 @@ class AdminApi:
     ) -> ReindexAcceptedResponse:
         """Start search reindex (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_admin_search_reindex`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_post(
+            self.post_admin_search_reindex(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -519,7 +519,7 @@ class AdminApi:
         )
 
     @validate_call
-    def admin_search_reindex_post_sync_with_http_info(
+    def post_admin_search_reindex_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -531,11 +531,11 @@ class AdminApi:
     ) -> ApiResponse[ReindexAcceptedResponse]:
         """Start search reindex (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_admin_search_reindex_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_post_with_http_info(
+            self.post_admin_search_reindex_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -545,7 +545,7 @@ class AdminApi:
         )
 
     @validate_call
-    def admin_search_reindex_post_sync_without_preload_content(
+    def post_admin_search_reindex_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -557,11 +557,11 @@ class AdminApi:
     ) -> RESTResponseType:
         """Start search reindex (synchronous)
 
-        Synchronous variant of :meth:`admin_search_reindex_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_admin_search_reindex_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.admin_search_reindex_post_without_preload_content(
+            self.post_admin_search_reindex_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -570,7 +570,7 @@ class AdminApi:
             )
         )
 
-    def _admin_search_reindex_post_serialize(
+    def _post_admin_search_reindex_serialize(
         self,
         _request_auth,
         _content_type,
@@ -604,7 +604,7 @@ class AdminApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/admin/search/reindex",
+            resource_path="/api/v1/admin/search/reindex",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

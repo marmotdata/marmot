@@ -23,64 +23,64 @@ class TestAuthApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_auth_provider_callback_get(self) -> None:
-        """Test case for auth_provider_callback_get
+    async def test_get_auth_provider_callback(self) -> None:
+        """Test case for get_auth_provider_callback
 
         Handle OAuth callback
         """
 
-    def test_auth_provider_callback_get_sync(self) -> None:
-        """Test case for auth_provider_callback_get (synchronous)
+    def test_get_auth_provider_callback_sync(self) -> None:
+        """Test case for get_auth_provider_callback (synchronous)
 
         Handle OAuth callback
         """
 
-    async def test_auth_provider_login_get(self) -> None:
-        """Test case for auth_provider_login_get
+    async def test_get_auth_provider_login(self) -> None:
+        """Test case for get_auth_provider_login
 
         Initiate OAuth login
         """
 
-    def test_auth_provider_login_get_sync(self) -> None:
-        """Test case for auth_provider_login_get (synchronous)
+    def test_get_auth_provider_login_sync(self) -> None:
+        """Test case for get_auth_provider_login (synchronous)
 
         Initiate OAuth login
         """
 
-    async def test_auth_providers_get(self) -> None:
-        """Test case for auth_providers_get
+    async def test_get_auth_providers(self) -> None:
+        """Test case for get_auth_providers
 
         Get auth configuration
         """
 
-    def test_auth_providers_get_sync(self) -> None:
-        """Test case for auth_providers_get (synchronous)
+    def test_get_auth_providers_sync(self) -> None:
+        """Test case for get_auth_providers (synchronous)
 
         Get auth configuration
         """
 
-    async def test_oauth_token_post(self) -> None:
-        """Test case for oauth_token_post
-
-        OAuth token endpoint
-        """
-
-    def test_oauth_token_post_sync(self) -> None:
-        """Test case for oauth_token_post (synchronous)
-
-        OAuth token endpoint
-        """
-
-    async def test_sso_providers_get(self) -> None:
-        """Test case for sso_providers_get
+    async def test_get_sso_providers(self) -> None:
+        """Test case for get_sso_providers
 
         List configured SSO providers (admin)
         """
 
-    def test_sso_providers_get_sync(self) -> None:
-        """Test case for sso_providers_get (synchronous)
+    def test_get_sso_providers_sync(self) -> None:
+        """Test case for get_sso_providers (synchronous)
 
         List configured SSO providers (admin)
+        """
+
+    async def test_post_oauth_token(self) -> None:
+        """Test case for post_oauth_token
+
+        OAuth token endpoint
+        """
+
+    def test_post_oauth_token_sync(self) -> None:
+        """Test case for post_oauth_token (synchronous)
+
+        OAuth token endpoint
         """
 
 

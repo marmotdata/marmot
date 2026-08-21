@@ -23,100 +23,100 @@ class TestServiceAccountsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_service_accounts_get(self) -> None:
-        """Test case for service_accounts_get
-
-        List service accounts
-        """
-
-    def test_service_accounts_get_sync(self) -> None:
-        """Test case for service_accounts_get (synchronous)
-
-        List service accounts
-        """
-
-    async def test_service_accounts_id_api_keys_get(self) -> None:
-        """Test case for service_accounts_id_api_keys_get
-
-        List API keys for a service account
-        """
-
-    def test_service_accounts_id_api_keys_get_sync(self) -> None:
-        """Test case for service_accounts_id_api_keys_get (synchronous)
-
-        List API keys for a service account
-        """
-
-    async def test_service_accounts_id_api_keys_key_id_delete(self) -> None:
-        """Test case for service_accounts_id_api_keys_key_id_delete
-
-        Delete an API key
-        """
-
-    def test_service_accounts_id_api_keys_key_id_delete_sync(self) -> None:
-        """Test case for service_accounts_id_api_keys_key_id_delete (synchronous)
-
-        Delete an API key
-        """
-
-    async def test_service_accounts_id_api_keys_post(self) -> None:
-        """Test case for service_accounts_id_api_keys_post
-
-        Create API key for a service account
-        """
-
-    def test_service_accounts_id_api_keys_post_sync(self) -> None:
-        """Test case for service_accounts_id_api_keys_post (synchronous)
-
-        Create API key for a service account
-        """
-
-    async def test_service_accounts_id_delete(self) -> None:
-        """Test case for service_accounts_id_delete
+    async def test_delete_service_accounts_id(self) -> None:
+        """Test case for delete_service_accounts_id
 
         Delete service account
         """
 
-    def test_service_accounts_id_delete_sync(self) -> None:
-        """Test case for service_accounts_id_delete (synchronous)
+    def test_delete_service_accounts_id_sync(self) -> None:
+        """Test case for delete_service_accounts_id (synchronous)
 
         Delete service account
         """
 
-    async def test_service_accounts_id_get(self) -> None:
-        """Test case for service_accounts_id_get
+    async def test_delete_service_accounts_idapi_keys_key_id(self) -> None:
+        """Test case for delete_service_accounts_idapi_keys_key_id
+
+        Delete an API key
+        """
+
+    def test_delete_service_accounts_idapi_keys_key_id_sync(self) -> None:
+        """Test case for delete_service_accounts_idapi_keys_key_id (synchronous)
+
+        Delete an API key
+        """
+
+    async def test_get_service_accounts(self) -> None:
+        """Test case for get_service_accounts
+
+        List service accounts
+        """
+
+    def test_get_service_accounts_sync(self) -> None:
+        """Test case for get_service_accounts (synchronous)
+
+        List service accounts
+        """
+
+    async def test_get_service_accounts_id(self) -> None:
+        """Test case for get_service_accounts_id
 
         Get service account
         """
 
-    def test_service_accounts_id_get_sync(self) -> None:
-        """Test case for service_accounts_id_get (synchronous)
+    def test_get_service_accounts_id_sync(self) -> None:
+        """Test case for get_service_accounts_id (synchronous)
 
         Get service account
         """
 
-    async def test_service_accounts_id_patch(self) -> None:
-        """Test case for service_accounts_id_patch
+    async def test_get_service_accounts_idapi_keys(self) -> None:
+        """Test case for get_service_accounts_idapi_keys
+
+        List API keys for a service account
+        """
+
+    def test_get_service_accounts_idapi_keys_sync(self) -> None:
+        """Test case for get_service_accounts_idapi_keys (synchronous)
+
+        List API keys for a service account
+        """
+
+    async def test_patch_service_accounts_id(self) -> None:
+        """Test case for patch_service_accounts_id
 
         Update service account
         """
 
-    def test_service_accounts_id_patch_sync(self) -> None:
-        """Test case for service_accounts_id_patch (synchronous)
+    def test_patch_service_accounts_id_sync(self) -> None:
+        """Test case for patch_service_accounts_id (synchronous)
 
         Update service account
         """
 
-    async def test_service_accounts_post(self) -> None:
-        """Test case for service_accounts_post
+    async def test_post_service_accounts(self) -> None:
+        """Test case for post_service_accounts
 
         Create service account
         """
 
-    def test_service_accounts_post_sync(self) -> None:
-        """Test case for service_accounts_post (synchronous)
+    def test_post_service_accounts_sync(self) -> None:
+        """Test case for post_service_accounts (synchronous)
 
         Create service account
+        """
+
+    async def test_post_service_accounts_idapi_keys(self) -> None:
+        """Test case for post_service_accounts_idapi_keys
+
+        Create API key for a service account
+        """
+
+    def test_post_service_accounts_idapi_keys_sync(self) -> None:
+        """Test case for post_service_accounts_idapi_keys (synchronous)
+
+        Create API key for a service account
         """
 
 

@@ -33,7 +33,7 @@ class PipelinesApi:
         self.api_client = api_client
 
     @validate_call
-    async def pipelines_pipeline_name_delete(
+    async def delete_pipelines_pipeline_name(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -72,7 +72,7 @@ class PipelinesApi:
         :return: Returns the result object.
         """
 
-        _param = self._pipelines_pipeline_name_delete_serialize(
+        _param = self._delete_pipelines_pipeline_name_serialize(
             pipeline_name=pipeline_name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -91,7 +91,7 @@ class PipelinesApi:
         ).data
 
     @validate_call
-    async def pipelines_pipeline_name_delete_with_http_info(
+    async def delete_pipelines_pipeline_name_with_http_info(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -130,7 +130,7 @@ class PipelinesApi:
         :return: Returns the result object.
         """
 
-        _param = self._pipelines_pipeline_name_delete_serialize(
+        _param = self._delete_pipelines_pipeline_name_serialize(
             pipeline_name=pipeline_name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -149,7 +149,7 @@ class PipelinesApi:
         )
 
     @validate_call
-    async def pipelines_pipeline_name_delete_without_preload_content(
+    async def delete_pipelines_pipeline_name_without_preload_content(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -188,7 +188,7 @@ class PipelinesApi:
         :return: Returns the result object.
         """
 
-        _param = self._pipelines_pipeline_name_delete_serialize(
+        _param = self._delete_pipelines_pipeline_name_serialize(
             pipeline_name=pipeline_name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -203,7 +203,7 @@ class PipelinesApi:
         return response_data.response
 
     @validate_call
-    def pipelines_pipeline_name_delete_sync(
+    def delete_pipelines_pipeline_name_sync(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -216,11 +216,11 @@ class PipelinesApi:
     ) -> DestroyRunResponse:
         """Destroy pipeline (synchronous)
 
-        Synchronous variant of :meth:`pipelines_pipeline_name_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_pipelines_pipeline_name`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.pipelines_pipeline_name_delete(
+            self.delete_pipelines_pipeline_name(
                 pipeline_name=pipeline_name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -231,7 +231,7 @@ class PipelinesApi:
         )
 
     @validate_call
-    def pipelines_pipeline_name_delete_sync_with_http_info(
+    def delete_pipelines_pipeline_name_sync_with_http_info(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -244,11 +244,11 @@ class PipelinesApi:
     ) -> ApiResponse[DestroyRunResponse]:
         """Destroy pipeline (synchronous)
 
-        Synchronous variant of :meth:`pipelines_pipeline_name_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_pipelines_pipeline_name_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.pipelines_pipeline_name_delete_with_http_info(
+            self.delete_pipelines_pipeline_name_with_http_info(
                 pipeline_name=pipeline_name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -259,7 +259,7 @@ class PipelinesApi:
         )
 
     @validate_call
-    def pipelines_pipeline_name_delete_sync_without_preload_content(
+    def delete_pipelines_pipeline_name_sync_without_preload_content(
         self,
         pipeline_name: Annotated[StrictStr, Field(description="Pipeline Name")],
         _request_timeout: None
@@ -272,11 +272,11 @@ class PipelinesApi:
     ) -> RESTResponseType:
         """Destroy pipeline (synchronous)
 
-        Synchronous variant of :meth:`pipelines_pipeline_name_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_pipelines_pipeline_name_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.pipelines_pipeline_name_delete_without_preload_content(
+            self.delete_pipelines_pipeline_name_without_preload_content(
                 pipeline_name=pipeline_name,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -286,7 +286,7 @@ class PipelinesApi:
             )
         )
 
-    def _pipelines_pipeline_name_delete_serialize(
+    def _delete_pipelines_pipeline_name_serialize(
         self,
         pipeline_name,
         _request_auth,
@@ -323,7 +323,7 @@ class PipelinesApi:
 
         return self.api_client.param_serialize(
             method="DELETE",
-            resource_path="/pipelines/{pipelineName}",
+            resource_path="/api/v1/pipelines/{pipelineName}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

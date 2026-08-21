@@ -39,8 +39,9 @@ class ServiceAccountsApi:
         self.api_client = api_client
 
     @validate_call
-    async def service_accounts_get(
+    async def delete_service_accounts_id(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -48,11 +49,13 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[ServiceAccount]:
-        """List service accounts
+    ) -> None:
+        """Delete service account
 
-        Get all service accounts
+        Soft-delete a service account
 
+        :param id: Service account ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -75,7 +78,8 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_get_serialize(
+        _param = self._delete_service_accounts_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -83,8 +87,8 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccount]",
-            "500": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -94,8 +98,9 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_get_with_http_info(
+    async def delete_service_accounts_id_with_http_info(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -103,11 +108,13 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[ServiceAccount]]:
-        """List service accounts
+    ) -> ApiResponse[None]:
+        """Delete service account
 
-        Get all service accounts
+        Soft-delete a service account
 
+        :param id: Service account ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -130,7 +137,8 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_get_serialize(
+        _param = self._delete_service_accounts_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -138,8 +146,8 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccount]",
-            "500": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -149,8 +157,9 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_get_without_preload_content(
+    async def delete_service_accounts_id_without_preload_content(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -159,10 +168,12 @@ class ServiceAccountsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List service accounts
+        """Delete service account
 
-        Get all service accounts
+        Soft-delete a service account
 
+        :param id: Service account ID (required)
+        :type id: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -185,7 +196,8 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_get_serialize(
+        _param = self._delete_service_accounts_id_serialize(
+            id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -193,15 +205,16 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccount]",
-            "500": "ErrorResponse",
+            "204": None,
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def service_accounts_get_sync(
+    def delete_service_accounts_id_sync(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -209,14 +222,15 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[ServiceAccount]:
-        """List service accounts (synchronous)
+    ) -> None:
+        """Delete service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_get`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_service_accounts_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_get(
+            self.delete_service_accounts_id(
+                id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -226,8 +240,9 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_get_sync_with_http_info(
+    def delete_service_accounts_id_sync_with_http_info(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -235,14 +250,15 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[ServiceAccount]]:
-        """List service accounts (synchronous)
+    ) -> ApiResponse[None]:
+        """Delete service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_service_accounts_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_get_with_http_info(
+            self.delete_service_accounts_id_with_http_info(
+                id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -252,8 +268,9 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_get_sync_without_preload_content(
+    def delete_service_accounts_id_sync_without_preload_content(
         self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -262,257 +279,13 @@ class ServiceAccountsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List service accounts (synchronous)
+        """Delete service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_service_accounts_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_get_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _service_accounts_get_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/service-accounts",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def service_accounts_id_api_keys_get(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[ServiceAccountAPIKey]:
-        """List API keys for a service account
-
-        Get all API keys for a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_api_keys_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccountAPIKey]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def service_accounts_id_api_keys_get_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[ServiceAccountAPIKey]]:
-        """List API keys for a service account
-
-        Get all API keys for a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_api_keys_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccountAPIKey]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def service_accounts_id_api_keys_get_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List API keys for a service account
-
-        Get all API keys for a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_api_keys_get_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "List[ServiceAccountAPIKey]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def service_accounts_id_api_keys_get_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> list[ServiceAccountAPIKey]:
-        """List API keys for a service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_api_keys_get`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_api_keys_get(
+            self.delete_service_accounts_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -522,63 +295,7 @@ class ServiceAccountsApi:
             )
         )
 
-    @validate_call
-    def service_accounts_id_api_keys_get_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[list[ServiceAccountAPIKey]]:
-        """List API keys for a service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_api_keys_get_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_api_keys_get_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def service_accounts_id_api_keys_get_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """List API keys for a service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_api_keys_get_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_api_keys_get_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _service_accounts_id_api_keys_get_serialize(
+    def _delete_service_accounts_id_serialize(
         self,
         id,
         _request_auth,
@@ -608,14 +325,14 @@ class ServiceAccountsApi:
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
 
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/service-accounts/{id}/api-keys",
+            method="DELETE",
+            resource_path="/api/v1/service-accounts/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -629,7 +346,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_api_keys_key_id_delete(
+    async def delete_service_accounts_idapi_keys_key_id(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -671,7 +388,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_key_id_delete_serialize(
+        _param = self._delete_service_accounts_idapi_keys_key_id_serialize(
             id=id,
             key_id=key_id,
             _request_auth=_request_auth,
@@ -692,7 +409,7 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_id_api_keys_key_id_delete_with_http_info(
+    async def delete_service_accounts_idapi_keys_key_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -734,7 +451,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_key_id_delete_serialize(
+        _param = self._delete_service_accounts_idapi_keys_key_id_serialize(
             id=id,
             key_id=key_id,
             _request_auth=_request_auth,
@@ -755,7 +472,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_api_keys_key_id_delete_without_preload_content(
+    async def delete_service_accounts_idapi_keys_key_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -797,7 +514,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_key_id_delete_serialize(
+        _param = self._delete_service_accounts_idapi_keys_key_id_serialize(
             id=id,
             key_id=key_id,
             _request_auth=_request_auth,
@@ -814,7 +531,7 @@ class ServiceAccountsApi:
         return response_data.response
 
     @validate_call
-    def service_accounts_id_api_keys_key_id_delete_sync(
+    def delete_service_accounts_idapi_keys_key_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -828,11 +545,11 @@ class ServiceAccountsApi:
     ) -> None:
         """Delete an API key (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_key_id_delete`. It calls the asynchronous
+        Synchronous variant of :meth:`delete_service_accounts_idapi_keys_key_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_key_id_delete(
+            self.delete_service_accounts_idapi_keys_key_id(
                 id=id,
                 key_id=key_id,
                 _request_timeout=_request_timeout,
@@ -844,7 +561,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_api_keys_key_id_delete_sync_with_http_info(
+    def delete_service_accounts_idapi_keys_key_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -858,11 +575,11 @@ class ServiceAccountsApi:
     ) -> ApiResponse[None]:
         """Delete an API key (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_key_id_delete_with_http_info`. It calls the
+        Synchronous variant of :meth:`delete_service_accounts_idapi_keys_key_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_key_id_delete_with_http_info(
+            self.delete_service_accounts_idapi_keys_key_id_with_http_info(
                 id=id,
                 key_id=key_id,
                 _request_timeout=_request_timeout,
@@ -874,7 +591,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_api_keys_key_id_delete_sync_without_preload_content(
+    def delete_service_accounts_idapi_keys_key_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         key_id: Annotated[StrictStr, Field(description="API key ID")],
@@ -888,11 +605,11 @@ class ServiceAccountsApi:
     ) -> RESTResponseType:
         """Delete an API key (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_key_id_delete_without_preload_content`. It calls
+        Synchronous variant of :meth:`delete_service_accounts_idapi_keys_key_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_key_id_delete_without_preload_content(
+            self.delete_service_accounts_idapi_keys_key_id_without_preload_content(
                 id=id,
                 key_id=key_id,
                 _request_timeout=_request_timeout,
@@ -903,7 +620,7 @@ class ServiceAccountsApi:
             )
         )
 
-    def _service_accounts_id_api_keys_key_id_delete_serialize(
+    def _delete_service_accounts_idapi_keys_key_id_serialize(
         self,
         id,
         key_id,
@@ -943,7 +660,7 @@ class ServiceAccountsApi:
 
         return self.api_client.param_serialize(
             method="DELETE",
-            resource_path="/service-accounts/{id}/api-keys/{keyId}",
+            resource_path="/api/v1/service-accounts/{id}/api-keys/{keyId}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -957,12 +674,8 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_api_keys_post(
+    async def get_service_accounts(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -970,15 +683,11 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ServiceAccountAPIKey:
-        """Create API key for a service account
+    ) -> list[ServiceAccount]:
+        """List service accounts
 
-        Create a new API key. The plaintext key is only returned once.
+        Get all service accounts
 
-        :param id: Service account ID (required)
-        :type id: str
-        :param create_service_account_api_key_request: API key details (required)
-        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1001,9 +710,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_post_serialize(
-            id=id,
-            create_service_account_api_key_request=create_service_account_api_key_request,
+        _param = self._get_service_accounts_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1011,8 +718,8 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "201": "ServiceAccountAPIKey",
-            "400": "ErrorResponse",
+            "200": "List[ServiceAccount]",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1022,12 +729,8 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_id_api_keys_post_with_http_info(
+    async def get_service_accounts_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1035,15 +738,11 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ServiceAccountAPIKey]:
-        """Create API key for a service account
+    ) -> ApiResponse[list[ServiceAccount]]:
+        """List service accounts
 
-        Create a new API key. The plaintext key is only returned once.
+        Get all service accounts
 
-        :param id: Service account ID (required)
-        :type id: str
-        :param create_service_account_api_key_request: API key details (required)
-        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1066,9 +765,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_post_serialize(
-            id=id,
-            create_service_account_api_key_request=create_service_account_api_key_request,
+        _param = self._get_service_accounts_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1076,8 +773,8 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "201": "ServiceAccountAPIKey",
-            "400": "ErrorResponse",
+            "200": "List[ServiceAccount]",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1087,12 +784,8 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_api_keys_post_without_preload_content(
+    async def get_service_accounts_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1101,14 +794,10 @@ class ServiceAccountsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create API key for a service account
+        """List service accounts
 
-        Create a new API key. The plaintext key is only returned once.
+        Get all service accounts
 
-        :param id: Service account ID (required)
-        :type id: str
-        :param create_service_account_api_key_request: API key details (required)
-        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1131,9 +820,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_api_keys_post_serialize(
-            id=id,
-            create_service_account_api_key_request=create_service_account_api_key_request,
+        _param = self._get_service_accounts_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1141,19 +828,15 @@ class ServiceAccountsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "201": "ServiceAccountAPIKey",
-            "400": "ErrorResponse",
+            "200": "List[ServiceAccount]",
+            "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def service_accounts_id_api_keys_post_sync(
+    def get_service_accounts_sync(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1161,16 +844,14 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ServiceAccountAPIKey:
-        """Create API key for a service account (synchronous)
+    ) -> list[ServiceAccount]:
+        """List service accounts (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_post`. It calls the asynchronous
+        Synchronous variant of :meth:`get_service_accounts`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_post(
-                id=id,
-                create_service_account_api_key_request=create_service_account_api_key_request,
+            self.get_service_accounts(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1180,12 +861,8 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_api_keys_post_sync_with_http_info(
+    def get_service_accounts_sync_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1193,16 +870,14 @@ class ServiceAccountsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ServiceAccountAPIKey]:
-        """Create API key for a service account (synchronous)
+    ) -> ApiResponse[list[ServiceAccount]]:
+        """List service accounts (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_service_accounts_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_post_with_http_info(
-                id=id,
-                create_service_account_api_key_request=create_service_account_api_key_request,
+            self.get_service_accounts_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1212,12 +887,8 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_api_keys_post_sync_without_preload_content(
+    def get_service_accounts_sync_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        create_service_account_api_key_request: Annotated[
-            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
-        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1226,15 +897,13 @@ class ServiceAccountsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create API key for a service account (synchronous)
+        """List service accounts (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_api_keys_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_service_accounts_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_api_keys_post_without_preload_content(
-                id=id,
-                create_service_account_api_key_request=create_service_account_api_key_request,
+            self.get_service_accounts_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1243,10 +912,8 @@ class ServiceAccountsApi:
             )
         )
 
-    def _service_accounts_id_api_keys_post_serialize(
+    def _get_service_accounts_serialize(
         self,
-        id,
-        create_service_account_api_key_request,
         _request_auth,
         _content_type,
         _headers,
@@ -1265,33 +932,21 @@ class ServiceAccountsApi:
         _body_params: bytes | None = None
 
         # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
         # process the query parameters
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if create_service_account_api_key_request is not None:
-            _body_params = create_service_account_api_key_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/service-accounts/{id}/api-keys",
+            method="GET",
+            resource_path="/api/v1/service-accounts",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1305,314 +960,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_delete(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete service account
-
-        Soft-delete a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def service_accounts_id_delete_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete service account
-
-        Soft-delete a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def service_accounts_id_delete_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete service account
-
-        Soft-delete a service account
-
-        :param id: Service account ID (required)
-        :type id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._service_accounts_id_delete_serialize(
-            id=id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "204": None,
-            "404": "ErrorResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def service_accounts_id_delete_sync(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> None:
-        """Delete service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_delete`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_delete(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def service_accounts_id_delete_sync_with_http_info(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[None]:
-        """Delete service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_delete_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_delete_with_http_info(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def service_accounts_id_delete_sync_without_preload_content(
-        self,
-        id: Annotated[StrictStr, Field(description="Service account ID")],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Delete service account (synchronous)
-
-        Synchronous variant of :meth:`service_accounts_id_delete_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.service_accounts_id_delete_without_preload_content(
-                id=id,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _service_accounts_id_delete_serialize(
-        self,
-        id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="DELETE",
-            resource_path="/service-accounts/{id}",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def service_accounts_id_get(
+    async def get_service_accounts_id(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1651,7 +999,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_get_serialize(
+        _param = self._get_service_accounts_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1671,7 +1019,7 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_id_get_with_http_info(
+    async def get_service_accounts_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1710,7 +1058,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_get_serialize(
+        _param = self._get_service_accounts_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1730,7 +1078,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_get_without_preload_content(
+    async def get_service_accounts_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1769,7 +1117,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_get_serialize(
+        _param = self._get_service_accounts_id_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1785,7 +1133,7 @@ class ServiceAccountsApi:
         return response_data.response
 
     @validate_call
-    def service_accounts_id_get_sync(
+    def get_service_accounts_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1798,11 +1146,11 @@ class ServiceAccountsApi:
     ) -> ServiceAccount:
         """Get service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_service_accounts_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_get(
+            self.get_service_accounts_id(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1813,7 +1161,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_get_sync_with_http_info(
+    def get_service_accounts_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1826,11 +1174,11 @@ class ServiceAccountsApi:
     ) -> ApiResponse[ServiceAccount]:
         """Get service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_service_accounts_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_get_with_http_info(
+            self.get_service_accounts_id_with_http_info(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1841,7 +1189,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_get_sync_without_preload_content(
+    def get_service_accounts_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         _request_timeout: None
@@ -1854,11 +1202,11 @@ class ServiceAccountsApi:
     ) -> RESTResponseType:
         """Get service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_service_accounts_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_get_without_preload_content(
+            self.get_service_accounts_id_without_preload_content(
                 id=id,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -1868,7 +1216,7 @@ class ServiceAccountsApi:
             )
         )
 
-    def _service_accounts_id_get_serialize(
+    def _get_service_accounts_id_serialize(
         self,
         id,
         _request_auth,
@@ -1905,7 +1253,7 @@ class ServiceAccountsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/service-accounts/{id}",
+            resource_path="/api/v1/service-accounts/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1919,7 +1267,311 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_patch(
+    async def get_service_accounts_idapi_keys(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[ServiceAccountAPIKey]:
+        """List API keys for a service account
+
+        Get all API keys for a service account
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_service_accounts_idapi_keys_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[ServiceAccountAPIKey]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_service_accounts_idapi_keys_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[ServiceAccountAPIKey]]:
+        """List API keys for a service account
+
+        Get all API keys for a service account
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_service_accounts_idapi_keys_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[ServiceAccountAPIKey]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_service_accounts_idapi_keys_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List API keys for a service account
+
+        Get all API keys for a service account
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_service_accounts_idapi_keys_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "List[ServiceAccountAPIKey]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_service_accounts_idapi_keys_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> list[ServiceAccountAPIKey]:
+        """List API keys for a service account (synchronous)
+
+        Synchronous variant of :meth:`get_service_accounts_idapi_keys`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_service_accounts_idapi_keys(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_service_accounts_idapi_keys_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[list[ServiceAccountAPIKey]]:
+        """List API keys for a service account (synchronous)
+
+        Synchronous variant of :meth:`get_service_accounts_idapi_keys_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_service_accounts_idapi_keys_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_service_accounts_idapi_keys_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List API keys for a service account (synchronous)
+
+        Synchronous variant of :meth:`get_service_accounts_idapi_keys_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_service_accounts_idapi_keys_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_service_accounts_idapi_keys_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/service-accounts/{id}/api-keys",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def patch_service_accounts_id(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -1963,7 +1615,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_patch_serialize(
+        _param = self._patch_service_accounts_id_serialize(
             id=id,
             update_service_account_request=update_service_account_request,
             _request_auth=_request_auth,
@@ -1984,7 +1636,7 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_id_patch_with_http_info(
+    async def patch_service_accounts_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -2028,7 +1680,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_patch_serialize(
+        _param = self._patch_service_accounts_id_serialize(
             id=id,
             update_service_account_request=update_service_account_request,
             _request_auth=_request_auth,
@@ -2049,7 +1701,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_id_patch_without_preload_content(
+    async def patch_service_accounts_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -2093,7 +1745,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_id_patch_serialize(
+        _param = self._patch_service_accounts_id_serialize(
             id=id,
             update_service_account_request=update_service_account_request,
             _request_auth=_request_auth,
@@ -2110,7 +1762,7 @@ class ServiceAccountsApi:
         return response_data.response
 
     @validate_call
-    def service_accounts_id_patch_sync(
+    def patch_service_accounts_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -2126,11 +1778,11 @@ class ServiceAccountsApi:
     ) -> ServiceAccount:
         """Update service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_patch`. It calls the asynchronous
+        Synchronous variant of :meth:`patch_service_accounts_id`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_patch(
+            self.patch_service_accounts_id(
                 id=id,
                 update_service_account_request=update_service_account_request,
                 _request_timeout=_request_timeout,
@@ -2142,7 +1794,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_patch_sync_with_http_info(
+    def patch_service_accounts_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -2158,11 +1810,11 @@ class ServiceAccountsApi:
     ) -> ApiResponse[ServiceAccount]:
         """Update service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_patch_with_http_info`. It calls the
+        Synchronous variant of :meth:`patch_service_accounts_id_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_patch_with_http_info(
+            self.patch_service_accounts_id_with_http_info(
                 id=id,
                 update_service_account_request=update_service_account_request,
                 _request_timeout=_request_timeout,
@@ -2174,7 +1826,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_id_patch_sync_without_preload_content(
+    def patch_service_accounts_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Service account ID")],
         update_service_account_request: Annotated[
@@ -2190,11 +1842,11 @@ class ServiceAccountsApi:
     ) -> RESTResponseType:
         """Update service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_id_patch_without_preload_content`. It calls
+        Synchronous variant of :meth:`patch_service_accounts_id_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_id_patch_without_preload_content(
+            self.patch_service_accounts_id_without_preload_content(
                 id=id,
                 update_service_account_request=update_service_account_request,
                 _request_timeout=_request_timeout,
@@ -2205,7 +1857,7 @@ class ServiceAccountsApi:
             )
         )
 
-    def _service_accounts_id_patch_serialize(
+    def _patch_service_accounts_id_serialize(
         self,
         id,
         update_service_account_request,
@@ -2253,7 +1905,7 @@ class ServiceAccountsApi:
 
         return self.api_client.param_serialize(
             method="PATCH",
-            resource_path="/service-accounts/{id}",
+            resource_path="/api/v1/service-accounts/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2267,7 +1919,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_post(
+    async def post_service_accounts(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2308,7 +1960,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_post_serialize(
+        _param = self._post_service_accounts_serialize(
             create_service_account_request=create_service_account_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2328,7 +1980,7 @@ class ServiceAccountsApi:
         ).data
 
     @validate_call
-    async def service_accounts_post_with_http_info(
+    async def post_service_accounts_with_http_info(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2369,7 +2021,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_post_serialize(
+        _param = self._post_service_accounts_serialize(
             create_service_account_request=create_service_account_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2389,7 +2041,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    async def service_accounts_post_without_preload_content(
+    async def post_service_accounts_without_preload_content(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2430,7 +2082,7 @@ class ServiceAccountsApi:
         :return: Returns the result object.
         """
 
-        _param = self._service_accounts_post_serialize(
+        _param = self._post_service_accounts_serialize(
             create_service_account_request=create_service_account_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2446,7 +2098,7 @@ class ServiceAccountsApi:
         return response_data.response
 
     @validate_call
-    def service_accounts_post_sync(
+    def post_service_accounts_sync(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2461,11 +2113,11 @@ class ServiceAccountsApi:
     ) -> ServiceAccount:
         """Create service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_service_accounts`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_post(
+            self.post_service_accounts(
                 create_service_account_request=create_service_account_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2476,7 +2128,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_post_sync_with_http_info(
+    def post_service_accounts_sync_with_http_info(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2491,11 +2143,11 @@ class ServiceAccountsApi:
     ) -> ApiResponse[ServiceAccount]:
         """Create service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_service_accounts_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_post_with_http_info(
+            self.post_service_accounts_with_http_info(
                 create_service_account_request=create_service_account_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2506,7 +2158,7 @@ class ServiceAccountsApi:
         )
 
     @validate_call
-    def service_accounts_post_sync_without_preload_content(
+    def post_service_accounts_sync_without_preload_content(
         self,
         create_service_account_request: Annotated[
             CreateServiceAccountRequest, Field(description="Service account")
@@ -2521,11 +2173,11 @@ class ServiceAccountsApi:
     ) -> RESTResponseType:
         """Create service account (synchronous)
 
-        Synchronous variant of :meth:`service_accounts_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_service_accounts_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.service_accounts_post_without_preload_content(
+            self.post_service_accounts_without_preload_content(
                 create_service_account_request=create_service_account_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2535,7 +2187,7 @@ class ServiceAccountsApi:
             )
         )
 
-    def _service_accounts_post_serialize(
+    def _post_service_accounts_serialize(
         self,
         create_service_account_request,
         _request_auth,
@@ -2580,7 +2232,355 @@ class ServiceAccountsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/service-accounts",
+            resource_path="/api/v1/service-accounts",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_service_accounts_idapi_keys(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ServiceAccountAPIKey:
+        """Create API key for a service account
+
+        Create a new API key. The plaintext key is only returned once.
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param create_service_account_api_key_request: API key details (required)
+        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_service_accounts_idapi_keys_serialize(
+            id=id,
+            create_service_account_api_key_request=create_service_account_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "ServiceAccountAPIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_service_accounts_idapi_keys_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ServiceAccountAPIKey]:
+        """Create API key for a service account
+
+        Create a new API key. The plaintext key is only returned once.
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param create_service_account_api_key_request: API key details (required)
+        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_service_accounts_idapi_keys_serialize(
+            id=id,
+            create_service_account_api_key_request=create_service_account_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "ServiceAccountAPIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_service_accounts_idapi_keys_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create API key for a service account
+
+        Create a new API key. The plaintext key is only returned once.
+
+        :param id: Service account ID (required)
+        :type id: str
+        :param create_service_account_api_key_request: API key details (required)
+        :type create_service_account_api_key_request: CreateServiceAccountAPIKeyRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_service_accounts_idapi_keys_serialize(
+            id=id,
+            create_service_account_api_key_request=create_service_account_api_key_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "ServiceAccountAPIKey",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_service_accounts_idapi_keys_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ServiceAccountAPIKey:
+        """Create API key for a service account (synchronous)
+
+        Synchronous variant of :meth:`post_service_accounts_idapi_keys`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_service_accounts_idapi_keys(
+                id=id,
+                create_service_account_api_key_request=create_service_account_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_service_accounts_idapi_keys_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ServiceAccountAPIKey]:
+        """Create API key for a service account (synchronous)
+
+        Synchronous variant of :meth:`post_service_accounts_idapi_keys_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_service_accounts_idapi_keys_with_http_info(
+                id=id,
+                create_service_account_api_key_request=create_service_account_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_service_accounts_idapi_keys_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Service account ID")],
+        create_service_account_api_key_request: Annotated[
+            CreateServiceAccountAPIKeyRequest, Field(description="API key details")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Create API key for a service account (synchronous)
+
+        Synchronous variant of :meth:`post_service_accounts_idapi_keys_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_service_accounts_idapi_keys_without_preload_content(
+                id=id,
+                create_service_account_api_key_request=create_service_account_api_key_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_service_accounts_idapi_keys_serialize(
+        self,
+        id,
+        create_service_account_api_key_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if create_service_account_api_key_request is not None:
+            _body_params = create_service_account_api_key_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/service-accounts/{id}/api-keys",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

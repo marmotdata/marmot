@@ -23,172 +23,172 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_users_apikeys_get(self) -> None:
-        """Test case for users_apikeys_get
-
-        List API keys
-        """
-
-    def test_users_apikeys_get_sync(self) -> None:
-        """Test case for users_apikeys_get (synchronous)
-
-        List API keys
-        """
-
-    async def test_users_apikeys_id_delete(self) -> None:
-        """Test case for users_apikeys_id_delete
+    async def test_delete_users_apikeys_id(self) -> None:
+        """Test case for delete_users_apikeys_id
 
         Delete API key
         """
 
-    def test_users_apikeys_id_delete_sync(self) -> None:
-        """Test case for users_apikeys_id_delete (synchronous)
+    def test_delete_users_apikeys_id_sync(self) -> None:
+        """Test case for delete_users_apikeys_id (synchronous)
 
         Delete API key
         """
 
-    async def test_users_apikeys_post(self) -> None:
-        """Test case for users_apikeys_post
-
-        Create API key
-        """
-
-    def test_users_apikeys_post_sync(self) -> None:
-        """Test case for users_apikeys_post (synchronous)
-
-        Create API key
-        """
-
-    async def test_users_get(self) -> None:
-        """Test case for users_get
-
-        List users
-        """
-
-    def test_users_get_sync(self) -> None:
-        """Test case for users_get (synchronous)
-
-        List users
-        """
-
-    async def test_users_id_delete(self) -> None:
-        """Test case for users_id_delete
+    async def test_delete_users_id(self) -> None:
+        """Test case for delete_users_id
 
         Delete a user
         """
 
-    def test_users_id_delete_sync(self) -> None:
-        """Test case for users_id_delete (synchronous)
+    def test_delete_users_id_sync(self) -> None:
+        """Test case for delete_users_id (synchronous)
 
         Delete a user
         """
 
-    async def test_users_id_get(self) -> None:
-        """Test case for users_id_get
-
-        Get a user by ID
-        """
-
-    def test_users_id_get_sync(self) -> None:
-        """Test case for users_id_get (synchronous)
-
-        Get a user by ID
-        """
-
-    async def test_users_id_put(self) -> None:
-        """Test case for users_id_put
-
-        Update a user
-        """
-
-    def test_users_id_put_sync(self) -> None:
-        """Test case for users_id_put (synchronous)
-
-        Update a user
-        """
-
-    async def test_users_login_post(self) -> None:
-        """Test case for users_login_post
-
-        Login user
-        """
-
-    def test_users_login_post_sync(self) -> None:
-        """Test case for users_login_post (synchronous)
-
-        Login user
-        """
-
-    async def test_users_me_get(self) -> None:
-        """Test case for users_me_get
-
-        Get current user profile
-        """
-
-    def test_users_me_get_sync(self) -> None:
-        """Test case for users_me_get (synchronous)
-
-        Get current user profile
-        """
-
-    async def test_users_oauth_link_post(self) -> None:
-        """Test case for users_oauth_link_post
-
-        Link OAuth account
-        """
-
-    def test_users_oauth_link_post_sync(self) -> None:
-        """Test case for users_oauth_link_post (synchronous)
-
-        Link OAuth account
-        """
-
-    async def test_users_oauth_unlink_id_provider_delete(self) -> None:
-        """Test case for users_oauth_unlink_id_provider_delete
+    async def test_delete_users_oauth_unlink_id_provider(self) -> None:
+        """Test case for delete_users_oauth_unlink_id_provider
 
         Unlink OAuth account
         """
 
-    def test_users_oauth_unlink_id_provider_delete_sync(self) -> None:
-        """Test case for users_oauth_unlink_id_provider_delete (synchronous)
+    def test_delete_users_oauth_unlink_id_provider_sync(self) -> None:
+        """Test case for delete_users_oauth_unlink_id_provider (synchronous)
 
         Unlink OAuth account
         """
 
-    async def test_users_post(self) -> None:
-        """Test case for users_post
+    async def test_get_users(self) -> None:
+        """Test case for get_users
+
+        List users
+        """
+
+    def test_get_users_sync(self) -> None:
+        """Test case for get_users (synchronous)
+
+        List users
+        """
+
+    async def test_get_users_apikeys(self) -> None:
+        """Test case for get_users_apikeys
+
+        List API keys
+        """
+
+    def test_get_users_apikeys_sync(self) -> None:
+        """Test case for get_users_apikeys (synchronous)
+
+        List API keys
+        """
+
+    async def test_get_users_id(self) -> None:
+        """Test case for get_users_id
+
+        Get a user by ID
+        """
+
+    def test_get_users_id_sync(self) -> None:
+        """Test case for get_users_id (synchronous)
+
+        Get a user by ID
+        """
+
+    async def test_get_users_me(self) -> None:
+        """Test case for get_users_me
+
+        Get current user profile
+        """
+
+    def test_get_users_me_sync(self) -> None:
+        """Test case for get_users_me (synchronous)
+
+        Get current user profile
+        """
+
+    async def test_post_users(self) -> None:
+        """Test case for post_users
 
         Create a new user
         """
 
-    def test_users_post_sync(self) -> None:
-        """Test case for users_post (synchronous)
+    def test_post_users_sync(self) -> None:
+        """Test case for post_users (synchronous)
 
         Create a new user
         """
 
-    async def test_users_preferences_put(self) -> None:
-        """Test case for users_preferences_put
+    async def test_post_users_apikeys(self) -> None:
+        """Test case for post_users_apikeys
 
-        Update user preferences
+        Create API key
         """
 
-    def test_users_preferences_put_sync(self) -> None:
-        """Test case for users_preferences_put (synchronous)
+    def test_post_users_apikeys_sync(self) -> None:
+        """Test case for post_users_apikeys (synchronous)
 
-        Update user preferences
+        Create API key
         """
 
-    async def test_users_update_password_post(self) -> None:
-        """Test case for users_update_password_post
+    async def test_post_users_login(self) -> None:
+        """Test case for post_users_login
+
+        Login user
+        """
+
+    def test_post_users_login_sync(self) -> None:
+        """Test case for post_users_login (synchronous)
+
+        Login user
+        """
+
+    async def test_post_users_oauth_link(self) -> None:
+        """Test case for post_users_oauth_link
+
+        Link OAuth account
+        """
+
+    def test_post_users_oauth_link_sync(self) -> None:
+        """Test case for post_users_oauth_link (synchronous)
+
+        Link OAuth account
+        """
+
+    async def test_post_users_update_password(self) -> None:
+        """Test case for post_users_update_password
 
         Update user password
         """
 
-    def test_users_update_password_post_sync(self) -> None:
-        """Test case for users_update_password_post (synchronous)
+    def test_post_users_update_password_sync(self) -> None:
+        """Test case for post_users_update_password (synchronous)
 
         Update user password
+        """
+
+    async def test_put_users_id(self) -> None:
+        """Test case for put_users_id
+
+        Update a user
+        """
+
+    def test_put_users_id_sync(self) -> None:
+        """Test case for put_users_id (synchronous)
+
+        Update a user
+        """
+
+    async def test_put_users_preferences(self) -> None:
+        """Test case for put_users_preferences
+
+        Update user preferences
+        """
+
+    def test_put_users_preferences_sync(self) -> None:
+        """Test case for put_users_preferences (synchronous)
+
+        Update user preferences
         """
 
 

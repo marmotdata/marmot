@@ -23,26 +23,26 @@ class TestAdminApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_admin_search_reindex_get(self) -> None:
-        """Test case for admin_search_reindex_get
+    async def test_get_admin_search_reindex(self) -> None:
+        """Test case for get_admin_search_reindex
 
         Get reindex status
         """
 
-    def test_admin_search_reindex_get_sync(self) -> None:
-        """Test case for admin_search_reindex_get (synchronous)
+    def test_get_admin_search_reindex_sync(self) -> None:
+        """Test case for get_admin_search_reindex (synchronous)
 
         Get reindex status
         """
 
-    async def test_admin_search_reindex_post(self) -> None:
-        """Test case for admin_search_reindex_post
+    async def test_post_admin_search_reindex(self) -> None:
+        """Test case for post_admin_search_reindex
 
         Start search reindex
         """
 
-    def test_admin_search_reindex_post_sync(self) -> None:
-        """Test case for admin_search_reindex_post (synchronous)
+    def test_post_admin_search_reindex_sync(self) -> None:
+        """Test case for post_admin_search_reindex (synchronous)
 
         Start search reindex
         """

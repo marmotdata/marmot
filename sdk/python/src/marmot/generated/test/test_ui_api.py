@@ -23,14 +23,14 @@ class TestUiApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_ui_config_get(self) -> None:
-        """Test case for ui_config_get
+    async def test_get_ui_config(self) -> None:
+        """Test case for get_ui_config
 
         Get UI configuration
         """
 
-    def test_ui_config_get_sync(self) -> None:
-        """Test case for ui_config_get (synchronous)
+    def test_get_ui_config_sync(self) -> None:
+        """Test case for get_ui_config (synchronous)
 
         Get UI configuration
         """

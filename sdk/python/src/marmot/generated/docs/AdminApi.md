@@ -1,17 +1,17 @@
 # marmot.generated.AdminApi
 
-All URIs are relative to */api/v1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**admin_search_reindex_get**](AdminApi.md#admin_search_reindex_get) | **GET** /admin/search/reindex | Get reindex status
-[**admin_search_reindex_post**](AdminApi.md#admin_search_reindex_post) | **POST** /admin/search/reindex | Start search reindex
+[**get_admin_search_reindex**](AdminApi.md#get_admin_search_reindex) | **GET** /api/v1/admin/search/reindex | Get reindex status
+[**post_admin_search_reindex**](AdminApi.md#post_admin_search_reindex) | **POST** /api/v1/admin/search/reindex | Start search reindex
 
 
-# **admin_search_reindex_get**
-> ReindexStatusResponse admin_search_reindex_get()
+# **get_admin_search_reindex**
+> ReindexStatusResponse get_admin_search_reindex()
 
-**Synchronous variant:** `admin_search_reindex_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `get_admin_search_reindex_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Get reindex status
 
@@ -28,10 +28,10 @@ from marmot.generated.models.reindex_status_response import ReindexStatusRespons
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -58,11 +58,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Get reindex status
-        api_response = await api_instance.admin_search_reindex_get()
-        print("The response of AdminApi->admin_search_reindex_get:\n")
+        api_response = await api_instance.get_admin_search_reindex()
+        print("The response of AdminApi->get_admin_search_reindex:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AdminApi->admin_search_reindex_get: %s\n" % e)
+        print("Exception when calling AdminApi->get_admin_search_reindex: %s\n" % e)
 ```
 
 
@@ -94,10 +94,10 @@ This endpoint does not need any parameter.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **admin_search_reindex_post**
-> ReindexAcceptedResponse admin_search_reindex_post()
+# **post_admin_search_reindex**
+> ReindexAcceptedResponse post_admin_search_reindex()
 
-**Synchronous variant:** `admin_search_reindex_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `post_admin_search_reindex_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Start search reindex
 
@@ -114,10 +114,10 @@ from marmot.generated.models.reindex_accepted_response import ReindexAcceptedRes
 from marmot.generated.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to /api/v1
+# Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = marmot.generated.Configuration(
-    host = "/api/v1"
+    host = "http://localhost"
 )
 
 # The client must configure the authentication and authorization parameters
@@ -144,11 +144,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Start search reindex
-        api_response = await api_instance.admin_search_reindex_post()
-        print("The response of AdminApi->admin_search_reindex_post:\n")
+        api_response = await api_instance.post_admin_search_reindex()
+        print("The response of AdminApi->post_admin_search_reindex:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AdminApi->admin_search_reindex_post: %s\n" % e)
+        print("Exception when calling AdminApi->post_admin_search_reindex: %s\n" % e)
 ```
 
 

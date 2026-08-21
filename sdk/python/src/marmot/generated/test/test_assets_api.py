@@ -23,304 +23,304 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_assets_by_glossary_term_term_id_get(self) -> None:
-        """Test case for assets_by_glossary_term_term_id_get
-
-        Get assets by glossary term
-        """
-
-    def test_assets_by_glossary_term_term_id_get_sync(self) -> None:
-        """Test case for assets_by_glossary_term_term_id_get (synchronous)
-
-        Get assets by glossary term
-        """
-
-    async def test_assets_documentation_batch_post(self) -> None:
-        """Test case for assets_documentation_batch_post
-
-        Batch create documentation
-        """
-
-    def test_assets_documentation_batch_post_sync(self) -> None:
-        """Test case for assets_documentation_batch_post (synchronous)
-
-        Batch create documentation
-        """
-
-    async def test_assets_documentation_mrn_get(self) -> None:
-        """Test case for assets_documentation_mrn_get
-
-        Get asset documentation
-        """
-
-    def test_assets_documentation_mrn_get_sync(self) -> None:
-        """Test case for assets_documentation_mrn_get (synchronous)
-
-        Get asset documentation
-        """
-
-    async def test_assets_documentation_post(self) -> None:
-        """Test case for assets_documentation_post
-
-        Create asset documentation
-        """
-
-    def test_assets_documentation_post_sync(self) -> None:
-        """Test case for assets_documentation_post (synchronous)
-
-        Create asset documentation
-        """
-
-    async def test_assets_id_delete(self) -> None:
-        """Test case for assets_id_delete
+    async def test_delete_assets_id(self) -> None:
+        """Test case for delete_assets_id
 
         Delete an asset
         """
 
-    def test_assets_id_delete_sync(self) -> None:
-        """Test case for assets_id_delete (synchronous)
+    def test_delete_assets_id_sync(self) -> None:
+        """Test case for delete_assets_id (synchronous)
 
         Delete an asset
         """
 
-    async def test_assets_id_get(self) -> None:
-        """Test case for assets_id_get
-
-        Get an asset by ID
-        """
-
-    def test_assets_id_get_sync(self) -> None:
-        """Test case for assets_id_get (synchronous)
-
-        Get an asset by ID
-        """
-
-    async def test_assets_id_put(self) -> None:
-        """Test case for assets_id_put
-
-        Update an asset
-        """
-
-    def test_assets_id_put_sync(self) -> None:
-        """Test case for assets_id_put (synchronous)
-
-        Update an asset
-        """
-
-    async def test_assets_id_run_history_get(self) -> None:
-        """Test case for assets_id_run_history_get
-
-        Get asset run history
-        """
-
-    def test_assets_id_run_history_get_sync(self) -> None:
-        """Test case for assets_id_run_history_get (synchronous)
-
-        Get asset run history
-        """
-
-    async def test_assets_id_run_history_histogram_get(self) -> None:
-        """Test case for assets_id_run_history_histogram_get
-
-        Get asset run history histogram
-        """
-
-    def test_assets_id_run_history_histogram_get_sync(self) -> None:
-        """Test case for assets_id_run_history_histogram_get (synchronous)
-
-        Get asset run history histogram
-        """
-
-    async def test_assets_lookup_type_service_name_get(self) -> None:
-        """Test case for assets_lookup_type_service_name_get
-
-        Lookup asset by type, service, and name
-        """
-
-    def test_assets_lookup_type_service_name_get_sync(self) -> None:
-        """Test case for assets_lookup_type_service_name_get (synchronous)
-
-        Lookup asset by type, service, and name
-        """
-
-    async def test_assets_match_pattern_get(self) -> None:
-        """Test case for assets_match_pattern_get
-
-        Match asset pattern
-        """
-
-    def test_assets_match_pattern_get_sync(self) -> None:
-        """Test case for assets_match_pattern_get (synchronous)
-
-        Match asset pattern
-        """
-
-    async def test_assets_my_assets_get(self) -> None:
-        """Test case for assets_my_assets_get
-
-        Get user's assets
-        """
-
-    def test_assets_my_assets_get_sync(self) -> None:
-        """Test case for assets_my_assets_get (synchronous)
-
-        Get user's assets
-        """
-
-    async def test_assets_post(self) -> None:
-        """Test case for assets_post
-
-        Create a new asset
-        """
-
-    def test_assets_post_sync(self) -> None:
-        """Test case for assets_post (synchronous)
-
-        Create a new asset
-        """
-
-    async def test_assets_preview_id_get(self) -> None:
-        """Test case for assets_preview_id_get
-
-        Get preview data for an asset
-        """
-
-    def test_assets_preview_id_get_sync(self) -> None:
-        """Test case for assets_preview_id_get (synchronous)
-
-        Get preview data for an asset
-        """
-
-    async def test_assets_qualified_name_qualified_name_get(self) -> None:
-        """Test case for assets_qualified_name_qualified_name_get
-
-        Get an asset by qualified name
-        """
-
-    def test_assets_qualified_name_qualified_name_get_sync(self) -> None:
-        """Test case for assets_qualified_name_qualified_name_get (synchronous)
-
-        Get an asset by qualified name
-        """
-
-    async def test_assets_search_get(self) -> None:
-        """Test case for assets_search_get
-
-        Search assets
-        """
-
-    def test_assets_search_get_sync(self) -> None:
-        """Test case for assets_search_get (synchronous)
-
-        Search assets
-        """
-
-    async def test_assets_suggestions_metadata_fields_get(self) -> None:
-        """Test case for assets_suggestions_metadata_fields_get
-
-        Get metadata field suggestions
-        """
-
-    def test_assets_suggestions_metadata_fields_get_sync(self) -> None:
-        """Test case for assets_suggestions_metadata_fields_get (synchronous)
-
-        Get metadata field suggestions
-        """
-
-    async def test_assets_suggestions_metadata_values_get(self) -> None:
-        """Test case for assets_suggestions_metadata_values_get
-
-        Get metadata value suggestions
-        """
-
-    def test_assets_suggestions_metadata_values_get_sync(self) -> None:
-        """Test case for assets_suggestions_metadata_values_get (synchronous)
-
-        Get metadata value suggestions
-        """
-
-    async def test_assets_suggestions_tags_get(self) -> None:
-        """Test case for assets_suggestions_tags_get
-
-        Get tag suggestions
-        """
-
-    def test_assets_suggestions_tags_get_sync(self) -> None:
-        """Test case for assets_suggestions_tags_get (synchronous)
-
-        Get tag suggestions
-        """
-
-    async def test_assets_summary_get(self) -> None:
-        """Test case for assets_summary_get
-
-        Get asset summary
-        """
-
-    def test_assets_summary_get_sync(self) -> None:
-        """Test case for assets_summary_get (synchronous)
-
-        Get asset summary
-        """
-
-    async def test_assets_tags_id_delete(self) -> None:
-        """Test case for assets_tags_id_delete
+    async def test_delete_assets_tags_id(self) -> None:
+        """Test case for delete_assets_tags_id
 
         Remove tag from asset
         """
 
-    def test_assets_tags_id_delete_sync(self) -> None:
-        """Test case for assets_tags_id_delete (synchronous)
+    def test_delete_assets_tags_id_sync(self) -> None:
+        """Test case for delete_assets_tags_id (synchronous)
 
         Remove tag from asset
         """
 
-    async def test_assets_tags_id_post(self) -> None:
-        """Test case for assets_tags_id_post
-
-        Add tag to asset
-        """
-
-    def test_assets_tags_id_post_sync(self) -> None:
-        """Test case for assets_tags_id_post (synchronous)
-
-        Add tag to asset
-        """
-
-    async def test_assets_terms_id_delete(self) -> None:
-        """Test case for assets_terms_id_delete
+    async def test_delete_assets_terms_id(self) -> None:
+        """Test case for delete_assets_terms_id
 
         Remove glossary term from asset
         """
 
-    def test_assets_terms_id_delete_sync(self) -> None:
-        """Test case for assets_terms_id_delete (synchronous)
+    def test_delete_assets_terms_id_sync(self) -> None:
+        """Test case for delete_assets_terms_id (synchronous)
 
         Remove glossary term from asset
         """
 
-    async def test_assets_terms_id_get(self) -> None:
-        """Test case for assets_terms_id_get
+    async def test_get_assets_by_glossary_term_term_id(self) -> None:
+        """Test case for get_assets_by_glossary_term_term_id
+
+        Get assets by glossary term
+        """
+
+    def test_get_assets_by_glossary_term_term_id_sync(self) -> None:
+        """Test case for get_assets_by_glossary_term_term_id (synchronous)
+
+        Get assets by glossary term
+        """
+
+    async def test_get_assets_documentation_mrn(self) -> None:
+        """Test case for get_assets_documentation_mrn
+
+        Get asset documentation
+        """
+
+    def test_get_assets_documentation_mrn_sync(self) -> None:
+        """Test case for get_assets_documentation_mrn (synchronous)
+
+        Get asset documentation
+        """
+
+    async def test_get_assets_id(self) -> None:
+        """Test case for get_assets_id
+
+        Get an asset by ID
+        """
+
+    def test_get_assets_id_sync(self) -> None:
+        """Test case for get_assets_id (synchronous)
+
+        Get an asset by ID
+        """
+
+    async def test_get_assets_id_run_history(self) -> None:
+        """Test case for get_assets_id_run_history
+
+        Get asset run history
+        """
+
+    def test_get_assets_id_run_history_sync(self) -> None:
+        """Test case for get_assets_id_run_history (synchronous)
+
+        Get asset run history
+        """
+
+    async def test_get_assets_id_run_history_histogram(self) -> None:
+        """Test case for get_assets_id_run_history_histogram
+
+        Get asset run history histogram
+        """
+
+    def test_get_assets_id_run_history_histogram_sync(self) -> None:
+        """Test case for get_assets_id_run_history_histogram (synchronous)
+
+        Get asset run history histogram
+        """
+
+    async def test_get_assets_lookup_type_service_name(self) -> None:
+        """Test case for get_assets_lookup_type_service_name
+
+        Lookup asset by type, service, and name
+        """
+
+    def test_get_assets_lookup_type_service_name_sync(self) -> None:
+        """Test case for get_assets_lookup_type_service_name (synchronous)
+
+        Lookup asset by type, service, and name
+        """
+
+    async def test_get_assets_match_pattern(self) -> None:
+        """Test case for get_assets_match_pattern
+
+        Match asset pattern
+        """
+
+    def test_get_assets_match_pattern_sync(self) -> None:
+        """Test case for get_assets_match_pattern (synchronous)
+
+        Match asset pattern
+        """
+
+    async def test_get_assets_my_assets(self) -> None:
+        """Test case for get_assets_my_assets
+
+        Get user's assets
+        """
+
+    def test_get_assets_my_assets_sync(self) -> None:
+        """Test case for get_assets_my_assets (synchronous)
+
+        Get user's assets
+        """
+
+    async def test_get_assets_preview_id(self) -> None:
+        """Test case for get_assets_preview_id
+
+        Get preview data for an asset
+        """
+
+    def test_get_assets_preview_id_sync(self) -> None:
+        """Test case for get_assets_preview_id (synchronous)
+
+        Get preview data for an asset
+        """
+
+    async def test_get_assets_qualified_name_qualified_name(self) -> None:
+        """Test case for get_assets_qualified_name_qualified_name
+
+        Get an asset by qualified name
+        """
+
+    def test_get_assets_qualified_name_qualified_name_sync(self) -> None:
+        """Test case for get_assets_qualified_name_qualified_name (synchronous)
+
+        Get an asset by qualified name
+        """
+
+    async def test_get_assets_search(self) -> None:
+        """Test case for get_assets_search
+
+        Search assets
+        """
+
+    def test_get_assets_search_sync(self) -> None:
+        """Test case for get_assets_search (synchronous)
+
+        Search assets
+        """
+
+    async def test_get_assets_suggestions_metadata_fields(self) -> None:
+        """Test case for get_assets_suggestions_metadata_fields
+
+        Get metadata field suggestions
+        """
+
+    def test_get_assets_suggestions_metadata_fields_sync(self) -> None:
+        """Test case for get_assets_suggestions_metadata_fields (synchronous)
+
+        Get metadata field suggestions
+        """
+
+    async def test_get_assets_suggestions_metadata_values(self) -> None:
+        """Test case for get_assets_suggestions_metadata_values
+
+        Get metadata value suggestions
+        """
+
+    def test_get_assets_suggestions_metadata_values_sync(self) -> None:
+        """Test case for get_assets_suggestions_metadata_values (synchronous)
+
+        Get metadata value suggestions
+        """
+
+    async def test_get_assets_suggestions_tags(self) -> None:
+        """Test case for get_assets_suggestions_tags
+
+        Get tag suggestions
+        """
+
+    def test_get_assets_suggestions_tags_sync(self) -> None:
+        """Test case for get_assets_suggestions_tags (synchronous)
+
+        Get tag suggestions
+        """
+
+    async def test_get_assets_summary(self) -> None:
+        """Test case for get_assets_summary
+
+        Get asset summary
+        """
+
+    def test_get_assets_summary_sync(self) -> None:
+        """Test case for get_assets_summary (synchronous)
+
+        Get asset summary
+        """
+
+    async def test_get_assets_terms_id(self) -> None:
+        """Test case for get_assets_terms_id
 
         Get asset's glossary terms
         """
 
-    def test_assets_terms_id_get_sync(self) -> None:
-        """Test case for assets_terms_id_get (synchronous)
+    def test_get_assets_terms_id_sync(self) -> None:
+        """Test case for get_assets_terms_id (synchronous)
 
         Get asset's glossary terms
         """
 
-    async def test_assets_terms_id_post(self) -> None:
-        """Test case for assets_terms_id_post
+    async def test_post_assets(self) -> None:
+        """Test case for post_assets
+
+        Create a new asset
+        """
+
+    def test_post_assets_sync(self) -> None:
+        """Test case for post_assets (synchronous)
+
+        Create a new asset
+        """
+
+    async def test_post_assets_documentation(self) -> None:
+        """Test case for post_assets_documentation
+
+        Create asset documentation
+        """
+
+    def test_post_assets_documentation_sync(self) -> None:
+        """Test case for post_assets_documentation (synchronous)
+
+        Create asset documentation
+        """
+
+    async def test_post_assets_documentation_batch(self) -> None:
+        """Test case for post_assets_documentation_batch
+
+        Batch create documentation
+        """
+
+    def test_post_assets_documentation_batch_sync(self) -> None:
+        """Test case for post_assets_documentation_batch (synchronous)
+
+        Batch create documentation
+        """
+
+    async def test_post_assets_tags_id(self) -> None:
+        """Test case for post_assets_tags_id
+
+        Add tag to asset
+        """
+
+    def test_post_assets_tags_id_sync(self) -> None:
+        """Test case for post_assets_tags_id (synchronous)
+
+        Add tag to asset
+        """
+
+    async def test_post_assets_terms_id(self) -> None:
+        """Test case for post_assets_terms_id
 
         Add glossary terms to asset
         """
 
-    def test_assets_terms_id_post_sync(self) -> None:
-        """Test case for assets_terms_id_post (synchronous)
+    def test_post_assets_terms_id_sync(self) -> None:
+        """Test case for post_assets_terms_id (synchronous)
 
         Add glossary terms to asset
+        """
+
+    async def test_put_assets_id(self) -> None:
+        """Test case for put_assets_id
+
+        Update an asset
+        """
+
+    def test_put_assets_id_sync(self) -> None:
+        """Test case for put_assets_id (synchronous)
+
+        Update an asset
         """
 
 

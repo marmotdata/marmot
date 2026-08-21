@@ -18,9 +18,9 @@ from marmot.generated.api_response import ApiResponse
 from marmot.generated.models.batch_create_request import BatchCreateRequest
 from marmot.generated.models.batch_create_response import BatchCreateResponse
 from marmot.generated.models.complete_run_request import CompleteRunRequest
+from marmot.generated.models.get_runs200_response import GetRuns200Response
 from marmot.generated.models.plugin_run import PluginRun
 from marmot.generated.models.run_entities_response import RunEntitiesResponse
-from marmot.generated.models.runs_get200_response import RunsGet200Response
 from marmot.generated.models.start_run_request import StartRunRequest
 from marmot.generated.rest import RESTResponseType
 from marmot.generated.sync_helper import run_sync
@@ -39,938 +39,7 @@ class RunsApi:
         self.api_client = api_client
 
     @validate_call
-    async def runs_assets_batch_post(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BatchCreateResponse:
-        """Batch create assets
-
-        Create/update assets within a run
-
-        :param batch_create_request: Batch create request (required)
-        :type batch_create_request: BatchCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_assets_batch_post_serialize(
-            batch_create_request=batch_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchCreateResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def runs_assets_batch_post_with_http_info(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BatchCreateResponse]:
-        """Batch create assets
-
-        Create/update assets within a run
-
-        :param batch_create_request: Batch create request (required)
-        :type batch_create_request: BatchCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_assets_batch_post_serialize(
-            batch_create_request=batch_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchCreateResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def runs_assets_batch_post_without_preload_content(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Batch create assets
-
-        Create/update assets within a run
-
-        :param batch_create_request: Batch create request (required)
-        :type batch_create_request: BatchCreateRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_assets_batch_post_serialize(
-            batch_create_request=batch_create_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "BatchCreateResponse",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def runs_assets_batch_post_sync(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BatchCreateResponse:
-        """Batch create assets (synchronous)
-
-        Synchronous variant of :meth:`runs_assets_batch_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_assets_batch_post(
-                batch_create_request=batch_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_assets_batch_post_sync_with_http_info(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BatchCreateResponse]:
-        """Batch create assets (synchronous)
-
-        Synchronous variant of :meth:`runs_assets_batch_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_assets_batch_post_with_http_info(
-                batch_create_request=batch_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_assets_batch_post_sync_without_preload_content(
-        self,
-        batch_create_request: Annotated[
-            BatchCreateRequest, Field(description="Batch create request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Batch create assets (synchronous)
-
-        Synchronous variant of :meth:`runs_assets_batch_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_assets_batch_post_without_preload_content(
-                batch_create_request=batch_create_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _runs_assets_batch_post_serialize(
-        self,
-        batch_create_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if batch_create_request is not None:
-            _body_params = batch_create_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/runs/assets/batch",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def runs_cleanup_post(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, int]:
-        """Cleanup stale runs
-
-        Mark runs as failed if they've been running too long without updates
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_cleanup_post_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, int]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def runs_cleanup_post_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, int]]:
-        """Cleanup stale runs
-
-        Mark runs as failed if they've been running too long without updates
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_cleanup_post_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, int]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def runs_cleanup_post_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Cleanup stale runs
-
-        Mark runs as failed if they've been running too long without updates
-
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_cleanup_post_serialize(
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, int]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def runs_cleanup_post_sync(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, int]:
-        """Cleanup stale runs (synchronous)
-
-        Synchronous variant of :meth:`runs_cleanup_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_cleanup_post(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_cleanup_post_sync_with_http_info(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, int]]:
-        """Cleanup stale runs (synchronous)
-
-        Synchronous variant of :meth:`runs_cleanup_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_cleanup_post_with_http_info(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_cleanup_post_sync_without_preload_content(
-        self,
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Cleanup stale runs (synchronous)
-
-        Synchronous variant of :meth:`runs_cleanup_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_cleanup_post_without_preload_content(
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _runs_cleanup_post_serialize(
-        self,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/runs/cleanup",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def runs_complete_post(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Complete run
-
-        Complete a run with results
-
-        :param complete_run_request: Complete run request (required)
-        :type complete_run_request: CompleteRunRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_complete_post_serialize(
-            complete_run_request=complete_run_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-    @validate_call
-    async def runs_complete_post_with_http_info(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Complete run
-
-        Complete a run with results
-
-        :param complete_run_request: Complete run request (required)
-        :type complete_run_request: CompleteRunRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_complete_post_serialize(
-            complete_run_request=complete_run_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-    @validate_call
-    async def runs_complete_post_without_preload_content(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Complete run
-
-        Complete a run with results
-
-        :param complete_run_request: Complete run request (required)
-        :type complete_run_request: CompleteRunRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """
-
-        _param = self._runs_complete_post_serialize(
-            complete_run_request=complete_run_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index,
-        )
-
-        _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, str]",
-        }
-        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
-        return response_data.response
-
-    @validate_call
-    def runs_complete_post_sync(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, str]:
-        """Complete run (synchronous)
-
-        Synchronous variant of :meth:`runs_complete_post`. It calls the asynchronous
-        method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_complete_post(
-                complete_run_request=complete_run_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_complete_post_sync_with_http_info(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, str]]:
-        """Complete run (synchronous)
-
-        Synchronous variant of :meth:`runs_complete_post_with_http_info`. It calls the
-        asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_complete_post_with_http_info(
-                complete_run_request=complete_run_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    @validate_call
-    def runs_complete_post_sync_without_preload_content(
-        self,
-        complete_run_request: Annotated[
-            CompleteRunRequest, Field(description="Complete run request")
-        ],
-        _request_timeout: None
-        | Annotated[StrictFloat, Field(gt=0)]
-        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
-        _request_auth: dict[StrictStr, Any] | None = None,
-        _content_type: StrictStr | None = None,
-        _headers: dict[StrictStr, Any] | None = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Complete run (synchronous)
-
-        Synchronous variant of :meth:`runs_complete_post_without_preload_content`. It calls
-        the asynchronous method and blocks until it completes.
-        """
-        return run_sync(
-            self.runs_complete_post_without_preload_content(
-                complete_run_request=complete_run_request,
-                _request_timeout=_request_timeout,
-                _request_auth=_request_auth,
-                _content_type=_content_type,
-                _headers=_headers,
-                _host_index=_host_index,
-            )
-        )
-
-    def _runs_complete_post_serialize(
-        self,
-        complete_run_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: dict[str, str] = {}
-
-        _path_params: dict[str, str] = {}
-        _query_params: list[tuple[str, str]] = []
-        _header_params: dict[str, str | None] = _headers or {}
-        _form_params: list[tuple[str, str]] = []
-        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
-        _body_params: bytes | None = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if complete_run_request is not None:
-            _body_params = complete_run_request
-
-        # set the HTTP header `Accept`
-        if "Accept" not in _header_params:
-            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params["Content-Type"] = _content_type
-        else:
-            _default_content_type = self.api_client.select_header_content_type(["application/json"])
-            if _default_content_type is not None:
-                _header_params["Content-Type"] = _default_content_type
-
-        # authentication setting
-        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
-
-        return self.api_client.param_serialize(
-            method="POST",
-            resource_path="/runs/complete",
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth,
-        )
-
-    @validate_call
-    async def runs_get(
+    async def get_runs(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -987,7 +56,7 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RunsGet200Response:
+    ) -> GetRuns200Response:
         """List runs
 
         Get paginated list of runs with filtering
@@ -1022,7 +91,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_get_serialize(
+        _param = self._get_runs_serialize(
             pipelines=pipelines,
             statuses=statuses,
             limit=limit,
@@ -1034,7 +103,7 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "RunsGet200Response",
+            "200": "GetRuns200Response",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1044,7 +113,7 @@ class RunsApi:
         ).data
 
     @validate_call
-    async def runs_get_with_http_info(
+    async def get_runs_with_http_info(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -1061,7 +130,7 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[RunsGet200Response]:
+    ) -> ApiResponse[GetRuns200Response]:
         """List runs
 
         Get paginated list of runs with filtering
@@ -1096,7 +165,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_get_serialize(
+        _param = self._get_runs_serialize(
             pipelines=pipelines,
             statuses=statuses,
             limit=limit,
@@ -1108,7 +177,7 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "RunsGet200Response",
+            "200": "GetRuns200Response",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1118,7 +187,7 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_get_without_preload_content(
+    async def get_runs_without_preload_content(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -1170,7 +239,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_get_serialize(
+        _param = self._get_runs_serialize(
             pipelines=pipelines,
             statuses=statuses,
             limit=limit,
@@ -1182,13 +251,13 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "RunsGet200Response",
+            "200": "GetRuns200Response",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def runs_get_sync(
+    def get_runs_sync(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -1205,14 +274,14 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RunsGet200Response:
+    ) -> GetRuns200Response:
         """List runs (synchronous)
 
-        Synchronous variant of :meth:`runs_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_runs`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.runs_get(
+            self.get_runs(
                 pipelines=pipelines,
                 statuses=statuses,
                 limit=limit,
@@ -1226,7 +295,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_get_sync_with_http_info(
+    def get_runs_sync_with_http_info(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -1243,14 +312,14 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[RunsGet200Response]:
+    ) -> ApiResponse[GetRuns200Response]:
         """List runs (synchronous)
 
-        Synchronous variant of :meth:`runs_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_runs_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_get_with_http_info(
+            self.get_runs_with_http_info(
                 pipelines=pipelines,
                 statuses=statuses,
                 limit=limit,
@@ -1264,7 +333,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_get_sync_without_preload_content(
+    def get_runs_sync_without_preload_content(
         self,
         pipelines: Annotated[
             StrictStr | None, Field(description="Comma-separated list of pipeline names")
@@ -1284,11 +353,11 @@ class RunsApi:
     ) -> RESTResponseType:
         """List runs (synchronous)
 
-        Synchronous variant of :meth:`runs_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_runs_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_get_without_preload_content(
+            self.get_runs_without_preload_content(
                 pipelines=pipelines,
                 statuses=statuses,
                 limit=limit,
@@ -1301,7 +370,7 @@ class RunsApi:
             )
         )
 
-    def _runs_get_serialize(
+    def _get_runs_serialize(
         self,
         pipelines,
         statuses,
@@ -1351,7 +420,7 @@ class RunsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/runs",
+            resource_path="/api/v1/runs",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1365,7 +434,311 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_id_entities_get(
+    async def get_runs_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> PluginRun:
+        """Get run
+
+        Get a specific run by ID
+
+        :param id: Run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_runs_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginRun",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_runs_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[PluginRun]:
+        """Get run
+
+        Get a specific run by ID
+
+        :param id: Run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_runs_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginRun",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_runs_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get run
+
+        Get a specific run by ID
+
+        :param id: Run ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_runs_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginRun",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_runs_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> PluginRun:
+        """Get run (synchronous)
+
+        Synchronous variant of :meth:`get_runs_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_runs_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_runs_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[PluginRun]:
+        """Get run (synchronous)
+
+        Synchronous variant of :meth:`get_runs_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_runs_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_runs_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Run ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get run (synchronous)
+
+        Synchronous variant of :meth:`get_runs_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_runs_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_runs_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/runs/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_runs_id_entities(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1422,7 +795,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_entities_get_serialize(
+        _param = self._get_runs_id_entities_serialize(
             id=id,
             entity_type=entity_type,
             status=status,
@@ -1445,7 +818,7 @@ class RunsApi:
         ).data
 
     @validate_call
-    async def runs_id_entities_get_with_http_info(
+    async def get_runs_id_entities_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1502,7 +875,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_entities_get_serialize(
+        _param = self._get_runs_id_entities_serialize(
             id=id,
             entity_type=entity_type,
             status=status,
@@ -1525,7 +898,7 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_id_entities_get_without_preload_content(
+    async def get_runs_id_entities_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1582,7 +955,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_entities_get_serialize(
+        _param = self._get_runs_id_entities_serialize(
             id=id,
             entity_type=entity_type,
             status=status,
@@ -1601,7 +974,7 @@ class RunsApi:
         return response_data.response
 
     @validate_call
-    def runs_id_entities_get_sync(
+    def get_runs_id_entities_sync(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1624,11 +997,11 @@ class RunsApi:
     ) -> RunEntitiesResponse:
         """Get run entities (synchronous)
 
-        Synchronous variant of :meth:`runs_id_entities_get`. It calls the asynchronous
+        Synchronous variant of :meth:`get_runs_id_entities`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_entities_get(
+            self.get_runs_id_entities(
                 id=id,
                 entity_type=entity_type,
                 status=status,
@@ -1643,7 +1016,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_id_entities_get_sync_with_http_info(
+    def get_runs_id_entities_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1666,11 +1039,11 @@ class RunsApi:
     ) -> ApiResponse[RunEntitiesResponse]:
         """Get run entities (synchronous)
 
-        Synchronous variant of :meth:`runs_id_entities_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_runs_id_entities_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_entities_get_with_http_info(
+            self.get_runs_id_entities_with_http_info(
                 id=id,
                 entity_type=entity_type,
                 status=status,
@@ -1685,7 +1058,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_id_entities_get_sync_without_preload_content(
+    def get_runs_id_entities_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Run ID")],
         entity_type: Annotated[
@@ -1708,11 +1081,11 @@ class RunsApi:
     ) -> RESTResponseType:
         """Get run entities (synchronous)
 
-        Synchronous variant of :meth:`runs_id_entities_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_runs_id_entities_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_entities_get_without_preload_content(
+            self.get_runs_id_entities_without_preload_content(
                 id=id,
                 entity_type=entity_type,
                 status=status,
@@ -1726,7 +1099,7 @@ class RunsApi:
             )
         )
 
-    def _runs_id_entities_get_serialize(
+    def _get_runs_id_entities_serialize(
         self,
         id,
         entity_type,
@@ -1779,7 +1152,7 @@ class RunsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/runs/{id}/entities",
+            resource_path="/api/v1/runs/{id}/entities",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1793,9 +1166,11 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_id_get(
+    async def post_runs_assets_batch(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1803,13 +1178,13 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> PluginRun:
-        """Get run
+    ) -> BatchCreateResponse:
+        """Batch create assets
 
-        Get a specific run by ID
+        Create/update assets within a run
 
-        :param id: Run ID (required)
-        :type id: str
+        :param batch_create_request: Batch create request (required)
+        :type batch_create_request: BatchCreateRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1832,8 +1207,8 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_get_serialize(
-            id=id,
+        _param = self._post_runs_assets_batch_serialize(
+            batch_create_request=batch_create_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1841,7 +1216,7 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "PluginRun",
+            "200": "BatchCreateResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1851,9 +1226,11 @@ class RunsApi:
         ).data
 
     @validate_call
-    async def runs_id_get_with_http_info(
+    async def post_runs_assets_batch_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1861,13 +1238,13 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[PluginRun]:
-        """Get run
+    ) -> ApiResponse[BatchCreateResponse]:
+        """Batch create assets
 
-        Get a specific run by ID
+        Create/update assets within a run
 
-        :param id: Run ID (required)
-        :type id: str
+        :param batch_create_request: Batch create request (required)
+        :type batch_create_request: BatchCreateRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1890,8 +1267,8 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_get_serialize(
-            id=id,
+        _param = self._post_runs_assets_batch_serialize(
+            batch_create_request=batch_create_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1899,7 +1276,7 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "PluginRun",
+            "200": "BatchCreateResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1909,9 +1286,11 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_id_get_without_preload_content(
+    async def post_runs_assets_batch_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1920,12 +1299,12 @@ class RunsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get run
+        """Batch create assets
 
-        Get a specific run by ID
+        Create/update assets within a run
 
-        :param id: Run ID (required)
-        :type id: str
+        :param batch_create_request: Batch create request (required)
+        :type batch_create_request: BatchCreateRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1948,8 +1327,8 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_id_get_serialize(
-            id=id,
+        _param = self._post_runs_assets_batch_serialize(
+            batch_create_request=batch_create_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1957,15 +1336,17 @@ class RunsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "PluginRun",
+            "200": "BatchCreateResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def runs_id_get_sync(
+    def post_runs_assets_batch_sync(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1973,15 +1354,15 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> PluginRun:
-        """Get run (synchronous)
+    ) -> BatchCreateResponse:
+        """Batch create assets (synchronous)
 
-        Synchronous variant of :meth:`runs_id_get`. It calls the asynchronous
+        Synchronous variant of :meth:`post_runs_assets_batch`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_get(
-                id=id,
+            self.post_runs_assets_batch(
+                batch_create_request=batch_create_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1991,9 +1372,11 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_id_get_sync_with_http_info(
+    def post_runs_assets_batch_sync_with_http_info(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2001,15 +1384,15 @@ class RunsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[PluginRun]:
-        """Get run (synchronous)
+    ) -> ApiResponse[BatchCreateResponse]:
+        """Batch create assets (synchronous)
 
-        Synchronous variant of :meth:`runs_id_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_runs_assets_batch_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_get_with_http_info(
-                id=id,
+            self.post_runs_assets_batch_with_http_info(
+                batch_create_request=batch_create_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -2019,9 +1402,11 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_id_get_sync_without_preload_content(
+    def post_runs_assets_batch_sync_without_preload_content(
         self,
-        id: Annotated[StrictStr, Field(description="Run ID")],
+        batch_create_request: Annotated[
+            BatchCreateRequest, Field(description="Batch create request")
+        ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -2030,14 +1415,14 @@ class RunsApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get run (synchronous)
+        """Batch create assets (synchronous)
 
-        Synchronous variant of :meth:`runs_id_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_runs_assets_batch_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_id_get_without_preload_content(
-                id=id,
+            self.post_runs_assets_batch_without_preload_content(
+                batch_create_request=batch_create_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -2046,9 +1431,9 @@ class RunsApi:
             )
         )
 
-    def _runs_id_get_serialize(
+    def _post_runs_assets_batch_serialize(
         self,
-        id,
+        batch_create_request,
         _request_auth,
         _content_type,
         _headers,
@@ -2067,23 +1452,31 @@ class RunsApi:
         _body_params: bytes | None = None
 
         # process the path parameters
-        if id is not None:
-            _path_params["id"] = id
         # process the query parameters
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if batch_create_request is not None:
+            _body_params = batch_create_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
         # authentication setting
         _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
-            method="GET",
-            resource_path="/runs/{id}",
+            method="POST",
+            resource_path="/api/v1/runs/assets/batch",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -2097,7 +1490,614 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_start_post(
+    async def post_runs_cleanup(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, int]:
+        """Cleanup stale runs
+
+        Mark runs as failed if they've been running too long without updates
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_cleanup_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, int]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_runs_cleanup_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, int]]:
+        """Cleanup stale runs
+
+        Mark runs as failed if they've been running too long without updates
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_cleanup_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, int]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_runs_cleanup_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cleanup stale runs
+
+        Mark runs as failed if they've been running too long without updates
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_cleanup_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, int]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_runs_cleanup_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, int]:
+        """Cleanup stale runs (synchronous)
+
+        Synchronous variant of :meth:`post_runs_cleanup`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_cleanup(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_runs_cleanup_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, int]]:
+        """Cleanup stale runs (synchronous)
+
+        Synchronous variant of :meth:`post_runs_cleanup_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_cleanup_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_runs_cleanup_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cleanup stale runs (synchronous)
+
+        Synchronous variant of :meth:`post_runs_cleanup_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_cleanup_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_runs_cleanup_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/runs/cleanup",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_runs_complete(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Complete run
+
+        Complete a run with results
+
+        :param complete_run_request: Complete run request (required)
+        :type complete_run_request: CompleteRunRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_complete_serialize(
+            complete_run_request=complete_run_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_runs_complete_with_http_info(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Complete run
+
+        Complete a run with results
+
+        :param complete_run_request: Complete run request (required)
+        :type complete_run_request: CompleteRunRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_complete_serialize(
+            complete_run_request=complete_run_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_runs_complete_without_preload_content(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Complete run
+
+        Complete a run with results
+
+        :param complete_run_request: Complete run request (required)
+        :type complete_run_request: CompleteRunRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_runs_complete_serialize(
+            complete_run_request=complete_run_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "Dict[str, str]",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_runs_complete_sync(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> dict[str, str]:
+        """Complete run (synchronous)
+
+        Synchronous variant of :meth:`post_runs_complete`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_complete(
+                complete_run_request=complete_run_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_runs_complete_sync_with_http_info(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[dict[str, str]]:
+        """Complete run (synchronous)
+
+        Synchronous variant of :meth:`post_runs_complete_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_complete_with_http_info(
+                complete_run_request=complete_run_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_runs_complete_sync_without_preload_content(
+        self,
+        complete_run_request: Annotated[
+            CompleteRunRequest, Field(description="Complete run request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Complete run (synchronous)
+
+        Synchronous variant of :meth:`post_runs_complete_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_runs_complete_without_preload_content(
+                complete_run_request=complete_run_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_runs_complete_serialize(
+        self,
+        complete_run_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if complete_run_request is not None:
+            _body_params = complete_run_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/runs/complete",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_runs_start(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2136,7 +2136,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_start_post_serialize(
+        _param = self._post_runs_start_serialize(
             start_run_request=start_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2155,7 +2155,7 @@ class RunsApi:
         ).data
 
     @validate_call
-    async def runs_start_post_with_http_info(
+    async def post_runs_start_with_http_info(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2194,7 +2194,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_start_post_serialize(
+        _param = self._post_runs_start_serialize(
             start_run_request=start_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2213,7 +2213,7 @@ class RunsApi:
         )
 
     @validate_call
-    async def runs_start_post_without_preload_content(
+    async def post_runs_start_without_preload_content(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2252,7 +2252,7 @@ class RunsApi:
         :return: Returns the result object.
         """
 
-        _param = self._runs_start_post_serialize(
+        _param = self._post_runs_start_serialize(
             start_run_request=start_run_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2267,7 +2267,7 @@ class RunsApi:
         return response_data.response
 
     @validate_call
-    def runs_start_post_sync(
+    def post_runs_start_sync(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2280,11 +2280,11 @@ class RunsApi:
     ) -> PluginRun:
         """Start run (synchronous)
 
-        Synchronous variant of :meth:`runs_start_post`. It calls the asynchronous
+        Synchronous variant of :meth:`post_runs_start`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.runs_start_post(
+            self.post_runs_start(
                 start_run_request=start_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2295,7 +2295,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_start_post_sync_with_http_info(
+    def post_runs_start_sync_with_http_info(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2308,11 +2308,11 @@ class RunsApi:
     ) -> ApiResponse[PluginRun]:
         """Start run (synchronous)
 
-        Synchronous variant of :meth:`runs_start_post_with_http_info`. It calls the
+        Synchronous variant of :meth:`post_runs_start_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_start_post_with_http_info(
+            self.post_runs_start_with_http_info(
                 start_run_request=start_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2323,7 +2323,7 @@ class RunsApi:
         )
 
     @validate_call
-    def runs_start_post_sync_without_preload_content(
+    def post_runs_start_sync_without_preload_content(
         self,
         start_run_request: Annotated[StartRunRequest, Field(description="Start run request")],
         _request_timeout: None
@@ -2336,11 +2336,11 @@ class RunsApi:
     ) -> RESTResponseType:
         """Start run (synchronous)
 
-        Synchronous variant of :meth:`runs_start_post_without_preload_content`. It calls
+        Synchronous variant of :meth:`post_runs_start_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.runs_start_post_without_preload_content(
+            self.post_runs_start_without_preload_content(
                 start_run_request=start_run_request,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
@@ -2350,7 +2350,7 @@ class RunsApi:
             )
         )
 
-    def _runs_start_post_serialize(
+    def _post_runs_start_serialize(
         self,
         start_run_request,
         _request_auth,
@@ -2395,7 +2395,7 @@ class RunsApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/runs/start",
+            resource_path="/api/v1/runs/start",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

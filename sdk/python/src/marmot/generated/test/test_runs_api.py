@@ -23,86 +23,86 @@ class TestRunsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_runs_assets_batch_post(self) -> None:
-        """Test case for runs_assets_batch_post
-
-        Batch create assets
-        """
-
-    def test_runs_assets_batch_post_sync(self) -> None:
-        """Test case for runs_assets_batch_post (synchronous)
-
-        Batch create assets
-        """
-
-    async def test_runs_cleanup_post(self) -> None:
-        """Test case for runs_cleanup_post
-
-        Cleanup stale runs
-        """
-
-    def test_runs_cleanup_post_sync(self) -> None:
-        """Test case for runs_cleanup_post (synchronous)
-
-        Cleanup stale runs
-        """
-
-    async def test_runs_complete_post(self) -> None:
-        """Test case for runs_complete_post
-
-        Complete run
-        """
-
-    def test_runs_complete_post_sync(self) -> None:
-        """Test case for runs_complete_post (synchronous)
-
-        Complete run
-        """
-
-    async def test_runs_get(self) -> None:
-        """Test case for runs_get
+    async def test_get_runs(self) -> None:
+        """Test case for get_runs
 
         List runs
         """
 
-    def test_runs_get_sync(self) -> None:
-        """Test case for runs_get (synchronous)
+    def test_get_runs_sync(self) -> None:
+        """Test case for get_runs (synchronous)
 
         List runs
         """
 
-    async def test_runs_id_entities_get(self) -> None:
-        """Test case for runs_id_entities_get
-
-        Get run entities
-        """
-
-    def test_runs_id_entities_get_sync(self) -> None:
-        """Test case for runs_id_entities_get (synchronous)
-
-        Get run entities
-        """
-
-    async def test_runs_id_get(self) -> None:
-        """Test case for runs_id_get
+    async def test_get_runs_id(self) -> None:
+        """Test case for get_runs_id
 
         Get run
         """
 
-    def test_runs_id_get_sync(self) -> None:
-        """Test case for runs_id_get (synchronous)
+    def test_get_runs_id_sync(self) -> None:
+        """Test case for get_runs_id (synchronous)
 
         Get run
         """
 
-    async def test_runs_start_post(self) -> None:
-        """Test case for runs_start_post
+    async def test_get_runs_id_entities(self) -> None:
+        """Test case for get_runs_id_entities
+
+        Get run entities
+        """
+
+    def test_get_runs_id_entities_sync(self) -> None:
+        """Test case for get_runs_id_entities (synchronous)
+
+        Get run entities
+        """
+
+    async def test_post_runs_assets_batch(self) -> None:
+        """Test case for post_runs_assets_batch
+
+        Batch create assets
+        """
+
+    def test_post_runs_assets_batch_sync(self) -> None:
+        """Test case for post_runs_assets_batch (synchronous)
+
+        Batch create assets
+        """
+
+    async def test_post_runs_cleanup(self) -> None:
+        """Test case for post_runs_cleanup
+
+        Cleanup stale runs
+        """
+
+    def test_post_runs_cleanup_sync(self) -> None:
+        """Test case for post_runs_cleanup (synchronous)
+
+        Cleanup stale runs
+        """
+
+    async def test_post_runs_complete(self) -> None:
+        """Test case for post_runs_complete
+
+        Complete run
+        """
+
+    def test_post_runs_complete_sync(self) -> None:
+        """Test case for post_runs_complete (synchronous)
+
+        Complete run
+        """
+
+    async def test_post_runs_start(self) -> None:
+        """Test case for post_runs_start
 
         Start run
         """
 
-    def test_runs_start_post_sync(self) -> None:
-        """Test case for runs_start_post (synchronous)
+    def test_post_runs_start_sync(self) -> None:
+        """Test case for post_runs_start (synchronous)
 
         Start run
         """
