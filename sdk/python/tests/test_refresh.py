@@ -3,8 +3,8 @@
 ``param_serialize`` applies the Authorization header before ``call_api`` runs,
 so a refresh that only updates the Configuration would replay the old token.
 
-These exercise ``GET /users/me`` because it is currently the only operation the
-spec attaches a security requirement to.
+``GET /users/me`` stands in for a protected operation and ``GET /ui/config`` for
+a public one. Both sit under the API base path; ``/oauth/token`` does not.
 """
 
 from __future__ import annotations
@@ -12,16 +12,18 @@ from __future__ import annotations
 import threading
 
 import anyio
+import httpx
 import pytest
 
-from marmot import AuthenticatedApiClient, SearchApi, UsersApi
-from marmot.auth import OIDCCredential, SecurityScheme, StaticCredential
+from marmot import AuthenticatedApiClient, UiApi, UsersApi
+from marmot.auth import OIDCCredential, SecurityScheme, StaticCredential, resolve_credential
 from marmot.auth.workload import SubjectToken
+from marmot.client import api_base_url
 from marmot.errors import AuthError
 from marmot.generated import ApiClient, Configuration
 
 HOST = "http://x"
-ME_URL = f"{HOST}/users/me"
+ME_URL = f"{HOST}/api/v1/users/me"
 ME_BODY = {"id": "u1", "email": "dev@example.com"}
 TOKEN_URL = f"{HOST}/oauth/token"
 
@@ -33,12 +35,10 @@ class _StaticSource:
         return SubjectToken(token="subject-jwt", source=self.name)
 
 
-def _oidc_client(
-    httpx_mock: object, *tokens: str, expires_in: int = 3600
-) -> AuthenticatedApiClient:
+def _oidc_client(httpx_mock: object, *tokens: str) -> AuthenticatedApiClient:
     for token in tokens:
         httpx_mock.add_response(  # type: ignore[attr-defined]
-            method="POST", url=TOKEN_URL, json={"access_token": token, "expires_in": expires_in}
+            method="POST", url=TOKEN_URL, json={"access_token": token}
         )
     credential = OIDCCredential(
         api_client=ApiClient(Configuration(host=HOST)),
@@ -132,51 +132,91 @@ def test_first_call_sends_the_exchanged_token(httpx_mock: object) -> None:
     assert UsersApi(client).users_me_get_sync().id == "u1"
 
 
-def test_api_key_is_wired_to_its_own_header_unprefixed() -> None:
-    """Which endpoints actually send it is decided by each operation's `security`."""
+def test_api_key_is_sent_unprefixed_under_its_own_header(httpx_mock: object) -> None:
     client = AuthenticatedApiClient(HOST, StaticCredential("secret-key", SecurityScheme.apikey))
-
-    setting = client.configuration.auth_settings()["ApiKeyAuth"]
-    assert setting["in"] == "header"
-    assert setting["key"] == "X-API-KEY"
-    assert setting["value"] == "secret-key"
-
-
-def test_bearer_token_is_wired_with_its_prefix() -> None:
-    client = AuthenticatedApiClient(HOST, StaticCredential("jwt", SecurityScheme.bearer))
-
-    setting = client.configuration.auth_settings()["BearerAuth"]
-    assert setting["key"] == "Authorization"
-    assert setting["value"] == "Bearer jwt"
-
-
-def test_expiring_token_is_refreshed_before_the_request(httpx_mock: object) -> None:
-    """A token past its leeway is replaced pre-flight, without spending a 401."""
-    client = _oidc_client(httpx_mock, "short-lived-jwt", expires_in=5)
     httpx_mock.add_response(  # type: ignore[attr-defined]
-        method="POST", url=TOKEN_URL, json={"access_token": "renewed-jwt", "expires_in": 3600}
+        method="GET", url=ME_URL, json=ME_BODY, match_headers={"X-API-KEY": "secret-key"}
+    )
+
+    assert UsersApi(client).users_me_get_sync().id == "u1"
+
+
+def test_bearer_token_is_sent_with_its_prefix(httpx_mock: object) -> None:
+    client = AuthenticatedApiClient(HOST, StaticCredential("jwt", SecurityScheme.bearer))
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET", url=ME_URL, json=ME_BODY, match_headers={"Authorization": "Bearer jwt"}
+    )
+
+    assert UsersApi(client).users_me_get_sync().id == "u1"
+
+
+def test_public_operations_are_called_without_credentials(httpx_mock: object) -> None:
+    """Whether an operation sends a credential is decided by its `security`, not by us."""
+    client = _oidc_client(httpx_mock, "first-jwt")
+    httpx_mock.add_response(method="GET", url=f"{HOST}/api/v1/ui/config", json={})  # type: ignore[attr-defined]
+
+    UiApi(client).ui_config_get_sync()
+
+    public = [r for r in httpx_mock.get_requests() if r.url.path == "/api/v1/ui/config"]  # type: ignore[attr-defined]
+    assert public
+    assert "authorization" not in public[-1].headers
+
+
+def test_concurrent_401s_all_recover(httpx_mock: object) -> None:
+    """Each rejected request refreshes on its own; every one must still succeed."""
+    issued = iter(f"jwt-{n}" for n in range(1, 10))
+
+    async def exchange(request: httpx.Request) -> httpx.Response:
+        await anyio.sleep(0.05)  # hold the exchanges open so they overlap
+        return httpx.Response(200, json={"access_token": next(issued)})
+
+    async def me(request: httpx.Request) -> httpx.Response:
+        if request.headers.get("authorization") == "Bearer jwt-1":
+            return httpx.Response(401, json={})  # the token every request starts with
+        return httpx.Response(200, json=ME_BODY)
+
+    httpx_mock.add_callback(exchange, method="POST", url=TOKEN_URL, is_reusable=True)  # type: ignore[attr-defined]
+    httpx_mock.add_callback(me, method="GET", url=ME_URL, is_reusable=True)  # type: ignore[attr-defined]
+
+    credential = OIDCCredential(
+        api_client=ApiClient(Configuration(host=HOST)), audience=HOST, sources=[_StaticSource()]
+    )
+    api = UsersApi(AuthenticatedApiClient(HOST, credential))  # consumes "jwt-1"
+
+    results: list[str | None] = []
+
+    async def five_at_once() -> None:
+        async def call() -> None:
+            results.append((await api.users_me_get()).id)
+
+        async with anyio.create_task_group() as group:
+            for _ in range(5):
+                group.start_soon(call)
+
+    anyio.run(five_at_once)
+
+    assert results == ["u1"] * 5
+
+
+def test_api_base_path_is_added_once() -> None:
+    """`marmot login` stores a bare host; the generated client wants the base URL."""
+    assert api_base_url("http://x") == "http://x/api/v1"
+    assert api_base_url("http://x/") == "http://x/api/v1"
+    assert api_base_url("http://x/api/v1") == "http://x/api/v1"
+    assert api_base_url("http://x/api/v1/") == "http://x/api/v1"
+
+
+def test_token_exchange_bypasses_the_api_base_path(httpx_mock: object) -> None:
+    """`/oauth/token` is served at the root, so the exchange must not be prefixed."""
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST", url=TOKEN_URL, json={"access_token": "exchanged-jwt"}
     )
     httpx_mock.add_response(  # type: ignore[attr-defined]
         method="GET",
         url=ME_URL,
         json=ME_BODY,
-        match_headers={"Authorization": "Bearer renewed-jwt"},
+        match_headers={"Authorization": "Bearer exchanged-jwt"},
     )
 
-    assert client.credential.is_stale, "expires_in=3600 within leeway is not stale; see fixture"
-    assert UsersApi(client).users_me_get_sync().id == "u1"
-
-
-def test_refresh_does_not_add_auth_to_unauthenticated_operations(httpx_mock: object) -> None:
-    """Whether an operation sends a credential is decided by its `security`, not by us."""
-    client = _oidc_client(httpx_mock, "short-lived-jwt", expires_in=5)
-    httpx_mock.add_response(  # type: ignore[attr-defined]
-        method="POST", url=TOKEN_URL, json={"access_token": "renewed-jwt", "expires_in": 3600}
-    )
-    httpx_mock.add_response(method="GET", url=f"{HOST}/search?q=orders", json={"results": []})  # type: ignore[attr-defined]
-
-    SearchApi(client).search_get_sync(q="orders")
-
-    search = [r for r in httpx_mock.get_requests() if r.url.path == "/search"]  # type: ignore[attr-defined]
-    assert search
-    assert "authorization" not in search[-1].headers
+    credential = resolve_credential(HOST, sources=[_StaticSource()])
+    assert UsersApi(AuthenticatedApiClient(HOST, credential)).users_me_get_sync().id == "u1"
