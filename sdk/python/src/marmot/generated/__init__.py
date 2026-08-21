@@ -25,6 +25,7 @@ __all__ = [
     "GlossaryApi",
     "IngestionApi",
     "LineageApi",
+    "McpApi",
     "MetricsApi",
     "OwnersApi",
     "PipelinesApi",
@@ -230,6 +231,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.api.glossary_api import GlossaryApi as GlossaryApi
     from marmot.generated.api.ingestion_api import IngestionApi as IngestionApi
     from marmot.generated.api.lineage_api import LineageApi as LineageApi
+    from marmot.generated.api.mcp_api import McpApi as McpApi
     from marmot.generated.api.metrics_api import MetricsApi as MetricsApi
     from marmot.generated.api.owners_api import OwnersApi as OwnersApi
     from marmot.generated.api.pipelines_api import PipelinesApi as PipelinesApi
@@ -603,6 +605,7 @@ from marmot.generated.api.auth_api import AuthApi as AuthApi
 from marmot.generated.api.glossary_api import GlossaryApi as GlossaryApi
 from marmot.generated.api.ingestion_api import IngestionApi as IngestionApi
 from marmot.generated.api.lineage_api import LineageApi as LineageApi
+from marmot.generated.api.mcp_api import McpApi as McpApi
 from marmot.generated.api.metrics_api import MetricsApi as MetricsApi
 from marmot.generated.api.owners_api import OwnersApi as OwnersApi
 from marmot.generated.api.pipelines_api import PipelinesApi as PipelinesApi
