@@ -1,6 +1,6 @@
 """Python SDK for Marmot."""
 
-from marmot.auth import ENVIRONMENT_API_KEY, ENVIRONMENT_BEARER_TOKEN, Credential
+from marmot.auth import ENVIRONMENT_API_KEY, ENVIRONMENT_BEARER_TOKEN, Credential, SecurityScheme
 from marmot.client import AuthenticatedApiClient
 from marmot.config import ENVIRONMENT_HOST, ENVIRONMENT_MARMOT_CONTEXT
 from marmot.errors import (
@@ -38,11 +38,15 @@ from marmot.generated import (
     UsersApi,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022 — grouped by origin, not alphabetised
+    # Wrappers/helpers
     "ENVIRONMENT_API_KEY",
     "ENVIRONMENT_BEARER_TOKEN",
     "ENVIRONMENT_HOST",
     "ENVIRONMENT_MARMOT_CONTEXT",
+    "AuthenticatedApiClient",
+    "SecurityScheme",
+    # Generated
     "AdminApi",
     "AgentsApi",
     "ApiClient",
@@ -51,7 +55,6 @@ __all__ = [
     "AssetsApi",
     "AuthApi",
     "AuthError",
-    "AuthenticatedApiClient",
     "Configuration",
     "Credential",
     "GlossaryApi",

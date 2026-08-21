@@ -12,36 +12,54 @@ from __future__ import annotations
 import json
 import os
 import platform
-from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 ENVIRONMENT_MARMOT_CONTEXT = "MARMOT_CONTEXT"
 ENVIRONMENT_HOST = "MARMOT_HOST"
 
 
-@dataclass(frozen=True)
-class Context:
+class Context(BaseModel):
     """A named server entry from config.yaml."""
 
+    model_config = ConfigDict(frozen=True)
+
     name: str
-    host: str
+    host: str = Field(min_length=1)
 
 
-@dataclass(frozen=True)
-class CachedToken:
-    """An OAuth token cached by `marmot login` for a given context."""
+class MarmotConfig(BaseModel):
+    """The contents of config.yaml, as written by `marmot login`."""
 
-    token: str
-    token_scheme: str
+    model_config = ConfigDict(frozen=True)
+
+    current_context: str | None = None
+    contexts: dict[str, Context] = Field(default_factory=dict)
+
+
+class CachedToken(BaseModel):
+    """An OAuth token cached by `marmot login` for a given context.
+
+    Fields are aliased to the credentials.json spelling. Go writes timestamps with
+    nanosecond precision, which pydantic truncates to what ``datetime`` can hold.
+    """
+
+    model_config = ConfigDict(frozen=True, populate_by_name=True)
+
+    token: str = Field(min_length=1, alias="access_token")
+    token_scheme: str = Field(default="Bearer", alias="token_type")
     expires_at: datetime
 
-    def is_expired(self, *, leeway_seconds: int = 30) -> bool:
-        from datetime import timedelta, timezone
+    @field_validator("token_scheme", mode="before")
+    @classmethod
+    def _default_scheme(cls, value: Any) -> Any:
+        return value or "Bearer"
 
+    def is_expired(self, *, leeway_seconds: int = 30) -> bool:
         now = datetime.now(timezone.utc)
         return self.expires_at - timedelta(seconds=leeway_seconds) <= now
 
@@ -72,35 +90,39 @@ def credentials_path() -> Path:
     return config_dir() / "credentials.json"
 
 
-def load_contexts() -> tuple[dict[str, Context], str | None]:
-    """Return (contexts_by_name, active_context_name) or ({}, None) if no config."""
-    p = config_path()
-    if not p.exists():
-        return {}, None
+def load_config() -> MarmotConfig:
+    """Read config.yaml, keeping whichever entries are usable.
+
+    The CLI owns this file, so one malformed context must not lock the SDK out.
+    """
+    path = config_path()
+    if not path.exists():
+        return MarmotConfig()
 
     try:
-        raw: Any = yaml.safe_load(p.read_text())
-    except yaml.YAMLError:
-        return {}, None
-
+        raw: Any = yaml.safe_load(path.read_text())
+    except (yaml.YAMLError, OSError):
+        return MarmotConfig()
     if not isinstance(raw, dict):
-        return {}, None
+        return MarmotConfig()
 
-    contexts: dict[str, Context] = {}
-    raw_contexts = raw.get("contexts") or {}
-    if isinstance(raw_contexts, dict):
-        for name, entry in raw_contexts.items():
-            if isinstance(entry, dict):
-                host = entry.get("host")
-                if isinstance(host, str) and host:
-                    contexts[name] = Context(name=name, host=host)
+    contexts = {}
+    for name, entry in (raw.get("contexts") or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        try:
+            contexts[name] = Context(name=name, **entry)
+        except ValidationError:
+            continue
 
     active = raw.get("current_context")
-    return contexts, active if isinstance(active, str) and active else None
+    return MarmotConfig(
+        contexts=contexts, current_context=active if isinstance(active, str) and active else None
+    )
 
 
 def load_cached_token(context_name: str) -> CachedToken | None:
-    """Return the cached OAuth token for a context, or None if absent/expired."""
+    """Return the cached OAuth token for a context, or None if there is no usable one."""
     p = credentials_path()
     if not p.exists():
         return None
@@ -111,67 +133,27 @@ def load_cached_token(context_name: str) -> CachedToken | None:
         return None
 
     tokens = raw.get("tokens") if isinstance(raw, dict) else None
-    if not isinstance(tokens, dict):
-        return None
-
-    entry = tokens.get(context_name)
+    entry = tokens.get(context_name) if isinstance(tokens, dict) else None
     if not isinstance(entry, dict):
         return None
 
-    token = entry.get("access_token")
-    token_type = entry.get("token_type") or "Bearer"
-    expires_raw = entry.get("expires_at")
-    if not isinstance(token, str) or not isinstance(expires_raw, str):
-        return None
-
     try:
-        expires_at = _parse_rfc3339(expires_raw)
-    except ValueError:
+        return CachedToken.model_validate(entry)
+    except ValidationError:
         return None
-
-    return CachedToken(token=token, token_scheme=token_type, expires_at=expires_at)
 
 
 def resolve_context(
-    context_name: str | None = None,
-    contexts: dict[str, Context] | None = None,
-    active: str | None = None,
-    env: dict[str, str] | None = None,
+    context_name: str | None = None, config: MarmotConfig | None = None
 ) -> Context | None:
     """Pick the context to use.
 
-    Order: explicit kwarg > MARMOT_CONTEXT env > active context.
+    Order: explicit kwarg > env var > active context.
     """
-    if contexts is None or active is None:
-        contexts, active = load_contexts()
-    if env is None:
-        env = dict(os.environ)
+    if config is None:
+        config = load_config()
 
-    name = context_name or env.get(ENVIRONMENT_MARMOT_CONTEXT) or active
+    name = context_name or os.environ.get(ENVIRONMENT_MARMOT_CONTEXT) or config.current_context
     if not name:
         return None
-    return contexts.get(name)
-
-
-def _parse_rfc3339(s: str) -> datetime:
-    """Parse Go-style time.Time JSON strings (RFC 3339 with nanoseconds + Z or offset)."""
-    # Trim sub-microsecond precision Python can't represent.
-    if "." in s:
-        head, _, tail = s.partition(".")
-        # tail looks like "123456789Z" or "123456789+00:00"
-        digits = ""
-        rest = tail
-        for i, ch in enumerate(tail):
-            if ch.isdigit():
-                digits = tail[: i + 1]
-                rest = tail[i + 1 :]
-            else:
-                rest = tail[i:]
-                break
-        digits = digits[:6]
-        s = f"{head}.{digits}{rest}"
-
-    if s.endswith("Z"):
-        s = s[:-1] + "+00:00"
-
-    return datetime.fromisoformat(s)
+    return config.contexts.get(name)

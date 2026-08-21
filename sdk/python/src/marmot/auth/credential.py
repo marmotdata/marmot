@@ -48,14 +48,11 @@ class Credential(Protocol):
 
 @runtime_checkable
 class Refreshable(Protocol):
-    """A credential that can obtain a new token when the current one ages out or is rejected."""
+    """A credential that can replace a token the API rejected."""
 
-    @property
-    def is_stale(self) -> bool:
-        """Whether the held token is expired or about to be, so it can be replaced pre-flight."""
+    async def refresh(self) -> str:
+        """Obtain a new token, discarding the one held. Raises :class:`AuthError` on failure."""
         ...
-
-    async def refresh(self) -> str: ...
 
 
 @dataclass(frozen=True)

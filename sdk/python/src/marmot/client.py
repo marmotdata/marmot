@@ -28,6 +28,8 @@ if TYPE_CHECKING:
 
     from marmot.auth.workload import WorkloadIdentitySource
 
+API_BASE_PATH = "/api/v1"
+
 _SCHEME_PREFIXES: Final[dict[SecurityScheme, str]] = {
     SecurityScheme.apikey: "",
     SecurityScheme.bearer: "Bearer",
@@ -43,7 +45,7 @@ class AuthenticatedApiClient(ApiClient):
         **kwargs: Any,
     ) -> None:
         if configuration is None:
-            configuration = Configuration(host=host)
+            configuration = Configuration(host=api_base_url(host))
         configuration.api_key_prefix[credential.scheme] = _SCHEME_PREFIXES[credential.scheme]
 
         super().__init__(configuration, **kwargs)
@@ -82,16 +84,13 @@ class AuthenticatedApiClient(ApiClient):
         *args: Any,
         **kwargs: Any,
     ) -> rest.RESTResponse:
-        refreshable = self.credential if isinstance(self.credential, Refreshable) else None
-        if refreshable is not None and refreshable.is_stale:
-            await self._refresh_into(refreshable, header_params)
-
         response = await super().call_api(method, url, header_params, *args, **kwargs)
-        if response.status != 401 or refreshable is None:
+        if response.status != 401 or not isinstance(self.credential, Refreshable):
             return response
 
         await response.read()  # type: ignore[no-untyped-call]  # drain before discarding
-        await self._refresh_into(refreshable, header_params)
+        self._store_token(await self.credential.refresh())
+        self._reapply_auth_headers(header_params)
         return await super().call_api(method, url, header_params, *args, **kwargs)
 
     def response_deserialize(
@@ -105,12 +104,6 @@ class AuthenticatedApiClient(ApiClient):
             raise get_exception_type(e.status)(
                 message=e.reason or str(e), status_code=e.status
             ) from e
-
-    async def _refresh_into(
-        self, credential: Refreshable, header_params: dict[str, str] | None
-    ) -> None:
-        self._store_token(await credential.refresh())
-        self._reapply_auth_headers(header_params)
 
     def _store_token(self, token: str) -> None:
         self.configuration.api_key[self.credential.scheme] = token
@@ -126,3 +119,14 @@ class AuthenticatedApiClient(ApiClient):
         for setting in self.configuration.auth_settings().values():
             if setting["in"] == "header" and setting["value"] and setting["key"] in header_params:
                 header_params[setting["key"]] = setting["value"]
+
+
+def api_base_url(host: str) -> str:
+    """Add the API base path to a bare host.
+
+    ``marmot login`` and ``MARMOT_HOST`` hold the server address, while the
+    generated ``Configuration`` wants the full base URL, so the two are joined
+    here. Hosts that already carry the base path are left alone.
+    """
+    trimmed = host.rstrip("/")
+    return trimmed if trimmed.endswith(API_BASE_PATH) else f"{trimmed}{API_BASE_PATH}"

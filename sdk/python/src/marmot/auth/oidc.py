@@ -8,7 +8,6 @@ recovers.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from marmot.auth.credential import SecurityScheme
@@ -23,7 +22,6 @@ if TYPE_CHECKING:
     from marmot.auth.workload import WorkloadIdentitySource
 
 GRANT_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:grant-type:token-exchange"  # noqa: S105 — RFC 8693 URN, not a credential
-_EXPIRY_LEEWAY = timedelta(seconds=30)
 
 
 class OIDCCredential:
@@ -42,25 +40,24 @@ class OIDCCredential:
         self.sources = list(sources) if sources is not None else default_sources()
         self.source = "workload identity"
         self._token: str | None = None
-        self._expires_at: datetime | None = None
-
-    @property
-    def is_stale(self) -> bool:
-        return self._token is None or self._is_expired()
 
     def get_token(self) -> str:
-        """Exchange a subject token, reusing the last one until it expires.
+        """Return the token held, exchanging one if there is none yet.
 
         Blocks the calling thread on the same shared loop the generated ``*_sync``
-        methods use; from async code ``await refresh()`` instead.
+        methods use; from async code ``await refresh()`` instead. A token the API
+        later rejects is replaced by the refresh-on-401 path, not here.
         """
-        if not self.is_stale:
-            return self._token  # type: ignore[return-value]  # is_stale covers None
+        if self._token is not None:
+            return self._token
         return run_sync(self.refresh())
 
     async def refresh(self) -> str:
-        """Exchange a new subject token, discarding any token held."""
+        """Exchange a new subject token, discarding any token held.
 
+        Concurrent rejected requests each exchange their own token. Marmot issues
+        stateless JWTs, so the tokens are independent and the last one stored wins.
+        """
         subject = self._subject_token()
         try:
             response = await self.auth_api.oauth_token_post_with_http_info(
@@ -86,17 +83,5 @@ class OIDCCredential:
             raise AuthError("Did not receive token after API exchange")
 
         self._token = response.data.access_token
-        self._expires_at = None
-        if response.data.expires_in and response.data.expires_in > 0:
-            self._expires_at = self._now() + timedelta(seconds=response.data.expires_in)
         self.source = f"workload identity ({subject.source})"
         return self._token
-
-    def _is_expired(self) -> bool:
-        if self._expires_at is None:
-            return False  # no expiry advertised; refresh-on-401 covers rejection
-        return self._now() >= self._expires_at - _EXPIRY_LEEWAY
-
-    @staticmethod
-    def _now() -> datetime:
-        return datetime.now(timezone.utc)

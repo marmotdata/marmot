@@ -96,8 +96,9 @@ def _exchanged_credential(
     api_client: ApiClient | None,
     sources: Sequence[WorkloadIdentitySource] | None,
 ) -> Credential:
+    # `/oauth/token` is served at the root, not under the API base path.
     credential = OIDCCredential(
-        api_client=api_client or ApiClient(Configuration(host=host)),
+        api_client=api_client or ApiClient(Configuration(host=host.rstrip("/"))),
         audience=host,
         sources=sources,
     )
