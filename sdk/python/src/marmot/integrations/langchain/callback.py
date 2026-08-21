@@ -10,16 +10,13 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from marmot.generated import LineageEdge
+from marmot.integrations import shared
 from marmot.integrations.catalog import (
     AGENT_INVOKES,
     AgentRunRecord,
     AgentSpec,
     ToolCall,
 )
-from marmot.integrations.shared import extract_mrns
-
-from marmot.integrations.shared import sha256_hex
-
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -118,7 +115,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             version=version,
             owner=owner,
             tool_names=[t.name for t in tools] if tools else None,
-            system_prompt_hash=sha256_hex(system_prompt)[:16] if system_prompt else None,
+            system_prompt_hash=shared.sha256_hex(system_prompt)[:16] if system_prompt else None,
             extra_metadata=extra_metadata or {},
         )
 
@@ -478,7 +475,7 @@ def extract_mrns(output: Any) -> set[str]:
     """
     if isinstance(output, BaseMessage):
         output = output.content
-    return extract_mrns_shared(output)
+    return shared.extract_mrns(output)
 
 
 def _tool_asset_mrn(tool: Any) -> str | None:
@@ -514,9 +511,7 @@ def _extract_tokens(response: LLMResult) -> tuple[int, int]:
                     continue
                 usage_metadata = getattr(generation.message, "usage_metadata", None)
                 if usage_metadata:
-                    return int(usage_metadata["input_tokens"]), int(
-                        usage_metadata["output_tokens"]
-                    )
+                    return int(usage_metadata["input_tokens"]), int(usage_metadata["output_tokens"])
 
         llm_output = response.llm_output
         if isinstance(llm_output, dict):

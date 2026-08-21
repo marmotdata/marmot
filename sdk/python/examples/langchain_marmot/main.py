@@ -16,7 +16,7 @@ Usage:
 from __future__ import annotations
 
 from langchain_core.language_models import FakeMessagesListChatModel
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.messages.ai import UsageMetadata
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
@@ -28,8 +28,14 @@ from marmot.integrations.langchain import MarmotCallbackHandler, catalog_tools, 
 AGENT_NAME = "orders-analyst-langchain-py"
 MODEL = "scripted-test-model"
 OWNER = "mock-owner"
-DEFAULT_PROMPT = (
-    "What is the primary table for orders?"
+DEFAULT_PROMPT = "What is the primary table for orders?"
+
+# A real model answers catalog questions from memory unless told to use the tools;
+# the scripted model below ignores its input, so this matters once you swap in
+# ChatAnthropic/ChatOllama.
+SYSTEM_PROMPT = (
+    "You answer questions about an organisation's data using the Marmot catalog. "
+    "Always consult the marmot tools; never guess from memory."
 )
 
 
@@ -74,11 +80,11 @@ def main() -> None:
     def pipeline(question: str, config: RunnableConfig) -> str:
         print("search_catalog ->", search.invoke({"query": "orders", "limit": 3}, config=config))
         print("query_orders ->", query_orders.invoke({"sql": "select 1"}, config=config))
-        answer = model.invoke([HumanMessage(question)], config=config)
+        answer = model.invoke([SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config)
         return str(answer.content)
 
     reply = RunnableLambda(pipeline).invoke(
-        "Summarise the orders table", config=RunnableConfig(callbacks=[handler])
+        DEFAULT_PROMPT, config=RunnableConfig(callbacks=[handler])
     )
     print("model ->", reply)
 

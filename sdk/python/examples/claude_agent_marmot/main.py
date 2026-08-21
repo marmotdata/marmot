@@ -28,17 +28,18 @@ from claude_agent_sdk import (
     ToolUseBlock,
 )
 
-from marmot import AuthenticatedApiClient
+from marmot import AuthenticatedApiClient, mcp_url
 from marmot.auth import SecurityScheme, resolve_credential, resolve_host
-from marmot.client import api_base_url
 from marmot.integrations import MarmotCatalog
 from marmot.integrations.claude_agent import MarmotAgentTracker
 
 AGENT_NAME = "catalog-explorer-claude-py"
 MODEL = "claude-sonnet-4-5"
 OWNER = "mock-owner"
-DEFAULT_PROMPT = (
-    "What is the primary table for orders?"
+DEFAULT_PROMPT = "What is the primary table for order information? Use the Marmot catalog"
+SYSTEM_PROMPT = (
+    "You answer questions about an organisation's data using the Marmot catalog. "
+    "Always consult the marmot tools; never guess from memory."
 )
 
 
@@ -47,7 +48,8 @@ async def main() -> None:
 
     host = resolve_host()
     credential = resolve_credential(host)
-    catalog = MarmotCatalog(AuthenticatedApiClient(host, credential))
+    client = AuthenticatedApiClient(host, credential)
+    catalog = MarmotCatalog(client)
     tracker = MarmotAgentTracker(
         catalog,
         name=AGENT_NAME,
@@ -65,12 +67,17 @@ async def main() -> None:
         mcp_servers={
             "marmot": {
                 "type": "http",
-                "url": f"{api_base_url(host)}/mcp",
+                "url": mcp_url(client),
                 "headers": mcp_headers,
             }
         },
         hooks=tracker.hooks(),
         permission_mode="bypassPermissions",
+        # Without this the agent loads the developer's own settings and CLAUDE.md
+        # files, and answers catalog questions from that context instead of asking
+        # Marmot.
+        setting_sources=[],
+        system_prompt=SYSTEM_PROMPT,
         allowed_tools=[
             "mcp__marmot__discover_data",
             "mcp__marmot__find_ownership",
@@ -94,7 +101,6 @@ async def main() -> None:
 
     print("\nagent registered as:", tracker.agent_mrn or "(not yet registered)")
     print(f"check the UI: /discover/Agent/LangChain/{AGENT_NAME}?tab=runs")
-
 
 
 if __name__ == "__main__":

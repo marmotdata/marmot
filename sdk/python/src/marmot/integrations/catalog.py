@@ -188,37 +188,37 @@ class MarmotCatalog:
         self._search = SearchApi(api_client=client)
 
     def search(self, query: str, *, limit: int = 20) -> SearchResponse:
-        return self._search.search_get_sync(q=query, limit=limit)
+        return self._search.get_search_sync(q=query, limit=limit)
 
     def get_asset(self, asset_id: str) -> Asset:
-        return self._assets.assets_id_get_sync(id=asset_id)
+        return self._assets.get_assets_id_sync(id=asset_id)
 
     def lookup_asset(self, *, asset_type: str, service: str, name: str) -> Asset | None:
         try:
-            return self._assets.assets_lookup_type_service_name_get_sync(
+            return self._assets.get_assets_lookup_type_service_name_sync(
                 type=asset_type, service=service, name=name
             )
         except NotFoundError:
             return None
 
     def upstream_lineage(self, asset_id: str, *, depth: int = 2) -> LineageResponse:
-        return self._lineage.lineage_assets_id_get_sync(id=UUID(asset_id), limit=depth)
+        return self._lineage.get_lineage_assets_id_sync(id=UUID(asset_id), limit=depth)
 
     def register_agent(self, spec: AgentSpec) -> Asset:
         existing = self.lookup_asset(
             asset_type=AGENT_ASSET_TYPE, service=spec.service, name=spec.name
         )
         if existing is None:
-            return self._assets.assets_post_sync(create_asset_request=spec.to_create_request())
+            return self._assets.post_assets_sync(create_asset_request=spec.to_create_request())
         if existing.id:
-            return self._assets.assets_id_put_sync(
+            return self._assets.put_assets_id_sync(
                 id=existing.id, update_asset_request=spec.to_update_request()
             )
         return existing
 
     def record_run(self, run: AgentRunRecord) -> None:
-        self._agents.agents_runs_post_sync(record_run_request=run.to_request())
+        self._agents.post_agents_runs_sync(record_run_request=run.to_request())
 
     def write_edges(self, edges: Sequence[LineageEdge]) -> None:
         if edges:
-            self._lineage.lineage_batch_post_sync(lineage_edge=list(edges))
+            self._lineage.post_lineage_batch_sync(lineage_edge=list(edges))
