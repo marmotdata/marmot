@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/glossary"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ingestion"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/lineage"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/mcp"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/metrics"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/owners"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/pipelines"
@@ -82,6 +83,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot
 	cli.Glossary = glossary.New(transport, formats)
 	cli.Ingestion = ingestion.New(transport, formats)
 	cli.Lineage = lineage.New(transport, formats)
+	cli.Mcp = mcp.New(transport, formats)
 	cli.Metrics = metrics.New(transport, formats)
 	cli.Owners = owners.New(transport, formats)
 	cli.Pipelines = pipelines.New(transport, formats)
@@ -170,6 +172,8 @@ type Marmot struct {
 
 	Lineage lineage.ClientService
 
+	Mcp mcp.ClientService
+
 	Metrics metrics.ClientService
 
 	Owners owners.ClientService
@@ -210,6 +214,7 @@ func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.Glossary.SetTransport(transport)
 	c.Ingestion.SetTransport(transport)
 	c.Lineage.SetTransport(transport)
+	c.Mcp.SetTransport(transport)
 	c.Metrics.SetTransport(transport)
 	c.Owners.SetTransport(transport)
 	c.Pipelines.SetTransport(transport)
