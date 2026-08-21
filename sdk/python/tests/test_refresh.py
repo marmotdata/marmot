@@ -16,9 +16,13 @@ import httpx
 import pytest
 
 from marmot import AuthenticatedApiClient, UiApi, UsersApi
-from marmot.auth import OIDCCredential, SecurityScheme, StaticCredential, resolve_credential
+from marmot.auth import (
+    OIDCCredential,
+    SecurityScheme,
+    StaticCredential,
+    resolve_credential,
+)
 from marmot.auth.workload import SubjectToken
-from marmot.client import api_base_url
 from marmot.errors import AuthError
 from marmot.generated import ApiClient, Configuration
 
@@ -63,7 +67,7 @@ def test_401_refreshes_and_retries_with_the_new_token(httpx_mock: object) -> Non
         match_headers={"Authorization": "Bearer second-jwt"},
     )
 
-    assert UsersApi(client).users_me_get_sync().id == "u1"
+    assert UsersApi(client).get_users_me_sync().id == "u1"
 
 
 def test_401_refresh_does_not_deadlock_sync_callers(httpx_mock: object) -> None:
@@ -80,7 +84,7 @@ def test_401_refresh_does_not_deadlock_sync_callers(httpx_mock: object) -> None:
     finished = threading.Event()
 
     def call() -> None:
-        UsersApi(client).users_me_get_sync()
+        UsersApi(client).get_users_me_sync()
         finished.set()
 
     threading.Thread(target=call, daemon=True).start()
@@ -92,7 +96,7 @@ def test_401_is_not_retried_for_static_credentials(httpx_mock: object) -> None:
     httpx_mock.add_response(method="GET", url=ME_URL, status_code=401)  # type: ignore[attr-defined]
 
     with pytest.raises(AuthError):
-        UsersApi(client).users_me_get_sync()
+        UsersApi(client).get_users_me_sync()
 
 
 def test_second_401_surfaces_as_auth_error(httpx_mock: object) -> None:
@@ -101,7 +105,7 @@ def test_second_401_surfaces_as_auth_error(httpx_mock: object) -> None:
     httpx_mock.add_response(method="GET", url=ME_URL, status_code=401)  # type: ignore[attr-defined]
 
     with pytest.raises(AuthError):
-        UsersApi(client).users_me_get_sync()
+        UsersApi(client).get_users_me_sync()
 
 
 def test_async_callers_refresh_on_their_own_loop(httpx_mock: object) -> None:
@@ -115,7 +119,7 @@ def test_async_callers_refresh_on_their_own_loop(httpx_mock: object) -> None:
     )
 
     async def call() -> str | None:
-        return (await UsersApi(client).users_me_get()).id
+        return (await UsersApi(client).get_users_me()).id
 
     assert anyio.run(call) == "u1"
 
@@ -129,7 +133,7 @@ def test_first_call_sends_the_exchanged_token(httpx_mock: object) -> None:
         match_headers={"Authorization": "Bearer first-jwt"},
     )
 
-    assert UsersApi(client).users_me_get_sync().id == "u1"
+    assert UsersApi(client).get_users_me_sync().id == "u1"
 
 
 def test_api_key_is_sent_unprefixed_under_its_own_header(httpx_mock: object) -> None:
@@ -138,7 +142,7 @@ def test_api_key_is_sent_unprefixed_under_its_own_header(httpx_mock: object) -> 
         method="GET", url=ME_URL, json=ME_BODY, match_headers={"X-API-KEY": "secret-key"}
     )
 
-    assert UsersApi(client).users_me_get_sync().id == "u1"
+    assert UsersApi(client).get_users_me_sync().id == "u1"
 
 
 def test_bearer_token_is_sent_with_its_prefix(httpx_mock: object) -> None:
@@ -147,7 +151,7 @@ def test_bearer_token_is_sent_with_its_prefix(httpx_mock: object) -> None:
         method="GET", url=ME_URL, json=ME_BODY, match_headers={"Authorization": "Bearer jwt"}
     )
 
-    assert UsersApi(client).users_me_get_sync().id == "u1"
+    assert UsersApi(client).get_users_me_sync().id == "u1"
 
 
 def test_public_operations_are_called_without_credentials(httpx_mock: object) -> None:
@@ -155,7 +159,7 @@ def test_public_operations_are_called_without_credentials(httpx_mock: object) ->
     client = _oidc_client(httpx_mock, "first-jwt")
     httpx_mock.add_response(method="GET", url=f"{HOST}/api/v1/ui/config", json={})  # type: ignore[attr-defined]
 
-    UiApi(client).ui_config_get_sync()
+    UiApi(client).get_ui_config_sync()
 
     public = [r for r in httpx_mock.get_requests() if r.url.path == "/api/v1/ui/config"]  # type: ignore[attr-defined]
     assert public
@@ -187,7 +191,7 @@ def test_concurrent_401s_all_recover(httpx_mock: object) -> None:
 
     async def five_at_once() -> None:
         async def call() -> None:
-            results.append((await api.users_me_get()).id)
+            results.append((await api.get_users_me()).id)
 
         async with anyio.create_task_group() as group:
             for _ in range(5):
@@ -196,14 +200,6 @@ def test_concurrent_401s_all_recover(httpx_mock: object) -> None:
     anyio.run(five_at_once)
 
     assert results == ["u1"] * 5
-
-
-def test_api_base_path_is_added_once() -> None:
-    """`marmot login` stores a bare host; the generated client wants the base URL."""
-    assert api_base_url("http://x") == "http://x/api/v1"
-    assert api_base_url("http://x/") == "http://x/api/v1"
-    assert api_base_url("http://x/api/v1") == "http://x/api/v1"
-    assert api_base_url("http://x/api/v1/") == "http://x/api/v1"
 
 
 def test_token_exchange_bypasses_the_api_base_path(httpx_mock: object) -> None:
@@ -219,4 +215,4 @@ def test_token_exchange_bypasses_the_api_base_path(httpx_mock: object) -> None:
     )
 
     credential = resolve_credential(HOST, sources=[_StaticSource()])
-    assert UsersApi(AuthenticatedApiClient(HOST, credential)).users_me_get_sync().id == "u1"
+    assert UsersApi(AuthenticatedApiClient(HOST, credential)).get_users_me_sync().id == "u1"
