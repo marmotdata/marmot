@@ -8,6 +8,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// The same handler also answers GET (the SSE stream) and OPTIONS (CORS
+// preflight) on this path; only POST is documented, since a JSON-RPC request is
+// the operation a client makes.
+//
+// @Summary MCP endpoint
+// @Description JSON-RPC 2.0 over the MCP Streamable HTTP transport. Requires assets:view, glossary:view and teams:view.
+// @Tags mcp
+// @Accept json
+// @Produce json
+// @Param request body map[string]interface{} true "JSON-RPC 2.0 request"
+// @Success 200 {object} map[string]interface{} "JSON-RPC 2.0 response"
+// @Failure 401 {object} common.ErrorResponse
+// @ID postMcp
+// @Router /api/v1/mcp [post]
 func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")

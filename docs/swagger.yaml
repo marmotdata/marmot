@@ -4725,6 +4725,36 @@ paths:
       summary: Get direct lineage by ID
       tags:
       - lineage
+  /api/v1/mcp:
+    post:
+      consumes:
+      - application/json
+      description: JSON-RPC 2.0 over the MCP Streamable HTTP transport. Requires assets:view,
+        glossary:view and teams:view.
+      operationId: postMcp
+      parameters:
+      - description: JSON-RPC 2.0 request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JSON-RPC 2.0 response
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: MCP endpoint
+      tags:
+      - mcp
   /api/v1/metrics:
     get:
       consumes:
