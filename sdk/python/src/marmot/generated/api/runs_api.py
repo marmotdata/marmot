@@ -345,7 +345,7 @@ class RunsApi:
                 _header_params["Content-Type"] = _default_content_type
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="POST",
@@ -628,7 +628,7 @@ class RunsApi:
             _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="POST",
@@ -952,7 +952,7 @@ class RunsApi:
                 _header_params["Content-Type"] = _default_content_type
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="POST",
@@ -1347,7 +1347,7 @@ class RunsApi:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="GET",
@@ -1775,7 +1775,7 @@ class RunsApi:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="GET",
@@ -2079,7 +2079,7 @@ class RunsApi:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="GET",
@@ -2391,7 +2391,7 @@ class RunsApi:
                 _header_params["Content-Type"] = _default_content_type
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="POST",

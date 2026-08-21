@@ -412,7 +412,7 @@ class SearchApi:
             _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
 
         # authentication setting
-        _auth_settings: list[str] = []
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
 
         return self.api_client.param_serialize(
             method="GET",

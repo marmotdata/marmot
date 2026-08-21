@@ -4,14 +4,14 @@ All URIs are relative to */api/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**api_v1_plugins_aws_credentials_status_get**](PluginsApi.md#api_v1_plugins_aws_credentials_status_get) | **GET** /api/v1/plugins/aws/credentials/status | Get AWS credential detection status
-[**api_v1_plugins_get**](PluginsApi.md#api_v1_plugins_get) | **GET** /api/v1/plugins | List registered plugins
+[**plugins_aws_credentials_status_get**](PluginsApi.md#plugins_aws_credentials_status_get) | **GET** /plugins/aws/credentials/status | Get AWS credential detection status
+[**plugins_get**](PluginsApi.md#plugins_get) | **GET** /plugins | List registered plugins
 
 
-# **api_v1_plugins_aws_credentials_status_get**
-> AWSCredentialStatus api_v1_plugins_aws_credentials_status_get()
+# **plugins_aws_credentials_status_get**
+> AWSCredentialStatus plugins_aws_credentials_status_get()
 
-**Synchronous variant:** `api_v1_plugins_aws_credentials_status_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `plugins_aws_credentials_status_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 Get AWS credential detection status
 
@@ -40,11 +40,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # Get AWS credential detection status
-        api_response = await api_instance.api_v1_plugins_aws_credentials_status_get()
-        print("The response of PluginsApi->api_v1_plugins_aws_credentials_status_get:\n")
+        api_response = await api_instance.plugins_aws_credentials_status_get()
+        print("The response of PluginsApi->plugins_aws_credentials_status_get:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling PluginsApi->api_v1_plugins_aws_credentials_status_get: %s\n" % e)
+        print("Exception when calling PluginsApi->plugins_aws_credentials_status_get: %s\n" % e)
 ```
 
 
@@ -74,10 +74,10 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **api_v1_plugins_get**
-> ListPluginsResponse api_v1_plugins_get()
+# **plugins_get**
+> ListPluginsResponse plugins_get()
 
-**Synchronous variant:** `api_v1_plugins_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+**Synchronous variant:** `plugins_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
 
 List registered plugins
 
@@ -104,11 +104,11 @@ async with marmot.generated.ApiClient(configuration) as api_client:
 
     try:
         # List registered plugins
-        api_response = await api_instance.api_v1_plugins_get()
-        print("The response of PluginsApi->api_v1_plugins_get:\n")
+        api_response = await api_instance.plugins_get()
+        print("The response of PluginsApi->plugins_get:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling PluginsApi->api_v1_plugins_get: %s\n" % e)
+        print("Exception when calling PluginsApi->plugins_get: %s\n" % e)
 ```
 
 

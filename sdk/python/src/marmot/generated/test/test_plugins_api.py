@@ -23,26 +23,26 @@ class TestPluginsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_api_v1_plugins_aws_credentials_status_get(self) -> None:
-        """Test case for api_v1_plugins_aws_credentials_status_get
+    async def test_plugins_aws_credentials_status_get(self) -> None:
+        """Test case for plugins_aws_credentials_status_get
 
         Get AWS credential detection status
         """
 
-    def test_api_v1_plugins_aws_credentials_status_get_sync(self) -> None:
-        """Test case for api_v1_plugins_aws_credentials_status_get (synchronous)
+    def test_plugins_aws_credentials_status_get_sync(self) -> None:
+        """Test case for plugins_aws_credentials_status_get (synchronous)
 
         Get AWS credential detection status
         """
 
-    async def test_api_v1_plugins_get(self) -> None:
-        """Test case for api_v1_plugins_get
+    async def test_plugins_get(self) -> None:
+        """Test case for plugins_get
 
         List registered plugins
         """
 
-    def test_api_v1_plugins_get_sync(self) -> None:
-        """Test case for api_v1_plugins_get (synchronous)
+    def test_plugins_get_sync(self) -> None:
+        """Test case for plugins_get (synchronous)
 
         List registered plugins
         """

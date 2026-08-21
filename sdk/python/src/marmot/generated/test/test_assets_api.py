@@ -23,18 +23,6 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_api_v1_assets_preview_id_get(self) -> None:
-        """Test case for api_v1_assets_preview_id_get
-
-        Get preview data for an asset
-        """
-
-    def test_api_v1_assets_preview_id_get_sync(self) -> None:
-        """Test case for api_v1_assets_preview_id_get (synchronous)
-
-        Get preview data for an asset
-        """
-
     async def test_assets_by_glossary_term_term_id_get(self) -> None:
         """Test case for assets_by_glossary_term_term_id_get
 
@@ -189,6 +177,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for assets_post (synchronous)
 
         Create a new asset
+        """
+
+    async def test_assets_preview_id_get(self) -> None:
+        """Test case for assets_preview_id_get
+
+        Get preview data for an asset
+        """
+
+    def test_assets_preview_id_get_sync(self) -> None:
+        """Test case for assets_preview_id_get (synchronous)
+
+        Get preview data for an asset
         """
 
     async def test_assets_qualified_name_qualified_name_get(self) -> None:

@@ -4,7 +4,6 @@ All URIs are relative to */api/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**api_v1_assets_preview_id_get**](AssetsApi.md#api_v1_assets_preview_id_get) | **GET** /api/v1/assets/preview/{id} | Get preview data for an asset
 [**assets_by_glossary_term_term_id_get**](AssetsApi.md#assets_by_glossary_term_term_id_get) | **GET** /assets/by-glossary-term/{term_id} | Get assets by glossary term
 [**assets_documentation_batch_post**](AssetsApi.md#assets_documentation_batch_post) | **POST** /assets/documentation/batch | Batch create documentation
 [**assets_documentation_mrn_get**](AssetsApi.md#assets_documentation_mrn_get) | **GET** /assets/documentation/{mrn} | Get asset documentation
@@ -18,6 +17,7 @@ Method | HTTP request | Description
 [**assets_match_pattern_get**](AssetsApi.md#assets_match_pattern_get) | **GET** /assets/match-pattern | Match asset pattern
 [**assets_my_assets_get**](AssetsApi.md#assets_my_assets_get) | **GET** /assets/my-assets | Get user&#39;s assets
 [**assets_post**](AssetsApi.md#assets_post) | **POST** /assets | Create a new asset
+[**assets_preview_id_get**](AssetsApi.md#assets_preview_id_get) | **GET** /assets/preview/{id} | Get preview data for an asset
 [**assets_qualified_name_qualified_name_get**](AssetsApi.md#assets_qualified_name_qualified_name_get) | **GET** /assets/qualified-name/{qualifiedName} | Get an asset by qualified name
 [**assets_search_get**](AssetsApi.md#assets_search_get) | **GET** /assets/search | Search assets
 [**assets_suggestions_metadata_fields_get**](AssetsApi.md#assets_suggestions_metadata_fields_get) | **GET** /assets/suggestions/metadata/fields | Get metadata field suggestions
@@ -31,81 +31,6 @@ Method | HTTP request | Description
 [**assets_terms_id_post**](AssetsApi.md#assets_terms_id_post) | **POST** /assets/terms/{id} | Add glossary terms to asset
 
 
-# **api_v1_assets_preview_id_get**
-> PreviewResponse api_v1_assets_preview_id_get(id)
-
-**Synchronous variant:** `api_v1_assets_preview_id_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Get preview data for an asset
-
-Fetches sample data from the asset's data source. Requires assets:preview permission.
-
-### Example
-
-
-```python
-import marmot.generated
-from marmot.generated.models.preview_response import PreviewResponse
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.AssetsApi(api_client)
-    id = 'id_example' # str | Asset ID
-
-    try:
-        # Get preview data for an asset
-        api_response = await api_instance.api_v1_assets_preview_id_get(id)
-        print("The response of AssetsApi->api_v1_assets_preview_id_get:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AssetsApi->api_v1_assets_preview_id_get: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **str**| Asset ID | 
-
-### Return type
-
-[**PreviewResponse**](PreviewResponse.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-**400** | Bad Request |  -  |
-**403** | Missing assets:preview permission |  -  |
-**404** | Not Found |  -  |
-**500** | Internal Server Error |  -  |
-**501** | Data preview not supported for this asset |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **assets_by_glossary_term_term_id_get**
 > Dict[str, object] assets_by_glossary_term_term_id_get(term_id, limit=limit, offset=offset)
 
@@ -117,6 +42,8 @@ Retrieve all assets associated with a specific glossary term
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -129,6 +56,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -164,7 +107,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -191,6 +134,8 @@ Create or update documentation for multiple assets
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -205,6 +150,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -236,7 +197,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -264,6 +225,8 @@ Get documentation for a specific asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -277,6 +240,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -308,7 +287,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -336,6 +315,8 @@ Create or update documentation for an asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -350,6 +331,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -381,7 +378,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -409,6 +406,8 @@ Delete an asset from the system
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -421,6 +420,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -450,7 +465,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -479,6 +494,8 @@ Get detailed information about a specific asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -492,6 +509,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -523,7 +556,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -551,6 +584,8 @@ Update an existing asset's information
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -565,6 +600,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -598,7 +649,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -627,6 +678,8 @@ Get paginated run history for a specific asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -640,6 +693,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -675,7 +744,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -704,6 +773,8 @@ Get histogram data for asset run history over specified period
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -717,6 +788,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -750,7 +837,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -779,6 +866,8 @@ Get an asset by its type, service (provider), and name
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -792,6 +881,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -827,7 +932,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -855,6 +960,8 @@ Find assets matching a pattern
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -868,6 +975,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -901,7 +1024,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -929,6 +1052,8 @@ Get assets owned by the current user or their teams
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -942,6 +1067,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -975,7 +1116,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1003,6 +1144,8 @@ Create a new asset in the system
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1017,6 +1160,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1048,7 +1207,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1066,6 +1225,99 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **assets_preview_id_get**
+> PreviewResponse assets_preview_id_get(id)
+
+**Synchronous variant:** `assets_preview_id_get_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Get preview data for an asset
+
+Fetches sample data from the asset's data source. Requires assets:preview permission.
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.preview_response import PreviewResponse
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to /api/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "/api/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.AssetsApi(api_client)
+    id = 'id_example' # str | Asset ID
+
+    try:
+        # Get preview data for an asset
+        api_response = await api_instance.assets_preview_id_get(id)
+        print("The response of AssetsApi->assets_preview_id_get:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling AssetsApi->assets_preview_id_get: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **str**| Asset ID | 
+
+### Return type
+
+[**PreviewResponse**](PreviewResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+**400** | Bad Request |  -  |
+**403** | Missing assets:preview permission |  -  |
+**404** | Not Found |  -  |
+**500** | Internal Server Error |  -  |
+**501** | Data preview not supported for this asset |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **assets_qualified_name_qualified_name_get**
 > Asset assets_qualified_name_qualified_name_get(qualified_name)
 
@@ -1077,6 +1329,8 @@ Get detailed information about a specific asset using its qualified name
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1090,6 +1344,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1121,7 +1391,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1149,6 +1419,8 @@ Search for assets using query string and filters
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1162,6 +1434,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1205,7 +1493,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1233,6 +1521,8 @@ Get suggestions for metadata fields and their types
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1246,6 +1536,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1273,7 +1579,7 @@ This endpoint does not need any parameter.
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1300,6 +1606,8 @@ Get suggestions for values of a specific metadata field
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1313,6 +1621,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1348,7 +1672,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1376,6 +1700,8 @@ Get suggestions for asset tags
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1388,6 +1714,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1421,7 +1763,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1448,6 +1790,8 @@ Get the total count of assets by type
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1461,6 +1805,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1488,7 +1848,7 @@ This endpoint does not need any parameter.
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1515,6 +1875,8 @@ Remove a tag from an existing asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1529,6 +1891,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1562,7 +1940,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1590,6 +1968,8 @@ Add a new tag to an existing asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1604,6 +1984,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1637,7 +2033,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1665,6 +2061,8 @@ Remove a glossary term association from an asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1679,6 +2077,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1712,7 +2126,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1740,6 +2154,8 @@ Retrieve all glossary terms associated with an asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1753,6 +2169,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1784,7 +2216,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -1811,6 +2243,8 @@ Associate one or more glossary terms with an asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -1825,6 +2259,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -1858,7 +2308,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 

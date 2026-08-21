@@ -4,83 +4,13 @@ All URIs are relative to */api/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**api_v1_lineage_post**](LineageApi.md#api_v1_lineage_post) | **POST** /api/v1/lineage | Ingest OpenLineage event
 [**lineage_assets_id_get**](LineageApi.md#lineage_assets_id_get) | **GET** /lineage/assets/{id} | Get asset lineage
 [**lineage_batch_post**](LineageApi.md#lineage_batch_post) | **POST** /lineage/batch | Batch create lineage edges
 [**lineage_direct_id_delete**](LineageApi.md#lineage_direct_id_delete) | **DELETE** /lineage/direct/{id} | Delete direct lineage
 [**lineage_direct_id_get**](LineageApi.md#lineage_direct_id_get) | **GET** /lineage/direct/{id} | Get direct lineage by ID
 [**lineage_direct_post**](LineageApi.md#lineage_direct_post) | **POST** /lineage/direct | Create direct lineage
+[**lineage_post**](LineageApi.md#lineage_post) | **POST** /lineage | Ingest OpenLineage event
 
-
-# **api_v1_lineage_post**
-> api_v1_lineage_post(run_event)
-
-**Synchronous variant:** `api_v1_lineage_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
-
-Ingest OpenLineage event
-
-Process OpenLineage run events and update assets/lineage accordingly
-
-### Example
-
-
-```python
-import marmot.generated
-from marmot.generated.models.run_event import RunEvent
-from marmot.generated.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to /api/v1
-# See configuration.py for a list of all supported configuration parameters.
-configuration = marmot.generated.Configuration(
-    host = "/api/v1"
-)
-
-
-# Enter a context with an instance of the API client
-async with marmot.generated.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = marmot.generated.LineageApi(api_client)
-    run_event = marmot.generated.RunEvent() # RunEvent | OpenLineage run event
-
-    try:
-        # Ingest OpenLineage event
-        await api_instance.api_v1_lineage_post(run_event)
-    except Exception as e:
-        print("Exception when calling LineageApi->api_v1_lineage_post: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **run_event** | [**RunEvent**](RunEvent.md)| OpenLineage run event | 
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | Event processed successfully |  -  |
-**400** | Bad Request |  -  |
-**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **lineage_assets_id_get**
 > LineageResponse lineage_assets_id_get(id, limit=limit, direction=direction, exclude_types=exclude_types)
@@ -93,6 +23,8 @@ Get upstream and downstream lineage for a specific asset
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -106,6 +38,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -143,7 +91,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -172,6 +120,8 @@ Create lineage edges in batch
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -186,6 +136,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -217,7 +183,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -244,6 +210,8 @@ Delete a direct lineage connection by its ID
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -256,6 +224,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -285,7 +269,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -313,6 +297,8 @@ Get a specific direct lineage connection by its ID
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -326,6 +312,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -357,7 +359,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -385,6 +387,8 @@ Create a direct lineage connection between two assets and returns the created ed
 
 ### Example
 
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
 
 ```python
 import marmot.generated
@@ -398,6 +402,22 @@ configuration = marmot.generated.Configuration(
     host = "/api/v1"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
 
 # Enter a context with an instance of the API client
 async with marmot.generated.ApiClient(configuration) as api_client:
@@ -429,7 +449,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 
@@ -441,6 +461,94 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | OK |  -  |
+**400** | Bad Request |  -  |
+**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **lineage_post**
+> lineage_post(run_event)
+
+**Synchronous variant:** `lineage_post_sync(...)` — same parameters and return type, but blocks until completion instead of requiring `await`.
+
+Ingest OpenLineage event
+
+Process OpenLineage run events and update assets/lineage accordingly
+
+### Example
+
+* Api Key Authentication (ApiKeyAuth):
+* Api Key Authentication (BearerAuth):
+
+```python
+import marmot.generated
+from marmot.generated.models.run_event import RunEvent
+from marmot.generated.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to /api/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = marmot.generated.Configuration(
+    host = "/api/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: ApiKeyAuth
+configuration.api_key['ApiKeyAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['ApiKeyAuth'] = 'Bearer'
+
+# Configure API key authorization: BearerAuth
+configuration.api_key['BearerAuth'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['BearerAuth'] = 'Bearer'
+
+# Enter a context with an instance of the API client
+async with marmot.generated.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = marmot.generated.LineageApi(api_client)
+    run_event = marmot.generated.RunEvent() # RunEvent | OpenLineage run event
+
+    try:
+        # Ingest OpenLineage event
+        await api_instance.lineage_post(run_event)
+    except Exception as e:
+        print("Exception when calling LineageApi->lineage_post: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **run_event** | [**RunEvent**](RunEvent.md)| OpenLineage run event | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth), [BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Event processed successfully |  -  |
 **400** | Bad Request |  -  |
 **500** | Internal Server Error |  -  |
 

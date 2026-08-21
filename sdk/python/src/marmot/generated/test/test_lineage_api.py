@@ -23,18 +23,6 @@ class TestLineageApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_api_v1_lineage_post(self) -> None:
-        """Test case for api_v1_lineage_post
-
-        Ingest OpenLineage event
-        """
-
-    def test_api_v1_lineage_post_sync(self) -> None:
-        """Test case for api_v1_lineage_post (synchronous)
-
-        Ingest OpenLineage event
-        """
-
     async def test_lineage_assets_id_get(self) -> None:
         """Test case for lineage_assets_id_get
 
@@ -93,6 +81,18 @@ class TestLineageApi(unittest.IsolatedAsyncioTestCase):
         """Test case for lineage_direct_post (synchronous)
 
         Create direct lineage
+        """
+
+    async def test_lineage_post(self) -> None:
+        """Test case for lineage_post
+
+        Ingest OpenLineage event
+        """
+
+    def test_lineage_post_sync(self) -> None:
+        """Test case for lineage_post (synchronous)
+
+        Ingest OpenLineage event
         """
 
 

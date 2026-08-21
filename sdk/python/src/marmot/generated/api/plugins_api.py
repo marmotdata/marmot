@@ -34,7 +34,7 @@ class PluginsApi:
         self.api_client = api_client
 
     @validate_call
-    async def api_v1_plugins_aws_credentials_status_get(
+    async def plugins_aws_credentials_status_get(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -70,7 +70,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_aws_credentials_status_get_serialize(
+        _param = self._plugins_aws_credentials_status_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -88,7 +88,7 @@ class PluginsApi:
         ).data
 
     @validate_call
-    async def api_v1_plugins_aws_credentials_status_get_with_http_info(
+    async def plugins_aws_credentials_status_get_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -124,7 +124,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_aws_credentials_status_get_serialize(
+        _param = self._plugins_aws_credentials_status_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -142,7 +142,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def api_v1_plugins_aws_credentials_status_get_without_preload_content(
+    async def plugins_aws_credentials_status_get_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -178,7 +178,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_aws_credentials_status_get_serialize(
+        _param = self._plugins_aws_credentials_status_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -192,7 +192,7 @@ class PluginsApi:
         return response_data.response
 
     @validate_call
-    def api_v1_plugins_aws_credentials_status_get_sync(
+    def plugins_aws_credentials_status_get_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -204,11 +204,11 @@ class PluginsApi:
     ) -> AWSCredentialStatus:
         """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_aws_credentials_status_get`. It calls the asynchronous
+        Synchronous variant of :meth:`plugins_aws_credentials_status_get`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_aws_credentials_status_get(
+            self.plugins_aws_credentials_status_get(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -218,7 +218,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def api_v1_plugins_aws_credentials_status_get_sync_with_http_info(
+    def plugins_aws_credentials_status_get_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -230,11 +230,11 @@ class PluginsApi:
     ) -> ApiResponse[AWSCredentialStatus]:
         """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_aws_credentials_status_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`plugins_aws_credentials_status_get_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_aws_credentials_status_get_with_http_info(
+            self.plugins_aws_credentials_status_get_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -244,7 +244,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def api_v1_plugins_aws_credentials_status_get_sync_without_preload_content(
+    def plugins_aws_credentials_status_get_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -256,11 +256,11 @@ class PluginsApi:
     ) -> RESTResponseType:
         """Get AWS credential detection status (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_aws_credentials_status_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`plugins_aws_credentials_status_get_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_aws_credentials_status_get_without_preload_content(
+            self.plugins_aws_credentials_status_get_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -269,7 +269,7 @@ class PluginsApi:
             )
         )
 
-    def _api_v1_plugins_aws_credentials_status_get_serialize(
+    def _plugins_aws_credentials_status_get_serialize(
         self,
         _request_auth,
         _content_type,
@@ -303,7 +303,7 @@ class PluginsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/api/v1/plugins/aws/credentials/status",
+            resource_path="/plugins/aws/credentials/status",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -317,7 +317,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def api_v1_plugins_get(
+    async def plugins_get(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -352,7 +352,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_get_serialize(
+        _param = self._plugins_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -370,7 +370,7 @@ class PluginsApi:
         ).data
 
     @validate_call
-    async def api_v1_plugins_get_with_http_info(
+    async def plugins_get_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -405,7 +405,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_get_serialize(
+        _param = self._plugins_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -423,7 +423,7 @@ class PluginsApi:
         )
 
     @validate_call
-    async def api_v1_plugins_get_without_preload_content(
+    async def plugins_get_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -458,7 +458,7 @@ class PluginsApi:
         :return: Returns the result object.
         """
 
-        _param = self._api_v1_plugins_get_serialize(
+        _param = self._plugins_get_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -472,7 +472,7 @@ class PluginsApi:
         return response_data.response
 
     @validate_call
-    def api_v1_plugins_get_sync(
+    def plugins_get_sync(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -484,11 +484,11 @@ class PluginsApi:
     ) -> ListPluginsResponse:
         """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_get`. It calls the asynchronous
+        Synchronous variant of :meth:`plugins_get`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_get(
+            self.plugins_get(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -498,7 +498,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def api_v1_plugins_get_sync_with_http_info(
+    def plugins_get_sync_with_http_info(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -510,11 +510,11 @@ class PluginsApi:
     ) -> ApiResponse[ListPluginsResponse]:
         """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_get_with_http_info`. It calls the
+        Synchronous variant of :meth:`plugins_get_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_get_with_http_info(
+            self.plugins_get_with_http_info(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -524,7 +524,7 @@ class PluginsApi:
         )
 
     @validate_call
-    def api_v1_plugins_get_sync_without_preload_content(
+    def plugins_get_sync_without_preload_content(
         self,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -536,11 +536,11 @@ class PluginsApi:
     ) -> RESTResponseType:
         """List registered plugins (synchronous)
 
-        Synchronous variant of :meth:`api_v1_plugins_get_without_preload_content`. It calls
+        Synchronous variant of :meth:`plugins_get_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.api_v1_plugins_get_without_preload_content(
+            self.plugins_get_without_preload_content(
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -549,7 +549,7 @@ class PluginsApi:
             )
         )
 
-    def _api_v1_plugins_get_serialize(
+    def _plugins_get_serialize(
         self,
         _request_auth,
         _content_type,
@@ -583,7 +583,7 @@ class PluginsApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/api/v1/plugins",
+            resource_path="/plugins",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
