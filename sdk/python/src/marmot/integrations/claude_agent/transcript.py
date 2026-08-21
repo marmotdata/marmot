@@ -6,17 +6,67 @@ At ``Stop`` time the tracker reads it once to extract real token totals and
 timestamps, which hook callbacks alone cannot supply (``ResultMessage.usage``
 only travels over the message stream, never through hooks).
 
-Schema is SDK-internal; everything here is best-effort and degrades to zero
-counts on any parse failure so a missing/changed field never blocks the run
-record from landing.
+The JSONL is the CLI's own log format, not part of the Agent SDK's API, so
+there is no published type to import: :class:`TranscriptEntry` declares the
+fields we consume and ignores the rest. Lines that don't fit are skipped, so a
+changed field never blocks the run record from landing.
 """
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+
+
+class Usage(BaseModel):
+    """Per-turn token counts, in Anthropic's billing buckets."""
+
+    model_config = ConfigDict(frozen=True)
+
+    input_tokens: int = 0
+    cache_creation_input_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    output_tokens: int = 0
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _missing_counts_as_zero(cls, value: Any) -> Any:
+        return value or 0
+
+    @property
+    def total_in(self) -> int:
+        """Cache writes and reads are priced apart, but both are input side."""
+
+        return self.input_tokens + self.cache_creation_input_tokens + self.cache_read_input_tokens
+
+
+class TranscriptMessage(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    usage: Usage = Usage()
+
+
+class TranscriptEntry(BaseModel):
+    """One JSONL line, narrowed to what telemetry needs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    type: str | None = None
+    timestamp: datetime | None = None
+    message: TranscriptMessage = TranscriptMessage()
+
+    @field_validator("timestamp", "type", mode="before")
+    @classmethod
+    def _only_strings(cls, value: Any) -> Any:
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def is_assistant_turn(self) -> bool:
+        return self.type == "assistant"
 
 
 @dataclass(frozen=True)
@@ -32,83 +82,41 @@ class TranscriptSummary:
 def summarize_transcript(path: str | Path) -> TranscriptSummary | None:
     """Walk a session's JSONL transcript and aggregate per-turn usage.
 
-    Returns ``None`` when the file is missing or unreadable. Returns a
-    summary with zero counts when the file exists but contains no
-    recognisable assistant turns — the caller still gets timestamps if any
-    entry had a parseable ``timestamp``.
-
-    Token attribution follows Anthropic's billing buckets: ``input_tokens``
-    + ``cache_creation_input_tokens`` + ``cache_read_input_tokens`` are all
-    input-side (the latter two are priced separately by the API but bill as
-    input from the user's perspective); ``output_tokens`` is output.
+    Returns ``None`` when the file is missing or unreadable. Returns a summary
+    with zero counts when the file exists but holds no recognisable assistant
+    turns — the caller still gets timestamps from any entry that carried one.
     """
-    p = Path(path)
     try:
-        raw = p.read_text(encoding="utf-8")
+        raw = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return None
 
     tokens_in = 0
     tokens_out = 0
-    first_ts: datetime | None = None
-    last_ts: datetime | None = None
+    timestamps: list[datetime] = []
 
-    for raw_line in raw.splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        try:
-            entry = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(entry, dict):
-            continue
-
-        ts = _parse_ts(entry.get("timestamp"))
-        if ts is not None:
-            if first_ts is None or ts < first_ts:
-                first_ts = ts
-            if last_ts is None or ts > last_ts:
-                last_ts = ts
-
-        if entry.get("type") != "assistant":
-            continue
-        message = entry.get("message")
-        if not isinstance(message, dict):
-            continue
-        usage = message.get("usage")
-        if not isinstance(usage, dict):
-            continue
-
-        tokens_in += _int(usage.get("input_tokens"))
-        tokens_in += _int(usage.get("cache_creation_input_tokens"))
-        tokens_in += _int(usage.get("cache_read_input_tokens"))
-        tokens_out += _int(usage.get("output_tokens"))
+    for entry in _parse_entries(raw):
+        if entry.timestamp is not None:
+            timestamps.append(entry.timestamp)
+        if entry.is_assistant_turn:
+            tokens_in += entry.message.usage.total_in
+            tokens_out += entry.message.usage.output_tokens
 
     return TranscriptSummary(
         tokens_in=tokens_in,
         tokens_out=tokens_out,
-        started_at=first_ts,
-        ended_at=last_ts,
+        started_at=min(timestamps, default=None),
+        ended_at=max(timestamps, default=None),
     )
 
 
-def _parse_ts(value: object) -> datetime | None:
-    if not isinstance(value, str) or not value:
-        return None
-    normalised = value[:-1] + "+00:00" if value.endswith("Z") else value
-    try:
-        dt = datetime.fromisoformat(normalised)
-    except ValueError:
-        return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt
-
-
-def _int(value: object) -> int:
-    if isinstance(value, bool):
-        return 0
-    if isinstance(value, int):
-        return value
-    return 0
+def _parse_entries(raw: str) -> list[TranscriptEntry]:
+    entries = []
+    for line in raw.splitlines():
+        if not line.strip():
+            continue
+        try:
+            entries.append(TranscriptEntry.model_validate_json(line))
+        except ValidationError:
+            continue
+    return entries

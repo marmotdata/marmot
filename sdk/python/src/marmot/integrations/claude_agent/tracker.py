@@ -7,22 +7,33 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from marmot.integrations._shared import extract_mrns, sha256_hex
-from marmot.integrations.claude_agent._transcript import (
+from marmot.generated import LineageEdge
+from marmot.integrations.catalog import AgentRunRecord, AgentSpec, ToolCall
+from marmot.integrations.claude_agent.transcript import (
     TranscriptSummary,
     summarize_transcript,
 )
+from marmot.integrations.shared import extract_mrns, sha256_hex
 
 if TYPE_CHECKING:
-    from marmot.client import Client
+    from claude_agent_sdk import (
+        BaseHookInput,
+        HookInput,
+        HookJSONOutput,
+        PostToolUseFailureHookInput,
+        PostToolUseHookInput,
+        PreToolUseHookInput,
+    )
+
+    from marmot.integrations.catalog import AgentRegistry
 
 
 _LOG = logging.getLogger("marmot.integrations.claude_agent")
 
 _DEFAULT_SERVICE = "ClaudeAgent"
-_AGENT_ASSET_TYPE = "Agent"
+_FRAMEWORK = "ClaudeAgent"
 
 
 @dataclass
@@ -36,7 +47,7 @@ class _RunState:
     started_at: datetime
     transcript_path: str | None = None
     upstreams: set[str] = field(default_factory=set)
-    tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    tool_calls: list[ToolCall] = field(default_factory=list)
     tool_open: dict[str, _ToolOpen] = field(default_factory=dict)
     error: str | None = None
 
@@ -52,12 +63,13 @@ class MarmotAgentTracker:
         import asyncio
         from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
         import marmot
+        from marmot.integrations import MarmotCatalog
         from marmot.integrations.claude_agent import MarmotAgentTracker
 
         async def main():
-            client = marmot.connect()
+            catalog = MarmotCatalog(marmot.AuthenticatedApiClient.connect())
             tracker = MarmotAgentTracker(
-                client,
+                catalog,
                 name="catalog-explorer",
                 model="claude-sonnet-4-5",
             )
@@ -92,7 +104,7 @@ class MarmotAgentTracker:
 
     def __init__(
         self,
-        client: Client,
+        catalog: AgentRegistry,
         *,
         name: str,
         service: str = _DEFAULT_SERVICE,
@@ -102,14 +114,17 @@ class MarmotAgentTracker:
         system_prompt: str | None = None,
         extra_metadata: dict[str, Any] | None = None,
     ) -> None:
-        self._client = client
-        self._name = name
-        self._service = service
-        self._model = model
-        self._version = version
-        self._owner = owner
-        self._system_prompt_hash = sha256_hex(system_prompt)[:16] if system_prompt else None
-        self._extra_metadata = extra_metadata or {}
+        self._catalog = catalog
+        self._spec = AgentSpec(
+            name=name,
+            service=service,
+            framework=_FRAMEWORK,
+            model=model,
+            version=version,
+            owner=owner,
+            system_prompt_hash=sha256_hex(system_prompt)[:16] if system_prompt else None,
+            extra_metadata=extra_metadata or {},
+        )
 
         self._agent_mrn: str | None = None
         self._agent_id: str | None = None
@@ -174,10 +189,11 @@ class MarmotAgentTracker:
         await asyncio.to_thread(self._post_run, session_id, run, summary, ended_at)
 
         if run.upstreams:
-            target = self._agent_mrn
-            edges = [{"source": s, "target": target} for s in sorted(run.upstreams)]
+            edges = [
+                LineageEdge(source=mrn, target=self._agent_mrn) for mrn in sorted(run.upstreams)
+            ]
             try:
-                await asyncio.to_thread(self._client.lineage.batch, edges)
+                await asyncio.to_thread(self._catalog.write_edges, edges)
             except Exception as e:
                 _LOG.warning("failed to write lineage: %s", e)
 
@@ -185,29 +201,28 @@ class MarmotAgentTracker:
     # Hook callbacks
 
     async def _on_pre_tool_use(
-        self, input_data: dict[str, Any], tool_use_id: str | None, context: Any
-    ) -> dict[str, Any]:
+        self, input_data: HookInput, tool_use_id: str | None, context: Any
+    ) -> HookJSONOutput:
+        event = cast("PreToolUseHookInput", input_data)
         await self._ensure_registered()
-        state = self._run_state(_session_id_of(input_data))
-        _capture_transcript_path(state, input_data)
-        name = input_data.get("tool_name")
-        if isinstance(tool_use_id, str) and tool_use_id and isinstance(name, str):
+        state = self._run_state(_session_id_of(event))
+        _capture_transcript_path(state, event)
+        name = event.get("tool_name")
+        if isinstance(tool_use_id, str) and tool_use_id and name:
             state.tool_open[tool_use_id] = _ToolOpen(
                 tool_name=name, started_at=datetime.now(timezone.utc)
             )
         return {}
 
     async def _on_post_tool_use(
-        self, input_data: dict[str, Any], tool_use_id: str | None, context: Any
-    ) -> dict[str, Any]:
+        self, input_data: HookInput, tool_use_id: str | None, context: Any
+    ) -> HookJSONOutput:
+        event = cast("PostToolUseHookInput", input_data)
         await self._ensure_registered()
-        session_id = _session_id_of(input_data)
-        state = self._run_state(session_id)
-        _capture_transcript_path(state, input_data)
+        state = self._run_state(_session_id_of(event))
+        _capture_transcript_path(state, event)
 
-        response = input_data.get("tool_response")
-        if response is None:
-            response = input_data.get("tool_output")
+        response = event.get("tool_response")
         observed: list[str] = []
         if response is not None:
             for mrn in extract_mrns(response):
@@ -216,7 +231,7 @@ class MarmotAgentTracker:
 
         self._close_tool_call(
             state,
-            input_data,
+            event,
             tool_use_id,
             status="success",
             target_mrn=observed[0] if observed else None,
@@ -224,20 +239,20 @@ class MarmotAgentTracker:
         return {}
 
     async def _on_post_tool_use_failure(
-        self, input_data: dict[str, Any], tool_use_id: str | None, context: Any
-    ) -> dict[str, Any]:
+        self, input_data: HookInput, tool_use_id: str | None, context: Any
+    ) -> HookJSONOutput:
+        event = cast("PostToolUseFailureHookInput", input_data)
         await self._ensure_registered()
-        state = self._run_state(_session_id_of(input_data))
-        _capture_transcript_path(state, input_data)
-        err = input_data.get("error")
-        if isinstance(err, str) and err:
-            state.error = err
-        self._close_tool_call(state, input_data, tool_use_id, status="error", target_mrn=None)
+        state = self._run_state(_session_id_of(event))
+        _capture_transcript_path(state, event)
+        if error := event.get("error"):
+            state.error = error
+        self._close_tool_call(state, event, tool_use_id, status="error", target_mrn=None)
         return {}
 
     async def _on_stop(
-        self, input_data: dict[str, Any], tool_use_id: str | None, context: Any
-    ) -> dict[str, Any]:
+        self, input_data: HookInput, tool_use_id: str | None, context: Any
+    ) -> HookJSONOutput:
         # Snapshot transcript path on the run before the take_run() in flush()
         # discards state — Stop is the last hook that carries it.
         state = self._run_state_optional(_session_id_of(input_data))
@@ -275,7 +290,7 @@ class MarmotAgentTracker:
     def _close_tool_call(
         self,
         state: _RunState,
-        input_data: dict[str, Any],
+        input_data: PreToolUseHookInput | PostToolUseHookInput | PostToolUseFailureHookInput,
         tool_use_id: str | None,
         *,
         status: str,
@@ -295,13 +310,13 @@ class MarmotAgentTracker:
             started = opened.started_at
             duration_ms = max(0, int((ended - started).total_seconds() * 1000))
         state.tool_calls.append(
-            {
-                "tool_name": tool_name,
-                "target_mrn": target_mrn,
-                "started_at": started,
-                "duration_ms": duration_ms,
-                "status": status,
-            }
+            ToolCall(
+                tool_name=tool_name,
+                target_mrn=target_mrn,
+                started_at=started,
+                duration_ms=duration_ms,
+                status=status,
+            )
         )
 
     # ------------------------------------------------------------------
@@ -323,22 +338,24 @@ class MarmotAgentTracker:
 
         observed_extras: list[str] = []
         if run.upstreams:
-            explicit = {tc.get("target_mrn") for tc in run.tool_calls if tc.get("target_mrn")}
+            explicit = {call.target_mrn for call in run.tool_calls if call.target_mrn}
             observed_extras = sorted((run.upstreams - explicit) - {self._agent_mrn or ""})
 
         try:
-            self._client.agent_runs.create(
-                agent_mrn=self._agent_mrn or "",
-                run_id=run_id,
-                started_at=started_at,
-                ended_at=ended_at,
-                status=status,
-                model=self._model,
-                tokens_in=tokens_in,
-                tokens_out=tokens_out,
-                error=run.error,
-                tool_calls=run.tool_calls or None,
-                observed_assets=observed_extras or None,
+            self._catalog.record_run(
+                AgentRunRecord(
+                    agent_mrn=self._agent_mrn or "",
+                    run_id=run_id,
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    status=status,
+                    model=self._spec.model,
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out,
+                    error=run.error,
+                    tool_calls=run.tool_calls,
+                    observed_assets=observed_extras,
+                )
             )
         except Exception as e:
             _LOG.warning("failed to record Claude Agent run: %s", e)
@@ -352,72 +369,27 @@ class MarmotAgentTracker:
         async with self._register_lock:
             if self._agent_mrn is not None:
                 return
-            await asyncio.to_thread(self._do_register)
+            await asyncio.to_thread(self._register)
 
-    def _do_register(self) -> None:
+    def _register(self) -> None:
         try:
-            existing = self._client.assets.find(
-                type=_AGENT_ASSET_TYPE,
-                service=self._service,
-                name=self._name,
-            )
+            asset = self._catalog.register_agent(self._spec)
         except Exception as e:
-            _LOG.warning("failed to look up agent asset: %s", e)
+            _LOG.warning("failed to register agent asset: %s", e)
             return
-
-        payload = self._build_asset_payload()
-        try:
-            if existing is None:
-                created = self._client.assets.create(payload)
-                self._agent_id = _str_or_none(
-                    getattr(created, "id", None) or _dict_get(created, "id")
-                )
-                self._agent_mrn = _str_or_none(
-                    getattr(created, "mrn", None) or _dict_get(created, "mrn")
-                )
-            else:
-                self._agent_id = _str_or_none(
-                    getattr(existing, "id", None) or _dict_get(existing, "id")
-                )
-                self._agent_mrn = _str_or_none(
-                    getattr(existing, "mrn", None) or _dict_get(existing, "mrn")
-                )
-                if self._agent_id:
-                    self._client.assets.update(self._agent_id, payload)
-        except Exception as e:
-            _LOG.warning("failed to upsert agent asset: %s", e)
-
-    def _build_asset_payload(self) -> dict[str, Any]:
-        metadata: dict[str, Any] = {"framework": _DEFAULT_SERVICE}
-        if self._model:
-            metadata["model"] = self._model
-        if self._version:
-            metadata["version"] = self._version
-        if self._owner:
-            metadata["owner"] = self._owner
-        if self._system_prompt_hash:
-            metadata["system_prompt_sha256_16"] = self._system_prompt_hash
-        metadata.update(self._extra_metadata)
-        return {
-            "name": self._name,
-            "type": _AGENT_ASSET_TYPE,
-            "providers": [self._service],
-            "services": [self._service],
-            "metadata": metadata,
-        }
+        self._agent_id = _str_or_none(asset.id)
+        self._agent_mrn = _str_or_none(asset.mrn)
 
 
-def _capture_transcript_path(state: _RunState, input_data: dict[str, Any]) -> None:
+def _capture_transcript_path(state: _RunState, input_data: BaseHookInput) -> None:
     if state.transcript_path:
         return
-    tp = input_data.get("transcript_path")
-    if isinstance(tp, str) and tp:
-        state.transcript_path = tp
+    if path := input_data.get("transcript_path"):
+        state.transcript_path = path
 
 
-def _session_id_of(input_data: dict[str, Any]) -> str | None:
-    sid = input_data.get("session_id")
-    return sid if isinstance(sid, str) and sid else None
+def _session_id_of(input_data: BaseHookInput) -> str | None:
+    return input_data.get("session_id") or None
 
 
 def _synthetic_run_id(started_at: datetime) -> str:
@@ -426,11 +398,3 @@ def _synthetic_run_id(started_at: datetime) -> str:
 
 def _str_or_none(value: Any) -> str | None:
     return value if isinstance(value, str) and value else None
-
-
-def _dict_get(obj: Any, key: str) -> Any:
-    """Return ``obj[key]`` when obj behaves like a mapping, else None."""
-    try:
-        return obj[key]
-    except (KeyError, TypeError):
-        return None

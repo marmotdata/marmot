@@ -9,33 +9,45 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from marmot.integrations._shared import (
-    extract_mrns as _extract_mrns_shared,
+from marmot.generated import LineageEdge
+from marmot.integrations.catalog import (
+    AGENT_INVOKES,
+    AgentRunRecord,
+    AgentSpec,
+    ToolCall,
 )
-from marmot.integrations._shared import (
-    sha256_hex as _sha256_hex,
-)
+from marmot.integrations.shared import extract_mrns
+
+from marmot.integrations.shared import sha256_hex
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from langchain_core.outputs import LLMResult
     from langchain_core.tools import BaseTool
 
-    from marmot.client import Client
+    from marmot.integrations.catalog import AgentRegistry
 
 try:
     from langchain_core.callbacks import BaseCallbackHandler as _BaseCallbackHandler
+    from langchain_core.messages import BaseMessage
+    from langchain_core.outputs import ChatGeneration
 
     _LANGCHAIN_AVAILABLE = True
 except ImportError:
     _BaseCallbackHandler = object  # type: ignore[assignment,misc]
+    # `isinstance(x, ())` is always False, so the checks below degrade cleanly
+    # when langchain is absent — the handler cannot be constructed anyway.
+    BaseMessage = ()  # type: ignore[assignment,misc]
+    ChatGeneration = ()  # type: ignore[assignment,misc]
     _LANGCHAIN_AVAILABLE = False
 
 
 _LOG = logging.getLogger("marmot.integrations.langchain")
 
 _DEFAULT_SERVICE = "LangChain"
-_AGENT_ASSET_TYPE = "Agent"
+_FRAMEWORK = "LangChain"
 _TOOL_METADATA_KEY = "marmot_asset_mrn"
 # Tools may opt in to having their *output* mined for asset MRNs by setting
 # this metadata flag. Used by lookup-style tools (e.g. get_asset, lookup_asset)
@@ -52,12 +64,13 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
     Usage::
 
         from langchain_core.runnables import RunnableConfig
-        from marmot import connect
+        from marmot import AuthenticatedApiClient
+        from marmot.integrations import MarmotCatalog
         from marmot.integrations.langchain import MarmotCallbackHandler
 
-        client = connect()
+        catalog = MarmotCatalog(AuthenticatedApiClient.connect())
         handler = MarmotCallbackHandler(
-            client,
+            catalog,
             name="orders-analyst",
             model="claude-opus-4-7",
             owner="data-eng",
@@ -79,7 +92,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
 
     def __init__(
         self,
-        client: Client,
+        catalog: AgentRegistry,
         *,
         name: str,
         service: str = _DEFAULT_SERVICE,
@@ -95,16 +108,19 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
                 "langchain-core is required for MarmotCallbackHandler. "
                 "Install via `pip install marmot-sdk[langchain]`."
             )
-        self._client = client
-        self._name = name
-        self._service = service
-        self._model = model
-        self._version = version
-        self._owner = owner
+        self._catalog = catalog
         self._tools = tools
-        self._tool_names = [t.name for t in tools] if tools else None
-        self._system_prompt_hash = _sha256_hex(system_prompt)[:16] if system_prompt else None
-        self._extra_metadata = extra_metadata or {}
+        self._spec = AgentSpec(
+            name=name,
+            service=service,
+            framework=_FRAMEWORK,
+            model=model,
+            version=version,
+            owner=owner,
+            tool_names=[t.name for t in tools] if tools else None,
+            system_prompt_hash=sha256_hex(system_prompt)[:16] if system_prompt else None,
+            extra_metadata=extra_metadata or {},
+        )
 
         self._agent_mrn: str | None = None
         self._agent_id: str | None = None
@@ -113,7 +129,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         self._root_of: dict[UUID, UUID] = {}
         self._upstreams: dict[UUID, set[str]] = {}
         self._run_started: dict[UUID, datetime] = {}
-        self._tool_traces: dict[UUID, list[dict[str, Any]]] = {}
+        self._tool_traces: dict[UUID, list[ToolCall]] = {}
         self._tokens: dict[UUID, list[int]] = {}  # [in, out]
         self._run_error: dict[UUID, str] = {}
 
@@ -197,7 +213,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             return
         opened = self._tool_open.get(run_id, {})
         if opened.get("record_lookups"):
-            for mrn in _extract_mrns(output):
+            for mrn in extract_mrns(output):
                 self._upstreams.setdefault(root, set()).add(mrn)
         self._close_tool_call(run_id, root, status="success")
 
@@ -222,18 +238,18 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         ended = datetime.now(timezone.utc)
         duration_ms = max(0, int((ended - opened["started_at"]).total_seconds() * 1000))
         self._tool_traces.setdefault(root_run_id, []).append(
-            {
-                "tool_name": opened["tool_name"],
-                "target_mrn": opened["target_mrn"],
-                "started_at": opened["started_at"],
-                "duration_ms": duration_ms,
-                "status": status,
-            }
+            ToolCall(
+                tool_name=opened["tool_name"],
+                target_mrn=opened["target_mrn"],
+                started_at=opened["started_at"],
+                duration_ms=duration_ms,
+                status=status,
+            )
         )
 
     def on_llm_end(
         self,
-        response: Any,
+        response: LLMResult,
         *,
         run_id: UUID,
         parent_run_id: UUID | None = None,
@@ -324,22 +340,24 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         # tool's *output* rather than declared in metadata). Drop the agent's
         # own MRN — the agent encountering itself in a search result shouldn't
         # produce a self-loop.
-        explicit = {tc.get("target_mrn") for tc in tool_calls if tc.get("target_mrn")}
+        explicit = {call.target_mrn for call in tool_calls if call.target_mrn}
         observed_extras = sorted((upstreams - explicit) - {self._agent_mrn}) if upstreams else []
 
         try:
-            self._client.agent_runs.create(
-                agent_mrn=self._agent_mrn,
-                run_id=str(root_run_id),
-                started_at=started_at,
-                ended_at=ended_at,
-                status=status,
-                model=self._model,
-                tokens_in=tokens[0],
-                tokens_out=tokens[1],
-                error=error or None,
-                tool_calls=tool_calls or None,
-                observed_assets=observed_extras or None,
+            self._catalog.record_run(
+                AgentRunRecord(
+                    agent_mrn=self._agent_mrn,
+                    run_id=str(root_run_id),
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    status=status,
+                    model=self._spec.model,
+                    tokens_in=tokens[0],
+                    tokens_out=tokens[1],
+                    error=error or None,
+                    tool_calls=tool_calls,
+                    observed_assets=observed_extras,
+                )
             )
         except Exception as e:
             _LOG.warning("failed to record Marmot agent run: %s", e)
@@ -348,28 +366,13 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         if self._agent_mrn is not None:
             return
         try:
-            existing = self._client.assets.find(
-                type=_AGENT_ASSET_TYPE, service=self._service, name=self._name
-            )
+            asset = self._catalog.register_agent(self._spec)
         except Exception as e:
-            _LOG.warning("failed to look up Marmot agent asset: %s", e)
+            _LOG.warning("failed to register Marmot agent asset: %s", e)
             return
 
-        payload = self._build_asset_payload()
-        try:
-            if existing is None:
-                created = self._client.assets.create(payload)
-                self._agent_id = _str_or_none(created.id)
-                self._agent_mrn = _str_or_none(created.mrn)
-            else:
-                self._agent_id = _str_or_none(existing.id)
-                self._agent_mrn = _str_or_none(existing.mrn)
-                if self._agent_id:
-                    self._client.assets.update(self._agent_id, payload)
-        except Exception as e:
-            _LOG.warning("failed to upsert Marmot agent asset: %s", e)
-            return
-
+        self._agent_id = _str_or_none(asset.id)
+        self._agent_mrn = _str_or_none(asset.mrn)
         self._emit_declared_invocations()
 
     def _emit_declared_invocations(self) -> None:
@@ -380,48 +383,17 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         """
         if not self._agent_mrn or not self._tools:
             return
-        edges: list[dict[str, Any]] = []
-        for tool in self._tools:
-            mrn = _tool_asset_mrn(tool)
-            if not mrn:
-                continue
-            edges.append(
-                {
-                    "source": self._agent_mrn,
-                    "target": mrn,
-                    "type": "AGENT_INVOKES",
-                }
-            )
+        edges = [
+            LineageEdge(source=self._agent_mrn, target=mrn, type=AGENT_INVOKES)
+            for tool in self._tools
+            if (mrn := _tool_asset_mrn(tool))
+        ]
         if not edges:
             return
         try:
-            self._client.lineage.batch(edges)
+            self._catalog.write_edges(edges)
         except Exception as e:
-            _LOG.warning("failed to write AGENT_INVOKES edges: %s", e)
-
-    def _build_asset_payload(self) -> dict[str, Any]:
-        metadata: dict[str, Any] = {
-            "framework": "LangChain",
-        }
-        if self._model:
-            metadata["model"] = self._model
-        if self._version:
-            metadata["version"] = self._version
-        if self._owner:
-            metadata["owner"] = self._owner
-        if self._tool_names:
-            metadata["tool_names"] = self._tool_names
-        if self._system_prompt_hash:
-            metadata["system_prompt_sha256_16"] = self._system_prompt_hash
-        metadata.update(self._extra_metadata)
-
-        return {
-            "name": self._name,
-            "type": _AGENT_ASSET_TYPE,
-            "providers": [self._service],
-            "services": [self._service],
-            "metadata": metadata,
-        }
+            _LOG.warning("failed to write %s edges: %s", AGENT_INVOKES, e)
 
 
 def marmot_tool(
@@ -456,7 +428,7 @@ def marmot_tool(
             description=description or (fn.__doc__ or fn.__name__),
             metadata={_TOOL_METADATA_KEY: asset_mrn},
         )
-        functools.update_wrapper(tool, fn, updated=())
+        functools.update_wrapper(tool, fn, updated=())  # type: ignore[arg-type]
         return tool
 
     return decorator
@@ -496,32 +468,17 @@ def _str_or_none(v: Any) -> str | None:
     return v if isinstance(v, str) and v else None
 
 
-def _extract_mrns(output: Any) -> set[str]:
+def extract_mrns(output: Any) -> set[str]:
     """Best-effort extraction of asset MRNs from a LangChain tool's output.
 
-    Unwraps LangChain's ``ToolMessage`` (whose payload lives on ``content``)
-    before deferring to the shared walker, which handles structured dicts,
-    JSON-encoded strings and free-text MRN URIs uniformly.
+    LangChain 1.x wraps structured tool output in a ``ToolMessage`` whose
+    payload lives on ``content`` (``str | list[str | dict]``); older agent types
+    pass the raw return value. Both go to the shared walker, which covers
+    dicts, JSON-encoded strings and free-text MRN URIs uniformly.
     """
-    # LangChain 1.x wraps structured tool output in ToolMessage; older agent
-    # types may pass the raw return value. Normalise both into ``output``.
-    content = getattr(output, "content", None)
-    if isinstance(content, (str, list, dict)):
-        output = content
-
-    found = _extract_mrns_shared(output)
-
-    # ``content`` can be a list of content blocks (multimodal) where each item
-    # exposes ``.text`` as an attribute rather than a dict key. The shared
-    # walker handles dict-shaped blocks; the attribute case is LangChain-only.
-    if isinstance(output, list):
-        for item in output:
-            if not isinstance(item, (dict, str, list)):
-                text = getattr(item, "text", None)
-                if isinstance(text, str):
-                    found |= _extract_mrns_shared(text)
-
-    return found
+    if isinstance(output, BaseMessage):
+        output = output.content
+    return extract_mrns_shared(output)
 
 
 def _tool_asset_mrn(tool: Any) -> str | None:
@@ -543,14 +500,25 @@ def _tool_asset_mrn(tool: Any) -> str | None:
     return None
 
 
-def _extract_tokens(response: Any) -> tuple[int, int]:
-    """Best-effort extraction of (input_tokens, output_tokens) from a LangChain
-    LLMResult. Different providers surface counts in different places — this
-    handles the common ones (OpenAI/Anthropic via ``llm_output['token_usage']``,
-    Ollama via ``generations[].generation_info``).
+def _extract_tokens(response: LLMResult) -> tuple[int, int]:
+    """Extract (input_tokens, output_tokens) from an ``LLMResult``.
+
+    ``usage_metadata`` on a chat message is LangChain's provider-agnostic
+    accounting, so it is preferred. The ``llm_output`` and ``generation_info``
+    paths below remain for providers that only populate those.
     """
     try:
-        llm_output = getattr(response, "llm_output", None)
+        for batch in response.generations:
+            for generation in batch:
+                if not isinstance(generation, ChatGeneration):
+                    continue
+                usage_metadata = getattr(generation.message, "usage_metadata", None)
+                if usage_metadata:
+                    return int(usage_metadata["input_tokens"]), int(
+                        usage_metadata["output_tokens"]
+                    )
+
+        llm_output = response.llm_output
         if isinstance(llm_output, dict):
             usage = llm_output.get("token_usage") or llm_output.get("usage") or {}
             tin = (
@@ -568,10 +536,9 @@ def _extract_tokens(response: Any) -> tuple[int, int]:
             if tin or tout:
                 return int(tin), int(tout)
 
-        generations = getattr(response, "generations", None) or []
-        for batch in generations:
+        for batch in response.generations:
             for gen in batch:
-                info = getattr(gen, "generation_info", None) or {}
+                info = gen.generation_info or {}
                 tin = info.get("prompt_eval_count") or info.get("input_tokens") or 0
                 tout = info.get("eval_count") or info.get("output_tokens") or 0
                 if tin or tout:

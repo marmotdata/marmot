@@ -1,6 +1,6 @@
 """LangChain tools backed directly by the Marmot SDK.
 
-Each tool is a thin wrapper over a :class:`marmot.Client` method, exposed as a
+Each tool is a thin wrapper over a :class:`CatalogReader` call, exposed as a
 :class:`langchain_core.tools.StructuredTool` so an LLM agent can call it.
 """
 
@@ -8,26 +8,25 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from marmot.errors import NotFoundError
-
 if TYPE_CHECKING:
     from langchain_core.tools import BaseTool
 
-    from marmot.client import Client
+    from marmot.integrations.catalog import CatalogReader
 
 
-def catalog_tools(client: Client) -> list[BaseTool]:
-    """Return a list of LangChain tools that read from the given Marmot client.
+def catalog_tools(catalog: CatalogReader) -> list[BaseTool]:
+    """Return a list of LangChain tools that read from the given catalog.
 
-    The tools are bound to ``client``; they share its auth and HTTP session.
-    Hand the list straight to an agent factory:
+    The tools are bound to ``catalog``; they share its client, auth and HTTP
+    session. Hand the list straight to an agent factory:
 
-        from marmot import connect
+        from marmot import AuthenticatedApiClient
+        from marmot.integrations import MarmotCatalog
         from marmot.integrations.langchain import catalog_tools
 
-        with connect() as client:
-            tools = catalog_tools(client)
-            agent = create_react_agent(llm, tools)
+        catalog = MarmotCatalog(AuthenticatedApiClient.connect())
+        tools = catalog_tools(catalog)
+        agent = create_react_agent(llm, tools)
     """
     try:
         from langchain_core.tools import StructuredTool
@@ -75,7 +74,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         After this returns, use ``lookup_asset`` (when you know type+provider+name)
         or ``get_asset`` (when you have an id from these results) for full details.
         """
-        raw = client.search(query, limit=limit).to_dict()
+        raw = catalog.search(query, limit=limit).to_dict()
         hits = []
         for r in raw.get("results") or []:
             md = r.get("metadata") or {}
@@ -99,7 +98,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         ``search_catalog`` finds a candidate, when you need column/schema
         details to write a query or understand structure.
         """
-        return client.assets.get(asset_id).to_dict()
+        return catalog.get_asset(asset_id).to_dict()
 
     def lookup_asset(asset_type: str, service: str, name: str) -> dict[str, Any] | None:
         """Look up a single asset by its (type, service, name) triple.
@@ -108,10 +107,8 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         ``asset_type="table"``, ``service="postgres"``, ``name="prod.orders"``.
         Returns ``None`` if no asset matches.
         """
-        try:
-            return client.assets.lookup(type=asset_type, service=service, name=name).to_dict()
-        except NotFoundError:
-            return None
+        found = catalog.lookup_asset(asset_type=asset_type, service=service, name=name)
+        return found.to_dict() if found else None
 
     def get_upstream_lineage(asset_id: str, depth: int = 2) -> dict[str, Any]:
         """Trace the upstream lineage of an asset — what feeds into it.
@@ -120,7 +117,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         understand where data comes from, who/what writes to a table, or to
         find a root source you can query directly.
         """
-        return client.lineage.upstream(asset_id, limit=depth).to_dict()
+        return catalog.upstream_lineage(asset_id, depth=depth).to_dict()
 
     # Tools whose return value uniquely identifies the asset the agent fetched
     # opt in to lineage emission. search_catalog deliberately does NOT — its
