@@ -43,7 +43,8 @@ type ListPluginsResponse struct {
 // @Tags plugins
 // @Produce json
 // @Success 200 {object} ListPluginsResponse
-// @Router /plugins [get]
+// @ID getPlugins
+// @Router /api/v1/plugins [get]
 func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, ListPluginsResponse{
 		Plugins: plugin.GetRegistry().List(),
@@ -72,7 +73,8 @@ type AWSCredentialStatus struct {
 // @Tags plugins
 // @Produce json
 // @Success 200 {object} AWSCredentialStatus
-// @Router /plugins/aws/credentials/status [get]
+// @ID getPluginsAwsCredentialsStatus
+// @Router /api/v1/plugins/aws/credentials/status [get]
 func (h *Handler) awsCredentialStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	status := pluginsdk.DetectAWSCredentials(ctx)

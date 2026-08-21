@@ -34,7 +34,8 @@ type PreviewResponse struct {
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 501 {object} common.ErrorResponse "Data preview not supported for this asset"
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/preview/{id} [get]
+// @ID getAssetsPreviewID
+// @Router /api/v1/assets/preview/{id} [get]
 func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	assetID := r.PathValue("id")

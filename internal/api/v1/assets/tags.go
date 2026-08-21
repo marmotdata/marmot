@@ -24,7 +24,8 @@ type TagRequest struct {
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/tags/{id} [post]
+// @ID postAssetsTagsID
+// @Router /api/v1/assets/tags/{id} [post]
 func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -70,7 +71,8 @@ func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/tags/{id} [delete]
+// @ID deleteAssetsTagsID
+// @Router /api/v1/assets/tags/{id} [delete]
 func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -112,7 +114,8 @@ func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Maximum number of suggestions" default(10)
 // @Success 200 {array} string
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/suggestions/tags [get]
+// @ID getAssetsSuggestionsTags
+// @Router /api/v1/assets/suggestions/tags [get]
 func (h *Handler) getTagSuggestions(w http.ResponseWriter, r *http.Request) {
 	prefix := r.URL.Query().Get("prefix")
 	limit := common.ParseLimit(r.URL.Query().Get("limit"), 10, 100)

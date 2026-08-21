@@ -21,7 +21,8 @@ import (
 // @Success 200 {object} search.Response
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /search [get]
+// @ID getSearch
+// @Router /api/v1/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	queryValues := r.URL.Query()
 	query := strings.TrimSpace(queryValues.Get("q"))

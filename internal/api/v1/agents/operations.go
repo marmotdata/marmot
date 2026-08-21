@@ -58,7 +58,8 @@ type ActivityResponse struct {
 // @Produce  json
 // @Param    request body RecordRunRequest true "Agent run record"
 // @Success  201 {object} agent.Run
-// @Router   /agents/runs [post]
+// @ID postAgentsRuns
+// @Router   /api/v1/agents/runs [post]
 func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
 	var req RecordRunRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,7 +111,8 @@ func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
 // @Param    limit    query int    false "Max number of runs to return"
 // @Success  200 {object} RunsResponse
-// @Router   /agents/{asset_id}/runs [get]
+// @ID getAgentsAssetIDRuns
+// @Router   /api/v1/agents/{asset_id}/runs [get]
 func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("asset_id")
 	if assetID == "" {
@@ -144,7 +146,8 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 // @Param    asset_id path  string true  "Agent asset id"
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
 // @Success  200 {object} agent.Stats
-// @Router   /agents/{asset_id}/stats [get]
+// @ID getAgentsAssetIDStats
+// @Router   /api/v1/agents/{asset_id}/stats [get]
 func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("asset_id")
 	if assetID == "" {
@@ -172,7 +175,8 @@ func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
 // @Param    asset_id path  string true  "Agent asset id"
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
 // @Success  200 {object} ActivityResponse
-// @Router   /agents/{asset_id}/activity [get]
+// @ID getAgentsAssetIDActivity
+// @Router   /api/v1/agents/{asset_id}/activity [get]
 func (h *Handler) getActivity(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("asset_id")
 	if assetID == "" {

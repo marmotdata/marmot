@@ -61,7 +61,8 @@ type PreviewRequest struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules [post]
+// @ID postAssetRules
+// @Router /api/v1/asset-rules/ [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -113,7 +114,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} assetrule.AssetRule
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/{id} [get]
+// @ID getAssetRulesID
+// @Router /api/v1/asset-rules/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -147,7 +149,8 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/{id} [put]
+// @ID putAssetRulesID
+// @Router /api/v1/asset-rules/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -204,7 +207,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/{id} [delete]
+// @ID deleteAssetRulesID
+// @Router /api/v1/asset-rules/{id} [delete]
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -234,7 +238,8 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 // @Param offset query int false "Number of items to skip" default(0)
 // @Success 200 {object} assetrule.ListResult
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/list [get]
+// @ID getAssetRulesList
+// @Router /api/v1/asset-rules/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -258,7 +263,8 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 // @Param offset query int false "Number of items to skip" default(0)
 // @Success 200 {object} assetrule.ListResult
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/search [get]
+// @ID getAssetRulesSearch
+// @Router /api/v1/asset-rules/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -288,7 +294,8 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} assetrule.RulePreview
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/preview [post]
+// @ID postAssetRulesPreview
+// @Router /api/v1/asset-rules/preview [post]
 func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	var req PreviewRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -324,7 +331,8 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /asset-rules/assets/{id} [get]
+// @ID getAssetRulesAssetsID
+// @Router /api/v1/asset-rules/assets/{id} [get]
 func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {

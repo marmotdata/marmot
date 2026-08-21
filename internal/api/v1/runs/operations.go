@@ -158,7 +158,8 @@ type RunEntitiesResponse struct {
 // @Produce json
 // @Param request body StartRunRequest true "Start run request"
 // @Success 200 {object} plugin.Run
-// @Router /runs/start [post]
+// @ID postRunsStart
+// @Router /api/v1/runs/start [post]
 func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 	if !common.RequirePluginsReady(w) {
 		return
@@ -198,7 +199,8 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param request body CompleteRunRequest true "Complete run request"
 // @Success 200 {object} map[string]string
-// @Router /runs/complete [post]
+// @ID postRunsComplete
+// @Router /api/v1/runs/complete [post]
 func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 	var req CompleteRunRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -247,7 +249,8 @@ func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param request body BatchCreateRequest true "Batch create request"
 // @Success 200 {object} BatchCreateResponse
-// @Router /runs/assets/batch [post]
+// @ID postRunsAssetsBatch
+// @Router /api/v1/runs/assets/batch [post]
 func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	var req BatchCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -343,7 +346,8 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param pipelineName path string true "Pipeline Name"
 // @Success 200 {object} DestroyRunResponse
-// @Router /pipelines/{pipelineName} [delete]
+// @ID deletePipelinesPipelineName
+// @Router /api/v1/pipelines/{pipelineName} [delete]
 func (h *Handler) destroyPipeline(w http.ResponseWriter, r *http.Request) {
 	pipelineName := r.PathValue("pipelineName")
 
@@ -371,7 +375,8 @@ func (h *Handler) destroyPipeline(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Number of results per page" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} RunEntitiesResponse
-// @Router /runs/{id}/entities [get]
+// @ID getRunsIDEntities
+// @Router /api/v1/runs/{id}/entities [get]
 func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 	runID := r.PathValue("id")
 	if runID == "" {
@@ -420,7 +425,8 @@ func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 // @Description Mark runs as failed if they've been running too long without updates
 // @Tags runs
 // @Success 200 {object} map[string]int
-// @Router /runs/cleanup [post]
+// @ID postRunsCleanup
+// @Router /api/v1/runs/cleanup [post]
 func (h *Handler) cleanupStaleRuns(w http.ResponseWriter, r *http.Request) {
 	timeoutMinutes := 60
 	if t := r.URL.Query().Get("timeout_minutes"); t != "" {
@@ -448,7 +454,8 @@ func (h *Handler) cleanupStaleRuns(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Number of results per page" default(50)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} object{runs=[]plugin.Run,total=int,limit=int,offset=int,pipelines=[]string}
-// @Router /runs [get]
+// @ID getRuns
+// @Router /api/v1/runs [get]
 func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 	var pipelines []string
 	if pipelinesParam := r.URL.Query().Get("pipelines"); pipelinesParam != "" {
@@ -515,7 +522,8 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Run ID"
 // @Success 200 {object} plugin.Run
-// @Router /runs/{id} [get]
+// @ID getRunsID
+// @Router /api/v1/runs/{id} [get]
 func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 	runID := r.PathValue("id")
 	if runID == "" {
