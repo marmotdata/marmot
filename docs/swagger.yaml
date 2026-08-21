@@ -4752,6 +4752,9 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: MCP endpoint
       tags:
       - mcp

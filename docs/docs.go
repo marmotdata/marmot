@@ -3181,6 +3181,14 @@ const docTemplate = `{
         },
         "/api/v1/mcp": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "JSON-RPC 2.0 over the MCP Streamable HTTP transport. Requires assets:view, glossary:view and teams:view.",
                 "consumes": [
                     "application/json"

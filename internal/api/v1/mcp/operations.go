@@ -20,6 +20,8 @@ import (
 // @Param request body map[string]interface{} true "JSON-RPC 2.0 request"
 // @Success 200 {object} map[string]interface{} "JSON-RPC 2.0 response"
 // @Failure 401 {object} common.ErrorResponse
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @ID postMcp
 // @Router /api/v1/mcp [post]
 func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
