@@ -152,12 +152,22 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 exclude = [
-    "src/marmot/integrations",
     "src/marmot/generated/*",
     "tests",
     "dist",
     ".venv",
 ]
+
+[[tool.mypy.overrides]]
+# Optional extras are absent in a bare install, where their types resolve to Any.
+module = ["langchain_core.*", "claude_agent_sdk.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Whether an ignore is needed here depends on which extras are installed, so the
+# integrations must not be judged on ignores that look unused.
+module = "marmot.integrations.*"
+warn_unused_ignores = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
