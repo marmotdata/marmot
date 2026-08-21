@@ -40,7 +40,7 @@ func (o *GetAdminSearchReindexReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /admin/search/reindex] GetAdminSearchReindex", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/admin/search/reindex] getAdminSearchReindex", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAdminSearchReindexOK) Code() int {
 
 func (o *GetAdminSearchReindexOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexOK %s", 200, payload)
 }
 
 func (o *GetAdminSearchReindexOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexOK %s", 200, payload)
 }
 
 func (o *GetAdminSearchReindexOK) GetPayload() *models.ReindexStatusResponse {
@@ -156,12 +156,12 @@ func (o *GetAdminSearchReindexUnauthorized) Code() int {
 
 func (o *GetAdminSearchReindexUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
 func (o *GetAdminSearchReindexUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
 func (o *GetAdminSearchReindexUnauthorized) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetAdminSearchReindexForbidden) Code() int {
 
 func (o *GetAdminSearchReindexForbidden) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexForbidden %s", 403, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexForbidden %s", 403, payload)
 }
 
 func (o *GetAdminSearchReindexForbidden) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexForbidden %s", 403, payload)
+	return fmt.Sprintf("[GET /api/v1/admin/search/reindex][%d] getAdminSearchReindexForbidden %s", 403, payload)
 }
 
 func (o *GetAdminSearchReindexForbidden) GetPayload() *models.ErrorResponse {

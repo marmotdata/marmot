@@ -34,7 +34,7 @@ func (o *GetTeamsReader) ReadResponse(response runtime.ClientResponse, consumer 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /teams] GetTeams", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/teams] getTeams", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetTeamsOK) Code() int {
 
 func (o *GetTeamsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams][%d] getTeamsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams][%d] getTeamsOK %s", 200, payload)
 }
 
 func (o *GetTeamsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams][%d] getTeamsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams][%d] getTeamsOK %s", 200, payload)
 }
 
 func (o *GetTeamsOK) GetPayload() *models.ListTeamsResponse {
@@ -150,12 +150,12 @@ func (o *GetTeamsInternalServerError) Code() int {
 
 func (o *GetTeamsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams][%d] getTeamsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams][%d] getTeamsInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams][%d] getTeamsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams][%d] getTeamsInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsInternalServerError) GetPayload() *models.ErrorResponse {

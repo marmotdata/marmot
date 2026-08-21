@@ -28,7 +28,7 @@ func (o *GetSsoProvidersReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /sso-providers] GetSsoProviders", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/sso-providers] getSsoProviders", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetSsoProvidersOK) Code() int {
 
 func (o *GetSsoProvidersOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso-providers][%d] getSsoProvidersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso-providers][%d] getSsoProvidersOK %s", 200, payload)
 }
 
 func (o *GetSsoProvidersOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso-providers][%d] getSsoProvidersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso-providers][%d] getSsoProvidersOK %s", 200, payload)
 }
 
 func (o *GetSsoProvidersOK) GetPayload() *models.SSOProvidersResponse {

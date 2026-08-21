@@ -34,7 +34,7 @@ func (o *PostUsersOauthLinkReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /users/oauth/link] PostUsersOauthLink", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/users/oauth/link] postUsersOauthLink", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *PostUsersOauthLinkOK) Code() int {
 }
 
 func (o *PostUsersOauthLinkOK) Error() string {
-	return fmt.Sprintf("[POST /users/oauth/link][%d] postUsersOauthLinkOK", 200)
+	return fmt.Sprintf("[POST /api/v1/users/oauth/link][%d] postUsersOauthLinkOK", 200)
 }
 
 func (o *PostUsersOauthLinkOK) String() string {
-	return fmt.Sprintf("[POST /users/oauth/link][%d] postUsersOauthLinkOK", 200)
+	return fmt.Sprintf("[POST /api/v1/users/oauth/link][%d] postUsersOauthLinkOK", 200)
 }
 
 func (o *PostUsersOauthLinkOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *PostUsersOauthLinkBadRequest) Code() int {
 
 func (o *PostUsersOauthLinkBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/oauth/link][%d] postUsersOauthLinkBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/oauth/link][%d] postUsersOauthLinkBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersOauthLinkBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/oauth/link][%d] postUsersOauthLinkBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/oauth/link][%d] postUsersOauthLinkBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersOauthLinkBadRequest) GetPayload() *models.ErrorResponse {

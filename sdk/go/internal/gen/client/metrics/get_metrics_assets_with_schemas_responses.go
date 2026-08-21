@@ -28,7 +28,7 @@ func (o *GetMetricsAssetsWithSchemasReader) ReadResponse(response runtime.Client
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /metrics/assets/with-schemas] GetMetricsAssetsWithSchemas", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/metrics/assets/with-schemas] getMetricsAssetsWithSchemas", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetMetricsAssetsWithSchemasOK) Code() int {
 
 func (o *GetMetricsAssetsWithSchemasOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/assets/with-schemas][%d] getMetricsAssetsWithSchemasOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/assets/with-schemas][%d] getMetricsAssetsWithSchemasOK %s", 200, payload)
 }
 
 func (o *GetMetricsAssetsWithSchemasOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/assets/with-schemas][%d] getMetricsAssetsWithSchemasOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/assets/with-schemas][%d] getMetricsAssetsWithSchemasOK %s", 200, payload)
 }
 
 func (o *GetMetricsAssetsWithSchemasOK) GetPayload() *models.AssetsWithSchemasResponse {

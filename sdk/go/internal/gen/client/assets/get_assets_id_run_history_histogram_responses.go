@@ -46,7 +46,7 @@ func (o *GetAssetsIDRunHistoryHistogramReader) ReadResponse(response runtime.Cli
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/{id}/run-history/histogram] GetAssetsIDRunHistoryHistogram", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/run-history-histogram/{id}] getAssetsIDRunHistoryHistogram", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetAssetsIDRunHistoryHistogramOK) Code() int {
 
 func (o *GetAssetsIDRunHistoryHistogramOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramOK %s", 200, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramOK %s", 200, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramOK) GetPayload() *models.HistogramResponse {
@@ -162,12 +162,12 @@ func (o *GetAssetsIDRunHistoryHistogramBadRequest) Code() int {
 
 func (o *GetAssetsIDRunHistoryHistogramBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *GetAssetsIDRunHistoryHistogramNotFound) Code() int {
 
 func (o *GetAssetsIDRunHistoryHistogramNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *GetAssetsIDRunHistoryHistogramInternalServerError) Code() int {
 
 func (o *GetAssetsIDRunHistoryHistogramInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history-histogram/{id}][%d] getAssetsIdRunHistoryHistogramInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsIDRunHistoryHistogramInternalServerError) GetPayload() *models.ErrorResponse {

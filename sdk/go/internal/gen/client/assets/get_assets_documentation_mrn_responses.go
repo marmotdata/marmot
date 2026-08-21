@@ -40,7 +40,7 @@ func (o *GetAssetsDocumentationMrnReader) ReadResponse(response runtime.ClientRe
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/documentation/{mrn}] GetAssetsDocumentationMrn", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/documentation/{mrn}] getAssetsDocumentationMrn", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsDocumentationMrnOK) Code() int {
 
 func (o *GetAssetsDocumentationMrnOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnOK %s", 200, payload)
 }
 
 func (o *GetAssetsDocumentationMrnOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnOK %s", 200, payload)
 }
 
 func (o *GetAssetsDocumentationMrnOK) GetPayload() []*models.Documentation {
@@ -154,12 +154,12 @@ func (o *GetAssetsDocumentationMrnNotFound) Code() int {
 
 func (o *GetAssetsDocumentationMrnNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsDocumentationMrnNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsDocumentationMrnNotFound) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *GetAssetsDocumentationMrnInternalServerError) Code() int {
 
 func (o *GetAssetsDocumentationMrnInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsDocumentationMrnInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/documentation/{mrn}][%d] getAssetsDocumentationMrnInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsDocumentationMrnInternalServerError) GetPayload() *models.ErrorResponse {

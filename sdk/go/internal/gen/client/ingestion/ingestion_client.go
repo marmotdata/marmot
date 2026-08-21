@@ -152,9 +152,9 @@ func (a *Client) DeleteIngestionSchedulesIDContext(ctx context.Context, params *
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteIngestionSchedulesID",
+		ID:                 "deleteIngestionSchedulesID",
 		Method:             "DELETE",
-		PathPattern:        "/ingestion/schedules/{id}",
+		PathPattern:        "/api/v1/ingestion/schedules/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -183,7 +183,7 @@ func (a *Client) DeleteIngestionSchedulesIDContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -214,9 +214,9 @@ func (a *Client) GetIngestionRunsContext(ctx context.Context, params *GetIngesti
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetIngestionRuns",
+		ID:                 "getIngestionRuns",
 		Method:             "GET",
-		PathPattern:        "/ingestion/runs",
+		PathPattern:        "/api/v1/ingestion/runs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -245,7 +245,7 @@ func (a *Client) GetIngestionRunsContext(ctx context.Context, params *GetIngesti
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetIngestionRuns: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getIngestionRuns: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -276,9 +276,9 @@ func (a *Client) GetIngestionRunsIDContext(ctx context.Context, params *GetInges
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetIngestionRunsID",
+		ID:                 "getIngestionRunsID",
 		Method:             "GET",
-		PathPattern:        "/ingestion/runs/{id}",
+		PathPattern:        "/api/v1/ingestion/runs/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -307,7 +307,7 @@ func (a *Client) GetIngestionRunsIDContext(ctx context.Context, params *GetInges
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetIngestionRunsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getIngestionRunsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -338,9 +338,9 @@ func (a *Client) GetIngestionRunsIDEntitiesContext(ctx context.Context, params *
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetIngestionRunsIDEntities",
+		ID:                 "getIngestionRunsIDEntities",
 		Method:             "GET",
-		PathPattern:        "/ingestion/runs/{id}/entities",
+		PathPattern:        "/api/v1/ingestion/runs/{id}/entities",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -369,7 +369,7 @@ func (a *Client) GetIngestionRunsIDEntitiesContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetIngestionRunsIDEntities: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getIngestionRunsIDEntities: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -400,9 +400,9 @@ func (a *Client) GetIngestionSchedulesContext(ctx context.Context, params *GetIn
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetIngestionSchedules",
+		ID:                 "getIngestionSchedules",
 		Method:             "GET",
-		PathPattern:        "/ingestion/schedules",
+		PathPattern:        "/api/v1/ingestion/schedules",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -431,7 +431,7 @@ func (a *Client) GetIngestionSchedulesContext(ctx context.Context, params *GetIn
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetIngestionSchedules: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getIngestionSchedules: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -462,9 +462,9 @@ func (a *Client) GetIngestionSchedulesIDContext(ctx context.Context, params *Get
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetIngestionSchedulesID",
+		ID:                 "getIngestionSchedulesID",
 		Method:             "GET",
-		PathPattern:        "/ingestion/schedules/{id}",
+		PathPattern:        "/api/v1/ingestion/schedules/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -493,7 +493,7 @@ func (a *Client) GetIngestionSchedulesIDContext(ctx context.Context, params *Get
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -524,9 +524,9 @@ func (a *Client) PostIngestionRunsIDCancelContext(ctx context.Context, params *P
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostIngestionRunsIDCancel",
+		ID:                 "postIngestionRunsIDCancel",
 		Method:             "POST",
-		PathPattern:        "/ingestion/runs/{id}/cancel",
+		PathPattern:        "/api/v1/ingestion/runs/{id}/cancel",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -555,7 +555,7 @@ func (a *Client) PostIngestionRunsIDCancelContext(ctx context.Context, params *P
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostIngestionRunsIDCancel: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postIngestionRunsIDCancel: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -586,9 +586,9 @@ func (a *Client) PostIngestionSchedulesContext(ctx context.Context, params *Post
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostIngestionSchedules",
+		ID:                 "postIngestionSchedules",
 		Method:             "POST",
-		PathPattern:        "/ingestion/schedules",
+		PathPattern:        "/api/v1/ingestion/schedules",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -617,7 +617,7 @@ func (a *Client) PostIngestionSchedulesContext(ctx context.Context, params *Post
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostIngestionSchedules: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postIngestionSchedules: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -648,9 +648,9 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostIngestionSchedulesIDTrigger",
+		ID:                 "postIngestionSchedulesIDTrigger",
 		Method:             "POST",
-		PathPattern:        "/ingestion/schedules/{id}/trigger",
+		PathPattern:        "/api/v1/ingestion/schedules/{id}/trigger",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -679,7 +679,7 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostIngestionSchedulesIDTrigger: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postIngestionSchedulesIDTrigger: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -710,9 +710,9 @@ func (a *Client) PostIngestionValidateContext(ctx context.Context, params *PostI
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostIngestionValidate",
+		ID:                 "postIngestionValidate",
 		Method:             "POST",
-		PathPattern:        "/ingestion/validate",
+		PathPattern:        "/api/v1/ingestion/validate",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -741,7 +741,7 @@ func (a *Client) PostIngestionValidateContext(ctx context.Context, params *PostI
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostIngestionValidate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postIngestionValidate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -772,9 +772,9 @@ func (a *Client) PutIngestionSchedulesIDContext(ctx context.Context, params *Put
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutIngestionSchedulesID",
+		ID:                 "putIngestionSchedulesID",
 		Method:             "PUT",
-		PathPattern:        "/ingestion/schedules/{id}",
+		PathPattern:        "/api/v1/ingestion/schedules/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -803,7 +803,7 @@ func (a *Client) PutIngestionSchedulesIDContext(ctx context.Context, params *Put
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putIngestionSchedulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

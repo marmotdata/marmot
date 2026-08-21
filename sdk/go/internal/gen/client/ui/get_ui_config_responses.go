@@ -28,7 +28,7 @@ func (o *GetUIConfigReader) ReadResponse(response runtime.ClientResponse, consum
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /ui/config] GetUIConfig", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/ui/config] getUIConfig", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetUIConfigOK) Code() int {
 
 func (o *GetUIConfigOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ui/config][%d] getUiConfigOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ui/config][%d] getUiConfigOK %s", 200, payload)
 }
 
 func (o *GetUIConfigOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ui/config][%d] getUiConfigOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ui/config][%d] getUiConfigOK %s", 200, payload)
 }
 
 func (o *GetUIConfigOK) GetPayload() *models.UIConfigResponse {

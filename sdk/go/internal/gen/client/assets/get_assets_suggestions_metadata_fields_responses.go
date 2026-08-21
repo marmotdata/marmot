@@ -34,7 +34,7 @@ func (o *GetAssetsSuggestionsMetadataFieldsReader) ReadResponse(response runtime
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/suggestions/metadata/fields] GetAssetsSuggestionsMetadataFields", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/suggestions/metadata/fields] getAssetsSuggestionsMetadataFields", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetsSuggestionsMetadataFieldsOK) Code() int {
 
 func (o *GetAssetsSuggestionsMetadataFieldsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataFieldsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataFieldsOK) GetPayload() []*models.MetadataFieldSuggestion {
@@ -148,12 +148,12 @@ func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) Code() int {
 
 func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) GetPayload() *models.ErrorResponse {

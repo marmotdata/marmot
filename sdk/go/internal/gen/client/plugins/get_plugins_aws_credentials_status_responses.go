@@ -28,7 +28,7 @@ func (o *GetPluginsAwsCredentialsStatusReader) ReadResponse(response runtime.Cli
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /plugins/aws/credentials/status] GetPluginsAwsCredentialsStatus", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/plugins/aws/credentials/status] getPluginsAwsCredentialsStatus", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetPluginsAwsCredentialsStatusOK) Code() int {
 
 func (o *GetPluginsAwsCredentialsStatusOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /plugins/aws/credentials/status][%d] getPluginsAwsCredentialsStatusOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/plugins/aws/credentials/status][%d] getPluginsAwsCredentialsStatusOK %s", 200, payload)
 }
 
 func (o *GetPluginsAwsCredentialsStatusOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /plugins/aws/credentials/status][%d] getPluginsAwsCredentialsStatusOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/plugins/aws/credentials/status][%d] getPluginsAwsCredentialsStatusOK %s", 200, payload)
 }
 
 func (o *GetPluginsAwsCredentialsStatusOK) GetPayload() *models.AWSCredentialStatus {

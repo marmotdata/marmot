@@ -40,7 +40,7 @@ func (o *GetProductsImagesIDReader) ReadResponse(response runtime.ClientResponse
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /products/images/{id}] GetProductsImagesID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/products/images/{id}] getProductsImagesID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetProductsImagesIDOK) Code() int {
 
 func (o *GetProductsImagesIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdOK %s", 200, payload)
 }
 
 func (o *GetProductsImagesIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdOK %s", 200, payload)
 }
 
 func (o *GetProductsImagesIDOK) GetPayload() any {
@@ -154,12 +154,12 @@ func (o *GetProductsImagesIDNotFound) Code() int {
 
 func (o *GetProductsImagesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdNotFound %s", 404, payload)
 }
 
 func (o *GetProductsImagesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdNotFound %s", 404, payload)
 }
 
 func (o *GetProductsImagesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *GetProductsImagesIDInternalServerError) Code() int {
 
 func (o *GetProductsImagesIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsImagesIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/images/{id}][%d] getProductsImagesIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsImagesIDInternalServerError) GetPayload() *models.ErrorResponse {

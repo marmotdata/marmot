@@ -40,7 +40,7 @@ func (o *PostTeamsIDMembersUserIDConvertToManualReader) ReadResponse(response ru
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /teams/{id}/members/{userId}/convert-to-manual] PostTeamsIDMembersUserIDConvertToManual", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual] postTeamsIDMembersUserIDConvertToManual", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostTeamsIDMembersUserIDConvertToManualOK) Code() int {
 
 func (o *PostTeamsIDMembersUserIDConvertToManualOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualOK %s", 200, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualOK %s", 200, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualOK) GetPayload() *models.MessageResponse {
@@ -156,12 +156,12 @@ func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) Code() int {
 
 func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualNotFound %s", 404, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualNotFound %s", 404, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) Code() int 
 
 func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualInternalServerError %s", 500, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualInternalServerError %s", 500, payload)
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) GetPayload() *models.ErrorResponse {

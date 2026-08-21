@@ -40,7 +40,7 @@ func (o *GetTeamsIDReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /teams/{id}] GetTeamsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/teams/{id}] getTeamsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetTeamsIDOK) Code() int {
 
 func (o *GetTeamsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdOK %s", 200, payload)
 }
 
 func (o *GetTeamsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdOK %s", 200, payload)
 }
 
 func (o *GetTeamsIDOK) GetPayload() *models.Team {
@@ -156,12 +156,12 @@ func (o *GetTeamsIDNotFound) Code() int {
 
 func (o *GetTeamsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdNotFound %s", 404, payload)
 }
 
 func (o *GetTeamsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdNotFound %s", 404, payload)
 }
 
 func (o *GetTeamsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetTeamsIDInternalServerError) Code() int {
 
 func (o *GetTeamsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsIDInternalServerError) GetPayload() *models.ErrorResponse {

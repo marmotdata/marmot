@@ -40,7 +40,7 @@ func (o *DeleteTeamsIDMembersUserIDReader) ReadResponse(response runtime.ClientR
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /teams/{id}/members/{userId}] DeleteTeamsIDMembersUserID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/teams/{id}/members/{userId}] deleteTeamsIDMembersUserID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *DeleteTeamsIDMembersUserIDOK) Code() int {
 
 func (o *DeleteTeamsIDMembersUserIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdOK %s", 200, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdOK %s", 200, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDOK) GetPayload() *models.MessageResponse {
@@ -156,12 +156,12 @@ func (o *DeleteTeamsIDMembersUserIDNotFound) Code() int {
 
 func (o *DeleteTeamsIDMembersUserIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *DeleteTeamsIDMembersUserIDInternalServerError) Code() int {
 
 func (o *DeleteTeamsIDMembersUserIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/teams/{id}/members/{userId}][%d] deleteTeamsIdMembersUserIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteTeamsIDMembersUserIDInternalServerError) GetPayload() *models.ErrorResponse {

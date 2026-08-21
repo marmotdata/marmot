@@ -28,7 +28,7 @@ func (o *PostRunsAssetsBatchReader) ReadResponse(response runtime.ClientResponse
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[POST /runs/assets/batch] PostRunsAssetsBatch", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/runs/assets/batch] postRunsAssetsBatch", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *PostRunsAssetsBatchOK) Code() int {
 
 func (o *PostRunsAssetsBatchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/assets/batch][%d] postRunsAssetsBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/assets/batch][%d] postRunsAssetsBatchOK %s", 200, payload)
 }
 
 func (o *PostRunsAssetsBatchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/assets/batch][%d] postRunsAssetsBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/assets/batch][%d] postRunsAssetsBatchOK %s", 200, payload)
 }
 
 func (o *PostRunsAssetsBatchOK) GetPayload() *models.BatchCreateResponse {

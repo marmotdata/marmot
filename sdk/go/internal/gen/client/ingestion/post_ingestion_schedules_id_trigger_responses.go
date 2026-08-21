@@ -46,7 +46,7 @@ func (o *PostIngestionSchedulesIDTriggerReader) ReadResponse(response runtime.Cl
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /ingestion/schedules/{id}/trigger] PostIngestionSchedulesIDTrigger", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/ingestion/schedules/{id}/trigger] postIngestionSchedulesIDTrigger", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostIngestionSchedulesIDTriggerCreated) Code() int {
 
 func (o *PostIngestionSchedulesIDTriggerCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerCreated %s", 201, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerCreated %s", 201, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerCreated) GetPayload() *models.JobRun {
@@ -162,12 +162,12 @@ func (o *PostIngestionSchedulesIDTriggerUnauthorized) Code() int {
 
 func (o *PostIngestionSchedulesIDTriggerUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerUnauthorized) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostIngestionSchedulesIDTriggerNotFound) Code() int {
 
 func (o *PostIngestionSchedulesIDTriggerNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerNotFound %s", 404, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerNotFound %s", 404, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostIngestionSchedulesIDTriggerInternalServerError) Code() int {
 
 func (o *PostIngestionSchedulesIDTriggerInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postIngestionSchedulesIdTriggerInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionSchedulesIDTriggerInternalServerError) GetPayload() *models.ErrorResponse {

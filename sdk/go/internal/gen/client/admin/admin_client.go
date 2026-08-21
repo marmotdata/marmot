@@ -102,9 +102,9 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAdminSearchReindex",
+		ID:                 "getAdminSearchReindex",
 		Method:             "GET",
-		PathPattern:        "/admin/search/reindex",
+		PathPattern:        "/api/v1/admin/search/reindex",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -133,7 +133,7 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAdminSearchReindex: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAdminSearchReindex: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -168,9 +168,9 @@ func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *Post
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAdminSearchReindex",
+		ID:                 "postAdminSearchReindex",
 		Method:             "POST",
-		PathPattern:        "/admin/search/reindex",
+		PathPattern:        "/api/v1/admin/search/reindex",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -199,7 +199,7 @@ func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *Post
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAdminSearchReindex: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAdminSearchReindex: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
