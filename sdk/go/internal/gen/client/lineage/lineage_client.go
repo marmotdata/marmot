@@ -126,9 +126,9 @@ func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *Delet
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteLineageDirectID",
+		ID:                 "deleteLineageDirectID",
 		Method:             "DELETE",
-		PathPattern:        "/lineage/direct/{id}",
+		PathPattern:        "/api/v1/lineage/direct/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -157,7 +157,7 @@ func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *Delet
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -192,9 +192,9 @@ func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLinea
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetLineageAssetsID",
+		ID:                 "getLineageAssetsID",
 		Method:             "GET",
-		PathPattern:        "/lineage/assets/{id}",
+		PathPattern:        "/api/v1/lineage/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -223,7 +223,7 @@ func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetLineageAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getLineageAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -258,9 +258,9 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetLineageDirectID",
+		ID:                 "getLineageDirectID",
 		Method:             "GET",
-		PathPattern:        "/lineage/direct/{id}",
+		PathPattern:        "/api/v1/lineage/direct/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -289,7 +289,7 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -324,9 +324,9 @@ func (a *Client) PostLineageContext(ctx context.Context, params *PostLineagePara
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostLineage",
+		ID:                 "postLineage",
 		Method:             "POST",
-		PathPattern:        "/lineage",
+		PathPattern:        "/api/v1/lineage",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -355,7 +355,7 @@ func (a *Client) PostLineageContext(ctx context.Context, params *PostLineagePara
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostLineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -390,9 +390,9 @@ func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineag
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostLineageBatch",
+		ID:                 "postLineageBatch",
 		Method:             "POST",
-		PathPattern:        "/lineage/batch",
+		PathPattern:        "/api/v1/lineage/batch",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -421,7 +421,7 @@ func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineag
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostLineageBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineageBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -456,9 +456,9 @@ func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLinea
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostLineageDirect",
+		ID:                 "postLineageDirect",
 		Method:             "POST",
-		PathPattern:        "/lineage/direct",
+		PathPattern:        "/api/v1/lineage/direct",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -487,7 +487,7 @@ func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostLineageDirect: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineageDirect: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

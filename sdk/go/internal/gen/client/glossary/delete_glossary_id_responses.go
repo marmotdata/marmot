@@ -46,7 +46,7 @@ func (o *DeleteGlossaryIDReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /glossary/{id}] DeleteGlossaryID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/glossary/{id}] deleteGlossaryID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *DeleteGlossaryIDOK) Code() int {
 
 func (o *DeleteGlossaryIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdOK %s", 200, payload)
 }
 
 func (o *DeleteGlossaryIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdOK %s", 200, payload)
 }
 
 func (o *DeleteGlossaryIDOK) GetPayload() map[string]string {
@@ -160,12 +160,12 @@ func (o *DeleteGlossaryIDBadRequest) Code() int {
 
 func (o *DeleteGlossaryIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteGlossaryIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteGlossaryIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *DeleteGlossaryIDNotFound) Code() int {
 
 func (o *DeleteGlossaryIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteGlossaryIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteGlossaryIDNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *DeleteGlossaryIDInternalServerError) Code() int {
 
 func (o *DeleteGlossaryIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteGlossaryIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/glossary/{id}][%d] deleteGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteGlossaryIDInternalServerError) GetPayload() *models.ErrorResponse {

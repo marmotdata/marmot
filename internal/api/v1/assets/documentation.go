@@ -43,7 +43,8 @@ type BatchDocumentationResult struct {
 // @Success 200 {object} assetdocs.Documentation
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/documentation [post]
+// @ID postAssetsDocumentation
+// @Router /api/v1/assets/documentation/ [post]
 func (h *Handler) createAssetDocumentation(w http.ResponseWriter, r *http.Request) {
 	var req DocumentationCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -78,7 +79,8 @@ func (h *Handler) createAssetDocumentation(w http.ResponseWriter, r *http.Reques
 // @Success 200 {array} assetdocs.Documentation
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/documentation/{mrn} [get]
+// @ID getAssetsDocumentationMrn
+// @Router /api/v1/assets/documentation/{mrn} [get]
 func (h *Handler) getAssetDocumentation(w http.ResponseWriter, r *http.Request) {
 	encodedMRN := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/documentation/")
 	if encodedMRN == "" {
@@ -118,7 +120,8 @@ func (h *Handler) getAssetDocumentation(w http.ResponseWriter, r *http.Request) 
 // @Success 200 {object} BatchDocumentationResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/documentation/batch [post]
+// @ID postAssetsDocumentationBatch
+// @Router /api/v1/assets/documentation/batch [post]
 func (h *Handler) batchCreateDocumentation(w http.ResponseWriter, r *http.Request) {
 	var req BatchDocumentationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

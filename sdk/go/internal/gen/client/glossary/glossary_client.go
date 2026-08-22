@@ -138,9 +138,9 @@ func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlos
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteGlossaryID",
+		ID:                 "deleteGlossaryID",
 		Method:             "DELETE",
-		PathPattern:        "/glossary/{id}",
+		PathPattern:        "/api/v1/glossary/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -169,7 +169,7 @@ func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlos
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -204,9 +204,9 @@ func (a *Client) GetGlossaryAncestorsIDContext(ctx context.Context, params *GetG
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetGlossaryAncestorsID",
+		ID:                 "getGlossaryAncestorsID",
 		Method:             "GET",
-		PathPattern:        "/glossary/ancestors/{id}",
+		PathPattern:        "/api/v1/glossary/ancestors/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -235,7 +235,7 @@ func (a *Client) GetGlossaryAncestorsIDContext(ctx context.Context, params *GetG
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossaryAncestorsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getGlossaryAncestorsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -270,9 +270,9 @@ func (a *Client) GetGlossaryChildrenIDContext(ctx context.Context, params *GetGl
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetGlossaryChildrenID",
+		ID:                 "getGlossaryChildrenID",
 		Method:             "GET",
-		PathPattern:        "/glossary/children/{id}",
+		PathPattern:        "/api/v1/glossary/children/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -301,7 +301,7 @@ func (a *Client) GetGlossaryChildrenIDContext(ctx context.Context, params *GetGl
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossaryChildrenID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getGlossaryChildrenID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -336,9 +336,9 @@ func (a *Client) GetGlossaryIDContext(ctx context.Context, params *GetGlossaryID
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetGlossaryID",
+		ID:                 "getGlossaryID",
 		Method:             "GET",
-		PathPattern:        "/glossary/{id}",
+		PathPattern:        "/api/v1/glossary/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -367,7 +367,7 @@ func (a *Client) GetGlossaryIDContext(ctx context.Context, params *GetGlossaryID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -402,9 +402,9 @@ func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossary
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetGlossaryList",
+		ID:                 "getGlossaryList",
 		Method:             "GET",
-		PathPattern:        "/glossary/list",
+		PathPattern:        "/api/v1/glossary/list",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -433,7 +433,7 @@ func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossary
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossaryList: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getGlossaryList: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -468,9 +468,9 @@ func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossa
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetGlossarySearch",
+		ID:                 "getGlossarySearch",
 		Method:             "GET",
-		PathPattern:        "/glossary/search",
+		PathPattern:        "/api/v1/glossary/search",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -499,7 +499,7 @@ func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossa
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossarySearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getGlossarySearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -534,9 +534,9 @@ func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryPa
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostGlossary",
+		ID:                 "postGlossary",
 		Method:             "POST",
-		PathPattern:        "/glossary/",
+		PathPattern:        "/api/v1/glossary/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -565,7 +565,7 @@ func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryPa
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostGlossary: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postGlossary: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -600,9 +600,9 @@ func (a *Client) PutGlossaryIDContext(ctx context.Context, params *PutGlossaryID
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutGlossaryID",
+		ID:                 "putGlossaryID",
 		Method:             "PUT",
-		PathPattern:        "/glossary/{id}",
+		PathPattern:        "/api/v1/glossary/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -631,7 +631,7 @@ func (a *Client) PutGlossaryIDContext(ctx context.Context, params *PutGlossaryID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

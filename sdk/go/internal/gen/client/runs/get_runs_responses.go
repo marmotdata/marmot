@@ -33,7 +33,7 @@ func (o *GetRunsReader) ReadResponse(response runtime.ClientResponse, consumer r
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /runs] GetRuns", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/runs] getRuns", response, response.Code())
 	}
 }
 
@@ -81,12 +81,12 @@ func (o *GetRunsOK) Code() int {
 
 func (o *GetRunsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs][%d] getRunsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs][%d] getRunsOK %s", 200, payload)
 }
 
 func (o *GetRunsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs][%d] getRunsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs][%d] getRunsOK %s", 200, payload)
 }
 
 func (o *GetRunsOK) GetPayload() *GetRunsOKBody {

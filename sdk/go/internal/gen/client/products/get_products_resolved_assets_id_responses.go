@@ -46,7 +46,7 @@ func (o *GetProductsResolvedAssetsIDReader) ReadResponse(response runtime.Client
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /products/resolved-assets/{id}] GetProductsResolvedAssetsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/products/resolved-assets/{id}] getProductsResolvedAssetsID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetProductsResolvedAssetsIDOK) Code() int {
 
 func (o *GetProductsResolvedAssetsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDOK) GetPayload() *models.DataProductResolvedAssets {
@@ -162,12 +162,12 @@ func (o *GetProductsResolvedAssetsIDBadRequest) Code() int {
 
 func (o *GetProductsResolvedAssetsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *GetProductsResolvedAssetsIDNotFound) Code() int {
 
 func (o *GetProductsResolvedAssetsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *GetProductsResolvedAssetsIDInternalServerError) Code() int {
 
 func (o *GetProductsResolvedAssetsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/resolved-assets/{id}][%d] getProductsResolvedAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsResolvedAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {

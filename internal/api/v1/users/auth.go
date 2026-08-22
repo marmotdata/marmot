@@ -42,7 +42,8 @@ type OAuthLinkRequest struct {
 // @Success 200 {object} TokenResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/login [post]
+// @ID postUsersLogin
+// @Router /api/v1/users/login [post]
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	var input LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -100,7 +101,8 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/oauth/link [post]
+// @ID postUsersOauthLink
+// @Router /api/v1/users/oauth/link [post]
 func (h *Handler) linkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 	var input OAuthLinkRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -132,7 +134,8 @@ func (h *Handler) linkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/oauth/unlink/{id}/{provider} [delete]
+// @ID deleteUsersOauthUnlinkIDProvider
+// @Router /api/v1/users/oauth/unlink/{id}/{provider} [delete]
 func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/users/oauth/unlink/"), "/")
 	if len(parts) != 2 {
@@ -167,7 +170,8 @@ func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} TokenResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
-// @Router /users/update-password [post]
+// @ID postUsersUpdatePassword
+// @Router /api/v1/users/update-password [post]
 func (h *Handler) updatePassword(w http.ResponseWriter, r *http.Request) {
 	var input UpdatePasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

@@ -46,7 +46,7 @@ func (o *GetIngestionRunsIDEntitiesReader) ReadResponse(response runtime.ClientR
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /ingestion/runs/{id}/entities] GetIngestionRunsIDEntities", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/ingestion/runs/{id}/entities] getIngestionRunsIDEntities", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetIngestionRunsIDEntitiesOK) Code() int {
 
 func (o *GetIngestionRunsIDEntitiesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesOK %s", 200, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesOK %s", 200, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesOK) GetPayload() any {
@@ -160,12 +160,12 @@ func (o *GetIngestionRunsIDEntitiesUnauthorized) Code() int {
 
 func (o *GetIngestionRunsIDEntitiesUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesUnauthorized) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *GetIngestionRunsIDEntitiesNotFound) Code() int {
 
 func (o *GetIngestionRunsIDEntitiesNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesNotFound %s", 404, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesNotFound %s", 404, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *GetIngestionRunsIDEntitiesInternalServerError) Code() int {
 
 func (o *GetIngestionRunsIDEntitiesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs/{id}/entities][%d] getIngestionRunsIdEntitiesInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionRunsIDEntitiesInternalServerError) GetPayload() *models.ErrorResponse {

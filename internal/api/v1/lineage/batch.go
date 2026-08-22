@@ -24,7 +24,8 @@ type BatchLineageResult struct {
 // @Security BearerAuth
 // @Success 200 {array} BatchLineageResult
 // @Failure 400 {object} common.ErrorResponse
-// @Router /lineage/batch [post]
+// @ID postLineageBatch
+// @Router /api/v1/lineage/batch [post]
 func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
 	var edges []lineage.LineageEdge
 	if err := json.NewDecoder(r.Body).Decode(&edges); err != nil {

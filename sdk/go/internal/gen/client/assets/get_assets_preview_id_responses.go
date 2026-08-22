@@ -58,7 +58,7 @@ func (o *GetAssetsPreviewIDReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/preview/{id}] GetAssetsPreviewID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/preview/{id}] getAssetsPreviewID", response, response.Code())
 	}
 }
 
@@ -106,12 +106,12 @@ func (o *GetAssetsPreviewIDOK) Code() int {
 
 func (o *GetAssetsPreviewIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsPreviewIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsPreviewIDOK) GetPayload() *models.PreviewResponse {
@@ -174,12 +174,12 @@ func (o *GetAssetsPreviewIDBadRequest) Code() int {
 
 func (o *GetAssetsPreviewIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsPreviewIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsPreviewIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -242,12 +242,12 @@ func (o *GetAssetsPreviewIDForbidden) Code() int {
 
 func (o *GetAssetsPreviewIDForbidden) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdForbidden %s", 403, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdForbidden %s", 403, payload)
 }
 
 func (o *GetAssetsPreviewIDForbidden) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdForbidden %s", 403, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdForbidden %s", 403, payload)
 }
 
 func (o *GetAssetsPreviewIDForbidden) GetPayload() *models.ErrorResponse {
@@ -310,12 +310,12 @@ func (o *GetAssetsPreviewIDNotFound) Code() int {
 
 func (o *GetAssetsPreviewIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsPreviewIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsPreviewIDNotFound) GetPayload() *models.ErrorResponse {
@@ -378,12 +378,12 @@ func (o *GetAssetsPreviewIDInternalServerError) Code() int {
 
 func (o *GetAssetsPreviewIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsPreviewIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsPreviewIDInternalServerError) GetPayload() *models.ErrorResponse {
@@ -446,12 +446,12 @@ func (o *GetAssetsPreviewIDNotImplemented) Code() int {
 
 func (o *GetAssetsPreviewIDNotImplemented) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdNotImplemented %s", 501, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdNotImplemented %s", 501, payload)
 }
 
 func (o *GetAssetsPreviewIDNotImplemented) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/preview/{id}][%d] getAssetsPreviewIdNotImplemented %s", 501, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getAssetsPreviewIdNotImplemented %s", 501, payload)
 }
 
 func (o *GetAssetsPreviewIDNotImplemented) GetPayload() *models.ErrorResponse {

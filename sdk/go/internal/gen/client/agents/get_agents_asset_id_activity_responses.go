@@ -28,7 +28,7 @@ func (o *GetAgentsAssetIDActivityReader) ReadResponse(response runtime.ClientRes
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /agents/{asset_id}/activity] GetAgentsAssetIDActivity", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/agents/{asset_id}/activity] getAgentsAssetIDActivity", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetAgentsAssetIDActivityOK) Code() int {
 
 func (o *GetAgentsAssetIDActivityOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /agents/{asset_id}/activity][%d] getAgentsAssetIdActivityOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/agents/{asset_id}/activity][%d] getAgentsAssetIdActivityOK %s", 200, payload)
 }
 
 func (o *GetAgentsAssetIDActivityOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /agents/{asset_id}/activity][%d] getAgentsAssetIdActivityOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/agents/{asset_id}/activity][%d] getAgentsAssetIdActivityOK %s", 200, payload)
 }
 
 func (o *GetAgentsAssetIDActivityOK) GetPayload() *models.ActivityResponse {

@@ -27,7 +27,7 @@ func (o *PostRunsCompleteReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[POST /runs/complete] PostRunsComplete", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/runs/complete] postRunsComplete", response, response.Code())
 	}
 }
 
@@ -75,12 +75,12 @@ func (o *PostRunsCompleteOK) Code() int {
 
 func (o *PostRunsCompleteOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/complete][%d] postRunsCompleteOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/complete][%d] postRunsCompleteOK %s", 200, payload)
 }
 
 func (o *PostRunsCompleteOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/complete][%d] postRunsCompleteOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/complete][%d] postRunsCompleteOK %s", 200, payload)
 }
 
 func (o *PostRunsCompleteOK) GetPayload() map[string]string {

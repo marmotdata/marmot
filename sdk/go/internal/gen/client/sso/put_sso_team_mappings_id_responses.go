@@ -46,7 +46,7 @@ func (o *PutSsoTeamMappingsIDReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /sso/team-mappings/{id}] PutSsoTeamMappingsID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/sso/team-mappings/{id}] putSsoTeamMappingsID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PutSsoTeamMappingsIDOK) Code() int {
 
 func (o *PutSsoTeamMappingsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *PutSsoTeamMappingsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *PutSsoTeamMappingsIDOK) GetPayload() *models.MessageResponse {
@@ -162,12 +162,12 @@ func (o *PutSsoTeamMappingsIDBadRequest) Code() int {
 
 func (o *PutSsoTeamMappingsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutSsoTeamMappingsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutSsoTeamMappingsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PutSsoTeamMappingsIDNotFound) Code() int {
 
 func (o *PutSsoTeamMappingsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *PutSsoTeamMappingsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *PutSsoTeamMappingsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PutSsoTeamMappingsIDInternalServerError) Code() int {
 
 func (o *PutSsoTeamMappingsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutSsoTeamMappingsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /sso/team-mappings/{id}][%d] putSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/sso/team-mappings/{id}][%d] putSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutSsoTeamMappingsIDInternalServerError) GetPayload() *models.ErrorResponse {

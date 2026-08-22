@@ -98,9 +98,9 @@ func (a *Client) GetPluginsContext(ctx context.Context, params *GetPluginsParams
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetPlugins",
+		ID:                 "getPlugins",
 		Method:             "GET",
-		PathPattern:        "/plugins",
+		PathPattern:        "/api/v1/plugins",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -129,7 +129,7 @@ func (a *Client) GetPluginsContext(ctx context.Context, params *GetPluginsParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetPlugins: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getPlugins: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -164,9 +164,9 @@ func (a *Client) GetPluginsAwsCredentialsStatusContext(ctx context.Context, para
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetPluginsAwsCredentialsStatus",
+		ID:                 "getPluginsAwsCredentialsStatus",
 		Method:             "GET",
-		PathPattern:        "/plugins/aws/credentials/status",
+		PathPattern:        "/api/v1/plugins/aws/credentials/status",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -195,7 +195,7 @@ func (a *Client) GetPluginsAwsCredentialsStatusContext(ctx context.Context, para
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetPluginsAwsCredentialsStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getPluginsAwsCredentialsStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

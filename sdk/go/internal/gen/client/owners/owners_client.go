@@ -96,9 +96,9 @@ func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSe
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetOwnersSearch",
+		ID:                 "getOwnersSearch",
 		Method:             "GET",
-		PathPattern:        "/owners/search",
+		PathPattern:        "/api/v1/owners/search",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -127,7 +127,7 @@ func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSe
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetOwnersSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getOwnersSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -150,9 +150,9 @@ func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsID
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTeamsID",
+		ID:                 "deleteTeamsID",
 		Method:             "DELETE",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -181,7 +181,7 @@ func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -216,9 +216,9 @@ func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTeamsIDMembersUserID",
+		ID:                 "deleteTeamsIDMembersUserID",
 		Method:             "DELETE",
-		PathPattern:        "/teams/{id}/members/{userId}",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -247,7 +247,7 @@ func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTeamsIDMembersUserID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteTeamsIDMembersUserID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -282,9 +282,9 @@ func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, op
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeams",
+		ID:                 "getTeams",
 		Method:             "GET",
-		PathPattern:        "/teams",
+		PathPattern:        "/api/v1/teams",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -313,7 +313,7 @@ func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, op
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -348,9 +348,9 @@ func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeamsID",
+		ID:                 "getTeamsID",
 		Method:             "GET",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -379,7 +379,7 @@ func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -414,9 +414,9 @@ func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsI
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeamsIDMembers",
+		ID:                 "getTeamsIDMembers",
 		Method:             "GET",
-		PathPattern:        "/teams/{id}/members",
+		PathPattern:        "/api/v1/teams/{id}/members",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -445,7 +445,7 @@ func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsI
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -480,9 +480,9 @@ func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, 
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeams",
+		ID:                 "postTeams",
 		Method:             "POST",
-		PathPattern:        "/teams",
+		PathPattern:        "/api/v1/teams",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -511,7 +511,7 @@ func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -546,9 +546,9 @@ func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeam
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeamsIDMembers",
+		ID:                 "postTeamsIDMembers",
 		Method:             "POST",
-		PathPattern:        "/teams/{id}/members",
+		PathPattern:        "/api/v1/teams/{id}/members",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -577,7 +577,7 @@ func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeam
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -612,9 +612,9 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Cont
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeamsIDMembersUserIDConvertToManual",
+		ID:                 "postTeamsIDMembersUserIDConvertToManual",
 		Method:             "POST",
-		PathPattern:        "/teams/{id}/members/{userId}/convert-to-manual",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}/convert-to-manual",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -643,7 +643,7 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Cont
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeamsIDMembersUserIDConvertToManual: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeamsIDMembersUserIDConvertToManual: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -678,9 +678,9 @@ func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutTeamsID",
+		ID:                 "putTeamsID",
 		Method:             "PUT",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -709,7 +709,7 @@ func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -744,9 +744,9 @@ func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params 
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutTeamsIDMembersUserIDRole",
+		ID:                 "putTeamsIDMembersUserIDRole",
 		Method:             "PUT",
-		PathPattern:        "/teams/{id}/members/{userId}/role",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}/role",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -775,7 +775,7 @@ func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutTeamsIDMembersUserIDRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putTeamsIDMembersUserIDRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

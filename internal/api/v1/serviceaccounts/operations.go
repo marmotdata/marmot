@@ -38,7 +38,8 @@ type createAPIKeyRequest struct {
 // @Security BearerAuth
 // @Success 200 {array} serviceaccount.ServiceAccount
 // @Failure 500 {object} common.ErrorResponse
-// @Router /service-accounts [get]
+// @ID getServiceAccounts
+// @Router /api/v1/service-accounts [get]
 func (h *Handler) listServiceAccounts(w http.ResponseWriter, r *http.Request) {
 	accounts, err := h.svcService.List(r.Context())
 	if err != nil {
@@ -62,7 +63,8 @@ func (h *Handler) listServiceAccounts(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 201 {object} serviceaccount.ServiceAccount
 // @Failure 400 {object} common.ErrorResponse
-// @Router /service-accounts [post]
+// @ID postServiceAccounts
+// @Router /api/v1/service-accounts [post]
 func (h *Handler) createServiceAccount(w http.ResponseWriter, r *http.Request) {
 	var req createServiceAccountRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -106,7 +108,8 @@ func (h *Handler) createServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {object} serviceaccount.ServiceAccount
 // @Failure 404 {object} common.ErrorResponse
-// @Router /service-accounts/{id} [get]
+// @ID getServiceAccountsID
+// @Router /api/v1/service-accounts/{id} [get]
 func (h *Handler) getServiceAccount(w http.ResponseWriter, r *http.Request) {
 	id := extractID(r.URL.Path, "/api/v1/service-accounts/", "")
 	if id == "" {
@@ -139,7 +142,8 @@ func (h *Handler) getServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {object} serviceaccount.ServiceAccount
 // @Failure 404 {object} common.ErrorResponse
-// @Router /service-accounts/{id} [patch]
+// @ID patchServiceAccountsID
+// @Router /api/v1/service-accounts/{id} [patch]
 func (h *Handler) updateServiceAccount(w http.ResponseWriter, r *http.Request) {
 	id := extractID(r.URL.Path, "/api/v1/service-accounts/", "")
 	if id == "" {
@@ -184,7 +188,8 @@ func (h *Handler) updateServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
-// @Router /service-accounts/{id} [delete]
+// @ID deleteServiceAccountsID
+// @Router /api/v1/service-accounts/{id} [delete]
 func (h *Handler) deleteServiceAccount(w http.ResponseWriter, r *http.Request) {
 	id := extractID(r.URL.Path, "/api/v1/service-accounts/", "")
 	if id == "" {
@@ -213,7 +218,8 @@ func (h *Handler) deleteServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {array} serviceaccount.APIKey
-// @Router /service-accounts/{id}/api-keys [get]
+// @ID getServiceAccountsIDAPIKeys
+// @Router /api/v1/service-accounts/{id}/api-keys [get]
 func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 	saID := extractID(r.URL.Path, "/api/v1/service-accounts/", "/api-keys")
 	if saID == "" {
@@ -244,7 +250,8 @@ func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 201 {object} serviceaccount.APIKey
 // @Failure 400 {object} common.ErrorResponse
-// @Router /service-accounts/{id}/api-keys [post]
+// @ID postServiceAccountsIDAPIKeys
+// @Router /api/v1/service-accounts/{id}/api-keys [post]
 func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 	saID := extractID(r.URL.Path, "/api/v1/service-accounts/", "/api-keys")
 	if saID == "" {
@@ -299,7 +306,8 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
-// @Router /service-accounts/{id}/api-keys/{keyId} [delete]
+// @ID deleteServiceAccountsIDAPIKeysKeyID
+// @Router /api/v1/service-accounts/{id}/api-keys/{keyId} [delete]
 func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/service-accounts/"), "/api-keys/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

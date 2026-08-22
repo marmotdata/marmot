@@ -34,7 +34,7 @@ func (o *GetAssetRulesListReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /asset-rules/list] GetAssetRulesList", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/asset-rules/list] getAssetRulesList", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetRulesListOK) Code() int {
 
 func (o *GetAssetRulesListOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/list][%d] getAssetRulesListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/list][%d] getAssetRulesListOK %s", 200, payload)
 }
 
 func (o *GetAssetRulesListOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/list][%d] getAssetRulesListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/list][%d] getAssetRulesListOK %s", 200, payload)
 }
 
 func (o *GetAssetRulesListOK) GetPayload() *models.AssetRuleListResult {
@@ -150,12 +150,12 @@ func (o *GetAssetRulesListInternalServerError) Code() int {
 
 func (o *GetAssetRulesListInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/list][%d] getAssetRulesListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/list][%d] getAssetRulesListInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetRulesListInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/list][%d] getAssetRulesListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/list][%d] getAssetRulesListInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetRulesListInternalServerError) GetPayload() *models.ErrorResponse {

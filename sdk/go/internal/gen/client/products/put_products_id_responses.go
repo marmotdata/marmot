@@ -52,7 +52,7 @@ func (o *PutProductsIDReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /products/{id}] PutProductsID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/products/{id}] putProductsID", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PutProductsIDOK) Code() int {
 
 func (o *PutProductsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdOK %s", 200, payload)
 }
 
 func (o *PutProductsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdOK %s", 200, payload)
 }
 
 func (o *PutProductsIDOK) GetPayload() *models.DataProduct {
@@ -168,12 +168,12 @@ func (o *PutProductsIDBadRequest) Code() int {
 
 func (o *PutProductsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutProductsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutProductsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PutProductsIDNotFound) Code() int {
 
 func (o *PutProductsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdNotFound %s", 404, payload)
 }
 
 func (o *PutProductsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdNotFound %s", 404, payload)
 }
 
 func (o *PutProductsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PutProductsIDConflict) Code() int {
 
 func (o *PutProductsIDConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdConflict %s", 409, payload)
 }
 
 func (o *PutProductsIDConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdConflict %s", 409, payload)
 }
 
 func (o *PutProductsIDConflict) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PutProductsIDInternalServerError) Code() int {
 
 func (o *PutProductsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutProductsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/{id}][%d] putProductsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutProductsIDInternalServerError) GetPayload() *models.ErrorResponse {

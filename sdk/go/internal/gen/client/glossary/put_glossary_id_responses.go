@@ -46,7 +46,7 @@ func (o *PutGlossaryIDReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /glossary/{id}] PutGlossaryID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/glossary/{id}] putGlossaryID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PutGlossaryIDOK) Code() int {
 
 func (o *PutGlossaryIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdOK %s", 200, payload)
 }
 
 func (o *PutGlossaryIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdOK %s", 200, payload)
 }
 
 func (o *PutGlossaryIDOK) GetPayload() *models.GlossaryTerm {
@@ -162,12 +162,12 @@ func (o *PutGlossaryIDBadRequest) Code() int {
 
 func (o *PutGlossaryIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *PutGlossaryIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *PutGlossaryIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PutGlossaryIDNotFound) Code() int {
 
 func (o *PutGlossaryIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *PutGlossaryIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *PutGlossaryIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PutGlossaryIDInternalServerError) Code() int {
 
 func (o *PutGlossaryIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutGlossaryIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /glossary/{id}][%d] putGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/glossary/{id}][%d] putGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutGlossaryIDInternalServerError) GetPayload() *models.ErrorResponse {

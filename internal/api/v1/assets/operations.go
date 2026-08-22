@@ -60,7 +60,8 @@ type UpdateRequest struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
-// @Router /assets [post]
+// @ID postAssets
+// @Router /api/v1/assets/ [post]
 func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -146,7 +147,8 @@ func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *Ass
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [get]
+// @ID getAssetsID
+// @Router /api/v1/assets/{id} [get]
 func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -185,7 +187,8 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [put]
+// @ID putAssetsID
+// @Router /api/v1/assets/{id} [put]
 func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -242,7 +245,8 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [delete]
+// @ID deleteAssetsID
+// @Router /api/v1/assets/{id} [delete]
 func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -272,13 +276,14 @@ func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 // @Tags assets
 // @Accept json
 // @Produce json
-// @Param qualifiedName path string true "Asset qualified name"
 // @Security ApiKeyAuth
 // @Security BearerAuth
+// @Param name path string true "Asset qualified name"
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/qualified-name/{qualifiedName} [get]
+// @ID getAssetsQualifiedNameQualifiedName
+// @Router /api/v1/assets/qualified-name/{name} [get]
 func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 	qualifiedName := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/qualified-name/")
 	if qualifiedName == "" {

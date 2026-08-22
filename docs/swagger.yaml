@@ -1,4 +1,3 @@
-basePath: /api/v1
 definitions:
   APIKey:
     properties:
@@ -2606,10 +2605,11 @@ info:
   title: Marmot API
   version: "0.1"
 paths:
-  /admin/search/reindex:
+  /api/v1/admin/search/reindex:
     get:
       description: Check whether a search reindex is currently running and whether
         Elasticsearch is configured.
+      operationId: getAdminSearchReindex
       produces:
       - application/json
       responses:
@@ -2634,6 +2634,7 @@ paths:
     post:
       description: Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex
         runs asynchronously in the background. Only one reindex can run at a time.
+      operationId: postAdminSearchReindex
       produces:
       - application/json
       responses:
@@ -2663,8 +2664,9 @@ paths:
       summary: Start search reindex
       tags:
       - admin
-  /agents/{asset_id}/activity:
+  /api/v1/agents/{asset_id}/activity:
     get:
+      operationId: getAgentsAssetIDActivity
       parameters:
       - description: Agent asset id
         in: path
@@ -2688,8 +2690,9 @@ paths:
       summary: Agent activity
       tags:
       - agents
-  /agents/{asset_id}/runs:
+  /api/v1/agents/{asset_id}/runs:
     get:
+      operationId: getAgentsAssetIDRuns
       parameters:
       - description: Agent asset id
         in: path
@@ -2717,8 +2720,9 @@ paths:
       summary: List agent runs
       tags:
       - agents
-  /agents/{asset_id}/stats:
+  /api/v1/agents/{asset_id}/stats:
     get:
+      operationId: getAgentsAssetIDStats
       parameters:
       - description: Agent asset id
         in: path
@@ -2742,10 +2746,11 @@ paths:
       summary: Agent stats
       tags:
       - agents
-  /agents/runs:
+  /api/v1/agents/runs:
     post:
       consumes:
       - application/json
+      operationId: postAgentsRuns
       parameters:
       - description: Agent run record
         in: body
@@ -2766,11 +2771,12 @@ paths:
       summary: Record agent run
       tags:
       - agents
-  /asset-rules:
+  /api/v1/asset-rules/:
     post:
       consumes:
       - application/json
       description: Create a new asset rule that applies enrichments to matching assets
+      operationId: postAssetRules
       parameters:
       - description: Asset rule creation request
         in: body
@@ -2803,9 +2809,10 @@ paths:
       summary: Create an asset rule
       tags:
       - asset-rules
-  /asset-rules/{id}:
+  /api/v1/asset-rules/{id}:
     delete:
       description: Delete an asset rule by ID
+      operationId: deleteAssetRulesID
       parameters:
       - description: Asset rule ID
         in: path
@@ -2831,6 +2838,7 @@ paths:
       - asset-rules
     get:
       description: Get an asset rule by ID
+      operationId: getAssetRulesID
       parameters:
       - description: Asset rule ID
         in: path
@@ -2862,6 +2870,7 @@ paths:
       consumes:
       - application/json
       description: Update an existing asset rule
+      operationId: putAssetRulesID
       parameters:
       - description: Asset rule ID
         in: path
@@ -2903,9 +2912,10 @@ paths:
       summary: Update an asset rule
       tags:
       - asset-rules
-  /asset-rules/assets/{id}:
+  /api/v1/asset-rules/assets/{id}:
     get:
       description: Get the list of asset IDs matched by an asset rule
+      operationId: getAssetRulesAssetsID
       parameters:
       - description: Asset rule ID
         in: path
@@ -2944,9 +2954,10 @@ paths:
       summary: Get assets matched by a rule
       tags:
       - asset-rules
-  /asset-rules/list:
+  /api/v1/asset-rules/list:
     get:
       description: List all asset rules with pagination
+      operationId: getAssetRulesList
       parameters:
       - default: 50
         description: Number of items to return
@@ -2975,11 +2986,12 @@ paths:
       summary: List asset rules
       tags:
       - asset-rules
-  /asset-rules/preview:
+  /api/v1/asset-rules/preview:
     post:
       consumes:
       - application/json
       description: Preview which assets would match a rule configuration
+      operationId: postAssetRulesPreview
       parameters:
       - description: Rule preview request
         in: body
@@ -3008,9 +3020,10 @@ paths:
       summary: Preview an asset rule
       tags:
       - asset-rules
-  /asset-rules/search:
+  /api/v1/asset-rules/search:
     get:
       description: Search asset rules by name
+      operationId: getAssetRulesSearch
       parameters:
       - description: Search query
         in: query
@@ -3043,11 +3056,12 @@ paths:
       summary: Search asset rules
       tags:
       - asset-rules
-  /assets:
+  /api/v1/assets/:
     post:
       consumes:
       - application/json
       description: Create a new asset in the system
+      operationId: postAssets
       parameters:
       - description: Asset creation request
         in: body
@@ -3080,11 +3094,12 @@ paths:
       summary: Create a new asset
       tags:
       - assets
-  /assets/{id}:
+  /api/v1/assets/{id}:
     delete:
       consumes:
       - application/json
       description: Delete an asset from the system
+      operationId: deleteAssetsID
       parameters:
       - description: Asset ID
         in: path
@@ -3118,6 +3133,7 @@ paths:
       consumes:
       - application/json
       description: Get detailed information about a specific asset
+      operationId: getAssetsID
       parameters:
       - description: Asset ID
         in: path
@@ -3149,6 +3165,7 @@ paths:
       consumes:
       - application/json
       description: Update an existing asset's information
+      operationId: putAssetsID
       parameters:
       - description: Asset ID
         in: path
@@ -3186,9 +3203,383 @@ paths:
       summary: Update an asset
       tags:
       - assets
-  /assets/{id}/run-history:
+  /api/v1/assets/by-glossary-term/{term_id}:
+    get:
+      description: Retrieve all assets associated with a specific glossary term
+      operationId: getAssetsByGlossaryTermTermID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: term_id
+        required: true
+        type: string
+      - default: 20
+        description: Maximum number of assets
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get assets by glossary term
+      tags:
+      - assets
+  /api/v1/assets/documentation/:
+    post:
+      consumes:
+      - application/json
+      description: Create or update documentation for an asset
+      operationId: postAssetsDocumentation
+      parameters:
+      - description: Documentation creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/DocumentationCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Documentation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Create asset documentation
+      tags:
+      - assets
+  /api/v1/assets/documentation/{mrn}:
+    get:
+      description: Get documentation for a specific asset
+      operationId: getAssetsDocumentationMrn
+      parameters:
+      - description: Asset MRN
+        format: url
+        in: path
+        name: mrn
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Documentation'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get asset documentation
+      tags:
+      - assets
+  /api/v1/assets/documentation/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create or update documentation for multiple assets
+      operationId: postAssetsDocumentationBatch
+      parameters:
+      - description: Batch documentation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/BatchDocumentationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/BatchDocumentationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Batch create documentation
+      tags:
+      - assets
+  /api/v1/assets/lookup/{type}/{service}/{name}:
+    get:
+      description: Get an asset by its type, service (provider), and name
+      operationId: getAssetsLookupTypeServiceName
+      parameters:
+      - description: Asset type
+        in: path
+        name: type
+        required: true
+        type: string
+      - description: Service/Provider name
+        in: path
+        name: service
+        required: true
+        type: string
+      - description: Asset name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Asset'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Lookup asset by type, service, and name
+      tags:
+      - assets
+  /api/v1/assets/match-pattern/:
+    get:
+      description: Find assets matching a pattern
+      operationId: getAssetsMatchPattern
+      parameters:
+      - description: Asset pattern to match
+        in: query
+        name: pattern
+        required: true
+        type: string
+      - description: Asset type
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Asset'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Match asset pattern
+      tags:
+      - assets
+  /api/v1/assets/my-assets:
+    get:
+      description: Get assets owned by the current user or their teams
+      operationId: getAssetsMyAssets
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AssetSearchResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get user's assets
+      tags:
+      - assets
+  /api/v1/assets/preview/{id}:
+    get:
+      description: Fetches sample data from the asset's data source. Requires assets:preview
+        permission.
+      operationId: getAssetsPreviewID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Missing assets:preview permission
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "501":
+          description: Data preview not supported for this asset
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get preview data for an asset
+      tags:
+      - assets
+  /api/v1/assets/qualified-name/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific asset using its qualified
+        name
+      operationId: getAssetsQualifiedNameQualifiedName
+      parameters:
+      - description: Asset qualified name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Asset'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get an asset by qualified name
+      tags:
+      - assets
+  /api/v1/assets/run-history-histogram/{id}:
+    get:
+      description: Get histogram data for asset run history over specified period
+      operationId: getAssetsIDRunHistoryHistogram
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 30d
+        description: Time period (7d, 30d, 90d)
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/HistogramResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get asset run history histogram
+      tags:
+      - assets
+  /api/v1/assets/run-history/{id}:
     get:
       description: Get paginated run history for a specific asset
+      operationId: getAssetsIDRunHistory
       parameters:
       - description: Asset ID
         in: path
@@ -3230,374 +3621,12 @@ paths:
       summary: Get asset run history
       tags:
       - assets
-  /assets/{id}/run-history/histogram:
-    get:
-      description: Get histogram data for asset run history over specified period
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - default: 30d
-        description: Time period (7d, 30d, 90d)
-        in: query
-        name: period
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/HistogramResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get asset run history histogram
-      tags:
-      - assets
-  /assets/by-glossary-term/{term_id}:
-    get:
-      description: Retrieve all assets associated with a specific glossary term
-      parameters:
-      - description: Glossary Term ID
-        in: path
-        name: term_id
-        required: true
-        type: string
-      - default: 20
-        description: Maximum number of assets
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Pagination offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get assets by glossary term
-      tags:
-      - assets
-  /assets/documentation:
-    post:
-      consumes:
-      - application/json
-      description: Create or update documentation for an asset
-      parameters:
-      - description: Documentation creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/DocumentationCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Documentation'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Create asset documentation
-      tags:
-      - assets
-  /assets/documentation/{mrn}:
-    get:
-      description: Get documentation for a specific asset
-      parameters:
-      - description: Asset MRN
-        format: url
-        in: path
-        name: mrn
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/Documentation'
-            type: array
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get asset documentation
-      tags:
-      - assets
-  /assets/documentation/batch:
-    post:
-      consumes:
-      - application/json
-      description: Create or update documentation for multiple assets
-      parameters:
-      - description: Batch documentation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/BatchDocumentationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/BatchDocumentationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Batch create documentation
-      tags:
-      - assets
-  /assets/lookup/{type}/{service}/{name}:
-    get:
-      description: Get an asset by its type, service (provider), and name
-      parameters:
-      - description: Asset type
-        in: path
-        name: type
-        required: true
-        type: string
-      - description: Service/Provider name
-        in: path
-        name: service
-        required: true
-        type: string
-      - description: Asset name
-        in: path
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Asset'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Lookup asset by type, service, and name
-      tags:
-      - assets
-  /assets/match-pattern:
-    get:
-      description: Find assets matching a pattern
-      parameters:
-      - description: Asset pattern to match
-        in: query
-        name: pattern
-        required: true
-        type: string
-      - description: Asset type
-        in: query
-        name: type
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/Asset'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Match asset pattern
-      tags:
-      - assets
-  /assets/my-assets:
-    get:
-      description: Get assets owned by the current user or their teams
-      parameters:
-      - default: 20
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AssetSearchResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get user's assets
-      tags:
-      - assets
-  /assets/preview/{id}:
-    get:
-      description: Fetches sample data from the asset's data source. Requires assets:preview
-        permission.
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/PreviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "403":
-          description: Missing assets:preview permission
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "501":
-          description: Data preview not supported for this asset
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get preview data for an asset
-      tags:
-      - assets
-  /assets/qualified-name/{qualifiedName}:
-    get:
-      consumes:
-      - application/json
-      description: Get detailed information about a specific asset using its qualified
-        name
-      parameters:
-      - description: Asset qualified name
-        in: path
-        name: qualifiedName
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Asset'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get an asset by qualified name
-      tags:
-      - assets
-  /assets/search:
+  /api/v1/assets/search:
     get:
       consumes:
       - application/json
       description: Search for assets using query string and filters
+      operationId: getAssetsSearch
       parameters:
       - description: Search query
         in: query
@@ -3660,9 +3689,10 @@ paths:
       summary: Search assets
       tags:
       - assets
-  /assets/suggestions/metadata/fields:
+  /api/v1/assets/suggestions/metadata/fields:
     get:
       description: Get suggestions for metadata fields and their types
+      operationId: getAssetsSuggestionsMetadataFields
       produces:
       - application/json
       responses:
@@ -3682,9 +3712,10 @@ paths:
       summary: Get metadata field suggestions
       tags:
       - assets
-  /assets/suggestions/metadata/values:
+  /api/v1/assets/suggestions/metadata/values:
     get:
       description: Get suggestions for values of a specific metadata field
+      operationId: getAssetsSuggestionsMetadataValues
       parameters:
       - description: Metadata field name
         in: query
@@ -3723,9 +3754,10 @@ paths:
       summary: Get metadata value suggestions
       tags:
       - assets
-  /assets/suggestions/tags:
+  /api/v1/assets/suggestions/tags:
     get:
       description: Get suggestions for asset tags
+      operationId: getAssetsSuggestionsTags
       parameters:
       - description: Tag prefix to filter by
         in: query
@@ -3755,11 +3787,12 @@ paths:
       summary: Get tag suggestions
       tags:
       - assets
-  /assets/summary:
+  /api/v1/assets/summary:
     get:
       consumes:
       - application/json
       description: Get the total count of assets by type
+      operationId: getAssetsSummary
       produces:
       - application/json
       responses:
@@ -3777,11 +3810,12 @@ paths:
       summary: Get asset summary
       tags:
       - assets
-  /assets/tags/{id}:
+  /api/v1/assets/tags/{id}:
     delete:
       consumes:
       - application/json
       description: Remove a tag from an existing asset
+      operationId: deleteAssetsTagsID
       parameters:
       - description: Asset ID
         in: path
@@ -3819,6 +3853,7 @@ paths:
       consumes:
       - application/json
       description: Add a new tag to an existing asset
+      operationId: postAssetsTagsID
       parameters:
       - description: Asset ID
         in: path
@@ -3852,11 +3887,12 @@ paths:
       summary: Add tag to asset
       tags:
       - assets
-  /assets/terms/{id}:
+  /api/v1/assets/terms/{id}:
     delete:
       consumes:
       - application/json
       description: Remove a glossary term association from an asset
+      operationId: deleteAssetsTermsID
       parameters:
       - description: Asset ID
         in: path
@@ -3894,6 +3930,7 @@ paths:
       - assets
     get:
       description: Retrieve all glossary terms associated with an asset
+      operationId: getAssetsTermsID
       parameters:
       - description: Asset ID
         in: path
@@ -3923,6 +3960,7 @@ paths:
       consumes:
       - application/json
       description: Associate one or more glossary terms with an asset
+      operationId: postAssetsTermsID
       parameters:
       - description: Asset ID
         in: path
@@ -3958,93 +3996,13 @@ paths:
       summary: Add glossary terms to asset
       tags:
       - assets
-  /auth-providers:
-    get:
-      description: Returns the enabled auth providers without sensitive data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AuthConfig'
-      summary: Get auth configuration
-      tags:
-      - auth
-  /auth/{provider}/callback:
-    get:
-      description: Processes the OAuth callback from any provider
-      parameters:
-      - description: OAuth provider (okta, google, github, etc.)
-        in: path
-        name: provider
-        required: true
-        type: string
-      - description: Authorization code
-        in: query
-        name: code
-        required: true
-        type: string
-      - description: State parameter for CSRF protection
-        in: query
-        name: state
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "307":
-          description: Temporary Redirect
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Handle OAuth callback
-      tags:
-      - auth
-  /auth/{provider}/login:
-    get:
-      description: Redirects the user to the OAuth provider for authentication
-      parameters:
-      - description: OAuth provider (okta, google, github, etc.)
-        in: path
-        name: provider
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "307":
-          description: Temporary Redirect
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Initiate OAuth login
-      tags:
-      - auth
-  /glossary/:
+  /api/v1/glossary/:
     post:
       consumes:
       - application/json
       description: Create a new glossary term with name, definition, and optional
         metadata
+      operationId: postGlossary
       parameters:
       - description: Glossary term to create
         in: body
@@ -4081,9 +4039,10 @@ paths:
       summary: Create glossary term
       tags:
       - glossary
-  /glossary/{id}:
+  /api/v1/glossary/{id}:
     delete:
       description: Delete a glossary term by its ID
+      operationId: deleteGlossaryID
       parameters:
       - description: Glossary Term ID
         in: path
@@ -4119,6 +4078,7 @@ paths:
       - glossary
     get:
       description: Retrieve a glossary term by its ID
+      operationId: getGlossaryID
       parameters:
       - description: Glossary Term ID
         in: path
@@ -4154,6 +4114,7 @@ paths:
       consumes:
       - application/json
       description: Update an existing glossary term by its ID
+      operationId: putGlossaryID
       parameters:
       - description: Glossary Term ID
         in: path
@@ -4191,9 +4152,10 @@ paths:
       summary: Update glossary term
       tags:
       - glossary
-  /glossary/ancestors/{id}:
+  /api/v1/glossary/ancestors/{id}:
     get:
       description: Retrieve all ancestor terms of a glossary term (parent chain)
+      operationId: getGlossaryAncestorsID
       parameters:
       - description: Term ID
         in: path
@@ -4226,9 +4188,10 @@ paths:
       summary: Get ancestor terms
       tags:
       - glossary
-  /glossary/children/{id}:
+  /api/v1/glossary/children/{id}:
     get:
       description: Retrieve all child terms of a glossary term
+      operationId: getGlossaryChildrenID
       parameters:
       - description: Parent Term ID
         in: path
@@ -4261,9 +4224,10 @@ paths:
       summary: Get child terms
       tags:
       - glossary
-  /glossary/list:
+  /api/v1/glossary/list:
     get:
       description: Retrieve a paginated list of all glossary terms
+      operationId: getGlossaryList
       parameters:
       - default: 20
         description: Maximum number of terms to return
@@ -4292,9 +4256,10 @@ paths:
       summary: List glossary terms
       tags:
       - glossary
-  /glossary/search:
+  /api/v1/glossary/search:
     get:
       description: Search for glossary terms by query string and filters
+      operationId: getGlossarySearch
       parameters:
       - description: Search query
         in: query
@@ -4335,8 +4300,9 @@ paths:
       summary: Search glossary terms
       tags:
       - glossary
-  /ingestion/runs:
+  /api/v1/ingestion/runs:
     get:
+      operationId: getIngestionRuns
       parameters:
       - description: Filter by schedule ID
         in: query
@@ -4375,8 +4341,9 @@ paths:
       summary: List ingestion job runs
       tags:
       - ingestion
-  /ingestion/runs/{id}:
+  /api/v1/ingestion/runs/{id}:
     get:
+      operationId: getIngestionRunsID
       parameters:
       - description: Job run ID
         in: path
@@ -4408,8 +4375,9 @@ paths:
       summary: Get a job run by ID
       tags:
       - ingestion
-  /ingestion/runs/{id}/cancel:
+  /api/v1/ingestion/runs/{id}/cancel:
     post:
+      operationId: postIngestionRunsIDCancel
       parameters:
       - description: Job run ID
         in: path
@@ -4437,8 +4405,9 @@ paths:
       summary: Cancel a running job
       tags:
       - ingestion
-  /ingestion/runs/{id}/entities:
+  /api/v1/ingestion/runs/{id}/entities:
     get:
+      operationId: getIngestionRunsIDEntities
       parameters:
       - description: Job run ID
         in: path
@@ -4479,8 +4448,9 @@ paths:
       summary: Get entities for a job run
       tags:
       - ingestion
-  /ingestion/schedules:
+  /api/v1/ingestion/schedules:
     get:
+      operationId: getIngestionSchedules
       parameters:
       - description: Filter by enabled status
         in: query
@@ -4518,6 +4488,7 @@ paths:
     post:
       consumes:
       - application/json
+      operationId: postIngestionSchedules
       parameters:
       - description: Schedule configuration
         in: body
@@ -4550,8 +4521,9 @@ paths:
       summary: Create a new ingestion schedule
       tags:
       - ingestion
-  /ingestion/schedules/{id}:
+  /api/v1/ingestion/schedules/{id}:
     delete:
+      operationId: deleteIngestionSchedulesID
       parameters:
       - description: Schedule ID
         in: path
@@ -4580,6 +4552,7 @@ paths:
       tags:
       - ingestion
     get:
+      operationId: getIngestionSchedulesID
       parameters:
       - description: Schedule ID
         in: path
@@ -4614,6 +4587,7 @@ paths:
     put:
       consumes:
       - application/json
+      operationId: putIngestionSchedulesID
       parameters:
       - description: Schedule ID
         in: path
@@ -4655,8 +4629,9 @@ paths:
       summary: Update an ingestion schedule
       tags:
       - ingestion
-  /ingestion/schedules/{id}/trigger:
+  /api/v1/ingestion/schedules/{id}/trigger:
     post:
+      operationId: postIngestionSchedulesIDTrigger
       parameters:
       - description: Schedule ID
         in: path
@@ -4686,10 +4661,11 @@ paths:
       summary: Manually trigger an ingestion schedule
       tags:
       - ingestion
-  /ingestion/validate:
+  /api/v1/ingestion/validate:
     post:
       consumes:
       - application/json
+      operationId: postIngestionValidate
       parameters:
       - description: Config to validate
         in: body
@@ -4718,11 +4694,12 @@ paths:
       summary: Validate plugin configuration
       tags:
       - ingestion
-  /lineage:
+  /api/v1/lineage:
     post:
       consumes:
       - application/json
       description: Process OpenLineage run events and update assets/lineage accordingly
+      operationId: postLineage
       parameters:
       - description: OpenLineage run event
         in: body
@@ -4749,11 +4726,12 @@ paths:
       summary: Ingest OpenLineage event
       tags:
       - lineage
-  /lineage/assets/{id}:
+  /api/v1/lineage/assets/{id}:
     get:
       consumes:
       - application/json
       description: Get upstream and downstream lineage for a specific asset
+      operationId: getLineageAssetsID
       parameters:
       - description: Asset ID
         format: uuid
@@ -4805,11 +4783,12 @@ paths:
       summary: Get asset lineage
       tags:
       - lineage
-  /lineage/batch:
+  /api/v1/lineage/batch:
     post:
       consumes:
       - application/json
       description: Create lineage edges in batch
+      operationId: postLineageBatch
       parameters:
       - description: Array of lineage edges to create
         in: body
@@ -4838,12 +4817,13 @@ paths:
       summary: Batch create lineage edges
       tags:
       - lineage
-  /lineage/direct:
+  /api/v1/lineage/direct:
     post:
       consumes:
       - application/json
       description: Create a direct lineage connection between two assets and returns
         the created edge
+      operationId: postLineageDirect
       parameters:
       - description: Lineage edge to create
         in: body
@@ -4872,11 +4852,12 @@ paths:
       summary: Create direct lineage
       tags:
       - lineage
-  /lineage/direct/{id}:
+  /api/v1/lineage/direct/{id}:
     delete:
       consumes:
       - application/json
       description: Delete a direct lineage connection by its ID
+      operationId: deleteLineageDirectID
       parameters:
       - description: Edge ID
         format: uuid
@@ -4907,6 +4888,7 @@ paths:
       consumes:
       - application/json
       description: Get a specific direct lineage connection by its ID
+      operationId: getLineageDirectID
       parameters:
       - description: Edge ID
         format: uuid
@@ -4935,11 +4917,45 @@ paths:
       summary: Get direct lineage by ID
       tags:
       - lineage
-  /metrics:
+  /api/v1/mcp:
+    post:
+      consumes:
+      - application/json
+      description: JSON-RPC 2.0 over the MCP Streamable HTTP transport. Requires assets:view,
+        glossary:view and teams:view.
+      operationId: postMcp
+      parameters:
+      - description: JSON-RPC 2.0 request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JSON-RPC 2.0 response
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: MCP endpoint
+      tags:
+      - mcp
+  /api/v1/metrics:
     get:
       consumes:
       - application/json
       description: Get aggregated metrics for dashboard display
+      operationId: getMetrics
       parameters:
       - description: Start time (ISO 8601)
         in: query
@@ -4998,9 +5014,10 @@ paths:
       summary: Get metrics for UI
       tags:
       - metrics
-  /metrics/assets/by-owner:
+  /api/v1/metrics/assets/by-owner:
     get:
       description: Get asset counts grouped by owner
+      operationId: getMetricsAssetsByOwner
       produces:
       - application/json
       responses:
@@ -5014,9 +5031,10 @@ paths:
       summary: Get assets by owner
       tags:
       - metrics
-  /metrics/assets/by-provider:
+  /api/v1/metrics/assets/by-provider:
     get:
       description: Get asset counts grouped by provider
+      operationId: getMetricsAssetsByProvider
       produces:
       - application/json
       responses:
@@ -5030,9 +5048,10 @@ paths:
       summary: Get assets by provider
       tags:
       - metrics
-  /metrics/assets/by-type:
+  /api/v1/metrics/assets/by-type:
     get:
       description: Get asset counts grouped by type
+      operationId: getMetricsAssetsByType
       produces:
       - application/json
       responses:
@@ -5046,9 +5065,10 @@ paths:
       summary: Get assets by type
       tags:
       - metrics
-  /metrics/assets/total:
+  /api/v1/metrics/assets/total:
     get:
       description: Get the total number of assets
+      operationId: getMetricsAssetsTotal
       produces:
       - application/json
       responses:
@@ -5062,9 +5082,10 @@ paths:
       summary: Get total assets count
       tags:
       - metrics
-  /metrics/assets/with-schemas:
+  /api/v1/metrics/assets/with-schemas:
     get:
       description: Get the count of assets that have schemas defined
+      operationId: getMetricsAssetsWithSchemas
       produces:
       - application/json
       responses:
@@ -5078,9 +5099,10 @@ paths:
       summary: Get assets with schemas count
       tags:
       - metrics
-  /metrics/top-assets:
+  /api/v1/metrics/top-assets:
     get:
       description: Get the most viewed assets
+      operationId: getMetricsTopAssets
       parameters:
       - description: Start time (ISO 8601)
         in: query
@@ -5112,9 +5134,10 @@ paths:
       summary: Get top viewed assets
       tags:
       - metrics
-  /metrics/top-queries:
+  /api/v1/metrics/top-queries:
     get:
       description: Get the most popular search queries
+      operationId: getMetricsTopQueries
       parameters:
       - description: Start time (ISO 8601)
         in: query
@@ -5146,55 +5169,12 @@ paths:
       summary: Get top search queries
       tags:
       - metrics
-  /oauth/token:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: |-
-        Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
-        For token-exchange, supported subject_token_type values are
-        urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.
-      parameters:
-      - description: authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
-        in: formData
-        name: grant_type
-        required: true
-        type: string
-      - description: Token to exchange (token-exchange grant only)
-        in: formData
-        name: subject_token
-        type: string
-      - description: id_token or access_token URI (token-exchange grant only)
-        in: formData
-        name: subject_token_type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/TokenExchangeResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/OAuthErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/OAuthErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/OAuthErrorResponse'
-      summary: OAuth token endpoint
-      tags:
-      - auth
-  /owners/search:
+  /api/v1/owners/search:
     get:
       consumes:
       - application/json
       description: Search for asset owners (users and teams)
+      operationId: getOwnersSearch
       parameters:
       - description: Search query
         in: query
@@ -5227,9 +5207,10 @@ paths:
       summary: Search owners
       tags:
       - owners
-  /permissions:
+  /api/v1/permissions:
     get:
       description: List all defined permissions grouped by resource type
+      operationId: getPermissions
       produces:
       - application/json
       responses:
@@ -5249,9 +5230,10 @@ paths:
       summary: List all permissions
       tags:
       - roles
-  /pipelines/{pipelineName}:
+  /api/v1/pipelines/{pipelineName}:
     delete:
       description: Delete all resources ever created by a pipeline (across all sources)
+      operationId: deletePipelinesPipelineName
       parameters:
       - description: Pipeline Name
         in: path
@@ -5271,8 +5253,9 @@ paths:
       summary: Destroy pipeline
       tags:
       - pipelines
-  /plugins:
+  /api/v1/plugins:
     get:
+      operationId: getPlugins
       produces:
       - application/json
       responses:
@@ -5283,10 +5266,11 @@ paths:
       summary: List registered plugins
       tags:
       - plugins
-  /plugins/aws/credentials/status:
+  /api/v1/plugins/aws/credentials/status:
     get:
       description: Detects if AWS credentials are available from environment or config
         files
+      operationId: getPluginsAwsCredentialsStatus
       produces:
       - application/json
       responses:
@@ -5297,11 +5281,12 @@ paths:
       summary: Get AWS credential detection status
       tags:
       - plugins
-  /products/:
+  /api/v1/products/:
     post:
       consumes:
       - application/json
       description: Create a new data product with owners and optional membership rules
+      operationId: postProducts
       parameters:
       - description: Data product to create
         in: body
@@ -5338,9 +5323,10 @@ paths:
       summary: Create data product
       tags:
       - products
-  /products/{id}:
+  /api/v1/products/{id}:
     delete:
       description: Delete a data product by ID
+      operationId: deleteProductsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5376,6 +5362,7 @@ paths:
       - products
     get:
       description: Get a data product by ID
+      operationId: getProductsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5411,6 +5398,7 @@ paths:
       consumes:
       - application/json
       description: Update an existing data product
+      operationId: putProductsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5452,9 +5440,10 @@ paths:
       summary: Update data product
       tags:
       - products
-  /products/assets/{id}:
+  /api/v1/products/assets/{id}:
     get:
       description: Get the manually added assets of a data product
+      operationId: getProductsAssetsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5500,6 +5489,7 @@ paths:
       consumes:
       - application/json
       description: Manually add assets to a data product
+      operationId: postProductsAssetsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5543,9 +5533,10 @@ paths:
       summary: Add data product assets
       tags:
       - products
-  /products/assets/{id}/{assetId}:
+  /api/v1/products/assets/{id}/{assetId}:
     delete:
       description: Remove a manually added asset from a data product
+      operationId: deleteProductsAssetsIDAssetID
       parameters:
       - description: Data Product ID
         in: path
@@ -5584,9 +5575,10 @@ paths:
       summary: Remove data product asset
       tags:
       - products
-  /products/images/{id}:
+  /api/v1/products/images/{id}:
     get:
       description: List all images for a data product
+      operationId: getProductsImagesID
       parameters:
       - description: Data Product ID
         in: path
@@ -5615,9 +5607,10 @@ paths:
       summary: List product images
       tags:
       - products
-  /products/images/{id}/{purpose}:
+  /api/v1/products/images/{id}/{purpose}:
     delete:
       description: Delete an icon or header image for a data product
+      operationId: deleteProductsImagesIDPurpose
       parameters:
       - description: Data Product ID
         in: path
@@ -5654,6 +5647,7 @@ paths:
       - products
     get:
       description: Get an icon or header image for a data product
+      operationId: getProductsImagesIDPurpose
       parameters:
       - description: Data Product ID
         in: path
@@ -5693,6 +5687,7 @@ paths:
       consumes:
       - multipart/form-data
       description: Upload an icon or header image for a data product
+      operationId: postProductsImagesIDPurpose
       parameters:
       - description: Data Product ID
         in: path
@@ -5734,9 +5729,10 @@ paths:
       summary: Upload product image
       tags:
       - products
-  /products/list:
+  /api/v1/products/list:
     get:
       description: Retrieve a paginated list of data products
+      operationId: getProductsList
       parameters:
       - default: 20
         description: Maximum number of data products to return
@@ -5765,10 +5761,11 @@ paths:
       summary: List data products
       tags:
       - products
-  /products/resolved-assets/{id}:
+  /api/v1/products/resolved-assets/{id}:
     get:
       description: Get all assets of a data product, both manually added and matched
         by rules
+      operationId: getProductsResolvedAssetsID
       parameters:
       - description: Data Product ID
         in: path
@@ -5810,11 +5807,12 @@ paths:
       summary: Get resolved data product assets
       tags:
       - products
-  /products/rule-preview:
+  /api/v1/products/rule-preview:
     post:
       consumes:
       - application/json
       description: Preview which assets would match a rule configuration
+      operationId: postProductsRulePreview
       parameters:
       - description: Rule to preview
         in: body
@@ -5848,9 +5846,10 @@ paths:
       summary: Preview data product rule
       tags:
       - products
-  /products/rules/{id}:
+  /api/v1/products/rules/{id}:
     get:
       description: Get the membership rules of a data product
+      operationId: getProductsRulesID
       parameters:
       - description: Data Product ID
         in: path
@@ -5886,6 +5885,7 @@ paths:
       consumes:
       - application/json
       description: Create a membership rule for a data product
+      operationId: postProductsRulesID
       parameters:
       - description: Data Product ID
         in: path
@@ -5923,9 +5923,10 @@ paths:
       summary: Create data product rule
       tags:
       - products
-  /products/rules/{id}/{ruleId}:
+  /api/v1/products/rules/{id}/{ruleId}:
     delete:
       description: Delete a membership rule from a data product
+      operationId: deleteProductsRulesIDRuleID
       parameters:
       - description: Data Product ID
         in: path
@@ -5968,6 +5969,7 @@ paths:
       consumes:
       - application/json
       description: Update a membership rule of a data product
+      operationId: putProductsRulesIDRuleID
       parameters:
       - description: Data Product ID
         in: path
@@ -6010,9 +6012,10 @@ paths:
       summary: Update data product rule
       tags:
       - products
-  /products/search:
+  /api/v1/products/search:
     get:
       description: Search data products by name, description, and tags
+      operationId: getProductsSearch
       parameters:
       - description: Search query
         in: query
@@ -6053,9 +6056,10 @@ paths:
       summary: Search data products
       tags:
       - products
-  /roles:
+  /api/v1/roles:
     get:
       description: List all active roles with user counts and permissions
+      operationId: getRoles
       produces:
       - application/json
       responses:
@@ -6079,6 +6083,7 @@ paths:
       consumes:
       - application/json
       description: Create a new role with optional initial permissions
+      operationId: postRoles
       parameters:
       - description: Role creation request
         in: body
@@ -6107,10 +6112,11 @@ paths:
       summary: Create a role
       tags:
       - roles
-  /roles/{id}:
+  /api/v1/roles/{id}:
     delete:
       description: Soft-delete a role. Fails if the role is a system role or has active
         user assignments.
+      operationId: deleteRolesID
       parameters:
       - description: Role ID
         in: path
@@ -6138,6 +6144,7 @@ paths:
       - roles
     get:
       description: Get a role by ID with its permissions
+      operationId: getRolesID
       parameters:
       - description: Role ID
         in: path
@@ -6165,6 +6172,7 @@ paths:
       consumes:
       - application/json
       description: Update a role's name or description. System roles cannot be renamed.
+      operationId: patchRolesID
       parameters:
       - description: Role ID
         in: path
@@ -6202,12 +6210,13 @@ paths:
       summary: Update a role
       tags:
       - roles
-  /roles/{id}/permissions:
+  /api/v1/roles/{id}/permissions:
     post:
       consumes:
       - application/json
       description: Atomically replace all permissions on a role. System roles enforce
         a minimum permission floor.
+      operationId: postRolesIDPermissions
       parameters:
       - description: Role ID
         in: path
@@ -6245,9 +6254,10 @@ paths:
       summary: Replace role permissions
       tags:
       - roles
-  /runs:
+  /api/v1/runs:
     get:
       description: Get paginated list of runs with filtering
+      operationId: getRuns
       parameters:
       - description: Comma-separated list of pipeline names
         in: query
@@ -6295,9 +6305,10 @@ paths:
       summary: List runs
       tags:
       - runs
-  /runs/{id}:
+  /api/v1/runs/{id}:
     get:
       description: Get a specific run by ID
+      operationId: getRunsID
       parameters:
       - description: Run ID
         in: path
@@ -6317,9 +6328,10 @@ paths:
       summary: Get run
       tags:
       - runs
-  /runs/{id}/entities:
+  /api/v1/runs/{id}/entities:
     get:
       description: Get paginated list of entities for a specific run
+      operationId: getRunsIDEntities
       parameters:
       - description: Run ID
         in: path
@@ -6357,11 +6369,12 @@ paths:
       summary: Get run entities
       tags:
       - runs
-  /runs/assets/batch:
+  /api/v1/runs/assets/batch:
     post:
       consumes:
       - application/json
       description: Create/update assets within a run
+      operationId: postRunsAssetsBatch
       parameters:
       - description: Batch create request
         in: body
@@ -6382,9 +6395,10 @@ paths:
       summary: Batch create assets
       tags:
       - runs
-  /runs/cleanup:
+  /api/v1/runs/cleanup:
     post:
       description: Mark runs as failed if they've been running too long without updates
+      operationId: postRunsCleanup
       responses:
         "200":
           description: OK
@@ -6398,11 +6412,12 @@ paths:
       summary: Cleanup stale runs
       tags:
       - runs
-  /runs/complete:
+  /api/v1/runs/complete:
     post:
       consumes:
       - application/json
       description: Complete a run with results
+      operationId: postRunsComplete
       parameters:
       - description: Complete run request
         in: body
@@ -6425,11 +6440,12 @@ paths:
       summary: Complete run
       tags:
       - runs
-  /runs/start:
+  /api/v1/runs/start:
     post:
       consumes:
       - application/json
       description: Start a new run for tracking
+      operationId: postRunsStart
       parameters:
       - description: Start run request
         in: body
@@ -6450,9 +6466,10 @@ paths:
       summary: Start run
       tags:
       - runs
-  /search:
+  /api/v1/search:
     get:
       description: Search across assets, glossary terms, teams, and users
+      operationId: getSearch
       parameters:
       - description: Search query
         in: query
@@ -6497,9 +6514,10 @@ paths:
       summary: Unified search
       tags:
       - search
-  /service-accounts:
+  /api/v1/service-accounts:
     get:
       description: Get all service accounts
+      operationId: getServiceAccounts
       produces:
       - application/json
       responses:
@@ -6523,6 +6541,7 @@ paths:
       consumes:
       - application/json
       description: Create a new service account
+      operationId: postServiceAccounts
       parameters:
       - description: Service account
         in: body
@@ -6547,9 +6566,10 @@ paths:
       summary: Create service account
       tags:
       - service_accounts
-  /service-accounts/{id}:
+  /api/v1/service-accounts/{id}:
     delete:
       description: Soft-delete a service account
+      operationId: deleteServiceAccountsID
       parameters:
       - description: Service account ID
         in: path
@@ -6571,6 +6591,7 @@ paths:
       - service_accounts
     get:
       description: Get a service account by ID
+      operationId: getServiceAccountsID
       parameters:
       - description: Service account ID
         in: path
@@ -6598,6 +6619,7 @@ paths:
       consumes:
       - application/json
       description: Update a service account
+      operationId: patchServiceAccountsID
       parameters:
       - description: Service account ID
         in: path
@@ -6627,9 +6649,10 @@ paths:
       summary: Update service account
       tags:
       - service_accounts
-  /service-accounts/{id}/api-keys:
+  /api/v1/service-accounts/{id}/api-keys:
     get:
       description: Get all API keys for a service account
+      operationId: getServiceAccountsIDAPIKeys
       parameters:
       - description: Service account ID
         in: path
@@ -6655,6 +6678,7 @@ paths:
       consumes:
       - application/json
       description: Create a new API key. The plaintext key is only returned once.
+      operationId: postServiceAccountsIDAPIKeys
       parameters:
       - description: Service account ID
         in: path
@@ -6684,9 +6708,10 @@ paths:
       summary: Create API key for a service account
       tags:
       - service_accounts
-  /service-accounts/{id}/api-keys/{keyId}:
+  /api/v1/service-accounts/{id}/api-keys/{keyId}:
     delete:
       description: Delete an API key for a service account
+      operationId: deleteServiceAccountsIDAPIKeysKeyID
       parameters:
       - description: Service account ID
         in: path
@@ -6711,10 +6736,11 @@ paths:
       summary: Delete an API key
       tags:
       - service_accounts
-  /sso-providers:
+  /api/v1/sso-providers:
     get:
       description: Read-only view of SSO providers wired via server config. Editing
         is done in config.yaml.
+      operationId: getSsoProviders
       produces:
       - application/json
       responses:
@@ -6728,11 +6754,12 @@ paths:
       summary: List configured SSO providers (admin)
       tags:
       - auth
-  /sso/team-mappings:
+  /api/v1/sso/team-mappings:
     get:
       consumes:
       - application/json
       description: Get a list of SSO group to team mappings
+      operationId: getSsoTeamMappings
       parameters:
       - description: Filter by SSO provider
         in: query
@@ -6759,6 +6786,7 @@ paths:
       consumes:
       - application/json
       description: Create a new SSO group to team mapping
+      operationId: postSsoTeamMappings
       parameters:
       - description: SSO mapping creation request
         in: body
@@ -6791,11 +6819,12 @@ paths:
       summary: Create an SSO team mapping
       tags:
       - sso
-  /sso/team-mappings/{id}:
+  /api/v1/sso/team-mappings/{id}:
     delete:
       consumes:
       - application/json
       description: Delete an SSO team mapping by its ID
+      operationId: deleteSsoTeamMappingsID
       parameters:
       - description: SSO mapping ID
         in: path
@@ -6827,6 +6856,7 @@ paths:
       consumes:
       - application/json
       description: Get an SSO team mapping by its ID
+      operationId: getSsoTeamMappingsID
       parameters:
       - description: SSO mapping ID
         in: path
@@ -6858,6 +6888,7 @@ paths:
       consumes:
       - application/json
       description: Update an SSO team mapping by its ID
+      operationId: putSsoTeamMappingsID
       parameters:
       - description: SSO mapping ID
         in: path
@@ -6895,11 +6926,12 @@ paths:
       summary: Update an SSO team mapping
       tags:
       - sso
-  /teams:
+  /api/v1/teams:
     get:
       consumes:
       - application/json
       description: Get a paginated list of teams
+      operationId: getTeams
       parameters:
       - default: 50
         description: Number of items to return
@@ -6932,6 +6964,7 @@ paths:
       consumes:
       - application/json
       description: Create a new team
+      operationId: postTeams
       parameters:
       - description: Team creation request
         in: body
@@ -6964,11 +6997,12 @@ paths:
       summary: Create a team
       tags:
       - teams
-  /teams/{id}:
+  /api/v1/teams/{id}:
     delete:
       consumes:
       - application/json
       description: Delete a team by its ID
+      operationId: deleteTeamsID
       parameters:
       - description: Team ID
         in: path
@@ -7004,6 +7038,7 @@ paths:
       consumes:
       - application/json
       description: Get a team by its ID
+      operationId: getTeamsID
       parameters:
       - description: Team ID
         in: path
@@ -7035,6 +7070,7 @@ paths:
       consumes:
       - application/json
       description: Update a team's fields by its ID
+      operationId: putTeamsID
       parameters:
       - description: Team ID
         in: path
@@ -7080,11 +7116,12 @@ paths:
       summary: Update a team
       tags:
       - teams
-  /teams/{id}/members:
+  /api/v1/teams/{id}/members:
     get:
       consumes:
       - application/json
       description: Get the members of a team
+      operationId: getTeamsIDMembers
       parameters:
       - description: Team ID
         in: path
@@ -7112,6 +7149,7 @@ paths:
       consumes:
       - application/json
       description: Add a user as a member of a team
+      operationId: postTeamsIDMembers
       parameters:
       - description: Team ID
         in: path
@@ -7153,11 +7191,12 @@ paths:
       summary: Add a team member
       tags:
       - teams
-  /teams/{id}/members/{userId}:
+  /api/v1/teams/{id}/members/{userId}:
     delete:
       consumes:
       - application/json
       description: Remove a user from a team
+      operationId: deleteTeamsIDMembersUserID
       parameters:
       - description: Team ID
         in: path
@@ -7190,11 +7229,12 @@ paths:
       summary: Remove a team member
       tags:
       - teams
-  /teams/{id}/members/{userId}/convert-to-manual:
+  /api/v1/teams/{id}/members/{userId}/convert-to-manual:
     post:
       consumes:
       - application/json
       description: Convert an SSO-managed team member to a manually managed member
+      operationId: postTeamsIDMembersUserIDConvertToManual
       parameters:
       - description: Team ID
         in: path
@@ -7227,11 +7267,12 @@ paths:
       summary: Convert member to manual
       tags:
       - teams
-  /teams/{id}/members/{userId}/role:
+  /api/v1/teams/{id}/members/{userId}/role:
     put:
       consumes:
       - application/json
       description: Update the role of a team member
+      operationId: putTeamsIDMembersUserIDRole
       parameters:
       - description: Team ID
         in: path
@@ -7274,9 +7315,10 @@ paths:
       summary: Update member role
       tags:
       - teams
-  /ui/config:
+  /api/v1/ui/config:
     get:
       description: Get UI configuration including banner settings
+      operationId: getUIConfig
       produces:
       - application/json
       responses:
@@ -7287,11 +7329,12 @@ paths:
       summary: Get UI configuration
       tags:
       - ui
-  /users:
+  /api/v1/users:
     get:
       consumes:
       - application/json
       description: Get a list of users with optional filtering
+      operationId: getUsers
       parameters:
       - default: 50
         description: Number of items to return
@@ -7339,6 +7382,7 @@ paths:
       consumes:
       - application/json
       description: Create a new user in the system
+      operationId: postUsers
       parameters:
       - description: User creation request
         in: body
@@ -7367,11 +7411,12 @@ paths:
       summary: Create a new user
       tags:
       - users
-  /users/{id}:
+  /api/v1/users/{id}:
     delete:
       consumes:
       - application/json
       description: Delete a user from the system
+      operationId: deleteUsersID
       parameters:
       - description: User ID
         in: path
@@ -7401,6 +7446,7 @@ paths:
       consumes:
       - application/json
       description: Get detailed information about a specific user
+      operationId: getUsersID
       parameters:
       - description: User ID
         in: path
@@ -7432,6 +7478,7 @@ paths:
       consumes:
       - application/json
       description: Update user information
+      operationId: putUsersID
       parameters:
       - description: User ID
         in: path
@@ -7465,11 +7512,12 @@ paths:
       summary: Update a user
       tags:
       - users
-  /users/apikeys:
+  /api/v1/users/apikeys:
     get:
       consumes:
       - application/json
       description: Get all API keys for a user
+      operationId: getUsersApikeys
       produces:
       - application/json
       responses:
@@ -7493,6 +7541,7 @@ paths:
       consumes:
       - application/json
       description: Create a new API key for a user
+      operationId: postUsersApikeys
       parameters:
       - description: API key creation request
         in: body
@@ -7517,11 +7566,12 @@ paths:
       summary: Create API key
       tags:
       - users
-  /users/apikeys/{id}:
+  /api/v1/users/apikeys/{id}:
     delete:
       consumes:
       - application/json
       description: Delete an API key
+      operationId: deleteUsersApikeysID
       parameters:
       - description: API key ID
         in: path
@@ -7543,11 +7593,12 @@ paths:
       summary: Delete API key
       tags:
       - users
-  /users/login:
+  /api/v1/users/login:
     post:
       consumes:
       - application/json
       description: Authenticate a user with username/email and password
+      operationId: postUsersLogin
       parameters:
       - description: Login credentials
         in: body
@@ -7573,11 +7624,12 @@ paths:
       summary: Login user
       tags:
       - users
-  /users/me:
+  /api/v1/users/me:
     get:
       consumes:
       - application/json
       description: Get detailed information about the currently authenticated user
+      operationId: getUsersMe
       produces:
       - application/json
       responses:
@@ -7595,11 +7647,12 @@ paths:
       summary: Get current user profile
       tags:
       - users
-  /users/oauth/link:
+  /api/v1/users/oauth/link:
     post:
       consumes:
       - application/json
       description: Link an OAuth account to an existing user
+      operationId: postUsersOauthLink
       parameters:
       - description: OAuth account link request
         in: body
@@ -7622,11 +7675,12 @@ paths:
       summary: Link OAuth account
       tags:
       - users
-  /users/oauth/unlink/{id}/{provider}:
+  /api/v1/users/oauth/unlink/{id}/{provider}:
     delete:
       consumes:
       - application/json
       description: Unlink an OAuth account from a user
+      operationId: deleteUsersOauthUnlinkIDProvider
       parameters:
       - description: User ID
         in: path
@@ -7653,11 +7707,12 @@ paths:
       summary: Unlink OAuth account
       tags:
       - users
-  /users/preferences:
+  /api/v1/users/preferences:
     put:
       consumes:
       - application/json
       description: Update preferences for the current user
+      operationId: putUsersPreferences
       parameters:
       - description: User preferences
         in: body
@@ -7681,11 +7736,12 @@ paths:
       summary: Update user preferences
       tags:
       - users
-  /users/update-password:
+  /api/v1/users/update-password:
     post:
       consumes:
       - application/json
       description: Update current user's password
+      operationId: postUsersUpdatePassword
       parameters:
       - description: Password update request
         in: body
@@ -7714,6 +7770,135 @@ paths:
       summary: Update user password
       tags:
       - users
+  /auth-providers:
+    get:
+      description: Returns the enabled auth providers without sensitive data
+      operationId: getAuthProviders
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthConfig'
+      summary: Get auth configuration
+      tags:
+      - auth
+  /auth/{provider}/callback:
+    get:
+      description: Processes the OAuth callback from any provider
+      operationId: getAuthProviderCallback
+      parameters:
+      - description: OAuth provider (okta, google, github, etc.)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: State parameter for CSRF protection
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Handle OAuth callback
+      tags:
+      - auth
+  /auth/{provider}/login:
+    get:
+      description: Redirects the user to the OAuth provider for authentication
+      operationId: getAuthProviderLogin
+      parameters:
+      - description: OAuth provider (okta, google, github, etc.)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Initiate OAuth login
+      tags:
+      - auth
+  /oauth/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+        For token-exchange, supported subject_token_type values are
+        urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.
+      operationId: postOauthToken
+      parameters:
+      - description: authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
+        in: formData
+        name: grant_type
+        required: true
+        type: string
+      - description: Token to exchange (token-exchange grant only)
+        in: formData
+        name: subject_token
+        type: string
+      - description: id_token or access_token URI (token-exchange grant only)
+        in: formData
+        name: subject_token_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenExchangeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/OAuthErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/OAuthErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/OAuthErrorResponse'
+      summary: OAuth token endpoint
+      tags:
+      - auth
 securityDefinitions:
   ApiKeyAuth:
     in: header

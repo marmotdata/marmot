@@ -34,7 +34,7 @@ func (o *GetUsersMeReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /users/me] GetUsersMe", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/users/me] getUsersMe", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetUsersMeOK) Code() int {
 
 func (o *GetUsersMeOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/me][%d] getUsersMeOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/me][%d] getUsersMeOK %s", 200, payload)
 }
 
 func (o *GetUsersMeOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/me][%d] getUsersMeOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/me][%d] getUsersMeOK %s", 200, payload)
 }
 
 func (o *GetUsersMeOK) GetPayload() *models.User {
@@ -150,12 +150,12 @@ func (o *GetUsersMeUnauthorized) Code() int {
 
 func (o *GetUsersMeUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/me][%d] getUsersMeUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/users/me][%d] getUsersMeUnauthorized %s", 401, payload)
 }
 
 func (o *GetUsersMeUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/me][%d] getUsersMeUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/users/me][%d] getUsersMeUnauthorized %s", 401, payload)
 }
 
 func (o *GetUsersMeUnauthorized) GetPayload() *models.ErrorResponse {
