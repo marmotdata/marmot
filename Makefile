@@ -122,7 +122,7 @@ sdk-py-generate: swagger sdk-py-install $(SDK_OPENAPI3)
 		-o /local/_tmp \
 		--http-user-agent marmot-sdk-py \
 		--library httpx \
-		--additional-properties=lazyImports=true,generateSourceCodeOnly=true,packageName=marmot.generated
+		--additional-properties=lazyImports=true,generateSourceCodeOnly=true,supportHttpxSync=true,packageName=marmot.generated
 	mv _tmp/marmot/generated sdk/python/src/marmot/ && rm -rf _tmp/
 	make sdk-py-format
 
@@ -134,6 +134,7 @@ sdk-py-lint:
 	cd $(SDK_PY_DIR) && uv run ruff check .
 	cd $(SDK_PY_DIR) && uv run ruff format --check .
 	cd $(SDK_PY_DIR) && uv run mypy src/marmot
+	cd $(SDK_PY_DIR) && uv run mypy examples
 	cd $(SDK_PY_DIR) && uv run pip-audit --skip-editable
 
 sdk-py-test:
