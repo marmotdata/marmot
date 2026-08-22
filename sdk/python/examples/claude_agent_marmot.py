@@ -7,7 +7,7 @@ Usage:
     pip install "marmot-sdk[claude-agent]"
     export MARMOT_HOST=http://localhost:8080
     export MARMOT_API_KEY=...            # or run `marmot login` first
-    python main.py [prompt...]
+    python examples/claude_agent_marmot.py [prompt...]
 
 The Marmot host + credential is resolved via the SDK's standard chain:
 explicit kwargs → MARMOT_API_KEY/MARMOT_TOKEN env vars → the token cached by

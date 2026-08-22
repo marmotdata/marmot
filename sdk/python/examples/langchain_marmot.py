@@ -10,7 +10,7 @@ Usage:
     pip install "marmot-sdk[langchain]"
     export MARMOT_HOST=http://localhost:8080
     export MARMOT_API_KEY=...            # or run `marmot login` first
-    python main.py
+    python examples/langchain_marmot.py
 """
 
 from __future__ import annotations

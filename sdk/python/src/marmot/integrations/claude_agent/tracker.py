@@ -22,10 +22,12 @@ if TYPE_CHECKING:
         BaseHookInput,
         HookInput,
         HookJSONOutput,
+        HookMatcher,
         PostToolUseFailureHookInput,
         PostToolUseHookInput,
         PreToolUseHookInput,
     )
+    from claude_agent_sdk.types import HookEvent
 
     from marmot.integrations.catalog import AgentRegistry
 
@@ -143,7 +145,7 @@ class MarmotAgentTracker:
         ``<scheme>://`` URI."""
         self._run_state(session_id).upstreams.add(mrn)
 
-    def hooks(self) -> dict[str, list[Any]]:
+    def hooks(self) -> dict[HookEvent, list[HookMatcher]]:
         """Return a hook map suitable for ``ClaudeAgentOptions.hooks``.
 
         Wraps the tracker's lifecycle callbacks in ``HookMatcher`` so they
@@ -221,7 +223,6 @@ class MarmotAgentTracker:
         await self._ensure_registered()
         state = self._run_state(_session_id_of(event))
         _capture_transcript_path(state, event)
-
         response = event.get("tool_response")
         observed: list[str] = []
         if response is not None:
