@@ -28,6 +28,8 @@ type PreviewResponse struct {
 // @Tags assets
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} PreviewResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse "Missing assets:preview permission"

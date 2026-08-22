@@ -34,6 +34,8 @@ type GetMetricsResponse struct {
 // @Param metric_names query []string false "Filter by metric names"
 // @Param aggregation query string false "Aggregation type" Enums(avg,sum,max,min) default(avg)
 // @Param bucket_size query string false "Time bucket size" Enums(1m,5m,1h,1d)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} GetMetricsResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -148,6 +150,8 @@ func parseBucketSize(s string) (time.Duration, error) {
 // @Param start query string true "Start time (ISO 8601)"
 // @Param end query string true "End time (ISO 8601)"
 // @Param limit query int false "Number of results" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} []metrics.QueryCount
 // @ID getMetricsTopQueries
 // @Router /api/v1/metrics/top-queries [get]
@@ -201,6 +205,8 @@ func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
 // @Param start query string true "Start time (ISO 8601)"
 // @Param end query string true "End time (ISO 8601)"
 // @Param limit query int false "Number of results" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} []metrics.AssetCount
 // @ID getMetricsTopAssets
 // @Router /api/v1/metrics/top-assets [get]
@@ -255,6 +261,8 @@ type TotalAssetsResponse struct {
 // @Description Get the total number of assets
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} TotalAssetsResponse
 // @ID getMetricsAssetsTotal
 // @Router /api/v1/metrics/assets/total [get]
@@ -277,6 +285,8 @@ type AssetsByTypeResponse struct {
 // @Description Get asset counts grouped by type
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByTypeResponse
 // @ID getMetricsAssetsByType
 // @Router /api/v1/metrics/assets/by-type [get]
@@ -299,6 +309,8 @@ type AssetsByProviderResponse struct {
 // @Description Get asset counts grouped by provider
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByProviderResponse
 // @ID getMetricsAssetsByProvider
 // @Router /api/v1/metrics/assets/by-provider [get]
@@ -323,6 +335,8 @@ type AssetsWithSchemasResponse struct {
 // @Description Get the count of assets that have schemas defined
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsWithSchemasResponse
 // @ID getMetricsAssetsWithSchemas
 // @Router /api/v1/metrics/assets/with-schemas [get]
@@ -363,6 +377,8 @@ type AssetsByOwnerResponse struct {
 // @Description Get asset counts grouped by owner
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByOwnerResponse
 // @ID getMetricsAssetsByOwner
 // @Router /api/v1/metrics/assets/by-owner [get]

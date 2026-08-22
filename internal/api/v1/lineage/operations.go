@@ -21,6 +21,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path string true "Edge ID" format(uuid)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageEdge
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -66,6 +68,8 @@ func (h *Handler) getDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param edge body lineage.LineageEdge true "Lineage edge to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageEdge
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -111,6 +115,8 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Edge ID" format(uuid)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -153,6 +159,8 @@ func (h *Handler) deleteDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Maximum depth of lineage graph" default(10)
 // @Param direction query string false "Direction of lineage (upstream, downstream, or both)" Enums(upstream, downstream, both) default(both)
 // @Param exclude_types query string false "Comma separated edge types to leave out, for example CONTAINS to see data flow without structure"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -218,6 +226,8 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param event body lineage.RunEvent true "OpenLineage run event"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "Event processed successfully"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

@@ -57,52 +57,52 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteAssetRulesID delete an asset rule.
-	DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
+	DeleteAssetRulesID(params *DeleteAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
 
 	// DeleteAssetRulesIDContext delete an asset rule.
-	DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
+	DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
 
 	// GetAssetRulesAssetsID get assets matched by a rule.
-	GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
+	GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
 
 	// GetAssetRulesAssetsIDContext get assets matched by a rule.
-	GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
+	GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
 
 	// GetAssetRulesID get an asset rule.
-	GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error)
+	GetAssetRulesID(params *GetAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesIDOK, error)
 
 	// GetAssetRulesIDContext get an asset rule.
-	GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error)
+	GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesIDOK, error)
 
 	// GetAssetRulesList list asset rules.
-	GetAssetRulesList(params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error)
+	GetAssetRulesList(params *GetAssetRulesListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesListOK, error)
 
 	// GetAssetRulesListContext list asset rules.
-	GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error)
+	GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesListOK, error)
 
 	// GetAssetRulesSearch search asset rules.
-	GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
+	GetAssetRulesSearch(params *GetAssetRulesSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
 
 	// GetAssetRulesSearchContext search asset rules.
-	GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
+	GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
 
 	// PostAssetRules create an asset rule.
-	PostAssetRules(params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error)
+	PostAssetRules(params *PostAssetRulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesCreated, error)
 
 	// PostAssetRulesContext create an asset rule.
-	PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error)
+	PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesCreated, error)
 
 	// PostAssetRulesPreview preview an asset rule.
-	PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
+	PostAssetRulesPreview(params *PostAssetRulesPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
 
 	// PostAssetRulesPreviewContext preview an asset rule.
-	PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
+	PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
 
 	// PutAssetRulesID update an asset rule.
-	PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error)
+	PutAssetRulesID(params *PutAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetRulesIDOK, error)
 
 	// PutAssetRulesIDContext update an asset rule.
-	PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error)
+	PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetRulesIDOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -115,7 +115,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteAssetRulesIDContext] instead.
-func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
+func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -123,7 +123,7 @@ func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.DeleteAssetRulesIDContext(ctx, params, opts...)
+	return a.DeleteAssetRulesIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteAssetRulesIDContext deletes an asset rule.
@@ -131,7 +131,7 @@ func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...Cl
 // Delete an asset rule by ID.
 //
 // Do not use the deprecated [DeleteAssetRulesIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
+func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetRulesIDParams()
@@ -146,6 +146,7 @@ func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAs
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetRulesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -181,7 +182,7 @@ func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAs
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetRulesAssetsIDContext] instead.
-func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
+func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -189,7 +190,7 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts
 		ctx = context.Background()
 	}
 
-	return a.GetAssetRulesAssetsIDContext(ctx, params, opts...)
+	return a.GetAssetRulesAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetRulesAssetsIDContext gets assets matched by a rule.
@@ -197,7 +198,7 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts
 // Get the list of asset IDs matched by an asset rule.
 //
 // Do not use the deprecated [GetAssetRulesAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
+func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesAssetsIDParams()
@@ -212,6 +213,7 @@ func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAs
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -247,7 +249,7 @@ func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAs
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetRulesIDContext] instead.
-func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
+func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -255,7 +257,7 @@ func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetAssetRulesIDContext(ctx, params, opts...)
+	return a.GetAssetRulesIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetRulesIDContext gets an asset rule.
@@ -263,7 +265,7 @@ func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOp
 // Get an asset rule by ID.
 //
 // Do not use the deprecated [GetAssetRulesIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
+func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesIDParams()
@@ -278,6 +280,7 @@ func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRul
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -313,7 +316,7 @@ func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRul
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetRulesListContext] instead.
-func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error) {
+func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesListOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -321,7 +324,7 @@ func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.GetAssetRulesListContext(ctx, params, opts...)
+	return a.GetAssetRulesListContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetRulesListContext lists asset rules.
@@ -329,7 +332,7 @@ func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...Clie
 // List all asset rules with pagination.
 //
 // Do not use the deprecated [GetAssetRulesListParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error) {
+func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesListOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesListParams()
@@ -344,6 +347,7 @@ func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetR
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesListReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -379,7 +383,7 @@ func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetR
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetRulesSearchContext] instead.
-func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
+func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -387,7 +391,7 @@ func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.GetAssetRulesSearchContext(ctx, params, opts...)
+	return a.GetAssetRulesSearchContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetRulesSearchContext searches asset rules.
@@ -395,7 +399,7 @@ func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...
 // Search asset rules by name.
 //
 // Do not use the deprecated [GetAssetRulesSearchParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
+func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesSearchParams()
@@ -410,6 +414,7 @@ func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAsse
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesSearchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -445,7 +450,7 @@ func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAsse
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetRulesContext] instead.
-func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error) {
+func (a *Client) PostAssetRules(params *PostAssetRulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -453,7 +458,7 @@ func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOpti
 		ctx = context.Background()
 	}
 
-	return a.PostAssetRulesContext(ctx, params, opts...)
+	return a.PostAssetRulesContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetRulesContext creates an asset rule.
@@ -461,7 +466,7 @@ func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOpti
 // Create a new asset rule that applies enrichments to matching assets.
 //
 // Do not use the deprecated [PostAssetRulesParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error) {
+func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetRulesParams()
@@ -476,6 +481,7 @@ func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRul
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetRulesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -511,7 +517,7 @@ func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRul
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetRulesPreviewContext] instead.
-func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
+func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -519,7 +525,7 @@ func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts
 		ctx = context.Background()
 	}
 
-	return a.PostAssetRulesPreviewContext(ctx, params, opts...)
+	return a.PostAssetRulesPreviewContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetRulesPreviewContext previews an asset rule.
@@ -527,7 +533,7 @@ func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts
 // Preview which assets would match a rule configuration.
 //
 // Do not use the deprecated [PostAssetRulesPreviewParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
+func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetRulesPreviewParams()
@@ -542,6 +548,7 @@ func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostA
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetRulesPreviewReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -577,7 +584,7 @@ func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostA
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutAssetRulesIDContext] instead.
-func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
+func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -585,7 +592,7 @@ func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.PutAssetRulesIDContext(ctx, params, opts...)
+	return a.PutAssetRulesIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutAssetRulesIDContext updates an asset rule.
@@ -593,7 +600,7 @@ func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOp
 // Update an existing asset rule.
 //
 // Do not use the deprecated [PutAssetRulesIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
+func (a *Client) PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAssetRulesIDParams()
@@ -608,6 +615,7 @@ func (a *Client) PutAssetRulesIDContext(ctx context.Context, params *PutAssetRul
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAssetRulesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

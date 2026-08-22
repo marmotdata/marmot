@@ -57,52 +57,52 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// GetMetrics get metrics for UI.
-	GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error)
+	GetMetrics(params *GetMetricsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsOK, error)
 
 	// GetMetricsContext get metrics for UI.
-	GetMetricsContext(ctx context.Context, params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error)
+	GetMetricsContext(ctx context.Context, params *GetMetricsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsOK, error)
 
 	// GetMetricsAssetsByOwner get assets by owner.
-	GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
+	GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
 
 	// GetMetricsAssetsByOwnerContext get assets by owner.
-	GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
+	GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
 
 	// GetMetricsAssetsByProvider get assets by provider.
-	GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
+	GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
 
 	// GetMetricsAssetsByProviderContext get assets by provider.
-	GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
+	GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
 
 	// GetMetricsAssetsByType get assets by type.
-	GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
+	GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
 
 	// GetMetricsAssetsByTypeContext get assets by type.
-	GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
+	GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
 
 	// GetMetricsAssetsTotal get total assets count.
-	GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
+	GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
 
 	// GetMetricsAssetsTotalContext get total assets count.
-	GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
+	GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
 
 	// GetMetricsAssetsWithSchemas get assets with schemas count.
-	GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
+	GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
 
 	// GetMetricsAssetsWithSchemasContext get assets with schemas count.
-	GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
+	GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
 
 	// GetMetricsTopAssets get top viewed assets.
-	GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
+	GetMetricsTopAssets(params *GetMetricsTopAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
 
 	// GetMetricsTopAssetsContext get top viewed assets.
-	GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
+	GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
 
 	// GetMetricsTopQueries get top search queries.
-	GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
+	GetMetricsTopQueries(params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
 
 	// GetMetricsTopQueriesContext get top search queries.
-	GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
+	GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -115,7 +115,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsContext] instead.
-func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error) {
+func (a *Client) GetMetrics(params *GetMetricsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -123,7 +123,7 @@ func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*Ge
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsContext(ctx, params, opts...)
+	return a.GetMetricsContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsContext gets metrics for UI.
@@ -131,7 +131,7 @@ func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*Ge
 // Get aggregated metrics for dashboard display.
 //
 // Do not use the deprecated [GetMetricsParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error) {
+func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsParams()
@@ -146,6 +146,7 @@ func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -181,7 +182,7 @@ func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByOwnerContext] instead.
-func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
+func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -189,7 +190,7 @@ func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, 
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsAssetsByOwnerContext(ctx, params, opts...)
+	return a.GetMetricsAssetsByOwnerContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsAssetsByOwnerContext gets assets by owner.
@@ -197,7 +198,7 @@ func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, 
 // Get asset counts grouped by owner.
 //
 // Do not use the deprecated [GetMetricsAssetsByOwnerParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
+func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByOwnerParams()
@@ -212,6 +213,7 @@ func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *Get
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByOwnerReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -247,7 +249,7 @@ func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *Get
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByProviderContext] instead.
-func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
+func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -255,7 +257,7 @@ func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderPa
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsAssetsByProviderContext(ctx, params, opts...)
+	return a.GetMetricsAssetsByProviderContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsAssetsByProviderContext gets assets by provider.
@@ -263,7 +265,7 @@ func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderPa
 // Get asset counts grouped by provider.
 //
 // Do not use the deprecated [GetMetricsAssetsByProviderParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
+func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByProviderParams()
@@ -278,6 +280,7 @@ func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByProviderReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -313,7 +316,7 @@ func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByTypeContext] instead.
-func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
+func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -321,7 +324,7 @@ func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, op
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsAssetsByTypeContext(ctx, params, opts...)
+	return a.GetMetricsAssetsByTypeContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsAssetsByTypeContext gets assets by type.
@@ -329,7 +332,7 @@ func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, op
 // Get asset counts grouped by type.
 //
 // Do not use the deprecated [GetMetricsAssetsByTypeParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
+func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByTypeParams()
@@ -344,6 +347,7 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByTypeReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -379,7 +383,7 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsAssetsTotalContext] instead.
-func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
+func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -387,7 +391,7 @@ func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsAssetsTotalContext(ctx, params, opts...)
+	return a.GetMetricsAssetsTotalContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsAssetsTotalContext gets total assets count.
@@ -395,7 +399,7 @@ func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts
 // Get the total number of assets.
 //
 // Do not use the deprecated [GetMetricsAssetsTotalParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
+func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsTotalParams()
@@ -410,6 +414,7 @@ func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMe
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsTotalReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -445,7 +450,7 @@ func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMe
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsAssetsWithSchemasContext] instead.
-func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
+func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -453,7 +458,7 @@ func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemas
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsAssetsWithSchemasContext(ctx, params, opts...)
+	return a.GetMetricsAssetsWithSchemasContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsAssetsWithSchemasContext gets assets with schemas count.
@@ -461,7 +466,7 @@ func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemas
 // Get the count of assets that have schemas defined.
 //
 // Do not use the deprecated [GetMetricsAssetsWithSchemasParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
+func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsWithSchemasParams()
@@ -476,6 +481,7 @@ func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsWithSchemasReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -511,7 +517,7 @@ func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsTopAssetsContext] instead.
-func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
+func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -519,7 +525,7 @@ func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsTopAssetsContext(ctx, params, opts...)
+	return a.GetMetricsTopAssetsContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsTopAssetsContext gets top viewed assets.
@@ -527,7 +533,7 @@ func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...
 // Get the most viewed assets.
 //
 // Do not use the deprecated [GetMetricsTopAssetsParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
+func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsTopAssetsParams()
@@ -542,6 +548,7 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsTopAssetsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -577,7 +584,7 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetMetricsTopQueriesContext] instead.
-func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
+func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -585,7 +592,7 @@ func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.GetMetricsTopQueriesContext(ctx, params, opts...)
+	return a.GetMetricsTopQueriesContext(ctx, params, authInfo, opts...)
 }
 
 // GetMetricsTopQueriesContext gets top search queries.
@@ -593,7 +600,7 @@ func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts .
 // Get the most popular search queries.
 //
 // Do not use the deprecated [GetMetricsTopQueriesParams.Context] with this method: it would be ignored.
-func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
+func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsTopQueriesParams()
@@ -608,6 +615,7 @@ func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMet
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsTopQueriesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

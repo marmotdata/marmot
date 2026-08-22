@@ -157,6 +157,8 @@ type RunEntitiesResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body StartRunRequest true "Start run request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} plugin.Run
 // @ID postRunsStart
 // @Router /api/v1/runs/start [post]
@@ -198,6 +200,8 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body CompleteRunRequest true "Complete run request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @ID postRunsComplete
 // @Router /api/v1/runs/complete [post]
@@ -248,6 +252,8 @@ func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body BatchCreateRequest true "Batch create request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} BatchCreateResponse
 // @ID postRunsAssetsBatch
 // @Router /api/v1/runs/assets/batch [post]
@@ -345,6 +351,8 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 // @Tags pipelines
 // @Produce json
 // @Param pipelineName path string true "Pipeline Name"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} DestroyRunResponse
 // @ID deletePipelinesPipelineName
 // @Router /api/v1/pipelines/{pipelineName} [delete]
@@ -374,6 +382,8 @@ func (h *Handler) destroyPipeline(w http.ResponseWriter, r *http.Request) {
 // @Param status query string false "Filter by status (created, updated, deleted, failed)"
 // @Param limit query int false "Number of results per page" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} RunEntitiesResponse
 // @ID getRunsIDEntities
 // @Router /api/v1/runs/{id}/entities [get]
@@ -424,6 +434,8 @@ func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 // @Summary Cleanup stale runs
 // @Description Mark runs as failed if they've been running too long without updates
 // @Tags runs
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]int
 // @ID postRunsCleanup
 // @Router /api/v1/runs/cleanup [post]
@@ -453,6 +465,8 @@ func (h *Handler) cleanupStaleRuns(w http.ResponseWriter, r *http.Request) {
 // @Param statuses query string false "Comma-separated list of statuses"
 // @Param limit query int false "Number of results per page" default(50)
 // @Param offset query int false "Number of results to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} object{runs=[]plugin.Run,total=int,limit=int,offset=int,pipelines=[]string}
 // @ID getRuns
 // @Router /api/v1/runs [get]
@@ -521,6 +535,8 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 // @Tags runs
 // @Produce json
 // @Param id path string true "Run ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} plugin.Run
 // @ID getRunsID
 // @Router /api/v1/runs/{id} [get]

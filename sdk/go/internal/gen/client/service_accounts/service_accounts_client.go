@@ -57,52 +57,52 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteServiceAccountsID delete service account.
-	DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error)
+	DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error)
 
 	// DeleteServiceAccountsIDContext delete service account.
-	DeleteServiceAccountsIDContext(ctx context.Context, params *DeleteServiceAccountsIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error)
+	DeleteServiceAccountsIDContext(ctx context.Context, params *DeleteServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error)
 
 	// DeleteServiceAccountsIDAPIKeysKeyID delete an API key.
-	DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccountsIDAPIKeysKeyIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error)
+	DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccountsIDAPIKeysKeyIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error)
 
 	// DeleteServiceAccountsIDAPIKeysKeyIDContext delete an API key.
-	DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context, params *DeleteServiceAccountsIDAPIKeysKeyIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error)
+	DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context, params *DeleteServiceAccountsIDAPIKeysKeyIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error)
 
 	// GetServiceAccounts list service accounts.
-	GetServiceAccounts(params *GetServiceAccountsParams, opts ...ClientOption) (*GetServiceAccountsOK, error)
+	GetServiceAccounts(params *GetServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsOK, error)
 
 	// GetServiceAccountsContext list service accounts.
-	GetServiceAccountsContext(ctx context.Context, params *GetServiceAccountsParams, opts ...ClientOption) (*GetServiceAccountsOK, error)
+	GetServiceAccountsContext(ctx context.Context, params *GetServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsOK, error)
 
 	// GetServiceAccountsID get service account.
-	GetServiceAccountsID(params *GetServiceAccountsIDParams, opts ...ClientOption) (*GetServiceAccountsIDOK, error)
+	GetServiceAccountsID(params *GetServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDOK, error)
 
 	// GetServiceAccountsIDContext get service account.
-	GetServiceAccountsIDContext(ctx context.Context, params *GetServiceAccountsIDParams, opts ...ClientOption) (*GetServiceAccountsIDOK, error)
+	GetServiceAccountsIDContext(ctx context.Context, params *GetServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDOK, error)
 
 	// GetServiceAccountsIDAPIKeys list API keys for a service account.
-	GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error)
+	GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error)
 
 	// GetServiceAccountsIDAPIKeysContext list API keys for a service account.
-	GetServiceAccountsIDAPIKeysContext(ctx context.Context, params *GetServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error)
+	GetServiceAccountsIDAPIKeysContext(ctx context.Context, params *GetServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error)
 
 	// PatchServiceAccountsID update service account.
-	PatchServiceAccountsID(params *PatchServiceAccountsIDParams, opts ...ClientOption) (*PatchServiceAccountsIDOK, error)
+	PatchServiceAccountsID(params *PatchServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchServiceAccountsIDOK, error)
 
 	// PatchServiceAccountsIDContext update service account.
-	PatchServiceAccountsIDContext(ctx context.Context, params *PatchServiceAccountsIDParams, opts ...ClientOption) (*PatchServiceAccountsIDOK, error)
+	PatchServiceAccountsIDContext(ctx context.Context, params *PatchServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchServiceAccountsIDOK, error)
 
 	// PostServiceAccounts create service account.
-	PostServiceAccounts(params *PostServiceAccountsParams, opts ...ClientOption) (*PostServiceAccountsCreated, error)
+	PostServiceAccounts(params *PostServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsCreated, error)
 
 	// PostServiceAccountsContext create service account.
-	PostServiceAccountsContext(ctx context.Context, params *PostServiceAccountsParams, opts ...ClientOption) (*PostServiceAccountsCreated, error)
+	PostServiceAccountsContext(ctx context.Context, params *PostServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsCreated, error)
 
 	// PostServiceAccountsIDAPIKeys create API key for a service account.
-	PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error)
+	PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error)
 
 	// PostServiceAccountsIDAPIKeysContext create API key for a service account.
-	PostServiceAccountsIDAPIKeysContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error)
+	PostServiceAccountsIDAPIKeysContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -115,7 +115,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteServiceAccountsIDContext] instead.
-func (a *Client) DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error) {
+func (a *Client) DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -123,7 +123,7 @@ func (a *Client) DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, 
 		ctx = context.Background()
 	}
 
-	return a.DeleteServiceAccountsIDContext(ctx, params, opts...)
+	return a.DeleteServiceAccountsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteServiceAccountsIDContext deletes service account.
@@ -131,7 +131,7 @@ func (a *Client) DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, 
 // Soft-delete a service account.
 //
 // Do not use the deprecated [DeleteServiceAccountsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteServiceAccountsIDContext(ctx context.Context, params *DeleteServiceAccountsIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error) {
+func (a *Client) DeleteServiceAccountsIDContext(ctx context.Context, params *DeleteServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteServiceAccountsIDParams()
@@ -146,6 +146,7 @@ func (a *Client) DeleteServiceAccountsIDContext(ctx context.Context, params *Del
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteServiceAccountsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -181,7 +182,7 @@ func (a *Client) DeleteServiceAccountsIDContext(ctx context.Context, params *Del
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteServiceAccountsIDAPIKeysKeyIDContext] instead.
-func (a *Client) DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccountsIDAPIKeysKeyIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error) {
+func (a *Client) DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccountsIDAPIKeysKeyIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -189,7 +190,7 @@ func (a *Client) DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccoun
 		ctx = context.Background()
 	}
 
-	return a.DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx, params, opts...)
+	return a.DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteServiceAccountsIDAPIKeysKeyIDContext deletes an API key.
@@ -197,7 +198,7 @@ func (a *Client) DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccoun
 // Delete an API key for a service account.
 //
 // Do not use the deprecated [DeleteServiceAccountsIDAPIKeysKeyIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context, params *DeleteServiceAccountsIDAPIKeysKeyIDParams, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error) {
+func (a *Client) DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context, params *DeleteServiceAccountsIDAPIKeysKeyIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteServiceAccountsIDAPIKeysKeyIDParams()
@@ -212,6 +213,7 @@ func (a *Client) DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context,
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteServiceAccountsIDAPIKeysKeyIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -247,7 +249,7 @@ func (a *Client) DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context,
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetServiceAccountsContext] instead.
-func (a *Client) GetServiceAccounts(params *GetServiceAccountsParams, opts ...ClientOption) (*GetServiceAccountsOK, error) {
+func (a *Client) GetServiceAccounts(params *GetServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -255,7 +257,7 @@ func (a *Client) GetServiceAccounts(params *GetServiceAccountsParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.GetServiceAccountsContext(ctx, params, opts...)
+	return a.GetServiceAccountsContext(ctx, params, authInfo, opts...)
 }
 
 // GetServiceAccountsContext lists service accounts.
@@ -263,7 +265,7 @@ func (a *Client) GetServiceAccounts(params *GetServiceAccountsParams, opts ...Cl
 // Get all service accounts.
 //
 // Do not use the deprecated [GetServiceAccountsParams.Context] with this method: it would be ignored.
-func (a *Client) GetServiceAccountsContext(ctx context.Context, params *GetServiceAccountsParams, opts ...ClientOption) (*GetServiceAccountsOK, error) {
+func (a *Client) GetServiceAccountsContext(ctx context.Context, params *GetServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetServiceAccountsParams()
@@ -278,6 +280,7 @@ func (a *Client) GetServiceAccountsContext(ctx context.Context, params *GetServi
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetServiceAccountsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -313,7 +316,7 @@ func (a *Client) GetServiceAccountsContext(ctx context.Context, params *GetServi
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetServiceAccountsIDContext] instead.
-func (a *Client) GetServiceAccountsID(params *GetServiceAccountsIDParams, opts ...ClientOption) (*GetServiceAccountsIDOK, error) {
+func (a *Client) GetServiceAccountsID(params *GetServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -321,7 +324,7 @@ func (a *Client) GetServiceAccountsID(params *GetServiceAccountsIDParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.GetServiceAccountsIDContext(ctx, params, opts...)
+	return a.GetServiceAccountsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetServiceAccountsIDContext gets service account.
@@ -329,7 +332,7 @@ func (a *Client) GetServiceAccountsID(params *GetServiceAccountsIDParams, opts .
 // Get a service account by ID.
 //
 // Do not use the deprecated [GetServiceAccountsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetServiceAccountsIDContext(ctx context.Context, params *GetServiceAccountsIDParams, opts ...ClientOption) (*GetServiceAccountsIDOK, error) {
+func (a *Client) GetServiceAccountsIDContext(ctx context.Context, params *GetServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetServiceAccountsIDParams()
@@ -344,6 +347,7 @@ func (a *Client) GetServiceAccountsIDContext(ctx context.Context, params *GetSer
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetServiceAccountsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -379,7 +383,7 @@ func (a *Client) GetServiceAccountsIDContext(ctx context.Context, params *GetSer
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetServiceAccountsIDAPIKeysContext] instead.
-func (a *Client) GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error) {
+func (a *Client) GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -387,7 +391,7 @@ func (a *Client) GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeys
 		ctx = context.Background()
 	}
 
-	return a.GetServiceAccountsIDAPIKeysContext(ctx, params, opts...)
+	return a.GetServiceAccountsIDAPIKeysContext(ctx, params, authInfo, opts...)
 }
 
 // GetServiceAccountsIDAPIKeysContext lists API keys for a service account.
@@ -395,7 +399,7 @@ func (a *Client) GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeys
 // Get all API keys for a service account.
 //
 // Do not use the deprecated [GetServiceAccountsIDAPIKeysParams.Context] with this method: it would be ignored.
-func (a *Client) GetServiceAccountsIDAPIKeysContext(ctx context.Context, params *GetServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error) {
+func (a *Client) GetServiceAccountsIDAPIKeysContext(ctx context.Context, params *GetServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetServiceAccountsIDAPIKeysParams()
@@ -410,6 +414,7 @@ func (a *Client) GetServiceAccountsIDAPIKeysContext(ctx context.Context, params 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetServiceAccountsIDAPIKeysReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -445,7 +450,7 @@ func (a *Client) GetServiceAccountsIDAPIKeysContext(ctx context.Context, params 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PatchServiceAccountsIDContext] instead.
-func (a *Client) PatchServiceAccountsID(params *PatchServiceAccountsIDParams, opts ...ClientOption) (*PatchServiceAccountsIDOK, error) {
+func (a *Client) PatchServiceAccountsID(params *PatchServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchServiceAccountsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -453,7 +458,7 @@ func (a *Client) PatchServiceAccountsID(params *PatchServiceAccountsIDParams, op
 		ctx = context.Background()
 	}
 
-	return a.PatchServiceAccountsIDContext(ctx, params, opts...)
+	return a.PatchServiceAccountsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PatchServiceAccountsIDContext updates service account.
@@ -461,7 +466,7 @@ func (a *Client) PatchServiceAccountsID(params *PatchServiceAccountsIDParams, op
 // Update a service account.
 //
 // Do not use the deprecated [PatchServiceAccountsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PatchServiceAccountsIDContext(ctx context.Context, params *PatchServiceAccountsIDParams, opts ...ClientOption) (*PatchServiceAccountsIDOK, error) {
+func (a *Client) PatchServiceAccountsIDContext(ctx context.Context, params *PatchServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchServiceAccountsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPatchServiceAccountsIDParams()
@@ -476,6 +481,7 @@ func (a *Client) PatchServiceAccountsIDContext(ctx context.Context, params *Patc
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PatchServiceAccountsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -511,7 +517,7 @@ func (a *Client) PatchServiceAccountsIDContext(ctx context.Context, params *Patc
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostServiceAccountsContext] instead.
-func (a *Client) PostServiceAccounts(params *PostServiceAccountsParams, opts ...ClientOption) (*PostServiceAccountsCreated, error) {
+func (a *Client) PostServiceAccounts(params *PostServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -519,7 +525,7 @@ func (a *Client) PostServiceAccounts(params *PostServiceAccountsParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.PostServiceAccountsContext(ctx, params, opts...)
+	return a.PostServiceAccountsContext(ctx, params, authInfo, opts...)
 }
 
 // PostServiceAccountsContext creates service account.
@@ -527,7 +533,7 @@ func (a *Client) PostServiceAccounts(params *PostServiceAccountsParams, opts ...
 // Create a new service account.
 //
 // Do not use the deprecated [PostServiceAccountsParams.Context] with this method: it would be ignored.
-func (a *Client) PostServiceAccountsContext(ctx context.Context, params *PostServiceAccountsParams, opts ...ClientOption) (*PostServiceAccountsCreated, error) {
+func (a *Client) PostServiceAccountsContext(ctx context.Context, params *PostServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostServiceAccountsParams()
@@ -542,6 +548,7 @@ func (a *Client) PostServiceAccountsContext(ctx context.Context, params *PostSer
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostServiceAccountsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -577,7 +584,7 @@ func (a *Client) PostServiceAccountsContext(ctx context.Context, params *PostSer
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostServiceAccountsIDAPIKeysContext] instead.
-func (a *Client) PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error) {
+func (a *Client) PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -585,7 +592,7 @@ func (a *Client) PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKe
 		ctx = context.Background()
 	}
 
-	return a.PostServiceAccountsIDAPIKeysContext(ctx, params, opts...)
+	return a.PostServiceAccountsIDAPIKeysContext(ctx, params, authInfo, opts...)
 }
 
 // PostServiceAccountsIDAPIKeysContext creates API key for a service account.
@@ -593,7 +600,7 @@ func (a *Client) PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKe
 // Create a new API key. The plaintext key is only returned once..
 //
 // Do not use the deprecated [PostServiceAccountsIDAPIKeysParams.Context] with this method: it would be ignored.
-func (a *Client) PostServiceAccountsIDAPIKeysContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysParams, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error) {
+func (a *Client) PostServiceAccountsIDAPIKeysContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostServiceAccountsIDAPIKeysParams()
@@ -608,6 +615,7 @@ func (a *Client) PostServiceAccountsIDAPIKeysContext(ctx context.Context, params
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostServiceAccountsIDAPIKeysReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
