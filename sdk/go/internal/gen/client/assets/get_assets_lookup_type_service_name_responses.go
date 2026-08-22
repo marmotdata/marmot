@@ -40,7 +40,7 @@ func (o *GetAssetsLookupTypeServiceNameReader) ReadResponse(response runtime.Cli
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/lookup/{type}/{service}/{name}] GetAssetsLookupTypeServiceName", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/lookup/{type}/{service}/{name}] getAssetsLookupTypeServiceName", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsLookupTypeServiceNameOK) Code() int {
 
 func (o *GetAssetsLookupTypeServiceNameOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameOK %s", 200, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameOK %s", 200, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameOK) GetPayload() *models.Asset {
@@ -156,12 +156,12 @@ func (o *GetAssetsLookupTypeServiceNameNotFound) Code() int {
 
 func (o *GetAssetsLookupTypeServiceNameNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetAssetsLookupTypeServiceNameInternalServerError) Code() int {
 
 func (o *GetAssetsLookupTypeServiceNameInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsLookupTypeServiceNameInternalServerError) GetPayload() *models.ErrorResponse {

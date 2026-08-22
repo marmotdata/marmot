@@ -46,7 +46,7 @@ func (o *PatchRolesIDReader) ReadResponse(response runtime.ClientResponse, consu
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PATCH /roles/{id}] PatchRolesID", response, response.Code())
+		return nil, runtime.NewAPIError("[PATCH /api/v1/roles/{id}] patchRolesID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PatchRolesIDOK) Code() int {
 
 func (o *PatchRolesIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdOK %s", 200, payload)
 }
 
 func (o *PatchRolesIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdOK %s", 200, payload)
 }
 
 func (o *PatchRolesIDOK) GetPayload() *models.Role {
@@ -162,12 +162,12 @@ func (o *PatchRolesIDBadRequest) Code() int {
 
 func (o *PatchRolesIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdBadRequest %s", 400, payload)
 }
 
 func (o *PatchRolesIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdBadRequest %s", 400, payload)
 }
 
 func (o *PatchRolesIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PatchRolesIDNotFound) Code() int {
 
 func (o *PatchRolesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdNotFound %s", 404, payload)
 }
 
 func (o *PatchRolesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdNotFound %s", 404, payload)
 }
 
 func (o *PatchRolesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PatchRolesIDUnprocessableEntity) Code() int {
 
 func (o *PatchRolesIDUnprocessableEntity) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdUnprocessableEntity %s", 422, payload)
 }
 
 func (o *PatchRolesIDUnprocessableEntity) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /roles/{id}][%d] patchRolesIdUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[PATCH /api/v1/roles/{id}][%d] patchRolesIdUnprocessableEntity %s", 422, payload)
 }
 
 func (o *PatchRolesIDUnprocessableEntity) GetPayload() *models.ErrorResponse {

@@ -43,7 +43,8 @@ type SearchResponse struct {
 // @Success 200 {object} SearchResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/search [get]
+// @ID getAssetsSearch
+// @Router /api/v1/assets/search [get]
 func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 	queryValues := r.URL.Query()
 	searchQuery := queryValues.Get("q")
@@ -113,7 +114,8 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/match-pattern [get]
+// @ID getAssetsMatchPattern
+// @Router /api/v1/assets/match-pattern/ [get]
 func (h *Handler) matchAssetPattern(w http.ResponseWriter, r *http.Request) {
 	pattern := r.URL.Query().Get("pattern")
 	if pattern == "" {
@@ -196,7 +198,8 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/lookup/{type}/{service}/{name} [get]
+// @ID getAssetsLookupTypeServiceName
+// @Router /api/v1/assets/lookup/{type}/{service}/{name} [get]
 func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 	pathPart := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/lookup/")
 	if pathPart == "" {

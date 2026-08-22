@@ -22,7 +22,8 @@ var _ = user.User{}
 // @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 401 {object} common.ErrorResponse
-// @Router /users/me [get]
+// @ID getUsersMe
+// @Router /api/v1/users/me [get]
 func (h *Handler) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {
@@ -48,7 +49,8 @@ func (h *Handler) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 // @Param preferences body map[string]interface{} true "User preferences"
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/preferences [put]
+// @ID putUsersPreferences
+// @Router /api/v1/users/preferences [put]
 func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {

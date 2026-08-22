@@ -40,7 +40,7 @@ func (o *DeleteLineageDirectIDReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /lineage/direct/{id}] DeleteLineageDirectID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/lineage/direct/{id}] deleteLineageDirectID", response, response.Code())
 	}
 }
 
@@ -86,11 +86,11 @@ func (o *DeleteLineageDirectIDOK) Code() int {
 }
 
 func (o *DeleteLineageDirectIDOK) Error() string {
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdOK", 200)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdOK", 200)
 }
 
 func (o *DeleteLineageDirectIDOK) String() string {
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdOK", 200)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdOK", 200)
 }
 
 func (o *DeleteLineageDirectIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,12 +142,12 @@ func (o *DeleteLineageDirectIDBadRequest) Code() int {
 
 func (o *DeleteLineageDirectIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteLineageDirectIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteLineageDirectIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -210,12 +210,12 @@ func (o *DeleteLineageDirectIDInternalServerError) Code() int {
 
 func (o *DeleteLineageDirectIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteLineageDirectIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /lineage/direct/{id}][%d] deleteLineageDirectIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/lineage/direct/{id}][%d] deleteLineageDirectIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteLineageDirectIDInternalServerError) GetPayload() *models.ErrorResponse {

@@ -40,7 +40,7 @@ func (o *DeleteRolesIDReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /roles/{id}] DeleteRolesID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/roles/{id}] deleteRolesID", response, response.Code())
 	}
 }
 
@@ -86,11 +86,11 @@ func (o *DeleteRolesIDNoContent) Code() int {
 }
 
 func (o *DeleteRolesIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdNoContent", 204)
 }
 
 func (o *DeleteRolesIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdNoContent", 204)
 }
 
 func (o *DeleteRolesIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,12 +142,12 @@ func (o *DeleteRolesIDNotFound) Code() int {
 
 func (o *DeleteRolesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteRolesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteRolesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -210,12 +210,12 @@ func (o *DeleteRolesIDUnprocessableEntity) Code() int {
 
 func (o *DeleteRolesIDUnprocessableEntity) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdUnprocessableEntity %s", 422, payload)
 }
 
 func (o *DeleteRolesIDUnprocessableEntity) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /roles/{id}][%d] deleteRolesIdUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[DELETE /api/v1/roles/{id}][%d] deleteRolesIdUnprocessableEntity %s", 422, payload)
 }
 
 func (o *DeleteRolesIDUnprocessableEntity) GetPayload() *models.ErrorResponse {

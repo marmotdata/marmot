@@ -96,9 +96,9 @@ func (a *Client) GetUIConfigContext(ctx context.Context, params *GetUIConfigPara
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetUIConfig",
+		ID:                 "getUIConfig",
 		Method:             "GET",
-		PathPattern:        "/ui/config",
+		PathPattern:        "/api/v1/ui/config",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -127,7 +127,7 @@ func (a *Client) GetUIConfigContext(ctx context.Context, params *GetUIConfigPara
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetUIConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getUIConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

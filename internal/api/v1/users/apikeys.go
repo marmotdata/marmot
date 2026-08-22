@@ -26,7 +26,8 @@ type CreateAPIKeyRequest struct {
 // @Produce json
 // @Success 200 {array} user.APIKey
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/apikeys [get]
+// @ID getUsersApikeys
+// @Router /api/v1/users/apikeys [get]
 func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {
@@ -52,7 +53,8 @@ func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 // @Param key body CreateAPIKeyRequest true "API key creation request"
 // @Success 200 {object} user.APIKey
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/apikeys [post]
+// @ID postUsersApikeys
+// @Router /api/v1/users/apikeys [post]
 func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {
@@ -95,7 +97,8 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "API key ID"
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/apikeys/{id} [delete]
+// @ID deleteUsersApikeysID
+// @Router /api/v1/users/apikeys/{id} [delete]
 func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	keyID := strings.TrimPrefix(r.URL.Path, "/api/v1/users/apikeys/")
 	if keyID == "" {

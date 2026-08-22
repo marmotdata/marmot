@@ -138,9 +138,9 @@ func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetrics",
+		ID:                 "getMetrics",
 		Method:             "GET",
-		PathPattern:        "/metrics",
+		PathPattern:        "/api/v1/metrics",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -169,7 +169,7 @@ func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetrics: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetrics: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -204,9 +204,9 @@ func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *Get
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsAssetsByOwner",
+		ID:                 "getMetricsAssetsByOwner",
 		Method:             "GET",
-		PathPattern:        "/metrics/assets/by-owner",
+		PathPattern:        "/api/v1/metrics/assets/by-owner",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -235,7 +235,7 @@ func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *Get
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsAssetsByOwner: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsByOwner: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -270,9 +270,9 @@ func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsAssetsByProvider",
+		ID:                 "getMetricsAssetsByProvider",
 		Method:             "GET",
-		PathPattern:        "/metrics/assets/by-provider",
+		PathPattern:        "/api/v1/metrics/assets/by-provider",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -301,7 +301,7 @@ func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsAssetsByProvider: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsByProvider: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -336,9 +336,9 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsAssetsByType",
+		ID:                 "getMetricsAssetsByType",
 		Method:             "GET",
-		PathPattern:        "/metrics/assets/by-type",
+		PathPattern:        "/api/v1/metrics/assets/by-type",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -367,7 +367,7 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsAssetsByType: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsByType: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -402,9 +402,9 @@ func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMe
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsAssetsTotal",
+		ID:                 "getMetricsAssetsTotal",
 		Method:             "GET",
-		PathPattern:        "/metrics/assets/total",
+		PathPattern:        "/api/v1/metrics/assets/total",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -433,7 +433,7 @@ func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMe
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsAssetsTotal: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsTotal: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -468,9 +468,9 @@ func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params 
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsAssetsWithSchemas",
+		ID:                 "getMetricsAssetsWithSchemas",
 		Method:             "GET",
-		PathPattern:        "/metrics/assets/with-schemas",
+		PathPattern:        "/api/v1/metrics/assets/with-schemas",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -499,7 +499,7 @@ func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsAssetsWithSchemas: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsWithSchemas: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -534,9 +534,9 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsTopAssets",
+		ID:                 "getMetricsTopAssets",
 		Method:             "GET",
-		PathPattern:        "/metrics/top-assets",
+		PathPattern:        "/api/v1/metrics/top-assets",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -565,7 +565,7 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsTopAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsTopAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -600,9 +600,9 @@ func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMet
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetMetricsTopQueries",
+		ID:                 "getMetricsTopQueries",
 		Method:             "GET",
-		PathPattern:        "/metrics/top-queries",
+		PathPattern:        "/api/v1/metrics/top-queries",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -631,7 +631,7 @@ func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMet
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetricsTopQueries: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getMetricsTopQueries: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

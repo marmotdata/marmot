@@ -40,7 +40,7 @@ func (o *GetGlossarySearchReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /glossary/search] GetGlossarySearch", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/glossary/search] getGlossarySearch", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetGlossarySearchOK) Code() int {
 
 func (o *GetGlossarySearchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchOK %s", 200, payload)
 }
 
 func (o *GetGlossarySearchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchOK %s", 200, payload)
 }
 
 func (o *GetGlossarySearchOK) GetPayload() *models.GlossaryListResult {
@@ -156,12 +156,12 @@ func (o *GetGlossarySearchBadRequest) Code() int {
 
 func (o *GetGlossarySearchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossarySearchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossarySearchBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetGlossarySearchInternalServerError) Code() int {
 
 func (o *GetGlossarySearchInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossarySearchInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/search][%d] getGlossarySearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/search][%d] getGlossarySearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossarySearchInternalServerError) GetPayload() *models.ErrorResponse {

@@ -175,7 +175,8 @@ type ValidateConfigResponse struct {
 // @Success 200 {object} ValidateConfigResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
-// @Router /ingestion/validate [post]
+// @ID postIngestionValidate
+// @Router /api/v1/ingestion/validate [post]
 func (h *Handler) validateConfig(w http.ResponseWriter, r *http.Request) {
 	if !common.RequirePluginsReady(w) {
 		return
@@ -272,7 +273,8 @@ type ListJobRunsResponse struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules [post]
+// @ID postIngestionSchedules
+// @Router /api/v1/ingestion/schedules [post]
 func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 	var req CreateScheduleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -349,7 +351,8 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} ListSchedulesResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules [get]
+// @ID getIngestionSchedules
+// @Router /api/v1/ingestion/schedules [get]
 func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	if limit <= 0 {
@@ -400,7 +403,8 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules/{id} [get]
+// @ID getIngestionSchedulesID
+// @Router /api/v1/ingestion/schedules/{id} [get]
 func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -439,7 +443,8 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules/{id} [put]
+// @ID putIngestionSchedulesID
+// @Router /api/v1/ingestion/schedules/{id} [put]
 func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -518,7 +523,8 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules/{id} [delete]
+// @ID deleteIngestionSchedulesID
+// @Router /api/v1/ingestion/schedules/{id} [delete]
 func (h *Handler) deleteSchedule(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -583,7 +589,8 @@ func (h *Handler) deleteSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/schedules/{id}/trigger [post]
+// @ID postIngestionSchedulesIDTrigger
+// @Router /api/v1/ingestion/schedules/{id}/trigger [post]
 func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 	if !common.RequirePluginsReady(w) {
 		return
@@ -647,7 +654,8 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} ListJobRunsResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/runs [get]
+// @ID getIngestionRuns
+// @Router /api/v1/ingestion/runs [get]
 func (h *Handler) listJobRuns(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	if limit <= 0 {
@@ -694,7 +702,8 @@ func (h *Handler) listJobRuns(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/runs/{id} [get]
+// @ID getIngestionRunsID
+// @Router /api/v1/ingestion/runs/{id} [get]
 func (h *Handler) getJobRun(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -723,7 +732,8 @@ func (h *Handler) getJobRun(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/runs/{id}/cancel [post]
+// @ID postIngestionRunsIDCancel
+// @Router /api/v1/ingestion/runs/{id}/cancel [post]
 func (h *Handler) cancelJobRun(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -755,7 +765,8 @@ func (h *Handler) cancelJobRun(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /ingestion/runs/{id}/entities [get]
+// @ID getIngestionRunsIDEntities
+// @Router /api/v1/ingestion/runs/{id}/entities [get]
 func (h *Handler) getJobRunEntities(w http.ResponseWriter, r *http.Request) {
 	jobRunID := r.PathValue("id")
 	if jobRunID == "" {

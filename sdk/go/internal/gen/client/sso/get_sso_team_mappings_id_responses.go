@@ -40,7 +40,7 @@ func (o *GetSsoTeamMappingsIDReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /sso/team-mappings/{id}] GetSsoTeamMappingsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/sso/team-mappings/{id}] getSsoTeamMappingsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetSsoTeamMappingsIDOK) Code() int {
 
 func (o *GetSsoTeamMappingsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *GetSsoTeamMappingsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *GetSsoTeamMappingsIDOK) GetPayload() *models.SSOTeamMapping {
@@ -156,12 +156,12 @@ func (o *GetSsoTeamMappingsIDNotFound) Code() int {
 
 func (o *GetSsoTeamMappingsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *GetSsoTeamMappingsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *GetSsoTeamMappingsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetSsoTeamMappingsIDInternalServerError) Code() int {
 
 func (o *GetSsoTeamMappingsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetSsoTeamMappingsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings/{id}][%d] getSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetSsoTeamMappingsIDInternalServerError) GetPayload() *models.ErrorResponse {

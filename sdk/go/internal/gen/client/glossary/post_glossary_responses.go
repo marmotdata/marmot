@@ -52,7 +52,7 @@ func (o *PostGlossaryReader) ReadResponse(response runtime.ClientResponse, consu
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /glossary/] PostGlossary", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/glossary/] postGlossary", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PostGlossaryCreated) Code() int {
 
 func (o *PostGlossaryCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryCreated %s", 201, payload)
 }
 
 func (o *PostGlossaryCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryCreated %s", 201, payload)
 }
 
 func (o *PostGlossaryCreated) GetPayload() *models.GlossaryTerm {
@@ -168,12 +168,12 @@ func (o *PostGlossaryBadRequest) Code() int {
 
 func (o *PostGlossaryBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryBadRequest %s", 400, payload)
 }
 
 func (o *PostGlossaryBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryBadRequest %s", 400, payload)
 }
 
 func (o *PostGlossaryBadRequest) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PostGlossaryUnauthorized) Code() int {
 
 func (o *PostGlossaryUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryUnauthorized %s", 401, payload)
 }
 
 func (o *PostGlossaryUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryUnauthorized %s", 401, payload)
 }
 
 func (o *PostGlossaryUnauthorized) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PostGlossaryConflict) Code() int {
 
 func (o *PostGlossaryConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryConflict %s", 409, payload)
 }
 
 func (o *PostGlossaryConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryConflict %s", 409, payload)
 }
 
 func (o *PostGlossaryConflict) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PostGlossaryInternalServerError) Code() int {
 
 func (o *PostGlossaryInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryInternalServerError %s", 500, payload)
 }
 
 func (o *PostGlossaryInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /glossary/][%d] postGlossaryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/glossary/][%d] postGlossaryInternalServerError %s", 500, payload)
 }
 
 func (o *PostGlossaryInternalServerError) GetPayload() *models.ErrorResponse {

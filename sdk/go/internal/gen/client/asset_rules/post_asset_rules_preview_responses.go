@@ -40,7 +40,7 @@ func (o *PostAssetRulesPreviewReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /asset-rules/preview] PostAssetRulesPreview", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/asset-rules/preview] postAssetRulesPreview", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostAssetRulesPreviewOK) Code() int {
 
 func (o *PostAssetRulesPreviewOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewOK %s", 200, payload)
 }
 
 func (o *PostAssetRulesPreviewOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewOK %s", 200, payload)
 }
 
 func (o *PostAssetRulesPreviewOK) GetPayload() *models.RulePreview {
@@ -156,12 +156,12 @@ func (o *PostAssetRulesPreviewBadRequest) Code() int {
 
 func (o *PostAssetRulesPreviewBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetRulesPreviewBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetRulesPreviewBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostAssetRulesPreviewInternalServerError) Code() int {
 
 func (o *PostAssetRulesPreviewInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetRulesPreviewInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/preview][%d] postAssetRulesPreviewInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetRulesPreviewInternalServerError) GetPayload() *models.ErrorResponse {

@@ -49,7 +49,8 @@ type UpdateTermRequest struct {
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/ [post]
+// @ID postGlossary
+// @Router /api/v1/glossary/ [post]
 func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 	var req CreateTermRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -113,7 +114,8 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [get]
+// @ID getGlossaryID
+// @Router /api/v1/glossary/{id} [get]
 func (h *Handler) getTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -150,7 +152,8 @@ func (h *Handler) getTerm(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [put]
+// @ID putGlossaryID
+// @Router /api/v1/glossary/{id} [put]
 func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -215,7 +218,8 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [delete]
+// @ID deleteGlossaryID
+// @Router /api/v1/glossary/{id} [delete]
 func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -247,7 +251,8 @@ func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 // @Param offset query int false "Number of terms to skip" default(0)
 // @Success 200 {object} glossary.ListResult
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/list [get]
+// @ID getGlossaryList
+// @Router /api/v1/glossary/list [get]
 func (h *Handler) listTerms(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -281,7 +286,8 @@ func (h *Handler) listTerms(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} glossary.ListResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/search [get]
+// @ID getGlossarySearch
+// @Router /api/v1/glossary/search [get]
 func (h *Handler) searchTerms(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	parentTermID := r.URL.Query().Get("parent_term_id")
@@ -323,7 +329,8 @@ func (h *Handler) searchTerms(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/children/{id} [get]
+// @ID getGlossaryChildrenID
+// @Router /api/v1/glossary/children/{id} [get]
 func (h *Handler) getChildren(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/children/")
 	id = strings.TrimSuffix(id, "/")
@@ -360,7 +367,8 @@ func (h *Handler) getChildren(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/ancestors/{id} [get]
+// @ID getGlossaryAncestorsID
+// @Router /api/v1/glossary/ancestors/{id} [get]
 func (h *Handler) getAncestors(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/ancestors/")
 	id = strings.TrimSuffix(id, "/")

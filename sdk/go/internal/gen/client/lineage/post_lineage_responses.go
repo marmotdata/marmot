@@ -40,7 +40,7 @@ func (o *PostLineageReader) ReadResponse(response runtime.ClientResponse, consum
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /lineage] PostLineage", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/lineage] postLineage", response, response.Code())
 	}
 }
 
@@ -86,11 +86,11 @@ func (o *PostLineageOK) Code() int {
 }
 
 func (o *PostLineageOK) Error() string {
-	return fmt.Sprintf("[POST /lineage][%d] postLineageOK", 200)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageOK", 200)
 }
 
 func (o *PostLineageOK) String() string {
-	return fmt.Sprintf("[POST /lineage][%d] postLineageOK", 200)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageOK", 200)
 }
 
 func (o *PostLineageOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,12 +142,12 @@ func (o *PostLineageBadRequest) Code() int {
 
 func (o *PostLineageBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage][%d] postLineageBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage][%d] postLineageBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageBadRequest) GetPayload() *models.ErrorResponse {
@@ -210,12 +210,12 @@ func (o *PostLineageInternalServerError) Code() int {
 
 func (o *PostLineageInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage][%d] postLineageInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageInternalServerError %s", 500, payload)
 }
 
 func (o *PostLineageInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage][%d] postLineageInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageInternalServerError %s", 500, payload)
 }
 
 func (o *PostLineageInternalServerError) GetPayload() *models.ErrorResponse {
