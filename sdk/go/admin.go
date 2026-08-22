@@ -22,7 +22,7 @@ type AdminService struct {
 // Reindex triggers a full search reindex.
 func (s *AdminService) Reindex(ctx context.Context) (*ReindexAccepted, error) {
 	p := admin.NewPostAdminSearchReindexParams().WithContext(ctx)
-	resp, err := s.gen.Admin.PostAdminSearchReindex(p)
+	resp, err := s.gen.Admin.PostAdminSearchReindex(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -32,7 +32,7 @@ func (s *AdminService) Reindex(ctx context.Context) (*ReindexAccepted, error) {
 // ReindexStatus returns the current reindex progress.
 func (s *AdminService) ReindexStatus(ctx context.Context) (*ReindexStatus, error) {
 	p := admin.NewGetAdminSearchReindexParams().WithContext(ctx)
-	resp, err := s.gen.Admin.GetAdminSearchReindex(p)
+	resp, err := s.gen.Admin.GetAdminSearchReindex(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

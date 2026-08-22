@@ -59,7 +59,7 @@ func (s *IngestionService) ListSchedules(ctx context.Context, opts SchedulesList
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Ingestion.GetIngestionSchedules(p)
+	resp, err := s.gen.Ingestion.GetIngestionSchedules(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -69,7 +69,7 @@ func (s *IngestionService) ListSchedules(ctx context.Context, opts SchedulesList
 // GetSchedule fetches a single ingestion schedule by ID.
 func (s *IngestionService) GetSchedule(ctx context.Context, id string) (*Schedule, error) {
 	p := ingestion.NewGetIngestionSchedulesIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Ingestion.GetIngestionSchedulesID(p)
+	resp, err := s.gen.Ingestion.GetIngestionSchedulesID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -87,7 +87,7 @@ func (s *IngestionService) CreateSchedule(ctx context.Context, in CreateSchedule
 		Enabled:        in.Enabled,
 	}
 	p := ingestion.NewPostIngestionSchedulesParams().WithContext(ctx).WithSchedule(body)
-	resp, err := s.gen.Ingestion.PostIngestionSchedules(p)
+	resp, err := s.gen.Ingestion.PostIngestionSchedules(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -105,7 +105,7 @@ func (s *IngestionService) UpdateSchedule(ctx context.Context, id string, in Upd
 		Enabled:        in.Enabled,
 	}
 	p := ingestion.NewPutIngestionSchedulesIDParams().WithContext(ctx).WithID(id).WithSchedule(body)
-	resp, err := s.gen.Ingestion.PutIngestionSchedulesID(p)
+	resp, err := s.gen.Ingestion.PutIngestionSchedulesID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -115,7 +115,7 @@ func (s *IngestionService) UpdateSchedule(ctx context.Context, id string, in Upd
 // DeleteSchedule removes an ingestion schedule.
 func (s *IngestionService) DeleteSchedule(ctx context.Context, id string) error {
 	p := ingestion.NewDeleteIngestionSchedulesIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Ingestion.DeleteIngestionSchedulesID(p)
+	_, err := s.gen.Ingestion.DeleteIngestionSchedulesID(p, nil)
 	return mapErr(err)
 }
 
@@ -123,6 +123,6 @@ func (s *IngestionService) DeleteSchedule(ctx context.Context, id string) error 
 // cadence.
 func (s *IngestionService) TriggerSchedule(ctx context.Context, id string) error {
 	p := ingestion.NewPostIngestionSchedulesIDTriggerParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Ingestion.PostIngestionSchedulesIDTrigger(p)
+	_, err := s.gen.Ingestion.PostIngestionSchedulesIDTrigger(p, nil)
 	return mapErr(err)
 }
