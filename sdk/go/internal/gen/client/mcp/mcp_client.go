@@ -57,10 +57,10 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// PostMcp m c p endpoint.
-	PostMcp(params *PostMcpParams, opts ...ClientOption) (*PostMcpOK, error)
+	PostMcp(params *PostMcpParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostMcpOK, error)
 
 	// PostMcpContext m c p endpoint.
-	PostMcpContext(ctx context.Context, params *PostMcpParams, opts ...ClientOption) (*PostMcpOK, error)
+	PostMcpContext(ctx context.Context, params *PostMcpParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostMcpOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -73,7 +73,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostMcpContext] instead.
-func (a *Client) PostMcp(params *PostMcpParams, opts ...ClientOption) (*PostMcpOK, error) {
+func (a *Client) PostMcp(params *PostMcpParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostMcpOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -81,7 +81,7 @@ func (a *Client) PostMcp(params *PostMcpParams, opts ...ClientOption) (*PostMcpO
 		ctx = context.Background()
 	}
 
-	return a.PostMcpContext(ctx, params, opts...)
+	return a.PostMcpContext(ctx, params, authInfo, opts...)
 }
 
 // PostMcpContext ms c p endpoint.
@@ -89,7 +89,7 @@ func (a *Client) PostMcp(params *PostMcpParams, opts ...ClientOption) (*PostMcpO
 // JSON-RPC 2.0 over the MCP Streamable HTTP transport. Requires assets:view, glossary:view and teams:view..
 //
 // Do not use the deprecated [PostMcpParams.Context] with this method: it would be ignored.
-func (a *Client) PostMcpContext(ctx context.Context, params *PostMcpParams, opts ...ClientOption) (*PostMcpOK, error) {
+func (a *Client) PostMcpContext(ctx context.Context, params *PostMcpParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostMcpOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostMcpParams()
@@ -104,6 +104,7 @@ func (a *Client) PostMcpContext(ctx context.Context, params *PostMcpParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostMcpReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

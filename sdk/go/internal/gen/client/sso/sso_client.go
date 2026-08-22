@@ -57,34 +57,34 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteSsoTeamMappingsID delete an s s o team mapping.
-	DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error)
+	DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error)
 
 	// DeleteSsoTeamMappingsIDContext delete an s s o team mapping.
-	DeleteSsoTeamMappingsIDContext(ctx context.Context, params *DeleteSsoTeamMappingsIDParams, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error)
+	DeleteSsoTeamMappingsIDContext(ctx context.Context, params *DeleteSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error)
 
 	// GetSsoTeamMappings list s s o team mappings.
-	GetSsoTeamMappings(params *GetSsoTeamMappingsParams, opts ...ClientOption) (*GetSsoTeamMappingsOK, error)
+	GetSsoTeamMappings(params *GetSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsOK, error)
 
 	// GetSsoTeamMappingsContext list s s o team mappings.
-	GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTeamMappingsParams, opts ...ClientOption) (*GetSsoTeamMappingsOK, error)
+	GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsOK, error)
 
 	// GetSsoTeamMappingsID get an s s o team mapping.
-	GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error)
+	GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error)
 
 	// GetSsoTeamMappingsIDContext get an s s o team mapping.
-	GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSsoTeamMappingsIDParams, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error)
+	GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error)
 
 	// PostSsoTeamMappings create an s s o team mapping.
-	PostSsoTeamMappings(params *PostSsoTeamMappingsParams, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error)
+	PostSsoTeamMappings(params *PostSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error)
 
 	// PostSsoTeamMappingsContext create an s s o team mapping.
-	PostSsoTeamMappingsContext(ctx context.Context, params *PostSsoTeamMappingsParams, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error)
+	PostSsoTeamMappingsContext(ctx context.Context, params *PostSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error)
 
 	// PutSsoTeamMappingsID update an s s o team mapping.
-	PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error)
+	PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error)
 
 	// PutSsoTeamMappingsIDContext update an s s o team mapping.
-	PutSsoTeamMappingsIDContext(ctx context.Context, params *PutSsoTeamMappingsIDParams, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error)
+	PutSsoTeamMappingsIDContext(ctx context.Context, params *PutSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -97,7 +97,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteSsoTeamMappingsIDContext] instead.
-func (a *Client) DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error) {
+func (a *Client) DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -105,7 +105,7 @@ func (a *Client) DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, 
 		ctx = context.Background()
 	}
 
-	return a.DeleteSsoTeamMappingsIDContext(ctx, params, opts...)
+	return a.DeleteSsoTeamMappingsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteSsoTeamMappingsIDContext deletes an s s o team mapping.
@@ -113,7 +113,7 @@ func (a *Client) DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, 
 // Delete an SSO team mapping by its ID.
 //
 // Do not use the deprecated [DeleteSsoTeamMappingsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteSsoTeamMappingsIDContext(ctx context.Context, params *DeleteSsoTeamMappingsIDParams, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error) {
+func (a *Client) DeleteSsoTeamMappingsIDContext(ctx context.Context, params *DeleteSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteSsoTeamMappingsIDParams()
@@ -128,6 +128,7 @@ func (a *Client) DeleteSsoTeamMappingsIDContext(ctx context.Context, params *Del
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteSsoTeamMappingsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -163,7 +164,7 @@ func (a *Client) DeleteSsoTeamMappingsIDContext(ctx context.Context, params *Del
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetSsoTeamMappingsContext] instead.
-func (a *Client) GetSsoTeamMappings(params *GetSsoTeamMappingsParams, opts ...ClientOption) (*GetSsoTeamMappingsOK, error) {
+func (a *Client) GetSsoTeamMappings(params *GetSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -171,7 +172,7 @@ func (a *Client) GetSsoTeamMappings(params *GetSsoTeamMappingsParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.GetSsoTeamMappingsContext(ctx, params, opts...)
+	return a.GetSsoTeamMappingsContext(ctx, params, authInfo, opts...)
 }
 
 // GetSsoTeamMappingsContext lists s s o team mappings.
@@ -179,7 +180,7 @@ func (a *Client) GetSsoTeamMappings(params *GetSsoTeamMappingsParams, opts ...Cl
 // Get a list of SSO group to team mappings.
 //
 // Do not use the deprecated [GetSsoTeamMappingsParams.Context] with this method: it would be ignored.
-func (a *Client) GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTeamMappingsParams, opts ...ClientOption) (*GetSsoTeamMappingsOK, error) {
+func (a *Client) GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetSsoTeamMappingsParams()
@@ -194,6 +195,7 @@ func (a *Client) GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTe
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetSsoTeamMappingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -229,7 +231,7 @@ func (a *Client) GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTe
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetSsoTeamMappingsIDContext] instead.
-func (a *Client) GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error) {
+func (a *Client) GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -237,7 +239,7 @@ func (a *Client) GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.GetSsoTeamMappingsIDContext(ctx, params, opts...)
+	return a.GetSsoTeamMappingsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetSsoTeamMappingsIDContext gets an s s o team mapping.
@@ -245,7 +247,7 @@ func (a *Client) GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, opts .
 // Get an SSO team mapping by its ID.
 //
 // Do not use the deprecated [GetSsoTeamMappingsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSsoTeamMappingsIDParams, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error) {
+func (a *Client) GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetSsoTeamMappingsIDParams()
@@ -260,6 +262,7 @@ func (a *Client) GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSso
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetSsoTeamMappingsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -295,7 +298,7 @@ func (a *Client) GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSso
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostSsoTeamMappingsContext] instead.
-func (a *Client) PostSsoTeamMappings(params *PostSsoTeamMappingsParams, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error) {
+func (a *Client) PostSsoTeamMappings(params *PostSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -303,7 +306,7 @@ func (a *Client) PostSsoTeamMappings(params *PostSsoTeamMappingsParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.PostSsoTeamMappingsContext(ctx, params, opts...)
+	return a.PostSsoTeamMappingsContext(ctx, params, authInfo, opts...)
 }
 
 // PostSsoTeamMappingsContext creates an s s o team mapping.
@@ -311,7 +314,7 @@ func (a *Client) PostSsoTeamMappings(params *PostSsoTeamMappingsParams, opts ...
 // Create a new SSO group to team mapping.
 //
 // Do not use the deprecated [PostSsoTeamMappingsParams.Context] with this method: it would be ignored.
-func (a *Client) PostSsoTeamMappingsContext(ctx context.Context, params *PostSsoTeamMappingsParams, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error) {
+func (a *Client) PostSsoTeamMappingsContext(ctx context.Context, params *PostSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostSsoTeamMappingsParams()
@@ -326,6 +329,7 @@ func (a *Client) PostSsoTeamMappingsContext(ctx context.Context, params *PostSso
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostSsoTeamMappingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -361,7 +365,7 @@ func (a *Client) PostSsoTeamMappingsContext(ctx context.Context, params *PostSso
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutSsoTeamMappingsIDContext] instead.
-func (a *Client) PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error) {
+func (a *Client) PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -369,7 +373,7 @@ func (a *Client) PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.PutSsoTeamMappingsIDContext(ctx, params, opts...)
+	return a.PutSsoTeamMappingsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutSsoTeamMappingsIDContext updates an s s o team mapping.
@@ -377,7 +381,7 @@ func (a *Client) PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, opts .
 // Update an SSO team mapping by its ID.
 //
 // Do not use the deprecated [PutSsoTeamMappingsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutSsoTeamMappingsIDContext(ctx context.Context, params *PutSsoTeamMappingsIDParams, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error) {
+func (a *Client) PutSsoTeamMappingsIDContext(ctx context.Context, params *PutSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutSsoTeamMappingsIDParams()
@@ -392,6 +396,7 @@ func (a *Client) PutSsoTeamMappingsIDContext(ctx context.Context, params *PutSso
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutSsoTeamMappingsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

@@ -99,10 +99,10 @@ type ClientService interface {
 	GetAuthProvidersContext(ctx context.Context, params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error)
 
 	// GetSsoProviders list configured s s o providers admin.
-	GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+	GetSsoProviders(params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error)
 
 	// GetSsoProvidersContext list configured s s o providers admin.
-	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error)
 
 	// PostOauthToken o auth token endpoint.
 	PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error)
@@ -297,7 +297,7 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetSsoProvidersContext] instead.
-func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -305,7 +305,7 @@ func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetSsoProvidersContext(ctx, params, opts...)
+	return a.GetSsoProvidersContext(ctx, params, authInfo, opts...)
 }
 
 // GetSsoProvidersContext lists configured s s o providers admin.
@@ -313,7 +313,7 @@ func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOp
 // Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
 //
 // Do not use the deprecated [GetSsoProvidersParams.Context] with this method: it would be ignored.
-func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetSsoProvidersParams()
@@ -328,6 +328,7 @@ func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvi
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetSsoProvidersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

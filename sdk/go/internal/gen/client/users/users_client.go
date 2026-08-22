@@ -57,40 +57,40 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteUsersApikeysID delete API key.
-	DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error)
+	DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error)
 
 	// DeleteUsersApikeysIDContext delete API key.
-	DeleteUsersApikeysIDContext(ctx context.Context, params *DeleteUsersApikeysIDParams, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error)
+	DeleteUsersApikeysIDContext(ctx context.Context, params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error)
 
 	// DeleteUsersID delete a user.
-	DeleteUsersID(params *DeleteUsersIDParams, opts ...ClientOption) (*DeleteUsersIDNoContent, error)
+	DeleteUsersID(params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error)
 
 	// DeleteUsersIDContext delete a user.
-	DeleteUsersIDContext(ctx context.Context, params *DeleteUsersIDParams, opts ...ClientOption) (*DeleteUsersIDNoContent, error)
+	DeleteUsersIDContext(ctx context.Context, params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error)
 
 	// DeleteUsersOauthUnlinkIDProvider unlink o auth account.
-	DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
+	DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
 
 	// DeleteUsersOauthUnlinkIDProviderContext unlink o auth account.
-	DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, params *DeleteUsersOauthUnlinkIDProviderParams, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
+	DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
 
 	// GetUsers list users.
-	GetUsers(params *GetUsersParams, opts ...ClientOption) (*GetUsersOK, error)
+	GetUsers(params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error)
 
 	// GetUsersContext list users.
-	GetUsersContext(ctx context.Context, params *GetUsersParams, opts ...ClientOption) (*GetUsersOK, error)
+	GetUsersContext(ctx context.Context, params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error)
 
 	// GetUsersApikeys list API keys.
-	GetUsersApikeys(params *GetUsersApikeysParams, opts ...ClientOption) (*GetUsersApikeysOK, error)
+	GetUsersApikeys(params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error)
 
 	// GetUsersApikeysContext list API keys.
-	GetUsersApikeysContext(ctx context.Context, params *GetUsersApikeysParams, opts ...ClientOption) (*GetUsersApikeysOK, error)
+	GetUsersApikeysContext(ctx context.Context, params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error)
 
 	// GetUsersID get a user by ID.
-	GetUsersID(params *GetUsersIDParams, opts ...ClientOption) (*GetUsersIDOK, error)
+	GetUsersID(params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error)
 
 	// GetUsersIDContext get a user by ID.
-	GetUsersIDContext(ctx context.Context, params *GetUsersIDParams, opts ...ClientOption) (*GetUsersIDOK, error)
+	GetUsersIDContext(ctx context.Context, params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error)
 
 	// GetUsersMe get current user profile.
 	GetUsersMe(params *GetUsersMeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeOK, error)
@@ -99,16 +99,16 @@ type ClientService interface {
 	GetUsersMeContext(ctx context.Context, params *GetUsersMeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeOK, error)
 
 	// PostUsers create a new user.
-	PostUsers(params *PostUsersParams, opts ...ClientOption) (*PostUsersOK, error)
+	PostUsers(params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error)
 
 	// PostUsersContext create a new user.
-	PostUsersContext(ctx context.Context, params *PostUsersParams, opts ...ClientOption) (*PostUsersOK, error)
+	PostUsersContext(ctx context.Context, params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error)
 
 	// PostUsersApikeys create API key.
-	PostUsersApikeys(params *PostUsersApikeysParams, opts ...ClientOption) (*PostUsersApikeysOK, error)
+	PostUsersApikeys(params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error)
 
 	// PostUsersApikeysContext create API key.
-	PostUsersApikeysContext(ctx context.Context, params *PostUsersApikeysParams, opts ...ClientOption) (*PostUsersApikeysOK, error)
+	PostUsersApikeysContext(ctx context.Context, params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error)
 
 	// PostUsersLogin login user.
 	PostUsersLogin(params *PostUsersLoginParams, opts ...ClientOption) (*PostUsersLoginOK, error)
@@ -117,28 +117,28 @@ type ClientService interface {
 	PostUsersLoginContext(ctx context.Context, params *PostUsersLoginParams, opts ...ClientOption) (*PostUsersLoginOK, error)
 
 	// PostUsersOauthLink link o auth account.
-	PostUsersOauthLink(params *PostUsersOauthLinkParams, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
+	PostUsersOauthLink(params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
 
 	// PostUsersOauthLinkContext link o auth account.
-	PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
+	PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
 
 	// PostUsersUpdatePassword update user password.
-	PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
+	PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
 
 	// PostUsersUpdatePasswordContext update user password.
-	PostUsersUpdatePasswordContext(ctx context.Context, params *PostUsersUpdatePasswordParams, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
+	PostUsersUpdatePasswordContext(ctx context.Context, params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
 
 	// PutUsersID update a user.
-	PutUsersID(params *PutUsersIDParams, opts ...ClientOption) (*PutUsersIDOK, error)
+	PutUsersID(params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error)
 
 	// PutUsersIDContext update a user.
-	PutUsersIDContext(ctx context.Context, params *PutUsersIDParams, opts ...ClientOption) (*PutUsersIDOK, error)
+	PutUsersIDContext(ctx context.Context, params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error)
 
 	// PutUsersPreferences update user preferences.
-	PutUsersPreferences(params *PutUsersPreferencesParams, opts ...ClientOption) (*PutUsersPreferencesOK, error)
+	PutUsersPreferences(params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error)
 
 	// PutUsersPreferencesContext update user preferences.
-	PutUsersPreferencesContext(ctx context.Context, params *PutUsersPreferencesParams, opts ...ClientOption) (*PutUsersPreferencesOK, error)
+	PutUsersPreferencesContext(ctx context.Context, params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -151,7 +151,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteUsersApikeysIDContext] instead.
-func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
+func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -159,7 +159,7 @@ func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.DeleteUsersApikeysIDContext(ctx, params, opts...)
+	return a.DeleteUsersApikeysIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteUsersApikeysIDContext deletes API key.
@@ -167,7 +167,7 @@ func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, opts .
 // Delete an API key.
 //
 // Do not use the deprecated [DeleteUsersApikeysIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *DeleteUsersApikeysIDParams, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
+func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteUsersApikeysIDParams()
@@ -182,6 +182,7 @@ func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *Delete
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteUsersApikeysIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -217,7 +218,7 @@ func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *Delete
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteUsersIDContext] instead.
-func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
+func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -225,7 +226,7 @@ func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.DeleteUsersIDContext(ctx, params, opts...)
+	return a.DeleteUsersIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteUsersIDContext deletes a user.
@@ -233,7 +234,7 @@ func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, opts ...ClientOption
 // Delete a user from the system.
 //
 // Do not use the deprecated [DeleteUsersIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersIDParams, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
+func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteUsersIDParams()
@@ -248,6 +249,7 @@ func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersID
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteUsersIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -283,7 +285,7 @@ func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteUsersOauthUnlinkIDProviderContext] instead.
-func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
+func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -291,7 +293,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlink
 		ctx = context.Background()
 	}
 
-	return a.DeleteUsersOauthUnlinkIDProviderContext(ctx, params, opts...)
+	return a.DeleteUsersOauthUnlinkIDProviderContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteUsersOauthUnlinkIDProviderContext unlinks o auth account.
@@ -299,7 +301,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlink
 // Unlink an OAuth account from a user.
 //
 // Do not use the deprecated [DeleteUsersOauthUnlinkIDProviderParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, params *DeleteUsersOauthUnlinkIDProviderParams, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
+func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteUsersOauthUnlinkIDProviderParams()
@@ -314,6 +316,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, pa
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteUsersOauthUnlinkIDProviderReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -349,7 +352,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, pa
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetUsersContext] instead.
-func (a *Client) GetUsers(params *GetUsersParams, opts ...ClientOption) (*GetUsersOK, error) {
+func (a *Client) GetUsers(params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -357,7 +360,7 @@ func (a *Client) GetUsers(params *GetUsersParams, opts ...ClientOption) (*GetUse
 		ctx = context.Background()
 	}
 
-	return a.GetUsersContext(ctx, params, opts...)
+	return a.GetUsersContext(ctx, params, authInfo, opts...)
 }
 
 // GetUsersContext lists users.
@@ -365,7 +368,7 @@ func (a *Client) GetUsers(params *GetUsersParams, opts ...ClientOption) (*GetUse
 // Get a list of users with optional filtering.
 //
 // Do not use the deprecated [GetUsersParams.Context] with this method: it would be ignored.
-func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, opts ...ClientOption) (*GetUsersOK, error) {
+func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetUsersParams()
@@ -380,6 +383,7 @@ func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, op
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetUsersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -415,7 +419,7 @@ func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, op
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetUsersApikeysContext] instead.
-func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, opts ...ClientOption) (*GetUsersApikeysOK, error) {
+func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -423,7 +427,7 @@ func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetUsersApikeysContext(ctx, params, opts...)
+	return a.GetUsersApikeysContext(ctx, params, authInfo, opts...)
 }
 
 // GetUsersApikeysContext lists API keys.
@@ -431,7 +435,7 @@ func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, opts ...ClientOp
 // Get all API keys for a user.
 //
 // Do not use the deprecated [GetUsersApikeysParams.Context] with this method: it would be ignored.
-func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApikeysParams, opts ...ClientOption) (*GetUsersApikeysOK, error) {
+func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetUsersApikeysParams()
@@ -446,6 +450,7 @@ func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApi
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetUsersApikeysReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -481,7 +486,7 @@ func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApi
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetUsersIDContext] instead.
-func (a *Client) GetUsersID(params *GetUsersIDParams, opts ...ClientOption) (*GetUsersIDOK, error) {
+func (a *Client) GetUsersID(params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -489,7 +494,7 @@ func (a *Client) GetUsersID(params *GetUsersIDParams, opts ...ClientOption) (*Ge
 		ctx = context.Background()
 	}
 
-	return a.GetUsersIDContext(ctx, params, opts...)
+	return a.GetUsersIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetUsersIDContext gets a user by ID.
@@ -497,7 +502,7 @@ func (a *Client) GetUsersID(params *GetUsersIDParams, opts ...ClientOption) (*Ge
 // Get detailed information about a specific user.
 //
 // Do not use the deprecated [GetUsersIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetUsersIDContext(ctx context.Context, params *GetUsersIDParams, opts ...ClientOption) (*GetUsersIDOK, error) {
+func (a *Client) GetUsersIDContext(ctx context.Context, params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetUsersIDParams()
@@ -512,6 +517,7 @@ func (a *Client) GetUsersIDContext(ctx context.Context, params *GetUsersIDParams
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetUsersIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -614,7 +620,7 @@ func (a *Client) GetUsersMeContext(ctx context.Context, params *GetUsersMeParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostUsersContext] instead.
-func (a *Client) PostUsers(params *PostUsersParams, opts ...ClientOption) (*PostUsersOK, error) {
+func (a *Client) PostUsers(params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -622,7 +628,7 @@ func (a *Client) PostUsers(params *PostUsersParams, opts ...ClientOption) (*Post
 		ctx = context.Background()
 	}
 
-	return a.PostUsersContext(ctx, params, opts...)
+	return a.PostUsersContext(ctx, params, authInfo, opts...)
 }
 
 // PostUsersContext creates a new user.
@@ -630,7 +636,7 @@ func (a *Client) PostUsers(params *PostUsersParams, opts ...ClientOption) (*Post
 // Create a new user in the system.
 //
 // Do not use the deprecated [PostUsersParams.Context] with this method: it would be ignored.
-func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, opts ...ClientOption) (*PostUsersOK, error) {
+func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostUsersParams()
@@ -645,6 +651,7 @@ func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostUsersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -680,7 +687,7 @@ func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostUsersApikeysContext] instead.
-func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, opts ...ClientOption) (*PostUsersApikeysOK, error) {
+func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -688,7 +695,7 @@ func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostUsersApikeysContext(ctx, params, opts...)
+	return a.PostUsersApikeysContext(ctx, params, authInfo, opts...)
 }
 
 // PostUsersApikeysContext creates API key.
@@ -696,7 +703,7 @@ func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, opts ...Client
 // Create a new API key for a user.
 //
 // Do not use the deprecated [PostUsersApikeysParams.Context] with this method: it would be ignored.
-func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersApikeysParams, opts ...ClientOption) (*PostUsersApikeysOK, error) {
+func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostUsersApikeysParams()
@@ -711,6 +718,7 @@ func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersA
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostUsersApikeysReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -812,7 +820,7 @@ func (a *Client) PostUsersLoginContext(ctx context.Context, params *PostUsersLog
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostUsersOauthLinkContext] instead.
-func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
+func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -820,7 +828,7 @@ func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.PostUsersOauthLinkContext(ctx, params, opts...)
+	return a.PostUsersOauthLinkContext(ctx, params, authInfo, opts...)
 }
 
 // PostUsersOauthLinkContext links o auth account.
@@ -828,7 +836,7 @@ func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, opts ...Cl
 // Link an OAuth account to an existing user.
 //
 // Do not use the deprecated [PostUsersOauthLinkParams.Context] with this method: it would be ignored.
-func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
+func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostUsersOauthLinkParams()
@@ -843,6 +851,7 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostUsersOauthLinkReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -878,7 +887,7 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostUsersUpdatePasswordContext] instead.
-func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
+func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -886,7 +895,7 @@ func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, 
 		ctx = context.Background()
 	}
 
-	return a.PostUsersUpdatePasswordContext(ctx, params, opts...)
+	return a.PostUsersUpdatePasswordContext(ctx, params, authInfo, opts...)
 }
 
 // PostUsersUpdatePasswordContext updates user password.
@@ -894,7 +903,7 @@ func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, 
 // Update current user's password.
 //
 // Do not use the deprecated [PostUsersUpdatePasswordParams.Context] with this method: it would be ignored.
-func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *PostUsersUpdatePasswordParams, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
+func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostUsersUpdatePasswordParams()
@@ -909,6 +918,7 @@ func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *Pos
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostUsersUpdatePasswordReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -944,7 +954,7 @@ func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *Pos
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutUsersIDContext] instead.
-func (a *Client) PutUsersID(params *PutUsersIDParams, opts ...ClientOption) (*PutUsersIDOK, error) {
+func (a *Client) PutUsersID(params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -952,7 +962,7 @@ func (a *Client) PutUsersID(params *PutUsersIDParams, opts ...ClientOption) (*Pu
 		ctx = context.Background()
 	}
 
-	return a.PutUsersIDContext(ctx, params, opts...)
+	return a.PutUsersIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutUsersIDContext updates a user.
@@ -960,7 +970,7 @@ func (a *Client) PutUsersID(params *PutUsersIDParams, opts ...ClientOption) (*Pu
 // Update user information.
 //
 // Do not use the deprecated [PutUsersIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams, opts ...ClientOption) (*PutUsersIDOK, error) {
+func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutUsersIDParams()
@@ -975,6 +985,7 @@ func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutUsersIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1010,7 +1021,7 @@ func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutUsersPreferencesContext] instead.
-func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
+func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1018,7 +1029,7 @@ func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.PutUsersPreferencesContext(ctx, params, opts...)
+	return a.PutUsersPreferencesContext(ctx, params, authInfo, opts...)
 }
 
 // PutUsersPreferencesContext updates user preferences.
@@ -1026,7 +1037,7 @@ func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, opts ...
 // Update preferences for the current user.
 //
 // Do not use the deprecated [PutUsersPreferencesParams.Context] with this method: it would be ignored.
-func (a *Client) PutUsersPreferencesContext(ctx context.Context, params *PutUsersPreferencesParams, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
+func (a *Client) PutUsersPreferencesContext(ctx context.Context, params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutUsersPreferencesParams()
@@ -1041,6 +1052,7 @@ func (a *Client) PutUsersPreferencesContext(ctx context.Context, params *PutUser
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutUsersPreferencesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

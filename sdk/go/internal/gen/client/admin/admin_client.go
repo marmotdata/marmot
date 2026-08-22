@@ -57,16 +57,16 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// GetAdminSearchReindex get reindex status.
-	GetAdminSearchReindex(params *GetAdminSearchReindexParams, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
+	GetAdminSearchReindex(params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
 
 	// GetAdminSearchReindexContext get reindex status.
-	GetAdminSearchReindexContext(ctx context.Context, params *GetAdminSearchReindexParams, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
+	GetAdminSearchReindexContext(ctx context.Context, params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
 
 	// PostAdminSearchReindex start search reindex.
-	PostAdminSearchReindex(params *PostAdminSearchReindexParams, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
+	PostAdminSearchReindex(params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
 
 	// PostAdminSearchReindexContext start search reindex.
-	PostAdminSearchReindexContext(ctx context.Context, params *PostAdminSearchReindexParams, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
+	PostAdminSearchReindexContext(ctx context.Context, params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -79,7 +79,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAdminSearchReindexContext] instead.
-func (a *Client) GetAdminSearchReindex(params *GetAdminSearchReindexParams, opts ...ClientOption) (*GetAdminSearchReindexOK, error) {
+func (a *Client) GetAdminSearchReindex(params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -87,7 +87,7 @@ func (a *Client) GetAdminSearchReindex(params *GetAdminSearchReindexParams, opts
 		ctx = context.Background()
 	}
 
-	return a.GetAdminSearchReindexContext(ctx, params, opts...)
+	return a.GetAdminSearchReindexContext(ctx, params, authInfo, opts...)
 }
 
 // GetAdminSearchReindexContext gets reindex status.
@@ -95,7 +95,7 @@ func (a *Client) GetAdminSearchReindex(params *GetAdminSearchReindexParams, opts
 // Check whether a search reindex is currently running and whether Elasticsearch is configured..
 //
 // Do not use the deprecated [GetAdminSearchReindexParams.Context] with this method: it would be ignored.
-func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAdminSearchReindexParams, opts ...ClientOption) (*GetAdminSearchReindexOK, error) {
+func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAdminSearchReindexParams()
@@ -110,6 +110,7 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAdminSearchReindexReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -145,7 +146,7 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAdminSearchReindexContext] instead.
-func (a *Client) PostAdminSearchReindex(params *PostAdminSearchReindexParams, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error) {
+func (a *Client) PostAdminSearchReindex(params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -153,7 +154,7 @@ func (a *Client) PostAdminSearchReindex(params *PostAdminSearchReindexParams, op
 		ctx = context.Background()
 	}
 
-	return a.PostAdminSearchReindexContext(ctx, params, opts...)
+	return a.PostAdminSearchReindexContext(ctx, params, authInfo, opts...)
 }
 
 // PostAdminSearchReindexContext starts search reindex.
@@ -161,7 +162,7 @@ func (a *Client) PostAdminSearchReindex(params *PostAdminSearchReindexParams, op
 // Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time..
 //
 // Do not use the deprecated [PostAdminSearchReindexParams.Context] with this method: it would be ignored.
-func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *PostAdminSearchReindexParams, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error) {
+func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAdminSearchReindexParams()
@@ -176,6 +177,7 @@ func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *Post
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAdminSearchReindexReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 

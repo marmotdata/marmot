@@ -57,10 +57,10 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// GetOwnersSearch search owners.
-	GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error)
+	GetOwnersSearch(params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error)
 
 	// GetOwnersSearchContext search owners.
-	GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error)
+	GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -73,7 +73,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetOwnersSearchContext] instead.
-func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error) {
+func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -81,7 +81,7 @@ func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetOwnersSearchContext(ctx, params, opts...)
+	return a.GetOwnersSearchContext(ctx, params, authInfo, opts...)
 }
 
 // GetOwnersSearchContext searches owners.
@@ -89,7 +89,7 @@ func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOp
 // Search for asset owners (users and teams).
 //
 // Do not use the deprecated [GetOwnersSearchParams.Context] with this method: it would be ignored.
-func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error) {
+func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetOwnersSearchParams()
@@ -104,6 +104,7 @@ func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSe
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetOwnersSearchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
