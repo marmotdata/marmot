@@ -124,7 +124,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
-	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore, serviceaccountService.DefaultMaxAPIKeysPerAccount)
+	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)

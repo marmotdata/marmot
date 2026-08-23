@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/serviceaccount"
 	"github.com/rs/zerolog/log"
 )
@@ -83,6 +84,10 @@ func (h *Handler) createServiceAccount(w http.ResponseWriter, r *http.Request) {
 		RoleIDs:     req.RoleIDs,
 	}, createdBy)
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		if errors.Is(err, serviceaccount.ErrAlreadyExists) {
 			common.RespondError(w, http.StatusConflict, "Service account already exists")
 			return

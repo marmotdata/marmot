@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -99,6 +100,10 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := h.userService.Create(r.Context(), input)
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch err {
 		case user.ErrInvalidInput:
 			common.RespondError(w, http.StatusBadRequest, "Invalid input")
