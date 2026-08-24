@@ -25,7 +25,7 @@ type APIKeysService struct {
 // List returns the caller's API keys.
 func (s *APIKeysService) List(ctx context.Context) ([]*APIKey, error) {
 	p := users.NewGetUsersApikeysParams().WithContext(ctx)
-	resp, err := s.gen.Users.GetUsersApikeys(p)
+	resp, err := s.gen.Users.GetUsersApikeys(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -39,7 +39,7 @@ func (s *APIKeysService) Create(ctx context.Context, in CreateAPIKeyInput) (*API
 		ExpiresInDays: in.ExpiresInDays,
 	}
 	p := users.NewPostUsersApikeysParams().WithContext(ctx).WithKey(body)
-	resp, err := s.gen.Users.PostUsersApikeys(p)
+	resp, err := s.gen.Users.PostUsersApikeys(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -49,6 +49,6 @@ func (s *APIKeysService) Create(ctx context.Context, in CreateAPIKeyInput) (*API
 // Delete revokes an API key.
 func (s *APIKeysService) Delete(ctx context.Context, id string) error {
 	p := users.NewDeleteUsersApikeysIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Users.DeleteUsersApikeysID(p)
+	_, err := s.gen.Users.DeleteUsersApikeysID(p, nil)
 	return mapErr(err)
 }

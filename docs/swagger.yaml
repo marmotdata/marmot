@@ -2625,6 +2625,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get reindex status
       tags:
       - admin
@@ -2655,6 +2658,9 @@ paths:
           description: Service Unavailable
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Start search reindex
       tags:
       - admin
@@ -2678,6 +2684,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ActivityResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Agent activity
       tags:
       - agents
@@ -2705,6 +2714,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/RunsResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List agent runs
       tags:
       - agents
@@ -2728,6 +2740,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/Stats'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Agent stats
       tags:
       - agents
@@ -2750,6 +2765,9 @@ paths:
           description: Created
           schema:
             $ref: '#/definitions/AgentRun'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Record agent run
       tags:
       - agents
@@ -2785,6 +2803,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create an asset rule
       tags:
       - asset-rules
@@ -2809,6 +2830,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete an asset rule
       tags:
       - asset-rules
@@ -2836,6 +2860,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get an asset rule
       tags:
       - asset-rules
@@ -2879,6 +2906,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update an asset rule
       tags:
       - asset-rules
@@ -2918,6 +2948,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets matched by a rule
       tags:
       - asset-rules
@@ -2947,6 +2980,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List asset rules
       tags:
       - asset-rules
@@ -2978,6 +3014,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Preview an asset rule
       tags:
       - asset-rules
@@ -3011,6 +3050,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Search asset rules
       tags:
       - asset-rules
@@ -3046,6 +3088,9 @@ paths:
           description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a new asset
       tags:
       - assets
@@ -3078,6 +3123,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete an asset
       tags:
       - assets
@@ -3107,6 +3155,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get an asset by ID
       tags:
       - assets
@@ -3146,6 +3197,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update an asset
       tags:
       - assets
@@ -3181,6 +3235,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets by glossary term
       tags:
       - assets
@@ -3212,6 +3269,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create asset documentation
       tags:
       - assets
@@ -3243,6 +3303,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset documentation
       tags:
       - assets
@@ -3274,6 +3337,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Batch create documentation
       tags:
       - assets
@@ -3312,6 +3378,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Lookup asset by type, service, and name
       tags:
       - assets
@@ -3347,6 +3416,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Match asset pattern
       tags:
       - assets
@@ -3380,6 +3452,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get user's assets
       tags:
       - assets
@@ -3421,6 +3496,9 @@ paths:
           description: Data preview not supported for this asset
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get preview data for an asset
       tags:
       - assets
@@ -3452,6 +3530,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get an asset by qualified name
       tags:
       - assets
@@ -3489,6 +3570,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset run history histogram
       tags:
       - assets
@@ -3531,6 +3615,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset run history
       tags:
       - assets
@@ -3596,6 +3683,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Search assets
       tags:
       - assets
@@ -3616,6 +3706,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get metadata field suggestions
       tags:
       - assets
@@ -3655,6 +3748,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get metadata value suggestions
       tags:
       - assets
@@ -3685,6 +3781,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get tag suggestions
       tags:
       - assets
@@ -3705,6 +3804,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset summary
       tags:
       - assets
@@ -3741,6 +3843,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Remove tag from asset
       tags:
       - assets
@@ -3776,6 +3881,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Add tag to asset
       tags:
       - assets
@@ -3814,6 +3922,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Remove glossary term from asset
       tags:
       - assets
@@ -3839,6 +3950,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset's glossary terms
       tags:
       - assets
@@ -3876,6 +3990,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Add glossary terms to asset
       tags:
       - assets
@@ -3916,6 +4033,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create glossary term
       tags:
       - glossary
@@ -3950,6 +4070,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete glossary term
       tags:
       - glossary
@@ -3981,6 +4104,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get glossary term
       tags:
       - glossary
@@ -4020,6 +4146,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update glossary term
       tags:
       - glossary
@@ -4053,6 +4182,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get ancestor terms
       tags:
       - glossary
@@ -4086,6 +4218,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get child terms
       tags:
       - glossary
@@ -4115,6 +4250,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List glossary terms
       tags:
       - glossary
@@ -4156,6 +4294,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Search glossary terms
       tags:
       - glossary
@@ -4194,6 +4335,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List ingestion job runs
       tags:
       - ingestion
@@ -4225,6 +4369,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get a job run by ID
       tags:
       - ingestion
@@ -4252,6 +4399,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Cancel a running job
       tags:
       - ingestion
@@ -4292,6 +4442,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get entities for a job run
       tags:
       - ingestion
@@ -4326,6 +4479,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List ingestion schedules
       tags:
       - ingestion
@@ -4359,6 +4515,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a new ingestion schedule
       tags:
       - ingestion
@@ -4386,6 +4545,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete an ingestion schedule
       tags:
       - ingestion
@@ -4416,6 +4578,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get an ingestion schedule by ID
       tags:
       - ingestion
@@ -4458,6 +4623,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update an ingestion schedule
       tags:
       - ingestion
@@ -4487,6 +4655,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Manually trigger an ingestion schedule
       tags:
       - ingestion
@@ -4517,6 +4688,9 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Validate plugin configuration
       tags:
       - ingestion
@@ -4546,6 +4720,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Ingest OpenLineage event
       tags:
       - lineage
@@ -4600,6 +4777,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get asset lineage
       tags:
       - lineage
@@ -4631,6 +4811,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Batch create lineage edges
       tags:
       - lineage
@@ -4663,6 +4846,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create direct lineage
       tags:
       - lineage
@@ -4692,6 +4878,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete direct lineage
       tags:
       - lineage
@@ -4722,6 +4911,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get direct lineage by ID
       tags:
       - lineage
@@ -4816,6 +5008,9 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get metrics for UI
       tags:
       - metrics
@@ -4830,6 +5025,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/AssetsByOwnerResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets by owner
       tags:
       - metrics
@@ -4844,6 +5042,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/AssetsByProviderResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets by provider
       tags:
       - metrics
@@ -4858,6 +5059,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/AssetsByTypeResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets by type
       tags:
       - metrics
@@ -4872,6 +5076,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/TotalAssetsResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get total assets count
       tags:
       - metrics
@@ -4886,6 +5093,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/AssetsWithSchemasResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get assets with schemas count
       tags:
       - metrics
@@ -4918,6 +5128,9 @@ paths:
             items:
               $ref: '#/definitions/AssetCount'
             type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get top viewed assets
       tags:
       - metrics
@@ -4950,6 +5163,9 @@ paths:
             items:
               $ref: '#/definitions/QueryCount'
             type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get top search queries
       tags:
       - metrics
@@ -4985,6 +5201,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Search owners
       tags:
       - owners
@@ -5005,6 +5224,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List all permissions
       tags:
       - roles
@@ -5025,6 +5247,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DestroyRunResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Destroy pipeline
       tags:
       - pipelines
@@ -5092,6 +5317,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create data product
       tags:
       - products
@@ -5126,6 +5354,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete data product
       tags:
       - products
@@ -5157,6 +5388,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get data product
       tags:
       - products
@@ -5200,6 +5434,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update data product
       tags:
       - products
@@ -5242,6 +5479,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get data product assets
       tags:
       - products
@@ -5287,6 +5527,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Add data product assets
       tags:
       - products
@@ -5326,6 +5569,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Remove data product asset
       tags:
       - products
@@ -5355,6 +5601,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List product images
       tags:
       - products
@@ -5390,6 +5639,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete product image
       tags:
       - products
@@ -5425,6 +5677,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get product image
       tags:
       - products
@@ -5468,6 +5723,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Upload product image
       tags:
       - products
@@ -5497,6 +5755,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List data products
       tags:
       - products
@@ -5540,6 +5801,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get resolved data product assets
       tags:
       - products
@@ -5576,6 +5840,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Preview data product rule
       tags:
       - products
@@ -5608,6 +5875,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get data product rules
       tags:
       - products
@@ -5647,6 +5917,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create data product rule
       tags:
       - products
@@ -5686,6 +5959,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete data product rule
       tags:
       - products
@@ -5730,6 +6006,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update data product rule
       tags:
       - products
@@ -5771,6 +6050,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Search data products
       tags:
       - products
@@ -5791,6 +6073,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List roles
       tags:
       - roles
@@ -5821,6 +6106,9 @@ paths:
           description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a role
       tags:
       - roles
@@ -5848,6 +6136,9 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete a role
       tags:
       - roles
@@ -5871,6 +6162,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get a role
       tags:
       - roles
@@ -5910,6 +6204,9 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update a role
       tags:
       - roles
@@ -5951,6 +6248,9 @@ paths:
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Replace role permissions
       tags:
       - roles
@@ -5999,6 +6299,9 @@ paths:
               total:
                 type: integer
             type: object
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List runs
       tags:
       - runs
@@ -6019,6 +6322,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/PluginRun'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get run
       tags:
       - runs
@@ -6057,6 +6363,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/RunEntitiesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get run entities
       tags:
       - runs
@@ -6080,6 +6389,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/BatchCreateResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Batch create assets
       tags:
       - runs
@@ -6094,6 +6406,9 @@ paths:
             additionalProperties:
               type: integer
             type: object
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Cleanup stale runs
       tags:
       - runs
@@ -6119,6 +6434,9 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Complete run
       tags:
       - runs
@@ -6142,6 +6460,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/PluginRun'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Start run
       tags:
       - runs
@@ -6187,6 +6508,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Unified search
       tags:
       - search
@@ -6207,6 +6531,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List service accounts
       tags:
       - service_accounts
@@ -6233,6 +6560,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create service account
       tags:
       - service_accounts
@@ -6253,6 +6583,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete service account
       tags:
       - service_accounts
@@ -6276,6 +6609,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get service account
       tags:
       - service_accounts
@@ -6307,6 +6643,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update service account
       tags:
       - service_accounts
@@ -6329,6 +6668,9 @@ paths:
             items:
               $ref: '#/definitions/ServiceAccountAPIKey'
             type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List API keys for a service account
       tags:
       - service_accounts
@@ -6360,6 +6702,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create API key for a service account
       tags:
       - service_accounts
@@ -6385,6 +6730,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete an API key
       tags:
       - service_accounts
@@ -6400,6 +6748,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/SSOProvidersResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List configured SSO providers (admin)
       tags:
       - auth
@@ -6425,6 +6776,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List SSO team mappings
       tags:
       - sso
@@ -6459,6 +6813,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create an SSO team mapping
       tags:
       - sso
@@ -6489,6 +6846,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete an SSO team mapping
       tags:
       - sso
@@ -6518,6 +6878,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get an SSO team mapping
       tags:
       - sso
@@ -6557,6 +6920,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update an SSO team mapping
       tags:
       - sso
@@ -6588,6 +6954,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List teams
       tags:
       - teams
@@ -6622,6 +6991,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a team
       tags:
       - teams
@@ -6656,6 +7028,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete a team
       tags:
       - teams
@@ -6685,6 +7060,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get a team
       tags:
       - teams
@@ -6732,6 +7110,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update a team
       tags:
       - teams
@@ -6758,6 +7139,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List team members
       tags:
       - teams
@@ -6801,6 +7185,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Add a team member
       tags:
       - teams
@@ -6836,6 +7223,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Remove a team member
       tags:
       - teams
@@ -6871,6 +7261,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Convert member to manual
       tags:
       - teams
@@ -6916,6 +7309,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update member role
       tags:
       - teams
@@ -6976,6 +7372,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List users
       tags:
       - users
@@ -7006,6 +7405,9 @@ paths:
           description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a new user
       tags:
       - users
@@ -7034,6 +7436,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete a user
       tags:
       - users
@@ -7063,6 +7468,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get a user by ID
       tags:
       - users
@@ -7098,6 +7506,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update a user
       tags:
       - users
@@ -7120,6 +7531,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List API keys
       tags:
       - users
@@ -7146,6 +7560,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create API key
       tags:
       - users
@@ -7170,6 +7587,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete API key
       tags:
       - users
@@ -7222,6 +7642,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
+      - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get current user profile
       tags:
@@ -7248,6 +7669,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Link OAuth account
       tags:
       - users
@@ -7277,6 +7701,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Unlink OAuth account
       tags:
       - users
@@ -7303,6 +7730,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user preferences
       tags:
       - users
@@ -7334,6 +7764,9 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user password
       tags:
       - users
@@ -7466,4 +7899,14 @@ paths:
       summary: OAuth token endpoint
       tags:
       - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

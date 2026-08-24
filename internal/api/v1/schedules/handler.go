@@ -172,6 +172,8 @@ type ValidateConfigResponse struct {
 // @Accept json
 // @Produce json
 // @Param config body ValidateConfigRequest true "Config to validate"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ValidateConfigResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -269,6 +271,8 @@ type ListJobRunsResponse struct {
 // @Accept json
 // @Produce json
 // @Param schedule body CreateScheduleRequest true "Schedule configuration"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} runs.Schedule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -348,6 +352,8 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 // @Param enabled query boolean false "Filter by enabled status"
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListSchedulesResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -399,6 +405,8 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 // @Tags ingestion
 // @Produce json
 // @Param id path string true "Schedule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} runs.Schedule
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -438,6 +446,8 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Schedule ID"
 // @Param schedule body UpdateScheduleRequest true "Updated schedule configuration"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} runs.Schedule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -519,6 +529,8 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 // @Summary Delete an ingestion schedule
 // @Tags ingestion
 // @Param id path string true "Schedule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -585,6 +597,8 @@ func (h *Handler) deleteSchedule(w http.ResponseWriter, r *http.Request) {
 // @Summary Manually trigger an ingestion schedule
 // @Tags ingestion
 // @Param id path string true "Schedule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} runs.JobRun
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -651,6 +665,8 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 // @Param status query string false "Filter by status"
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListJobRunsResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -698,6 +714,8 @@ func (h *Handler) listJobRuns(w http.ResponseWriter, r *http.Request) {
 // @Tags ingestion
 // @Produce json
 // @Param id path string true "Job run ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} runs.JobRun
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -728,6 +746,8 @@ func (h *Handler) getJobRun(w http.ResponseWriter, r *http.Request) {
 // @Summary Cancel a running job
 // @Tags ingestion
 // @Param id path string true "Job run ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -761,6 +781,8 @@ func (h *Handler) cancelJobRun(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Job run ID"
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse

@@ -24,6 +24,8 @@ type CreateAPIKeyRequest struct {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} user.APIKey
 // @Failure 500 {object} common.ErrorResponse
 // @ID getUsersApikeys
@@ -51,6 +53,8 @@ func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param key body CreateAPIKeyRequest true "API key creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.APIKey
 // @Failure 400 {object} common.ErrorResponse
 // @ID postUsersApikeys
@@ -95,6 +99,8 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "API key ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
 // @ID deleteUsersApikeysID

@@ -19,6 +19,7 @@ var _ = user.User{}
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 401 {object} common.ErrorResponse
@@ -47,6 +48,8 @@ func (h *Handler) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param preferences body map[string]interface{} true "User preferences"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
 // @ID putUsersPreferences
