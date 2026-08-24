@@ -76,7 +76,7 @@ import (
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
-// @name X-API-KEY
+// @name X-API-Key
 
 // @securityDefinitions.apikey BearerAuth
 // @in header

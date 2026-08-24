@@ -12319,7 +12319,7 @@ const docTemplate = `{
     "securityDefinitions": {
         "ApiKeyAuth": {
             "type": "apiKey",
-            "name": "X-API-KEY",
+            "name": "X-API-Key",
             "in": "header"
         },
         "BearerAuth": {

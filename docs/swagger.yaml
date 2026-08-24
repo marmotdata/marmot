@@ -7902,7 +7902,7 @@ paths:
 securityDefinitions:
   ApiKeyAuth:
     in: header
-    name: X-API-KEY
+    name: X-API-Key
     type: apiKey
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT.
