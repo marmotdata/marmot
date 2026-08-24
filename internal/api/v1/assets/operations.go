@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -97,6 +98,10 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Interface("asset", newAsset).Msg("createAsset: Output to assetService.Create")
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")

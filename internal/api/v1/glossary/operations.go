@@ -9,6 +9,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
@@ -89,6 +90,10 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 
 	term, err := h.glossaryService.Create(r.Context(), input)
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch {
 		case errors.Is(err, glossary.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
