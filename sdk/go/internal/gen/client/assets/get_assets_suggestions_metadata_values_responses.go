@@ -40,7 +40,7 @@ func (o *GetAssetsSuggestionsMetadataValuesReader) ReadResponse(response runtime
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/suggestions/metadata/values] GetAssetsSuggestionsMetadataValues", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/suggestions/metadata/values] getAssetsSuggestionsMetadataValues", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsSuggestionsMetadataValuesOK) Code() int {
 
 func (o *GetAssetsSuggestionsMetadataValuesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesOK) GetPayload() []*models.MetadataValueSuggestion {
@@ -154,12 +154,12 @@ func (o *GetAssetsSuggestionsMetadataValuesBadRequest) Code() int {
 
 func (o *GetAssetsSuggestionsMetadataValuesBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesBadRequest) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) Code() int {
 
 func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) GetPayload() *models.ErrorResponse {

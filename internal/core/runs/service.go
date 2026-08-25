@@ -279,7 +279,15 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		return nil, fmt.Errorf("getting run: %w", err)
 	}
 
-	lastCheckpoints, _ := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName)
+	// This error must not be dropped. An empty checkpoint map reads as
+	// "this pipeline has never created anything", which switches off
+	// stale-entity removal, so a transient database error that came back
+	// as an empty map would quietly re-create the whole catalog alongside
+	// the rows already in it.
+	lastCheckpoints, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName)
+	if err != nil {
+		return nil, fmt.Errorf("getting last run checkpoints: %w", err)
+	}
 
 	response := &ProcessAssetsResponse{
 		Assets:        make([]AssetResult, 0, len(assets)),
@@ -291,21 +299,29 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	// linked to its terms the moment it is written.
 	termIDsByName := s.syncGlossary(ctx, sourceName, terms, response)
 
-	currentMRNs := make([]string, 0, len(assets))
-	for _, ast := range assets {
-		var assetMRN string
+	// Indexed by position so that currentMRNs[i] always belongs to assets[i],
+	// which the loop below relies on.
+	currentMRNs := make([]string, len(assets))
+	for i, ast := range assets {
 		if ast.MRN != nil && *ast.MRN != "" {
-			assetMRN = *ast.MRN
-		} else {
-			assetMRN = mrn.New(ast.Type, ast.Providers[0], ast.Name)
+			currentMRNs[i] = *ast.MRN
+			continue
 		}
-		currentMRNs = append(currentMRNs, assetMRN)
+		currentMRNs[i] = mrn.New(ast.Type, ast.Providers[0], ast.Name)
+	}
 
+	existingAssets, err := s.assetService.GetByMRNs(ctx, currentMRNs)
+	if err != nil {
+		return nil, fmt.Errorf("fetching existing assets: %w", err)
+	}
+
+	for i, ast := range assets {
+		assetMRN := currentMRNs[i]
 		assetHash := s.hashAsset(ast)
 
 		assetError := ""
 		status := StatusCreated
-		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted {
+		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted && existingAssets[assetMRN] != nil {
 			if len(checkpoint.SourceFields) > 0 && checkpoint.SourceFields[0] == assetHash {
 				status = StatusUnchanged
 			} else {
@@ -367,9 +383,15 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				ExternalLinks:    convertToAssetExternalLinks(ast.ExternalLinks),
 				Query:            ast.Query,
 				QueryLanguage:    ast.QueryLanguage,
+				Sources:          ast.Sources,
 				SkipNotification: true,
 			}
-			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
+			// Not cached when another writer created the asset after the fetch above.
+			existingAsset := existingAssets[assetMRN]
+			var err error
+			if existingAsset == nil {
+				existingAsset, err = s.assetService.GetByMRN(ctx, assetMRN)
+			}
 			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get existing asset for update")
 				assetError = err.Error()
@@ -877,6 +899,16 @@ func (s *service) GetStaleEntities(ctx context.Context, lastCheckpoints map[stri
 
 	var staleEntities []string
 	for mrn, checkpoint := range lastCheckpoints {
+		// The checkpoint map is keyed by MRN alone, so it holds lineage and
+		// documentation rows alongside assets, while currentEntityMRNs only
+		// ever holds assets. Without this guard every lineage checkpoint
+		// looks stale and is handed to the asset deleter, which both inflates
+		// the reported deletion count and leaves lineage permanently absent:
+		// the lineage loop only recreates an edge whose checkpoint is
+		// missing, and a deleted-then-recorded checkpoint is not missing.
+		if checkpoint.EntityType != "asset" {
+			continue
+		}
 		if checkpoint.Operation != StatusDeleted && !currentSet[mrn] {
 			staleEntities = append(staleEntities, mrn)
 		}

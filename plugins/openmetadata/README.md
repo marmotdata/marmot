@@ -24,9 +24,9 @@ When you are done, stop scheduling the run. The imported assets stay exactly as 
 
 ## Running Alongside Native Plugins
 
-By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/public.orders` whether Marmot read it from OpenMetadata or from the database itself.
+By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself.
 
-This means names drop the levels the native plugin does not use, so two OpenMetadata services holding the same table name resolve to one asset. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs.
+This means names drop the levels the native plugin does not use. Marmot's own plugins for Postgres, MySQL, BigQuery, MongoDB, ClickHouse, Glue and Iceberg all name a table by its bare name, so `public.orders` and `staging.orders` resolve to one asset, as do two OpenMetadata services holding the same table name. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs.
 
 Technologies Marmot has no plugin for yet, such as Snowflake or Looker, are imported under their own provider name. Nothing is invented: an entity is only imported when Marmot already has an asset type that means the same thing.
 

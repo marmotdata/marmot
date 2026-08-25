@@ -16,8 +16,12 @@ import (
 )
 
 const (
-	DefaultHost      = "http://localhost:8080"
-	DefaultBasePath  = "/api/v1"
+	DefaultHost = "http://localhost:8080"
+
+	// DefaultBasePath is empty because the spec's paths are absolute: they
+	// carry /api/v1 where the endpoint has it, and the OAuth endpoints are
+	// served at the server root.
+	DefaultBasePath  = ""
 	DefaultUserAgent = "marmot-sdk-go"
 )
 
@@ -27,7 +31,8 @@ type ClientOptions struct {
 	// context, then DefaultHost.
 	Host string
 
-	// BasePath overrides the URL prefix appended to Host (default DefaultBasePath).
+	// BasePath prefixes every request path, for a Marmot served under a
+	// subpath by a reverse proxy. Empty means the paths are used as-is.
 	BasePath string
 
 	APIKey string
@@ -91,11 +96,6 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		scheme = "http"
 	}
 
-	basePath := opts.BasePath
-	if basePath == "" {
-		basePath = DefaultBasePath
-	}
-
 	httpClient := opts.HTTPClient
 	if httpClient == nil {
 		httpClient = &http.Client{}
@@ -106,7 +106,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	}
 	httpClient = withUserAgent(httpClient, ua)
 
-	transport := httptransport.NewWithClient(u.Host, basePath, []string{scheme}, httpClient)
+	transport := httptransport.NewWithClient(u.Host, opts.BasePath, []string{scheme}, httpClient)
 	transport.DefaultAuthentication = cred.AuthInfo()
 	gen := client.New(transport, strfmt.Default)
 

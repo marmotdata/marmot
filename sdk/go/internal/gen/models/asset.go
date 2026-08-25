@@ -76,6 +76,11 @@ type Asset struct {
 	// tags
 	Tags []string `json:"tags"`
 
+	// Terms carries glossary term names a discovery assigned to this
+	// asset. It is input only: the links live in asset_terms, so reading
+	// an asset back from the database never fills this in.
+	Terms []string `json:"terms"`
+
 	// type
 	Type string `json:"type,omitempty"`
 

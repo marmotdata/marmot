@@ -39,7 +39,7 @@ type MetricsService struct {
 // TotalAssets returns the total number of assets in the catalog.
 func (s *MetricsService) TotalAssets(ctx context.Context) (*TotalAssets, error) {
 	p := metrics.NewGetMetricsAssetsTotalParams().WithContext(ctx)
-	resp, err := s.gen.Metrics.GetMetricsAssetsTotal(p)
+	resp, err := s.gen.Metrics.GetMetricsAssetsTotal(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -49,7 +49,7 @@ func (s *MetricsService) TotalAssets(ctx context.Context) (*TotalAssets, error) 
 // AssetsByType returns asset counts grouped by type.
 func (s *MetricsService) AssetsByType(ctx context.Context) (*AssetsByType, error) {
 	p := metrics.NewGetMetricsAssetsByTypeParams().WithContext(ctx)
-	resp, err := s.gen.Metrics.GetMetricsAssetsByType(p)
+	resp, err := s.gen.Metrics.GetMetricsAssetsByType(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -59,7 +59,7 @@ func (s *MetricsService) AssetsByType(ctx context.Context) (*AssetsByType, error
 // AssetsByProvider returns asset counts grouped by provider.
 func (s *MetricsService) AssetsByProvider(ctx context.Context) (*AssetsByProvider, error) {
 	p := metrics.NewGetMetricsAssetsByProviderParams().WithContext(ctx)
-	resp, err := s.gen.Metrics.GetMetricsAssetsByProvider(p)
+	resp, err := s.gen.Metrics.GetMetricsAssetsByProvider(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -72,7 +72,7 @@ func (s *MetricsService) TopAssets(ctx context.Context, opts TopOptions) ([]*Ass
 	if opts.Limit > 0 {
 		p = p.WithLimit(&opts.Limit)
 	}
-	resp, err := s.gen.Metrics.GetMetricsTopAssets(p)
+	resp, err := s.gen.Metrics.GetMetricsTopAssets(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -85,7 +85,7 @@ func (s *MetricsService) TopQueries(ctx context.Context, opts TopOptions) ([]*Qu
 	if opts.Limit > 0 {
 		p = p.WithLimit(&opts.Limit)
 	}
-	resp, err := s.gen.Metrics.GetMetricsTopQueries(p)
+	resp, err := s.gen.Metrics.GetMetricsTopQueries(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

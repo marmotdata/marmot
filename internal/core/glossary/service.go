@@ -8,6 +8,7 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/marmotdata/marmot/internal/core/limits"
 )
 
 type Owner struct {
@@ -107,6 +108,7 @@ type service struct {
 	repo           Repository
 	validator      *validator.Validate
 	metrics        MetricsClient
+	guard          limits.Guard
 	searchObserver SearchObserver
 }
 
@@ -121,6 +123,7 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
 		validator: validator.New(),
+		guard:     limits.NoopGuard{},
 	}
 
 	for _, opt := range opts {
@@ -136,6 +139,16 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 	}
 }
 
+// WithGuard installs a resource-count Guard consulted before each Create.
+// Passing NoopGuard (the default) disables enforcement.
+func WithGuard(g limits.Guard) ServiceOption {
+	return func(s *service) {
+		if g != nil {
+			s.guard = g
+		}
+	}
+}
+
 // SetSearchObserver registers an observer for search index sync.
 func (s *service) SetSearchObserver(observer SearchObserver) {
 	s.searchObserver = observer
@@ -144,6 +157,10 @@ func (s *service) SetSearchObserver(observer SearchObserver) {
 func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryTerm, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	if err := s.guard.CheckCreate(ctx, limits.ResourceGlossaryTerms); err != nil {
+		return nil, err
 	}
 
 	if input.ParentTermID != nil && *input.ParentTermID != "" {

@@ -9,13 +9,6 @@ func (a *ClickHouseAdapter) Name() string {
 	return "ClickHouse"
 }
 
-// MRNName matches plugins/clickhouse/clickhouse/source.go, which
-// identifies a table as database.table. dbt fills ClickHouse's schema
-// field with the database.
-func (a *ClickHouseAdapter) MRNName(_, schema, table string) string {
-	return joinNonEmpty(schema, table)
-}
-
 func (a *ClickHouseAdapter) AssetTypeForMaterialization(materialization string) string {
 	switch materialization {
 	case "view":
@@ -23,7 +16,7 @@ func (a *ClickHouseAdapter) AssetTypeForMaterialization(materialization string) 
 	case "table", "incremental":
 		return "Table"
 	case "materialized_view":
-		return "View"
+		return "Materialized View"
 	case "dictionary":
 		return "Dictionary"
 	case "distributed", "distributed_incremental":
@@ -51,7 +44,7 @@ func (a *MaterializeAdapter) AssetTypeForMaterialization(materialization string)
 	case "table":
 		return "Table"
 	case "materializedview":
-		return "View"
+		return "Materialized View"
 	case "source":
 		return "Source"
 	case "sink":
@@ -59,7 +52,7 @@ func (a *MaterializeAdapter) AssetTypeForMaterialization(materialization string)
 	case "ephemeral":
 		return "Ephemeral"
 	default:
-		return "View"
+		return "Materialized View"
 	}
 }
 
@@ -114,7 +107,7 @@ func (a *OracleAdapter) AssetTypeForMaterialization(materialization string) stri
 	case "table", "incremental":
 		return "Table"
 	case "materialized_view":
-		return "View"
+		return "Materialized View"
 	case "ephemeral":
 		return "Ephemeral"
 	default:

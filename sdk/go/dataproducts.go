@@ -129,7 +129,7 @@ func (s *DataProductsService) List(ctx context.Context, opts DataProductListOpti
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Products.GetProductsList(p)
+	resp, err := s.gen.Products.GetProductsList(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -152,7 +152,7 @@ func (s *DataProductsService) Search(ctx context.Context, opts DataProductSearch
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Products.GetProductsSearch(p)
+	resp, err := s.gen.Products.GetProductsSearch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -162,7 +162,7 @@ func (s *DataProductsService) Search(ctx context.Context, opts DataProductSearch
 // Get fetches a data product by ID.
 func (s *DataProductsService) Get(ctx context.Context, id string) (*DataProduct, error) {
 	p := products.NewGetProductsIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Products.GetProductsID(p)
+	resp, err := s.gen.Products.GetProductsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -187,7 +187,7 @@ func (s *DataProductsService) Create(ctx context.Context, in CreateDataProductIn
 		}
 	}
 	p := products.NewPostProductsParams().WithContext(ctx).WithProduct(body)
-	resp, err := s.gen.Products.PostProducts(p)
+	resp, err := s.gen.Products.PostProducts(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -206,7 +206,7 @@ func (s *DataProductsService) Update(ctx context.Context, id string, in UpdateDa
 		body.Metadata = in.Metadata
 	}
 	p := products.NewPutProductsIDParams().WithContext(ctx).WithID(id).WithProduct(body)
-	resp, err := s.gen.Products.PutProductsID(p)
+	resp, err := s.gen.Products.PutProductsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -216,7 +216,7 @@ func (s *DataProductsService) Update(ctx context.Context, id string, in UpdateDa
 // Delete removes a data product.
 func (s *DataProductsService) Delete(ctx context.Context, id string) error {
 	p := products.NewDeleteProductsIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Products.DeleteProductsID(p)
+	_, err := s.gen.Products.DeleteProductsID(p, nil)
 	return mapErr(err)
 }
 
@@ -229,7 +229,7 @@ func (s *DataProductsService) Assets(ctx context.Context, id string, opts DataPr
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Products.GetProductsAssetsID(p)
+	resp, err := s.gen.Products.GetProductsAssetsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -240,14 +240,14 @@ func (s *DataProductsService) Assets(ctx context.Context, id string, opts DataPr
 func (s *DataProductsService) AddAssets(ctx context.Context, id string, assetIDs []string) error {
 	body := &models.AddDataProductAssetsRequest{AssetIds: assetIDs}
 	p := products.NewPostProductsAssetsIDParams().WithContext(ctx).WithID(id).WithAssets(body)
-	_, err := s.gen.Products.PostProductsAssetsID(p)
+	_, err := s.gen.Products.PostProductsAssetsID(p, nil)
 	return mapErr(err)
 }
 
 // RemoveAsset removes a manually added asset from a data product.
 func (s *DataProductsService) RemoveAsset(ctx context.Context, id, assetID string) error {
 	p := products.NewDeleteProductsAssetsIDAssetIDParams().WithContext(ctx).WithID(id).WithAssetID(assetID)
-	_, err := s.gen.Products.DeleteProductsAssetsIDAssetID(p)
+	_, err := s.gen.Products.DeleteProductsAssetsIDAssetID(p, nil)
 	return mapErr(err)
 }
 
@@ -261,7 +261,7 @@ func (s *DataProductsService) ResolvedAssets(ctx context.Context, id string, opt
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Products.GetProductsResolvedAssetsID(p)
+	resp, err := s.gen.Products.GetProductsResolvedAssetsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -271,7 +271,7 @@ func (s *DataProductsService) ResolvedAssets(ctx context.Context, id string, opt
 // Rules returns the membership rules of a data product.
 func (s *DataProductsService) Rules(ctx context.Context, id string) ([]*DataProductRule, error) {
 	p := products.NewGetProductsRulesIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Products.GetProductsRulesID(p)
+	resp, err := s.gen.Products.GetProductsRulesID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -281,7 +281,7 @@ func (s *DataProductsService) Rules(ctx context.Context, id string) ([]*DataProd
 // CreateRule adds a membership rule to a data product.
 func (s *DataProductsService) CreateRule(ctx context.Context, id string, in ProductRuleInput) (*DataProductRule, error) {
 	p := products.NewPostProductsRulesIDParams().WithContext(ctx).WithID(id).WithRule(productRuleRequest(in))
-	resp, err := s.gen.Products.PostProductsRulesID(p)
+	resp, err := s.gen.Products.PostProductsRulesID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -291,7 +291,7 @@ func (s *DataProductsService) CreateRule(ctx context.Context, id string, in Prod
 // UpdateRule modifies a membership rule of a data product.
 func (s *DataProductsService) UpdateRule(ctx context.Context, id, ruleID string, in ProductRuleInput) (*DataProductRule, error) {
 	p := products.NewPutProductsRulesIDRuleIDParams().WithContext(ctx).WithID(id).WithRuleID(ruleID).WithRule(productRuleRequest(in))
-	resp, err := s.gen.Products.PutProductsRulesIDRuleID(p)
+	resp, err := s.gen.Products.PutProductsRulesIDRuleID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -301,7 +301,7 @@ func (s *DataProductsService) UpdateRule(ctx context.Context, id, ruleID string,
 // DeleteRule removes a membership rule from a data product.
 func (s *DataProductsService) DeleteRule(ctx context.Context, id, ruleID string) error {
 	p := products.NewDeleteProductsRulesIDRuleIDParams().WithContext(ctx).WithID(id).WithRuleID(ruleID)
-	_, err := s.gen.Products.DeleteProductsRulesIDRuleID(p)
+	_, err := s.gen.Products.DeleteProductsRulesIDRuleID(p, nil)
 	return mapErr(err)
 }
 
@@ -312,7 +312,7 @@ func (s *DataProductsService) PreviewRule(ctx context.Context, in ProductRuleInp
 	if limit > 0 {
 		p = p.WithLimit(&limit)
 	}
-	resp, err := s.gen.Products.PostProductsRulePreview(p)
+	resp, err := s.gen.Products.PostProductsRulePreview(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

@@ -28,7 +28,7 @@ func (o *DeletePipelinesPipelineNameReader) ReadResponse(response runtime.Client
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[DELETE /pipelines/{pipelineName}] DeletePipelinesPipelineName", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/pipelines/{pipelineName}] deletePipelinesPipelineName", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *DeletePipelinesPipelineNameOK) Code() int {
 
 func (o *DeletePipelinesPipelineNameOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /pipelines/{pipelineName}][%d] deletePipelinesPipelineNameOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/pipelines/{pipelineName}][%d] deletePipelinesPipelineNameOK %s", 200, payload)
 }
 
 func (o *DeletePipelinesPipelineNameOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /pipelines/{pipelineName}][%d] deletePipelinesPipelineNameOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/pipelines/{pipelineName}][%d] deletePipelinesPipelineNameOK %s", 200, payload)
 }
 
 func (o *DeletePipelinesPipelineNameOK) GetPayload() *models.DestroyRunResponse {

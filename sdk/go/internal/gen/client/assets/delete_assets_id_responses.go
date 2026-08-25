@@ -46,7 +46,7 @@ func (o *DeleteAssetsIDReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /assets/{id}] DeleteAssetsID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/assets/{id}] deleteAssetsID", response, response.Code())
 	}
 }
 
@@ -92,11 +92,11 @@ func (o *DeleteAssetsIDNoContent) Code() int {
 }
 
 func (o *DeleteAssetsIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdNoContent", 204)
 }
 
 func (o *DeleteAssetsIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdNoContent", 204)
 }
 
 func (o *DeleteAssetsIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -148,12 +148,12 @@ func (o *DeleteAssetsIDNotFound) Code() int {
 
 func (o *DeleteAssetsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteAssetsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteAssetsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -216,12 +216,12 @@ func (o *DeleteAssetsIDConflict) Code() int {
 
 func (o *DeleteAssetsIDConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdConflict %s", 409, payload)
 }
 
 func (o *DeleteAssetsIDConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdConflict %s", 409, payload)
 }
 
 func (o *DeleteAssetsIDConflict) GetPayload() *models.ErrorResponse {
@@ -284,12 +284,12 @@ func (o *DeleteAssetsIDInternalServerError) Code() int {
 
 func (o *DeleteAssetsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteAssetsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/{id}][%d] deleteAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {

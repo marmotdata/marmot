@@ -27,10 +27,13 @@ type RemoveTermRequest struct {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param terms body AddTermsRequest true "Term IDs to add"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [post]
+// @ID postAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [post]
 func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -85,10 +88,13 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param term body RemoveTermRequest true "Term ID to remove"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [delete]
+// @ID deleteAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [delete]
 func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -134,9 +140,12 @@ func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 // @Tags assets
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.AssetTerm
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [get]
+// @ID getAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [get]
 func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -161,9 +170,12 @@ func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
 // @Param term_id path string true "Glossary Term ID"
 // @Param limit query int false "Maximum number of assets" default(20)
 // @Param offset query int false "Pagination offset" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/by-glossary-term/{term_id} [get]
+// @ID getAssetsByGlossaryTermTermID
+// @Router /api/v1/assets/by-glossary-term/{term_id} [get]
 func (h *Handler) getAssetsByTerm(w http.ResponseWriter, r *http.Request) {
 	termID := r.PathValue("term_id")
 	if termID == "" {

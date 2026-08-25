@@ -84,7 +84,7 @@ func TestModelLineage_SourceEdgeKeptWhenSourcesAreDiscovered(t *testing.T) {
 	for _, e := range lineages {
 		if e.Type == "DEPENDS_ON" {
 			dependsOn++
-			assert.Equal(t, "mrn://table/postgresql/raw.orders", e.Source)
+			assert.Equal(t, "mrn://table/postgres/analytics.raw.orders", e.Source)
 		}
 	}
 	assert.Equal(t, 1, dependsOn)
@@ -105,12 +105,25 @@ func TestModelLineage_SourceEdgeDroppedWhenSourcesAreNotDiscovered(t *testing.T)
 	}
 }
 
-// The materialized table a model creates must land on the MRN the native
-// plugin uses, or dbt files the same physical table twice.
-func TestModelLineage_CreatesEdgeUsesTheNativeTableMRN(t *testing.T) {
+// The CREATES edge must point at the same MRN the model's own asset is
+// given, so the edge is not silently dropped.
+//
+// Note what that MRN is NOT: it is not the one plugins/postgresql emits.
+// dbt's Postgres adapter calls the provider "Postgres" while
+// plugins/postgresql calls it "PostgreSQL", and dbt names the table
+// database.schema.table while the plugin uses the bare name. A dbt model
+// and the physical table it materializes are therefore two separate
+// assets, which is what both published plugins do today.
+//
+// That divergence is pinned here rather than fixed. Converging the two
+// changes the name an asset is identified by, so it renames every existing
+// dbt or Postgres asset and needs a migration to move them, plus a plugin
+// release that reaches users before the server expecting the new names.
+func TestModelLineage_CreatesEdgeMatchesTheModelsOwnAsset(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 
-	_, lineages := s.discoverModels()
+	modelAssets, lineages := s.discoverModels()
+	all := append(modelAssets, s.discoverSources()...)
 
 	var creates []string
 	for _, e := range lineages {
@@ -119,6 +132,8 @@ func TestModelLineage_CreatesEdgeUsesTheNativeTableMRN(t *testing.T) {
 		}
 	}
 	require.Len(t, creates, 1)
-	assert.Equal(t, "mrn://table/postgresql/marts.orders_summary", creates[0],
-		"plugins/postgresql addresses this table as schema.table under PostgreSQL")
+	assert.Equal(t, "mrn://table/postgres/analytics.marts.orders_summary", creates[0])
+
+	// The edge and the asset agree, which is the property that matters.
+	assertLineageOnlyReferencesDiscoveredAssets(t, all, lineages)
 }

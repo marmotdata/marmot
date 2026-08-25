@@ -21,10 +21,13 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path string true "Edge ID" format(uuid)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageEdge
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /lineage/direct/{id} [get]
+// @ID getLineageDirectID
+// @Router /api/v1/lineage/direct/{id} [get]
 func (h *Handler) getDirectLineage(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from path
 	parts := strings.Split(r.URL.Path, "/")
@@ -65,10 +68,13 @@ func (h *Handler) getDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param edge body lineage.LineageEdge true "Lineage edge to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageEdge
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /lineage/direct [post]
+// @ID postLineageDirect
+// @Router /api/v1/lineage/direct [post]
 func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 	var edge lineage.LineageEdge
 	if err := json.NewDecoder(r.Body).Decode(&edge); err != nil {
@@ -109,10 +115,13 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Edge ID" format(uuid)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /lineage/direct/{id} [delete]
+// @ID deleteLineageDirectID
+// @Router /api/v1/lineage/direct/{id} [delete]
 func (h *Handler) deleteDirectLineage(w http.ResponseWriter, r *http.Request) {
 	// Extract the ID from the path
 	//TODO: Move to Chi
@@ -150,11 +159,14 @@ func (h *Handler) deleteDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Maximum depth of lineage graph" default(10)
 // @Param direction query string false "Direction of lineage (upstream, downstream, or both)" Enums(upstream, downstream, both) default(both)
 // @Param exclude_types query string false "Comma separated edge types to leave out, for example CONTAINS to see data flow without structure"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} lineage.LineageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /lineage/assets/{id} [get]
+// @ID getLineageAssetsID
+// @Router /api/v1/lineage/assets/{id} [get]
 func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 	// Extract the asset ID from the path
 	parts := strings.Split(r.URL.Path, "/")
@@ -214,9 +226,12 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param event body lineage.RunEvent true "OpenLineage run event"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "Event processed successfully"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
+// @ID postLineage
 // @Router /api/v1/lineage [post]
 func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)

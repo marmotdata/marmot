@@ -1,228 +1,51 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { Icon } from "@iconify/react";
 
-interface FlowItem {
-  label: string;
-  icon?: string;
-  iconImg?: string;
-  kafkaIcon?: boolean;
-}
-
-interface FlowGroup {
-  title: string;
-  items: FlowItem[];
-}
-
-const sourceGroups: FlowGroup[] = [
-  {
-    title: "Plugins",
-    items: [
-      { label: "PostgreSQL", icon: "devicon:postgresql" },
-      { label: "Trino", icon: "simple-icons:trino" },
-      { label: "Kafka", icon: "devicon:apachekafka", kafkaIcon: true },
-      { label: "S3", icon: "logos:aws-s3" },
-      { label: "dbt", icon: "simple-icons:dbt" },
-      { label: "Iceberg", iconImg: "/img/iceberg.svg" },
-    ],
-  },
-  {
-    title: "Populate",
-    items: [
-      { label: "Terraform", iconImg: "/img/terraform.svg" },
-      { label: "Pulumi", iconImg: "/img/pulumi.svg" },
-      { label: "API", icon: "mdi:api" },
-      { label: "CLI", icon: "mdi:console" },
-    ],
-  },
-];
-
-const consumerGroups: FlowGroup[] = [
-  {
-    title: "AI Agents",
-    items: [
-      { label: "Claude", icon: "simple-icons:anthropic" },
-      { label: "Cursor", icon: "simple-icons:cursor" },
-      { label: "Windsurf", icon: "simple-icons:codeium" },
-      { label: "Copilot", icon: "simple-icons:githubcopilot" },
-      { label: "Gemini", icon: "simple-icons:googlegemini" },
-      { label: "ChatGPT", icon: "simple-icons:openai" },
-    ],
-  },
-  {
-    title: "Integrations",
-    items: [
-      { label: "REST API", icon: "mdi:api" },
-      { label: "CLI", icon: "mdi:console" },
-      { label: "Slack", icon: "simple-icons:slack" },
-      { label: "UI", icon: "mdi:monitor-dashboard" },
-    ],
-  },
-];
-
-const GroupCard: React.FC<{
-  group: FlowGroup;
-  visible: boolean;
-  delay: number;
-  iconsOnly?: boolean;
-}> = ({ group, visible, delay, iconsOnly }) => {
-  const gridCols = group.items.length > 4 ? "grid-cols-3" : "grid-cols-2";
-
-  return (
-    <div
-      className={`rounded-xl border border-gray-200 dark:border-gray-700/40 bg-white/70 dark:bg-gray-800/50 ${iconsOnly ? "p-3" : "p-4"
-        }`}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(12px)",
-        transition: "opacity 0.5s ease, transform 0.5s ease",
-        transitionDelay: `${delay}ms`,
-      }}
-    >
-      <p
-        className={`font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 ${iconsOnly ? "text-[9px] mb-2 text-center" : "text-[10px] mb-3"
-          }`}
-      >
-        {group.title}
-      </p>
-      {iconsOnly ? (
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          {group.items.map((item) => (
-            <div key={item.label} title={item.label}>
-              {item.iconImg ? (
-                <img
-                  src={item.iconImg}
-                  alt={item.label}
-                  className="w-6 h-6 object-contain"
-                />
-              ) : (
-                <Icon
-                  icon={item.icon!}
-                  className={`w-6 h-6 text-gray-500 dark:text-gray-400 ${item.kafkaIcon ? "kafka-icon" : ""
-                    }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={`grid ${gridCols} gap-3`}>
-          {group.items.map((item) => (
-            <div key={item.label} className="flex items-center gap-2">
-              {item.iconImg ? (
-                <img
-                  src={item.iconImg}
-                  alt={item.label}
-                  className="w-5 h-5 object-contain"
-                />
-              ) : (
-                <Icon
-                  icon={item.icon!}
-                  className={`w-5 h-5 ${item.kafkaIcon ? "kafka-icon" : ""}`}
-                />
-              )}
-              <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const leftPaths = [
-  "M 0 30 C 60 30, 40 50, 100 50",
-  "M 0 70 C 60 70, 40 50, 100 50",
-];
-
-const rightPaths = [
-  "M 0 50 C 60 50, 40 30, 100 30",
-  "M 0 50 C 60 50, 40 70, 100 70",
+const assistants = [
+  { label: "Claude", icon: "simple-icons:anthropic" },
+  { label: "Cursor", icon: "simple-icons:cursor" },
+  { label: "Copilot", icon: "simple-icons:githubcopilot" },
+  { label: "Gemini", icon: "simple-icons:googlegemini" },
+  { label: "ChatGPT", icon: "simple-icons:openai" },
+  { label: "Windsurf", icon: "simple-icons:codeium" },
 ];
 
 export default function Hero(): JSX.Element {
-  const flowRef = useRef<HTMLDivElement>(null);
-  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const [phase, setPhase] = useState(0);
-
-  useEffect(() => {
-    const el = flowRef.current;
-    if (!el) return;
-
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReduced) {
-      setPhase(5);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            observer.disconnect();
-            const schedule = (ms: number, p: number) => {
-              const id = setTimeout(() => setPhase(p), ms);
-              timeoutsRef.current.push(id);
-            };
-            schedule(200, 1);
-            schedule(900, 2);
-            schedule(1400, 3);
-            schedule(1800, 4);
-            schedule(2300, 5);
-            return;
-          }
-        }
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-      timeoutsRef.current.forEach(clearTimeout);
-      timeoutsRef.current = [];
-    };
-  }, []);
-
   return (
-    <header className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 gradient-mesh-hero overflow-hidden">
-      <div className="relative max-w-5xl mx-auto text-center">
+    <header className="relative pt-28 pb-20 sm:pt-32 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 gradient-mesh-hero overflow-hidden">
+      <div className="relative max-w-4xl mx-auto text-center">
         <h1
           data-animate
-          data-animate-delay="2"
-          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-5 tracking-tight leading-[1.1]"
+          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.05]"
         >
-          AI agents are only as good as
-          <br />
-          <span className="gradient-text">the context they can reach.</span>
+          {/* Inline on small screens so the line wraps naturally; two
+              deliberate lines once there is room for them. */}
+          <span className="sm:block">AI agents are only as good as</span>{" "}
+          <span className="gradient-text sm:block">
+            the context they can reach.
+          </span>
         </h1>
 
         <p
           data-animate
-          data-animate-delay="3"
-          className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed"
+          data-animate-delay="2"
+          className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-500 dark:text-gray-400 leading-relaxed"
         >
-          Assistants, agents, copilots: your organization already uses them
-          every day, but none of them can reach how it actually works: the
-          systems, the data, what it all means, and who owns it. Marmot is
-          the <b>open source context layer</b> that puts all of it within
-          reach of every assistant, agent, and person.
+          Marmot is the open source context layer. It catalogs what you run,
+          what it means and who owns it, then serves that to your team in the
+          UI and to every assistant over one MCP server.
         </p>
 
         <div
           data-animate
-          data-animate-delay="4"
-          className="flex flex-row items-center justify-center gap-3"
+          data-animate-delay="3"
+          className="mt-9 flex flex-row items-center justify-center gap-3"
         >
           <a
             href="/docs/introduction"
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Get Started
+            Get started
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"
@@ -243,378 +66,29 @@ export default function Hero(): JSX.Element {
             rel="noopener noreferrer"
             className="group demo-btn inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 transition-all duration-200 hover:-translate-y-0.5"
           >
-            <svg
-              className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:scale-110"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-              />
-            </svg>
-            Live Demo
+            Live demo
           </a>
         </div>
-
-        {/* Built-by credibility strip */}
-        <p
-          data-animate
-          data-animate-delay="5"
-          className="mt-10 text-sm text-gray-400 dark:text-gray-500 max-w-2xl mx-auto leading-relaxed"
-        >
-          Built by engineers who've shipped at{" "}
-          <span className="text-gray-500 dark:text-gray-400 font-medium">
-            HashiCorp, Adidas, Just Eat Takeaway.com
-          </span>{" "}
-          and{" "}
-          <span className="text-gray-500 dark:text-gray-400 font-medium">
-            Traefik
-          </span>
-          , and help maintain{" "}
-          <span className="text-gray-500 dark:text-gray-400 font-medium">
-            Kubernetes, Terraform, Redpanda
-          </span>{" "}
-          and the{" "}
-          <span className="text-gray-500 dark:text-gray-400 font-medium">
-            Cloud Native Computing Foundation
-          </span>
-          .
-        </p>
       </div>
 
-      {/* Context Flow diagram */}
-      <div ref={flowRef} className="max-w-7xl mx-auto mt-16 sm:mt-20">
-        {/* Desktop layout — 3-column grid: left side | hub | right side */}
-        <div
-          className="hidden lg:grid items-center"
-          style={{ gridTemplateColumns: "1fr auto 1fr" }}
-        >
-          {/* Left side: source groups + connector */}
-          <div className="flex items-center">
-            <div className="flex flex-col gap-4 flex-shrink-0">
-              {sourceGroups.map((group, i) => (
-                <GroupCard
-                  key={group.title}
-                  group={group}
-                  visible={phase >= 1}
-                  delay={i * 150}
-                />
-              ))}
-            </div>
+      <div
+        data-animate
+        data-animate-delay="4"
+        className="relative max-w-3xl mx-auto mt-16 sm:mt-20"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 text-center mb-5">
+          Works with
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          {assistants.map((a) => (
             <div
-              className="flex-1 relative min-w-[4rem] self-stretch"
-              style={{
-                opacity: phase >= 2 ? 1 : 0,
-                transition: "opacity 0.5s ease",
-              }}
+              key={a.label}
+              className="flex items-center gap-2 text-gray-400 dark:text-gray-500"
             >
-              <svg
-                className="absolute inset-0 w-full h-full text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                overflow="visible"
-              >
-                {leftPaths.map((d, i) => (
-                  <React.Fragment key={i}>
-                    <path
-                      d={d}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={6}
-                      strokeLinecap="round"
-                      vectorEffect="non-scaling-stroke"
-                      className="animate-flow-glow"
-                      style={{
-                        filter: "blur(4px)",
-                        animationDelay: `${i * 0.8}s`,
-                      }}
-                    />
-                    <path
-                      d={d}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 3"
-                      vectorEffect="non-scaling-stroke"
-                      className="animate-flow"
-                    />
-                  </React.Fragment>
-                ))}
-              </svg>
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-earthy-brown-50 dark:bg-gray-900 px-2 py-0.5 rounded whitespace-nowrap">
-                Populate
-              </span>
+              <Icon icon={a.icon} className="w-5 h-5" />
+              <span className="text-sm font-medium">{a.label}</span>
             </div>
-          </div>
-
-          {/* Hub card — center column */}
-          <div
-            className={`flex flex-col items-center gap-2 px-8 py-6 rounded-2xl border border-earthy-terracotta-200 dark:border-earthy-terracotta-700/50 bg-white dark:bg-gray-800 shadow-lg ${phase >= 3 ? "hub-pulse" : ""
-              }`}
-            style={{
-              opacity: phase >= 3 ? 1 : 0,
-              transform: phase >= 3 ? "scale(1)" : "scale(0.85)",
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-            }}
-          >
-            <img src="/img/marmot.svg" alt="Marmot" className="w-14 h-14" />
-            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-              Marmot
-            </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
-              Context layer
-            </span>
-          </div>
-
-          {/* Right side: connector + consumer groups */}
-          <div className="flex items-center">
-            <div
-              className="flex-1 relative min-w-[4rem] self-stretch"
-              style={{
-                opacity: phase >= 4 ? 1 : 0,
-                transition: "opacity 0.5s ease",
-              }}
-            >
-              <svg
-                className="absolute inset-0 w-full h-full text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                overflow="visible"
-              >
-                {rightPaths.map((d, i) => (
-                  <React.Fragment key={i}>
-                    <path
-                      d={d}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={6}
-                      strokeLinecap="round"
-                      vectorEffect="non-scaling-stroke"
-                      className="animate-flow-glow"
-                      style={{
-                        filter: "blur(4px)",
-                        animationDelay: `${1.2 + i * 0.8}s`,
-                      }}
-                    />
-                    <path
-                      d={d}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 3"
-                      vectorEffect="non-scaling-stroke"
-                      className="animate-flow"
-                    />
-                  </React.Fragment>
-                ))}
-              </svg>
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-earthy-brown-50 dark:bg-gray-900 px-2 py-0.5 rounded whitespace-nowrap">
-                Discover
-              </span>
-            </div>
-            <div className="flex flex-col gap-4 flex-shrink-0">
-              {consumerGroups.map((group, i) => (
-                <GroupCard
-                  key={group.title}
-                  group={group}
-                  visible={phase >= 5}
-                  delay={i * 150}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile layout — grouped cards, vertical flow */}
-        <div className="lg:hidden flex flex-col items-center gap-0">
-          {/* Source cards */}
-          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-            {sourceGroups.map((group, i) => (
-              <GroupCard
-                key={group.title}
-                group={group}
-                visible={phase >= 1}
-                delay={i * 150}
-                iconsOnly
-              />
-            ))}
-          </div>
-
-          {/* Vertical connector + label */}
-          <div
-            className="flex flex-col items-center"
-            style={{
-              opacity: phase >= 2 ? 1 : 0,
-              transition: "opacity 0.5s ease",
-            }}
-          >
-            <svg
-              width="2"
-              height="20"
-              overflow="visible"
-              className="text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-            >
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                className="animate-flow"
-              />
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={6}
-                strokeLinecap="round"
-                className="animate-flow-glow"
-                style={{ filter: "blur(4px)" }}
-              />
-            </svg>
-            <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 py-1">
-              Populate
-            </span>
-            <svg
-              width="2"
-              height="20"
-              overflow="visible"
-              className="text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-            >
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                className="animate-flow"
-              />
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={6}
-                strokeLinecap="round"
-                className="animate-flow-glow"
-                style={{ filter: "blur(4px)", animationDelay: "0.8s" }}
-              />
-            </svg>
-          </div>
-
-          {/* Hub card */}
-          <div
-            className={`flex items-center gap-3 px-5 py-3 rounded-xl border border-earthy-terracotta-200 dark:border-earthy-terracotta-700/50 bg-white dark:bg-gray-800 shadow-md ${phase >= 3 ? "hub-pulse" : ""
-              }`}
-            style={{
-              opacity: phase >= 3 ? 1 : 0,
-              transform: phase >= 3 ? "scale(1)" : "scale(0.9)",
-              transition: "opacity 0.4s ease, transform 0.4s ease",
-            }}
-          >
-            <img src="/img/marmot.svg" alt="Marmot" className="w-10 h-10" />
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-tight">
-                Marmot
-              </span>
-              <span className="text-[9px] font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                Context layer
-              </span>
-            </div>
-          </div>
-
-          {/* Vertical connector + label */}
-          <div
-            className="flex flex-col items-center"
-            style={{
-              opacity: phase >= 4 ? 1 : 0,
-              transition: "opacity 0.5s ease",
-            }}
-          >
-            <svg
-              width="2"
-              height="20"
-              overflow="visible"
-              className="text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-            >
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                className="animate-flow"
-              />
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={6}
-                strokeLinecap="round"
-                className="animate-flow-glow"
-                style={{ filter: "blur(4px)", animationDelay: "1.2s" }}
-              />
-            </svg>
-            <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 py-1">
-              Discover
-            </span>
-            <svg
-              width="2"
-              height="20"
-              overflow="visible"
-              className="text-earthy-terracotta-300/60 dark:text-earthy-terracotta-600/40"
-            >
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                className="animate-flow"
-              />
-              <line
-                x1="1"
-                y1="0"
-                x2="1"
-                y2="20"
-                stroke="currentColor"
-                strokeWidth={6}
-                strokeLinecap="round"
-                className="animate-flow-glow"
-                style={{ filter: "blur(4px)", animationDelay: "2s" }}
-              />
-            </svg>
-          </div>
-
-          {/* Consumer cards */}
-          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-            {consumerGroups.map((group, i) => (
-              <GroupCard
-                key={group.title}
-                group={group}
-                visible={phase >= 5}
-                delay={i * 150}
-                iconsOnly
-              />
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </header>

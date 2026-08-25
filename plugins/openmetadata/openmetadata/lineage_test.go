@@ -31,7 +31,7 @@ func TestLineage_TurnsOpenMetadataEdgesIntoMarmotLineage(t *testing.T) {
 	result := discover(t, lineageFixture(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/postgresql/shop.public.raw_orders", "mrn://table/postgresql/shop.public.orders", "DEPENDS_ON"))
+		"mrn://table/postgresql/raw_orders", "mrn://table/postgresql/orders", "DEPENDS_ON"))
 }
 
 func TestLineage_DeduplicatesEdgesSeenFromBothEnds(t *testing.T) {

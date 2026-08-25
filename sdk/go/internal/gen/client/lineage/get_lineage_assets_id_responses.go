@@ -46,7 +46,7 @@ func (o *GetLineageAssetsIDReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /lineage/assets/{id}] GetLineageAssetsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/lineage/assets/{id}] getLineageAssetsID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetLineageAssetsIDOK) Code() int {
 
 func (o *GetLineageAssetsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetLineageAssetsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetLineageAssetsIDOK) GetPayload() *models.LineageResponse {
@@ -162,12 +162,12 @@ func (o *GetLineageAssetsIDBadRequest) Code() int {
 
 func (o *GetLineageAssetsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetLineageAssetsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetLineageAssetsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *GetLineageAssetsIDNotFound) Code() int {
 
 func (o *GetLineageAssetsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetLineageAssetsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetLineageAssetsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *GetLineageAssetsIDInternalServerError) Code() int {
 
 func (o *GetLineageAssetsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetLineageAssetsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/assets/{id}][%d] getLineageAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetLineageAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {

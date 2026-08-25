@@ -24,9 +24,12 @@ type CreateAPIKeyRequest struct {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} user.APIKey
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/apikeys [get]
+// @ID getUsersApikeys
+// @Router /api/v1/users/apikeys [get]
 func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {
@@ -50,9 +53,12 @@ func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param key body CreateAPIKeyRequest true "API key creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.APIKey
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/apikeys [post]
+// @ID postUsersApikeys
+// @Router /api/v1/users/apikeys [post]
 func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {
@@ -93,9 +99,12 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "API key ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
-// @Router /users/apikeys/{id} [delete]
+// @ID deleteUsersApikeysID
+// @Router /api/v1/users/apikeys/{id} [delete]
 func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	keyID := strings.TrimPrefix(r.URL.Path, "/api/v1/users/apikeys/")
 	if keyID == "" {

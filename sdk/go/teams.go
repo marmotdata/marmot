@@ -51,7 +51,7 @@ func (s *TeamsService) List(ctx context.Context, opts TeamsListOptions) (*TeamLi
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Teams.GetTeams(p)
+	resp, err := s.gen.Teams.GetTeams(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -61,7 +61,7 @@ func (s *TeamsService) List(ctx context.Context, opts TeamsListOptions) (*TeamLi
 // Get fetches a team by ID.
 func (s *TeamsService) Get(ctx context.Context, id string) (*Team, error) {
 	p := teams.NewGetTeamsIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Teams.GetTeamsID(p)
+	resp, err := s.gen.Teams.GetTeamsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -71,7 +71,7 @@ func (s *TeamsService) Get(ctx context.Context, id string) (*Team, error) {
 // Members returns the members of a team.
 func (s *TeamsService) Members(ctx context.Context, id string) (*TeamMembers, error) {
 	p := teams.NewGetTeamsIDMembersParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Teams.GetTeamsIDMembers(p)
+	resp, err := s.gen.Teams.GetTeamsIDMembers(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -85,7 +85,7 @@ func (s *TeamsService) Create(ctx context.Context, in CreateTeamInput) (*Team, e
 		Description: in.Description,
 	}
 	p := teams.NewPostTeamsParams().WithContext(ctx).WithTeam(body)
-	resp, err := s.gen.Teams.PostTeams(p)
+	resp, err := s.gen.Teams.PostTeams(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -104,7 +104,7 @@ func (s *TeamsService) Update(ctx context.Context, id string, in UpdateTeamInput
 		body.Metadata = in.Metadata
 	}
 	p := teams.NewPutTeamsIDParams().WithContext(ctx).WithID(id).WithTeam(body)
-	if _, err := s.gen.Teams.PutTeamsID(p); err != nil {
+	if _, err := s.gen.Teams.PutTeamsID(p, nil); err != nil {
 		return nil, mapErr(err)
 	}
 	return s.Get(ctx, id)
@@ -113,6 +113,6 @@ func (s *TeamsService) Update(ctx context.Context, id string, in UpdateTeamInput
 // Delete removes a team.
 func (s *TeamsService) Delete(ctx context.Context, id string) error {
 	p := teams.NewDeleteTeamsIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Teams.DeleteTeamsID(p)
+	_, err := s.gen.Teams.DeleteTeamsID(p, nil)
 	return mapErr(err)
 }

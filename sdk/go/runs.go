@@ -53,7 +53,7 @@ func (s *RunsService) List(ctx context.Context, opts RunsListOptions) (*RunList,
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Runs.GetRuns(p)
+	resp, err := s.gen.Runs.GetRuns(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -63,7 +63,7 @@ func (s *RunsService) List(ctx context.Context, opts RunsListOptions) (*RunList,
 // Get fetches a single run by ID.
 func (s *RunsService) Get(ctx context.Context, id string) (*Run, error) {
 	p := runs.NewGetRunsIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Runs.GetRunsID(p)
+	resp, err := s.gen.Runs.GetRunsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -85,7 +85,7 @@ func (s *RunsService) Entities(ctx context.Context, runID string, opts RunEntiti
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Runs.GetRunsIDEntities(p)
+	resp, err := s.gen.Runs.GetRunsIDEntities(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

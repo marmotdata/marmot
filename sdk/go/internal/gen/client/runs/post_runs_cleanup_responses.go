@@ -27,7 +27,7 @@ func (o *PostRunsCleanupReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[POST /runs/cleanup] PostRunsCleanup", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/runs/cleanup] postRunsCleanup", response, response.Code())
 	}
 }
 
@@ -75,12 +75,12 @@ func (o *PostRunsCleanupOK) Code() int {
 
 func (o *PostRunsCleanupOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/cleanup][%d] postRunsCleanupOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/cleanup][%d] postRunsCleanupOK %s", 200, payload)
 }
 
 func (o *PostRunsCleanupOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/cleanup][%d] postRunsCleanupOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/cleanup][%d] postRunsCleanupOK %s", 200, payload)
 }
 
 func (o *PostRunsCleanupOK) GetPayload() map[string]int64 {

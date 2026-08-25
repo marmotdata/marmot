@@ -34,7 +34,7 @@ func (o *PutUsersPreferencesReader) ReadResponse(response runtime.ClientResponse
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /users/preferences] PutUsersPreferences", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/users/preferences] putUsersPreferences", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *PutUsersPreferencesOK) Code() int {
 }
 
 func (o *PutUsersPreferencesOK) Error() string {
-	return fmt.Sprintf("[PUT /users/preferences][%d] putUsersPreferencesOK", 200)
+	return fmt.Sprintf("[PUT /api/v1/users/preferences][%d] putUsersPreferencesOK", 200)
 }
 
 func (o *PutUsersPreferencesOK) String() string {
-	return fmt.Sprintf("[PUT /users/preferences][%d] putUsersPreferencesOK", 200)
+	return fmt.Sprintf("[PUT /api/v1/users/preferences][%d] putUsersPreferencesOK", 200)
 }
 
 func (o *PutUsersPreferencesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *PutUsersPreferencesBadRequest) Code() int {
 
 func (o *PutUsersPreferencesBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/preferences][%d] putUsersPreferencesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/preferences][%d] putUsersPreferencesBadRequest %s", 400, payload)
 }
 
 func (o *PutUsersPreferencesBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/preferences][%d] putUsersPreferencesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/preferences][%d] putUsersPreferencesBadRequest %s", 400, payload)
 }
 
 func (o *PutUsersPreferencesBadRequest) GetPayload() *models.ErrorResponse {

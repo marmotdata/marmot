@@ -46,7 +46,7 @@ func (o *GetAssetsIDRunHistoryReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/{id}/run-history] GetAssetsIDRunHistory", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/run-history/{id}] getAssetsIDRunHistory", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetAssetsIDRunHistoryOK) Code() int {
 
 func (o *GetAssetsIDRunHistoryOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryOK %s", 200, payload)
 }
 
 func (o *GetAssetsIDRunHistoryOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryOK %s", 200, payload)
 }
 
 func (o *GetAssetsIDRunHistoryOK) GetPayload() *models.RunHistoryResponse {
@@ -162,12 +162,12 @@ func (o *GetAssetsIDRunHistoryBadRequest) Code() int {
 
 func (o *GetAssetsIDRunHistoryBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsIDRunHistoryBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsIDRunHistoryBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *GetAssetsIDRunHistoryNotFound) Code() int {
 
 func (o *GetAssetsIDRunHistoryNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsIDRunHistoryNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsIDRunHistoryNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *GetAssetsIDRunHistoryInternalServerError) Code() int {
 
 func (o *GetAssetsIDRunHistoryInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsIDRunHistoryInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/run-history/{id}][%d] getAssetsIdRunHistoryInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsIDRunHistoryInternalServerError) GetPayload() *models.ErrorResponse {

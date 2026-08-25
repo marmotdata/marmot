@@ -34,7 +34,7 @@ func (o *PostServiceAccountsReader) ReadResponse(response runtime.ClientResponse
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /service-accounts] PostServiceAccounts", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/service-accounts] postServiceAccounts", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *PostServiceAccountsCreated) Code() int {
 
 func (o *PostServiceAccountsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts][%d] postServiceAccountsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts][%d] postServiceAccountsCreated %s", 201, payload)
 }
 
 func (o *PostServiceAccountsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts][%d] postServiceAccountsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts][%d] postServiceAccountsCreated %s", 201, payload)
 }
 
 func (o *PostServiceAccountsCreated) GetPayload() *models.ServiceAccount {
@@ -150,12 +150,12 @@ func (o *PostServiceAccountsBadRequest) Code() int {
 
 func (o *PostServiceAccountsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts][%d] postServiceAccountsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts][%d] postServiceAccountsBadRequest %s", 400, payload)
 }
 
 func (o *PostServiceAccountsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts][%d] postServiceAccountsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts][%d] postServiceAccountsBadRequest %s", 400, payload)
 }
 
 func (o *PostServiceAccountsBadRequest) GetPayload() *models.ErrorResponse {

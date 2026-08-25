@@ -34,7 +34,7 @@ func (o *PostServiceAccountsIDAPIKeysReader) ReadResponse(response runtime.Clien
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /service-accounts/{id}/api-keys] PostServiceAccountsIDAPIKeys", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/service-accounts/{id}/api-keys] postServiceAccountsIDAPIKeys", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *PostServiceAccountsIDAPIKeysCreated) Code() int {
 
 func (o *PostServiceAccountsIDAPIKeysCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysCreated %s", 201, payload)
 }
 
 func (o *PostServiceAccountsIDAPIKeysCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysCreated %s", 201, payload)
 }
 
 func (o *PostServiceAccountsIDAPIKeysCreated) GetPayload() *models.ServiceAccountAPIKey {
@@ -150,12 +150,12 @@ func (o *PostServiceAccountsIDAPIKeysBadRequest) Code() int {
 
 func (o *PostServiceAccountsIDAPIKeysBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysBadRequest %s", 400, payload)
 }
 
 func (o *PostServiceAccountsIDAPIKeysBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/service-accounts/{id}/api-keys][%d] postServiceAccountsIdApiKeysBadRequest %s", 400, payload)
 }
 
 func (o *PostServiceAccountsIDAPIKeysBadRequest) GetPayload() *models.ErrorResponse {

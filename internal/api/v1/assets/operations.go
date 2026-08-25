@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -54,11 +55,14 @@ type UpdateRequest struct {
 // @Accept json
 // @Produce json
 // @Param asset body CreateRequest true "Asset creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
-// @Router /assets [post]
+// @ID postAssets
+// @Router /api/v1/assets/ [post]
 func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -94,6 +98,10 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Interface("asset", newAsset).Msg("createAsset: Output to assetService.Create")
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
@@ -139,10 +147,13 @@ func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *Ass
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [get]
+// @ID getAssetsID
+// @Router /api/v1/assets/{id} [get]
 func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -175,11 +186,14 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param asset body UpdateRequest true "Asset update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [put]
+// @ID putAssetsID
+// @Router /api/v1/assets/{id} [put]
 func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -230,11 +244,14 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id} [delete]
+// @ID deleteAssetsID
+// @Router /api/v1/assets/{id} [delete]
 func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -264,11 +281,14 @@ func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 // @Tags assets
 // @Accept json
 // @Produce json
-// @Param qualifiedName path string true "Asset qualified name"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Param name path string true "Asset qualified name"
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/qualified-name/{qualifiedName} [get]
+// @ID getAssetsQualifiedNameQualifiedName
+// @Router /api/v1/assets/qualified-name/{name} [get]
 func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 	qualifiedName := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/qualified-name/")
 	if qualifiedName == "" {

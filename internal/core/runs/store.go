@@ -182,18 +182,28 @@ func (r *PostgresRepository) AddCheckpoint(ctx context.Context, runDBID string, 
 	return nil
 }
 
-func (r *PostgresRepository) GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error) {
-	query := `
+// lastRunCheckpointsQuery reads the checkpoints of the run that forms the
+// baseline for staleness and for the deletion guard.
+const lastRunCheckpointsQuery = `
 		WITH last_successful_run AS (
-			SELECT id, run_id 
-			FROM runs 
-			WHERE pipeline_name = $1 AND source_name = $2 AND status = 'completed'
-			ORDER BY completed_at DESC 
+			SELECT r.id, r.run_id
+			FROM runs r
+			WHERE r.pipeline_name = $1 AND r.source_name = $2 AND r.status = 'completed'
+			  -- Skip a run that recorded nothing. A harvest can come back
+			  -- empty because a source was unreachable or a credential
+			  -- lapsed, and treating that as the new baseline would tell the
+			  -- next run that the catalog was always empty, so nothing looks
+			  -- stale and nothing looks like a mass deletion.
+			  AND EXISTS (SELECT 1 FROM run_checkpoints c WHERE c.run_id = r.id)
+			ORDER BY r.completed_at DESC
 			LIMIT 1
 		)
 		SELECT c.id, c.entity_type, c.entity_mrn, c.operation, c.source_fields, c.created_at, r.run_id
 		FROM run_checkpoints c
 		JOIN last_successful_run r ON c.run_id = r.id`
+
+func (r *PostgresRepository) GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error) {
+	query := lastRunCheckpointsQuery
 
 	rows, err := r.db.Query(ctx, query, pipelineName, sourceName)
 	if err != nil {
@@ -504,4 +514,3 @@ func (r *PostgresRepository) DeleteCheckpoints(ctx context.Context, pipelineName
 
 	return nil
 }
-

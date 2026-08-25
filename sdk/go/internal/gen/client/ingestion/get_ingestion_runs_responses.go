@@ -40,7 +40,7 @@ func (o *GetIngestionRunsReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /ingestion/runs] GetIngestionRuns", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/ingestion/runs] getIngestionRuns", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetIngestionRunsOK) Code() int {
 
 func (o *GetIngestionRunsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsOK %s", 200, payload)
 }
 
 func (o *GetIngestionRunsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsOK %s", 200, payload)
 }
 
 func (o *GetIngestionRunsOK) GetPayload() *models.ListJobRunsResponse {
@@ -156,12 +156,12 @@ func (o *GetIngestionRunsUnauthorized) Code() int {
 
 func (o *GetIngestionRunsUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionRunsUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionRunsUnauthorized) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetIngestionRunsInternalServerError) Code() int {
 
 func (o *GetIngestionRunsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionRunsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/runs][%d] getIngestionRunsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/runs][%d] getIngestionRunsInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionRunsInternalServerError) GetPayload() *models.ErrorResponse {

@@ -20,6 +20,9 @@ type RunSummary struct {
 	// assets deleted
 	AssetsDeleted int64 `json:"assets_deleted,omitempty"`
 
+	// assets terms linked
+	AssetsTermsLinked int64 `json:"assets_terms_linked,omitempty"`
+
 	// assets updated
 	AssetsUpdated int64 `json:"assets_updated,omitempty"`
 
@@ -31,6 +34,13 @@ type RunSummary struct {
 
 	// errors count
 	ErrorsCount int64 `json:"errors_count,omitempty"`
+
+	// Glossary counts are absent from runs that predate them, and from
+	// sources that curate no business terms.
+	GlossaryTermsCreated int64 `json:"glossary_terms_created,omitempty"`
+
+	// glossary terms updated
+	GlossaryTermsUpdated int64 `json:"glossary_terms_updated,omitempty"`
 
 	// lineage created
 	LineageCreated int64 `json:"lineage_created,omitempty"`

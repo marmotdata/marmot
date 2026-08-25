@@ -14,6 +14,9 @@ import (
 // swagger:model CreateLineageRequest
 type CreateLineageRequest struct {
 
+	// job mrn
+	JobMrn string `json:"job_mrn,omitempty"`
+
 	// source
 	Source string `json:"source,omitempty"`
 
