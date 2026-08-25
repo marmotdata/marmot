@@ -75,7 +75,7 @@ def test_registers_on_first_hook_and_writes_lineage_on_stop(
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -130,7 +130,7 @@ def test_post_tool_use_registers_when_pre_was_skipped(client: Client, httpx_mock
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -231,7 +231,7 @@ def test_concurrent_register_calls_only_upsert_once(client: Client, httpx_mock: 
         post_count += 1
         return httpx.Response(201, json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"})
 
-    httpx_mock.add_callback(on_post, method="POST", url="http://m/api/v1/assets")
+    httpx_mock.add_callback(on_post, method="POST", url="http://m/api/v1/assets/")
 
     tracker = MarmotAgentTracker(client, name="explorer")
 
@@ -250,7 +250,7 @@ def test_stop_with_no_upstreams_skips_lineage_call(client: Client, httpx_mock: A
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -277,7 +277,7 @@ def test_captures_mrns_from_mcp_content_text_envelopes(client: Client, httpx_moc
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -335,7 +335,7 @@ def test_stop_posts_agent_run_with_per_tool_timing(client: Client, httpx_mock: A
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -395,7 +395,7 @@ def test_post_tool_use_failure_marks_run_as_error(client: Client, httpx_mock: An
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )
@@ -439,7 +439,7 @@ def test_stop_reads_transcript_for_tokens(client: Client, httpx_mock: Any, tmp_p
     )
     httpx_mock.add_response(
         method="POST",
-        url="http://m/api/v1/assets",
+        url="http://m/api/v1/assets/",
         status_code=201,
         json={"id": "agent-1", "mrn": "marmot://claude/agent/explorer"},
     )

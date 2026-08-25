@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
+	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
 	import type {
 		GlossaryTerm,
 		TermsListResponse,
@@ -202,8 +203,9 @@
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to create term');
+				const info = await parseApiError(response);
+				if (isLimitExceeded(info)) toasts.warning(info.message);
+				throw new Error(info.message);
 			}
 
 			showCreateModal = false;

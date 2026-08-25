@@ -34,7 +34,7 @@ func (o *GetRolesIDReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /roles/{id}] GetRolesID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/roles/{id}] getRolesID", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetRolesIDOK) Code() int {
 
 func (o *GetRolesIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles/{id}][%d] getRolesIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/roles/{id}][%d] getRolesIdOK %s", 200, payload)
 }
 
 func (o *GetRolesIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles/{id}][%d] getRolesIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/roles/{id}][%d] getRolesIdOK %s", 200, payload)
 }
 
 func (o *GetRolesIDOK) GetPayload() *models.Role {
@@ -150,12 +150,12 @@ func (o *GetRolesIDNotFound) Code() int {
 
 func (o *GetRolesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles/{id}][%d] getRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/roles/{id}][%d] getRolesIdNotFound %s", 404, payload)
 }
 
 func (o *GetRolesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles/{id}][%d] getRolesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/roles/{id}][%d] getRolesIdNotFound %s", 404, payload)
 }
 
 func (o *GetRolesIDNotFound) GetPayload() *models.ErrorResponse {

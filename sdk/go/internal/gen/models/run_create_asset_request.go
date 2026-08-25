@@ -4,9 +4,13 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // RunCreateAssetRequest run create asset request
@@ -33,10 +37,13 @@ type RunCreateAssetRequest struct {
 	Schema any `json:"schema,omitempty"`
 
 	// sources
-	Sources []string `json:"sources"`
+	Sources []*AssetSource `json:"sources"`
 
 	// tags
 	Tags []string `json:"tags"`
+
+	// Terms are the names of glossary terms assigned to this asset.
+	Terms []string `json:"terms"`
 
 	// type
 	Type string `json:"type,omitempty"`
@@ -44,11 +51,88 @@ type RunCreateAssetRequest struct {
 
 // Validate validates this run create asset request
 func (m *RunCreateAssetRequest) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateSources(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this run create asset request based on context it is used
+func (m *RunCreateAssetRequest) validateSources(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Sources) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Sources); i++ {
+		if typeutils.IsZero(m.Sources[i]) { // not required
+			continue
+		}
+
+		if m.Sources[i] != nil {
+			if err := m.Sources[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("sources" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("sources" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this run create asset request based on the context it is used
 func (m *RunCreateAssetRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateSources(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RunCreateAssetRequest) contextValidateSources(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Sources); i++ {
+
+		if m.Sources[i] != nil {
+
+			if typeutils.IsZero(m.Sources[i]) { // not required
+				return nil
+			}
+
+			if err := m.Sources[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("sources" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("sources" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

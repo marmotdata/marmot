@@ -54,7 +54,7 @@ func (s *LineageService) Get(ctx context.Context, assetID string, opts LineageOp
 	if opts.Limit > 0 {
 		p = p.WithLimit(&opts.Limit)
 	}
-	resp, err := s.gen.Lineage.GetLineageAssetsID(p)
+	resp, err := s.gen.Lineage.GetLineageAssetsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -85,7 +85,7 @@ func (s *LineageService) Write(ctx context.Context, in WriteEdgeInput) (*Lineage
 		edge.Type = DefaultEdgeType
 	}
 	p := lineage.NewPostLineageDirectParams().WithContext(ctx).WithEdge(edge)
-	resp, err := s.gen.Lineage.PostLineageDirect(p)
+	resp, err := s.gen.Lineage.PostLineageDirect(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -95,7 +95,7 @@ func (s *LineageService) Write(ctx context.Context, in WriteEdgeInput) (*Lineage
 // Edge returns a single direct lineage edge by its ID.
 func (s *LineageService) Edge(ctx context.Context, id string) (*LineageEdge, error) {
 	p := lineage.NewGetLineageDirectIDParams().WithContext(ctx).WithID(strfmt.UUID(id))
-	resp, err := s.gen.Lineage.GetLineageDirectID(p)
+	resp, err := s.gen.Lineage.GetLineageDirectID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -105,7 +105,7 @@ func (s *LineageService) Edge(ctx context.Context, id string) (*LineageEdge, err
 // Delete removes a direct lineage edge by its ID.
 func (s *LineageService) Delete(ctx context.Context, id string) error {
 	p := lineage.NewDeleteLineageDirectIDParams().WithContext(ctx).WithID(strfmt.UUID(id))
-	_, err := s.gen.Lineage.DeleteLineageDirectID(p)
+	_, err := s.gen.Lineage.DeleteLineageDirectID(p, nil)
 	return mapErr(err)
 }
 
@@ -126,7 +126,7 @@ func (s *LineageService) Batch(ctx context.Context, edges []WriteEdgeInput) ([]*
 		}
 	}
 	p := lineage.NewPostLineageBatchParams().WithContext(ctx).WithEdges(body)
-	resp, err := s.gen.Lineage.PostLineageBatch(p)
+	resp, err := s.gen.Lineage.PostLineageBatch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

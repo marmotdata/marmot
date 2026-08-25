@@ -49,7 +49,8 @@ type BannerResponse struct {
 // @Tags ui
 // @Produce json
 // @Success 200 {object} UIConfigResponse
-// @Router /ui/config [get]
+// @ID getUIConfig
+// @Router /api/v1/ui/config [get]
 func (h *Handler) getUIConfig(w http.ResponseWriter, r *http.Request) {
 	response := UIConfigResponse{
 		Banner: BannerResponse{

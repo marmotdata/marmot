@@ -8,31 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// An asset's identity is its MRN. Until this field existed the ingest API
-// could not carry one, so the server derived identity from the display
-// name instead and two objects sharing a name became one asset. These
-// tests pin the wire contract that carries it.
-
-func TestCreateAssetRequest_CarriesTheMRN(t *testing.T) {
-	body := `{"name":"orders","mrn":"mrn://table/postgresql/public.orders","type":"Table","providers":["PostgreSQL"]}`
-
-	var req CreateAssetRequest
-	require.NoError(t, json.Unmarshal([]byte(body), &req))
-
-	assert.Equal(t, "mrn://table/postgresql/public.orders", req.MRN,
-		"the qualified identity has to survive the wire")
-	assert.Equal(t, "orders", req.Name, "while the name stays the object's own name")
-}
-
-func TestCreateAssetRequest_OmitsAnEmptyMRN(t *testing.T) {
-	// A plugin that sets no MRN must not send an empty one, so that older
-	// and newer servers both fall back to deriving it.
-	encoded, err := json.Marshal(CreateAssetRequest{Name: "orders", Type: "Table"})
-	require.NoError(t, err)
-
-	assert.NotContains(t, string(encoded), `"mrn"`)
-}
-
 // Glossary terms ride the same batch as the assets that reference them,
 // keyed by name because a plugin cannot know the ids Marmot will assign.
 
@@ -74,12 +49,49 @@ func TestCreateAssetRequest_OmitsAbsentTerms(t *testing.T) {
 	assert.NotContains(t, string(encoded), `"terms"`)
 }
 
-func TestOptionalString_TreatsEmptyAsAbsent(t *testing.T) {
-	// The service derives an MRN when this is nil, so an empty string must
-	// not reach it as a value.
-	assert.Nil(t, optionalString(""))
+// A server is routinely newer than the plugins reporting to it, because
+// plugins ship on their own cadence. The batch endpoint therefore
+// has to read both shapes of the sources field.
 
-	got := optionalString("mrn://table/postgresql/public.orders")
-	require.NotNil(t, got)
-	assert.Equal(t, "mrn://table/postgresql/public.orders", *got)
+func TestAssetSources_ReadsTheObjectFormCurrentClientsSend(t *testing.T) {
+	var got AssetSources
+	require.NoError(t, json.Unmarshal(
+		[]byte(`[{"name":"PostgreSQL","priority":1,"properties":{"schema":"public"}}]`), &got))
+
+	require.Len(t, got, 1)
+	assert.Equal(t, "PostgreSQL", got[0].Name)
+	assert.Equal(t, 1, got[0].Priority)
+	assert.Equal(t, "public", got[0].Properties["schema"])
+}
+
+func TestAssetSources_ReadsTheBareNamesOlderClientsSend(t *testing.T) {
+	// Rejecting this shape would return 400 to every batch from a plugin
+	// that had not been upgraded alongside the server, which stops
+	// ingestion entirely.
+	var got AssetSources
+	require.NoError(t, json.Unmarshal([]byte(`["PostgreSQL","dbt"]`), &got))
+
+	require.Len(t, got, 2)
+	assert.Equal(t, "PostgreSQL", got[0].Name)
+	assert.Equal(t, "dbt", got[1].Name)
+	assert.Zero(t, got[0].Priority, "a name carries no other detail")
+}
+
+func TestAssetSources_RejectsAShapeItCannotRead(t *testing.T) {
+	var got AssetSources
+	err := json.Unmarshal([]byte(`{"name":"PostgreSQL"}`), &got)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "array of names or of source objects")
+}
+
+func TestCreateAssetRequest_AcceptsABatchFromAnOlderClient(t *testing.T) {
+	// The whole request, as a pre-upgrade plugin would send it.
+	body := `{"name":"orders","type":"Table","providers":["PostgreSQL"],"sources":["PostgreSQL"]}`
+
+	var req CreateAssetRequest
+	require.NoError(t, json.Unmarshal([]byte(body), &req))
+
+	require.Len(t, req.Sources, 1)
+	assert.Equal(t, "PostgreSQL", req.Sources[0].Name)
 }

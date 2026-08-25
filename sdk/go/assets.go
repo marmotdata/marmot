@@ -103,7 +103,7 @@ func (s *AssetsService) Search(ctx context.Context, opts AssetSearchOptions) (*A
 	if len(opts.Tags) > 0 {
 		p = p.WithTags(opts.Tags)
 	}
-	resp, err := s.gen.Assets.GetAssetsSearch(p)
+	resp, err := s.gen.Assets.GetAssetsSearch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -127,7 +127,7 @@ func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset
 		body.Metadata = in.Metadata
 	}
 	p := assets.NewPostAssetsParams().WithContext(ctx).WithAsset(body)
-	resp, err := s.gen.Assets.PostAssets(p)
+	resp, err := s.gen.Assets.PostAssets(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -137,7 +137,7 @@ func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset
 // Get fetches an asset by ID.
 func (s *AssetsService) Get(ctx context.Context, id string) (*Asset, error) {
 	p := assets.NewGetAssetsIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Assets.GetAssetsID(p)
+	resp, err := s.gen.Assets.GetAssetsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -152,7 +152,7 @@ func (s *AssetsService) Lookup(ctx context.Context, in LookupInput) (*Asset, err
 		WithType(in.Type).
 		WithService(in.Service).
 		WithName(in.Name)
-	resp, err := s.gen.Assets.GetAssetsLookupTypeServiceName(p)
+	resp, err := s.gen.Assets.GetAssetsLookupTypeServiceName(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -190,7 +190,7 @@ func (s *AssetsService) Update(ctx context.Context, id string, in UpdateAssetInp
 		body.Metadata = in.Metadata
 	}
 	p := assets.NewPutAssetsIDParams().WithContext(ctx).WithID(id).WithAsset(body)
-	resp, err := s.gen.Assets.PutAssetsID(p)
+	resp, err := s.gen.Assets.PutAssetsID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -200,14 +200,14 @@ func (s *AssetsService) Update(ctx context.Context, id string, in UpdateAssetInp
 // Delete removes an asset by ID.
 func (s *AssetsService) Delete(ctx context.Context, id string) error {
 	p := assets.NewDeleteAssetsIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Assets.DeleteAssetsID(p)
+	_, err := s.gen.Assets.DeleteAssetsID(p, nil)
 	return mapErr(err)
 }
 
 // Summary returns aggregate counts for the catalog.
 func (s *AssetsService) Summary(ctx context.Context) (*AssetSummary, error) {
 	p := assets.NewGetAssetsSummaryParams().WithContext(ctx)
-	resp, err := s.gen.Assets.GetAssetsSummary(p)
+	resp, err := s.gen.Assets.GetAssetsSummary(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -217,13 +217,13 @@ func (s *AssetsService) Summary(ctx context.Context) (*AssetSummary, error) {
 // AddTag adds a tag to an asset.
 func (s *AssetsService) AddTag(ctx context.Context, id, tag string) error {
 	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
-	_, err := s.gen.Assets.PostAssetsTagsID(p)
+	_, err := s.gen.Assets.PostAssetsTagsID(p, nil)
 	return mapErr(err)
 }
 
 // RemoveTag removes a tag from an asset.
 func (s *AssetsService) RemoveTag(ctx context.Context, id, tag string) error {
 	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
-	_, err := s.gen.Assets.DeleteAssetsTagsID(p)
+	_, err := s.gen.Assets.DeleteAssetsTagsID(p, nil)
 	return mapErr(err)
 }

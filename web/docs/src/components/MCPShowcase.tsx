@@ -19,18 +19,9 @@ function LineageIcon({ className }: { className?: string }) {
   );
 }
 
-function BookOpenIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className} fill="currentColor">
-      <path d="m19 1l-5 5v11l5-4.5zm2 4v13.5c-1.1-.35-2.3-.5-3.5-.5c-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5c.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5c1.35-.85 3.8-1.5 5.5-1.5c1.65 0 3.35.3 4.75 1.05c.1.05.15.05.25.05c.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63s2.59.23 3.5.63z" />
-    </svg>
-  );
-}
-
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
   "mdi:magnify": MagnifyIcon,
   "custom:lineage": LineageIcon,
-  "mdi:book-open-page-variant-outline": BookOpenIcon,
 };
 
 interface ChatMessage {
@@ -61,23 +52,11 @@ const messages: ChatMessage[] = [
       icon: "custom:lineage",
     },
   },
-  {
-    role: "user",
-    text: "And what does GMV actually stand for?",
-  },
-  {
-    role: "assistant",
-    text: "GMV is Gross Merchandise Value, the total sales revenue before deductions. That definition comes straight from your business glossary.",
-    tool: {
-      name: "lookup_term",
-      icon: "mdi:book-open-page-variant-outline",
-    },
-  },
 ];
 
-const TYPING_DELAY = 1800;
-const USER_DELAY = 1000;
-const FIRST_DELAY = 800;
+const TYPING_DELAY = 1200;
+const USER_DELAY = 700;
+const FIRST_DELAY = 600;
 
 export default function MCPShowcase(): JSX.Element {
   const chatRef = useRef<HTMLDivElement>(null);
@@ -154,26 +133,21 @@ export default function MCPShowcase(): JSX.Element {
   }, []);
 
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
+      <div className="max-w-5xl mx-auto">
         <div
           data-animate
-          className="flex flex-col lg:flex-row items-start gap-10 lg:gap-16"
+          className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14"
         >
           {/* Left: copy */}
           <div className="lg:w-2/5 text-center lg:text-left">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
               Answers, not guesses
             </h2>
             <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">
-              The questions that used to land in a team's Slack channel get
-              answered on the spot. Marmot's built-in MCP server gives the
-              assistants your people already use answers backed by your
-              actual catalog.
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-              One server to set up, not one per data source. Works with any
-              MCP-compatible client.
+              Questions that used to land in a team's Slack channel get
+              answered on the spot, from your catalog instead of a schema
+              someone pasted into a prompt. One MCP server, not one per source.
             </p>
             <a
               href="/docs/MCP/"

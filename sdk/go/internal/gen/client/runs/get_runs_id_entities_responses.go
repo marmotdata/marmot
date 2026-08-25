@@ -28,7 +28,7 @@ func (o *GetRunsIDEntitiesReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /runs/{id}/entities] GetRunsIDEntities", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/runs/{id}/entities] getRunsIDEntities", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetRunsIDEntitiesOK) Code() int {
 
 func (o *GetRunsIDEntitiesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs/{id}/entities][%d] getRunsIdEntitiesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs/{id}/entities][%d] getRunsIdEntitiesOK %s", 200, payload)
 }
 
 func (o *GetRunsIDEntitiesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs/{id}/entities][%d] getRunsIdEntitiesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs/{id}/entities][%d] getRunsIdEntitiesOK %s", 200, payload)
 }
 
 func (o *GetRunsIDEntitiesOK) GetPayload() *models.RunEntitiesResponse {

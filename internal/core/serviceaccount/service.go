@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,20 +31,52 @@ type Service interface {
 }
 
 type service struct {
-	repo        Repository
-	maxAPIKeys  int
+	repo       Repository
+	maxAPIKeys int
+	guard      limits.Guard
 }
 
-func NewService(repo Repository, maxAPIKeys int) Service {
-	if maxAPIKeys <= 0 {
-		maxAPIKeys = DefaultMaxAPIKeysPerAccount
+// ServiceOption configures a serviceaccount service.
+type ServiceOption func(*service)
+
+// WithMaxAPIKeys overrides the per-account API key cap. Non-positive values
+// fall back to DefaultMaxAPIKeysPerAccount.
+func WithMaxAPIKeys(n int) ServiceOption {
+	return func(s *service) {
+		if n > 0 {
+			s.maxAPIKeys = n
+		}
 	}
-	return &service{repo: repo, maxAPIKeys: maxAPIKeys}
+}
+
+// WithGuard installs a resource-count Guard consulted before each Create.
+// Passing NoopGuard (the default) disables enforcement.
+func WithGuard(g limits.Guard) ServiceOption {
+	return func(s *service) {
+		if g != nil {
+			s.guard = g
+		}
+	}
+}
+
+func NewService(repo Repository, opts ...ServiceOption) Service {
+	s := &service{
+		repo:       repo,
+		maxAPIKeys: DefaultMaxAPIKeysPerAccount,
+		guard:      limits.NoopGuard{},
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *service) Create(ctx context.Context, input CreateInput, createdBy *string) (*ServiceAccount, error) {
 	if input.Name == "" {
 		return nil, fmt.Errorf("name is required")
+	}
+	if err := s.guard.CheckCreate(ctx, limits.ResourceServiceAccounts); err != nil {
+		return nil, err
 	}
 	return s.repo.Create(ctx, input, createdBy)
 }

@@ -80,7 +80,7 @@ func (s *GlossaryService) List(ctx context.Context, opts GlossaryListOptions) (*
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Glossary.GetGlossaryList(p)
+	resp, err := s.gen.Glossary.GetGlossaryList(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -102,7 +102,7 @@ func (s *GlossaryService) Search(ctx context.Context, opts GlossarySearchOptions
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Glossary.GetGlossarySearch(p)
+	resp, err := s.gen.Glossary.GetGlossarySearch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -112,7 +112,7 @@ func (s *GlossaryService) Search(ctx context.Context, opts GlossarySearchOptions
 // Get fetches a glossary term by ID.
 func (s *GlossaryService) Get(ctx context.Context, id string) (*GlossaryTerm, error) {
 	p := glossary.NewGetGlossaryIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Glossary.GetGlossaryID(p)
+	resp, err := s.gen.Glossary.GetGlossaryID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -132,7 +132,7 @@ func (s *GlossaryService) Create(ctx context.Context, in CreateTermInput) (*Glos
 		body.Metadata = in.Metadata
 	}
 	p := glossary.NewPostGlossaryParams().WithContext(ctx).WithTerm(body)
-	resp, err := s.gen.Glossary.PostGlossary(p)
+	resp, err := s.gen.Glossary.PostGlossary(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -152,7 +152,7 @@ func (s *GlossaryService) Update(ctx context.Context, id string, in UpdateTermIn
 		body.Metadata = in.Metadata
 	}
 	p := glossary.NewPutGlossaryIDParams().WithContext(ctx).WithID(id).WithTerm(body)
-	resp, err := s.gen.Glossary.PutGlossaryID(p)
+	resp, err := s.gen.Glossary.PutGlossaryID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -162,6 +162,6 @@ func (s *GlossaryService) Update(ctx context.Context, id string, in UpdateTermIn
 // Delete removes a glossary term.
 func (s *GlossaryService) Delete(ctx context.Context, id string) error {
 	p := glossary.NewDeleteGlossaryIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Glossary.DeleteGlossaryID(p)
+	_, err := s.gen.Glossary.DeleteGlossaryID(p, nil)
 	return mapErr(err)
 }

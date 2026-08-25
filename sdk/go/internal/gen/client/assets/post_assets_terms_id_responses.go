@@ -40,7 +40,7 @@ func (o *PostAssetsTermsIDReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /assets/terms/{id}] PostAssetsTermsID", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/assets/terms/{id}] postAssetsTermsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostAssetsTermsIDOK) Code() int {
 
 func (o *PostAssetsTermsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdOK %s", 200, payload)
 }
 
 func (o *PostAssetsTermsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdOK %s", 200, payload)
 }
 
 func (o *PostAssetsTermsIDOK) GetPayload() []*models.AssetTerm {
@@ -154,12 +154,12 @@ func (o *PostAssetsTermsIDBadRequest) Code() int {
 
 func (o *PostAssetsTermsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsTermsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsTermsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *PostAssetsTermsIDNotFound) Code() int {
 
 func (o *PostAssetsTermsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdNotFound %s", 404, payload)
 }
 
 func (o *PostAssetsTermsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/terms/{id}][%d] postAssetsTermsIdNotFound %s", 404, payload)
 }
 
 func (o *PostAssetsTermsIDNotFound) GetPayload() *models.ErrorResponse {

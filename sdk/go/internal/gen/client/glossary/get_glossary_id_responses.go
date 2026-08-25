@@ -46,7 +46,7 @@ func (o *GetGlossaryIDReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /glossary/{id}] GetGlossaryID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/glossary/{id}] getGlossaryID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetGlossaryIDOK) Code() int {
 
 func (o *GetGlossaryIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryIDOK) GetPayload() *models.GlossaryTerm {
@@ -162,12 +162,12 @@ func (o *GetGlossaryIDBadRequest) Code() int {
 
 func (o *GetGlossaryIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *GetGlossaryIDNotFound) Code() int {
 
 func (o *GetGlossaryIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *GetGlossaryIDInternalServerError) Code() int {
 
 func (o *GetGlossaryIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/{id}][%d] getGlossaryIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryIDInternalServerError) GetPayload() *models.ErrorResponse {

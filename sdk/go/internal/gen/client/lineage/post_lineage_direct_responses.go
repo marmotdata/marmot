@@ -40,7 +40,7 @@ func (o *PostLineageDirectReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /lineage/direct] PostLineageDirect", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/lineage/direct] postLineageDirect", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostLineageDirectOK) Code() int {
 
 func (o *PostLineageDirectOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectOK %s", 200, payload)
 }
 
 func (o *PostLineageDirectOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectOK %s", 200, payload)
 }
 
 func (o *PostLineageDirectOK) GetPayload() *models.LineageEdge {
@@ -156,12 +156,12 @@ func (o *PostLineageDirectBadRequest) Code() int {
 
 func (o *PostLineageDirectBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageDirectBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageDirectBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostLineageDirectInternalServerError) Code() int {
 
 func (o *PostLineageDirectInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectInternalServerError %s", 500, payload)
 }
 
 func (o *PostLineageDirectInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/direct][%d] postLineageDirectInternalServerError %s", 500, payload)
 }
 
 func (o *PostLineageDirectInternalServerError) GetPayload() *models.ErrorResponse {

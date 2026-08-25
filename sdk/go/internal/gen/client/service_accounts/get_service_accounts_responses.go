@@ -34,7 +34,7 @@ func (o *GetServiceAccountsReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /service-accounts] GetServiceAccounts", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/service-accounts] getServiceAccounts", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetServiceAccountsOK) Code() int {
 
 func (o *GetServiceAccountsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts][%d] getServiceAccountsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts][%d] getServiceAccountsOK %s", 200, payload)
 }
 
 func (o *GetServiceAccountsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts][%d] getServiceAccountsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts][%d] getServiceAccountsOK %s", 200, payload)
 }
 
 func (o *GetServiceAccountsOK) GetPayload() []*models.ServiceAccount {
@@ -148,12 +148,12 @@ func (o *GetServiceAccountsInternalServerError) Code() int {
 
 func (o *GetServiceAccountsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts][%d] getServiceAccountsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts][%d] getServiceAccountsInternalServerError %s", 500, payload)
 }
 
 func (o *GetServiceAccountsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts][%d] getServiceAccountsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts][%d] getServiceAccountsInternalServerError %s", 500, payload)
 }
 
 func (o *GetServiceAccountsInternalServerError) GetPayload() *models.ErrorResponse {

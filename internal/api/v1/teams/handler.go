@@ -250,9 +250,12 @@ func (h *Handler) Routes() []common.Route {
 // @Produce json
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListTeamsResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams [get]
+// @ID getTeams
+// @Router /api/v1/teams [get]
 func (h *Handler) listTeams(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	if limit <= 0 || limit > 100 {
@@ -284,11 +287,14 @@ func (h *Handler) listTeams(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param team body CreateTeamRequest true "Team creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} team.Team
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams [post]
+// @ID postTeams
+// @Router /api/v1/teams [post]
 func (h *Handler) createTeam(w http.ResponseWriter, r *http.Request) {
 	var req CreateTeamRequest
 
@@ -322,10 +328,13 @@ func (h *Handler) createTeam(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Team ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} team.Team
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id} [get]
+// @ID getTeamsID
+// @Router /api/v1/teams/{id} [get]
 func (h *Handler) getTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -349,13 +358,16 @@ func (h *Handler) getTeam(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Team ID"
 // @Param team body UpdateTeamRequest true "Team update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id} [put]
+// @ID putTeamsID
+// @Router /api/v1/teams/{id} [put]
 func (h *Handler) updateTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -393,11 +405,14 @@ func (h *Handler) updateTeam(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Team ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 403 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id} [delete]
+// @ID deleteTeamsID
+// @Router /api/v1/teams/{id} [delete]
 func (h *Handler) deleteTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -424,9 +439,12 @@ func (h *Handler) deleteTeam(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Team ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListMembersResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id}/members [get]
+// @ID getTeamsIDMembers
+// @Router /api/v1/teams/{id}/members [get]
 func (h *Handler) listMembers(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -448,12 +466,15 @@ func (h *Handler) listMembers(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Team ID"
 // @Param member body AddMemberRequest true "Member addition request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} MessageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id}/members [post]
+// @ID postTeamsIDMembers
+// @Router /api/v1/teams/{id}/members [post]
 func (h *Handler) addMember(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -502,10 +523,13 @@ func (h *Handler) addMember(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Team ID"
 // @Param userId path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id}/members/{userId} [delete]
+// @ID deleteTeamsIDMembersUserID
+// @Router /api/v1/teams/{id}/members/{userId} [delete]
 func (h *Handler) removeMember(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	userID := r.PathValue("userId")
@@ -531,11 +555,14 @@ func (h *Handler) removeMember(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Team ID"
 // @Param userId path string true "User ID"
 // @Param role body UpdateMemberRoleRequest true "Role update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id}/members/{userId}/role [put]
+// @ID putTeamsIDMembersUserIDRole
+// @Router /api/v1/teams/{id}/members/{userId}/role [put]
 func (h *Handler) updateMemberRole(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	userID := r.PathValue("userId")
@@ -572,10 +599,13 @@ func (h *Handler) updateMemberRole(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Team ID"
 // @Param userId path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /teams/{id}/members/{userId}/convert-to-manual [post]
+// @ID postTeamsIDMembersUserIDConvertToManual
+// @Router /api/v1/teams/{id}/members/{userId}/convert-to-manual [post]
 func (h *Handler) convertMemberToManual(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	userID := r.PathValue("userId")
@@ -599,9 +629,12 @@ func (h *Handler) convertMemberToManual(w http.ResponseWriter, r *http.Request) 
 // @Accept json
 // @Produce json
 // @Param provider query string false "Filter by SSO provider"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListSSOMappingsResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /sso/team-mappings [get]
+// @ID getSsoTeamMappings
+// @Router /api/v1/sso/team-mappings [get]
 func (h *Handler) listSSOMappings(w http.ResponseWriter, r *http.Request) {
 	provider := r.URL.Query().Get("provider")
 
@@ -622,11 +655,14 @@ func (h *Handler) listSSOMappings(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param mapping body CreateSSOMappingRequest true "SSO mapping creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} team.SSOTeamMapping
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /sso/team-mappings [post]
+// @ID postSsoTeamMappings
+// @Router /api/v1/sso/team-mappings [post]
 func (h *Handler) createSSOMapping(w http.ResponseWriter, r *http.Request) {
 	var req CreateSSOMappingRequest
 
@@ -663,10 +699,13 @@ func (h *Handler) createSSOMapping(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "SSO mapping ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} team.SSOTeamMapping
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /sso/team-mappings/{id} [get]
+// @ID getSsoTeamMappingsID
+// @Router /api/v1/sso/team-mappings/{id} [get]
 func (h *Handler) getSSOMapping(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -690,11 +729,14 @@ func (h *Handler) getSSOMapping(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "SSO mapping ID"
 // @Param mapping body UpdateSSOMappingRequest true "SSO mapping update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /sso/team-mappings/{id} [put]
+// @ID putSsoTeamMappingsID
+// @Router /api/v1/sso/team-mappings/{id} [put]
 func (h *Handler) updateSSOMapping(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -729,10 +771,13 @@ func (h *Handler) updateSSOMapping(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "SSO mapping ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} MessageResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /sso/team-mappings/{id} [delete]
+// @ID deleteSsoTeamMappingsID
+// @Router /api/v1/sso/team-mappings/{id} [delete]
 func (h *Handler) deleteSSOMapping(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -756,10 +801,13 @@ func (h *Handler) deleteSSOMapping(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param q query string true "Search query"
 // @Param limit query int false "Maximum number of results" default(20)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} SearchOwnersResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /owners/search [get]
+// @ID getOwnersSearch
+// @Router /api/v1/owners/search [get]
 func (h *Handler) searchOwners(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {

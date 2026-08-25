@@ -46,7 +46,7 @@ func (o *PostOauthTokenReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /oauth/token] PostOauthToken", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /oauth/token] postOauthToken", response, response.Code())
 	}
 }
 

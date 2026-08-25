@@ -52,7 +52,7 @@ func (o *PutIngestionSchedulesIDReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /ingestion/schedules/{id}] PutIngestionSchedulesID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/ingestion/schedules/{id}] putIngestionSchedulesID", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PutIngestionSchedulesIDOK) Code() int {
 
 func (o *PutIngestionSchedulesIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdOK %s", 200, payload)
 }
 
 func (o *PutIngestionSchedulesIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdOK %s", 200, payload)
 }
 
 func (o *PutIngestionSchedulesIDOK) GetPayload() *models.Schedule {
@@ -168,12 +168,12 @@ func (o *PutIngestionSchedulesIDBadRequest) Code() int {
 
 func (o *PutIngestionSchedulesIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdBadRequest %s", 400, payload)
 }
 
 func (o *PutIngestionSchedulesIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdBadRequest %s", 400, payload)
 }
 
 func (o *PutIngestionSchedulesIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PutIngestionSchedulesIDUnauthorized) Code() int {
 
 func (o *PutIngestionSchedulesIDUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
 func (o *PutIngestionSchedulesIDUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
 func (o *PutIngestionSchedulesIDUnauthorized) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PutIngestionSchedulesIDNotFound) Code() int {
 
 func (o *PutIngestionSchedulesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdNotFound %s", 404, payload)
 }
 
 func (o *PutIngestionSchedulesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdNotFound %s", 404, payload)
 }
 
 func (o *PutIngestionSchedulesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PutIngestionSchedulesIDInternalServerError) Code() int {
 
 func (o *PutIngestionSchedulesIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutIngestionSchedulesIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /ingestion/schedules/{id}][%d] putIngestionSchedulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putIngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutIngestionSchedulesIDInternalServerError) GetPayload() *models.ErrorResponse {

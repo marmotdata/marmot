@@ -60,6 +60,7 @@ func respondOAuthError(w http.ResponseWriter, status int, code, description stri
 //	@Failure		400					{object}	oauthErrorResponse
 //	@Failure		401					{object}	oauthErrorResponse
 //	@Failure		500					{object}	oauthErrorResponse
+//	@ID postOauthToken
 //	@Router			/oauth/token [post]
 func (h *Handler) handleToken(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MB

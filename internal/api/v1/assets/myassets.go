@@ -15,10 +15,13 @@ import (
 // @Produce json
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} SearchResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/my-assets [get]
+// @ID getAssetsMyAssets
+// @Router /api/v1/assets/my-assets [get]
 func (h *Handler) getMyAssets(w http.ResponseWriter, r *http.Request) {
 	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
 	if !ok {

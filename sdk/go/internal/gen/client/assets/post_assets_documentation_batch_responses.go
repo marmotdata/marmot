@@ -40,7 +40,7 @@ func (o *PostAssetsDocumentationBatchReader) ReadResponse(response runtime.Clien
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /assets/documentation/batch] PostAssetsDocumentationBatch", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/assets/documentation/batch] postAssetsDocumentationBatch", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostAssetsDocumentationBatchOK) Code() int {
 
 func (o *PostAssetsDocumentationBatchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchOK %s", 200, payload)
 }
 
 func (o *PostAssetsDocumentationBatchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchOK %s", 200, payload)
 }
 
 func (o *PostAssetsDocumentationBatchOK) GetPayload() *models.BatchDocumentationResponse {
@@ -156,12 +156,12 @@ func (o *PostAssetsDocumentationBatchBadRequest) Code() int {
 
 func (o *PostAssetsDocumentationBatchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsDocumentationBatchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsDocumentationBatchBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostAssetsDocumentationBatchInternalServerError) Code() int {
 
 func (o *PostAssetsDocumentationBatchInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetsDocumentationBatchInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation/batch][%d] postAssetsDocumentationBatchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/batch][%d] postAssetsDocumentationBatchInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetsDocumentationBatchInternalServerError) GetPayload() *models.ErrorResponse {

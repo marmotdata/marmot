@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/plugin"
 )
 
@@ -20,6 +21,19 @@ func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 // RespondError sends a standard error response
 func RespondError(w http.ResponseWriter, status int, message string) {
 	RespondJSON(w, status, ErrorResponse{Error: message})
+}
+
+// RespondLimitExceeded writes the structured 403 response for a
+// resource-count limit denial. It preserves the exact numbers so clients
+// can render a "N of M used" style message without re-fetching state.
+func RespondLimitExceeded(w http.ResponseWriter, err *limits.ErrLimitExceeded) {
+	RespondJSON(w, http.StatusForbidden, LimitErrorResponse{
+		Error:    err.Error(),
+		Code:     "limit_exceeded",
+		Resource: string(err.Resource),
+		Current:  err.Current,
+		Limit:    err.Limit,
+	})
 }
 
 // RequirePluginsReady writes a 503 with Retry-After and returns false if

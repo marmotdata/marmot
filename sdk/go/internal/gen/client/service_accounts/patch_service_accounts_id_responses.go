@@ -34,7 +34,7 @@ func (o *PatchServiceAccountsIDReader) ReadResponse(response runtime.ClientRespo
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PATCH /service-accounts/{id}] PatchServiceAccountsID", response, response.Code())
+		return nil, runtime.NewAPIError("[PATCH /api/v1/service-accounts/{id}] patchServiceAccountsID", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *PatchServiceAccountsIDOK) Code() int {
 
 func (o *PatchServiceAccountsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /service-accounts/{id}][%d] patchServiceAccountsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PATCH /api/v1/service-accounts/{id}][%d] patchServiceAccountsIdOK %s", 200, payload)
 }
 
 func (o *PatchServiceAccountsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /service-accounts/{id}][%d] patchServiceAccountsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PATCH /api/v1/service-accounts/{id}][%d] patchServiceAccountsIdOK %s", 200, payload)
 }
 
 func (o *PatchServiceAccountsIDOK) GetPayload() *models.ServiceAccount {
@@ -150,12 +150,12 @@ func (o *PatchServiceAccountsIDNotFound) Code() int {
 
 func (o *PatchServiceAccountsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /service-accounts/{id}][%d] patchServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PATCH /api/v1/service-accounts/{id}][%d] patchServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *PatchServiceAccountsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PATCH /service-accounts/{id}][%d] patchServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PATCH /api/v1/service-accounts/{id}][%d] patchServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *PatchServiceAccountsIDNotFound) GetPayload() *models.ErrorResponse {

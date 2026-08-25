@@ -57,64 +57,64 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteTeamsID delete a team.
-	DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error)
+	DeleteTeamsID(params *DeleteTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDOK, error)
 
 	// DeleteTeamsIDContext delete a team.
-	DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error)
+	DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDOK, error)
 
 	// DeleteTeamsIDMembersUserID remove a team member.
-	DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
+	DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
 
 	// DeleteTeamsIDMembersUserIDContext remove a team member.
-	DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
+	DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
 
 	// GetTeams list teams.
-	GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error)
+	GetTeams(params *GetTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsOK, error)
 
 	// GetTeamsContext list teams.
-	GetTeamsContext(ctx context.Context, params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error)
+	GetTeamsContext(ctx context.Context, params *GetTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsOK, error)
 
 	// GetTeamsID get a team.
-	GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error)
+	GetTeamsID(params *GetTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDOK, error)
 
 	// GetTeamsIDContext get a team.
-	GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error)
+	GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDOK, error)
 
 	// GetTeamsIDMembers list team members.
-	GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
+	GetTeamsIDMembers(params *GetTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
 
 	// GetTeamsIDMembersContext list team members.
-	GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
+	GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
 
 	// PostTeams create a team.
-	PostTeams(params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error)
+	PostTeams(params *PostTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsCreated, error)
 
 	// PostTeamsContext create a team.
-	PostTeamsContext(ctx context.Context, params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error)
+	PostTeamsContext(ctx context.Context, params *PostTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsCreated, error)
 
 	// PostTeamsIDMembers add a team member.
-	PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
+	PostTeamsIDMembers(params *PostTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
 
 	// PostTeamsIDMembersContext add a team member.
-	PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
+	PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
 
 	// PostTeamsIDMembersUserIDConvertToManual convert member to manual.
-	PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
+	PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
 
 	// PostTeamsIDMembersUserIDConvertToManualContext convert member to manual.
-	PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
+	PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
 
 	// PutTeamsID update a team.
-	PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error)
+	PutTeamsID(params *PutTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDOK, error)
 
 	// PutTeamsIDContext update a team.
-	PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error)
+	PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDOK, error)
 
 	// PutTeamsIDMembersUserIDRole update member role.
-	PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
+	PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
 
 	// PutTeamsIDMembersUserIDRoleContext update member role.
-	PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
+	PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -127,7 +127,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteTeamsIDContext] instead.
-func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
+func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -135,7 +135,7 @@ func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.DeleteTeamsIDContext(ctx, params, opts...)
+	return a.DeleteTeamsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteTeamsIDContext deletes a team.
@@ -143,21 +143,22 @@ func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption
 // Delete a team by its ID.
 //
 // Do not use the deprecated [DeleteTeamsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
+func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteTeamsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTeamsID",
+		ID:                 "deleteTeamsID",
 		Method:             "DELETE",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteTeamsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -181,7 +182,7 @@ func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -193,7 +194,7 @@ func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteTeamsIDMembersUserIDContext] instead.
-func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
+func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -201,7 +202,7 @@ func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDPa
 		ctx = context.Background()
 	}
 
-	return a.DeleteTeamsIDMembersUserIDContext(ctx, params, opts...)
+	return a.DeleteTeamsIDMembersUserIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteTeamsIDMembersUserIDContext removes a team member.
@@ -209,21 +210,22 @@ func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDPa
 // Remove a user from a team.
 //
 // Do not use the deprecated [DeleteTeamsIDMembersUserIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
+func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteTeamsIDMembersUserIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTeamsIDMembersUserID",
+		ID:                 "deleteTeamsIDMembersUserID",
 		Method:             "DELETE",
-		PathPattern:        "/teams/{id}/members/{userId}",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteTeamsIDMembersUserIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -247,7 +249,7 @@ func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTeamsIDMembersUserID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteTeamsIDMembersUserID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -259,7 +261,7 @@ func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetTeamsContext] instead.
-func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error) {
+func (a *Client) GetTeams(params *GetTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -267,7 +269,7 @@ func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTea
 		ctx = context.Background()
 	}
 
-	return a.GetTeamsContext(ctx, params, opts...)
+	return a.GetTeamsContext(ctx, params, authInfo, opts...)
 }
 
 // GetTeamsContext lists teams.
@@ -275,21 +277,22 @@ func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTea
 // Get a paginated list of teams.
 //
 // Do not use the deprecated [GetTeamsParams.Context] with this method: it would be ignored.
-func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error) {
+func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeams",
+		ID:                 "getTeams",
 		Method:             "GET",
-		PathPattern:        "/teams",
+		PathPattern:        "/api/v1/teams",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -313,7 +316,7 @@ func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, op
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -325,7 +328,7 @@ func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, op
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetTeamsIDContext] instead.
-func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error) {
+func (a *Client) GetTeamsID(params *GetTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -333,7 +336,7 @@ func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*Ge
 		ctx = context.Background()
 	}
 
-	return a.GetTeamsIDContext(ctx, params, opts...)
+	return a.GetTeamsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetTeamsIDContext gets a team.
@@ -341,21 +344,22 @@ func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*Ge
 // Get a team by its ID.
 //
 // Do not use the deprecated [GetTeamsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error) {
+func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeamsID",
+		ID:                 "getTeamsID",
 		Method:             "GET",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -379,7 +383,7 @@ func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -391,7 +395,7 @@ func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetTeamsIDMembersContext] instead.
-func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
+func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -399,7 +403,7 @@ func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.GetTeamsIDMembersContext(ctx, params, opts...)
+	return a.GetTeamsIDMembersContext(ctx, params, authInfo, opts...)
 }
 
 // GetTeamsIDMembersContext lists team members.
@@ -407,21 +411,22 @@ func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...Clie
 // Get the members of a team.
 //
 // Do not use the deprecated [GetTeamsIDMembersParams.Context] with this method: it would be ignored.
-func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
+func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsIDMembersParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetTeamsIDMembers",
+		ID:                 "getTeamsIDMembers",
 		Method:             "GET",
-		PathPattern:        "/teams/{id}/members",
+		PathPattern:        "/api/v1/teams/{id}/members",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsIDMembersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -445,7 +450,7 @@ func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsI
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -457,7 +462,7 @@ func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsI
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostTeamsContext] instead.
-func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error) {
+func (a *Client) PostTeams(params *PostTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -465,7 +470,7 @@ func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*Post
 		ctx = context.Background()
 	}
 
-	return a.PostTeamsContext(ctx, params, opts...)
+	return a.PostTeamsContext(ctx, params, authInfo, opts...)
 }
 
 // PostTeamsContext creates a team.
@@ -473,21 +478,22 @@ func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*Post
 // Create a new team.
 //
 // Do not use the deprecated [PostTeamsParams.Context] with this method: it would be ignored.
-func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error) {
+func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeams",
+		ID:                 "postTeams",
 		Method:             "POST",
-		PathPattern:        "/teams",
+		PathPattern:        "/api/v1/teams",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -511,7 +517,7 @@ func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -523,7 +529,7 @@ func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostTeamsIDMembersContext] instead.
-func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
+func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -531,7 +537,7 @@ func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.PostTeamsIDMembersContext(ctx, params, opts...)
+	return a.PostTeamsIDMembersContext(ctx, params, authInfo, opts...)
 }
 
 // PostTeamsIDMembersContext adds a team member.
@@ -539,21 +545,22 @@ func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...Cl
 // Add a user as a member of a team.
 //
 // Do not use the deprecated [PostTeamsIDMembersParams.Context] with this method: it would be ignored.
-func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
+func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsIDMembersParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeamsIDMembers",
+		ID:                 "postTeamsIDMembers",
 		Method:             "POST",
-		PathPattern:        "/teams/{id}/members",
+		PathPattern:        "/api/v1/teams/{id}/members",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsIDMembersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -577,7 +584,7 @@ func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeam
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeamsIDMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -589,7 +596,7 @@ func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeam
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostTeamsIDMembersUserIDConvertToManualContext] instead.
-func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
+func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -597,7 +604,7 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMemb
 		ctx = context.Background()
 	}
 
-	return a.PostTeamsIDMembersUserIDConvertToManualContext(ctx, params, opts...)
+	return a.PostTeamsIDMembersUserIDConvertToManualContext(ctx, params, authInfo, opts...)
 }
 
 // PostTeamsIDMembersUserIDConvertToManualContext converts member to manual.
@@ -605,21 +612,22 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMemb
 // Convert an SSO-managed team member to a manually managed member.
 //
 // Do not use the deprecated [PostTeamsIDMembersUserIDConvertToManualParams.Context] with this method: it would be ignored.
-func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
+func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsIDMembersUserIDConvertToManualParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostTeamsIDMembersUserIDConvertToManual",
+		ID:                 "postTeamsIDMembersUserIDConvertToManual",
 		Method:             "POST",
-		PathPattern:        "/teams/{id}/members/{userId}/convert-to-manual",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}/convert-to-manual",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsIDMembersUserIDConvertToManualReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -643,7 +651,7 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Cont
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTeamsIDMembersUserIDConvertToManual: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postTeamsIDMembersUserIDConvertToManual: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -655,7 +663,7 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Cont
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutTeamsIDContext] instead.
-func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error) {
+func (a *Client) PutTeamsID(params *PutTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -663,7 +671,7 @@ func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*Pu
 		ctx = context.Background()
 	}
 
-	return a.PutTeamsIDContext(ctx, params, opts...)
+	return a.PutTeamsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutTeamsIDContext updates a team.
@@ -671,21 +679,22 @@ func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*Pu
 // Update a team's fields by its ID.
 //
 // Do not use the deprecated [PutTeamsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error) {
+func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutTeamsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutTeamsID",
+		ID:                 "putTeamsID",
 		Method:             "PUT",
-		PathPattern:        "/teams/{id}",
+		PathPattern:        "/api/v1/teams/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutTeamsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -709,7 +718,7 @@ func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putTeamsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -721,7 +730,7 @@ func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutTeamsIDMembersUserIDRoleContext] instead.
-func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
+func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -729,7 +738,7 @@ func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRole
 		ctx = context.Background()
 	}
 
-	return a.PutTeamsIDMembersUserIDRoleContext(ctx, params, opts...)
+	return a.PutTeamsIDMembersUserIDRoleContext(ctx, params, authInfo, opts...)
 }
 
 // PutTeamsIDMembersUserIDRoleContext updates member role.
@@ -737,21 +746,22 @@ func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRole
 // Update the role of a team member.
 //
 // Do not use the deprecated [PutTeamsIDMembersUserIDRoleParams.Context] with this method: it would be ignored.
-func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
+func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutTeamsIDMembersUserIDRoleParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutTeamsIDMembersUserIDRole",
+		ID:                 "putTeamsIDMembersUserIDRole",
 		Method:             "PUT",
-		PathPattern:        "/teams/{id}/members/{userId}/role",
+		PathPattern:        "/api/v1/teams/{id}/members/{userId}/role",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutTeamsIDMembersUserIDRoleReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -775,7 +785,7 @@ func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutTeamsIDMembersUserIDRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putTeamsIDMembersUserIDRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

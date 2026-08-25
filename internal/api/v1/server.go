@@ -71,9 +71,18 @@ import (
 // @title Marmot API
 // @version 0.1
 // @description API for interacting with Marmot
-// @BasePath /api/v1
 // @license.name MIT
 // @license.url https://opensource.org/license/MIT
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT.
+
 type Server struct {
 	config         *config.Config
 	metricsService *metrics.Service
@@ -125,7 +134,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
-	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore, serviceaccountService.DefaultMaxAPIKeysPerAccount)
+	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)

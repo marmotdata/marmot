@@ -57,10 +57,10 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeletePipelinesPipelineName destroy pipeline.
-	DeletePipelinesPipelineName(params *DeletePipelinesPipelineNameParams, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error)
+	DeletePipelinesPipelineName(params *DeletePipelinesPipelineNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error)
 
 	// DeletePipelinesPipelineNameContext destroy pipeline.
-	DeletePipelinesPipelineNameContext(ctx context.Context, params *DeletePipelinesPipelineNameParams, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error)
+	DeletePipelinesPipelineNameContext(ctx context.Context, params *DeletePipelinesPipelineNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -73,7 +73,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeletePipelinesPipelineNameContext] instead.
-func (a *Client) DeletePipelinesPipelineName(params *DeletePipelinesPipelineNameParams, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error) {
+func (a *Client) DeletePipelinesPipelineName(params *DeletePipelinesPipelineNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -81,7 +81,7 @@ func (a *Client) DeletePipelinesPipelineName(params *DeletePipelinesPipelineName
 		ctx = context.Background()
 	}
 
-	return a.DeletePipelinesPipelineNameContext(ctx, params, opts...)
+	return a.DeletePipelinesPipelineNameContext(ctx, params, authInfo, opts...)
 }
 
 // DeletePipelinesPipelineNameContext destroys pipeline.
@@ -89,21 +89,22 @@ func (a *Client) DeletePipelinesPipelineName(params *DeletePipelinesPipelineName
 // Delete all resources ever created by a pipeline (across all sources).
 //
 // Do not use the deprecated [DeletePipelinesPipelineNameParams.Context] with this method: it would be ignored.
-func (a *Client) DeletePipelinesPipelineNameContext(ctx context.Context, params *DeletePipelinesPipelineNameParams, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error) {
+func (a *Client) DeletePipelinesPipelineNameContext(ctx context.Context, params *DeletePipelinesPipelineNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeletePipelinesPipelineNameOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeletePipelinesPipelineNameParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeletePipelinesPipelineName",
+		ID:                 "deletePipelinesPipelineName",
 		Method:             "DELETE",
-		PathPattern:        "/pipelines/{pipelineName}",
+		PathPattern:        "/api/v1/pipelines/{pipelineName}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeletePipelinesPipelineNameReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -127,7 +128,7 @@ func (a *Client) DeletePipelinesPipelineNameContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeletePipelinesPipelineName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deletePipelinesPipelineName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

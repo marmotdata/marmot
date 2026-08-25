@@ -34,7 +34,7 @@ func (o *GetServiceAccountsIDReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /service-accounts/{id}] GetServiceAccountsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/service-accounts/{id}] getServiceAccountsID", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetServiceAccountsIDOK) Code() int {
 
 func (o *GetServiceAccountsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts/{id}][%d] getServiceAccountsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts/{id}][%d] getServiceAccountsIdOK %s", 200, payload)
 }
 
 func (o *GetServiceAccountsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts/{id}][%d] getServiceAccountsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts/{id}][%d] getServiceAccountsIdOK %s", 200, payload)
 }
 
 func (o *GetServiceAccountsIDOK) GetPayload() *models.ServiceAccount {
@@ -150,12 +150,12 @@ func (o *GetServiceAccountsIDNotFound) Code() int {
 
 func (o *GetServiceAccountsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts/{id}][%d] getServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts/{id}][%d] getServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *GetServiceAccountsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /service-accounts/{id}][%d] getServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/service-accounts/{id}][%d] getServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *GetServiceAccountsIDNotFound) GetPayload() *models.ErrorResponse {

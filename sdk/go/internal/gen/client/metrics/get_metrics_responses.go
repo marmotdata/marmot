@@ -40,7 +40,7 @@ func (o *GetMetricsReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /metrics] GetMetrics", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/metrics] getMetrics", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetMetricsOK) Code() int {
 
 func (o *GetMetricsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsOK %s", 200, payload)
 }
 
 func (o *GetMetricsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsOK %s", 200, payload)
 }
 
 func (o *GetMetricsOK) GetPayload() *models.GetMetricsResponse {
@@ -156,12 +156,12 @@ func (o *GetMetricsBadRequest) Code() int {
 
 func (o *GetMetricsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsBadRequest %s", 400, payload)
 }
 
 func (o *GetMetricsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsBadRequest %s", 400, payload)
 }
 
 func (o *GetMetricsBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetMetricsUnauthorized) Code() int {
 
 func (o *GetMetricsUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsUnauthorized %s", 401, payload)
 }
 
 func (o *GetMetricsUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics][%d] getMetricsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics][%d] getMetricsUnauthorized %s", 401, payload)
 }
 
 func (o *GetMetricsUnauthorized) GetPayload() *models.ErrorResponse {

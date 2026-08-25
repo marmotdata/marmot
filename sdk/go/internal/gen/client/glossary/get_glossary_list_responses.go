@@ -34,7 +34,7 @@ func (o *GetGlossaryListReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /glossary/list] GetGlossaryList", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/glossary/list] getGlossaryList", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetGlossaryListOK) Code() int {
 
 func (o *GetGlossaryListOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/list][%d] getGlossaryListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/list][%d] getGlossaryListOK %s", 200, payload)
 }
 
 func (o *GetGlossaryListOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/list][%d] getGlossaryListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/list][%d] getGlossaryListOK %s", 200, payload)
 }
 
 func (o *GetGlossaryListOK) GetPayload() *models.GlossaryListResult {
@@ -150,12 +150,12 @@ func (o *GetGlossaryListInternalServerError) Code() int {
 
 func (o *GetGlossaryListInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/list][%d] getGlossaryListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/list][%d] getGlossaryListInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryListInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/list][%d] getGlossaryListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/list][%d] getGlossaryListInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryListInternalServerError) GetPayload() *models.ErrorResponse {

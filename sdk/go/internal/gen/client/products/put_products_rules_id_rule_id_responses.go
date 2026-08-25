@@ -46,7 +46,7 @@ func (o *PutProductsRulesIDRuleIDReader) ReadResponse(response runtime.ClientRes
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /products/rules/{id}/{ruleId}] PutProductsRulesIDRuleID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/products/rules/{id}/{ruleId}] putProductsRulesIDRuleID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PutProductsRulesIDRuleIDOK) Code() int {
 
 func (o *PutProductsRulesIDRuleIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdOK %s", 200, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdOK %s", 200, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDOK) GetPayload() *models.DataProductRule {
@@ -162,12 +162,12 @@ func (o *PutProductsRulesIDRuleIDBadRequest) Code() int {
 
 func (o *PutProductsRulesIDRuleIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdBadRequest %s", 400, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdBadRequest %s", 400, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PutProductsRulesIDRuleIDNotFound) Code() int {
 
 func (o *PutProductsRulesIDRuleIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdNotFound %s", 404, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdNotFound %s", 404, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PutProductsRulesIDRuleIDInternalServerError) Code() int {
 
 func (o *PutProductsRulesIDRuleIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/products/rules/{id}/{ruleId}][%d] putProductsRulesIdRuleIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutProductsRulesIDRuleIDInternalServerError) GetPayload() *models.ErrorResponse {

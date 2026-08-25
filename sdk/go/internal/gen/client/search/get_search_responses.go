@@ -40,7 +40,7 @@ func (o *GetSearchReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /search] GetSearch", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/search] getSearch", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetSearchOK) Code() int {
 
 func (o *GetSearchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchOK %s", 200, payload)
 }
 
 func (o *GetSearchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchOK %s", 200, payload)
 }
 
 func (o *GetSearchOK) GetPayload() *models.SearchResponse {
@@ -156,12 +156,12 @@ func (o *GetSearchBadRequest) Code() int {
 
 func (o *GetSearchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetSearchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetSearchBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetSearchInternalServerError) Code() int {
 
 func (o *GetSearchInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetSearchInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /search][%d] getSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/search][%d] getSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetSearchInternalServerError) GetPayload() *models.ErrorResponse {

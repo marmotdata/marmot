@@ -46,7 +46,7 @@ func (o *PostRolesIDPermissionsReader) ReadResponse(response runtime.ClientRespo
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /roles/{id}/permissions] PostRolesIDPermissions", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/roles/{id}/permissions] postRolesIDPermissions", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostRolesIDPermissionsOK) Code() int {
 
 func (o *PostRolesIDPermissionsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsOK %s", 200, payload)
 }
 
 func (o *PostRolesIDPermissionsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsOK %s", 200, payload)
 }
 
 func (o *PostRolesIDPermissionsOK) GetPayload() *models.Role {
@@ -162,12 +162,12 @@ func (o *PostRolesIDPermissionsBadRequest) Code() int {
 
 func (o *PostRolesIDPermissionsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsBadRequest %s", 400, payload)
 }
 
 func (o *PostRolesIDPermissionsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsBadRequest %s", 400, payload)
 }
 
 func (o *PostRolesIDPermissionsBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostRolesIDPermissionsNotFound) Code() int {
 
 func (o *PostRolesIDPermissionsNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsNotFound %s", 404, payload)
 }
 
 func (o *PostRolesIDPermissionsNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsNotFound %s", 404, payload)
 }
 
 func (o *PostRolesIDPermissionsNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostRolesIDPermissionsUnprocessableEntity) Code() int {
 
 func (o *PostRolesIDPermissionsUnprocessableEntity) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsUnprocessableEntity %s", 422, payload)
 }
 
 func (o *PostRolesIDPermissionsUnprocessableEntity) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles/{id}/permissions][%d] postRolesIdPermissionsUnprocessableEntity %s", 422, payload)
+	return fmt.Sprintf("[POST /api/v1/roles/{id}/permissions][%d] postRolesIdPermissionsUnprocessableEntity %s", 422, payload)
 }
 
 func (o *PostRolesIDPermissionsUnprocessableEntity) GetPayload() *models.ErrorResponse {

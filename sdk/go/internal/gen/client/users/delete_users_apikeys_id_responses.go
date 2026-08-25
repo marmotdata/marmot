@@ -34,7 +34,7 @@ func (o *DeleteUsersApikeysIDReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /users/apikeys/{id}] DeleteUsersApikeysID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/users/apikeys/{id}] deleteUsersApikeysID", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *DeleteUsersApikeysIDNoContent) Code() int {
 }
 
 func (o *DeleteUsersApikeysIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /users/apikeys/{id}][%d] deleteUsersApikeysIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdNoContent", 204)
 }
 
 func (o *DeleteUsersApikeysIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /users/apikeys/{id}][%d] deleteUsersApikeysIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdNoContent", 204)
 }
 
 func (o *DeleteUsersApikeysIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *DeleteUsersApikeysIDBadRequest) Code() int {
 
 func (o *DeleteUsersApikeysIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/apikeys/{id}][%d] deleteUsersApikeysIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteUsersApikeysIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/apikeys/{id}][%d] deleteUsersApikeysIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteUsersApikeysIDBadRequest) GetPayload() *models.ErrorResponse {

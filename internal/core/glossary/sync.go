@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math"
 	"reflect"
 	"slices"
 	"strings"
@@ -223,7 +224,12 @@ func descriptionOf(in TermInput) *string {
 // metadataOf carries the source's own metadata through, with synonyms
 // folded in because the table has no column for them.
 func metadataOf(in TermInput) map[string]interface{} {
-	metadata := make(map[string]interface{}, len(in.Metadata)+1)
+	capHint := len(in.Metadata)
+	if capHint < math.MaxInt {
+		capHint++
+	}
+
+	metadata := make(map[string]interface{}, capHint)
 	maps.Copy(metadata, in.Metadata)
 
 	if len(in.Synonyms) > 0 {

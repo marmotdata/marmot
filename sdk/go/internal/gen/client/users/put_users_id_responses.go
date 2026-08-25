@@ -40,7 +40,7 @@ func (o *PutUsersIDReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /users/{id}] PutUsersID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/users/{id}] putUsersID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PutUsersIDOK) Code() int {
 
 func (o *PutUsersIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdOK %s", 200, payload)
 }
 
 func (o *PutUsersIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdOK %s", 200, payload)
 }
 
 func (o *PutUsersIDOK) GetPayload() *models.User {
@@ -156,12 +156,12 @@ func (o *PutUsersIDBadRequest) Code() int {
 
 func (o *PutUsersIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
 }
 
 func (o *PutUsersIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
 }
 
 func (o *PutUsersIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PutUsersIDNotFound) Code() int {
 
 func (o *PutUsersIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdNotFound %s", 404, payload)
 }
 
 func (o *PutUsersIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdNotFound %s", 404, payload)
 }
 
 func (o *PutUsersIDNotFound) GetPayload() *models.ErrorResponse {

@@ -40,7 +40,7 @@ func (o *GetOwnersSearchReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /owners/search] GetOwnersSearch", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/owners/search] getOwnersSearch", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetOwnersSearchOK) Code() int {
 
 func (o *GetOwnersSearchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchOK %s", 200, payload)
 }
 
 func (o *GetOwnersSearchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchOK %s", 200, payload)
 }
 
 func (o *GetOwnersSearchOK) GetPayload() *models.SearchOwnersResponse {
@@ -156,12 +156,12 @@ func (o *GetOwnersSearchBadRequest) Code() int {
 
 func (o *GetOwnersSearchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetOwnersSearchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetOwnersSearchBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetOwnersSearchInternalServerError) Code() int {
 
 func (o *GetOwnersSearchInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetOwnersSearchInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/owners/search][%d] getOwnersSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetOwnersSearchInternalServerError) GetPayload() *models.ErrorResponse {

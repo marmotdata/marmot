@@ -509,33 +509,6 @@ func containsMRN(created map[string]struct{}, mrnValue string) bool {
 	return ok
 }
 
-// relationalTableName turns the path of a relational dataset URI into the
-// name the Marmot plugin that owns the table uses. Airflow writes these as
-// authority/database/schema/table; the first segment after "://" is the
-// authority by URI syntax and is never part of a table's identity. levels
-// is how many trailing levels the owning plugin keeps: plugins/postgresql,
-// plugins/mysql and plugins/bigquery keep two, warehouses with no Marmot
-// plugin keep three.
-func relationalTableName(path string, levels int) string {
-	var segments []string
-	for _, seg := range strings.Split(path, "/") {
-		if seg != "" {
-			segments = append(segments, seg)
-		}
-	}
-	if len(segments) == 0 {
-		return path
-	}
-	// Drop the authority (host:port, account, project).
-	if len(segments) > 1 {
-		segments = segments[1:]
-	}
-	if len(segments) > levels {
-		segments = segments[len(segments)-levels:]
-	}
-	return strings.Join(segments, ".")
-}
-
 // parseDatasetURI parses an Airflow Dataset URI and returns provider, asset type, and name.
 func parseDatasetURI(uri string) (provider, assetType, name string) {
 	provider = "Airflow"
@@ -566,31 +539,37 @@ func parseDatasetURI(uri string) (provider, assetType, name string) {
 			} else {
 				name = path
 			}
-		// The relational schemes name a table some other Marmot plugin
-		// already owns, so they are addressed the way that plugin addresses
-		// them rather than by the whole URI path.
+		// The relational schemes keep the whole URI path as the name.
+		// Airflow writes these as authority/database/schema/table, so the
+		// name does not match what plugins/postgresql, plugins/mysql or
+		// plugins/bigquery emit, and a lineage edge from an Airflow
+		// dataset to one of their tables is dropped by the server for
+		// pointing at an MRN nothing created.
+		//
+		// Reshaping the name here would fix that and is deliberately not
+		// done: the name is the identity, so changing it renames every
+		// Airflow-discovered table and strands the rows already in the
+		// catalog. It needs a migration to move them first.
 		case "postgresql", "postgres":
 			provider = "PostgreSQL"
 			assetType = "Table"
-			name = relationalTableName(path, 2)
+			name = path
 		case "mysql":
 			provider = "MySQL"
 			assetType = "Table"
-			name = relationalTableName(path, 2)
+			name = path
 		case "bigquery", "bq":
 			provider = "BigQuery"
 			assetType = "Table"
-			name = relationalTableName(path, 2)
-		// No Marmot plugin owns these two, so all three levels stay, which
-		// is also what the OpenMetadata projection does for them.
+			name = path
 		case "snowflake":
 			provider = "Snowflake"
 			assetType = "Table"
-			name = relationalTableName(path, 3)
+			name = path
 		case "redshift":
 			provider = "Redshift"
 			assetType = "Table"
-			name = relationalTableName(path, 3)
+			name = path
 		case "http", "https":
 			provider = "HTTP"
 			assetType = "Endpoint"

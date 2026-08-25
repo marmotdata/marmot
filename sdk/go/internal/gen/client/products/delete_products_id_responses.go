@@ -46,7 +46,7 @@ func (o *DeleteProductsIDReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /products/{id}] DeleteProductsID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/products/{id}] deleteProductsID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *DeleteProductsIDOK) Code() int {
 
 func (o *DeleteProductsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdOK %s", 200, payload)
 }
 
 func (o *DeleteProductsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdOK %s", 200, payload)
 }
 
 func (o *DeleteProductsIDOK) GetPayload() map[string]string {
@@ -160,12 +160,12 @@ func (o *DeleteProductsIDBadRequest) Code() int {
 
 func (o *DeleteProductsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteProductsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteProductsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *DeleteProductsIDNotFound) Code() int {
 
 func (o *DeleteProductsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteProductsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteProductsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *DeleteProductsIDInternalServerError) Code() int {
 
 func (o *DeleteProductsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteProductsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/{id}][%d] deleteProductsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/{id}][%d] deleteProductsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteProductsIDInternalServerError) GetPayload() *models.ErrorResponse {
