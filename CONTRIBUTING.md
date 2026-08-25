@@ -28,7 +28,7 @@ Found a bug? Help us fix it by:
 
 Have an idea for a new feature?
 
-1. Check existing [feature requests](https://github.com/marmotdata/marmot/issues?q=is%3Aissue+label%3Aenhancement)
+1. Check existing [feature requests](https://github.com/marmotdata/marmot/issues?q=is%3Aissue+label%3A%22kind%2Ffeature%22)
 2. Open a new issue with:
    - A clear description of the feature
    - The problem it solves
@@ -64,6 +64,39 @@ All submissions require review. We aim to:
 - Respond to pull requests within 48 hours
 - Provide constructive, helpful feedback
 - Work with you to get your contribution merged
+
+### Bot commands
+
+We use [Prow](https://docs.prow.k8s.io/)-style slash commands, via
+[`cncf/prow-github-actions`](https://github.com/cncf/prow-github-actions). Put a command on its
+own line in a comment.
+
+Anyone can use these on their own pull request:
+
+| Command | Effect |
+| --- | --- |
+| `/assign` / `/unassign [@user]` | Assign yourself, or someone who is already involved |
+| `/cc` / `/uncc [@user]` | Request or withdraw a review request |
+
+Maintainers additionally have `/lgtm`, `/hold`, `/area`, `/kind`, `/priority`, `/remove`,
+`/retitle`, `/milestone`, `/close` and `/reopen`.
+
+There is deliberately no `/approve`. Approving a pull request is a UI action, so that the
+approval is attributed to the maintainer who actually gave it rather than to a bot.
+
+How a PR merges. Two things have to be true: a maintainer has commented `/lgtm`, which adds the
+`lgtm` label, and the PR satisfies branch protection, meaning required checks green and an
+approving review from someone other than the author. `marmot-ci-robot` then squash-merges it on
+the next hourly pass. `/hold` blocks the merge until someone comments `/hold cancel`.
+
+Pushing a new commit removes the `lgtm` label and dismisses the approval, so an updated PR needs
+a fresh review. On pull requests from forks the label sometimes survives the push, because the
+bot cannot write to fork PRs. The dismissed approval still holds the merge, so this is cosmetic.
+
+One sharp edge worth knowing: the bot matches commands anywhere in a comment, not just at the
+start of a line. Quoting someone else's `/lgtm` in a reply will re-apply it, and writing prose
+like "what /kind of error" will apply a label. If you need to mention a command without running
+it, break it up (`/ lgtm`).
 
 ## Questions?
 

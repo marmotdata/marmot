@@ -1,0 +1,61 @@
+area/server:
+  - changed-files:
+      - any-glob-to-any-file:
+          - internal/**
+          - cmd/**
+          - pkg/**
+
+area/frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - web/**
+
+area/plugins:
+  - changed-files:
+      - any-glob-to-any-file:
+          - plugins/**
+
+area/sdk:
+  - changed-files:
+      - any-glob-to-any-file:
+          - sdk/**
+
+area/chart:
+  - changed-files:
+      - any-glob-to-any-file:
+          - charts/**
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - README.md
+          - CONTRIBUTING.md
+
+area/search:
+  - changed-files:
+      - any-glob-to-any-file:
+          - internal/search/**
+          - internal/query/**
+
+area/auth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - internal/oauth2/**
+          - internal/crypto/**
+
+area/mcp:
+  - changed-files:
+      - any-glob-to-any-file:
+          - internal/mcp/**
+          - .ai/mcp/**
+
+area/build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - Dockerfile*
+          - Makefile
+          - .goreleaser.yaml
+          - install.sh
+          - Tiltfile
+          - .github/**
