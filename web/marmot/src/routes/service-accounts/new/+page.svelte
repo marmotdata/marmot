@@ -7,7 +7,7 @@
 	import { createServiceAccount } from '$lib/serviceaccounts/api';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role } from '$lib/roles/types';
-	import { toasts } from '$lib/stores/toast';
+	import { toasts, ApiError, isLimitExceeded } from '$lib/stores/toast';
 	import { onMount } from 'svelte';
 
 	let name = $state('');
@@ -74,6 +74,7 @@
 			goto(resolve(`/service-accounts/${sa.id}`));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to create service account';
+			if (err instanceof ApiError && isLimitExceeded(err)) toasts.warning(err.message);
 		} finally {
 			saving = false;
 		}

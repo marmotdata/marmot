@@ -46,7 +46,7 @@ func (o *GetGlossaryAncestorsIDReader) ReadResponse(response runtime.ClientRespo
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /glossary/ancestors/{id}] GetGlossaryAncestorsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/glossary/ancestors/{id}] getGlossaryAncestorsID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetGlossaryAncestorsIDOK) Code() int {
 
 func (o *GetGlossaryAncestorsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryAncestorsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryAncestorsIDOK) GetPayload() any {
@@ -160,12 +160,12 @@ func (o *GetGlossaryAncestorsIDBadRequest) Code() int {
 
 func (o *GetGlossaryAncestorsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryAncestorsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryAncestorsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *GetGlossaryAncestorsIDNotFound) Code() int {
 
 func (o *GetGlossaryAncestorsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryAncestorsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryAncestorsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *GetGlossaryAncestorsIDInternalServerError) Code() int {
 
 func (o *GetGlossaryAncestorsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryAncestorsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/ancestors/{id}][%d] getGlossaryAncestorsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryAncestorsIDInternalServerError) GetPayload() *models.ErrorResponse {

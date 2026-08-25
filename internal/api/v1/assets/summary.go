@@ -21,9 +21,12 @@ type AssetSummaryResponse struct {
 // @Tags assets
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetSummaryResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/summary [get]
+// @ID getAssetsSummary
+// @Router /api/v1/assets/summary [get]
 func (h *Handler) summaryAssets(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.assetService.Summary(r.Context())
 	if err != nil {

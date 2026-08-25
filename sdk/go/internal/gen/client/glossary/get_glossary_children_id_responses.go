@@ -46,7 +46,7 @@ func (o *GetGlossaryChildrenIDReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /glossary/children/{id}] GetGlossaryChildrenID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/glossary/children/{id}] getGlossaryChildrenID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *GetGlossaryChildrenIDOK) Code() int {
 
 func (o *GetGlossaryChildrenIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryChildrenIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdOK %s", 200, payload)
 }
 
 func (o *GetGlossaryChildrenIDOK) GetPayload() any {
@@ -160,12 +160,12 @@ func (o *GetGlossaryChildrenIDBadRequest) Code() int {
 
 func (o *GetGlossaryChildrenIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryChildrenIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdBadRequest %s", 400, payload)
 }
 
 func (o *GetGlossaryChildrenIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *GetGlossaryChildrenIDNotFound) Code() int {
 
 func (o *GetGlossaryChildrenIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryChildrenIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdNotFound %s", 404, payload)
 }
 
 func (o *GetGlossaryChildrenIDNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *GetGlossaryChildrenIDInternalServerError) Code() int {
 
 func (o *GetGlossaryChildrenIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryChildrenIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/glossary/children/{id}][%d] getGlossaryChildrenIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetGlossaryChildrenIDInternalServerError) GetPayload() *models.ErrorResponse {

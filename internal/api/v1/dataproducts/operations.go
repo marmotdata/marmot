@@ -65,12 +65,15 @@ type RulesResponse struct {
 // @Accept json
 // @Produce json
 // @Param product body CreateRequest true "Data product to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/ [post]
+// @ID postProducts
+// @Router /api/v1/products/ [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -144,11 +147,14 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/{id} [get]
+// @ID getProductsID
+// @Router /api/v1/products/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -180,12 +186,15 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param product body UpdateRequest true "Fields to update"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/{id} [put]
+// @ID putProductsID
+// @Router /api/v1/products/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -243,11 +252,14 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/{id} [delete]
+// @ID deleteProductsID
+// @Router /api/v1/products/{id} [delete]
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -276,9 +288,12 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param limit query int false "Maximum number of data products to return" default(20)
 // @Param offset query int false "Number of data products to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ListResult
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/list [get]
+// @ID getProductsList
+// @Router /api/v1/products/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -301,10 +316,13 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 // @Param tags query string false "Comma-separated list of tags to filter by"
 // @Param limit query int false "Maximum number of data products to return" default(20)
 // @Param offset query int false "Number of data products to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ListResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/search [get]
+// @ID getProductsSearch
+// @Router /api/v1/products/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -344,11 +362,14 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param limit query int false "Maximum number of assets to return" default(20)
 // @Param offset query int false "Number of assets to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.AssetsResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/assets/{id} [get]
+// @ID getProductsAssetsID
+// @Router /api/v1/products/assets/{id} [get]
 func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/assets/")
 	if id == "" {
@@ -381,12 +402,15 @@ func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param assets body AddAssetsRequest true "Asset IDs to add"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/assets/{id} [post]
+// @ID postProductsAssetsID
+// @Router /api/v1/products/assets/{id} [post]
 func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/assets/")
 	if id == "" {
@@ -429,11 +453,14 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param assetId path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/assets/{id}/{assetId} [delete]
+// @ID deleteProductsAssetsIDAssetID
+// @Router /api/v1/products/assets/{id}/{assetId} [delete]
 func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 	// URL format: /api/v1/products/assets/{productId}/{assetId}
 	// After trimming prefix: assets/{productId}/{assetId}
@@ -466,11 +493,14 @@ func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} RulesResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/rules/{id} [get]
+// @ID getProductsRulesID
+// @Router /api/v1/products/rules/{id} [get]
 func (h *Handler) getRules(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/rules/")
 	if id == "" {
@@ -503,11 +533,14 @@ func (h *Handler) getRules(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param rule body RuleRequest true "Rule to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} dataproduct.Rule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/rules/{id} [post]
+// @ID postProductsRulesID
+// @Router /api/v1/products/rules/{id} [post]
 func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/rules/")
 	if id == "" {
@@ -558,11 +591,14 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param ruleId path string true "Rule ID"
 // @Param rule body RuleRequest true "Rule fields to update"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.Rule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/rules/{id}/{ruleId} [put]
+// @ID putProductsRulesIDRuleID
+// @Router /api/v1/products/rules/{id}/{ruleId} [put]
 func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/"), "/")
 	if len(parts) < 3 {
@@ -613,11 +649,14 @@ func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param ruleId path string true "Rule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/rules/{id}/{ruleId} [delete]
+// @ID deleteProductsRulesIDRuleID
+// @Router /api/v1/products/rules/{id}/{ruleId} [delete]
 func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/"), "/")
 	if len(parts) < 3 {
@@ -649,10 +688,13 @@ func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param rule body RuleRequest true "Rule to preview"
 // @Param limit query int false "Maximum number of matching assets to return" default(20)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.RulePreview
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/rule-preview [post]
+// @ID postProductsRulePreview
+// @Router /api/v1/products/rule-preview [post]
 func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	var req RuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -691,11 +733,14 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param limit query int false "Maximum number of assets to return" default(20)
 // @Param offset query int false "Number of assets to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ResolvedAssets
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/resolved-assets/{id} [get]
+// @ID getProductsResolvedAssetsID
+// @Router /api/v1/products/resolved-assets/{id} [get]
 func (h *Handler) getResolvedAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/resolved-assets/")
 	if id == "" {
@@ -737,11 +782,14 @@ func extractIDFromPath(path, prefix string) string {
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
 // @Param file formData file true "Image file"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ProductImageMeta
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/images/{id}/{purpose} [post]
+// @ID postProductsImagesIDPurpose
+// @Router /api/v1/products/images/{id}/{purpose} [post]
 func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	// Parse URL: /api/v1/products/images/{id}/{purpose}
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
@@ -826,10 +874,13 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 // @Produce image/jpeg,image/png,image/gif,image/webp
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {file} binary
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/images/{id}/{purpose} [get]
+// @ID getProductsImagesIDPurpose
+// @Router /api/v1/products/images/{id}/{purpose} [get]
 func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	// Parse URL: /api/v1/products/images/{id}/{purpose}
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
@@ -878,10 +929,13 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/images/{id}/{purpose} [delete]
+// @ID deleteProductsImagesIDPurpose
+// @Router /api/v1/products/images/{id}/{purpose} [delete]
 func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
 	// Parse URL: /api/v1/products/images/{id}/{purpose}
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
@@ -915,10 +969,13 @@ func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /products/images/{id} [get]
+// @ID getProductsImagesID
+// @Router /api/v1/products/images/{id} [get]
 func (h *Handler) listImages(w http.ResponseWriter, r *http.Request) {
 	// Parse URL: /api/v1/products/images/{id}
 	productID := strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/")

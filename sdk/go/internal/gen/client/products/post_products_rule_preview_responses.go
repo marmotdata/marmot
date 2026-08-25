@@ -40,7 +40,7 @@ func (o *PostProductsRulePreviewReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /products/rule-preview] PostProductsRulePreview", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/products/rule-preview] postProductsRulePreview", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostProductsRulePreviewOK) Code() int {
 
 func (o *PostProductsRulePreviewOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewOK %s", 200, payload)
 }
 
 func (o *PostProductsRulePreviewOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewOK %s", 200, payload)
 }
 
 func (o *PostProductsRulePreviewOK) GetPayload() *models.DataProductRulePreview {
@@ -156,12 +156,12 @@ func (o *PostProductsRulePreviewBadRequest) Code() int {
 
 func (o *PostProductsRulePreviewBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsRulePreviewBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsRulePreviewBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostProductsRulePreviewInternalServerError) Code() int {
 
 func (o *PostProductsRulePreviewInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsRulePreviewInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/rule-preview][%d] postProductsRulePreviewInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/rule-preview][%d] postProductsRulePreviewInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsRulePreviewInternalServerError) GetPayload() *models.ErrorResponse {

@@ -8,7 +8,7 @@
 	import Avatar from '$components/user/Avatar.svelte';
 	import { listRoles } from '$lib/roles/api';
 	import { fetchApi } from '$lib/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
 	import type { Role } from '$lib/roles/types';
 
 	let username = $state('');
@@ -128,7 +128,9 @@
 				body: JSON.stringify(payload)
 			});
 			if (!res.ok) {
-				error = await handleApiError(res);
+				const info = await parseApiError(res);
+				error = info.message;
+				if (isLimitExceeded(info)) toasts.warning(info.message);
 				return;
 			}
 

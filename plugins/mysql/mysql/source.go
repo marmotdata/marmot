@@ -302,10 +302,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]p
 			assetDesc = fmt.Sprintf("MySQL table %s.%s in database %s", schemaName, objectName, dbName)
 		}
 
-		// One server holds many databases, and each can hold a table of the
-		// same name, so the database belongs in the identity. Name stays the
-		// bare object name.
-		mrnValue := assetMRN(assetType, schemaName, objectName)
+		mrnValue := mrn.New(assetType, "MySQL", objectName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -411,8 +408,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]plug
 
 		// Must match the identity the table assets were given above, or the
 		// edge points at an MRN that is never created.
-		sourceMRN := assetMRN("Table", sourceSchema, sourceTable)
-		targetMRN := assetMRN("Table", targetSchema.String, targetTable.String)
+		sourceMRN := mrn.New("Table", "MySQL", sourceTable)
+		targetMRN := mrn.New("Table", "MySQL", targetTable.String)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -554,13 +551,6 @@ func convertMySQLValue(val interface{}) interface{} {
 		// For other types, return as is
 		return val
 	}
-}
-
-// assetMRN is what identifies an object in this catalog. One server holds many databases, each able to hold the same table name.
-// The name shown in the UI stays the object's own name; only the MRN
-// carries the path.
-func assetMRN(assetType, parent, name string) string {
-	return mrn.New(assetType, "MySQL", parent+"."+name)
 }
 
 // databaseAsset is the container the discovered tables and views hang

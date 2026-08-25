@@ -28,7 +28,7 @@ func (o *GetAuthProvidersReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /auth-providers] GetAuthProviders", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /auth-providers] getAuthProviders", response, response.Code())
 	}
 }
 

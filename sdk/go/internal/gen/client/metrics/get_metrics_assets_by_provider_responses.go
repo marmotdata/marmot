@@ -28,7 +28,7 @@ func (o *GetMetricsAssetsByProviderReader) ReadResponse(response runtime.ClientR
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /metrics/assets/by-provider] GetMetricsAssetsByProvider", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/metrics/assets/by-provider] getMetricsAssetsByProvider", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetMetricsAssetsByProviderOK) Code() int {
 
 func (o *GetMetricsAssetsByProviderOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/assets/by-provider][%d] getMetricsAssetsByProviderOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/assets/by-provider][%d] getMetricsAssetsByProviderOK %s", 200, payload)
 }
 
 func (o *GetMetricsAssetsByProviderOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/assets/by-provider][%d] getMetricsAssetsByProviderOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/assets/by-provider][%d] getMetricsAssetsByProviderOK %s", 200, payload)
 }
 
 func (o *GetMetricsAssetsByProviderOK) GetPayload() *models.AssetsByProviderResponse {

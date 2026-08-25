@@ -34,7 +34,7 @@ func (o *DeleteUsersOauthUnlinkIDProviderReader) ReadResponse(response runtime.C
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /users/oauth/unlink/{id}/{provider}] DeleteUsersOauthUnlinkIDProvider", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/users/oauth/unlink/{id}/{provider}] deleteUsersOauthUnlinkIDProvider", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *DeleteUsersOauthUnlinkIDProviderNoContent) Code() int {
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderNoContent", 204)
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderNoContent) String() string {
-	return fmt.Sprintf("[DELETE /users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderNoContent", 204)
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) Code() int {
 
 func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderBadRequest %s", 400, payload)
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderBadRequest %s", 400, payload)
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) GetPayload() *models.ErrorResponse {

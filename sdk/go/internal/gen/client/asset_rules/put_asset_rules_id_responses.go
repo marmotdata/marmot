@@ -52,7 +52,7 @@ func (o *PutAssetRulesIDReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /asset-rules/{id}] PutAssetRulesID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/asset-rules/{id}] putAssetRulesID", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PutAssetRulesIDOK) Code() int {
 
 func (o *PutAssetRulesIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdOK %s", 200, payload)
 }
 
 func (o *PutAssetRulesIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdOK %s", 200, payload)
 }
 
 func (o *PutAssetRulesIDOK) GetPayload() *models.AssetRule {
@@ -168,12 +168,12 @@ func (o *PutAssetRulesIDBadRequest) Code() int {
 
 func (o *PutAssetRulesIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdBadRequest %s", 400, payload)
 }
 
 func (o *PutAssetRulesIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdBadRequest %s", 400, payload)
 }
 
 func (o *PutAssetRulesIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PutAssetRulesIDNotFound) Code() int {
 
 func (o *PutAssetRulesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdNotFound %s", 404, payload)
 }
 
 func (o *PutAssetRulesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdNotFound %s", 404, payload)
 }
 
 func (o *PutAssetRulesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PutAssetRulesIDConflict) Code() int {
 
 func (o *PutAssetRulesIDConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdConflict %s", 409, payload)
 }
 
 func (o *PutAssetRulesIDConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdConflict %s", 409, payload)
 }
 
 func (o *PutAssetRulesIDConflict) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PutAssetRulesIDInternalServerError) Code() int {
 
 func (o *PutAssetRulesIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutAssetRulesIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /asset-rules/{id}][%d] putAssetRulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/asset-rules/{id}][%d] putAssetRulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutAssetRulesIDInternalServerError) GetPayload() *models.ErrorResponse {

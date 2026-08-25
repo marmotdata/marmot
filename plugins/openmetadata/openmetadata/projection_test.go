@@ -1,6 +1,7 @@
 package openmetadata
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -16,9 +17,9 @@ func TestProjection_PostgresTableMatchesThePostgresPlugin(t *testing.T) {
 	p := projectionFor("Postgres")
 
 	assert.Equal(t, "PostgreSQL", p.Provider)
-	assert.Equal(t, "shop.public.orders", p.TableName("shop", "public", "orders"),
-		"the PostgreSQL plugin identifies a table by schema.table, because one database holds many schemas")
-	assert.Equal(t, mrn.New("Table", "PostgreSQL", "shop.public.orders"),
+	assert.Equal(t, "orders", p.TableName("shop", "public", "orders"),
+		"the PostgreSQL plugin names a table by its bare object name")
+	assert.Equal(t, mrn.New("Table", "PostgreSQL", "orders"),
 		mrn.New("Table", p.Provider, p.TableName("shop", "public", "orders")))
 }
 
@@ -26,16 +27,16 @@ func TestProjection_MysqlTableMatchesTheMysqlPlugin(t *testing.T) {
 	p := projectionFor("Mysql")
 
 	assert.Equal(t, "MySQL", p.Provider)
-	assert.Equal(t, "shop.orders", p.TableName("default", "shop", "orders"),
-		"the MySQL plugin identifies a table by database.table")
+	assert.Equal(t, "orders", p.TableName("default", "shop", "orders"),
+		"the MySQL plugin names a table by its bare object name")
 }
 
 func TestProjection_BigQueryTableMatchesTheBigQueryPlugin(t *testing.T) {
 	p := projectionFor("BigQuery")
 
 	assert.Equal(t, "BigQuery", p.Provider)
-	assert.Equal(t, "analytics.orders", p.TableName("my-project", "analytics", "orders"),
-		"the BigQuery plugin identifies a table by dataset.table")
+	assert.Equal(t, "orders", p.TableName("my-project", "analytics", "orders"),
+		"the BigQuery plugin names a table by its bare table id")
 }
 
 func TestProjection_BigQueryGroupsTablesUnderTheDataset(t *testing.T) {
@@ -79,17 +80,17 @@ func TestProjection_GlueTableMatchesTheGluePlugin(t *testing.T) {
 	p := projectionFor("Glue")
 
 	assert.Equal(t, "Glue", p.Provider)
-	assert.Equal(t, "analytics.orders", p.TableName("catalog", "analytics", "orders"),
-		"the Glue plugin builds its MRN from database.table")
+	assert.Equal(t, "orders", p.TableName("catalog", "analytics", "orders"),
+		"the Glue plugin sets Name to the bare table name, and identity comes from Name")
 }
 
 func TestProjection_AthenaIsCataloguedAsGlue(t *testing.T) {
-	// An Athena table is a Glue Data Catalog table, and plugins/glue
-	// builds mrn.New("Table", "Glue", database+"."+table) for it.
+	// An Athena table is a Glue Data Catalog table. plugins/glue sets Name
+	// to the bare table, so its assets land on mrn://table/glue/<table>.
 	p := projectionFor("Athena")
 
 	assert.Equal(t, "Glue", p.Provider)
-	assert.Equal(t, mrn.New("Table", "Glue", "analytics.customer_events"),
+	assert.Equal(t, mrn.New("Table", "Glue", "customer_events"),
 		mrn.New("Table", p.Provider, p.TableName("awsdatacatalog", "analytics", "customer_events")))
 }
 
@@ -224,20 +225,26 @@ func TestAssetTypeFor_BigQueryExternalTablesMatchTheBigQueryPlugin(t *testing.T)
 }
 
 // Every technology Marmot has a native plugin for must be projected onto
-// exactly the MRN that plugin declares, or an OpenMetadata import files a
-// second copy of a table the plugin already owns and the handover to the
-// real plugin duplicates instead of merging.
+// exactly the identity that plugin's assets land on, or an OpenMetadata
+// import files a second copy of a table the plugin already owns and the
+// handover to the real plugin duplicates instead of merging.
 //
-// The "declares" is load-bearing: a plugin's Name is a display field and is
-// usually the object's bare name, while its identity is the value it passes
-// to mrn.New. Ingest carries a declared MRN through untouched, so the
-// mrn.New call is what these have to be matched against. An earlier version
-// of this test asserted bare names, which was only true while the ingest
-// API dropped the MRN and rebuilt it from Name.
+// Which value that is, is the load-bearing part: the value to match is
+// the plugin's Name, NOT the string it passes to mrn.New. Several plugins
+// declare a qualified MRN and then set a bare Name (clickhouse, glue,
+// iceberg, deltalake); the Name is what wins on ingest, so these follow
+// it.
 //
-// Each case cites the plugin call it copies. When a plugin and this table
+// That makes most of this table nameOnly, which means an OpenMetadata
+// import cannot tell shop.orders from staging.orders. That is a real
+// limitation and it is the accepted one: matching the plugin exactly is
+// worth more than distinguishing them, because a mismatch produces two
+// half-populated assets instead of one good one. Per-run qualified naming
+// is available via the naming: qualified config.
+//
+// Each case cites the plugin field it copies. When a plugin and this table
 // disagree, the plugin wins and this table changes.
-func TestProjection_MatchesWhatNativePluginsDeclare(t *testing.T) {
+func TestProjection_MatchesTheNameEachNativePluginSets(t *testing.T) {
 	tests := []struct {
 		name        string
 		serviceType string
@@ -250,56 +257,57 @@ func TestProjection_MatchesWhatNativePluginsDeclare(t *testing.T) {
 		{
 			name: "postgres", serviceType: "Postgres",
 			database: "shop", schema: "public", object: "orders",
-			wantProvider: "PostgreSQL", wantName: "shop.public.orders",
-			authority: "plugins/postgresql/postgresql/source.go assetMRN: database.schema.table",
+			wantProvider: "PostgreSQL", wantName: "orders",
+			authority: "plugins/postgresql/postgresql/source.go: Name is the bare object name",
 		},
 		{
 			name: "mysql", serviceType: "Mysql",
 			database: "default", schema: "shop", object: "orders",
-			wantProvider: "MySQL", wantName: "shop.orders",
-			authority: "plugins/mysql/mysql/source.go assetMRN: database.table",
+			wantProvider: "MySQL", wantName: "orders",
+			authority: "plugins/mysql/mysql/source.go: Name is the bare object name",
 		},
 		{
 			name: "bigquery", serviceType: "BigQuery",
 			database: "my-gcp-project", schema: "analytics", object: "orders",
-			wantProvider: "BigQuery", wantName: "analytics.orders",
-			authority: "plugins/bigquery/bigquery/source.go assetMRN: dataset.table, project deliberately excluded",
+			wantProvider: "BigQuery", wantName: "orders",
+			authority: "plugins/bigquery/bigquery/source.go: Name is the bare table id",
 		},
 		{
 			name: "mongodb", serviceType: "MongoDB",
 			database: "default", schema: "shop", object: "orders",
-			wantProvider: "MongoDB", wantName: "shop.orders",
-			authority: "plugins/mongodb/mongodb/collection.go assetMRN: database.collection",
+			wantProvider: "MongoDB", wantName: "orders",
+			authority: "plugins/mongodb/mongodb/collection.go: Name is the bare collection name",
 		},
 		{
 			name: "clickhouse", serviceType: "Clickhouse",
 			database: "default", schema: "shop", object: "orders",
-			wantProvider: "ClickHouse", wantName: "shop.orders",
-			authority: "plugins/clickhouse/clickhouse/source.go: database.table",
+			wantProvider: "ClickHouse", wantName: "orders",
+			authority: "plugins/clickhouse/clickhouse/source.go: declares database.table but Name is bare, and Name wins",
 		},
 		{
 			name: "glue", serviceType: "Glue",
 			database: "default", schema: "analytics", object: "orders",
-			wantProvider: "Glue", wantName: "analytics.orders",
-			authority: "plugins/glue/glue/source.go: database.table",
+			wantProvider: "Glue", wantName: "orders",
+			authority: "plugins/glue/glue/source.go: declares database.table but Name is bare, and Name wins",
 		},
 		{
 			// Athena keeps no catalog of its own: its tables are Glue Data
 			// Catalog tables, so it is projected onto the Glue plugin.
 			name: "athena is glue", serviceType: "Athena",
 			database: "seed_athena_db", schema: "analytics", object: "orders",
-			wantProvider: "Glue", wantName: "analytics.orders",
-			authority: "plugins/glue/glue/source.go: database.table",
+			wantProvider: "Glue", wantName: "orders",
+			authority: "plugins/glue/glue/source.go: declares database.table but Name is bare, and Name wins",
 		},
 		{
 			name: "iceberg", serviceType: "Iceberg",
 			database: "default", schema: "ns", object: "orders",
-			wantProvider: "Iceberg", wantName: "ns.orders",
-			authority: "plugins/iceberg/iceberg/table.go: namespace.table",
+			wantProvider: "Iceberg", wantName: "orders",
+			authority: "plugins/iceberg/iceberg/table.go: declares namespace.table but Name is bare, and Name wins",
 		},
 		{
-			// Delta Lake really is bare: its plugin names a table by the
-			// last path segment of its location.
+			// Delta Lake is bare for its own reason rather than by this
+			// rule: its plugin names a table by the last path segment of
+			// the table's location, which has no schema in it to drop.
 			name: "delta lake", serviceType: "DeltaLake",
 			database: "default", schema: "ns", object: "orders",
 			wantProvider: "Delta Lake", wantName: "orders",
@@ -316,8 +324,8 @@ func TestProjection_MatchesWhatNativePluginsDeclare(t *testing.T) {
 			// that plugins/postgresql already reads.
 			name: "timescale is postgres", serviceType: "Timescale",
 			database: "shop", schema: "public", object: "metrics",
-			wantProvider: "PostgreSQL", wantName: "shop.public.metrics",
-			authority: "plugins/postgresql/postgresql/source.go assetMRN: database.schema.table",
+			wantProvider: "PostgreSQL", wantName: "metrics",
+			authority: "plugins/postgresql/postgresql/source.go: Name is the bare object name",
 		},
 	}
 
@@ -344,15 +352,41 @@ func TestProjection_WarehousesWithoutAPluginKeepEveryLevel(t *testing.T) {
 }
 
 // mrn.New lowercases all three components but only sanitizes spaces in the
-// name, never in the service. A provider with a space would put that space
-// into the MRN and into every URL built from it, so every provider this
-// table can emit has to survive mrnService unchanged in the MRN.
-func TestProjection_NoProviderLeavesASpaceInTheMRN(t *testing.T) {
+// name, never in the service. A provider whose name contains a space
+// therefore puts that space into the MRN.
+//
+// This plugin does NOT slug it out, and must not: slugging here would
+// stop the OpenMetadata import merging with the technology's own plugin,
+// which has the same space in its Providers entry.
+//
+// The list below is therefore an inventory of a known wart, not a target
+// to fix in this plugin. Fixing it means changing mrn.New to sanitize the
+// service, which renames existing assets and needs a migration.
+func TestProjection_ProvidersWithASpaceKeepItInTheMRN(t *testing.T) {
+	spaced := map[string]bool{}
 	for serviceType := range projections {
 		p := projectionFor(serviceType)
-		assert.NotContains(t, mrnService(p.Provider), " ",
-			"provider %q for service type %q would put a space in the MRN", p.Provider, serviceType)
+		if strings.Contains(p.Provider, " ") {
+			spaced[p.Provider] = true
+		}
 	}
+
+	// Pinned so that adding a tenth spaced provider is a deliberate act.
+	assert.Equal(t, map[string]bool{
+		"Delta Lake":         true,
+		"SQL Server":         true,
+		"Azure Synapse":      true,
+		"Vertex AI":          true,
+		"Data Lake":          true,
+		"SAP HANA":           true,
+		"SAP ERP":            true,
+		"Microsoft Fabric":   true,
+		"Azure Data Factory": true,
+	}, spaced)
+
+	// And the space really does reach the MRN, unslugged.
+	assert.Equal(t, "mrn://table/delta lake/orders",
+		mrn.New("Table", projectionFor("DeltaLake").Provider, "orders"))
 }
 
 func TestSplitFQN_KeepsQuotedNamesWhole(t *testing.T) {
@@ -461,7 +495,7 @@ func TestProjection_TimescaleIsPostgres(t *testing.T) {
 	p := projectionFor("Timescale")
 
 	assert.Equal(t, "PostgreSQL", p.Provider)
-	assert.Equal(t, mrn.New("Table", "PostgreSQL", "iot.public.metrics"),
+	assert.Equal(t, mrn.New("Table", "PostgreSQL", "metrics"),
 		mrn.New("Table", p.Provider, p.TableName("iot", "public", "metrics")))
 }
 
@@ -548,15 +582,15 @@ func TestProjection_AgreesWithTheTrinoPlugin(t *testing.T) {
 	)
 
 	trino := map[string]string{
-		// provider -> the name plugins/trino gives shop.public.orders
-		"PostgreSQL":  fullName,
-		"MySQL":       schemaName,
+		// provider -> the name plugins/trino gives shop.public.orders,
+		// read from connectorMap in plugins/trino/trino/source.go
+		"PostgreSQL":  bare,
+		"MySQL":       bare,
 		"MariaDB":     bare,
 		"SingleStore": bare,
-		"MongoDB":     schemaName,
+		"MongoDB":     bare,
 		"Pinot":       bare,
 		"Oracle":      schemaName,
-		"ClickHouse":  schemaName, // the ClickHouse plugin builds db.table, and it is the authority
 		"Cassandra":   schemaName,
 		"Druid":       schemaName,
 		"Hive":        fullName,
@@ -565,7 +599,7 @@ func TestProjection_AgreesWithTheTrinoPlugin(t *testing.T) {
 	byProvider := map[string]projection{}
 	for _, serviceType := range []string{
 		"Postgres", "Mysql", "MariaDB", "SingleStore", "MongoDB", "PinotDB",
-		"Oracle", "Clickhouse", "Cassandra", "Druid", "Hive",
+		"Oracle", "Cassandra", "Druid", "Hive",
 	} {
 		p := projectionFor(serviceType)
 		byProvider[p.Provider] = p
@@ -576,6 +610,29 @@ func TestProjection_AgreesWithTheTrinoPlugin(t *testing.T) {
 		require.True(t, ok, "no projection produces provider %s", provider)
 		assert.Equal(t, want, p.TableName("shop", "public", "orders"), provider)
 	}
+}
+
+// ClickHouse is the one technology where this table and plugins/trino
+// cannot both be right, because the two upstream sources disagree with
+// each other:
+//
+//   - plugins/trino names a ClickHouse table schema.table, and sets Name
+//     to that same string, so a Trino-discovered table lands on
+//     mrn://table/clickhouse/analytics.events.
+//   - plugins/clickhouse sets Name to the bare table, so a
+//     directly-discovered table lands on mrn://table/clickhouse/events.
+//
+// This table follows plugins/clickhouse, because that is the plugin that
+// owns the technology. The consequence is that reading the same ClickHouse
+// table through Trino files it separately. Fixing it properly means
+// changing plugins/clickhouse to set Name to the qualified string, which
+// renames existing assets and so belongs in a release of its own.
+func TestProjection_FollowsTheClickHousePluginNotTrino(t *testing.T) {
+	p := projectionFor("Clickhouse")
+
+	assert.Equal(t, "ClickHouse", p.Provider)
+	assert.Equal(t, "events", p.TableName("default", "analytics", "events"),
+		"matches plugins/clickhouse's Name, not plugins/trino's schema.table")
 }
 
 func TestProjection_DivergesFromTrinoOnlyWhereTrinoCannotSeeTheDatabase(t *testing.T) {
@@ -593,25 +650,27 @@ func TestProjection_DivergesFromTrinoOnlyWhereTrinoCannotSeeTheDatabase(t *testi
 	}
 }
 
-// The projection follows the technology's own plugin, judged by the MRN
-// that plugin declares. Marmot carries a declared MRN through ingest, so
-// the MRN is the identity and a projection that disagrees produces a
-// duplicate the day the native plugin is switched on.
-func TestProjection_FollowsWhatEachPluginDeclares(t *testing.T) {
-	declared := map[string]struct{ serviceType, name string }{
-		// plugins/clickhouse: mrn.New(type, "ClickHouse", dbName+"."+name)
-		"ClickHouse": {"Clickhouse", "analytics.events"},
-		// plugins/iceberg: mrn.New("Table", "Iceberg", strings.Join(ident, "."))
-		"Iceberg": {"Iceberg", "analytics.events"},
-		// plugins/deltalake: mrn.New("Table", "DeltaLake", filepath.Base(path))
-		// which really is just the directory name
+// The projection follows the identity each technology's own plugin lands
+// on, which is built from the plugin's Name, not from the string it hands
+// to mrn.New. All three plugins below set Name to the object's bare name,
+// even where they also declare a qualified MRN.
+//
+// A projection that disagrees produces a duplicate the day the native
+// plugin is switched on, which is the failure this test exists to prevent.
+func TestProjection_FollowsTheIdentityEachPluginLandsOn(t *testing.T) {
+	landsOn := map[string]struct{ serviceType, name string }{
+		// plugins/clickhouse/source.go: Name: &name (bare table)
+		"ClickHouse": {"Clickhouse", "events"},
+		// plugins/iceberg/table.go: Name: &tableName (bare table)
+		"Iceberg": {"Iceberg", "events"},
+		// plugins/deltalake/table.go: Name: &tableName, the directory name
 		"Delta Lake": {"DeltaLake", "events"},
 	}
 
-	for provider, want := range declared {
+	for provider, want := range landsOn {
 		p := projectionFor(want.serviceType)
 		assert.Equal(t, provider, p.Provider, want.serviceType)
 		assert.Equal(t, want.name, p.TableName("catalog", "analytics", "events"),
-			"%s must produce what its plugin declares", provider)
+			"%s must produce the identity its plugin lands on", provider)
 	}
 }

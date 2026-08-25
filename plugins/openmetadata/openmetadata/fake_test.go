@@ -120,25 +120,15 @@ func discover(t *testing.T, f *fakeOM, overrides pluginsdk.RawConfig) *pluginsdk
 	return result
 }
 
-// findAsset looks an asset up by the qualified name that identifies it,
-// not by the name shown in the UI. Those are deliberately different: the
-// MRN carries the full path, while Name is the object's own name.
+// findAsset looks an asset up by the name component of its MRN, rebuilt
+// as mrn.New with the asset's own type and first provider. Name is that
+// same string, so looking up by either gives the same asset.
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, asset := range result.Assets {
 		if asset.Type != assetType || asset.MRN == nil || len(asset.Providers) == 0 {
 			continue
 		}
 		if *asset.MRN == mrn.New(assetType, asset.Providers[0], name) {
-			return &result.Assets[i]
-		}
-	}
-	return nil
-}
-
-// findByDisplayName looks an asset up by what the UI shows.
-func findByDisplayName(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
-	for i, asset := range result.Assets {
-		if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
 			return &result.Assets[i]
 		}
 	}

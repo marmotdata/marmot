@@ -57,10 +57,10 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// GetOwnersSearch search owners.
-	GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error)
+	GetOwnersSearch(params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error)
 
 	// GetOwnersSearchContext search owners.
-	GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error)
+	GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -73,7 +73,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetOwnersSearchContext] instead.
-func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error) {
+func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -81,7 +81,7 @@ func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetOwnersSearchContext(ctx, params, opts...)
+	return a.GetOwnersSearchContext(ctx, params, authInfo, opts...)
 }
 
 // GetOwnersSearchContext searches owners.
@@ -89,21 +89,22 @@ func (a *Client) GetOwnersSearch(params *GetOwnersSearchParams, opts ...ClientOp
 // Search for asset owners (users and teams).
 //
 // Do not use the deprecated [GetOwnersSearchParams.Context] with this method: it would be ignored.
-func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, opts ...ClientOption) (*GetOwnersSearchOK, error) {
+func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetOwnersSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetOwnersSearchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetOwnersSearch",
+		ID:                 "getOwnersSearch",
 		Method:             "GET",
-		PathPattern:        "/owners/search",
+		PathPattern:        "/api/v1/owners/search",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetOwnersSearchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -127,7 +128,7 @@ func (a *Client) GetOwnersSearchContext(ctx context.Context, params *GetOwnersSe
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetOwnersSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getOwnersSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

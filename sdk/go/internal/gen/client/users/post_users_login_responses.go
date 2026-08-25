@@ -40,7 +40,7 @@ func (o *PostUsersLoginReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /users/login] PostUsersLogin", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/users/login] postUsersLogin", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostUsersLoginOK) Code() int {
 
 func (o *PostUsersLoginOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginOK %s", 200, payload)
 }
 
 func (o *PostUsersLoginOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginOK %s", 200, payload)
 }
 
 func (o *PostUsersLoginOK) GetPayload() *models.TokenResponse {
@@ -156,12 +156,12 @@ func (o *PostUsersLoginBadRequest) Code() int {
 
 func (o *PostUsersLoginBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersLoginBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersLoginBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostUsersLoginUnauthorized) Code() int {
 
 func (o *PostUsersLoginUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginUnauthorized %s", 401, payload)
 }
 
 func (o *PostUsersLoginUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/login][%d] postUsersLoginUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/users/login][%d] postUsersLoginUnauthorized %s", 401, payload)
 }
 
 func (o *PostUsersLoginUnauthorized) GetPayload() *models.ErrorResponse {

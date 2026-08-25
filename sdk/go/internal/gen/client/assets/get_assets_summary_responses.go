@@ -34,7 +34,7 @@ func (o *GetAssetsSummaryReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/summary] GetAssetsSummary", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/summary] getAssetsSummary", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetsSummaryOK) Code() int {
 
 func (o *GetAssetsSummaryOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/summary][%d] getAssetsSummaryOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/summary][%d] getAssetsSummaryOK %s", 200, payload)
 }
 
 func (o *GetAssetsSummaryOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/summary][%d] getAssetsSummaryOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/summary][%d] getAssetsSummaryOK %s", 200, payload)
 }
 
 func (o *GetAssetsSummaryOK) GetPayload() *models.AssetSummaryResponse {
@@ -150,12 +150,12 @@ func (o *GetAssetsSummaryInternalServerError) Code() int {
 
 func (o *GetAssetsSummaryInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/summary][%d] getAssetsSummaryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/summary][%d] getAssetsSummaryInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSummaryInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/summary][%d] getAssetsSummaryInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/summary][%d] getAssetsSummaryInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSummaryInternalServerError) GetPayload() *models.ErrorResponse {

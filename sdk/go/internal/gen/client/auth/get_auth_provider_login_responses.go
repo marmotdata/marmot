@@ -40,7 +40,7 @@ func (o *GetAuthProviderLoginReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /auth/{provider}/login] GetAuthProviderLogin", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /auth/{provider}/login] getAuthProviderLogin", response, response.Code())
 	}
 }
 

@@ -117,118 +117,118 @@ func WithAcceptImageWebp(r *runtime.ClientOperation) {
 type ClientService interface {
 
 	// DeleteProductsAssetsIDAssetID remove data product asset.
-	DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAssetIDParams, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error)
+	DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAssetIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error)
 
 	// DeleteProductsAssetsIDAssetIDContext remove data product asset.
-	DeleteProductsAssetsIDAssetIDContext(ctx context.Context, params *DeleteProductsAssetsIDAssetIDParams, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error)
+	DeleteProductsAssetsIDAssetIDContext(ctx context.Context, params *DeleteProductsAssetsIDAssetIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error)
 
 	// DeleteProductsID delete data product.
-	DeleteProductsID(params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error)
+	DeleteProductsID(params *DeleteProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsIDOK, error)
 
 	// DeleteProductsIDContext delete data product.
-	DeleteProductsIDContext(ctx context.Context, params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error)
+	DeleteProductsIDContext(ctx context.Context, params *DeleteProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsIDOK, error)
 
 	// DeleteProductsImagesIDPurpose delete product image.
-	DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error)
+	DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error)
 
 	// DeleteProductsImagesIDPurposeContext delete product image.
-	DeleteProductsImagesIDPurposeContext(ctx context.Context, params *DeleteProductsImagesIDPurposeParams, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error)
+	DeleteProductsImagesIDPurposeContext(ctx context.Context, params *DeleteProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error)
 
 	// DeleteProductsRulesIDRuleID delete data product rule.
-	DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleIDParams, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error)
+	DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error)
 
 	// DeleteProductsRulesIDRuleIDContext delete data product rule.
-	DeleteProductsRulesIDRuleIDContext(ctx context.Context, params *DeleteProductsRulesIDRuleIDParams, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error)
+	DeleteProductsRulesIDRuleIDContext(ctx context.Context, params *DeleteProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error)
 
 	// GetProductsAssetsID get data product assets.
-	GetProductsAssetsID(params *GetProductsAssetsIDParams, opts ...ClientOption) (*GetProductsAssetsIDOK, error)
+	GetProductsAssetsID(params *GetProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsAssetsIDOK, error)
 
 	// GetProductsAssetsIDContext get data product assets.
-	GetProductsAssetsIDContext(ctx context.Context, params *GetProductsAssetsIDParams, opts ...ClientOption) (*GetProductsAssetsIDOK, error)
+	GetProductsAssetsIDContext(ctx context.Context, params *GetProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsAssetsIDOK, error)
 
 	// GetProductsID get data product.
-	GetProductsID(params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error)
+	GetProductsID(params *GetProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsIDOK, error)
 
 	// GetProductsIDContext get data product.
-	GetProductsIDContext(ctx context.Context, params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error)
+	GetProductsIDContext(ctx context.Context, params *GetProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsIDOK, error)
 
 	// GetProductsImagesID list product images.
-	GetProductsImagesID(params *GetProductsImagesIDParams, opts ...ClientOption) (*GetProductsImagesIDOK, error)
+	GetProductsImagesID(params *GetProductsImagesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsImagesIDOK, error)
 
 	// GetProductsImagesIDContext list product images.
-	GetProductsImagesIDContext(ctx context.Context, params *GetProductsImagesIDParams, opts ...ClientOption) (*GetProductsImagesIDOK, error)
+	GetProductsImagesIDContext(ctx context.Context, params *GetProductsImagesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsImagesIDOK, error)
 
 	// GetProductsImagesIDPurpose get product image.
-	GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error)
+	GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error)
 
 	// GetProductsImagesIDPurposeContext get product image.
-	GetProductsImagesIDPurposeContext(ctx context.Context, params *GetProductsImagesIDPurposeParams, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error)
+	GetProductsImagesIDPurposeContext(ctx context.Context, params *GetProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error)
 
 	// GetProductsList list data products.
-	GetProductsList(params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error)
+	GetProductsList(params *GetProductsListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsListOK, error)
 
 	// GetProductsListContext list data products.
-	GetProductsListContext(ctx context.Context, params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error)
+	GetProductsListContext(ctx context.Context, params *GetProductsListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsListOK, error)
 
 	// GetProductsResolvedAssetsID get resolved data product assets.
-	GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsIDParams, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error)
+	GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error)
 
 	// GetProductsResolvedAssetsIDContext get resolved data product assets.
-	GetProductsResolvedAssetsIDContext(ctx context.Context, params *GetProductsResolvedAssetsIDParams, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error)
+	GetProductsResolvedAssetsIDContext(ctx context.Context, params *GetProductsResolvedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error)
 
 	// GetProductsRulesID get data product rules.
-	GetProductsRulesID(params *GetProductsRulesIDParams, opts ...ClientOption) (*GetProductsRulesIDOK, error)
+	GetProductsRulesID(params *GetProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsRulesIDOK, error)
 
 	// GetProductsRulesIDContext get data product rules.
-	GetProductsRulesIDContext(ctx context.Context, params *GetProductsRulesIDParams, opts ...ClientOption) (*GetProductsRulesIDOK, error)
+	GetProductsRulesIDContext(ctx context.Context, params *GetProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsRulesIDOK, error)
 
 	// GetProductsSearch search data products.
-	GetProductsSearch(params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error)
+	GetProductsSearch(params *GetProductsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsSearchOK, error)
 
 	// GetProductsSearchContext search data products.
-	GetProductsSearchContext(ctx context.Context, params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error)
+	GetProductsSearchContext(ctx context.Context, params *GetProductsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsSearchOK, error)
 
 	// PostProducts create data product.
-	PostProducts(params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error)
+	PostProducts(params *PostProductsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsCreated, error)
 
 	// PostProductsContext create data product.
-	PostProductsContext(ctx context.Context, params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error)
+	PostProductsContext(ctx context.Context, params *PostProductsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsCreated, error)
 
 	// PostProductsAssetsID add data product assets.
-	PostProductsAssetsID(params *PostProductsAssetsIDParams, opts ...ClientOption) (*PostProductsAssetsIDOK, error)
+	PostProductsAssetsID(params *PostProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsAssetsIDOK, error)
 
 	// PostProductsAssetsIDContext add data product assets.
-	PostProductsAssetsIDContext(ctx context.Context, params *PostProductsAssetsIDParams, opts ...ClientOption) (*PostProductsAssetsIDOK, error)
+	PostProductsAssetsIDContext(ctx context.Context, params *PostProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsAssetsIDOK, error)
 
 	// PostProductsImagesIDPurpose upload product image.
-	PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error)
+	PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error)
 
 	// PostProductsImagesIDPurposeContext upload product image.
-	PostProductsImagesIDPurposeContext(ctx context.Context, params *PostProductsImagesIDPurposeParams, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error)
+	PostProductsImagesIDPurposeContext(ctx context.Context, params *PostProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error)
 
 	// PostProductsRulePreview preview data product rule.
-	PostProductsRulePreview(params *PostProductsRulePreviewParams, opts ...ClientOption) (*PostProductsRulePreviewOK, error)
+	PostProductsRulePreview(params *PostProductsRulePreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulePreviewOK, error)
 
 	// PostProductsRulePreviewContext preview data product rule.
-	PostProductsRulePreviewContext(ctx context.Context, params *PostProductsRulePreviewParams, opts ...ClientOption) (*PostProductsRulePreviewOK, error)
+	PostProductsRulePreviewContext(ctx context.Context, params *PostProductsRulePreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulePreviewOK, error)
 
 	// PostProductsRulesID create data product rule.
-	PostProductsRulesID(params *PostProductsRulesIDParams, opts ...ClientOption) (*PostProductsRulesIDCreated, error)
+	PostProductsRulesID(params *PostProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulesIDCreated, error)
 
 	// PostProductsRulesIDContext create data product rule.
-	PostProductsRulesIDContext(ctx context.Context, params *PostProductsRulesIDParams, opts ...ClientOption) (*PostProductsRulesIDCreated, error)
+	PostProductsRulesIDContext(ctx context.Context, params *PostProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulesIDCreated, error)
 
 	// PutProductsID update data product.
-	PutProductsID(params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error)
+	PutProductsID(params *PutProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsIDOK, error)
 
 	// PutProductsIDContext update data product.
-	PutProductsIDContext(ctx context.Context, params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error)
+	PutProductsIDContext(ctx context.Context, params *PutProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsIDOK, error)
 
 	// PutProductsRulesIDRuleID update data product rule.
-	PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error)
+	PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error)
 
 	// PutProductsRulesIDRuleIDContext update data product rule.
-	PutProductsRulesIDRuleIDContext(ctx context.Context, params *PutProductsRulesIDRuleIDParams, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error)
+	PutProductsRulesIDRuleIDContext(ctx context.Context, params *PutProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -241,7 +241,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteProductsAssetsIDAssetIDContext] instead.
-func (a *Client) DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAssetIDParams, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error) {
+func (a *Client) DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAssetIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -249,7 +249,7 @@ func (a *Client) DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAss
 		ctx = context.Background()
 	}
 
-	return a.DeleteProductsAssetsIDAssetIDContext(ctx, params, opts...)
+	return a.DeleteProductsAssetsIDAssetIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteProductsAssetsIDAssetIDContext removes data product asset.
@@ -257,21 +257,22 @@ func (a *Client) DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAss
 // Remove a manually added asset from a data product.
 //
 // Do not use the deprecated [DeleteProductsAssetsIDAssetIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteProductsAssetsIDAssetIDContext(ctx context.Context, params *DeleteProductsAssetsIDAssetIDParams, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error) {
+func (a *Client) DeleteProductsAssetsIDAssetIDContext(ctx context.Context, params *DeleteProductsAssetsIDAssetIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteProductsAssetsIDAssetIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteProductsAssetsIDAssetID",
+		ID:                 "deleteProductsAssetsIDAssetID",
 		Method:             "DELETE",
-		PathPattern:        "/products/assets/{id}/{assetId}",
+		PathPattern:        "/api/v1/products/assets/{id}/{assetId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteProductsAssetsIDAssetIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -295,7 +296,7 @@ func (a *Client) DeleteProductsAssetsIDAssetIDContext(ctx context.Context, param
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteProductsAssetsIDAssetID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteProductsAssetsIDAssetID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -307,7 +308,7 @@ func (a *Client) DeleteProductsAssetsIDAssetIDContext(ctx context.Context, param
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteProductsIDContext] instead.
-func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error) {
+func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -315,7 +316,7 @@ func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.DeleteProductsIDContext(ctx, params, opts...)
+	return a.DeleteProductsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteProductsIDContext deletes data product.
@@ -323,21 +324,22 @@ func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, opts ...Client
 // Delete a data product by ID.
 //
 // Do not use the deprecated [DeleteProductsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteProductsIDContext(ctx context.Context, params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error) {
+func (a *Client) DeleteProductsIDContext(ctx context.Context, params *DeleteProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteProductsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteProductsID",
+		ID:                 "deleteProductsID",
 		Method:             "DELETE",
-		PathPattern:        "/products/{id}",
+		PathPattern:        "/api/v1/products/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteProductsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -361,7 +363,7 @@ func (a *Client) DeleteProductsIDContext(ctx context.Context, params *DeleteProd
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -373,7 +375,7 @@ func (a *Client) DeleteProductsIDContext(ctx context.Context, params *DeleteProd
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteProductsImagesIDPurposeContext] instead.
-func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error) {
+func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -381,7 +383,7 @@ func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPur
 		ctx = context.Background()
 	}
 
-	return a.DeleteProductsImagesIDPurposeContext(ctx, params, opts...)
+	return a.DeleteProductsImagesIDPurposeContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteProductsImagesIDPurposeContext deletes product image.
@@ -389,21 +391,22 @@ func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPur
 // Delete an icon or header image for a data product.
 //
 // Do not use the deprecated [DeleteProductsImagesIDPurposeParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteProductsImagesIDPurposeContext(ctx context.Context, params *DeleteProductsImagesIDPurposeParams, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error) {
+func (a *Client) DeleteProductsImagesIDPurposeContext(ctx context.Context, params *DeleteProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteProductsImagesIDPurposeParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteProductsImagesIDPurpose",
+		ID:                 "deleteProductsImagesIDPurpose",
 		Method:             "DELETE",
-		PathPattern:        "/products/images/{id}/{purpose}",
+		PathPattern:        "/api/v1/products/images/{id}/{purpose}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteProductsImagesIDPurposeReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -427,7 +430,7 @@ func (a *Client) DeleteProductsImagesIDPurposeContext(ctx context.Context, param
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -439,7 +442,7 @@ func (a *Client) DeleteProductsImagesIDPurposeContext(ctx context.Context, param
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteProductsRulesIDRuleIDContext] instead.
-func (a *Client) DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleIDParams, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error) {
+func (a *Client) DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -447,7 +450,7 @@ func (a *Client) DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleID
 		ctx = context.Background()
 	}
 
-	return a.DeleteProductsRulesIDRuleIDContext(ctx, params, opts...)
+	return a.DeleteProductsRulesIDRuleIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteProductsRulesIDRuleIDContext deletes data product rule.
@@ -455,21 +458,22 @@ func (a *Client) DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleID
 // Delete a membership rule from a data product.
 //
 // Do not use the deprecated [DeleteProductsRulesIDRuleIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteProductsRulesIDRuleIDContext(ctx context.Context, params *DeleteProductsRulesIDRuleIDParams, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error) {
+func (a *Client) DeleteProductsRulesIDRuleIDContext(ctx context.Context, params *DeleteProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteProductsRulesIDRuleIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteProductsRulesIDRuleID",
+		ID:                 "deleteProductsRulesIDRuleID",
 		Method:             "DELETE",
-		PathPattern:        "/products/rules/{id}/{ruleId}",
+		PathPattern:        "/api/v1/products/rules/{id}/{ruleId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteProductsRulesIDRuleIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -493,7 +497,7 @@ func (a *Client) DeleteProductsRulesIDRuleIDContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteProductsRulesIDRuleID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteProductsRulesIDRuleID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -505,7 +509,7 @@ func (a *Client) DeleteProductsRulesIDRuleIDContext(ctx context.Context, params 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsAssetsIDContext] instead.
-func (a *Client) GetProductsAssetsID(params *GetProductsAssetsIDParams, opts ...ClientOption) (*GetProductsAssetsIDOK, error) {
+func (a *Client) GetProductsAssetsID(params *GetProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -513,7 +517,7 @@ func (a *Client) GetProductsAssetsID(params *GetProductsAssetsIDParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.GetProductsAssetsIDContext(ctx, params, opts...)
+	return a.GetProductsAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsAssetsIDContext gets data product assets.
@@ -521,21 +525,22 @@ func (a *Client) GetProductsAssetsID(params *GetProductsAssetsIDParams, opts ...
 // Get the manually added assets of a data product.
 //
 // Do not use the deprecated [GetProductsAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsAssetsIDContext(ctx context.Context, params *GetProductsAssetsIDParams, opts ...ClientOption) (*GetProductsAssetsIDOK, error) {
+func (a *Client) GetProductsAssetsIDContext(ctx context.Context, params *GetProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsAssetsID",
+		ID:                 "getProductsAssetsID",
 		Method:             "GET",
-		PathPattern:        "/products/assets/{id}",
+		PathPattern:        "/api/v1/products/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -559,7 +564,7 @@ func (a *Client) GetProductsAssetsIDContext(ctx context.Context, params *GetProd
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -571,7 +576,7 @@ func (a *Client) GetProductsAssetsIDContext(ctx context.Context, params *GetProd
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsIDContext] instead.
-func (a *Client) GetProductsID(params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error) {
+func (a *Client) GetProductsID(params *GetProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -579,7 +584,7 @@ func (a *Client) GetProductsID(params *GetProductsIDParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.GetProductsIDContext(ctx, params, opts...)
+	return a.GetProductsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsIDContext gets data product.
@@ -587,21 +592,22 @@ func (a *Client) GetProductsID(params *GetProductsIDParams, opts ...ClientOption
 // Get a data product by ID.
 //
 // Do not use the deprecated [GetProductsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsIDContext(ctx context.Context, params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error) {
+func (a *Client) GetProductsIDContext(ctx context.Context, params *GetProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsID",
+		ID:                 "getProductsID",
 		Method:             "GET",
-		PathPattern:        "/products/{id}",
+		PathPattern:        "/api/v1/products/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -625,7 +631,7 @@ func (a *Client) GetProductsIDContext(ctx context.Context, params *GetProductsID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -637,7 +643,7 @@ func (a *Client) GetProductsIDContext(ctx context.Context, params *GetProductsID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsImagesIDContext] instead.
-func (a *Client) GetProductsImagesID(params *GetProductsImagesIDParams, opts ...ClientOption) (*GetProductsImagesIDOK, error) {
+func (a *Client) GetProductsImagesID(params *GetProductsImagesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsImagesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -645,7 +651,7 @@ func (a *Client) GetProductsImagesID(params *GetProductsImagesIDParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.GetProductsImagesIDContext(ctx, params, opts...)
+	return a.GetProductsImagesIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsImagesIDContext lists product images.
@@ -653,21 +659,22 @@ func (a *Client) GetProductsImagesID(params *GetProductsImagesIDParams, opts ...
 // List all images for a data product.
 //
 // Do not use the deprecated [GetProductsImagesIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsImagesIDContext(ctx context.Context, params *GetProductsImagesIDParams, opts ...ClientOption) (*GetProductsImagesIDOK, error) {
+func (a *Client) GetProductsImagesIDContext(ctx context.Context, params *GetProductsImagesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsImagesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsImagesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsImagesID",
+		ID:                 "getProductsImagesID",
 		Method:             "GET",
-		PathPattern:        "/products/images/{id}",
+		PathPattern:        "/api/v1/products/images/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsImagesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -691,7 +698,7 @@ func (a *Client) GetProductsImagesIDContext(ctx context.Context, params *GetProd
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsImagesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsImagesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -703,7 +710,7 @@ func (a *Client) GetProductsImagesIDContext(ctx context.Context, params *GetProd
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsImagesIDPurposeContext] instead.
-func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error) {
+func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -711,7 +718,7 @@ func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposePa
 		ctx = context.Background()
 	}
 
-	return a.GetProductsImagesIDPurposeContext(ctx, params, writer, opts...)
+	return a.GetProductsImagesIDPurposeContext(ctx, params, authInfo, writer, opts...)
 }
 
 // GetProductsImagesIDPurposeContext gets product image.
@@ -719,21 +726,22 @@ func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposePa
 // Get an icon or header image for a data product.
 //
 // Do not use the deprecated [GetProductsImagesIDPurposeParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsImagesIDPurposeContext(ctx context.Context, params *GetProductsImagesIDPurposeParams, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error) {
+func (a *Client) GetProductsImagesIDPurposeContext(ctx context.Context, params *GetProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsImagesIDPurposeParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsImagesIDPurpose",
+		ID:                 "getProductsImagesIDPurpose",
 		Method:             "GET",
-		PathPattern:        "/products/images/{id}/{purpose}",
+		PathPattern:        "/api/v1/products/images/{id}/{purpose}",
 		ProducesMediaTypes: []string{"image/jpeg", "image/png", "image/gif", "image/webp"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsImagesIDPurposeReader{formats: a.formats, writer: writer},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -757,7 +765,7 @@ func (a *Client) GetProductsImagesIDPurposeContext(ctx context.Context, params *
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -769,7 +777,7 @@ func (a *Client) GetProductsImagesIDPurposeContext(ctx context.Context, params *
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsListContext] instead.
-func (a *Client) GetProductsList(params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error) {
+func (a *Client) GetProductsList(params *GetProductsListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsListOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -777,7 +785,7 @@ func (a *Client) GetProductsList(params *GetProductsListParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetProductsListContext(ctx, params, opts...)
+	return a.GetProductsListContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsListContext lists data products.
@@ -785,21 +793,22 @@ func (a *Client) GetProductsList(params *GetProductsListParams, opts ...ClientOp
 // Retrieve a paginated list of data products.
 //
 // Do not use the deprecated [GetProductsListParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsListContext(ctx context.Context, params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error) {
+func (a *Client) GetProductsListContext(ctx context.Context, params *GetProductsListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsListOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsListParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsList",
+		ID:                 "getProductsList",
 		Method:             "GET",
-		PathPattern:        "/products/list",
+		PathPattern:        "/api/v1/products/list",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsListReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -823,7 +832,7 @@ func (a *Client) GetProductsListContext(ctx context.Context, params *GetProducts
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsList: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsList: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -835,7 +844,7 @@ func (a *Client) GetProductsListContext(ctx context.Context, params *GetProducts
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsResolvedAssetsIDContext] instead.
-func (a *Client) GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsIDParams, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error) {
+func (a *Client) GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -843,7 +852,7 @@ func (a *Client) GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsID
 		ctx = context.Background()
 	}
 
-	return a.GetProductsResolvedAssetsIDContext(ctx, params, opts...)
+	return a.GetProductsResolvedAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsResolvedAssetsIDContext gets resolved data product assets.
@@ -851,21 +860,22 @@ func (a *Client) GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsID
 // Get all assets of a data product, both manually added and matched by rules.
 //
 // Do not use the deprecated [GetProductsResolvedAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsResolvedAssetsIDContext(ctx context.Context, params *GetProductsResolvedAssetsIDParams, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error) {
+func (a *Client) GetProductsResolvedAssetsIDContext(ctx context.Context, params *GetProductsResolvedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsResolvedAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsResolvedAssetsID",
+		ID:                 "getProductsResolvedAssetsID",
 		Method:             "GET",
-		PathPattern:        "/products/resolved-assets/{id}",
+		PathPattern:        "/api/v1/products/resolved-assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsResolvedAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -889,7 +899,7 @@ func (a *Client) GetProductsResolvedAssetsIDContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsResolvedAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsResolvedAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -901,7 +911,7 @@ func (a *Client) GetProductsResolvedAssetsIDContext(ctx context.Context, params 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsRulesIDContext] instead.
-func (a *Client) GetProductsRulesID(params *GetProductsRulesIDParams, opts ...ClientOption) (*GetProductsRulesIDOK, error) {
+func (a *Client) GetProductsRulesID(params *GetProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsRulesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -909,7 +919,7 @@ func (a *Client) GetProductsRulesID(params *GetProductsRulesIDParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.GetProductsRulesIDContext(ctx, params, opts...)
+	return a.GetProductsRulesIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsRulesIDContext gets data product rules.
@@ -917,21 +927,22 @@ func (a *Client) GetProductsRulesID(params *GetProductsRulesIDParams, opts ...Cl
 // Get the membership rules of a data product.
 //
 // Do not use the deprecated [GetProductsRulesIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsRulesIDContext(ctx context.Context, params *GetProductsRulesIDParams, opts ...ClientOption) (*GetProductsRulesIDOK, error) {
+func (a *Client) GetProductsRulesIDContext(ctx context.Context, params *GetProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsRulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsRulesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsRulesID",
+		ID:                 "getProductsRulesID",
 		Method:             "GET",
-		PathPattern:        "/products/rules/{id}",
+		PathPattern:        "/api/v1/products/rules/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsRulesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -955,7 +966,7 @@ func (a *Client) GetProductsRulesIDContext(ctx context.Context, params *GetProdu
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsRulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsRulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -967,7 +978,7 @@ func (a *Client) GetProductsRulesIDContext(ctx context.Context, params *GetProdu
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetProductsSearchContext] instead.
-func (a *Client) GetProductsSearch(params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error) {
+func (a *Client) GetProductsSearch(params *GetProductsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -975,7 +986,7 @@ func (a *Client) GetProductsSearch(params *GetProductsSearchParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.GetProductsSearchContext(ctx, params, opts...)
+	return a.GetProductsSearchContext(ctx, params, authInfo, opts...)
 }
 
 // GetProductsSearchContext searches data products.
@@ -983,21 +994,22 @@ func (a *Client) GetProductsSearch(params *GetProductsSearchParams, opts ...Clie
 // Search data products by name, description, and tags.
 //
 // Do not use the deprecated [GetProductsSearchParams.Context] with this method: it would be ignored.
-func (a *Client) GetProductsSearchContext(ctx context.Context, params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error) {
+func (a *Client) GetProductsSearchContext(ctx context.Context, params *GetProductsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetProductsSearchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetProductsSearch",
+		ID:                 "getProductsSearch",
 		Method:             "GET",
-		PathPattern:        "/products/search",
+		PathPattern:        "/api/v1/products/search",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetProductsSearchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1021,7 +1033,7 @@ func (a *Client) GetProductsSearchContext(ctx context.Context, params *GetProduc
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetProductsSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getProductsSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1033,7 +1045,7 @@ func (a *Client) GetProductsSearchContext(ctx context.Context, params *GetProduc
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostProductsContext] instead.
-func (a *Client) PostProducts(params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error) {
+func (a *Client) PostProducts(params *PostProductsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1041,7 +1053,7 @@ func (a *Client) PostProducts(params *PostProductsParams, opts ...ClientOption) 
 		ctx = context.Background()
 	}
 
-	return a.PostProductsContext(ctx, params, opts...)
+	return a.PostProductsContext(ctx, params, authInfo, opts...)
 }
 
 // PostProductsContext creates data product.
@@ -1049,21 +1061,22 @@ func (a *Client) PostProducts(params *PostProductsParams, opts ...ClientOption) 
 // Create a new data product with owners and optional membership rules.
 //
 // Do not use the deprecated [PostProductsParams.Context] with this method: it would be ignored.
-func (a *Client) PostProductsContext(ctx context.Context, params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error) {
+func (a *Client) PostProductsContext(ctx context.Context, params *PostProductsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostProductsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostProducts",
+		ID:                 "postProducts",
 		Method:             "POST",
-		PathPattern:        "/products/",
+		PathPattern:        "/api/v1/products/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostProductsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1087,7 +1100,7 @@ func (a *Client) PostProductsContext(ctx context.Context, params *PostProductsPa
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostProducts: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postProducts: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1099,7 +1112,7 @@ func (a *Client) PostProductsContext(ctx context.Context, params *PostProductsPa
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostProductsAssetsIDContext] instead.
-func (a *Client) PostProductsAssetsID(params *PostProductsAssetsIDParams, opts ...ClientOption) (*PostProductsAssetsIDOK, error) {
+func (a *Client) PostProductsAssetsID(params *PostProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1107,7 +1120,7 @@ func (a *Client) PostProductsAssetsID(params *PostProductsAssetsIDParams, opts .
 		ctx = context.Background()
 	}
 
-	return a.PostProductsAssetsIDContext(ctx, params, opts...)
+	return a.PostProductsAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PostProductsAssetsIDContext adds data product assets.
@@ -1115,21 +1128,22 @@ func (a *Client) PostProductsAssetsID(params *PostProductsAssetsIDParams, opts .
 // Manually add assets to a data product.
 //
 // Do not use the deprecated [PostProductsAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PostProductsAssetsIDContext(ctx context.Context, params *PostProductsAssetsIDParams, opts ...ClientOption) (*PostProductsAssetsIDOK, error) {
+func (a *Client) PostProductsAssetsIDContext(ctx context.Context, params *PostProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostProductsAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostProductsAssetsID",
+		ID:                 "postProductsAssetsID",
 		Method:             "POST",
-		PathPattern:        "/products/assets/{id}",
+		PathPattern:        "/api/v1/products/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostProductsAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1153,7 +1167,7 @@ func (a *Client) PostProductsAssetsIDContext(ctx context.Context, params *PostPr
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostProductsAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postProductsAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1165,7 +1179,7 @@ func (a *Client) PostProductsAssetsIDContext(ctx context.Context, params *PostPr
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostProductsImagesIDPurposeContext] instead.
-func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error) {
+func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1173,7 +1187,7 @@ func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurpose
 		ctx = context.Background()
 	}
 
-	return a.PostProductsImagesIDPurposeContext(ctx, params, opts...)
+	return a.PostProductsImagesIDPurposeContext(ctx, params, authInfo, opts...)
 }
 
 // PostProductsImagesIDPurposeContext uploads product image.
@@ -1181,21 +1195,22 @@ func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurpose
 // Upload an icon or header image for a data product.
 //
 // Do not use the deprecated [PostProductsImagesIDPurposeParams.Context] with this method: it would be ignored.
-func (a *Client) PostProductsImagesIDPurposeContext(ctx context.Context, params *PostProductsImagesIDPurposeParams, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error) {
+func (a *Client) PostProductsImagesIDPurposeContext(ctx context.Context, params *PostProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostProductsImagesIDPurposeParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostProductsImagesIDPurpose",
+		ID:                 "postProductsImagesIDPurpose",
 		Method:             "POST",
-		PathPattern:        "/products/images/{id}/{purpose}",
+		PathPattern:        "/api/v1/products/images/{id}/{purpose}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"multipart/form-data"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostProductsImagesIDPurposeReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1219,7 +1234,7 @@ func (a *Client) PostProductsImagesIDPurposeContext(ctx context.Context, params 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1231,7 +1246,7 @@ func (a *Client) PostProductsImagesIDPurposeContext(ctx context.Context, params 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostProductsRulePreviewContext] instead.
-func (a *Client) PostProductsRulePreview(params *PostProductsRulePreviewParams, opts ...ClientOption) (*PostProductsRulePreviewOK, error) {
+func (a *Client) PostProductsRulePreview(params *PostProductsRulePreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulePreviewOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1239,7 +1254,7 @@ func (a *Client) PostProductsRulePreview(params *PostProductsRulePreviewParams, 
 		ctx = context.Background()
 	}
 
-	return a.PostProductsRulePreviewContext(ctx, params, opts...)
+	return a.PostProductsRulePreviewContext(ctx, params, authInfo, opts...)
 }
 
 // PostProductsRulePreviewContext previews data product rule.
@@ -1247,21 +1262,22 @@ func (a *Client) PostProductsRulePreview(params *PostProductsRulePreviewParams, 
 // Preview which assets would match a rule configuration.
 //
 // Do not use the deprecated [PostProductsRulePreviewParams.Context] with this method: it would be ignored.
-func (a *Client) PostProductsRulePreviewContext(ctx context.Context, params *PostProductsRulePreviewParams, opts ...ClientOption) (*PostProductsRulePreviewOK, error) {
+func (a *Client) PostProductsRulePreviewContext(ctx context.Context, params *PostProductsRulePreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulePreviewOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostProductsRulePreviewParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostProductsRulePreview",
+		ID:                 "postProductsRulePreview",
 		Method:             "POST",
-		PathPattern:        "/products/rule-preview",
+		PathPattern:        "/api/v1/products/rule-preview",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostProductsRulePreviewReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1285,7 +1301,7 @@ func (a *Client) PostProductsRulePreviewContext(ctx context.Context, params *Pos
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostProductsRulePreview: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postProductsRulePreview: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1297,7 +1313,7 @@ func (a *Client) PostProductsRulePreviewContext(ctx context.Context, params *Pos
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostProductsRulesIDContext] instead.
-func (a *Client) PostProductsRulesID(params *PostProductsRulesIDParams, opts ...ClientOption) (*PostProductsRulesIDCreated, error) {
+func (a *Client) PostProductsRulesID(params *PostProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulesIDCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1305,7 +1321,7 @@ func (a *Client) PostProductsRulesID(params *PostProductsRulesIDParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.PostProductsRulesIDContext(ctx, params, opts...)
+	return a.PostProductsRulesIDContext(ctx, params, authInfo, opts...)
 }
 
 // PostProductsRulesIDContext creates data product rule.
@@ -1313,21 +1329,22 @@ func (a *Client) PostProductsRulesID(params *PostProductsRulesIDParams, opts ...
 // Create a membership rule for a data product.
 //
 // Do not use the deprecated [PostProductsRulesIDParams.Context] with this method: it would be ignored.
-func (a *Client) PostProductsRulesIDContext(ctx context.Context, params *PostProductsRulesIDParams, opts ...ClientOption) (*PostProductsRulesIDCreated, error) {
+func (a *Client) PostProductsRulesIDContext(ctx context.Context, params *PostProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulesIDCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostProductsRulesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostProductsRulesID",
+		ID:                 "postProductsRulesID",
 		Method:             "POST",
-		PathPattern:        "/products/rules/{id}",
+		PathPattern:        "/api/v1/products/rules/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostProductsRulesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1351,7 +1368,7 @@ func (a *Client) PostProductsRulesIDContext(ctx context.Context, params *PostPro
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostProductsRulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postProductsRulesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1363,7 +1380,7 @@ func (a *Client) PostProductsRulesIDContext(ctx context.Context, params *PostPro
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutProductsIDContext] instead.
-func (a *Client) PutProductsID(params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error) {
+func (a *Client) PutProductsID(params *PutProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1371,7 +1388,7 @@ func (a *Client) PutProductsID(params *PutProductsIDParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.PutProductsIDContext(ctx, params, opts...)
+	return a.PutProductsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutProductsIDContext updates data product.
@@ -1379,21 +1396,22 @@ func (a *Client) PutProductsID(params *PutProductsIDParams, opts ...ClientOption
 // Update an existing data product.
 //
 // Do not use the deprecated [PutProductsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutProductsIDContext(ctx context.Context, params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error) {
+func (a *Client) PutProductsIDContext(ctx context.Context, params *PutProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutProductsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutProductsID",
+		ID:                 "putProductsID",
 		Method:             "PUT",
-		PathPattern:        "/products/{id}",
+		PathPattern:        "/api/v1/products/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutProductsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1417,7 +1435,7 @@ func (a *Client) PutProductsIDContext(ctx context.Context, params *PutProductsID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1429,7 +1447,7 @@ func (a *Client) PutProductsIDContext(ctx context.Context, params *PutProductsID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutProductsRulesIDRuleIDContext] instead.
-func (a *Client) PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error) {
+func (a *Client) PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1437,7 +1455,7 @@ func (a *Client) PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams
 		ctx = context.Background()
 	}
 
-	return a.PutProductsRulesIDRuleIDContext(ctx, params, opts...)
+	return a.PutProductsRulesIDRuleIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutProductsRulesIDRuleIDContext updates data product rule.
@@ -1445,21 +1463,22 @@ func (a *Client) PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams
 // Update a membership rule of a data product.
 //
 // Do not use the deprecated [PutProductsRulesIDRuleIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutProductsRulesIDRuleIDContext(ctx context.Context, params *PutProductsRulesIDRuleIDParams, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error) {
+func (a *Client) PutProductsRulesIDRuleIDContext(ctx context.Context, params *PutProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutProductsRulesIDRuleIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutProductsRulesIDRuleID",
+		ID:                 "putProductsRulesIDRuleID",
 		Method:             "PUT",
-		PathPattern:        "/products/rules/{id}/{ruleId}",
+		PathPattern:        "/api/v1/products/rules/{id}/{ruleId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutProductsRulesIDRuleIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1483,7 +1502,7 @@ func (a *Client) PutProductsRulesIDRuleIDContext(ctx context.Context, params *Pu
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutProductsRulesIDRuleID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putProductsRulesIDRuleID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

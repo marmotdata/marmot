@@ -70,6 +70,11 @@ type GetLineageAssetsIDParams struct {
 	// Default: "both"
 	Direction *string
 
+	// ExcludeTypes.
+	//
+	// Comma separated edge types to leave out, for example CONTAINS to see data flow without structure
+	ExcludeTypes *string
+
 	// ID.
 	//
 	// Asset ID
@@ -166,6 +171,17 @@ func (o *GetLineageAssetsIDParams) SetDirection(direction *string) {
 	o.Direction = direction
 }
 
+// WithExcludeTypes adds the excludeTypes to the get lineage assets ID params.
+func (o *GetLineageAssetsIDParams) WithExcludeTypes(excludeTypes *string) *GetLineageAssetsIDParams {
+	o.SetExcludeTypes(excludeTypes)
+	return o
+}
+
+// SetExcludeTypes adds the excludeTypes to the get lineage assets ID params.
+func (o *GetLineageAssetsIDParams) SetExcludeTypes(excludeTypes *string) {
+	o.ExcludeTypes = excludeTypes
+}
+
 // WithID adds the id to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithID(id strfmt.UUID) *GetLineageAssetsIDParams {
 	o.SetID(id)
@@ -207,6 +223,23 @@ func (o *GetLineageAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg s
 		if qDirection != "" {
 
 			if err := r.SetQueryParam("direction", qDirection); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.ExcludeTypes != nil {
+
+		// query param exclude_types
+		var qrExcludeTypes string
+
+		if o.ExcludeTypes != nil {
+			qrExcludeTypes = *o.ExcludeTypes
+		}
+		qExcludeTypes := qrExcludeTypes
+		if qExcludeTypes != "" {
+
+			if err := r.SetQueryParam("exclude_types", qExcludeTypes); err != nil {
 				return err
 			}
 		}

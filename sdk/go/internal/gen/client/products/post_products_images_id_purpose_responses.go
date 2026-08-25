@@ -46,7 +46,7 @@ func (o *PostProductsImagesIDPurposeReader) ReadResponse(response runtime.Client
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /products/images/{id}/{purpose}] PostProductsImagesIDPurpose", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/products/images/{id}/{purpose}] postProductsImagesIDPurpose", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostProductsImagesIDPurposeOK) Code() int {
 
 func (o *PostProductsImagesIDPurposeOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
 }
 
 func (o *PostProductsImagesIDPurposeOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
 }
 
 func (o *PostProductsImagesIDPurposeOK) GetPayload() *models.ProductImageMeta {
@@ -162,12 +162,12 @@ func (o *PostProductsImagesIDPurposeBadRequest) Code() int {
 
 func (o *PostProductsImagesIDPurposeBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsImagesIDPurposeBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsImagesIDPurposeBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostProductsImagesIDPurposeNotFound) Code() int {
 
 func (o *PostProductsImagesIDPurposeNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeNotFound %s", 404, payload)
 }
 
 func (o *PostProductsImagesIDPurposeNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeNotFound %s", 404, payload)
 }
 
 func (o *PostProductsImagesIDPurposeNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostProductsImagesIDPurposeInternalServerError) Code() int {
 
 func (o *PostProductsImagesIDPurposeInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsImagesIDPurposeInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsImagesIDPurposeInternalServerError) GetPayload() *models.ErrorResponse {

@@ -231,9 +231,9 @@ func TestDiscover_MatchesTheOpenMetadataProjection(t *testing.T) {
 	assert.Equal(t, "mrn://file/googledrive/marketing-plan.pdf", *fileAsset.MRN)
 }
 
-// Marmot keeps the MRN a plugin declares, so what has to hold is that the
-// MRN survives being split apart and rebuilt. Note this is NOT a constraint
-// that Name reproduce the MRN.
+// The MRN has to survive being split apart and rebuilt. That the MRN and
+// Name agree in the first place is pinned by
+// TestDiscover_NameIsTheStringTheMRNIsBuiltFrom.
 func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 	// The UI builds every link by splitting the MRN, and /assets/lookup
 	// feeds those parts back through mrn.New. An MRN that changes under
@@ -252,7 +252,10 @@ func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 	}
 }
 
-func TestDiscover_NamesAreTheItemsOwnName(t *testing.T) {
+// Name is the item's path, not its own name: without the path, every
+// "notes.md" in the drive would collide into one asset. The folder an
+// item sits in is shown by the Contents tab.
+func TestDiscover_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
 	result := discover(t, &fakeDrive{items: []driveItem{
 		folder("f1", "Marketing"),
 		file("d1", "brief.pdf", "application/pdf", "f1"),
@@ -261,7 +264,9 @@ func TestDiscover_NamesAreTheItemsOwnName(t *testing.T) {
 	file := findAsset(result, "File", "Marketing/brief.pdf")
 	require.NotNil(t, file)
 	assert.Equal(t, "mrn://file/googledrive/marketing-brief.pdf", *file.MRN)
-	assert.Equal(t, "brief.pdf", *file.Name, "the catalog reads brief.pdf, not its whole path")
+	assert.Equal(t, "Marketing/brief.pdf", *file.Name)
+	assert.Equal(t, *file.MRN, mrn.New("File", file.Providers[0], *file.Name),
+		"MRN and Name must agree")
 }
 
 func TestDiscover_LineagePointsAtRealAssets(t *testing.T) {
@@ -524,7 +529,8 @@ func TestDiscover_OrdersSheetsTheSameWayEveryRun(t *testing.T) {
 	}
 
 	// s1 replies last, so completion order would put A/One at the end.
-	want := []string{"One", "Two", "Three"}
+	// Names are paths because Name is what identity is derived from.
+	want := []string{"A/One", "B/Two", "C/Three"}
 
 	for run := 0; run < 8; run++ {
 		result := discover(t, drive, &staggeredSheets{tabs: tabs}, nil)

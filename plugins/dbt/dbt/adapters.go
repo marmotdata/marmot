@@ -1,48 +1,23 @@
 package dbt
 
-import "strings"
-
 // Adapter defines the interface for dbt database adapters.
 // Each adapter knows how to map dbt materializations to the correct
 // asset types and provider names for its target platform.
 type Adapter interface {
 	// Name returns the canonical provider name for this adapter (e.g., "Snowflake", "BigQuery")
-	// This must be the word the technology's own Marmot plugin uses, because
-	// it becomes the service component of the MRN.
 	Name() string
 
 	// AssetTypeForMaterialization maps a dbt materialization type to the appropriate asset type
 	// For most adapters: table -> Table, view -> View, incremental -> Table
-	// Some adapters have special types (e.g., ClickHouse has Dictionary)
+	// Some adapters have special types (e.g., ClickHouse has Dictionary, Distributed Table)
 	AssetTypeForMaterialization(materialization string) string
 
-	// MRNName builds the name component of the MRN for a table dbt
-	// materializes. dbt always knows database, schema and table, but the
-	// plugin that owns the table decides how many of those levels are part
-	// of its identity: a Postgres table is schema.table, a BigQuery table
-	// is dataset.table. Returning anything else files the same physical
-	// table a second time instead of merging with the plugin's asset.
-	MRNName(database, schema, table string) string
+	// SupportsSchemas returns true if the adapter uses database.schema.table naming
+	// Some platforms like BigQuery use project.dataset.table instead
+	SupportsSchemas() bool
 
 	// DefaultMaterialization returns the default materialization if none is specified
 	DefaultMaterialization() string
-}
-
-// mrnService is the service component of an MRN for a provider. mrn.New
-// sanitizes the name it is given but not the service, so a provider with
-// a space in it would put that space into the MRN and into every URL
-// built from it. Spaces are dropped rather than hyphenated, matching the
-// helper the Trino and OpenMetadata plugins already use.
-func mrnService(provider string) string {
-	return strings.ReplaceAll(provider, " ", "")
-}
-
-// mrnType is the type component of an MRN. mrn.New does not sanitize it
-// either, and dbt is the only plugin that mints compound asset types such
-// as "Dynamic Table", so they are slugged here rather than left to put a
-// space in the MRN.
-func mrnType(assetType string) string {
-	return strings.ReplaceAll(assetType, " ", "")
 }
 
 // BaseAdapter provides default implementations for common adapter behavior
@@ -61,10 +36,7 @@ func (a *BaseAdapter) AssetTypeForMaterialization(materialization string) string
 	case "table", "incremental":
 		return "Table"
 	case "materialized_view":
-		// Marmot's own SQL plugins do not distinguish a materialized view
-		// from a view (plugins/postgresql, plugins/clickhouse both collapse
-		// it), so neither does dbt. The plugins are authoritative.
-		return "View"
+		return "Materialized View"
 	case "ephemeral":
 		return "Ephemeral" // Not actually materialized
 	default:
@@ -72,24 +44,8 @@ func (a *BaseAdapter) AssetTypeForMaterialization(materialization string) string
 	}
 }
 
-// MRNName defaults to database.schema.table, which is right for the
-// warehouses whose plugin (or projection) keeps all three levels:
-// Snowflake, Redshift, SQL Server, Databricks, Synapse, Fabric.
-func (a *BaseAdapter) MRNName(database, schema, table string) string {
-	return joinNonEmpty(database, schema, table)
-}
-
-// joinNonEmpty joins the levels dbt actually filled in. A dbt project
-// against an engine with no database concept leaves that field empty, and
-// a leading dot would not match any plugin's MRN.
-func joinNonEmpty(parts ...string) string {
-	kept := parts[:0]
-	for _, p := range parts {
-		if p != "" {
-			kept = append(kept, p)
-		}
-	}
-	return strings.Join(kept, ".")
+func (a *BaseAdapter) SupportsSchemas() bool {
+	return true
 }
 
 func (a *BaseAdapter) DefaultMaterialization() string {

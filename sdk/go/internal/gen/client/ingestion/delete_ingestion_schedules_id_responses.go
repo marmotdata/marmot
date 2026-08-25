@@ -46,7 +46,7 @@ func (o *DeleteIngestionSchedulesIDReader) ReadResponse(response runtime.ClientR
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /ingestion/schedules/{id}] DeleteIngestionSchedulesID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/ingestion/schedules/{id}] deleteIngestionSchedulesID", response, response.Code())
 	}
 }
 
@@ -92,11 +92,11 @@ func (o *DeleteIngestionSchedulesIDNoContent) Code() int {
 }
 
 func (o *DeleteIngestionSchedulesIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNoContent", 204)
 }
 
 func (o *DeleteIngestionSchedulesIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNoContent", 204)
 }
 
 func (o *DeleteIngestionSchedulesIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -148,12 +148,12 @@ func (o *DeleteIngestionSchedulesIDUnauthorized) Code() int {
 
 func (o *DeleteIngestionSchedulesIDUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDUnauthorized) GetPayload() *models.ErrorResponse {
@@ -216,12 +216,12 @@ func (o *DeleteIngestionSchedulesIDNotFound) Code() int {
 
 func (o *DeleteIngestionSchedulesIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDNotFound) GetPayload() *models.ErrorResponse {
@@ -284,12 +284,12 @@ func (o *DeleteIngestionSchedulesIDInternalServerError) Code() int {
 
 func (o *DeleteIngestionSchedulesIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteIngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteIngestionSchedulesIDInternalServerError) GetPayload() *models.ErrorResponse {

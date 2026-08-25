@@ -57,46 +57,46 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// GetRuns list runs.
-	GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error)
+	GetRuns(params *GetRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsOK, error)
 
 	// GetRunsContext list runs.
-	GetRunsContext(ctx context.Context, params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error)
+	GetRunsContext(ctx context.Context, params *GetRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsOK, error)
 
 	// GetRunsID get run.
-	GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error)
+	GetRunsID(params *GetRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDOK, error)
 
 	// GetRunsIDContext get run.
-	GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error)
+	GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDOK, error)
 
 	// GetRunsIDEntities get run entities.
-	GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
+	GetRunsIDEntities(params *GetRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
 
 	// GetRunsIDEntitiesContext get run entities.
-	GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
+	GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
 
 	// PostRunsAssetsBatch batch create assets.
-	PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
+	PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
 
 	// PostRunsAssetsBatchContext batch create assets.
-	PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
+	PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
 
 	// PostRunsCleanup cleanup stale runs.
-	PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error)
+	PostRunsCleanup(params *PostRunsCleanupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCleanupOK, error)
 
 	// PostRunsCleanupContext cleanup stale runs.
-	PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error)
+	PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCleanupOK, error)
 
 	// PostRunsComplete complete run.
-	PostRunsComplete(params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error)
+	PostRunsComplete(params *PostRunsCompleteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCompleteOK, error)
 
 	// PostRunsCompleteContext complete run.
-	PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error)
+	PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCompleteOK, error)
 
 	// PostRunsStart start run.
-	PostRunsStart(params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error)
+	PostRunsStart(params *PostRunsStartParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsStartOK, error)
 
 	// PostRunsStartContext start run.
-	PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error)
+	PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsStartOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -109,7 +109,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetRunsContext] instead.
-func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error) {
+func (a *Client) GetRuns(params *GetRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -117,7 +117,7 @@ func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsO
 		ctx = context.Background()
 	}
 
-	return a.GetRunsContext(ctx, params, opts...)
+	return a.GetRunsContext(ctx, params, authInfo, opts...)
 }
 
 // GetRunsContext lists runs.
@@ -125,21 +125,22 @@ func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsO
 // Get paginated list of runs with filtering.
 //
 // Do not use the deprecated [GetRunsParams.Context] with this method: it would be ignored.
-func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error) {
+func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetRuns",
+		ID:                 "getRuns",
 		Method:             "GET",
-		PathPattern:        "/runs",
+		PathPattern:        "/api/v1/runs",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -163,7 +164,7 @@ func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, opts
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetRuns: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getRuns: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -175,7 +176,7 @@ func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, opts
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetRunsIDContext] instead.
-func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error) {
+func (a *Client) GetRunsID(params *GetRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -183,7 +184,7 @@ func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetR
 		ctx = context.Background()
 	}
 
-	return a.GetRunsIDContext(ctx, params, opts...)
+	return a.GetRunsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetRunsIDContext gets run.
@@ -191,21 +192,22 @@ func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetR
 // Get a specific run by ID.
 //
 // Do not use the deprecated [GetRunsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error) {
+func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetRunsID",
+		ID:                 "getRunsID",
 		Method:             "GET",
-		PathPattern:        "/runs/{id}",
+		PathPattern:        "/api/v1/runs/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -229,7 +231,7 @@ func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetRunsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getRunsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -241,7 +243,7 @@ func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetRunsIDEntitiesContext] instead.
-func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
+func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -249,7 +251,7 @@ func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.GetRunsIDEntitiesContext(ctx, params, opts...)
+	return a.GetRunsIDEntitiesContext(ctx, params, authInfo, opts...)
 }
 
 // GetRunsIDEntitiesContext gets run entities.
@@ -257,21 +259,22 @@ func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...Clie
 // Get paginated list of entities for a specific run.
 //
 // Do not use the deprecated [GetRunsIDEntitiesParams.Context] with this method: it would be ignored.
-func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
+func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsIDEntitiesParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetRunsIDEntities",
+		ID:                 "getRunsIDEntities",
 		Method:             "GET",
-		PathPattern:        "/runs/{id}/entities",
+		PathPattern:        "/api/v1/runs/{id}/entities",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsIDEntitiesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -295,7 +298,7 @@ func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetRunsIDEntities: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getRunsIDEntities: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -307,7 +310,7 @@ func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRunsAssetsBatchContext] instead.
-func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
+func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -315,7 +318,7 @@ func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.PostRunsAssetsBatchContext(ctx, params, opts...)
+	return a.PostRunsAssetsBatchContext(ctx, params, authInfo, opts...)
 }
 
 // PostRunsAssetsBatchContext batches create assets.
@@ -323,21 +326,22 @@ func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...
 // Create/update assets within a run.
 //
 // Do not use the deprecated [PostRunsAssetsBatchParams.Context] with this method: it would be ignored.
-func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
+func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsAssetsBatchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRunsAssetsBatch",
+		ID:                 "postRunsAssetsBatch",
 		Method:             "POST",
-		PathPattern:        "/runs/assets/batch",
+		PathPattern:        "/api/v1/runs/assets/batch",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsAssetsBatchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -361,7 +365,7 @@ func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRun
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRunsAssetsBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRunsAssetsBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -373,7 +377,7 @@ func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRun
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRunsCleanupContext] instead.
-func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error) {
+func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCleanupOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -381,7 +385,7 @@ func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.PostRunsCleanupContext(ctx, params, opts...)
+	return a.PostRunsCleanupContext(ctx, params, authInfo, opts...)
 }
 
 // PostRunsCleanupContext cleanups stale runs.
@@ -389,21 +393,22 @@ func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOp
 // Mark runs as failed if they've been running too long without updates.
 //
 // Do not use the deprecated [PostRunsCleanupParams.Context] with this method: it would be ignored.
-func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error) {
+func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCleanupOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsCleanupParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRunsCleanup",
+		ID:                 "postRunsCleanup",
 		Method:             "POST",
-		PathPattern:        "/runs/cleanup",
+		PathPattern:        "/api/v1/runs/cleanup",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsCleanupReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -427,7 +432,7 @@ func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCle
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRunsCleanup: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRunsCleanup: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -439,7 +444,7 @@ func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCle
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRunsCompleteContext] instead.
-func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error) {
+func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCompleteOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -447,7 +452,7 @@ func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostRunsCompleteContext(ctx, params, opts...)
+	return a.PostRunsCompleteContext(ctx, params, authInfo, opts...)
 }
 
 // PostRunsCompleteContext completes run.
@@ -455,21 +460,22 @@ func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...Client
 // Complete a run with results.
 //
 // Do not use the deprecated [PostRunsCompleteParams.Context] with this method: it would be ignored.
-func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error) {
+func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCompleteOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsCompleteParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRunsComplete",
+		ID:                 "postRunsComplete",
 		Method:             "POST",
-		PathPattern:        "/runs/complete",
+		PathPattern:        "/api/v1/runs/complete",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsCompleteReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -493,7 +499,7 @@ func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCo
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRunsComplete: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRunsComplete: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -505,7 +511,7 @@ func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCo
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRunsStartContext] instead.
-func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error) {
+func (a *Client) PostRunsStart(params *PostRunsStartParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsStartOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -513,7 +519,7 @@ func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.PostRunsStartContext(ctx, params, opts...)
+	return a.PostRunsStartContext(ctx, params, authInfo, opts...)
 }
 
 // PostRunsStartContext starts run.
@@ -521,21 +527,22 @@ func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption
 // Start a new run for tracking.
 //
 // Do not use the deprecated [PostRunsStartParams.Context] with this method: it would be ignored.
-func (a *Client) PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error) {
+func (a *Client) PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsStartOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsStartParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRunsStart",
+		ID:                 "postRunsStart",
 		Method:             "POST",
-		PathPattern:        "/runs/start",
+		PathPattern:        "/api/v1/runs/start",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsStartReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -559,7 +566,7 @@ func (a *Client) PostRunsStartContext(ctx context.Context, params *PostRunsStart
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRunsStart: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRunsStart: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

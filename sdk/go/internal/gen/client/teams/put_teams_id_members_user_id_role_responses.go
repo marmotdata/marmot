@@ -46,7 +46,7 @@ func (o *PutTeamsIDMembersUserIDRoleReader) ReadResponse(response runtime.Client
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /teams/{id}/members/{userId}/role] PutTeamsIDMembersUserIDRole", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/teams/{id}/members/{userId}/role] putTeamsIDMembersUserIDRole", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PutTeamsIDMembersUserIDRoleOK) Code() int {
 
 func (o *PutTeamsIDMembersUserIDRoleOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleOK %s", 200, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleOK %s", 200, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleOK) GetPayload() *models.MessageResponse {
@@ -162,12 +162,12 @@ func (o *PutTeamsIDMembersUserIDRoleBadRequest) Code() int {
 
 func (o *PutTeamsIDMembersUserIDRoleBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleBadRequest %s", 400, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleBadRequest %s", 400, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PutTeamsIDMembersUserIDRoleNotFound) Code() int {
 
 func (o *PutTeamsIDMembersUserIDRoleNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleNotFound %s", 404, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleNotFound %s", 404, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleNotFound) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PutTeamsIDMembersUserIDRoleInternalServerError) Code() int {
 
 func (o *PutTeamsIDMembersUserIDRoleInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleInternalServerError %s", 500, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleInternalServerError %s", 500, payload)
 }
 
 func (o *PutTeamsIDMembersUserIDRoleInternalServerError) GetPayload() *models.ErrorResponse {

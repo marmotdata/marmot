@@ -40,7 +40,7 @@ func (o *DeleteSsoTeamMappingsIDReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /sso/team-mappings/{id}] DeleteSsoTeamMappingsID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/sso/team-mappings/{id}] deleteSsoTeamMappingsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *DeleteSsoTeamMappingsIDOK) Code() int {
 
 func (o *DeleteSsoTeamMappingsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdOK %s", 200, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDOK) GetPayload() *models.MessageResponse {
@@ -156,12 +156,12 @@ func (o *DeleteSsoTeamMappingsIDNotFound) Code() int {
 
 func (o *DeleteSsoTeamMappingsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *DeleteSsoTeamMappingsIDInternalServerError) Code() int {
 
 func (o *DeleteSsoTeamMappingsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteSsoTeamMappingsIDInternalServerError) GetPayload() *models.ErrorResponse {

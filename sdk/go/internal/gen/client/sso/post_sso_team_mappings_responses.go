@@ -46,7 +46,7 @@ func (o *PostSsoTeamMappingsReader) ReadResponse(response runtime.ClientResponse
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /sso/team-mappings] PostSsoTeamMappings", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/sso/team-mappings] postSsoTeamMappings", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostSsoTeamMappingsCreated) Code() int {
 
 func (o *PostSsoTeamMappingsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsCreated %s", 201, payload)
 }
 
 func (o *PostSsoTeamMappingsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsCreated %s", 201, payload)
 }
 
 func (o *PostSsoTeamMappingsCreated) GetPayload() *models.SSOTeamMapping {
@@ -162,12 +162,12 @@ func (o *PostSsoTeamMappingsBadRequest) Code() int {
 
 func (o *PostSsoTeamMappingsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsBadRequest %s", 400, payload)
 }
 
 func (o *PostSsoTeamMappingsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsBadRequest %s", 400, payload)
 }
 
 func (o *PostSsoTeamMappingsBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostSsoTeamMappingsConflict) Code() int {
 
 func (o *PostSsoTeamMappingsConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsConflict %s", 409, payload)
 }
 
 func (o *PostSsoTeamMappingsConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsConflict %s", 409, payload)
 }
 
 func (o *PostSsoTeamMappingsConflict) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostSsoTeamMappingsInternalServerError) Code() int {
 
 func (o *PostSsoTeamMappingsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsInternalServerError %s", 500, payload)
 }
 
 func (o *PostSsoTeamMappingsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /sso/team-mappings][%d] postSsoTeamMappingsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/sso/team-mappings][%d] postSsoTeamMappingsInternalServerError %s", 500, payload)
 }
 
 func (o *PostSsoTeamMappingsInternalServerError) GetPayload() *models.ErrorResponse {
