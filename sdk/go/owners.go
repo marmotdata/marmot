@@ -27,7 +27,7 @@ func (s *OwnersService) Search(ctx context.Context, q string, opts OwnerSearchOp
 	if opts.Limit > 0 {
 		p = p.WithLimit(&opts.Limit)
 	}
-	resp, err := s.gen.Owners.GetOwnersSearch(p)
+	resp, err := s.gen.Owners.GetOwnersSearch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

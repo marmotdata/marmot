@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -38,9 +39,12 @@ type SearchUsersResponse struct {
 // @Param query query string false "Search query for username or email"
 // @Param role_ids query []string false "Filter by role IDs"
 // @Param active query bool false "Filter by active status"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListUsersResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users [get]
+// @ID getUsers
+// @Router /api/v1/users [get]
 func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 	filter := user.Filter{
 		Limit:  50,
@@ -84,10 +88,13 @@ func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param user body user.CreateUserInput true "User creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
-// @Router /users [post]
+// @ID postUsers
+// @Router /api/v1/users [post]
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	var input user.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -97,6 +104,10 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := h.userService.Create(r.Context(), input)
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch err {
 		case user.ErrInvalidInput:
 			common.RespondError(w, http.StatusBadRequest, "Invalid input")
@@ -118,10 +129,13 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/{id} [get]
+// @ID getUsersID
+// @Router /api/v1/users/{id} [get]
 func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {
@@ -151,10 +165,13 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Param user body user.UpdateUserInput true "User update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /users/{id} [put]
+// @ID putUsersID
+// @Router /api/v1/users/{id} [put]
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {
@@ -191,10 +208,13 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/{id} [delete]
+// @ID deleteUsersID
+// @Router /api/v1/users/{id} [delete]
 func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {

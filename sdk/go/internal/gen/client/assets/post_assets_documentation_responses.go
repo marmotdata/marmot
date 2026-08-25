@@ -40,7 +40,7 @@ func (o *PostAssetsDocumentationReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /assets/documentation] PostAssetsDocumentation", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/assets/documentation/] postAssetsDocumentation", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostAssetsDocumentationOK) Code() int {
 
 func (o *PostAssetsDocumentationOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationOK %s", 200, payload)
 }
 
 func (o *PostAssetsDocumentationOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationOK %s", 200, payload)
 }
 
 func (o *PostAssetsDocumentationOK) GetPayload() *models.Documentation {
@@ -156,12 +156,12 @@ func (o *PostAssetsDocumentationBadRequest) Code() int {
 
 func (o *PostAssetsDocumentationBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsDocumentationBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsDocumentationBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostAssetsDocumentationInternalServerError) Code() int {
 
 func (o *PostAssetsDocumentationInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetsDocumentationInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/documentation][%d] postAssetsDocumentationInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/documentation/][%d] postAssetsDocumentationInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetsDocumentationInternalServerError) GetPayload() *models.ErrorResponse {

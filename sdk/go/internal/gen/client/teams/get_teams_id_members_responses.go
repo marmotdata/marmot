@@ -34,7 +34,7 @@ func (o *GetTeamsIDMembersReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /teams/{id}/members] GetTeamsIDMembers", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/teams/{id}/members] getTeamsIDMembers", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetTeamsIDMembersOK) Code() int {
 
 func (o *GetTeamsIDMembersOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}/members][%d] getTeamsIdMembersOK %s", 200, payload)
 }
 
 func (o *GetTeamsIDMembersOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}/members][%d] getTeamsIdMembersOK %s", 200, payload)
 }
 
 func (o *GetTeamsIDMembersOK) GetPayload() *models.ListMembersResponse {
@@ -150,12 +150,12 @@ func (o *GetTeamsIDMembersInternalServerError) Code() int {
 
 func (o *GetTeamsIDMembersInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}/members][%d] getTeamsIdMembersInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsIDMembersInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/teams/{id}/members][%d] getTeamsIdMembersInternalServerError %s", 500, payload)
 }
 
 func (o *GetTeamsIDMembersInternalServerError) GetPayload() *models.ErrorResponse {

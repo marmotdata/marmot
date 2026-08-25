@@ -7,6 +7,7 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -117,6 +118,7 @@ type Service interface {
 type service struct {
 	repo      Repository
 	validator *validator.Validate
+	guard     limits.Guard
 }
 
 type ServiceOption func(*service)
@@ -125,6 +127,7 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
 		validator: validator.New(),
+		guard:     limits.NoopGuard{},
 	}
 
 	for _, opt := range opts {
@@ -132,6 +135,16 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	}
 
 	return s
+}
+
+// WithGuard installs a resource-count Guard consulted before each Create.
+// Passing NoopGuard (the default) disables enforcement.
+func WithGuard(g limits.Guard) ServiceOption {
+	return func(s *service) {
+		if g != nil {
+			s.guard = g
+		}
+	}
 }
 
 func (s *service) GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error) {
@@ -156,6 +169,10 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 		if err := validate.StructExcept(input, "Password"); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 		}
+	}
+
+	if err := s.guard.CheckCreate(ctx, limits.ResourceUsers); err != nil {
+		return nil, err
 	}
 
 	exists, err := s.repo.UsernameExists(ctx, input.Username)

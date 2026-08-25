@@ -34,7 +34,7 @@ func (o *GetAssetsSuggestionsTagsReader) ReadResponse(response runtime.ClientRes
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/suggestions/tags] GetAssetsSuggestionsTags", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/suggestions/tags] getAssetsSuggestionsTags", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetsSuggestionsTagsOK) Code() int {
 
 func (o *GetAssetsSuggestionsTagsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/tags][%d] getAssetsSuggestionsTagsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/tags][%d] getAssetsSuggestionsTagsOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsTagsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/tags][%d] getAssetsSuggestionsTagsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/tags][%d] getAssetsSuggestionsTagsOK %s", 200, payload)
 }
 
 func (o *GetAssetsSuggestionsTagsOK) GetPayload() []string {
@@ -148,12 +148,12 @@ func (o *GetAssetsSuggestionsTagsInternalServerError) Code() int {
 
 func (o *GetAssetsSuggestionsTagsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/tags][%d] getAssetsSuggestionsTagsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/tags][%d] getAssetsSuggestionsTagsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsTagsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/suggestions/tags][%d] getAssetsSuggestionsTagsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/suggestions/tags][%d] getAssetsSuggestionsTagsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsSuggestionsTagsInternalServerError) GetPayload() *models.ErrorResponse {

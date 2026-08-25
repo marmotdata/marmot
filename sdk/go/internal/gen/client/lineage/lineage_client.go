@@ -57,40 +57,40 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteLineageDirectID delete direct lineage.
-	DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
+	DeleteLineageDirectID(params *DeleteLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
 
 	// DeleteLineageDirectIDContext delete direct lineage.
-	DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
+	DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
 
 	// GetLineageAssetsID get asset lineage.
-	GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
+	GetLineageAssetsID(params *GetLineageAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
 
 	// GetLineageAssetsIDContext get asset lineage.
-	GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
+	GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
 
 	// GetLineageDirectID get direct lineage by ID.
-	GetLineageDirectID(params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error)
+	GetLineageDirectID(params *GetLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageDirectIDOK, error)
 
 	// GetLineageDirectIDContext get direct lineage by ID.
-	GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error)
+	GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageDirectIDOK, error)
 
-	// PostAPIV1Lineage ingest open lineage event.
-	PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
+	// PostLineage ingest open lineage event.
+	PostLineage(params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error)
 
-	// PostAPIV1LineageContext ingest open lineage event.
-	PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
+	// PostLineageContext ingest open lineage event.
+	PostLineageContext(ctx context.Context, params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error)
 
 	// PostLineageBatch batch create lineage edges.
-	PostLineageBatch(params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error)
+	PostLineageBatch(params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error)
 
 	// PostLineageBatchContext batch create lineage edges.
-	PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error)
+	PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error)
 
 	// PostLineageDirect create direct lineage.
-	PostLineageDirect(params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error)
+	PostLineageDirect(params *PostLineageDirectParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageDirectOK, error)
 
 	// PostLineageDirectContext create direct lineage.
-	PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error)
+	PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageDirectOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -103,7 +103,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteLineageDirectIDContext] instead.
-func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
+func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -111,7 +111,7 @@ func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts
 		ctx = context.Background()
 	}
 
-	return a.DeleteLineageDirectIDContext(ctx, params, opts...)
+	return a.DeleteLineageDirectIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteLineageDirectIDContext deletes direct lineage.
@@ -119,21 +119,22 @@ func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts
 // Delete a direct lineage connection by its ID.
 //
 // Do not use the deprecated [DeleteLineageDirectIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
+func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteLineageDirectIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteLineageDirectID",
+		ID:                 "deleteLineageDirectID",
 		Method:             "DELETE",
-		PathPattern:        "/lineage/direct/{id}",
+		PathPattern:        "/api/v1/lineage/direct/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteLineageDirectIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -157,7 +158,7 @@ func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *Delet
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -169,7 +170,7 @@ func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *Delet
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetLineageAssetsIDContext] instead.
-func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
+func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -177,7 +178,7 @@ func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.GetLineageAssetsIDContext(ctx, params, opts...)
+	return a.GetLineageAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetLineageAssetsIDContext gets asset lineage.
@@ -185,21 +186,22 @@ func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...Cl
 // Get upstream and downstream lineage for a specific asset.
 //
 // Do not use the deprecated [GetLineageAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
+func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetLineageAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetLineageAssetsID",
+		ID:                 "getLineageAssetsID",
 		Method:             "GET",
-		PathPattern:        "/lineage/assets/{id}",
+		PathPattern:        "/api/v1/lineage/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetLineageAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -223,7 +225,7 @@ func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetLineageAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getLineageAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -235,7 +237,7 @@ func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLinea
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetLineageDirectIDContext] instead.
-func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
+func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -243,7 +245,7 @@ func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.GetLineageDirectIDContext(ctx, params, opts...)
+	return a.GetLineageDirectIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetLineageDirectIDContext gets direct lineage by ID.
@@ -251,21 +253,22 @@ func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...Cl
 // Get a specific direct lineage connection by its ID.
 //
 // Do not use the deprecated [GetLineageDirectIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
+func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetLineageDirectIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetLineageDirectID",
+		ID:                 "getLineageDirectID",
 		Method:             "GET",
-		PathPattern:        "/lineage/direct/{id}",
+		PathPattern:        "/api/v1/lineage/direct/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetLineageDirectIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -289,19 +292,19 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getLineageDirectID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
-// PostAPIV1Lineage ingests open lineage event.
+// PostLineage ingests open lineage event.
 //
 // Process OpenLineage run events and update assets/lineage accordingly.
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
-// If you need to pass a specific context, use [Client.PostAPIV1LineageContext] instead.
-func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
+// If you need to pass a specific context, use [Client.PostLineageContext] instead.
+func (a *Client) PostLineage(params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -309,29 +312,30 @@ func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostAPIV1LineageContext(ctx, params, opts...)
+	return a.PostLineageContext(ctx, params, authInfo, opts...)
 }
 
-// PostAPIV1LineageContext ingests open lineage event.
+// PostLineageContext ingests open lineage event.
 //
 // Process OpenLineage run events and update assets/lineage accordingly.
 //
-// Do not use the deprecated [PostAPIV1LineageParams.Context] with this method: it would be ignored.
-func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
+// Do not use the deprecated [PostLineageParams.Context] with this method: it would be ignored.
+func (a *Client) PostLineageContext(ctx context.Context, params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
-		params = NewPostAPIV1LineageParams()
+		params = NewPostLineageParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAPIV1Lineage",
+		ID:                 "postLineage",
 		Method:             "POST",
 		PathPattern:        "/api/v1/lineage",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &PostAPIV1LineageReader{formats: a.formats},
+		Reader:             &PostLineageReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -345,7 +349,7 @@ func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1L
 	}
 
 	// only one success response has to be checked
-	success, ok := result.(*PostAPIV1LineageOK)
+	success, ok := result.(*PostLineageOK)
 	if ok {
 		return success, nil
 	}
@@ -355,7 +359,7 @@ func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1L
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAPIV1Lineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -367,7 +371,7 @@ func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1L
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostLineageBatchContext] instead.
-func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error) {
+func (a *Client) PostLineageBatch(params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -375,7 +379,7 @@ func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostLineageBatchContext(ctx, params, opts...)
+	return a.PostLineageBatchContext(ctx, params, authInfo, opts...)
 }
 
 // PostLineageBatchContext batches create lineage edges.
@@ -383,21 +387,22 @@ func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...Client
 // Create lineage edges in batch.
 //
 // Do not use the deprecated [PostLineageBatchParams.Context] with this method: it would be ignored.
-func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error) {
+func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostLineageBatchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostLineageBatch",
+		ID:                 "postLineageBatch",
 		Method:             "POST",
-		PathPattern:        "/lineage/batch",
+		PathPattern:        "/api/v1/lineage/batch",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostLineageBatchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -421,7 +426,7 @@ func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineag
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostLineageBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineageBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -433,7 +438,7 @@ func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineag
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostLineageDirectContext] instead.
-func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error) {
+func (a *Client) PostLineageDirect(params *PostLineageDirectParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageDirectOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -441,7 +446,7 @@ func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.PostLineageDirectContext(ctx, params, opts...)
+	return a.PostLineageDirectContext(ctx, params, authInfo, opts...)
 }
 
 // PostLineageDirectContext creates direct lineage.
@@ -449,21 +454,22 @@ func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...Clie
 // Create a direct lineage connection between two assets and returns the created edge.
 //
 // Do not use the deprecated [PostLineageDirectParams.Context] with this method: it would be ignored.
-func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error) {
+func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageDirectOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostLineageDirectParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostLineageDirect",
+		ID:                 "postLineageDirect",
 		Method:             "POST",
-		PathPattern:        "/lineage/direct",
+		PathPattern:        "/api/v1/lineage/direct",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostLineageDirectReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -487,7 +493,7 @@ func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLinea
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostLineageDirect: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postLineageDirect: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

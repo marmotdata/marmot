@@ -57,46 +57,46 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteRolesID delete a role.
-	DeleteRolesID(params *DeleteRolesIDParams, opts ...ClientOption) (*DeleteRolesIDNoContent, error)
+	DeleteRolesID(params *DeleteRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteRolesIDNoContent, error)
 
 	// DeleteRolesIDContext delete a role.
-	DeleteRolesIDContext(ctx context.Context, params *DeleteRolesIDParams, opts ...ClientOption) (*DeleteRolesIDNoContent, error)
+	DeleteRolesIDContext(ctx context.Context, params *DeleteRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteRolesIDNoContent, error)
 
 	// GetPermissions list all permissions.
-	GetPermissions(params *GetPermissionsParams, opts ...ClientOption) (*GetPermissionsOK, error)
+	GetPermissions(params *GetPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPermissionsOK, error)
 
 	// GetPermissionsContext list all permissions.
-	GetPermissionsContext(ctx context.Context, params *GetPermissionsParams, opts ...ClientOption) (*GetPermissionsOK, error)
+	GetPermissionsContext(ctx context.Context, params *GetPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPermissionsOK, error)
 
 	// GetRoles list roles.
-	GetRoles(params *GetRolesParams, opts ...ClientOption) (*GetRolesOK, error)
+	GetRoles(params *GetRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesOK, error)
 
 	// GetRolesContext list roles.
-	GetRolesContext(ctx context.Context, params *GetRolesParams, opts ...ClientOption) (*GetRolesOK, error)
+	GetRolesContext(ctx context.Context, params *GetRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesOK, error)
 
 	// GetRolesID get a role.
-	GetRolesID(params *GetRolesIDParams, opts ...ClientOption) (*GetRolesIDOK, error)
+	GetRolesID(params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error)
 
 	// GetRolesIDContext get a role.
-	GetRolesIDContext(ctx context.Context, params *GetRolesIDParams, opts ...ClientOption) (*GetRolesIDOK, error)
+	GetRolesIDContext(ctx context.Context, params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error)
 
 	// PatchRolesID update a role.
-	PatchRolesID(params *PatchRolesIDParams, opts ...ClientOption) (*PatchRolesIDOK, error)
+	PatchRolesID(params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error)
 
 	// PatchRolesIDContext update a role.
-	PatchRolesIDContext(ctx context.Context, params *PatchRolesIDParams, opts ...ClientOption) (*PatchRolesIDOK, error)
+	PatchRolesIDContext(ctx context.Context, params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error)
 
 	// PostRoles create a role.
-	PostRoles(params *PostRolesParams, opts ...ClientOption) (*PostRolesOK, error)
+	PostRoles(params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error)
 
 	// PostRolesContext create a role.
-	PostRolesContext(ctx context.Context, params *PostRolesParams, opts ...ClientOption) (*PostRolesOK, error)
+	PostRolesContext(ctx context.Context, params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error)
 
 	// PostRolesIDPermissions replace role permissions.
-	PostRolesIDPermissions(params *PostRolesIDPermissionsParams, opts ...ClientOption) (*PostRolesIDPermissionsOK, error)
+	PostRolesIDPermissions(params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error)
 
 	// PostRolesIDPermissionsContext replace role permissions.
-	PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, opts ...ClientOption) (*PostRolesIDPermissionsOK, error)
+	PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -109,7 +109,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteRolesIDContext] instead.
-func (a *Client) DeleteRolesID(params *DeleteRolesIDParams, opts ...ClientOption) (*DeleteRolesIDNoContent, error) {
+func (a *Client) DeleteRolesID(params *DeleteRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteRolesIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -117,7 +117,7 @@ func (a *Client) DeleteRolesID(params *DeleteRolesIDParams, opts ...ClientOption
 		ctx = context.Background()
 	}
 
-	return a.DeleteRolesIDContext(ctx, params, opts...)
+	return a.DeleteRolesIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteRolesIDContext deletes a role.
@@ -125,21 +125,22 @@ func (a *Client) DeleteRolesID(params *DeleteRolesIDParams, opts ...ClientOption
 // Soft-delete a role. Fails if the role is a system role or has active user assignments..
 //
 // Do not use the deprecated [DeleteRolesIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteRolesIDContext(ctx context.Context, params *DeleteRolesIDParams, opts ...ClientOption) (*DeleteRolesIDNoContent, error) {
+func (a *Client) DeleteRolesIDContext(ctx context.Context, params *DeleteRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteRolesIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteRolesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteRolesID",
+		ID:                 "deleteRolesID",
 		Method:             "DELETE",
-		PathPattern:        "/roles/{id}",
+		PathPattern:        "/api/v1/roles/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteRolesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -163,7 +164,7 @@ func (a *Client) DeleteRolesIDContext(ctx context.Context, params *DeleteRolesID
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -175,7 +176,7 @@ func (a *Client) DeleteRolesIDContext(ctx context.Context, params *DeleteRolesID
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetPermissionsContext] instead.
-func (a *Client) GetPermissions(params *GetPermissionsParams, opts ...ClientOption) (*GetPermissionsOK, error) {
+func (a *Client) GetPermissions(params *GetPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPermissionsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -183,7 +184,7 @@ func (a *Client) GetPermissions(params *GetPermissionsParams, opts ...ClientOpti
 		ctx = context.Background()
 	}
 
-	return a.GetPermissionsContext(ctx, params, opts...)
+	return a.GetPermissionsContext(ctx, params, authInfo, opts...)
 }
 
 // GetPermissionsContext lists all permissions.
@@ -191,21 +192,22 @@ func (a *Client) GetPermissions(params *GetPermissionsParams, opts ...ClientOpti
 // List all defined permissions grouped by resource type.
 //
 // Do not use the deprecated [GetPermissionsParams.Context] with this method: it would be ignored.
-func (a *Client) GetPermissionsContext(ctx context.Context, params *GetPermissionsParams, opts ...ClientOption) (*GetPermissionsOK, error) {
+func (a *Client) GetPermissionsContext(ctx context.Context, params *GetPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPermissionsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetPermissionsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetPermissions",
+		ID:                 "getPermissions",
 		Method:             "GET",
-		PathPattern:        "/permissions",
+		PathPattern:        "/api/v1/permissions",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetPermissionsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -229,7 +231,7 @@ func (a *Client) GetPermissionsContext(ctx context.Context, params *GetPermissio
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetPermissions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getPermissions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -241,7 +243,7 @@ func (a *Client) GetPermissionsContext(ctx context.Context, params *GetPermissio
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetRolesContext] instead.
-func (a *Client) GetRoles(params *GetRolesParams, opts ...ClientOption) (*GetRolesOK, error) {
+func (a *Client) GetRoles(params *GetRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -249,7 +251,7 @@ func (a *Client) GetRoles(params *GetRolesParams, opts ...ClientOption) (*GetRol
 		ctx = context.Background()
 	}
 
-	return a.GetRolesContext(ctx, params, opts...)
+	return a.GetRolesContext(ctx, params, authInfo, opts...)
 }
 
 // GetRolesContext lists roles.
@@ -257,21 +259,22 @@ func (a *Client) GetRoles(params *GetRolesParams, opts ...ClientOption) (*GetRol
 // List all active roles with user counts and permissions.
 //
 // Do not use the deprecated [GetRolesParams.Context] with this method: it would be ignored.
-func (a *Client) GetRolesContext(ctx context.Context, params *GetRolesParams, opts ...ClientOption) (*GetRolesOK, error) {
+func (a *Client) GetRolesContext(ctx context.Context, params *GetRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRolesParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetRoles",
+		ID:                 "getRoles",
 		Method:             "GET",
-		PathPattern:        "/roles",
+		PathPattern:        "/api/v1/roles",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRolesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -295,7 +298,7 @@ func (a *Client) GetRolesContext(ctx context.Context, params *GetRolesParams, op
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetRoles: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getRoles: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -307,7 +310,7 @@ func (a *Client) GetRolesContext(ctx context.Context, params *GetRolesParams, op
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetRolesIDContext] instead.
-func (a *Client) GetRolesID(params *GetRolesIDParams, opts ...ClientOption) (*GetRolesIDOK, error) {
+func (a *Client) GetRolesID(params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -315,7 +318,7 @@ func (a *Client) GetRolesID(params *GetRolesIDParams, opts ...ClientOption) (*Ge
 		ctx = context.Background()
 	}
 
-	return a.GetRolesIDContext(ctx, params, opts...)
+	return a.GetRolesIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetRolesIDContext gets a role.
@@ -323,21 +326,22 @@ func (a *Client) GetRolesID(params *GetRolesIDParams, opts ...ClientOption) (*Ge
 // Get a role by ID with its permissions.
 //
 // Do not use the deprecated [GetRolesIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams, opts ...ClientOption) (*GetRolesIDOK, error) {
+func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRolesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetRolesID",
+		ID:                 "getRolesID",
 		Method:             "GET",
-		PathPattern:        "/roles/{id}",
+		PathPattern:        "/api/v1/roles/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRolesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -361,7 +365,7 @@ func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -373,7 +377,7 @@ func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PatchRolesIDContext] instead.
-func (a *Client) PatchRolesID(params *PatchRolesIDParams, opts ...ClientOption) (*PatchRolesIDOK, error) {
+func (a *Client) PatchRolesID(params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -381,7 +385,7 @@ func (a *Client) PatchRolesID(params *PatchRolesIDParams, opts ...ClientOption) 
 		ctx = context.Background()
 	}
 
-	return a.PatchRolesIDContext(ctx, params, opts...)
+	return a.PatchRolesIDContext(ctx, params, authInfo, opts...)
 }
 
 // PatchRolesIDContext updates a role.
@@ -389,21 +393,22 @@ func (a *Client) PatchRolesID(params *PatchRolesIDParams, opts ...ClientOption) 
 // Update a role's name or description. System roles cannot be renamed..
 //
 // Do not use the deprecated [PatchRolesIDParams.Context] with this method: it would be ignored.
-func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDParams, opts ...ClientOption) (*PatchRolesIDOK, error) {
+func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPatchRolesIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PatchRolesID",
+		ID:                 "patchRolesID",
 		Method:             "PATCH",
-		PathPattern:        "/roles/{id}",
+		PathPattern:        "/api/v1/roles/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PatchRolesIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -427,7 +432,7 @@ func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDPa
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PatchRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for patchRolesID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -439,7 +444,7 @@ func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDPa
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRolesContext] instead.
-func (a *Client) PostRoles(params *PostRolesParams, opts ...ClientOption) (*PostRolesOK, error) {
+func (a *Client) PostRoles(params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -447,7 +452,7 @@ func (a *Client) PostRoles(params *PostRolesParams, opts ...ClientOption) (*Post
 		ctx = context.Background()
 	}
 
-	return a.PostRolesContext(ctx, params, opts...)
+	return a.PostRolesContext(ctx, params, authInfo, opts...)
 }
 
 // PostRolesContext creates a role.
@@ -455,21 +460,22 @@ func (a *Client) PostRoles(params *PostRolesParams, opts ...ClientOption) (*Post
 // Create a new role with optional initial permissions.
 //
 // Do not use the deprecated [PostRolesParams.Context] with this method: it would be ignored.
-func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, opts ...ClientOption) (*PostRolesOK, error) {
+func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRolesParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRoles",
+		ID:                 "postRoles",
 		Method:             "POST",
-		PathPattern:        "/roles",
+		PathPattern:        "/api/v1/roles",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRolesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -493,7 +499,7 @@ func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRoles: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRoles: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -505,7 +511,7 @@ func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostRolesIDPermissionsContext] instead.
-func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
+func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -513,7 +519,7 @@ func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, op
 		ctx = context.Background()
 	}
 
-	return a.PostRolesIDPermissionsContext(ctx, params, opts...)
+	return a.PostRolesIDPermissionsContext(ctx, params, authInfo, opts...)
 }
 
 // PostRolesIDPermissionsContext replaces role permissions.
@@ -521,21 +527,22 @@ func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, op
 // Atomically replace all permissions on a role. System roles enforce a minimum permission floor..
 //
 // Do not use the deprecated [PostRolesIDPermissionsParams.Context] with this method: it would be ignored.
-func (a *Client) PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
+func (a *Client) PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRolesIDPermissionsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostRolesIDPermissions",
+		ID:                 "postRolesIDPermissions",
 		Method:             "POST",
-		PathPattern:        "/roles/{id}/permissions",
+		PathPattern:        "/api/v1/roles/{id}/permissions",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRolesIDPermissionsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -559,7 +566,7 @@ func (a *Client) PostRolesIDPermissionsContext(ctx context.Context, params *Post
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostRolesIDPermissions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postRolesIDPermissions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

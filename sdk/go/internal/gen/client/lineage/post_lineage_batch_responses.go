@@ -34,7 +34,7 @@ func (o *PostLineageBatchReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /lineage/batch] PostLineageBatch", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/lineage/batch] postLineageBatch", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *PostLineageBatchOK) Code() int {
 
 func (o *PostLineageBatchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchOK %s", 200, payload)
 }
 
 func (o *PostLineageBatchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchOK %s", 200, payload)
 }
 
 func (o *PostLineageBatchOK) GetPayload() []*models.BatchLineageResult {
@@ -148,12 +148,12 @@ func (o *PostLineageBatchBadRequest) Code() int {
 
 func (o *PostLineageBatchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageBatchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchBadRequest %s", 400, payload)
 }
 
 func (o *PostLineageBatchBadRequest) GetPayload() *models.ErrorResponse {

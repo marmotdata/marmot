@@ -28,7 +28,7 @@ func (o *PostAgentsRunsReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[POST /agents/runs] PostAgentsRuns", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/agents/runs] postAgentsRuns", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *PostAgentsRunsCreated) Code() int {
 
 func (o *PostAgentsRunsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /agents/runs][%d] postAgentsRunsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/agents/runs][%d] postAgentsRunsCreated %s", 201, payload)
 }
 
 func (o *PostAgentsRunsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /agents/runs][%d] postAgentsRunsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/agents/runs][%d] postAgentsRunsCreated %s", 201, payload)
 }
 
 func (o *PostAgentsRunsCreated) GetPayload() *models.AgentRun {

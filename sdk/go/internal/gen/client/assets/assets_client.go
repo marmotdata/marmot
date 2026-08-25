@@ -57,154 +57,154 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 
 	// DeleteAssetsID delete an asset.
-	DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
+	DeleteAssetsID(params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
 
 	// DeleteAssetsIDContext delete an asset.
-	DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
+	DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
 
 	// DeleteAssetsTagsID remove tag from asset.
-	DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
+	DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
 
 	// DeleteAssetsTagsIDContext remove tag from asset.
-	DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
+	DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
 
 	// DeleteAssetsTermsID remove glossary term from asset.
-	DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
+	DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
 
 	// DeleteAssetsTermsIDContext remove glossary term from asset.
-	DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
-
-	// GetAPIV1AssetsPreviewID get preview data for an asset.
-	GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
-
-	// GetAPIV1AssetsPreviewIDContext get preview data for an asset.
-	GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
+	DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
 
 	// GetAssetsByGlossaryTermTermID get assets by glossary term.
-	GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
+	GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
 	// GetAssetsByGlossaryTermTermIDContext get assets by glossary term.
-	GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
+	GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
 	// GetAssetsDocumentationMrn get asset documentation.
-	GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
+	GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
 	// GetAssetsDocumentationMrnContext get asset documentation.
-	GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
+	GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
 	// GetAssetsID get an asset by ID.
-	GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error)
+	GetAssetsID(params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error)
 
 	// GetAssetsIDContext get an asset by ID.
-	GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error)
+	GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error)
 
 	// GetAssetsIDRunHistory get asset run history.
-	GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
+	GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
 
 	// GetAssetsIDRunHistoryContext get asset run history.
-	GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
+	GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
 
 	// GetAssetsIDRunHistoryHistogram get asset run history histogram.
-	GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
+	GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
 
 	// GetAssetsIDRunHistoryHistogramContext get asset run history histogram.
-	GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
+	GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
 
 	// GetAssetsLookupTypeServiceName lookup asset by type service and name.
-	GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
+	GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
 
 	// GetAssetsLookupTypeServiceNameContext lookup asset by type service and name.
-	GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
+	GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
 
 	// GetAssetsMatchPattern match asset pattern.
-	GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
+	GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
 
 	// GetAssetsMatchPatternContext match asset pattern.
-	GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
+	GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
 
 	// GetAssetsMyAssets get user s assets.
-	GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
+	GetAssetsMyAssets(params *GetAssetsMyAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
 
 	// GetAssetsMyAssetsContext get user s assets.
-	GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
+	GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
+
+	// GetAssetsPreviewID get preview data for an asset.
+	GetAssetsPreviewID(params *GetAssetsPreviewIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsPreviewIDOK, error)
+
+	// GetAssetsPreviewIDContext get preview data for an asset.
+	GetAssetsPreviewIDContext(ctx context.Context, params *GetAssetsPreviewIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsPreviewIDOK, error)
 
 	// GetAssetsQualifiedNameQualifiedName get an asset by qualified name.
-	GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
+	GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
 
 	// GetAssetsQualifiedNameQualifiedNameContext get an asset by qualified name.
-	GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
+	GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
 
 	// GetAssetsSearch search assets.
-	GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error)
+	GetAssetsSearch(params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error)
 
 	// GetAssetsSearchContext search assets.
-	GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error)
+	GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error)
 
 	// GetAssetsSuggestionsMetadataFields get metadata field suggestions.
-	GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
+	GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
 
 	// GetAssetsSuggestionsMetadataFieldsContext get metadata field suggestions.
-	GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
+	GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
 
 	// GetAssetsSuggestionsMetadataValues get metadata value suggestions.
-	GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
+	GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
 
 	// GetAssetsSuggestionsMetadataValuesContext get metadata value suggestions.
-	GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
+	GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
 
 	// GetAssetsSuggestionsTags get tag suggestions.
-	GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
+	GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
 
 	// GetAssetsSuggestionsTagsContext get tag suggestions.
-	GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
+	GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
 
 	// GetAssetsSummary get asset summary.
-	GetAssetsSummary(params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error)
+	GetAssetsSummary(params *GetAssetsSummaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSummaryOK, error)
 
 	// GetAssetsSummaryContext get asset summary.
-	GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error)
+	GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSummaryOK, error)
 
 	// GetAssetsTermsID get asset s glossary terms.
-	GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
+	GetAssetsTermsID(params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
 
 	// GetAssetsTermsIDContext get asset s glossary terms.
-	GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
+	GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
 
 	// PostAssets create a new asset.
-	PostAssets(params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error)
+	PostAssets(params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error)
 
 	// PostAssetsContext create a new asset.
-	PostAssetsContext(ctx context.Context, params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error)
+	PostAssetsContext(ctx context.Context, params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error)
 
 	// PostAssetsDocumentation create asset documentation.
-	PostAssetsDocumentation(params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
+	PostAssetsDocumentation(params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
 
 	// PostAssetsDocumentationContext create asset documentation.
-	PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
+	PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
 
 	// PostAssetsDocumentationBatch batch create documentation.
-	PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
+	PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
 
 	// PostAssetsDocumentationBatchContext batch create documentation.
-	PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
+	PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
 
 	// PostAssetsTagsID add tag to asset.
-	PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
+	PostAssetsTagsID(params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
 
 	// PostAssetsTagsIDContext add tag to asset.
-	PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
+	PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
 
 	// PostAssetsTermsID add glossary terms to asset.
-	PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
+	PostAssetsTermsID(params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
 
 	// PostAssetsTermsIDContext add glossary terms to asset.
-	PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
+	PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
 
 	// PutAssetsID update an asset.
-	PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error)
+	PutAssetsID(params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error)
 
 	// PutAssetsIDContext update an asset.
-	PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error)
+	PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -217,7 +217,7 @@ type ClientService interface {
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteAssetsIDContext] instead.
-func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
+func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -225,7 +225,7 @@ func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOpti
 		ctx = context.Background()
 	}
 
-	return a.DeleteAssetsIDContext(ctx, params, opts...)
+	return a.DeleteAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteAssetsIDContext deletes an asset.
@@ -233,21 +233,22 @@ func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOpti
 // Delete an asset from the system.
 //
 // Do not use the deprecated [DeleteAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
+func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteAssetsID",
+		ID:                 "deleteAssetsID",
 		Method:             "DELETE",
-		PathPattern:        "/assets/{id}",
+		PathPattern:        "/api/v1/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -271,7 +272,7 @@ func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssets
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -283,7 +284,7 @@ func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssets
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteAssetsTagsIDContext] instead.
-func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
+func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -291,7 +292,7 @@ func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...Cl
 		ctx = context.Background()
 	}
 
-	return a.DeleteAssetsTagsIDContext(ctx, params, opts...)
+	return a.DeleteAssetsTagsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteAssetsTagsIDContext removes tag from asset.
@@ -299,21 +300,22 @@ func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...Cl
 // Remove a tag from an existing asset.
 //
 // Do not use the deprecated [DeleteAssetsTagsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
+func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsTagsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteAssetsTagsID",
+		ID:                 "deleteAssetsTagsID",
 		Method:             "DELETE",
-		PathPattern:        "/assets/tags/{id}",
+		PathPattern:        "/api/v1/assets/tags/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsTagsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -337,7 +339,7 @@ func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAs
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteAssetsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteAssetsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -349,7 +351,7 @@ func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAs
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.DeleteAssetsTermsIDContext] instead.
-func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
+func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -357,7 +359,7 @@ func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...
 		ctx = context.Background()
 	}
 
-	return a.DeleteAssetsTermsIDContext(ctx, params, opts...)
+	return a.DeleteAssetsTermsIDContext(ctx, params, authInfo, opts...)
 }
 
 // DeleteAssetsTermsIDContext removes glossary term from asset.
@@ -365,21 +367,22 @@ func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...
 // Remove a glossary term association from an asset.
 //
 // Do not use the deprecated [DeleteAssetsTermsIDParams.Context] with this method: it would be ignored.
-func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
+func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsTermsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteAssetsTermsID",
+		ID:                 "deleteAssetsTermsID",
 		Method:             "DELETE",
-		PathPattern:        "/assets/terms/{id}",
+		PathPattern:        "/api/v1/assets/terms/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsTermsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -403,73 +406,7 @@ func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteA
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-// GetAPIV1AssetsPreviewID gets preview data for an asset.
-//
-// Fetches sample data from the asset's data source. Requires assets:preview permission..
-//
-// This method does not support injected context.
-// However, timeout and opentracing contexts are honored whenever enabled.
-//
-// If you need to pass a specific context, use [Client.GetAPIV1AssetsPreviewIDContext] instead.
-func (a *Client) GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
-	var ctx context.Context
-	if params.inner.ctx != nil {
-		ctx = params.inner.ctx
-	} else {
-		ctx = context.Background()
-	}
-
-	return a.GetAPIV1AssetsPreviewIDContext(ctx, params, opts...)
-}
-
-// GetAPIV1AssetsPreviewIDContext gets preview data for an asset.
-//
-// Fetches sample data from the asset's data source. Requires assets:preview permission..
-//
-// Do not use the deprecated [GetAPIV1AssetsPreviewIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewGetAPIV1AssetsPreviewIDParams()
-	}
-
-	op := &runtime.ClientOperation{
-		ID:                 "GetAPIV1AssetsPreviewID",
-		Method:             "GET",
-		PathPattern:        "/api/v1/assets/preview/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetAPIV1AssetsPreviewIDReader{formats: a.formats},
-		Client:             params.HTTPClient,
-	}
-
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.SubmitContext(ctx, op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*GetAPIV1AssetsPreviewIDOK)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAPIV1AssetsPreviewID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deleteAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -481,7 +418,7 @@ func (a *Client) GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *Get
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsByGlossaryTermTermIDContext] instead.
-func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
+func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -489,7 +426,7 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsByGlossaryTermTermIDContext(ctx, params, opts...)
+	return a.GetAssetsByGlossaryTermTermIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsByGlossaryTermTermIDContext gets assets by glossary term.
@@ -497,21 +434,22 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 // Retrieve all assets associated with a specific glossary term.
 //
 // Do not use the deprecated [GetAssetsByGlossaryTermTermIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
+func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsByGlossaryTermTermIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsByGlossaryTermTermID",
+		ID:                 "getAssetsByGlossaryTermTermID",
 		Method:             "GET",
-		PathPattern:        "/assets/by-glossary-term/{term_id}",
+		PathPattern:        "/api/v1/assets/by-glossary-term/{term_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsByGlossaryTermTermIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -535,7 +473,7 @@ func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, param
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsByGlossaryTermTermID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsByGlossaryTermTermID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -547,7 +485,7 @@ func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, param
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsDocumentationMrnContext] instead.
-func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
+func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -555,7 +493,7 @@ func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnPara
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsDocumentationMrnContext(ctx, params, opts...)
+	return a.GetAssetsDocumentationMrnContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsDocumentationMrnContext gets asset documentation.
@@ -563,21 +501,22 @@ func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnPara
 // Get documentation for a specific asset.
 //
 // Do not use the deprecated [GetAssetsDocumentationMrnParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
+func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsDocumentationMrnParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsDocumentationMrn",
+		ID:                 "getAssetsDocumentationMrn",
 		Method:             "GET",
-		PathPattern:        "/assets/documentation/{mrn}",
+		PathPattern:        "/api/v1/assets/documentation/{mrn}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsDocumentationMrnReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -601,7 +540,7 @@ func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *G
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsDocumentationMrn: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsDocumentationMrn: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -613,7 +552,7 @@ func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *G
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsIDContext] instead.
-func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error) {
+func (a *Client) GetAssetsID(params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -621,7 +560,7 @@ func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsIDContext(ctx, params, opts...)
+	return a.GetAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsIDContext gets an asset by ID.
@@ -629,21 +568,22 @@ func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*
 // Get detailed information about a specific asset.
 //
 // Do not use the deprecated [GetAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error) {
+func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsID",
+		ID:                 "getAssetsID",
 		Method:             "GET",
-		PathPattern:        "/assets/{id}",
+		PathPattern:        "/api/v1/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -667,7 +607,7 @@ func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDPara
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -679,7 +619,7 @@ func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDPara
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryContext] instead.
-func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
+func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -687,7 +627,7 @@ func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsIDRunHistoryContext(ctx, params, opts...)
+	return a.GetAssetsIDRunHistoryContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsIDRunHistoryContext gets asset run history.
@@ -695,21 +635,22 @@ func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts
 // Get paginated run history for a specific asset.
 //
 // Do not use the deprecated [GetAssetsIDRunHistoryParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
+func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDRunHistoryParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsIDRunHistory",
+		ID:                 "getAssetsIDRunHistory",
 		Method:             "GET",
-		PathPattern:        "/assets/{id}/run-history",
+		PathPattern:        "/api/v1/assets/run-history/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDRunHistoryReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -733,7 +674,7 @@ func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAs
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsIDRunHistory: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsIDRunHistory: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -745,7 +686,7 @@ func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAs
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryHistogramContext] instead.
-func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
+func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -753,7 +694,7 @@ func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHis
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsIDRunHistoryHistogramContext(ctx, params, opts...)
+	return a.GetAssetsIDRunHistoryHistogramContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsIDRunHistoryHistogramContext gets asset run history histogram.
@@ -761,21 +702,22 @@ func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHis
 // Get histogram data for asset run history over specified period.
 //
 // Do not use the deprecated [GetAssetsIDRunHistoryHistogramParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
+func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDRunHistoryHistogramParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsIDRunHistoryHistogram",
+		ID:                 "getAssetsIDRunHistoryHistogram",
 		Method:             "GET",
-		PathPattern:        "/assets/{id}/run-history/histogram",
+		PathPattern:        "/api/v1/assets/run-history-histogram/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDRunHistoryHistogramReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -799,7 +741,7 @@ func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, para
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsIDRunHistoryHistogram: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsIDRunHistoryHistogram: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -811,7 +753,7 @@ func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, para
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsLookupTypeServiceNameContext] instead.
-func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
+func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -819,7 +761,7 @@ func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServi
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsLookupTypeServiceNameContext(ctx, params, opts...)
+	return a.GetAssetsLookupTypeServiceNameContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsLookupTypeServiceNameContext lookups asset by type service and name.
@@ -827,21 +769,22 @@ func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServi
 // Get an asset by its type, service (provider), and name.
 //
 // Do not use the deprecated [GetAssetsLookupTypeServiceNameParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
+func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsLookupTypeServiceNameParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsLookupTypeServiceName",
+		ID:                 "getAssetsLookupTypeServiceName",
 		Method:             "GET",
-		PathPattern:        "/assets/lookup/{type}/{service}/{name}",
+		PathPattern:        "/api/v1/assets/lookup/{type}/{service}/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsLookupTypeServiceNameReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -865,7 +808,7 @@ func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, para
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsLookupTypeServiceName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsLookupTypeServiceName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -877,7 +820,7 @@ func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, para
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsMatchPatternContext] instead.
-func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
+func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -885,7 +828,7 @@ func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsMatchPatternContext(ctx, params, opts...)
+	return a.GetAssetsMatchPatternContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsMatchPatternContext matches asset pattern.
@@ -893,21 +836,22 @@ func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts
 // Find assets matching a pattern.
 //
 // Do not use the deprecated [GetAssetsMatchPatternParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
+func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsMatchPatternParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsMatchPattern",
+		ID:                 "getAssetsMatchPattern",
 		Method:             "GET",
-		PathPattern:        "/assets/match-pattern",
+		PathPattern:        "/api/v1/assets/match-pattern/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsMatchPatternReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -931,7 +875,7 @@ func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAs
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsMatchPattern: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsMatchPattern: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -943,7 +887,7 @@ func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAs
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsMyAssetsContext] instead.
-func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
+func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -951,7 +895,7 @@ func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsMyAssetsContext(ctx, params, opts...)
+	return a.GetAssetsMyAssetsContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsMyAssetsContext gets user s assets.
@@ -959,21 +903,22 @@ func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...Clie
 // Get assets owned by the current user or their teams.
 //
 // Do not use the deprecated [GetAssetsMyAssetsParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
+func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsMyAssetsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsMyAssets",
+		ID:                 "getAssetsMyAssets",
 		Method:             "GET",
-		PathPattern:        "/assets/my-assets",
+		PathPattern:        "/api/v1/assets/my-assets",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsMyAssetsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -997,7 +942,74 @@ func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssets
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsMyAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsMyAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAssetsPreviewID gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsPreviewIDContext] instead.
+func (a *Client) GetAssetsPreviewID(params *GetAssetsPreviewIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsPreviewIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsPreviewIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetAssetsPreviewIDContext gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// Do not use the deprecated [GetAssetsPreviewIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsPreviewIDContext(ctx context.Context, params *GetAssetsPreviewIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsPreviewIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsPreviewIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAssetsPreviewID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/assets/preview/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsPreviewIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsPreviewIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAssetsPreviewID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1009,7 +1021,7 @@ func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssets
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsQualifiedNameQualifiedNameContext] instead.
-func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
+func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1017,7 +1029,7 @@ func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedN
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsQualifiedNameQualifiedNameContext(ctx, params, opts...)
+	return a.GetAssetsQualifiedNameQualifiedNameContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsQualifiedNameQualifiedNameContext gets an asset by qualified name.
@@ -1025,21 +1037,22 @@ func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedN
 // Get detailed information about a specific asset using its qualified name.
 //
 // Do not use the deprecated [GetAssetsQualifiedNameQualifiedNameParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
+func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsQualifiedNameQualifiedNameParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsQualifiedNameQualifiedName",
+		ID:                 "getAssetsQualifiedNameQualifiedName",
 		Method:             "GET",
-		PathPattern:        "/assets/qualified-name/{qualifiedName}",
+		PathPattern:        "/api/v1/assets/qualified-name/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsQualifiedNameQualifiedNameReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1063,7 +1076,7 @@ func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context,
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsQualifiedNameQualifiedName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsQualifiedNameQualifiedName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1075,7 +1088,7 @@ func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context,
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsSearchContext] instead.
-func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error) {
+func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1083,7 +1096,7 @@ func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsSearchContext(ctx, params, opts...)
+	return a.GetAssetsSearchContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsSearchContext searches assets.
@@ -1091,21 +1104,22 @@ func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOp
 // Search for assets using query string and filters.
 //
 // Do not use the deprecated [GetAssetsSearchParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error) {
+func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSearchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsSearch",
+		ID:                 "getAssetsSearch",
 		Method:             "GET",
-		PathPattern:        "/assets/search",
+		PathPattern:        "/api/v1/assets/search",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSearchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1129,7 +1143,7 @@ func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSe
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1141,7 +1155,7 @@ func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSe
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataFieldsContext] instead.
-func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
+func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1149,7 +1163,7 @@ func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestions
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsSuggestionsMetadataFieldsContext(ctx, params, opts...)
+	return a.GetAssetsSuggestionsMetadataFieldsContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsSuggestionsMetadataFieldsContext gets metadata field suggestions.
@@ -1157,21 +1171,22 @@ func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestions
 // Get suggestions for metadata fields and their types.
 //
 // Do not use the deprecated [GetAssetsSuggestionsMetadataFieldsParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
+func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsMetadataFieldsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsSuggestionsMetadataFields",
+		ID:                 "getAssetsSuggestionsMetadataFields",
 		Method:             "GET",
-		PathPattern:        "/assets/suggestions/metadata/fields",
+		PathPattern:        "/api/v1/assets/suggestions/metadata/fields",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsMetadataFieldsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1195,7 +1210,7 @@ func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsSuggestionsMetadataFields: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsSuggestionsMetadataFields: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1207,7 +1222,7 @@ func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataValuesContext] instead.
-func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
+func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1215,7 +1230,7 @@ func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestions
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsSuggestionsMetadataValuesContext(ctx, params, opts...)
+	return a.GetAssetsSuggestionsMetadataValuesContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsSuggestionsMetadataValuesContext gets metadata value suggestions.
@@ -1223,21 +1238,22 @@ func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestions
 // Get suggestions for values of a specific metadata field.
 //
 // Do not use the deprecated [GetAssetsSuggestionsMetadataValuesParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
+func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsMetadataValuesParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsSuggestionsMetadataValues",
+		ID:                 "getAssetsSuggestionsMetadataValues",
 		Method:             "GET",
-		PathPattern:        "/assets/suggestions/metadata/values",
+		PathPattern:        "/api/v1/assets/suggestions/metadata/values",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsMetadataValuesReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1261,7 +1277,7 @@ func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, 
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsSuggestionsMetadataValues: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsSuggestionsMetadataValues: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1273,7 +1289,7 @@ func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, 
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsTagsContext] instead.
-func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
+func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1281,7 +1297,7 @@ func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsSuggestionsTagsContext(ctx, params, opts...)
+	return a.GetAssetsSuggestionsTagsContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsSuggestionsTagsContext gets tag suggestions.
@@ -1289,21 +1305,22 @@ func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams
 // Get suggestions for asset tags.
 //
 // Do not use the deprecated [GetAssetsSuggestionsTagsParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
+func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsTagsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsSuggestionsTags",
+		ID:                 "getAssetsSuggestionsTags",
 		Method:             "GET",
-		PathPattern:        "/assets/suggestions/tags",
+		PathPattern:        "/api/v1/assets/suggestions/tags",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsTagsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1327,7 +1344,7 @@ func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *Ge
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsSuggestionsTags: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsSuggestionsTags: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1339,7 +1356,7 @@ func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *Ge
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsSummaryContext] instead.
-func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
+func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1347,7 +1364,7 @@ func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsSummaryContext(ctx, params, opts...)
+	return a.GetAssetsSummaryContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsSummaryContext gets asset summary.
@@ -1355,21 +1372,22 @@ func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...Client
 // Get the total count of assets by type.
 //
 // Do not use the deprecated [GetAssetsSummaryParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
+func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSummaryParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsSummary",
+		ID:                 "getAssetsSummary",
 		Method:             "GET",
-		PathPattern:        "/assets/summary",
+		PathPattern:        "/api/v1/assets/summary",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSummaryReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1393,7 +1411,7 @@ func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsS
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsSummary: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsSummary: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1405,7 +1423,7 @@ func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsS
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetAssetsTermsIDContext] instead.
-func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
+func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1413,7 +1431,7 @@ func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.GetAssetsTermsIDContext(ctx, params, opts...)
+	return a.GetAssetsTermsIDContext(ctx, params, authInfo, opts...)
 }
 
 // GetAssetsTermsIDContext gets asset s glossary terms.
@@ -1421,21 +1439,22 @@ func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...Client
 // Retrieve all glossary terms associated with an asset.
 //
 // Do not use the deprecated [GetAssetsTermsIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
+func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsTermsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAssetsTermsID",
+		ID:                 "getAssetsTermsID",
 		Method:             "GET",
-		PathPattern:        "/assets/terms/{id}",
+		PathPattern:        "/api/v1/assets/terms/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsTermsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1459,7 +1478,7 @@ func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsT
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1471,7 +1490,7 @@ func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsT
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetsContext] instead.
-func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error) {
+func (a *Client) PostAssets(params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1479,7 +1498,7 @@ func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*Po
 		ctx = context.Background()
 	}
 
-	return a.PostAssetsContext(ctx, params, opts...)
+	return a.PostAssetsContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetsContext creates a new asset.
@@ -1487,21 +1506,22 @@ func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*Po
 // Create a new asset in the system.
 //
 // Do not use the deprecated [PostAssetsParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error) {
+func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAssets",
+		ID:                 "postAssets",
 		Method:             "POST",
-		PathPattern:        "/assets",
+		PathPattern:        "/api/v1/assets/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1525,7 +1545,7 @@ func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1537,7 +1557,7 @@ func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetsDocumentationContext] instead.
-func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
+func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1545,7 +1565,7 @@ func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, 
 		ctx = context.Background()
 	}
 
-	return a.PostAssetsDocumentationContext(ctx, params, opts...)
+	return a.PostAssetsDocumentationContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetsDocumentationContext creates asset documentation.
@@ -1553,21 +1573,22 @@ func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, 
 // Create or update documentation for an asset.
 //
 // Do not use the deprecated [PostAssetsDocumentationParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
+func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsDocumentationParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAssetsDocumentation",
+		ID:                 "postAssetsDocumentation",
 		Method:             "POST",
-		PathPattern:        "/assets/documentation",
+		PathPattern:        "/api/v1/assets/documentation/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsDocumentationReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1591,7 +1612,7 @@ func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *Pos
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAssetsDocumentation: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAssetsDocumentation: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1603,7 +1624,7 @@ func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *Pos
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetsDocumentationBatchContext] instead.
-func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
+func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1611,7 +1632,7 @@ func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBat
 		ctx = context.Background()
 	}
 
-	return a.PostAssetsDocumentationBatchContext(ctx, params, opts...)
+	return a.PostAssetsDocumentationBatchContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetsDocumentationBatchContext batches create documentation.
@@ -1619,21 +1640,22 @@ func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBat
 // Create or update documentation for multiple assets.
 //
 // Do not use the deprecated [PostAssetsDocumentationBatchParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
+func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsDocumentationBatchParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAssetsDocumentationBatch",
+		ID:                 "postAssetsDocumentationBatch",
 		Method:             "POST",
-		PathPattern:        "/assets/documentation/batch",
+		PathPattern:        "/api/v1/assets/documentation/batch",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsDocumentationBatchReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1657,7 +1679,7 @@ func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAssetsDocumentationBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAssetsDocumentationBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1669,7 +1691,7 @@ func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetsTagsIDContext] instead.
-func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
+func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1677,7 +1699,7 @@ func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostAssetsTagsIDContext(ctx, params, opts...)
+	return a.PostAssetsTagsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetsTagsIDContext adds tag to asset.
@@ -1685,21 +1707,22 @@ func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...Client
 // Add a new tag to an existing asset.
 //
 // Do not use the deprecated [PostAssetsTagsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
+func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsTagsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAssetsTagsID",
+		ID:                 "postAssetsTagsID",
 		Method:             "POST",
-		PathPattern:        "/assets/tags/{id}",
+		PathPattern:        "/api/v1/assets/tags/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsTagsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1723,7 +1746,7 @@ func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssets
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAssetsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAssetsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1735,7 +1758,7 @@ func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssets
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PostAssetsTermsIDContext] instead.
-func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
+func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1743,7 +1766,7 @@ func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...Clie
 		ctx = context.Background()
 	}
 
-	return a.PostAssetsTermsIDContext(ctx, params, opts...)
+	return a.PostAssetsTermsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PostAssetsTermsIDContext adds glossary terms to asset.
@@ -1751,21 +1774,22 @@ func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...Clie
 // Associate one or more glossary terms with an asset.
 //
 // Do not use the deprecated [PostAssetsTermsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
+func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsTermsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAssetsTermsID",
+		ID:                 "postAssetsTermsID",
 		Method:             "POST",
-		PathPattern:        "/assets/terms/{id}",
+		PathPattern:        "/api/v1/assets/terms/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsTermsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1789,7 +1813,7 @@ func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAsset
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1801,7 +1825,7 @@ func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAsset
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.PutAssetsIDContext] instead.
-func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error) {
+func (a *Client) PutAssetsID(params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -1809,7 +1833,7 @@ func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*
 		ctx = context.Background()
 	}
 
-	return a.PutAssetsIDContext(ctx, params, opts...)
+	return a.PutAssetsIDContext(ctx, params, authInfo, opts...)
 }
 
 // PutAssetsIDContext updates an asset.
@@ -1817,21 +1841,22 @@ func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*
 // Update an existing asset's information.
 //
 // Do not use the deprecated [PutAssetsIDParams.Context] with this method: it would be ignored.
-func (a *Client) PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error) {
+func (a *Client) PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAssetsIDParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PutAssetsID",
+		ID:                 "putAssetsID",
 		Method:             "PUT",
-		PathPattern:        "/assets/{id}",
+		PathPattern:        "/api/v1/assets/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -1855,7 +1880,7 @@ func (a *Client) PutAssetsIDContext(ctx context.Context, params *PutAssetsIDPara
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for putAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

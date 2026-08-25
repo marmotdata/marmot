@@ -73,10 +73,11 @@ def make_gen_client(
     ``http_client`` (or any other auth strategy) and for closing it when
     done.
 
-    The OpenAPI spec declares ``/api/v1`` as the server base, so we append it
-    here — generated URLs are relative (e.g. ``/assets/{id}``).
+    ``base_url`` is the server root: the spec declares no server base, so the
+    generated URLs are absolute (``/api/v1/assets/{id}``, and ``/oauth/token``
+    for the endpoints served outside the API namespace).
     """
-    client = AuthenticatedClient(base_url=base_url.rstrip("/") + "/api/v1", token="")
+    client = AuthenticatedClient(base_url=base_url.rstrip("/"), token="")
     client.set_httpx_client(http_client)
     return client
 

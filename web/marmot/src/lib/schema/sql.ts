@@ -13,8 +13,10 @@ interface SqlColumn {
 	data_type?: unknown;
 	is_nullable?: unknown;
 	is_primary_key?: unknown;
+	primary_key?: unknown;
 	is_sorting_key?: unknown;
 	comment?: unknown;
+	description?: unknown;
 	default_expression?: unknown;
 }
 
@@ -55,23 +57,34 @@ export function processSqlColumnSchema(schemaSection: unknown): Field[] {
 		const col = item as SqlColumn;
 		if (typeof col.column_name !== 'string') continue;
 
-		// Build description from comment + key annotations
+		// Build description from column description + key annotations.
+		// Accept either `is_primary_key`/`primary_key` and `description`/`comment` so
+		// plugins that pick either naming convention render correctly.
 		const descParts: string[] = [];
 
-		if (col.is_primary_key === true) {
+		if (col.is_primary_key === true || col.primary_key === true) {
 			descParts.push('Primary Key');
 		}
 		if (col.is_sorting_key === true) {
 			descParts.push('Sorting Key');
 		}
-		if (typeof col.comment === 'string' && col.comment !== '') {
-			descParts.push(col.comment);
+		const colDescription =
+			typeof col.description === 'string' && col.description !== ''
+				? col.description
+				: typeof col.comment === 'string' && col.comment !== ''
+					? col.comment
+					: undefined;
+		if (colDescription !== undefined) {
+			descParts.push(colDescription);
 		}
 
-		// Determine required from is_nullable (Trino format)
+		// Determine required from is_nullable. Accept both the Trino string form
+		// ("YES"/"NO") and the boolean form emitted by PostgreSQL/MySQL/DuckDB.
 		let required: boolean | undefined;
 		if (typeof col.is_nullable === 'string') {
 			required = col.is_nullable === 'NO';
+		} else if (typeof col.is_nullable === 'boolean') {
+			required = !col.is_nullable;
 		}
 
 		fields.push({

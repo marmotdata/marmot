@@ -40,7 +40,7 @@ func (o *PostRolesReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /roles] PostRoles", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/roles] postRoles", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostRolesOK) Code() int {
 
 func (o *PostRolesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesOK %s", 200, payload)
 }
 
 func (o *PostRolesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesOK %s", 200, payload)
 }
 
 func (o *PostRolesOK) GetPayload() *models.Role {
@@ -156,12 +156,12 @@ func (o *PostRolesBadRequest) Code() int {
 
 func (o *PostRolesBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesBadRequest %s", 400, payload)
 }
 
 func (o *PostRolesBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesBadRequest %s", 400, payload)
 }
 
 func (o *PostRolesBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostRolesConflict) Code() int {
 
 func (o *PostRolesConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesConflict %s", 409, payload)
 }
 
 func (o *PostRolesConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /roles][%d] postRolesConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/roles][%d] postRolesConflict %s", 409, payload)
 }
 
 func (o *PostRolesConflict) GetPayload() *models.ErrorResponse {

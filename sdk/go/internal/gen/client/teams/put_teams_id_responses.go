@@ -58,7 +58,7 @@ func (o *PutTeamsIDReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[PUT /teams/{id}] PutTeamsID", response, response.Code())
+		return nil, runtime.NewAPIError("[PUT /api/v1/teams/{id}] putTeamsID", response, response.Code())
 	}
 }
 
@@ -106,12 +106,12 @@ func (o *PutTeamsIDOK) Code() int {
 
 func (o *PutTeamsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdOK %s", 200, payload)
 }
 
 func (o *PutTeamsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdOK %s", 200, payload)
 }
 
 func (o *PutTeamsIDOK) GetPayload() *models.MessageResponse {
@@ -174,12 +174,12 @@ func (o *PutTeamsIDBadRequest) Code() int {
 
 func (o *PutTeamsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutTeamsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdBadRequest %s", 400, payload)
 }
 
 func (o *PutTeamsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -242,12 +242,12 @@ func (o *PutTeamsIDForbidden) Code() int {
 
 func (o *PutTeamsIDForbidden) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdForbidden %s", 403, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdForbidden %s", 403, payload)
 }
 
 func (o *PutTeamsIDForbidden) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdForbidden %s", 403, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdForbidden %s", 403, payload)
 }
 
 func (o *PutTeamsIDForbidden) GetPayload() *models.ErrorResponse {
@@ -310,12 +310,12 @@ func (o *PutTeamsIDNotFound) Code() int {
 
 func (o *PutTeamsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdNotFound %s", 404, payload)
 }
 
 func (o *PutTeamsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdNotFound %s", 404, payload)
 }
 
 func (o *PutTeamsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -378,12 +378,12 @@ func (o *PutTeamsIDConflict) Code() int {
 
 func (o *PutTeamsIDConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdConflict %s", 409, payload)
 }
 
 func (o *PutTeamsIDConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdConflict %s", 409, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdConflict %s", 409, payload)
 }
 
 func (o *PutTeamsIDConflict) GetPayload() *models.ErrorResponse {
@@ -446,12 +446,12 @@ func (o *PutTeamsIDInternalServerError) Code() int {
 
 func (o *PutTeamsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutTeamsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /teams/{id}][%d] putTeamsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[PUT /api/v1/teams/{id}][%d] putTeamsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PutTeamsIDInternalServerError) GetPayload() *models.ErrorResponse {

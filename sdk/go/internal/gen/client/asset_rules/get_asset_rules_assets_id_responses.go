@@ -40,7 +40,7 @@ func (o *GetAssetRulesAssetsIDReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /asset-rules/assets/{id}] GetAssetRulesAssetsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/asset-rules/assets/{id}] getAssetRulesAssetsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetRulesAssetsIDOK) Code() int {
 
 func (o *GetAssetRulesAssetsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetAssetRulesAssetsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdOK %s", 200, payload)
 }
 
 func (o *GetAssetRulesAssetsIDOK) GetPayload() any {
@@ -154,12 +154,12 @@ func (o *GetAssetRulesAssetsIDNotFound) Code() int {
 
 func (o *GetAssetRulesAssetsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetRulesAssetsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetRulesAssetsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *GetAssetRulesAssetsIDInternalServerError) Code() int {
 
 func (o *GetAssetRulesAssetsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetRulesAssetsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /asset-rules/assets/{id}][%d] getAssetRulesAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetRulesAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {

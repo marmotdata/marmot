@@ -28,7 +28,7 @@ func (o *GetMetricsTopQueriesReader) ReadResponse(response runtime.ClientRespons
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /metrics/top-queries] GetMetricsTopQueries", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/metrics/top-queries] getMetricsTopQueries", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetMetricsTopQueriesOK) Code() int {
 
 func (o *GetMetricsTopQueriesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/top-queries][%d] getMetricsTopQueriesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/top-queries][%d] getMetricsTopQueriesOK %s", 200, payload)
 }
 
 func (o *GetMetricsTopQueriesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/top-queries][%d] getMetricsTopQueriesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/top-queries][%d] getMetricsTopQueriesOK %s", 200, payload)
 }
 
 func (o *GetMetricsTopQueriesOK) GetPayload() []*models.QueryCount {

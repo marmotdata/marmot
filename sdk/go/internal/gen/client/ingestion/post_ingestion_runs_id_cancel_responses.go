@@ -46,7 +46,7 @@ func (o *PostIngestionRunsIDCancelReader) ReadResponse(response runtime.ClientRe
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /ingestion/runs/{id}/cancel] PostIngestionRunsIDCancel", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/ingestion/runs/{id}/cancel] postIngestionRunsIDCancel", response, response.Code())
 	}
 }
 
@@ -92,11 +92,11 @@ func (o *PostIngestionRunsIDCancelNoContent) Code() int {
 }
 
 func (o *PostIngestionRunsIDCancelNoContent) Error() string {
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNoContent", 204)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNoContent", 204)
 }
 
 func (o *PostIngestionRunsIDCancelNoContent) String() string {
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNoContent", 204)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNoContent", 204)
 }
 
 func (o *PostIngestionRunsIDCancelNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -148,12 +148,12 @@ func (o *PostIngestionRunsIDCancelUnauthorized) Code() int {
 
 func (o *PostIngestionRunsIDCancelUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionRunsIDCancelUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionRunsIDCancelUnauthorized) GetPayload() *models.ErrorResponse {
@@ -216,12 +216,12 @@ func (o *PostIngestionRunsIDCancelNotFound) Code() int {
 
 func (o *PostIngestionRunsIDCancelNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNotFound %s", 404, payload)
 }
 
 func (o *PostIngestionRunsIDCancelNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelNotFound %s", 404, payload)
 }
 
 func (o *PostIngestionRunsIDCancelNotFound) GetPayload() *models.ErrorResponse {
@@ -284,12 +284,12 @@ func (o *PostIngestionRunsIDCancelInternalServerError) Code() int {
 
 func (o *PostIngestionRunsIDCancelInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionRunsIDCancelInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postIngestionRunsIdCancelInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionRunsIDCancelInternalServerError) GetPayload() *models.ErrorResponse {

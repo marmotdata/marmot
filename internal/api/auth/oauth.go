@@ -19,6 +19,7 @@ import (
 // @Success 307 {string} string "Temporary Redirect"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
+// @ID getAuthProviderLogin
 // @Router /auth/{provider}/login [get]
 func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 	providerName := r.PathValue("provider")
@@ -62,6 +63,7 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
+// @ID getAuthProviderCallback
 // @Router /auth/{provider}/callback [get]
 func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	providerName := r.PathValue("provider")

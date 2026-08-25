@@ -34,7 +34,7 @@ func (o *GetAssetsTermsIDReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/terms/{id}] GetAssetsTermsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/terms/{id}] getAssetsTermsID", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetsTermsIDOK) Code() int {
 
 func (o *GetAssetsTermsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/terms/{id}][%d] getAssetsTermsIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsTermsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/terms/{id}][%d] getAssetsTermsIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsTermsIDOK) GetPayload() []*models.AssetTerm {
@@ -148,12 +148,12 @@ func (o *GetAssetsTermsIDNotFound) Code() int {
 
 func (o *GetAssetsTermsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/terms/{id}][%d] getAssetsTermsIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsTermsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/terms/{id}][%d] getAssetsTermsIdNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsTermsIDNotFound) GetPayload() *models.ErrorResponse {

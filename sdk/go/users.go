@@ -64,7 +64,7 @@ func (s *UsersService) List(ctx context.Context, opts UsersListOptions) (*UserLi
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Users.GetUsers(p)
+	resp, err := s.gen.Users.GetUsers(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -74,7 +74,7 @@ func (s *UsersService) List(ctx context.Context, opts UsersListOptions) (*UserLi
 // Get fetches a user by ID.
 func (s *UsersService) Get(ctx context.Context, id string) (*User, error) {
 	p := users.NewGetUsersIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.Users.GetUsersID(p)
+	resp, err := s.gen.Users.GetUsersID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -102,7 +102,7 @@ func (s *UsersService) Create(ctx context.Context, in CreateUserInput) (*User, e
 		ProfilePicture: in.ProfilePicture,
 	}
 	p := users.NewPostUsersParams().WithContext(ctx).WithUser(body)
-	resp, err := s.gen.Users.PostUsers(p)
+	resp, err := s.gen.Users.PostUsers(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -119,7 +119,7 @@ func (s *UsersService) Update(ctx context.Context, id string, in UpdateUserInput
 		ProfilePicture: in.ProfilePicture,
 	}
 	p := users.NewPutUsersIDParams().WithContext(ctx).WithID(id).WithUser(body)
-	resp, err := s.gen.Users.PutUsersID(p)
+	resp, err := s.gen.Users.PutUsersID(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -129,6 +129,6 @@ func (s *UsersService) Update(ctx context.Context, id string, in UpdateUserInput
 // Delete removes a user.
 func (s *UsersService) Delete(ctx context.Context, id string) error {
 	p := users.NewDeleteUsersIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.Users.DeleteUsersID(p)
+	_, err := s.gen.Users.DeleteUsersID(p, nil)
 	return mapErr(err)
 }

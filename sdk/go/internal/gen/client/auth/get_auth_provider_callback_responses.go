@@ -46,7 +46,7 @@ func (o *GetAuthProviderCallbackReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /auth/{provider}/callback] GetAuthProviderCallback", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /auth/{provider}/callback] getAuthProviderCallback", response, response.Code())
 	}
 }
 

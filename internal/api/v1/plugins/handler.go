@@ -43,6 +43,7 @@ type ListPluginsResponse struct {
 // @Tags plugins
 // @Produce json
 // @Success 200 {object} ListPluginsResponse
+// @ID getPlugins
 // @Router /api/v1/plugins [get]
 func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, ListPluginsResponse{
@@ -72,6 +73,7 @@ type AWSCredentialStatus struct {
 // @Tags plugins
 // @Produce json
 // @Success 200 {object} AWSCredentialStatus
+// @ID getPluginsAwsCredentialsStatus
 // @Router /api/v1/plugins/aws/credentials/status [get]
 func (h *Handler) awsCredentialStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()

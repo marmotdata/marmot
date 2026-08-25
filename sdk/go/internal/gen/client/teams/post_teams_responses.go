@@ -46,7 +46,7 @@ func (o *PostTeamsReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /teams] PostTeams", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/teams] postTeams", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostTeamsCreated) Code() int {
 
 func (o *PostTeamsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsCreated %s", 201, payload)
 }
 
 func (o *PostTeamsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsCreated %s", 201, payload)
 }
 
 func (o *PostTeamsCreated) GetPayload() *models.Team {
@@ -162,12 +162,12 @@ func (o *PostTeamsBadRequest) Code() int {
 
 func (o *PostTeamsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsBadRequest %s", 400, payload)
 }
 
 func (o *PostTeamsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsBadRequest %s", 400, payload)
 }
 
 func (o *PostTeamsBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostTeamsConflict) Code() int {
 
 func (o *PostTeamsConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsConflict %s", 409, payload)
 }
 
 func (o *PostTeamsConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsConflict %s", 409, payload)
 }
 
 func (o *PostTeamsConflict) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostTeamsInternalServerError) Code() int {
 
 func (o *PostTeamsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsInternalServerError %s", 500, payload)
 }
 
 func (o *PostTeamsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /teams][%d] postTeamsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/teams][%d] postTeamsInternalServerError %s", 500, payload)
 }
 
 func (o *PostTeamsInternalServerError) GetPayload() *models.ErrorResponse {

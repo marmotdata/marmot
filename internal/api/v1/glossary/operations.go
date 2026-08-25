@@ -9,6 +9,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
@@ -44,12 +45,15 @@ type UpdateTermRequest struct {
 // @Accept json
 // @Produce json
 // @Param term body CreateTermRequest true "Glossary term to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/ [post]
+// @ID postGlossary
+// @Router /api/v1/glossary/ [post]
 func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 	var req CreateTermRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -86,6 +90,10 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 
 	term, err := h.glossaryService.Create(r.Context(), input)
 	if err != nil {
+		if limitErr, ok := limits.AsLimitExceeded(err); ok {
+			common.RespondLimitExceeded(w, limitErr)
+			return
+		}
 		switch {
 		case errors.Is(err, glossary.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
@@ -109,11 +117,14 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Glossary Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [get]
+// @ID getGlossaryID
+// @Router /api/v1/glossary/{id} [get]
 func (h *Handler) getTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -146,11 +157,14 @@ func (h *Handler) getTerm(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Glossary Term ID"
 // @Param term body UpdateTermRequest true "Glossary term update data"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [put]
+// @ID putGlossaryID
+// @Router /api/v1/glossary/{id} [put]
 func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -211,11 +225,14 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Glossary Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/{id} [delete]
+// @ID deleteGlossaryID
+// @Router /api/v1/glossary/{id} [delete]
 func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/")
 	if id == "" {
@@ -245,9 +262,12 @@ func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param limit query int false "Maximum number of terms to return" default(20)
 // @Param offset query int false "Number of terms to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.ListResult
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/list [get]
+// @ID getGlossaryList
+// @Router /api/v1/glossary/list [get]
 func (h *Handler) listTerms(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -278,10 +298,13 @@ func (h *Handler) listTerms(w http.ResponseWriter, r *http.Request) {
 // @Param parent_term_id query string false "Filter by parent term ID"
 // @Param limit query int false "Maximum number of terms to return" default(20)
 // @Param offset query int false "Number of terms to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.ListResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/search [get]
+// @ID getGlossarySearch
+// @Router /api/v1/glossary/search [get]
 func (h *Handler) searchTerms(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	parentTermID := r.URL.Query().Get("parent_term_id")
@@ -319,11 +342,14 @@ func (h *Handler) searchTerms(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Parent Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/children/{id} [get]
+// @ID getGlossaryChildrenID
+// @Router /api/v1/glossary/children/{id} [get]
 func (h *Handler) getChildren(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/children/")
 	id = strings.TrimSuffix(id, "/")
@@ -356,11 +382,14 @@ func (h *Handler) getChildren(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /glossary/ancestors/{id} [get]
+// @ID getGlossaryAncestorsID
+// @Router /api/v1/glossary/ancestors/{id} [get]
 func (h *Handler) getAncestors(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/glossary/ancestors/")
 	id = strings.TrimSuffix(id, "/")

@@ -52,7 +52,7 @@ func (o *PostProductsAssetsIDReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /products/assets/{id}] PostProductsAssetsID", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/products/assets/{id}] postProductsAssetsID", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PostProductsAssetsIDOK) Code() int {
 
 func (o *PostProductsAssetsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdOK %s", 200, payload)
 }
 
 func (o *PostProductsAssetsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdOK %s", 200, payload)
 }
 
 func (o *PostProductsAssetsIDOK) GetPayload() map[string]string {
@@ -166,12 +166,12 @@ func (o *PostProductsAssetsIDBadRequest) Code() int {
 
 func (o *PostProductsAssetsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsAssetsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsAssetsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -234,12 +234,12 @@ func (o *PostProductsAssetsIDUnauthorized) Code() int {
 
 func (o *PostProductsAssetsIDUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdUnauthorized %s", 401, payload)
 }
 
 func (o *PostProductsAssetsIDUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdUnauthorized %s", 401, payload)
 }
 
 func (o *PostProductsAssetsIDUnauthorized) GetPayload() *models.ErrorResponse {
@@ -302,12 +302,12 @@ func (o *PostProductsAssetsIDNotFound) Code() int {
 
 func (o *PostProductsAssetsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *PostProductsAssetsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdNotFound %s", 404, payload)
 }
 
 func (o *PostProductsAssetsIDNotFound) GetPayload() *models.ErrorResponse {
@@ -370,12 +370,12 @@ func (o *PostProductsAssetsIDInternalServerError) Code() int {
 
 func (o *PostProductsAssetsIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsAssetsIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/assets/{id}][%d] postProductsAssetsIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/assets/{id}][%d] postProductsAssetsIdInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {

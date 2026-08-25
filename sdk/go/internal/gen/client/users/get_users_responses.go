@@ -34,7 +34,7 @@ func (o *GetUsersReader) ReadResponse(response runtime.ClientResponse, consumer 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /users] GetUsers", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/users] getUsers", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetUsersOK) Code() int {
 
 func (o *GetUsersOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users][%d] getUsersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users][%d] getUsersOK %s", 200, payload)
 }
 
 func (o *GetUsersOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users][%d] getUsersOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users][%d] getUsersOK %s", 200, payload)
 }
 
 func (o *GetUsersOK) GetPayload() *models.ListUsersResponse {
@@ -150,12 +150,12 @@ func (o *GetUsersInternalServerError) Code() int {
 
 func (o *GetUsersInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users][%d] getUsersInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users][%d] getUsersInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users][%d] getUsersInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users][%d] getUsersInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersInternalServerError) GetPayload() *models.ErrorResponse {
