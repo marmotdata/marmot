@@ -548,14 +548,18 @@ func TestParseDatasetURI(t *testing.T) {
 		{"gs://gcs-bucket/data", "GCS", "Bucket", "gcs-bucket"},
 		{"kafka://broker/topic-name", "Kafka", "Topic", "topic-name"},
 		{"kafka://localhost:9092/events", "Kafka", "Topic", "events"},
-		// The relational schemes address a table the way the Marmot plugin
-		// that owns it does, so a dataset and the table itself are one asset.
-		{"postgresql://host:5432/db/public/users", "PostgreSQL", "Table", "public.users"},
-		{"postgresql://host/db/schema/table", "PostgreSQL", "Table", "schema.table"},
-		{"mysql://host/db/table", "MySQL", "Table", "db.table"},
-		{"bigquery://project/dataset/table", "BigQuery", "Table", "dataset.table"},
-		// No Marmot plugin owns Snowflake, so all three levels stay.
-		{"snowflake://account/db/schema/table", "Snowflake", "Table", "db.schema.table"},
+		// The relational schemes keep the whole URI path. This does NOT
+		// match how plugins/postgresql, plugins/mysql or plugins/bigquery
+		// name the same table, so an Airflow dataset and the real table
+		// stay separate assets and a lineage edge between them is dropped.
+		// It is a known gap, pinned here rather than fixed: reshaping
+		// these renames every Airflow-discovered table and needs a
+		// migration to move the rows already in the catalog.
+		{"postgresql://host:5432/db/public/users", "PostgreSQL", "Table", "host:5432/db/public/users"},
+		{"postgresql://host/db/schema/table", "PostgreSQL", "Table", "host/db/schema/table"},
+		{"mysql://host/db/table", "MySQL", "Table", "host/db/table"},
+		{"bigquery://project/dataset/table", "BigQuery", "Table", "project/dataset/table"},
+		{"snowflake://account/db/schema/table", "Snowflake", "Table", "account/db/schema/table"},
 		{"http://api.example.com/data", "HTTP", "Endpoint", "http://api.example.com/data"},
 		{"file:///path/to/file.csv", "File", "File", "/path/to/file.csv"},
 		{"custom://some/path", "Custom", "Dataset", "some/path"},

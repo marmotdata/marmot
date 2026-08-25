@@ -350,7 +350,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Marmot.`,
+      copyright: `London office · 66 Paul St, London EC2A 4NA<br />Copyright © ${new Date().getFullYear()} Marmot.`,
     },
     algolia: {
       appId: "WAUET7ZVLV",

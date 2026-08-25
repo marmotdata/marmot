@@ -99,10 +99,10 @@ type ClientService interface {
 	GetAuthProvidersContext(ctx context.Context, params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error)
 
 	// GetSsoProviders list configured s s o providers admin.
-	GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+	GetSsoProviders(params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error)
 
 	// GetSsoProvidersContext list configured s s o providers admin.
-	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error)
 
 	// PostOauthToken o auth token endpoint.
 	PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error)
@@ -144,7 +144,7 @@ func (a *Client) GetAuthProviderCallbackContext(ctx context.Context, params *Get
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAuthProviderCallback",
+		ID:                 "getAuthProviderCallback",
 		Method:             "GET",
 		PathPattern:        "/auth/{provider}/callback",
 		ProducesMediaTypes: []string{"application/json"},
@@ -199,7 +199,7 @@ func (a *Client) GetAuthProviderLoginContext(ctx context.Context, params *GetAut
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAuthProviderLogin",
+		ID:                 "getAuthProviderLogin",
 		Method:             "GET",
 		PathPattern:        "/auth/{provider}/login",
 		ProducesMediaTypes: []string{"application/json"},
@@ -254,7 +254,7 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAuthProviders",
+		ID:                 "getAuthProviders",
 		Method:             "GET",
 		PathPattern:        "/auth-providers",
 		ProducesMediaTypes: []string{"application/json"},
@@ -285,7 +285,7 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAuthProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getAuthProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -297,7 +297,7 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
 // If you need to pass a specific context, use [Client.GetSsoProvidersContext] instead.
-func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -305,7 +305,7 @@ func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOp
 		ctx = context.Background()
 	}
 
-	return a.GetSsoProvidersContext(ctx, params, opts...)
+	return a.GetSsoProvidersContext(ctx, params, authInfo, opts...)
 }
 
 // GetSsoProvidersContext lists configured s s o providers admin.
@@ -313,21 +313,22 @@ func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOp
 // Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
 //
 // Do not use the deprecated [GetSsoProvidersParams.Context] with this method: it would be ignored.
-func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetSsoProvidersParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetSsoProviders",
+		ID:                 "getSsoProviders",
 		Method:             "GET",
-		PathPattern:        "/sso-providers",
+		PathPattern:        "/api/v1/sso-providers",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetSsoProvidersReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
 
@@ -351,7 +352,7 @@ func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvi
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetSsoProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSsoProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -390,7 +391,7 @@ func (a *Client) PostOauthTokenContext(ctx context.Context, params *PostOauthTok
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostOauthToken",
+		ID:                 "postOauthToken",
 		Method:             "POST",
 		PathPattern:        "/oauth/token",
 		ProducesMediaTypes: []string{"application/json"},
@@ -421,7 +422,7 @@ func (a *Client) PostOauthTokenContext(ctx context.Context, params *PostOauthTok
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostOauthToken: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for postOauthToken: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

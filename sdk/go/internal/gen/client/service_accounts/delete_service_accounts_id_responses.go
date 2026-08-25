@@ -34,7 +34,7 @@ func (o *DeleteServiceAccountsIDReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /service-accounts/{id}] DeleteServiceAccountsID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/service-accounts/{id}] deleteServiceAccountsID", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *DeleteServiceAccountsIDNoContent) Code() int {
 }
 
 func (o *DeleteServiceAccountsIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /service-accounts/{id}][%d] deleteServiceAccountsIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}][%d] deleteServiceAccountsIdNoContent", 204)
 }
 
 func (o *DeleteServiceAccountsIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /service-accounts/{id}][%d] deleteServiceAccountsIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}][%d] deleteServiceAccountsIdNoContent", 204)
 }
 
 func (o *DeleteServiceAccountsIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *DeleteServiceAccountsIDNotFound) Code() int {
 
 func (o *DeleteServiceAccountsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /service-accounts/{id}][%d] deleteServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}][%d] deleteServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteServiceAccountsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /service-accounts/{id}][%d] deleteServiceAccountsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}][%d] deleteServiceAccountsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteServiceAccountsIDNotFound) GetPayload() *models.ErrorResponse {

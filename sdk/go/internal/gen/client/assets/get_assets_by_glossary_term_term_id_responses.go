@@ -34,7 +34,7 @@ func (o *GetAssetsByGlossaryTermTermIDReader) ReadResponse(response runtime.Clie
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/by-glossary-term/{term_id}] GetAssetsByGlossaryTermTermID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/by-glossary-term/{term_id}] getAssetsByGlossaryTermTermID", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetAssetsByGlossaryTermTermIDOK) Code() int {
 
 func (o *GetAssetsByGlossaryTermTermIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsByGlossaryTermTermIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdOK %s", 200, payload)
 }
 
 func (o *GetAssetsByGlossaryTermTermIDOK) GetPayload() any {
@@ -148,12 +148,12 @@ func (o *GetAssetsByGlossaryTermTermIDInternalServerError) Code() int {
 
 func (o *GetAssetsByGlossaryTermTermIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsByGlossaryTermTermIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsByGlossaryTermTermIDInternalServerError) GetPayload() *models.ErrorResponse {

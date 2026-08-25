@@ -40,7 +40,7 @@ func (o *GetIngestionSchedulesReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /ingestion/schedules] GetIngestionSchedules", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/ingestion/schedules] getIngestionSchedules", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetIngestionSchedulesOK) Code() int {
 
 func (o *GetIngestionSchedulesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesOK %s", 200, payload)
 }
 
 func (o *GetIngestionSchedulesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesOK %s", 200, payload)
 }
 
 func (o *GetIngestionSchedulesOK) GetPayload() *models.ListSchedulesResponse {
@@ -156,12 +156,12 @@ func (o *GetIngestionSchedulesUnauthorized) Code() int {
 
 func (o *GetIngestionSchedulesUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionSchedulesUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesUnauthorized %s", 401, payload)
 }
 
 func (o *GetIngestionSchedulesUnauthorized) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetIngestionSchedulesInternalServerError) Code() int {
 
 func (o *GetIngestionSchedulesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionSchedulesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /ingestion/schedules][%d] getIngestionSchedulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/ingestion/schedules][%d] getIngestionSchedulesInternalServerError %s", 500, payload)
 }
 
 func (o *GetIngestionSchedulesInternalServerError) GetPayload() *models.ErrorResponse {

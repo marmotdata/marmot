@@ -14,7 +14,7 @@ from marmot._gen.api.lineage import (
 )
 from marmot._gen.client import AuthenticatedClient
 from marmot._gen.models.batch_lineage_result import BatchLineageResult
-from marmot._gen.models.get_lineage_assets_id_direction import GetLineageAssetsIdDirection
+from marmot._gen.models.get_lineage_assets_id_direction import GetLineageAssetsIDDirection
 from marmot._gen.models.lineage_edge import LineageEdge
 from marmot._gen.models.lineage_response import LineageResponse
 from marmot._gen.types import UNSET, Unset
@@ -38,8 +38,8 @@ class LineageResource:
         ``direction`` is "upstream", "downstream", or "both" (the API default).
         ``limit`` caps the traversal depth.
         """
-        dir_arg: GetLineageAssetsIdDirection | Unset = (
-            GetLineageAssetsIdDirection(direction) if direction is not None else UNSET
+        dir_arg: GetLineageAssetsIDDirection | Unset = (
+            GetLineageAssetsIDDirection(direction) if direction is not None else UNSET
         )
         limit_arg: int | Unset = limit if limit is not None else UNSET
         return cast(

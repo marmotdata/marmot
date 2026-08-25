@@ -40,7 +40,7 @@ func (o *PostUsersUpdatePasswordReader) ReadResponse(response runtime.ClientResp
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /users/update-password] PostUsersUpdatePassword", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/users/update-password] postUsersUpdatePassword", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostUsersUpdatePasswordOK) Code() int {
 
 func (o *PostUsersUpdatePasswordOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordOK %s", 200, payload)
 }
 
 func (o *PostUsersUpdatePasswordOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordOK %s", 200, payload)
 }
 
 func (o *PostUsersUpdatePasswordOK) GetPayload() *models.TokenResponse {
@@ -156,12 +156,12 @@ func (o *PostUsersUpdatePasswordBadRequest) Code() int {
 
 func (o *PostUsersUpdatePasswordBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersUpdatePasswordBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersUpdatePasswordBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostUsersUpdatePasswordUnauthorized) Code() int {
 
 func (o *PostUsersUpdatePasswordUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordUnauthorized %s", 401, payload)
 }
 
 func (o *PostUsersUpdatePasswordUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/users/update-password][%d] postUsersUpdatePasswordUnauthorized %s", 401, payload)
 }
 
 func (o *PostUsersUpdatePasswordUnauthorized) GetPayload() *models.ErrorResponse {

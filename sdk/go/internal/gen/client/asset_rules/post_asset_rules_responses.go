@@ -46,7 +46,7 @@ func (o *PostAssetRulesReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /asset-rules] PostAssetRules", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/asset-rules/] postAssetRules", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostAssetRulesCreated) Code() int {
 
 func (o *PostAssetRulesCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesCreated %s", 201, payload)
 }
 
 func (o *PostAssetRulesCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesCreated %s", 201, payload)
 }
 
 func (o *PostAssetRulesCreated) GetPayload() *models.AssetRule {
@@ -162,12 +162,12 @@ func (o *PostAssetRulesBadRequest) Code() int {
 
 func (o *PostAssetRulesBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetRulesBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetRulesBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostAssetRulesConflict) Code() int {
 
 func (o *PostAssetRulesConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesConflict %s", 409, payload)
 }
 
 func (o *PostAssetRulesConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesConflict %s", 409, payload)
 }
 
 func (o *PostAssetRulesConflict) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostAssetRulesInternalServerError) Code() int {
 
 func (o *PostAssetRulesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetRulesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /asset-rules][%d] postAssetRulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/asset-rules/][%d] postAssetRulesInternalServerError %s", 500, payload)
 }
 
 func (o *PostAssetRulesInternalServerError) GetPayload() *models.ErrorResponse {

@@ -1,4 +1,5 @@
 import { fetchApi } from '$lib/api';
+import { throwApiError } from '$lib/stores/toast';
 import type {
 	ServiceAccount,
 	ServiceAccountAPIKey,
@@ -26,10 +27,7 @@ export async function createServiceAccount(
 		method: 'POST',
 		body: JSON.stringify(input)
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(data.error || 'Failed to create service account');
-	}
+	if (!res.ok) await throwApiError(res);
 	return res.json();
 }
 

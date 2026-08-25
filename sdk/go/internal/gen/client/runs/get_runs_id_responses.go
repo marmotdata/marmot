@@ -28,7 +28,7 @@ func (o *GetRunsIDReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /runs/{id}] GetRunsID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/runs/{id}] getRunsID", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetRunsIDOK) Code() int {
 
 func (o *GetRunsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs/{id}][%d] getRunsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs/{id}][%d] getRunsIdOK %s", 200, payload)
 }
 
 func (o *GetRunsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /runs/{id}][%d] getRunsIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/runs/{id}][%d] getRunsIdOK %s", 200, payload)
 }
 
 func (o *GetRunsIDOK) GetPayload() *models.PluginRun {

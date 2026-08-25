@@ -52,7 +52,7 @@ func (o *PostProductsReader) ReadResponse(response runtime.ClientResponse, consu
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /products/] PostProducts", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/products/] postProducts", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PostProductsCreated) Code() int {
 
 func (o *PostProductsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsCreated %s", 201, payload)
 }
 
 func (o *PostProductsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsCreated %s", 201, payload)
 }
 
 func (o *PostProductsCreated) GetPayload() *models.DataProduct {
@@ -168,12 +168,12 @@ func (o *PostProductsBadRequest) Code() int {
 
 func (o *PostProductsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsBadRequest %s", 400, payload)
 }
 
 func (o *PostProductsBadRequest) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PostProductsUnauthorized) Code() int {
 
 func (o *PostProductsUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsUnauthorized %s", 401, payload)
 }
 
 func (o *PostProductsUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsUnauthorized %s", 401, payload)
 }
 
 func (o *PostProductsUnauthorized) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PostProductsConflict) Code() int {
 
 func (o *PostProductsConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsConflict %s", 409, payload)
 }
 
 func (o *PostProductsConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsConflict %s", 409, payload)
 }
 
 func (o *PostProductsConflict) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PostProductsInternalServerError) Code() int {
 
 func (o *PostProductsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /products/][%d] postProductsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/products/][%d] postProductsInternalServerError %s", 500, payload)
 }
 
 func (o *PostProductsInternalServerError) GetPayload() *models.ErrorResponse {

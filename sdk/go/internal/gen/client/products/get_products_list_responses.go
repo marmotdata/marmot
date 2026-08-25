@@ -34,7 +34,7 @@ func (o *GetProductsListReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /products/list] GetProductsList", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/products/list] getProductsList", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetProductsListOK) Code() int {
 
 func (o *GetProductsListOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/list][%d] getProductsListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/list][%d] getProductsListOK %s", 200, payload)
 }
 
 func (o *GetProductsListOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/list][%d] getProductsListOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/list][%d] getProductsListOK %s", 200, payload)
 }
 
 func (o *GetProductsListOK) GetPayload() *models.DataProductListResult {
@@ -150,12 +150,12 @@ func (o *GetProductsListInternalServerError) Code() int {
 
 func (o *GetProductsListInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/list][%d] getProductsListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/list][%d] getProductsListInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsListInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/list][%d] getProductsListInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/list][%d] getProductsListInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsListInternalServerError) GetPayload() *models.ErrorResponse {

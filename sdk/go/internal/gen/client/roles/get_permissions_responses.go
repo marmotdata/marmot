@@ -34,7 +34,7 @@ func (o *GetPermissionsReader) ReadResponse(response runtime.ClientResponse, con
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /permissions] GetPermissions", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/permissions] getPermissions", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetPermissionsOK) Code() int {
 
 func (o *GetPermissionsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /permissions][%d] getPermissionsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/permissions][%d] getPermissionsOK %s", 200, payload)
 }
 
 func (o *GetPermissionsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /permissions][%d] getPermissionsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/permissions][%d] getPermissionsOK %s", 200, payload)
 }
 
 func (o *GetPermissionsOK) GetPayload() []*models.RolePermission {
@@ -148,12 +148,12 @@ func (o *GetPermissionsInternalServerError) Code() int {
 
 func (o *GetPermissionsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /permissions][%d] getPermissionsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/permissions][%d] getPermissionsInternalServerError %s", 500, payload)
 }
 
 func (o *GetPermissionsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /permissions][%d] getPermissionsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/permissions][%d] getPermissionsInternalServerError %s", 500, payload)
 }
 
 func (o *GetPermissionsInternalServerError) GetPayload() *models.ErrorResponse {

@@ -114,17 +114,14 @@ type DocumentationResult struct {
 } // @name DocumentationResult
 
 type CreateAssetRequest struct {
-	Name string `json:"name"`
-	// MRN is the identity the plugin assigned. Empty means the server
-	// derives one from the type, first provider and name.
-	MRN           string                 `json:"mrn,omitempty"`
+	Name          string                 `json:"name"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
 	Tags          []string               `json:"tags"`
-	Sources       []asset.AssetSource    `json:"sources"`
+	Sources       AssetSources           `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 	// Terms are the names of glossary terms assigned to this asset.
 	Terms []string `json:"terms,omitempty"`
@@ -160,8 +157,11 @@ type RunEntitiesResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body StartRunRequest true "Start run request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} plugin.Run
-// @Router /runs/start [post]
+// @ID postRunsStart
+// @Router /api/v1/runs/start [post]
 func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 	if !common.RequirePluginsReady(w) {
 		return
@@ -200,8 +200,11 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body CompleteRunRequest true "Complete run request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
-// @Router /runs/complete [post]
+// @ID postRunsComplete
+// @Router /api/v1/runs/complete [post]
 func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 	var req CompleteRunRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -249,8 +252,11 @@ func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body BatchCreateRequest true "Batch create request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} BatchCreateResponse
-// @Router /runs/assets/batch [post]
+// @ID postRunsAssetsBatch
+// @Router /api/v1/runs/assets/batch [post]
 func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	var req BatchCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -261,7 +267,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	for i, asset := range req.Assets {
 		assets[i] = runs.CreateAssetInput{
 			Name:          asset.Name,
-			MRN:           optionalString(asset.MRN),
 			Type:          asset.Type,
 			Providers:     asset.Providers,
 			Description:   asset.Description,
@@ -346,8 +351,11 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 // @Tags pipelines
 // @Produce json
 // @Param pipelineName path string true "Pipeline Name"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} DestroyRunResponse
-// @Router /pipelines/{pipelineName} [delete]
+// @ID deletePipelinesPipelineName
+// @Router /api/v1/pipelines/{pipelineName} [delete]
 func (h *Handler) destroyPipeline(w http.ResponseWriter, r *http.Request) {
 	pipelineName := r.PathValue("pipelineName")
 
@@ -374,8 +382,11 @@ func (h *Handler) destroyPipeline(w http.ResponseWriter, r *http.Request) {
 // @Param status query string false "Filter by status (created, updated, deleted, failed)"
 // @Param limit query int false "Number of results per page" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} RunEntitiesResponse
-// @Router /runs/{id}/entities [get]
+// @ID getRunsIDEntities
+// @Router /api/v1/runs/{id}/entities [get]
 func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 	runID := r.PathValue("id")
 	if runID == "" {
@@ -423,8 +434,11 @@ func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 // @Summary Cleanup stale runs
 // @Description Mark runs as failed if they've been running too long without updates
 // @Tags runs
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]int
-// @Router /runs/cleanup [post]
+// @ID postRunsCleanup
+// @Router /api/v1/runs/cleanup [post]
 func (h *Handler) cleanupStaleRuns(w http.ResponseWriter, r *http.Request) {
 	timeoutMinutes := 60
 	if t := r.URL.Query().Get("timeout_minutes"); t != "" {
@@ -451,8 +465,11 @@ func (h *Handler) cleanupStaleRuns(w http.ResponseWriter, r *http.Request) {
 // @Param statuses query string false "Comma-separated list of statuses"
 // @Param limit query int false "Number of results per page" default(50)
 // @Param offset query int false "Number of results to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} object{runs=[]plugin.Run,total=int,limit=int,offset=int,pipelines=[]string}
-// @Router /runs [get]
+// @ID getRuns
+// @Router /api/v1/runs [get]
 func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 	var pipelines []string
 	if pipelinesParam := r.URL.Query().Get("pipelines"); pipelinesParam != "" {
@@ -518,8 +535,11 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 // @Tags runs
 // @Produce json
 // @Param id path string true "Run ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} plugin.Run
-// @Router /runs/{id} [get]
+// @ID getRunsID
+// @Router /api/v1/runs/{id} [get]
 func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 	runID := r.PathValue("id")
 	if runID == "" {
@@ -540,11 +560,33 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, run)
 }
 
-// optionalString turns an empty string into a nil pointer, so an absent
-// field stays absent rather than becoming an empty value.
-func optionalString(v string) *string {
-	if v == "" {
+// AssetSources is the provenance a run reports for an asset: which source
+// wrote it, when, and with what properties.
+//
+// It decodes two shapes. Current clients send an array of objects. Clients
+// built before provenance carried more than a label send an array of bare
+// strings, and those are read as a name with no other detail. Rejecting them
+// would mean an upgraded server could not accept a batch from a plugin that
+// had not been upgraded with it, which is the ordinary state of a deployment
+// between releases.
+type AssetSources []asset.AssetSource
+
+func (a *AssetSources) UnmarshalJSON(data []byte) error {
+	var objects []asset.AssetSource
+	if err := json.Unmarshal(data, &objects); err == nil {
+		*a = objects
 		return nil
 	}
-	return &v
+
+	var names []string
+	if err := json.Unmarshal(data, &names); err != nil {
+		return fmt.Errorf("sources must be an array of names or of source objects: %w", err)
+	}
+
+	converted := make([]asset.AssetSource, 0, len(names))
+	for _, name := range names {
+		converted = append(converted, asset.AssetSource{Name: name})
+	}
+	*a = converted
+	return nil
 }

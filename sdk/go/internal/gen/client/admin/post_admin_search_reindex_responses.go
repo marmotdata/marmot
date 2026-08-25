@@ -52,7 +52,7 @@ func (o *PostAdminSearchReindexReader) ReadResponse(response runtime.ClientRespo
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /admin/search/reindex] PostAdminSearchReindex", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/admin/search/reindex] postAdminSearchReindex", response, response.Code())
 	}
 }
 
@@ -100,12 +100,12 @@ func (o *PostAdminSearchReindexAccepted) Code() int {
 
 func (o *PostAdminSearchReindexAccepted) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexAccepted %s", 202, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexAccepted %s", 202, payload)
 }
 
 func (o *PostAdminSearchReindexAccepted) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexAccepted %s", 202, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexAccepted %s", 202, payload)
 }
 
 func (o *PostAdminSearchReindexAccepted) GetPayload() *models.ReindexAcceptedResponse {
@@ -168,12 +168,12 @@ func (o *PostAdminSearchReindexUnauthorized) Code() int {
 
 func (o *PostAdminSearchReindexUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
 func (o *PostAdminSearchReindexUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
 func (o *PostAdminSearchReindexUnauthorized) GetPayload() *models.ErrorResponse {
@@ -236,12 +236,12 @@ func (o *PostAdminSearchReindexForbidden) Code() int {
 
 func (o *PostAdminSearchReindexForbidden) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexForbidden %s", 403, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexForbidden %s", 403, payload)
 }
 
 func (o *PostAdminSearchReindexForbidden) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexForbidden %s", 403, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexForbidden %s", 403, payload)
 }
 
 func (o *PostAdminSearchReindexForbidden) GetPayload() *models.ErrorResponse {
@@ -304,12 +304,12 @@ func (o *PostAdminSearchReindexConflict) Code() int {
 
 func (o *PostAdminSearchReindexConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexConflict %s", 409, payload)
 }
 
 func (o *PostAdminSearchReindexConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexConflict %s", 409, payload)
 }
 
 func (o *PostAdminSearchReindexConflict) GetPayload() *models.ErrorResponse {
@@ -372,12 +372,12 @@ func (o *PostAdminSearchReindexServiceUnavailable) Code() int {
 
 func (o *PostAdminSearchReindexServiceUnavailable) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexServiceUnavailable %s", 503, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexServiceUnavailable %s", 503, payload)
 }
 
 func (o *PostAdminSearchReindexServiceUnavailable) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexServiceUnavailable %s", 503, payload)
+	return fmt.Sprintf("[POST /api/v1/admin/search/reindex][%d] postAdminSearchReindexServiceUnavailable %s", 503, payload)
 }
 
 func (o *PostAdminSearchReindexServiceUnavailable) GetPayload() *models.ErrorResponse {

@@ -62,10 +62,10 @@ GetAssetsQualifiedNameQualifiedNameParams contains all the parameters to send to
 */
 type GetAssetsQualifiedNameQualifiedNameParams struct {
 
-	// QualifiedName.
+	// Name.
 	//
 	// Asset qualified name
-	QualifiedName string
+	Name string
 
 	HTTPClient *http.Client
 
@@ -124,15 +124,15 @@ func (o *GetAssetsQualifiedNameQualifiedNameParams) SetHTTPClient(client *http.C
 	o.HTTPClient = client
 }
 
-// WithQualifiedName adds the qualifiedName to the get assets qualified name qualified name params.
-func (o *GetAssetsQualifiedNameQualifiedNameParams) WithQualifiedName(qualifiedName string) *GetAssetsQualifiedNameQualifiedNameParams {
-	o.SetQualifiedName(qualifiedName)
+// WithName adds the name to the get assets qualified name qualified name params.
+func (o *GetAssetsQualifiedNameQualifiedNameParams) WithName(name string) *GetAssetsQualifiedNameQualifiedNameParams {
+	o.SetName(name)
 	return o
 }
 
-// SetQualifiedName adds the qualifiedName to the get assets qualified name qualified name params.
-func (o *GetAssetsQualifiedNameQualifiedNameParams) SetQualifiedName(qualifiedName string) {
-	o.QualifiedName = qualifiedName
+// SetName adds the name to the get assets qualified name qualified name params.
+func (o *GetAssetsQualifiedNameQualifiedNameParams) SetName(name string) {
+	o.Name = name
 }
 
 // WriteToRequest writes these params to a [runtime.ClientRequest].
@@ -142,8 +142,8 @@ func (o *GetAssetsQualifiedNameQualifiedNameParams) WriteToRequest(r runtime.Cli
 	}
 	var res []error
 
-	// path param qualifiedName
-	if err := r.SetPathParam("qualifiedName", o.QualifiedName); err != nil {
+	// path param name
+	if err := r.SetPathParam("name", o.Name); err != nil {
 		return err
 	}
 

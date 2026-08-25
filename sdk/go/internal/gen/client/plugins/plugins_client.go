@@ -56,24 +56,28 @@ type ClientOption func(*runtime.ClientOperation)
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
-	// GetAPIV1PluginsAwsCredentialsStatus get a w s credential detection status.
-	GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error)
+	// GetPlugins list registered plugins.
+	GetPlugins(params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error)
 
-	// GetAPIV1PluginsAwsCredentialsStatusContext get a w s credential detection status.
-	GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context, params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error)
+	// GetPluginsContext list registered plugins.
+	GetPluginsContext(ctx context.Context, params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error)
+
+	// GetPluginsAwsCredentialsStatus get a w s credential detection status.
+	GetPluginsAwsCredentialsStatus(params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error)
+
+	// GetPluginsAwsCredentialsStatusContext get a w s credential detection status.
+	GetPluginsAwsCredentialsStatusContext(ctx context.Context, params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
 
-// GetAPIV1PluginsAwsCredentialsStatus gets a w s credential detection status.
-//
-// Detects if AWS credentials are available from environment or config files.
+// GetPlugins lists registered plugins.
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
-// If you need to pass a specific context, use [Client.GetAPIV1PluginsAwsCredentialsStatusContext] instead.
-func (a *Client) GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error) {
+// If you need to pass a specific context, use [Client.GetPluginsContext] instead.
+func (a *Client) GetPlugins(params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -81,29 +85,27 @@ func (a *Client) GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsC
 		ctx = context.Background()
 	}
 
-	return a.GetAPIV1PluginsAwsCredentialsStatusContext(ctx, params, opts...)
+	return a.GetPluginsContext(ctx, params, opts...)
 }
 
-// GetAPIV1PluginsAwsCredentialsStatusContext gets a w s credential detection status.
+// GetPluginsContext lists registered plugins.
 //
-// Detects if AWS credentials are available from environment or config files.
-//
-// Do not use the deprecated [GetAPIV1PluginsAwsCredentialsStatusParams.Context] with this method: it would be ignored.
-func (a *Client) GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context, params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error) {
+// Do not use the deprecated [GetPluginsParams.Context] with this method: it would be ignored.
+func (a *Client) GetPluginsContext(ctx context.Context, params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
-		params = NewGetAPIV1PluginsAwsCredentialsStatusParams()
+		params = NewGetPluginsParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "GetAPIV1PluginsAwsCredentialsStatus",
+		ID:                 "getPlugins",
 		Method:             "GET",
-		PathPattern:        "/api/v1/plugins/aws/credentials/status",
+		PathPattern:        "/api/v1/plugins",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetAPIV1PluginsAwsCredentialsStatusReader{formats: a.formats},
+		Reader:             &GetPluginsReader{formats: a.formats},
 		Client:             params.HTTPClient,
 	}
 
@@ -117,7 +119,7 @@ func (a *Client) GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context,
 	}
 
 	// only one success response has to be checked
-	success, ok := result.(*GetAPIV1PluginsAwsCredentialsStatusOK)
+	success, ok := result.(*GetPluginsOK)
 	if ok {
 		return success, nil
 	}
@@ -127,7 +129,73 @@ func (a *Client) GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context,
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAPIV1PluginsAwsCredentialsStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getPlugins: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetPluginsAwsCredentialsStatus gets a w s credential detection status.
+//
+// Detects if AWS credentials are available from environment or config files.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetPluginsAwsCredentialsStatusContext] instead.
+func (a *Client) GetPluginsAwsCredentialsStatus(params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetPluginsAwsCredentialsStatusContext(ctx, params, opts...)
+}
+
+// GetPluginsAwsCredentialsStatusContext gets a w s credential detection status.
+//
+// Detects if AWS credentials are available from environment or config files.
+//
+// Do not use the deprecated [GetPluginsAwsCredentialsStatusParams.Context] with this method: it would be ignored.
+func (a *Client) GetPluginsAwsCredentialsStatusContext(ctx context.Context, params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetPluginsAwsCredentialsStatusParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getPluginsAwsCredentialsStatus",
+		Method:             "GET",
+		PathPattern:        "/api/v1/plugins/aws/credentials/status",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPluginsAwsCredentialsStatusReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetPluginsAwsCredentialsStatusOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getPluginsAwsCredentialsStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

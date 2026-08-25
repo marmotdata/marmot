@@ -1,14 +1,11 @@
 import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Hero from "../components/Hero";
-import ContextProblem from "../components/ContextProblem";
-import BenefitsShowcase from "../components/BenefitsShowcase";
-import QuickDeploy from "../components/QuickDeploy";
-import ArchitectureComparison from "../components/ArchitectureComparison";
-import DataSources from "../components/DataSources";
-import PerformanceProof from "../components/PerformanceProof";
+import ContextDiagram from "../components/ContextDiagram";
 import MCPShowcase from "../components/MCPShowcase";
-import SecurityTrust from "../components/SecurityTrust";
+import ProductTour from "../components/ProductTour";
+import QuickDeploy from "../components/QuickDeploy";
+import DataSources from "../components/DataSources";
 import CTA from "../components/CTA";
 
 export default function Home(): JSX.Element {
@@ -40,14 +37,11 @@ export default function Home(): JSX.Element {
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen overflow-hidden">
         <Hero />
-        <ContextProblem />
-        <BenefitsShowcase />
+        <ContextDiagram />
         <MCPShowcase />
-        <ArchitectureComparison />
+        <ProductTour />
         <QuickDeploy />
         <DataSources />
-        <PerformanceProof />
-        <SecurityTrust />
         <CTA />
       </div>
     </Layout>

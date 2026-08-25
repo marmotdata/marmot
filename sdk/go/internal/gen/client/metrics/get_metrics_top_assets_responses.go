@@ -28,7 +28,7 @@ func (o *GetMetricsTopAssetsReader) ReadResponse(response runtime.ClientResponse
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[GET /metrics/top-assets] GetMetricsTopAssets", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/metrics/top-assets] getMetricsTopAssets", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *GetMetricsTopAssetsOK) Code() int {
 
 func (o *GetMetricsTopAssetsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/top-assets][%d] getMetricsTopAssetsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/top-assets][%d] getMetricsTopAssetsOK %s", 200, payload)
 }
 
 func (o *GetMetricsTopAssetsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /metrics/top-assets][%d] getMetricsTopAssetsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/metrics/top-assets][%d] getMetricsTopAssetsOK %s", 200, payload)
 }
 
 func (o *GetMetricsTopAssetsOK) GetPayload() []*models.AssetCount {

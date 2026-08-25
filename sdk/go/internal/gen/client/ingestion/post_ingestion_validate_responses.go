@@ -40,7 +40,7 @@ func (o *PostIngestionValidateReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /ingestion/validate] PostIngestionValidate", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/ingestion/validate] postIngestionValidate", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostIngestionValidateOK) Code() int {
 
 func (o *PostIngestionValidateOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateOK %s", 200, payload)
 }
 
 func (o *PostIngestionValidateOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateOK %s", 200, payload)
 }
 
 func (o *PostIngestionValidateOK) GetPayload() *models.ValidateConfigResponse {
@@ -156,12 +156,12 @@ func (o *PostIngestionValidateBadRequest) Code() int {
 
 func (o *PostIngestionValidateBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateBadRequest %s", 400, payload)
 }
 
 func (o *PostIngestionValidateBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateBadRequest %s", 400, payload)
 }
 
 func (o *PostIngestionValidateBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostIngestionValidateUnauthorized) Code() int {
 
 func (o *PostIngestionValidateUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionValidateUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/validate][%d] postIngestionValidateUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postIngestionValidateUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionValidateUnauthorized) GetPayload() *models.ErrorResponse {

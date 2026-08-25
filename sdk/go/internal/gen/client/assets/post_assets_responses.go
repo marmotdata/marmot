@@ -46,7 +46,7 @@ func (o *PostAssetsReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /assets] PostAssets", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/assets/] postAssets", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostAssetsCreated) Code() int {
 
 func (o *PostAssetsCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsCreated %s", 201, payload)
 }
 
 func (o *PostAssetsCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsCreated %s", 201, payload)
 }
 
 func (o *PostAssetsCreated) GetPayload() *models.Asset {
@@ -162,12 +162,12 @@ func (o *PostAssetsBadRequest) Code() int {
 
 func (o *PostAssetsBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsBadRequest %s", 400, payload)
 }
 
 func (o *PostAssetsBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostAssetsUnauthorized) Code() int {
 
 func (o *PostAssetsUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsUnauthorized %s", 401, payload)
 }
 
 func (o *PostAssetsUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsUnauthorized %s", 401, payload)
 }
 
 func (o *PostAssetsUnauthorized) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostAssetsConflict) Code() int {
 
 func (o *PostAssetsConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsConflict %s", 409, payload)
 }
 
 func (o *PostAssetsConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets][%d] postAssetsConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/assets/][%d] postAssetsConflict %s", 409, payload)
 }
 
 func (o *PostAssetsConflict) GetPayload() *models.ErrorResponse {

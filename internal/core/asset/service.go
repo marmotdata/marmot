@@ -13,6 +13,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/rs/zerolog/log"
 )
 
@@ -253,6 +254,7 @@ type service struct {
 	repo                 Repository
 	validator            *validator.Validate
 	metrics              MetricsClient
+	guard                limits.Guard
 	membershipObserver   MembershipObserver
 	membershipObservers  []MembershipObserver
 	notificationObserver NotificationObserver
@@ -276,6 +278,7 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
 		validator: validator.New(),
+		guard:     limits.NoopGuard{},
 	}
 
 	for _, opt := range opts {
@@ -288,6 +291,16 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 func WithMetrics(metrics MetricsClient) ServiceOption {
 	return func(s *service) {
 		s.metrics = metrics
+	}
+}
+
+// WithGuard installs a resource-count Guard consulted before each Create.
+// Passing NoopGuard (the default) disables enforcement.
+func WithGuard(g limits.Guard) ServiceOption {
+	return func(s *service) {
+		if g != nil {
+			s.guard = g
+		}
 	}
 }
 
@@ -415,6 +428,10 @@ func (s *service) ListByPattern(ctx context.Context, pattern string, assetType s
 func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	if err := s.guard.CheckCreate(ctx, limits.ResourceAssets); err != nil {
+		return nil, err
 	}
 
 	existing, err := s.repo.GetByMRN(ctx, *input.MRN)

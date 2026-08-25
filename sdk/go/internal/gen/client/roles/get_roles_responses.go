@@ -34,7 +34,7 @@ func (o *GetRolesReader) ReadResponse(response runtime.ClientResponse, consumer 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /roles] GetRoles", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/roles] getRoles", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetRolesOK) Code() int {
 
 func (o *GetRolesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles][%d] getRolesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/roles][%d] getRolesOK %s", 200, payload)
 }
 
 func (o *GetRolesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles][%d] getRolesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/roles][%d] getRolesOK %s", 200, payload)
 }
 
 func (o *GetRolesOK) GetPayload() []*models.Role {
@@ -148,12 +148,12 @@ func (o *GetRolesInternalServerError) Code() int {
 
 func (o *GetRolesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles][%d] getRolesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/roles][%d] getRolesInternalServerError %s", 500, payload)
 }
 
 func (o *GetRolesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /roles][%d] getRolesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/roles][%d] getRolesInternalServerError %s", 500, payload)
 }
 
 func (o *GetRolesInternalServerError) GetPayload() *models.ErrorResponse {

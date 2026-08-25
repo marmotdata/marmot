@@ -40,7 +40,7 @@ func (o *GetAssetsMyAssetsReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/my-assets] GetAssetsMyAssets", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/my-assets] getAssetsMyAssets", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsMyAssetsOK) Code() int {
 
 func (o *GetAssetsMyAssetsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsOK %s", 200, payload)
 }
 
 func (o *GetAssetsMyAssetsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsOK %s", 200, payload)
 }
 
 func (o *GetAssetsMyAssetsOK) GetPayload() *models.AssetSearchResponse {
@@ -156,12 +156,12 @@ func (o *GetAssetsMyAssetsUnauthorized) Code() int {
 
 func (o *GetAssetsMyAssetsUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsUnauthorized %s", 401, payload)
 }
 
 func (o *GetAssetsMyAssetsUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsUnauthorized %s", 401, payload)
 }
 
 func (o *GetAssetsMyAssetsUnauthorized) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetAssetsMyAssetsInternalServerError) Code() int {
 
 func (o *GetAssetsMyAssetsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsMyAssetsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/my-assets][%d] getAssetsMyAssetsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/my-assets][%d] getAssetsMyAssetsInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsMyAssetsInternalServerError) GetPayload() *models.ErrorResponse {

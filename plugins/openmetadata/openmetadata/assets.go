@@ -116,17 +116,14 @@ func (c *collector) mrnName(native, fqn string) string {
 // description, the OpenMetadata provenance metadata, tags, and links
 // back to OpenMetadata and to the system the entity lives in.
 func (c *collector) newAsset(base entityBase, kind, assetType string, p projection, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	// name is the qualified path that identifies the asset, so it is what
-	// the MRN is built from. What people read is the object's own name:
-	// a table is "orders", not "sales.public.orders". Marmot keeps the
-	// two apart, and every link is built from the MRN rather than from
-	// the name, the same way the ClickHouse, Iceberg and dbt plugins do.
-	mrnValue := mrn.New(assetType, mrnService(p.Provider), name)
-
-	displayName := strings.TrimSpace(base.Name)
-	if displayName == "" {
-		displayName = name
-	}
+	// Name and MRN are the same string on purpose: both have to match
+	// what the technology's own plugin produces, or the two runs stop
+	// merging onto one asset.
+	//
+	// p.Provider is used unslugged for the same reason. A provider with
+	// a space, such as "Delta Lake", lands that space in the MRN, which
+	// is where the technology's own plugin lands too.
+	mrnValue := mrn.New(assetType, p.Provider, name)
 
 	if metadata == nil {
 		metadata = make(map[string]interface{})
@@ -135,7 +132,7 @@ func (c *collector) newAsset(base entityBase, kind, assetType string, p projecti
 	c.trackForLineage(kind, base.ID)
 
 	asset := pluginsdk.Asset{
-		Name:          &displayName,
+		Name:          &name,
 		MRN:           &mrnValue,
 		Type:          assetType,
 		Providers:     []string{p.Provider},
@@ -386,14 +383,4 @@ func putIf(metadata map[string]interface{}, key string, value interface{}) {
 		return
 	}
 	metadata[key] = value
-}
-
-// mrnService is the service component of an MRN for a provider. mrn.New
-// sanitizes the name it is given but not the service, so a provider with
-// a space in it would put that space into the MRN and into every URL
-// built from it. Spaces are dropped rather than hyphenated so that
-// "Delta Lake" addresses the same assets as the Delta Lake plugin, which
-// slugs itself "DeltaLake".
-func mrnService(provider string) string {
-	return strings.ReplaceAll(provider, " ", "")
 }

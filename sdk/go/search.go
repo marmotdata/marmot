@@ -35,7 +35,7 @@ func (s *SearchService) Query(ctx context.Context, q string, opts SearchOptions)
 	if opts.Offset > 0 {
 		p = p.WithOffset(&opts.Offset)
 	}
-	resp, err := s.gen.Search.GetSearch(p)
+	resp, err := s.gen.Search.GetSearch(p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}

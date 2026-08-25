@@ -28,7 +28,7 @@ func (o *PostRunsStartReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return result, nil
 	default:
-		return nil, runtime.NewAPIError("[POST /runs/start] PostRunsStart", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/runs/start] postRunsStart", response, response.Code())
 	}
 }
 
@@ -76,12 +76,12 @@ func (o *PostRunsStartOK) Code() int {
 
 func (o *PostRunsStartOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/start][%d] postRunsStartOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/start][%d] postRunsStartOK %s", 200, payload)
 }
 
 func (o *PostRunsStartOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /runs/start][%d] postRunsStartOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/runs/start][%d] postRunsStartOK %s", 200, payload)
 }
 
 func (o *PostRunsStartOK) GetPayload() *models.PluginRun {

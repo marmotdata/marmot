@@ -18,6 +18,17 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 } // @name ErrorResponse
 
+// LimitErrorResponse is returned with HTTP 403 when a create is refused
+// because the target resource is at its configured cap. Code is stable
+// ("limit_exceeded") so clients can branch on it without parsing text.
+type LimitErrorResponse struct {
+	Error    string `json:"error"`
+	Code     string `json:"code"`
+	Resource string `json:"resource"`
+	Current  int64  `json:"current"`
+	Limit    int64  `json:"limit"`
+} // @name LimitErrorResponse
+
 // ValidationErrorResponse represents validation errors
 type ValidationErrorResponse struct {
 	Error  string            `json:"error"`

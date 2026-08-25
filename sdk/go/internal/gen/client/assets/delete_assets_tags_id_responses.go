@@ -40,7 +40,7 @@ func (o *DeleteAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /assets/tags/{id}] DeleteAssetsTagsID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/assets/tags/{id}] deleteAssetsTagsID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *DeleteAssetsTagsIDOK) Code() int {
 
 func (o *DeleteAssetsTagsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
 }
 
 func (o *DeleteAssetsTagsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
 }
 
 func (o *DeleteAssetsTagsIDOK) GetPayload() *models.Asset {
@@ -156,12 +156,12 @@ func (o *DeleteAssetsTagsIDBadRequest) Code() int {
 
 func (o *DeleteAssetsTagsIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteAssetsTagsIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteAssetsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *DeleteAssetsTagsIDNotFound) Code() int {
 
 func (o *DeleteAssetsTagsIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteAssetsTagsIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteAssetsTagsIDNotFound) GetPayload() *models.ErrorResponse {

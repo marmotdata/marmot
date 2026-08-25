@@ -19,7 +19,7 @@ func TestDiscover_CarriesTheDescription(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	asset := findAsset(result, "Table", "shop.public.orders")
+	asset := findAsset(result, "Table", "orders")
 	require.NotNil(t, asset)
 	require.NotNil(t, asset.Description)
 	assert.Equal(t, "One row per customer order", *asset.Description)
@@ -33,7 +33,7 @@ func TestDiscover_CarriesClassificationTags(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.Equal(t, []string{"PII.Sensitive"}, findAsset(result, "Table", "shop.public.orders").Tags)
+	assert.Equal(t, []string{"PII.Sensitive"}, findAsset(result, "Table", "orders").Tags)
 }
 
 func TestDiscover_CanAlsoCarryGlossaryTermsAsTags(t *testing.T) {
@@ -47,7 +47,7 @@ func TestDiscover_CanAlsoCarryGlossaryTermsAsTags(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables", orders),
 		pluginsdk.RawConfig{"glossary_terms_as_tags": true})
 
-	asset := findAsset(result, "Table", "shop.public.orders")
+	asset := findAsset(result, "Table", "orders")
 	assert.Equal(t, []string{"Business.Customer"}, asset.Tags)
 	assert.Equal(t, []string{"Business.Customer"}, asset.Metadata["glossary_terms"])
 }
@@ -60,7 +60,7 @@ func TestDiscover_SkipsSuggestedTags(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Tags,
+	assert.Empty(t, findAsset(result, "Table", "orders").Tags,
 		"a suggestion nobody accepted is not a fact about the asset")
 }
 
@@ -74,7 +74,7 @@ func TestDiscover_CanLeaveOpenMetadataTagsBehind(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables", orders),
 		pluginsdk.RawConfig{"tags_from_openmetadata": false, "glossary_terms_as_tags": false})
 
-	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Tags)
+	assert.Empty(t, findAsset(result, "Table", "orders").Tags)
 }
 
 func TestDiscover_AppliesConfiguredTags(t *testing.T) {
@@ -82,7 +82,7 @@ func TestDiscover_AppliesConfiguredTags(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		pluginsdk.RawConfig{"tags": []string{"imported"}})
 
-	assert.Contains(t, findAsset(result, "Table", "shop.public.orders").Tags, "imported")
+	assert.Contains(t, findAsset(result, "Table", "orders").Tags, "imported")
 }
 
 func TestDiscover_RecordsOwnersDomainsAndDataProducts(t *testing.T) {
@@ -93,7 +93,7 @@ func TestDiscover_RecordsOwnersDomainsAndDataProducts(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	asset := findAsset(result, "Table", "shop.public.orders")
+	asset := findAsset(result, "Table", "orders")
 	assert.Equal(t, []string{"Data Engineering"}, asset.Metadata["owners"])
 	assert.Equal(t, []string{"Commerce"}, asset.Metadata["domains"])
 	assert.Equal(t, []string{"Orders API"}, asset.Metadata["data_products"])
@@ -104,7 +104,7 @@ func TestDiscover_RecordsWhereTheAssetCameFrom(t *testing.T) {
 		with("tables", tableEntity("pg_prod", "Postgres", "pg_prod.shop.public.orders", "Regular")),
 		nil)
 
-	om, ok := findAsset(result, "Table", "shop.public.orders").Metadata["openmetadata"].(map[string]interface{})
+	om, ok := findAsset(result, "Table", "orders").Metadata["openmetadata"].(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal(t, "pg_prod.shop.public.orders", om["fqn"])
 	assert.Equal(t, "pg_prod", om["service"])
@@ -118,7 +118,7 @@ func TestDiscover_RecordsOpenMetadataAsTheSource(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		nil)
 
-	sources := findAsset(result, "Table", "shop.public.orders").Sources
+	sources := findAsset(result, "Table", "orders").Sources
 	require.Len(t, sources, 1)
 	assert.Equal(t, "OpenMetadata", sources[0].Name)
 	assert.Equal(t, 2, sources[0].Priority)
@@ -129,7 +129,7 @@ func TestDiscover_LinksBackToOpenMetadata(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		nil)
 
-	links := findAsset(result, "Table", "shop.public.orders").ExternalLinks
+	links := findAsset(result, "Table", "orders").ExternalLinks
 	require.NotEmpty(t, links)
 	assert.Equal(t, "OpenMetadata", links[0].Name)
 	assert.Contains(t, links[0].URL, "/table/pg.shop.public.orders")
@@ -152,7 +152,7 @@ func TestDiscover_CanLeaveOutTheOpenMetadataLink(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		pluginsdk.RawConfig{"link_to_openmetadata": false})
 
-	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").ExternalLinks)
+	assert.Empty(t, findAsset(result, "Table", "orders").ExternalLinks)
 }
 
 func TestDiscover_RecordsColumns(t *testing.T) {
@@ -164,7 +164,7 @@ func TestDiscover_RecordsColumns(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	columns := decodeColumns(t, findAsset(result, "Table", "shop.public.orders"))
+	columns := decodeColumns(t, findAsset(result, "Table", "orders"))
 	require.Len(t, columns, 2)
 	assert.Equal(t, "id", columns[0]["column_name"])
 	assert.Equal(t, true, columns[0]["is_primary_key"])
@@ -181,7 +181,7 @@ func TestDiscover_FlattensNestedColumns(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	columns := decodeColumns(t, findAsset(result, "Table", "shop.public.orders"))
+	columns := decodeColumns(t, findAsset(result, "Table", "orders"))
 	children, ok := columns[0]["children"].([]interface{})
 	require.True(t, ok)
 	require.Len(t, children, 1)
@@ -195,7 +195,7 @@ func TestDiscover_CanLeaveOutColumns(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables", orders),
 		pluginsdk.RawConfig{"include_columns": false})
 
-	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Schema["columns"])
+	assert.Empty(t, findAsset(result, "Table", "orders").Schema["columns"])
 }
 
 func TestDiscover_RecordsTableProfileMetrics(t *testing.T) {
@@ -204,7 +204,7 @@ func TestDiscover_RecordsTableProfileMetrics(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	metadata := findAsset(result, "Table", "shop.public.orders").Metadata
+	metadata := findAsset(result, "Table", "orders").Metadata
 	assert.Equal(t, int64(4200), metadata["row_count"])
 	assert.Equal(t, int64(8192), metadata["size"])
 }
@@ -215,7 +215,7 @@ func TestDiscover_CarriesStoredProcedureCodeAsAQuery(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("storedProcedures", procedure), nil)
 
-	asset := findAsset(result, "Function", "shop.public.refresh_orders")
+	asset := findAsset(result, "Function", "refresh_orders")
 	require.NotNil(t, asset)
 	require.NotNil(t, asset.Query)
 	assert.Equal(t, "BEGIN END", *asset.Query)
@@ -337,7 +337,7 @@ func TestDiscover_DecodesATableThatHasARetentionPeriod(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
 }
 
 func TestDiscover_LinksATableWhoseDatabaseNameContainsADot(t *testing.T) {
@@ -350,7 +350,7 @@ func TestDiscover_LinksATableWhoseDatabaseNameContainsADot(t *testing.T) {
 	result := discover(t, newFakeOM().with("databases", db).with("tables", orders), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://database/postgresql/my.shop", "mrn://table/postgresql/my.shop.public.orders", "CONTAINS"))
+		"mrn://database/postgresql/my.shop", "mrn://table/postgresql/orders", "CONTAINS"))
 }
 
 func TestDiscover_LinksToTheUIEvenWhenTheHostIsTheAPIRoot(t *testing.T) {

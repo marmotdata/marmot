@@ -81,11 +81,11 @@ func TestDiscover_CataloguesATableAsItsOwnTechnology(t *testing.T) {
 		with("tables", tableEntity("postgres_prod", "Postgres", "postgres_prod.shop.public.orders", "Regular")),
 		nil)
 
-	orders := findAsset(result, "Table", "shop.public.orders")
+	orders := findAsset(result, "Table", "orders")
 	require.NotNil(t, orders)
 	assert.Equal(t, []string{"PostgreSQL"}, orders.Providers,
 		"a Postgres table in OpenMetadata is a PostgreSQL asset in Marmot")
-	assert.Equal(t, "mrn://table/postgresql/shop.public.orders", *orders.MRN)
+	assert.Equal(t, "mrn://table/postgresql/orders", *orders.MRN)
 }
 
 func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
@@ -94,7 +94,7 @@ func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
 		with("tables", tableEntity("postgres_prod", "Postgres", "postgres_prod.shop.public.orders", "Regular")),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://database/postgresql/shop", "mrn://table/postgresql/shop.public.orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://database/postgresql/shop", "mrn://table/postgresql/orders", "CONTAINS"))
 }
 
 func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
@@ -104,8 +104,8 @@ func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
 			tableEntity("pg", "Postgres", "pg.shop.public.recent_orders", "View")),
 		nil)
 
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
-	assert.NotNil(t, findAsset(result, "View", "shop.public.recent_orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.NotNil(t, findAsset(result, "View", "recent_orders"))
 }
 
 func TestDiscover_QualifiedNamingKeepsServicesApart(t *testing.T) {
@@ -153,7 +153,7 @@ func TestDiscover_SkipsExcludedServices(t *testing.T) {
 		pluginsdk.RawConfig{"exclude_services": []string{"pg_staging"}})
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
 }
 
 func TestDiscover_SkipsExcludedServiceTypes(t *testing.T) {
@@ -185,7 +185,7 @@ func TestDiscover_SkipsSoftDeletedEntities(t *testing.T) {
 		nil)
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
 }
 
 func TestDiscover_HonoursIncludeToggles(t *testing.T) {
@@ -207,7 +207,7 @@ func TestDiscover_SurvivesEntityKindsTheServerDoesNotHave(t *testing.T) {
 		nil)
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
 }
 
 func TestDiscover_FailsWhenTheServerIsNotOpenMetadata(t *testing.T) {
@@ -229,8 +229,8 @@ func TestDiscover_FailsWhenTheServerIsNotOpenMetadata(t *testing.T) {
 // survive that round trip unchanged, or the asset exists but its page
 // 404s.
 //
-// Note this is NOT a constraint that Name reproduce the MRN. Name is the
-// object's own name, for reading; the MRN carries the qualified path.
+// Name must also reproduce the MRN's name component; that half is pinned
+// by TestDiscover_NameIsTheStringTheMRNIsBuiltFrom.
 func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 	result := discover(t, everyEntityKind(), nil)
 	require.NotEmpty(t, result.Assets)
@@ -248,9 +248,15 @@ func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 	}
 }
 
-// TestDiscover_NamesAreTheObjectsOwnName pins the other half: what people
-// read is the plain name, not the path that identifies it.
-func TestDiscover_NamesAreTheObjectsOwnName(t *testing.T) {
+// TestDiscover_NameIsTheStringTheMRNIsBuiltFrom pins the other half: Name
+// and the MRN's name component must agree, or the same object carries two
+// identities and lands twice.
+//
+// The price is that a Snowflake table reads as "sales.public.orders" in
+// the catalog rather than "orders". That is deliberate: a wrong name is
+// recoverable, a wrong identity deletes the asset's owners, term links and
+// lineage when it is rewritten.
+func TestDiscover_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables",
 		tableEntity("sf", "Snowflake", "sf.sales.public.orders", "Regular")), nil)
 
@@ -258,9 +264,23 @@ func TestDiscover_NamesAreTheObjectsOwnName(t *testing.T) {
 	require.NotNil(t, table)
 
 	assert.Equal(t, "mrn://table/snowflake/sales.public.orders", *table.MRN,
-		"identity keeps the whole path, so two databases stay apart")
-	assert.Equal(t, "orders", *table.Name,
-		"but the catalog reads orders, the way ClickHouse and Iceberg already do")
+		"Snowflake has no Marmot plugin, so it keeps every level")
+	assert.Equal(t, "sales.public.orders", *table.Name,
+		"Name must equal the MRN's name component")
+	assert.Equal(t, *table.MRN, mrn.New("Table", table.Providers[0], *table.Name))
+}
+
+// A technology that does have a Marmot plugin is projected onto that
+// plugin's bare name, so there the catalog does read "orders".
+func TestDiscover_NameIsBareWhereThePluginNamesItBare(t *testing.T) {
+	result := discover(t, newFakeOM().with("tables",
+		tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")), nil)
+
+	table := findAsset(result, "Table", "orders")
+	require.NotNil(t, table)
+
+	assert.Equal(t, "mrn://table/postgresql/orders", *table.MRN)
+	assert.Equal(t, "orders", *table.Name)
 }
 
 // TestDiscover_LineagePointsAtRealAssets guards the other half of the
