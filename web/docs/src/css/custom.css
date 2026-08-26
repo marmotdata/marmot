@@ -505,6 +505,63 @@ html[data-theme="dark"] .gradient-text {
   animation: flowPulse 2.5s ease-in-out infinite;
 }
 
+/* ============================================
+   Hero atmosphere (warmth breathe + slow flow)
+   ============================================ */
+
+@keyframes hero-warmth {
+  0%, 100% {
+    opacity: 0.55;
+    transform: translateY(3px) scale(0.98);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-6px) scale(1.05);
+  }
+}
+.animate-hero-warmth {
+  animation: hero-warmth 11s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+}
+
+@keyframes hero-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -18; }
+}
+.hero-flow-line {
+  stroke-dasharray: 4 4;
+  animation: hero-flow 5s linear infinite;
+}
+
+@keyframes terminal-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+.terminal-cursor {
+  animation: terminal-blink 1s step-end infinite;
+}
+
+/* Diagram connector flow — slower, more elegant than the .animate-flow used
+   for the MCPShowcase lineage lines. Longer dashes, gentler drift. */
+@keyframes context-flow {
+  from { stroke-dashoffset: 18; }
+  to   { stroke-dashoffset: 0; }
+}
+.animate-context-flow {
+  animation: context-flow 3.5s linear infinite;
+}
+
+
+@keyframes hero-mesh-drift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 50% 100%; }
+  50%      { background-position: 8% 4%, 92% 8%, 45% 96%; }
+}
+.gradient-mesh-hero {
+  background-size: 120% 120%, 120% 120%, 120% 120%;
+  animation: hero-mesh-drift 22s ease-in-out infinite;
+}
+
 @keyframes hubPulse {
   0%,
   100% {

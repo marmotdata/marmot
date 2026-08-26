@@ -347,10 +347,18 @@ const config: Config = {
               label: "Privacy Policy",
               to: "/privacy",
             },
+            {
+              label: "Terms of Service",
+              to: "/terms",
+            },
+            {
+              label: "Data Processing Agreement",
+              to: "/dpa",
+            },
           ],
         },
       ],
-      copyright: `London office · 66 Paul St, London EC2A 4NA<br />Copyright © ${new Date().getFullYear()} Marmot.`,
+      copyright: `66 Paul St, London EC2A 4NA<br />Copyright © ${new Date().getFullYear()} Marmot.`,
     },
     algolia: {
       appId: "WAUET7ZVLV",

@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Hero from "../components/Hero";
-import ContextDiagram from "../components/ContextDiagram";
 import MCPShowcase from "../components/MCPShowcase";
-import ProductTour from "../components/ProductTour";
 import QuickDeploy from "../components/QuickDeploy";
 import DataSources from "../components/DataSources";
 import CTA from "../components/CTA";
@@ -37,9 +35,7 @@ export default function Home(): JSX.Element {
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen overflow-hidden">
         <Hero />
-        <ContextDiagram />
         <MCPShowcase />
-        <ProductTour />
         <QuickDeploy />
         <DataSources />
         <CTA />
