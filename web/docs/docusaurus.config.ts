@@ -282,7 +282,7 @@ const config: Config = {
             },
             {
               label: "Plugins",
-              to: "/docs/Plugins",
+              href: "https://plugins.marmotdata.io",
             },
             {
               label: "MCP",

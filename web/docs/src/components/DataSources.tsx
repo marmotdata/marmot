@@ -1,8 +1,25 @@
 import React from "react";
 import { Icon } from "@iconify/react";
-import Link from "@docusaurus/Link";
-import { useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
 import { plugins, type Plugin } from "./PluginCards";
+
+const REGISTRY = "https://plugins.marmotdata.io";
+
+/* Registry slugs are the doc name lowercased with spaces removed, except for
+   these three. Verified against the slug list plugins.marmotdata.io serves. */
+const registrySlugOverrides: Record<string, string> = {
+  "Plugins/Azure Blob Storage": "azureblob",
+  "Plugins/Confluent Cloud": "confluent",
+  "Plugins/Google Cloud Storage": "gcs",
+};
+
+/* #usage selects the Usage tab on the registry page, which is the part
+   someone clicking a plugin from the homepage actually wants. */
+const registryHref = (docId: string): string => {
+  const slug =
+    registrySlugOverrides[docId] ??
+    docId.replace(/^Plugins\//, "").toLowerCase().replace(/\s+/g, "");
+  return `${REGISTRY}/marmotdata/${slug}#usage`;
+};
 
 // Order of chips shown on the homepage. Curated across categories
 // (databases, warehouses/lakes, cloud storage, streaming, orchestration,
@@ -57,16 +74,6 @@ function ChipIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: boolea
 }
 
 export default function DataSources(): JSX.Element {
-  const versionCandidates = useDocsVersionCandidates("default");
-
-  const resolveHref = (docId: string): string => {
-    for (const version of versionCandidates) {
-      const doc = version.docs.find((d) => d.id === docId);
-      if (doc) return doc.path;
-    }
-    return "#";
-  };
-
   const isDarkTheme =
     typeof document !== "undefined" &&
     document.documentElement.getAttribute("data-theme") === "dark";
@@ -83,8 +90,8 @@ export default function DataSources(): JSX.Element {
             Plugins for what you already run
           </h2>
           <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
-            {plugins.length} of them and counting, covering the databases,
-            warehouses, lakes, streams and orchestrators your team already uses.
+            Covering the databases, warehouses, lakes, streams and
+            orchestrators your team already uses, and counting.
           </p>
         </div>
 
@@ -94,16 +101,18 @@ export default function DataSources(): JSX.Element {
           className="mt-10 flex flex-wrap items-center justify-center gap-2.5"
         >
           {chips.map((plugin) => (
-            <Link
+            <a
               key={plugin.docId}
-              to={resolveHref(plugin.docId)}
+              href={registryHref(plugin.docId)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="plugin-chip group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white dark:bg-gray-900/40 no-underline"
             >
               <ChipIcon plugin={plugin} isDarkTheme={isDarkTheme} />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors">
                 {displayNameOverrides[plugin.docId] ?? plugin.name}
               </span>
-            </Link>
+            </a>
           ))}
         </div>
 
@@ -113,10 +122,12 @@ export default function DataSources(): JSX.Element {
           className="mt-9 text-center text-sm text-gray-500 dark:text-gray-400"
         >
           <a
-            href="/docs/Plugins/"
+            href={REGISTRY}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-earthy-terracotta-700 dark:text-earthy-terracotta-400 font-semibold hover:underline"
           >
-            View all {plugins.length} plugins
+            View all plugins
           </a>{" "}
           or{" "}
           <a

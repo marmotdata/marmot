@@ -1,339 +1,362 @@
 import React from "react";
 import { Icon } from "@iconify/react";
 
-interface Node {
+/* Two ways in, one catalog, many ways out.
+ *
+ * The diagram carries the shape: push from code on the left, Marmot in the
+ * middle, engineers and agents on the right. The strip underneath carries the
+ * breadth: the plugin ecosystem, grouped the way the plugin docs group it.
+ *
+ * Geometry note: the wire SVGs render at exactly WIRE_W x BODY_H with a
+ * matching viewBox, and the chip columns are BODY_H tall with space-between,
+ * so nothing scales and every curve endpoint lands on a chip centre by
+ * construction. The connectors this replaces drifted because they stretched a
+ * square viewBox across a wide box.
+ */
+
+const WIRE_W = 140;
+const BODY_H = 380;
+const CHIP_H = 52;
+
+/* The ecosystem strip is capped at 62rem, and the wide layout only runs when
+ * the figure is wider than that, so the strip is always exactly this wide
+ * there. That lets the feed curves be fixed-size and still land dead on each
+ * category's centre. */
+const ECO_W = 1080;
+const ECO_H = 80;
+
+// Chip centres, derived from `space-between` over a BODY_H column.
+const centres = (n: number) =>
+  Array.from({ length: n }, (_, i) => i * ((BODY_H - CHIP_H) / (n - 1)) + CHIP_H / 2);
+
+interface Chip {
   label: string;
-  icon?: string;
+  icon: string;
   iconImg?: string;
+  /** Generic tool glyph rather than a brand mark: inherits ink, not colour. */
+  glyph?: boolean;
+  /** Brand colour for monochrome marks that would otherwise render as ink. */
+  iconColor?: string;
   kafkaIcon?: boolean;
 }
 
-interface Group {
-  label: string;
-  items: Node[];
-}
+const pushFromCode: Chip[] = [
+  { label: "CLI", icon: "mdi:console", glyph: true },
+  { label: "Terraform", icon: "logos:terraform-icon" },
+  { label: "Pulumi", icon: "logos:pulumi-icon" },
+  { label: "REST API", icon: "mdi:api", glyph: true },
+  { label: "SDK", icon: "mdi:code-braces", glyph: true },
+];
 
-const sourceGroups: Group[] = [
+const consumers: Chip[] = [
+  { label: "MCP server", icon: "mdi:protocol", glyph: true },
+  { label: "Web UI", icon: "mdi:monitor-dashboard", glyph: true },
+  { label: "REST API", icon: "mdi:api", glyph: true },
+  { label: "CLI", icon: "mdi:console", glyph: true },
+];
+
+const agents: Chip[] = [
+  { label: "Claude", icon: "simple-icons:anthropic" },
+  { label: "Cursor", icon: "simple-icons:cursor" },
+  { label: "ChatGPT", icon: "simple-icons:openai" },
+  { label: "Copilot", icon: "simple-icons:githubcopilot" },
+];
+
+const stores = [
+  { label: "Assets", icon: "mdi:database-outline" },
+  { label: "Lineage", icon: "mdi:graph-outline" },
+  { label: "Ownership", icon: "mdi:account-outline" },
+  { label: "Glossary", icon: "mdi:book-open-page-variant-outline" },
+];
+
+/** Grouped the same way the plugin docs group them. */
+const categories: { label: string; items: Chip[] }[] = [
   {
     label: "Databases",
     items: [
       { label: "PostgreSQL", icon: "devicon:postgresql" },
-      { label: "MySQL", icon: "devicon:mysql" },
-      { label: "MongoDB", icon: "devicon:mongodb" },
+      { label: "MySQL", icon: "logos:mysql-icon" },
+      { label: "MongoDB", icon: "logos:mongodb-icon" },
       { label: "ClickHouse", icon: "devicon:clickhouse" },
-      { label: "Redis", icon: "devicon:redis" },
+      { label: "Redis", icon: "logos:redis" },
     ],
   },
   {
     label: "Warehouses & lakes",
     items: [
-      { label: "BigQuery", icon: "devicon:googlecloud" },
-      { label: "Snowflake", icon: "simple-icons:snowflake" },
+      { label: "BigQuery", icon: "simple-icons:googlebigquery", iconColor: "#4386fa" },
+      { label: "Snowflake", icon: "logos:snowflake-icon" },
       { label: "S3", icon: "logos:aws-s3" },
-      { label: "Iceberg", iconImg: "/img/iceberg.svg" },
-      { label: "Delta Lake", iconImg: "/img/deltalake.svg" },
+      { label: "Iceberg", icon: "", iconImg: "/img/iceberg.svg" },
+      { label: "Delta Lake", icon: "", iconImg: "/img/deltalake.svg" },
     ],
   },
   {
     label: "Streaming & pipelines",
     items: [
       { label: "Kafka", icon: "devicon:apachekafka", kafkaIcon: true },
-      { label: "Redpanda", iconImg: "/img/redpanda.svg" },
-      { label: "NATS", icon: "devicon:nats" },
+      { label: "Redpanda", icon: "", iconImg: "/img/redpanda.svg" },
+      { label: "NATS", icon: "logos:nats-icon" },
       { label: "Airflow", icon: "logos:airflow-icon" },
       { label: "dbt", icon: "logos:dbt-icon" },
     ],
   },
   {
-    label: "Push from code",
+    label: "Compute",
     items: [
-      { label: "CLI", icon: "mdi:console" },
-      { label: "Terraform", icon: "simple-icons:terraform" },
-      { label: "Pulumi", icon: "simple-icons:pulumi" },
-      { label: "REST API", icon: "mdi:api" },
-      { label: "SDK", icon: "mdi:code-braces" },
+      { label: "Kubernetes", icon: "logos:kubernetes" },
+      { label: "AWS", icon: "simple-icons:amazonwebservices" },
+      { label: "Google Cloud", icon: "logos:google-cloud" },
+      { label: "Azure", icon: "logos:microsoft-azure" },
     ],
   },
 ];
 
-const consumerGroups: Group[] = [
-  {
-    label: "AI agents",
-    items: [
-      { label: "Claude", icon: "simple-icons:anthropic" },
-      { label: "Cursor", icon: "simple-icons:cursor" },
-      { label: "Copilot", icon: "simple-icons:githubcopilot" },
-      { label: "ChatGPT", icon: "simple-icons:openai" },
-    ],
-  },
-  {
-    label: "Engineers",
-    items: [
-      { label: "Web UI", icon: "mdi:monitor-dashboard" },
-      { label: "REST API", icon: "mdi:api" },
-      { label: "CLI", icon: "mdi:console" },
-      { label: "Slack", icon: "simple-icons:slack" },
-    ],
-  },
-];
+// One feed curve per category, converging on the hub above.
+const ECO_X = categories.map(
+  (_, i) => ((i * 2 + 1) * ECO_W) / (categories.length * 2)
+);
 
-const stores = [
-  {
-    label: "Assets",
-    icon: "mdi:database-outline",
-    desc: "Every table, topic, bucket",
-  },
-  {
-    label: "Lineage",
-    icon: "mdi:graph-outline",
-    desc: "How data connects",
-  },
-  {
-    label: "Ownership",
-    icon: "mdi:account-outline",
-    desc: "Who to ask",
-  },
-  {
-    label: "Glossary",
-    icon: "mdi:book-open-page-variant-outline",
-    desc: "What the terms mean",
-  },
-];
-
-function NodeIcon({ node, className }: { node: Node; className: string }) {
-  if (node.iconImg) {
-    return (
-      <img
-        src={node.iconImg}
-        alt=""
-        className={`${className} object-contain`}
-        aria-hidden="true"
-      />
-    );
+function ChipIcon({ chip, className }: { chip: Chip; className: string }) {
+  if (chip.iconImg) {
+    return <img src={chip.iconImg} alt="" className={`${className} object-contain`} aria-hidden="true" />;
   }
   return (
     <Icon
-      icon={node.icon!}
-      className={`${className} ${node.kafkaIcon ? "kafka-icon" : ""}`}
+      icon={chip.icon}
+      className={`${className}${chip.kafkaIcon ? " kafka-icon" : ""}${chip.glyph ? " cl-glyph" : ""}`}
+      style={chip.iconColor ? { color: chip.iconColor } : undefined}
       aria-hidden="true"
     />
   );
 }
 
-function Chip({ node }: { node: Node }) {
+function ChipRow({ chip }: { chip: Chip }) {
   return (
-    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/80 dark:bg-gray-900/50 border border-earthy-brown-200/60 dark:border-gray-700">
-      <NodeIcon node={node} className="w-3.5 h-3.5 flex-shrink-0" />
-      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-        {node.label}
-      </span>
+    <div className="cl-chip">
+      <ChipIcon chip={chip} className="cl-chip-icon" />
+      <span className="cl-chip-label">{chip.label}</span>
     </div>
   );
 }
 
-function IconChip({ node }: { node: Node }) {
+function Hub() {
   return (
-    <div
-      className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white/80 dark:bg-gray-900/50 border border-earthy-brown-200/60 dark:border-gray-700"
-      title={node.label}
-    >
-      <NodeIcon node={node} className="w-3.5 h-3.5" />
-    </div>
-  );
-}
-
-function GroupCard({
-  group,
-  iconsOnly,
-}: {
-  group: Group;
-  iconsOnly?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-earthy-brown-200/70 dark:border-gray-700 bg-white/60 dark:bg-gray-800/50 backdrop-blur-sm px-3 py-2 shadow-sm shadow-earthy-terracotta-900/5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-earthy-terracotta-700 dark:text-earthy-terracotta-400 mb-1.5">
-        {group.label}
-      </p>
-      <div
-        className={`flex flex-wrap items-center ${iconsOnly ? "gap-1" : "gap-1.5"}`}
-      >
-        {group.items.map((item) =>
-          iconsOnly ? (
-            <IconChip key={item.label} node={item} />
-          ) : (
-            <Chip key={item.label} node={item} />
-          )
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RowLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="hidden sm:flex items-center">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500 leading-tight">
-        {children}
-      </span>
-    </div>
-  );
-}
-
-function MarmotHub() {
-  return (
-    <div className="relative rounded-xl border-2 border-earthy-terracotta-400/70 dark:border-earthy-terracotta-500/60 bg-white dark:bg-gray-800 p-4 sm:p-5 shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="cl-hub">
+      <div className="cl-hub-head">
+        <img src="/img/marmot.svg" alt="" className="cl-hub-mascot" aria-hidden="true" />
+        <img src="/img/marmot-text.svg" alt="Marmot" className="cl-hub-wordmark dark:hidden" />
         <img
-          src="/img/marmot.svg"
-          alt="Marmot"
-          className="w-10 h-10 flex-shrink-0"
+          src="/img/marmot-text-light.svg"
+          alt=""
+          aria-hidden="true"
+          className="cl-hub-wordmark hidden dark:inline"
         />
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-earthy-terracotta-600 dark:text-earthy-terracotta-400 leading-tight">
-            Context layer
-          </p>
-          <h3 className="m-0 text-base sm:text-lg font-bold text-gray-900 dark:text-white leading-tight">
-            Marmot
-          </h3>
-        </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <ul className="cl-hub-list m-0">
         {stores.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-md bg-earthy-brown-50 dark:bg-gray-900/50 border border-earthy-brown-200/60 dark:border-gray-700 px-3 py-2.5"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Icon
-                icon={s.icon}
-                className="w-3.5 h-3.5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+          <li key={s.label} className="cl-hub-item">
+            <Icon icon={s.icon} className="cl-hub-item-icon" aria-hidden="true" />
+            <span className="cl-hub-item-title">{s.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Wires({ n, dir }: { n: number; dir: "in" | "out" }) {
+  const ys = centres(n);
+  const inbound = dir === "in";
+  const mid = BODY_H / 2;
+  return (
+    <svg
+      width={WIRE_W}
+      height={BODY_H}
+      viewBox={`0 0 ${WIRE_W} ${BODY_H}`}
+      className="cl-wire"
+      aria-hidden="true"
+    >
+      <clipPath id={`cl-wipe-${dir}`}>
+        <rect className={`cl-wipe cl-wipe-${dir}`} x="0" y="0" width={WIRE_W} height={BODY_H} />
+      </clipPath>
+      <g clipPath={`url(#cl-wipe-${dir})`}>
+        {ys.map((y, i) => {
+          const d = inbound
+            ? `M0,${y} C${WIRE_W * 0.45},${y} ${WIRE_W * 0.55},${mid} ${WIRE_W},${mid}`
+            : `M0,${mid} C${WIRE_W * 0.45},${mid} ${WIRE_W * 0.55},${y} ${WIRE_W},${y}`;
+          return (
+            <g key={i}>
+              <path d={d} className="cl-line-base" fill="none" stroke="var(--cl-accent)" strokeWidth={1.75} strokeLinecap="round" />
+              <path
+                d={d}
+                className="cl-line-flow"
+                fill="none"
+                stroke="var(--cl-accent)"
+                strokeWidth={2.25}
+                strokeLinecap="round"
+                style={{ animationDelay: `${(i * 0.42).toFixed(2)}s` }}
               />
-              <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200">
-                {s.label}
-              </span>
+            </g>
+          );
+        })}
+        {inbound ? (
+          <path d={`M${WIRE_W - 8},${mid - 5.5} L${WIRE_W},${mid} L${WIRE_W - 8},${mid + 5.5} z`} fill="var(--cl-accent)" />
+        ) : (
+          ys.map((y, i) => (
+            <path key={i} d={`M${WIRE_W - 8},${y - 5.5} L${WIRE_W},${y} L${WIRE_W - 8},${y + 5.5} z`} fill="var(--cl-accent)" />
+          ))
+        )}
+      </g>
+    </svg>
+  );
+}
+
+function Ecosystem() {
+  return (
+    <div className="cl-eco">
+      {/* These sync into Marmot too, so each category feeds the hub with the
+          same converging curve the code paths use. */}
+      <svg
+        className="cl-eco-feed"
+        width={ECO_W}
+        height={ECO_H}
+        viewBox={`0 0 ${ECO_W} ${ECO_H}`}
+        aria-hidden="true"
+      >
+        {ECO_X.map((x, i) => {
+          const d =
+            x === ECO_W / 2
+              ? `M${x},${ECO_H} V16`
+              : `M${x},${ECO_H} C${x},56 ${ECO_W / 2},48 ${ECO_W / 2},16`;
+          return (
+            <g key={i}>
+              <path d={d} className="cl-line-base" fill="none" stroke="var(--cl-accent)" strokeWidth={1.75} strokeLinecap="round" />
+              <path
+                d={d}
+                className="cl-line-flow"
+                fill="none"
+                stroke="var(--cl-accent)"
+                strokeWidth={2.25}
+                strokeLinecap="round"
+                style={{ animationDelay: `${(i * 0.5).toFixed(2)}s` }}
+              />
+            </g>
+          );
+        })}
+        <path
+          d={`M${ECO_W / 2 - 5.5},17 L${ECO_W / 2},5 L${ECO_W / 2 + 5.5},17 z`}
+          fill="var(--cl-accent)"
+        />
+      </svg>
+
+      {/* Narrow: one arrow, since the strip is stacked rather than in thirds. */}
+      <svg className="cl-eco-feed-narrow" width="16" height="48" viewBox="0 0 16 48" aria-hidden="true">
+        <path d="M8,48 V14" stroke="var(--cl-accent)" strokeWidth="1.75" fill="none" strokeLinecap="round" opacity="0.9" />
+        <path d="M2.5,15 L8,3 L13.5,15 z" fill="var(--cl-accent)" />
+      </svg>
+      <div className="cl-eco-grid">
+        {categories.map((c) => (
+          <div key={c.label} className="cl-eco-group">
+            <p className="cl-eco-label m-0">{c.label}</p>
+            <div className="cl-eco-icons">
+              {c.items.map((item) => (
+                <span key={item.label} className="cl-eco-icon" title={item.label}>
+                  <ChipIcon chip={item} className="cl-eco-glyph" />
+                </span>
+              ))}
             </div>
-            <p className="m-0 text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
-              {s.desc}
-            </p>
           </div>
         ))}
       </div>
+      <a
+        className="cl-eco-more"
+        href="https://plugins.marmotdata.io/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Browse all plugins
+        <svg className="cl-eco-more-arrow" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M13 7l5 5m0 0l-5 5m5-5H6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </a>
     </div>
-  );
-}
-
-/** Vertical connectors between Marmot and a row of groups. Straight dashed
- * lines with small anchor dots at each end, and a traveling "packet" dot
- * rising up each line — staggered per line so packets arrive in a cascade
- * rather than in lock-step. */
-function VerticalConnectors({
-  count,
-}: {
-  count: number;
-  mode: "consumers" | "sources";
-}) {
-  return (
-    <svg
-      className="absolute inset-0 w-full h-full text-earthy-terracotta-400/70 dark:text-earthy-terracotta-500/50 overflow-visible"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      {Array.from({ length: count }, (_, i) => {
-        const x = ((i + 0.5) / count) * 100;
-        // Stagger packet start times & durations per line for organic flow.
-        const dur = 2.8 + i * 0.6;
-        const delay = -i * 0.9;
-
-        return (
-          <g key={i}>
-            {/* Base dashed line */}
-            <line
-              x1={x}
-              y1={100}
-              x2={x}
-              y2={0}
-              stroke="currentColor"
-              strokeWidth={1}
-              strokeDasharray="5 4"
-              vectorEffect="non-scaling-stroke"
-              className="animate-context-flow"
-            />
-            {/* Anchor dots at endpoints — small enough not to look like
-                horizontal elements when the viewBox is stretched. */}
-            <circle cx={x} cy={4} r={1.2} fill="currentColor" opacity={0.9} />
-            <circle cx={x} cy={96} r={1.2} fill="currentColor" opacity={0.9} />
-            {/* Traveling packet — rises bottom → top, fades in/out */}
-            <circle cx={x} r={1.8} fill="currentColor">
-              <animate
-                attributeName="cy"
-                values="96;4"
-                dur={`${dur}s`}
-                begin={`${delay}s`}
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                values="0;1;1;0"
-                keyTimes="0;0.15;0.85;1"
-                dur={`${dur}s`}
-                begin={`${delay}s`}
-                repeatCount="indefinite"
-              />
-            </circle>
-          </g>
-        );
-      })}
-    </svg>
   );
 }
 
 export default function ContextDiagram(): JSX.Element {
   return (
     <section className="pt-2 pb-16 sm:pt-4 sm:pb-20 px-4 sm:px-6 lg:px-8">
-      <div
-        data-animate
-        className="max-w-6xl mx-auto rounded-2xl border border-earthy-brown-200/70 dark:border-gray-700/70 bg-white/50 dark:bg-gray-900/40 backdrop-blur-sm shadow-sm shadow-earthy-terracotta-900/5 p-5 sm:p-8"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-[5rem_1fr] lg:grid-cols-[7rem_1fr] gap-x-6 gap-y-3">
-          {/* Row: Consumers */}
-          <RowLabel>Interfaces &amp; agents</RowLabel>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-stretch">
-            {consumerGroups.map((g) => (
-              <div key={g.label} className="sm:col-span-2">
-                <GroupCard group={g} />
-              </div>
+      <figure data-animate className="cl-figure">
+        {/* Wide layout: push paths converge, interfaces diverge. */}
+        <div className="cl-grid">
+          <p className="cl-eyebrow cl-head-in m-0">Manage via</p>
+          <p className="cl-eyebrow cl-head-out m-0">Query via</p>
+
+          <div className="cl-col">
+            {pushFromCode.map((c) => (
+              <ChipRow key={c.label} chip={c} />
             ))}
           </div>
 
-          {/* Connectors: consumers → marmot */}
-          <div />
-          <div className="relative w-full h-10">
-            <VerticalConnectors
-              count={consumerGroups.length}
-              mode="consumers"
-            />
-          </div>
+          <Wires n={pushFromCode.length} dir="in" />
+          <Hub />
+          <Wires n={consumers.length} dir="out" />
 
-          {/* Row: Marmot (full-width) */}
-          <RowLabel>Marmot catalog</RowLabel>
-          <MarmotHub />
-
-          {/* Connectors: sources → marmot */}
-          <div />
-          <div className="relative w-full h-10">
-            <VerticalConnectors count={sourceGroups.length} mode="sources" />
-          </div>
-
-          {/* Row: Sources */}
-          <RowLabel>Sources &amp; ingest</RowLabel>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch">
-            {sourceGroups.map((g) => (
-              <GroupCard key={g.label} group={g} iconsOnly />
+          <div className="cl-col cl-col-out">
+            <div className="cl-row">
+              <ChipRow chip={consumers[0]} />
+              <span className="cl-agent-tick" aria-hidden="true" />
+              <div className="cl-agents">
+                {agents.map((a) => (
+                  <span key={a.label} className="cl-agent" title={a.label}>
+                    <ChipIcon chip={a} className="cl-agent-icon" />
+                  </span>
+                ))}
+              </div>
+            </div>
+            {consumers.slice(1).map((c) => (
+              <ChipRow key={c.label} chip={c} />
             ))}
           </div>
         </div>
-      </div>
+
+        {/* Narrow layout: the same three stages, stacked. */}
+        <div className="cl-stack">
+          <p className="cl-eyebrow m-0">Manage via</p>
+          <div className="cl-stack-chips">
+            {pushFromCode.map((c) => (
+              <ChipRow key={c.label} chip={c} />
+            ))}
+          </div>
+          <span className="cl-stack-conn" aria-hidden="true" />
+          <Hub />
+          <span className="cl-stack-conn" aria-hidden="true" />
+          <p className="cl-eyebrow m-0">Query via</p>
+          <div className="cl-stack-chips">
+            {consumers.map((c) => (
+              <ChipRow key={c.label} chip={c} />
+            ))}
+          </div>
+          <div className="cl-agents cl-agents-stack">
+            {agents.map((a) => (
+              <span key={a.label} className="cl-agent" title={a.label}>
+                <ChipIcon chip={a} className="cl-agent-icon" />
+              </span>
+            ))}
+          </div>
+          <p className="cl-agents-note m-0">via MCP</p>
+        </div>
+
+        <Ecosystem />
+      </figure>
     </section>
   );
 }
