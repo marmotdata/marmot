@@ -90,8 +90,9 @@ export default function DataSources(): JSX.Element {
             Plugins for what you already run
           </h2>
           <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
-            Covering the databases, warehouses, lakes, streams and
-            orchestrators your team already uses, and counting.
+            Covering the databases, warehouses, lakes, streams{" "}
+            <br className="hidden sm:inline" />
+            and orchestrators your team already uses, and counting.
           </p>
         </div>
 
@@ -119,7 +120,7 @@ export default function DataSources(): JSX.Element {
         <p
           data-animate
           data-animate-delay="2"
-          className="mt-9 text-center text-sm text-gray-500 dark:text-gray-400"
+          className="mt-9 text-center text-lg text-gray-500 dark:text-gray-400"
         >
           <a
             href={REGISTRY}
@@ -134,7 +135,7 @@ export default function DataSources(): JSX.Element {
             href="https://github.com/marmotdata/marmot/issues/new"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline"
+            className="text-earthy-terracotta-700 dark:text-earthy-terracotta-400 font-semibold hover:underline"
           >
             ask for one
           </a>{" "}
