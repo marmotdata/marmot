@@ -8,10 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from marmot._config import (
+from marmot.config import (
+    ENVIRONMENT_MARMOT_CONTEXT,
+    MarmotConfig,
     config_dir,
     load_cached_token,
-    load_contexts,
+    load_config,
     resolve_context,
 )
 
@@ -25,28 +27,29 @@ def isolated_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     return cfg
 
 
-def test_load_contexts_empty(isolated_config: Path) -> None:
-    assert load_contexts() == ({}, None)
+def test_load_config_empty(isolated_config: Path) -> None:
+    config = load_config()
+    assert config.contexts == {}
+    assert config.current_context is None
 
 
-def test_load_contexts_parses_yaml(isolated_config: Path) -> None:
+def test_load_config_parses_yaml(isolated_config: Path) -> None:
     (isolated_config / "config.yaml").write_text(
-        """\
-current_context: prod
-contexts:
-  prod:
-    host: https://marmot.acme.io
-  staging:
-    host: https://staging.marmot.acme.io
-"""
+        "current_context: prod\n"
+        "contexts:\n"
+        "  prod:\n"
+        "    host: https://marmot.io \n"  # trailing space must be tolerated
+        "  staging:\n"
+        "    host: https://staging.marmot.io\n"
     )
-    contexts, active = load_contexts()
+    config = load_config()
+    contexts, active = config.contexts, config.current_context
     assert active == "prod"
     assert set(contexts) == {"prod", "staging"}
-    assert contexts["prod"].host == "https://marmot.acme.io"
+    assert contexts["prod"].host == "https://marmot.io"
 
 
-def test_load_contexts_skips_invalid_entries(isolated_config: Path) -> None:
+def test_load_config_skips_invalid_entries(isolated_config: Path) -> None:
     (isolated_config / "config.yaml").write_text(
         """\
 current_context: ok
@@ -57,8 +60,7 @@ contexts:
   not-a-mapping: "string-value"
 """
     )
-    contexts, _ = load_contexts()
-    assert set(contexts) == {"ok"}
+    assert set(load_config().contexts) == {"ok"}
 
 
 def test_load_cached_token_missing_returns_none(isolated_config: Path) -> None:
@@ -84,7 +86,7 @@ def test_load_cached_token_parses_go_rfc3339(isolated_config: Path) -> None:
     )
     cached = load_cached_token("prod")
     assert cached is not None
-    assert cached.access_token == "cached-jwt"
+    assert cached.token == "cached-jwt"
     assert not cached.is_expired()
 
 
@@ -109,36 +111,83 @@ def test_cached_token_is_expired(isolated_config: Path) -> None:
 
 
 def test_resolve_context_explicit_wins(monkeypatch: pytest.MonkeyPatch) -> None:
-    from marmot._config import Context
+    from marmot.config import Context
 
     contexts = {
         "prod": Context(name="prod", host="https://prod"),
         "stg": Context(name="stg", host="https://stg"),
     }
-    monkeypatch.setenv("MARMOT_CONTEXT", "stg")
-    assert resolve_context(explicit="prod", contexts=contexts, active="stg") == contexts["prod"]
+    monkeypatch.setenv(ENVIRONMENT_MARMOT_CONTEXT, "stg")
+    config = MarmotConfig(contexts=contexts, current_context="stg")
+    assert resolve_context(context_name="prod", config=config) == contexts["prod"]
 
 
 def test_resolve_context_env_over_active(monkeypatch: pytest.MonkeyPatch) -> None:
-    from marmot._config import Context
+    from marmot.config import Context
 
     contexts = {
         "prod": Context(name="prod", host="https://prod"),
         "stg": Context(name="stg", host="https://stg"),
     }
-    assert (
-        resolve_context(contexts=contexts, active="prod", env={"MARMOT_CONTEXT": "stg"})
-        == contexts["stg"]
-    )
+    monkeypatch.setenv(ENVIRONMENT_MARMOT_CONTEXT, "stg")
+    config = MarmotConfig(contexts=contexts, current_context="prod")
+    assert resolve_context(config=config) == contexts["stg"]
 
 
-def test_resolve_context_falls_back_to_active() -> None:
-    from marmot._config import Context
+def test_resolve_context_falls_back_to_active(monkeypatch: pytest.MonkeyPatch) -> None:
+    from marmot.config import Context
 
     contexts = {"prod": Context(name="prod", host="https://prod")}
-    assert resolve_context(contexts=contexts, active="prod", env={}) == contexts["prod"]
+    monkeypatch.delenv(ENVIRONMENT_MARMOT_CONTEXT, raising=False)
+    config = MarmotConfig(contexts=contexts, current_context="prod")
+    assert resolve_context(config=config) == contexts["prod"]
 
 
 def test_config_dir_uses_xdg(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     assert config_dir() == tmp_path / "xdg" / "marmot"
+
+
+def test_cached_token_defaults_scheme_when_absent(isolated_config: Path) -> None:
+    (isolated_config / "credentials.json").write_text(
+        json.dumps(
+            {"tokens": {"prod": {"access_token": "jwt", "expires_at": "2099-01-01T00:00:00Z"}}}
+        )
+    )
+    cached = load_cached_token("prod")
+    assert cached is not None
+    assert cached.token_scheme == "Bearer"
+
+
+def test_cached_token_unusable_entry_returns_none(isolated_config: Path) -> None:
+    (isolated_config / "credentials.json").write_text(
+        json.dumps(
+            {
+                "tokens": {
+                    "no-expiry": {"access_token": "jwt"},
+                    "empty-token": {"access_token": "", "expires_at": "2099-01-01T00:00:00Z"},
+                    "bad-date": {"access_token": "jwt", "expires_at": "not-a-date"},
+                }
+            }
+        )
+    )
+    assert load_cached_token("no-expiry") is None
+    assert load_cached_token("empty-token") is None
+    assert load_cached_token("bad-date") is None
+
+
+def test_cached_token_keeps_nanosecond_timestamps(isolated_config: Path) -> None:
+    """Go writes nanoseconds; pydantic truncates rather than rejecting."""
+    (isolated_config / "credentials.json").write_text(
+        json.dumps(
+            {
+                "tokens": {
+                    "prod": {"access_token": "jwt", "expires_at": "2099-01-01T10:00:00.123456789Z"}
+                }
+            }
+        )
+    )
+    cached = load_cached_token("prod")
+    assert cached is not None
+    assert cached.expires_at.microsecond == 123456
+    assert cached.expires_at.tzinfo is not None

@@ -11,6 +11,6 @@ Requires ``claude-agent-sdk``. Install via
 
 from __future__ import annotations
 
-from marmot.integrations.claude_agent._tracker import MarmotAgentTracker
+from marmot.integrations.claude_agent.tracker import MarmotAgentTracker
 
 __all__ = ["MarmotAgentTracker"]
