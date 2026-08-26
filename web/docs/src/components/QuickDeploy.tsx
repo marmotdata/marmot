@@ -9,11 +9,11 @@ const scale = [
 
 export default function QuickDeploy(): JSX.Element {
   return (
-    <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
+    <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 border-t border-dashed border-earthy-brown-200/70 dark:border-gray-800/70">
       <div className="max-w-5xl mx-auto">
         <div
           data-animate
-          className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14"
+          className="flex flex-col lg:flex-row-reverse items-center gap-10 lg:gap-14"
         >
           <div className="lg:w-1/2 text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
@@ -92,8 +92,7 @@ export default function QuickDeploy(): JSX.Element {
           data-animate-delay="2"
           className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400"
         >
-          Our largest open source deployment serves 175+ active users. Load
-          tested well beyond that:
+          Load tested with a single Postgres and a single Marmot process:
         </p>
 
         <div

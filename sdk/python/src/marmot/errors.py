@@ -39,3 +39,19 @@ def is_not_found(err: BaseException) -> bool:
 def is_rate_limit(err: BaseException) -> bool:
     """Return True if err is a RateLimitError. Mirrors Go SDK's IsRateLimit."""
     return isinstance(err, RateLimitError)
+
+
+def get_exception_type(status: int | None) -> type[MarmotError]:
+    match status:
+        case 400:
+            return ValidationError
+        case 401 | 403:
+            return AuthError
+        case 404:
+            return NotFoundError
+        case 429:
+            return RateLimitError
+        case int(num) if num >= 500:
+            return ServerError
+        case _:
+            return MarmotError

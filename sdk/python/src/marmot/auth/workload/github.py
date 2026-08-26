@@ -12,22 +12,24 @@ from dataclasses import dataclass
 
 import httpx
 
-from marmot.auth.workload import SubjectToken
+from marmot.auth.workload import SubjectToken, register_source
+from marmot.config import ENVIRONMENT_HOST
 
 
+@register_source
 @dataclass
 class GitHubActionsSource:
     name: str = "github-actions"
-    audience: str | None = None  # defaults to the Marmot host at fetch time
+    audience: str | None = None
     timeout: float = 5.0
 
-    def fetch(self) -> SubjectToken | None:
+    def fetch(self, audience: str | None = None) -> SubjectToken | None:
         url = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL")
         bearer = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
         if not url or not bearer:
             return None
 
-        audience = self.audience or os.environ.get("MARMOT_HOST")
+        audience = self.audience or audience or os.environ.get(ENVIRONMENT_HOST)
         params = {"audience": audience} if audience else {}
 
         try:
@@ -50,4 +52,4 @@ class GitHubActionsSource:
 
         if not isinstance(token, str) or not token:
             return None
-        return SubjectToken(token=token)
+        return SubjectToken(token=token, source=self.name)

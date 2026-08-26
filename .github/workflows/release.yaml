@@ -23,7 +23,7 @@ jobs:
           df -h /
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -105,13 +105,13 @@ jobs:
     steps:
       - name: Generate Marmbot token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.MARMBOT_APP_ID }}
           private-key: ${{ secrets.MARMBOT_PRIVATE_KEY }}
 
       - name: Checkout main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: main
           token: ${{ steps.app-token.outputs.token }}

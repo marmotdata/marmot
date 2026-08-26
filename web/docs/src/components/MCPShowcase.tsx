@@ -133,7 +133,7 @@ export default function MCPShowcase(): JSX.Element {
   }, []);
 
   return (
-    <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
+    <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 border-t border-dashed border-earthy-brown-200/70 dark:border-gray-800/70">
       <div className="max-w-5xl mx-auto">
         <div
           data-animate
