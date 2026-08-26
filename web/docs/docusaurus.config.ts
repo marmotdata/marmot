@@ -358,7 +358,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `66 Paul St, London EC2A 4NA<br />Copyright © ${new Date().getFullYear()} Marmot.`,
+      copyright: `Marmot Data Ltd · 66 Paul St, London EC2A 4NA<br />Copyright © ${new Date().getFullYear()} Marmot Data Ltd.`,
     },
     algolia: {
       appId: "WAUET7ZVLV",
