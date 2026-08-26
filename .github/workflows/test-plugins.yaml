@@ -26,7 +26,7 @@ jobs:
         working-directory: plugins/${{ matrix.plugin }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v5
