@@ -3,18 +3,8 @@ name: Test Python SDK
 on:
   push:
     branches: [main]
-    paths:
-      - 'sdk/python/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-py.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'sdk/python/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-py.yaml'
 
 permissions:
   contents: read
