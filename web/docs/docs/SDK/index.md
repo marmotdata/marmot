@@ -193,7 +193,7 @@ client = AuthenticatedApiClient.connect()
 results = SearchApi(client).get_search_sync(q="orders", types=["Table", "Topic"], limit=20)
 print(f"{results.total} matches")
 for hit in results.results or []:
-    print(hit.type, hit.name, hit.id)
+    print(hit.name, "-", hit.type.value if hit.type else "unknown")
 ```
 
 </TabPanel>
