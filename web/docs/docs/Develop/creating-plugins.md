@@ -293,7 +293,19 @@ which stores under `Asset.Schema["columns"]`:
 ]
 ```
 
-`SetColumns` replaces the column list on every call, so build the whole list (with `append`, or a `[]any` to mix column types) and set it once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+`SetColumns` replaces the column list on every call, so build the whole list and set it once. To mix different column types in one call, a plain `Column` and an extended one, wrap them in a `[]any`:
+
+```go
+cols := []any{
+    pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true},
+    clickhouseColumn{Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"}, Codec: "ZSTD"},
+}
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
 
 | Key | Type | Notes |
 | --- | --- | --- |
