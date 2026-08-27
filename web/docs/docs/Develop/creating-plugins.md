@@ -243,6 +243,36 @@ The `default` tag pre-fills the UI form, but configs written by hand (a CLI inge
 
 `BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
 
+## Column Schema
+
+Table-shaped assets can attach a column list that Marmot renders as a tabular "Formatted" view on the asset's Schema tab, with a "Raw" JSON view alongside it. `Asset.SetColumns` marshals a `[]pluginsdk.Column` into the JSON shape Marmot expects and stores it under the `columns` key of `Asset.Schema`:
+
+```go
+cols := []pluginsdk.Column{
+    {Name: "id", DataType: "INTEGER", Nullable: false, PrimaryKey: true, Comment: "Surrogate key"},
+    {Name: "email", DataType: "VARCHAR", Nullable: true},
+}
+if err := asset.SetColumns(cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+`Column` is the canonical column shape; its fields serialize to the keys below. If you build the schema map by hand instead (for a column shape `Column` does not cover), Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+
+| Key | Type | Notes |
+| --- | --- | --- |
+| `column_name` | string | Required. The column name. |
+| `data_type` | string | Rendered as the type badge. Falls back to `unknown` when absent. |
+| `is_nullable` | bool or string | Drives the Required/Optional badge. Boolean `false`, or the Trino-style string `"NO"`, marks the column Required. Omit the key to show no badge. |
+| `is_primary_key` | bool | `true` adds a Primary Key annotation. `primary_key` is also accepted. |
+| `is_sorting_key` | bool | `true` adds a Sorting Key annotation. |
+| `comment` | string | Column description. `description` is also accepted. |
+| `default_expression` | any | Shown as the column default. |
+
+Only `column_name` and `data_type` are required. Any other keys you emit are preserved in the Raw view but ignored by the Formatted view.
+
+Pick one spelling per key and stay consistent. The accepted aliases (`primary_key` for `is_primary_key`, `description` for `comment`, the string form of `is_nullable`) exist because the core plugins predate a single convention; the Formatted view reads all of them so every plugin renders correctly. New plugins should prefer the keys in the table above.
+
 ## Plugin Interface
 
 All plugins implement the `pluginsdk.Source` interface:
