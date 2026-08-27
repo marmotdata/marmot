@@ -207,6 +207,13 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sns",
   },
   {
+    name: "SQLite",
+    description: "Discover tables, views, and relationships from SQLite database files",
+    docId: "Plugins/SQLite",
+    icon: "sqlite.png",
+    useLocalIcon: true,
+  },
+  {
     name: "SQS",
     description: "Discover queues from Amazon SQS",
     docId: "Plugins/SQS",
