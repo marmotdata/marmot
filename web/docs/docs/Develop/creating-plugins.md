@@ -289,6 +289,26 @@ if err := pluginsdk.SetColumns(asset, cols); err != nil {
 }
 ```
 
+which stores under `Asset.Schema["columns"]`:
+
+```json
+[
+  {
+    "column_name": "id",
+    "data_type": "UInt64",
+    "is_nullable": false,
+    "is_primary_key": true
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "DateTime",
+    "is_nullable": false,
+    "codec": "Delta, ZSTD",
+    "ttl": "created_at + INTERVAL 90 DAY"
+  }
+]
+```
+
 `SetColumns` replaces the column list on every call. If a source builds its columns across several queries, accumulate them with Go's `append` (or a `[]any` to mix shapes) and call `SetColumns` once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
 
 | Key | Type | Notes |
