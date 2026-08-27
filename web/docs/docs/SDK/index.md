@@ -92,17 +92,18 @@ Then construct a client:
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, UsersApi
 
-# Resolves from the chain
-client = marmot.connect()
+# Resolves host and credential from the chain
+client = AuthenticatedApiClient.connect()
 
-# Or pass an API key explicitly
-client = marmot.connect(base_url="https://marmot.example.com", api_key="...")
+# Or supply them explicitly
+client = AuthenticatedApiClient.connect(
+    host="https://marmot.example.com", api_key="..."
+)
 
-# Context manager closes the underlying httpx client on exit
-with marmot.connect() as client:
-    me = client.users.me()
+me = UsersApi(client).get_users_me_sync()
+print(me.name, "via", client.credential.source)
 ```
 
 </TabPanel>
@@ -160,9 +161,21 @@ const explicit = await connect({
 
 The following sections all assume `client` (and `ctx` for Go) is already constructed as shown above.
 
+<TipBox>
+
+**Python:** one `AuthenticatedApiClient` is shared by every generated `*Api` class, which
+you construct around it — `UsersApi(client)`, `AssetsApi(client)`, and so on. Method names
+follow the operation: `get_assets_id`, `post_lineage_batch`. Each exists twice, as a
+coroutine and with a `_sync` suffix that runs it on a shared event loop, so the snippets
+below stay synchronous. Request bodies are pydantic models from `marmot.generated.models`,
+and failures raise `marmot.errors` types (`NotFoundError`, `AuthError`, `ValidationError`,
+`RateLimitError`, `ServerError`) rather than returning a status code.
+
+</TipBox>
+
 ## Search
 
-`client.search(query)` is the unified search across assets, glossary terms, teams and data products. Returns a typed `SearchResponse` with facets, results and pagination.
+One unified search across assets, glossary terms, teams and data products. Returns a typed `SearchResponse` with facets, results and pagination.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -173,13 +186,14 @@ The following sections all assume `client` (and `ctx` for Go) is already constru
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, SearchApi
 
-client = marmot.connect()
+client = AuthenticatedApiClient.connect()
 
-results = client.search("orders", types=["Table", "Topic"], limit=20)
-for hit in results.results:
-    print(hit.name, hit.metadata.get("mrn"))
+results = SearchApi(client).get_search_sync(q="orders", types=["Table", "Topic"], limit=20)
+print(f"{results.total} matches")
+for hit in results.results or []:
+    print(hit.type, hit.name, hit.id)
 ```
 
 </TabPanel>
@@ -244,11 +258,11 @@ Every catalog entry is an Asset. The Assets resource covers CRUD, lookup by natu
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AssetsApi, AuthenticatedApiClient
 
-client = marmot.connect()
+client = AuthenticatedApiClient.connect()
 
-asset = client.assets.get("01HX...")
+asset = AssetsApi(client).get_assets_id_sync(id="01HX...")
 print(asset.name, asset.mrn)
 ```
 
@@ -296,12 +310,22 @@ When you know an asset by `(type, service, name)` but not its ID, `lookup` resol
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AssetsApi, AuthenticatedApiClient
+from marmot.errors import NotFoundError
 
-client = marmot.connect()
+assets = AssetsApi(AuthenticatedApiClient.connect())
 
-asset = client.assets.lookup(type="Table", service="postgres", name="orders")
-maybe = client.assets.find(type="Table", service="postgres", name="orders")  # None on 404
+asset = assets.get_assets_lookup_type_service_name_sync(
+    type="Table", service="postgres", name="orders"
+)
+
+# A missing asset raises rather than returning None
+try:
+    assets.get_assets_lookup_type_service_name_sync(
+        type="Table", service="postgres", name="nope"
+    )
+except NotFoundError:
+    asset = None
 ```
 
 </TabPanel>
@@ -365,18 +389,18 @@ const maybe = await client.assets.find({
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AssetsApi, AuthenticatedApiClient
 
-client = marmot.connect()
+assets = AssetsApi(AuthenticatedApiClient.connect())
 
-hits = client.assets.search(
-    query="customer",
+hits = assets.get_assets_search_sync(
+    q="customer",
     types=["Table"],
-    providers=["postgres"],
+    services=["postgres"],
     tags=["pii"],
     limit=50,
 )
-summary = client.assets.summary()  # totals by type, provider, tag
+summary = assets.get_assets_summary_sync()  # totals by type, provider, tag
 ```
 
 </TabPanel>
@@ -430,19 +454,25 @@ const summary = await client.assets.summary();
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AssetsApi, AuthenticatedApiClient
+from marmot.generated.models import CreateAssetRequest, UpdateAssetRequest
 
-client = marmot.connect()
+assets = AssetsApi(AuthenticatedApiClient.connect())
 
-created = client.assets.create({
-    "name": "orders",
-    "type": "Table",
-    "providers": ["postgres"],
-    "metadata": {"owner": "data-eng"},
-})
+created = assets.post_assets_sync(
+    create_asset_request=CreateAssetRequest(
+        name="orders",
+        type="Table",
+        providers=["postgres"],
+        metadata={"owner": "data-eng"},
+    )
+)
 
-updated = client.assets.update(created.id, {"description": "Customer orders"})
-client.assets.delete(created.id)
+updated = assets.put_assets_id_sync(
+    id=created.id,
+    update_asset_request=UpdateAssetRequest(description="Customer orders"),
+)
+assets.delete_assets_id_sync(id=created.id)
 ```
 
 </TabPanel>
@@ -505,12 +535,13 @@ await client.assets.delete(created.id!);
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AssetsApi, AuthenticatedApiClient
+from marmot.generated.models import TagRequest
 
-client = marmot.connect()
+assets = AssetsApi(AuthenticatedApiClient.connect())
 
-client.assets.add_tag(asset_id, "pii")
-client.assets.remove_tag(asset_id, "pii")
+assets.post_assets_tags_id_sync(id=asset_id, tag_request=TagRequest(tag="pii"))
+assets.delete_assets_tags_id_sync(id=asset_id, tag_request=TagRequest(tag="pii"))
 ```
 
 </TabPanel>
@@ -557,12 +588,15 @@ Lineage edges identify endpoints by MRN (`<type>://<service>/<name>`). Read the 
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, LineageApi
 
-client = marmot.connect()
+lineage = LineageApi(AuthenticatedApiClient.connect())
 
-graph = client.lineage.get(asset_id, direction="both", limit=50)
-upstream = client.lineage.upstream(asset_id, limit=10)
+graph = lineage.get_lineage_assets_id_sync(id=asset_id, direction="both", limit=50)
+upstream = lineage.get_lineage_assets_id_sync(id=asset_id, direction="upstream", limit=10)
+
+# Leave out edge types you don't want, e.g. structural CONTAINS edges
+flow = lineage.get_lineage_assets_id_sync(id=asset_id, exclude_types="CONTAINS")
 ```
 
 </TabPanel>
@@ -617,21 +651,32 @@ Prefer `/lineage/direct` and `/lineage/batch` for new integrations. They accept 
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, LineageApi
+from marmot.generated.models import LineageEdge
 
-client = marmot.connect()
+lineage = LineageApi(AuthenticatedApiClient.connect())
 
 # Single edge
-client.lineage.write(
-    source="postgres://prod/sales/orders",
-    target="kafka://prod/orders.events",
+lineage.post_lineage_direct_sync(
+    lineage_edge=LineageEdge(
+        source="postgres://prod/sales/orders",
+        target="kafka://prod/orders.events",
+    )
 )
 
 # Batched: one HTTP call, many edges
-client.lineage.batch([
-    ("postgres://prod/sales/orders", "kafka://prod/orders.events"),
-    ("kafka://prod/orders.events", "s3://prod/orders-archive"),
-])
+lineage.post_lineage_batch_sync(
+    lineage_edge=[
+        LineageEdge(
+            source="postgres://prod/sales/orders",
+            target="kafka://prod/orders.events",
+        ),
+        LineageEdge(
+            source="kafka://prod/orders.events",
+            target="s3://prod/orders-archive",
+        ),
+    ]
+)
 ```
 
 </TabPanel>
@@ -696,21 +741,29 @@ Business glossary terms with definitions, descriptions and hierarchies via `pare
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, GlossaryApi
+from marmot.generated.models import CreateTermRequest, UpdateTermRequest
 
-client = marmot.connect()
+glossary = GlossaryApi(AuthenticatedApiClient.connect())
 
-page = client.glossary.list(limit=50)
-hits = client.glossary.search(query="customer")
+page = glossary.get_glossary_list_sync(limit=50)
+print(f"{len(page.terms or [])} of {page.total} terms")
 
-term = client.glossary.create(
-    name="PII",
-    definition="Personally Identifiable Information",
-    description="Data that can identify an individual.",
+hits = glossary.get_glossary_search_sync(q="customer")
+
+term = glossary.post_glossary_sync(
+    create_term_request=CreateTermRequest(
+        name="PII",
+        definition="Personally Identifiable Information",
+        description="Data that can identify an individual.",
+    )
 )
 
-client.glossary.update(term.id, name="Personally Identifiable Information")
-client.glossary.delete(term.id)
+glossary.put_glossary_id_sync(
+    id=term.id,
+    update_term_request=UpdateTermRequest(name="Personally Identifiable Information"),
+)
+glossary.delete_glossary_id_sync(id=term.id)
 ```
 
 </TabPanel>
@@ -777,17 +830,18 @@ await client.glossary.delete(term.id!);
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, TeamsApi, UsersApi
 
-client = marmot.connect()
+client = AuthenticatedApiClient.connect()
+users, teams = UsersApi(client), TeamsApi(client)
 
-me = client.users.me()
-user = client.users.get(user_id)
-users = client.users.list(active=True, limit=100)
+me = users.get_users_me_sync()
+user = users.get_users_id_sync(id=user_id)
+page = users.get_users_sync(active=True, limit=100)
 
-teams = client.teams.list()
-team = client.teams.get(team_id)
-members = client.teams.members(team_id)
+all_teams = teams.get_teams_sync()
+team = teams.get_teams_id_sync(id=team_id)
+members = teams.get_teams_id_members_sync(id=team_id)
 ```
 
 </TabPanel>
@@ -845,14 +899,17 @@ Manage personal API keys for the authenticated user. The full key token is only 
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, UsersApi
+from marmot.generated.models import CreateAPIKeyRequest
 
-client = marmot.connect()
+users = UsersApi(AuthenticatedApiClient.connect())
 
-keys = client.api_keys.list()
-created = client.api_keys.create(name="ci-deploy", expires_in_days=30)
+keys = users.get_users_apikeys_sync()
+created = users.post_users_apikeys_sync(
+    create_api_key_request=CreateAPIKeyRequest(name="ci-deploy", expires_in_days=30)
+)
 print(created.key)  # only readable here
-client.api_keys.delete(created.id)
+users.delete_users_apikeys_id_sync(id=created.id)
 ```
 
 </TabPanel>
@@ -913,13 +970,13 @@ Read pipeline-ingestion run history. Useful when wiring up alerts on failed inge
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, RunsApi
 
-client = marmot.connect()
+runs = RunsApi(AuthenticatedApiClient.connect())
 
-recent = client.runs.list(statuses="failed,running", limit=20)
-run = client.runs.get(run_id)
-entities = client.runs.entities(run_id, status="failed")
+recent = runs.get_runs_sync(statuses="failed,running", limit=20)
+run = runs.get_runs_id_sync(id=run_id)
+entities = runs.get_runs_id_entities_sync(id=run_id, status="failed")
 ```
 
 </TabPanel>
@@ -976,20 +1033,22 @@ Catalog usage and breakdown metrics. `top_assets` and `top_queries` take an incl
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, MetricsApi
 
-client = marmot.connect()
+metrics = MetricsApi(AuthenticatedApiClient.connect())
 
-total = client.metrics.total_assets()
-by_type = client.metrics.assets_by_type()
-by_provider = client.metrics.assets_by_provider()
+total = metrics.get_metrics_assets_total_sync()
+print(total.count)
 
-top = client.metrics.top_assets(
+by_type = metrics.get_metrics_assets_by_type_sync()
+by_provider = metrics.get_metrics_assets_by_provider_sync()
+
+top = metrics.get_metrics_top_assets_sync(
     start="2025-01-01T00:00:00Z",
     end="2025-02-01T00:00:00Z",
     limit=10,
 )
-queries = client.metrics.top_queries(
+queries = metrics.get_metrics_top_queries_sync(
     start="2025-01-01T00:00:00Z",
     end="2025-02-01T00:00:00Z",
     limit=10,
@@ -1064,11 +1123,13 @@ Search the catalog for asset owners (users and teams).
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AuthenticatedApiClient, OwnersApi
 
-client = marmot.connect()
+owners = OwnersApi(AuthenticatedApiClient.connect())
 
-hits = client.owners.search("alice", limit=10)
+hits = owners.get_owners_search_sync(q="alice", limit=10)
+for owner in hits.owners or []:
+    print(owner)
 ```
 
 </TabPanel>
@@ -1110,12 +1171,12 @@ Trigger or poll a full search reindex. Requires admin permissions.
 <TabPanel value="py">
 
 ```python
-import marmot
+from marmot import AdminApi, AuthenticatedApiClient
 
-client = marmot.connect()
+admin = AdminApi(AuthenticatedApiClient.connect())
 
-accepted = client.admin.reindex()
-status = client.admin.reindex_status()
+accepted = admin.post_admin_search_reindex_sync()
+status = admin.get_admin_search_reindex_sync()
 print(status.running, status.es_configured)
 ```
 
