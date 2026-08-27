@@ -245,19 +245,50 @@ The `default` tag pre-fills the UI form, but configs written by hand (a CLI inge
 
 ## Column Schema
 
-Table-shaped assets can attach a column list that Marmot renders as a tabular "Formatted" view on the asset's Schema tab, with a "Raw" JSON view alongside it. `Asset.SetColumns` marshals a `[]pluginsdk.Column` into the JSON shape Marmot expects and stores it under the `columns` key of `Asset.Schema`:
+Table-shaped assets can attach a column list that Marmot renders as a tabular "Formatted" view on the asset's Schema tab, with a "Raw" JSON view alongside it. `pluginsdk.SetColumns` marshals a slice of columns into the JSON shape Marmot expects and stores it under the `columns` key of `Asset.Schema`:
 
 ```go
 cols := []pluginsdk.Column{
     {Name: "id", DataType: "INTEGER", Nullable: false, PrimaryKey: true, Comment: "Surrogate key"},
     {Name: "email", DataType: "VARCHAR", Nullable: true},
 }
-if err := asset.SetColumns(cols); err != nil {
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
     return nil, fmt.Errorf("attaching columns: %w", err)
 }
 ```
 
-`Column` is the canonical column shape; its fields serialize to the keys below. If you build the schema map by hand instead (for a column shape `Column` does not cover), Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+`Column` carries the fields the Formatted view reads, so filling one in renders correctly without guessing key names. It is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To keep source-specific fields, embed `Column` and add your own. Embedding flattens `Column` into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view:
+
+```go
+type pgColumn struct {
+    pluginsdk.Column
+    ForeignKey string `json:"foreign_key,omitempty"` // e.g. "users.id"
+    PII        bool   `json:"pii,omitempty"`
+}
+
+if err := pluginsdk.SetColumns(asset, pgColumns); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+A source whose columns do not map onto `Column` (one with no notion of nullability, or that already has its own column type) can pass a fully custom slice instead; `SetColumns` only marshals what you give it.
+
+To combine shapes in one asset, pass a `[]any`. It can hold both `Column` values and your own column type, and each element marshals as itself, so a plain column and an extended one sit side by side:
+
+```go
+cols := []any{
+    pluginsdk.Column{Name: "id", DataType: "bigint", Nullable: false, PrimaryKey: true},
+    pgColumn{
+        Column:     pluginsdk.Column{Name: "user_id", DataType: "bigint", Nullable: false},
+        ForeignKey: "users.id",
+    },
+}
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+`SetColumns` replaces the column list on every call, it does not append, so build the whole list and set it once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
 
 | Key | Type | Notes |
 | --- | --- | --- |
