@@ -257,23 +257,18 @@ if err := pluginsdk.SetColumns(asset, cols); err != nil {
 }
 ```
 
-`Column` carries the fields the Formatted view reads, so filling one in renders correctly without guessing key names. It is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To keep source-specific fields, embed `Column` and add your own. Embedding flattens `Column` into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view. Use one such type for every column and build the list with `append`; columns without the extras just leave them empty:
+`Column` is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To add source-specific fields, embed `Column` in your own type. Embedding flattens it into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view:
 
 ```go
 type clickhouseColumn struct {
     pluginsdk.Column
-    Codec string `json:"codec,omitempty"` // e.g. "Delta, ZSTD"
-    TTL   string `json:"ttl,omitempty"`   // e.g. "created_at + INTERVAL 90 DAY"
+    Codec string `json:"codec,omitempty"`
 }
 
-var cols []clickhouseColumn
-cols = append(cols, clickhouseColumn{Column: pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true}})
-cols = append(cols, clickhouseColumn{
-    Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"},
-    Codec:  "Delta, ZSTD",
-    TTL:    "created_at + INTERVAL 90 DAY",
-})
-
+cols := []clickhouseColumn{
+    {Column: pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true}},
+    {Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"}, Codec: "ZSTD"},
+}
 if err := pluginsdk.SetColumns(asset, cols); err != nil {
     return nil, fmt.Errorf("attaching columns: %w", err)
 }
@@ -293,13 +288,12 @@ which stores under `Asset.Schema["columns"]`:
     "column_name": "created_at",
     "data_type": "DateTime",
     "is_nullable": false,
-    "codec": "Delta, ZSTD",
-    "ttl": "created_at + INTERVAL 90 DAY"
+    "codec": "ZSTD"
   }
 ]
 ```
 
-A source whose columns do not map onto `Column` (no notion of nullability, or one that already has its own column type) can pass a fully custom slice instead; `SetColumns` only marshals what you give it. To mix genuinely different column types in one call, use a `[]any`. `SetColumns` replaces the column list on every call, so build the whole list and set it once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+`SetColumns` replaces the column list on every call, so build the whole list (with `append`, or a `[]any` to mix column types) and set it once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
 
 | Key | Type | Notes |
 | --- | --- | --- |
