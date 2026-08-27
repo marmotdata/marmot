@@ -257,7 +257,7 @@ if err := pluginsdk.SetColumns(asset, cols); err != nil {
 }
 ```
 
-`Column` carries the fields the Formatted view reads, so filling one in renders correctly without guessing key names. It is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To keep source-specific fields, embed `Column` and add your own. Embedding flattens `Column` into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view:
+`Column` carries the fields the Formatted view reads, so filling one in renders correctly without guessing key names. It is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To keep source-specific fields, embed `Column` and add your own. Embedding flattens `Column` into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view. Use one such type for every column and build the list with `append`; columns without the extras just leave them empty:
 
 ```go
 type clickhouseColumn struct {
@@ -266,24 +266,14 @@ type clickhouseColumn struct {
     TTL   string `json:"ttl,omitempty"`   // e.g. "created_at + INTERVAL 90 DAY"
 }
 
-if err := pluginsdk.SetColumns(asset, clickhouseColumns); err != nil {
-    return nil, fmt.Errorf("attaching columns: %w", err)
-}
-```
+var cols []clickhouseColumn
+cols = append(cols, clickhouseColumn{Column: pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true}})
+cols = append(cols, clickhouseColumn{
+    Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"},
+    Codec:  "Delta, ZSTD",
+    TTL:    "created_at + INTERVAL 90 DAY",
+})
 
-A source whose columns do not map onto `Column` (one with no notion of nullability, or that already has its own column type) can pass a fully custom slice instead; `SetColumns` only marshals what you give it.
-
-To combine shapes in one asset, pass a `[]any`. It can hold both `Column` values and your own column type, and each element marshals as itself, so a plain column and an extended one sit side by side:
-
-```go
-cols := []any{
-    pluginsdk.Column{Name: "id", DataType: "UInt64", Nullable: false, PrimaryKey: true},
-    clickhouseColumn{
-        Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime", Nullable: false},
-        Codec:  "Delta, ZSTD",
-        TTL:    "created_at + INTERVAL 90 DAY",
-    },
-}
 if err := pluginsdk.SetColumns(asset, cols); err != nil {
     return nil, fmt.Errorf("attaching columns: %w", err)
 }
@@ -309,7 +299,7 @@ which stores under `Asset.Schema["columns"]`:
 ]
 ```
 
-`SetColumns` replaces the column list on every call. If a source builds its columns across several queries, accumulate them with Go's `append` (or a `[]any` to mix shapes) and call `SetColumns` once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+A source whose columns do not map onto `Column` (no notion of nullability, or one that already has its own column type) can pass a fully custom slice instead; `SetColumns` only marshals what you give it. To mix genuinely different column types in one call, use a `[]any`. `SetColumns` replaces the column list on every call, so build the whole list and set it once. Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
 
 | Key | Type | Notes |
 | --- | --- | --- |
