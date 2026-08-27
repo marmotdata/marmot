@@ -3,18 +3,8 @@ name: Test TS SDK
 on:
   push:
     branches: [main]
-    paths:
-      - 'sdk/ts/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-ts.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'sdk/ts/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-ts.yaml'
 
 permissions:
   contents: read

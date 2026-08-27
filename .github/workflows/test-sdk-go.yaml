@@ -3,18 +3,8 @@ name: Test Go SDK
 on:
   push:
     branches: [main]
-    paths:
-      - 'sdk/go/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-go.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'sdk/go/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-go.yaml'
 
 permissions:
   contents: read
