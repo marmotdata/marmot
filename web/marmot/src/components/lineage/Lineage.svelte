@@ -300,6 +300,7 @@
 						edgeType: edge.type,
 						edgeOrigin: edge.origin,
 						observationCount: edge.observation_count,
+						columnLineage: edge.column_lineage,
 						...(canManageAssets && { onDelete: handleEdgeDelete })
 					}
 				});
@@ -349,6 +350,7 @@
 						hasUpstream: nodeConnections.hasUpstream,
 						hasDownstream: nodeConnections.hasDownstream,
 						isStub: node.asset.is_stub,
+						schema: node.asset.schema,
 						nodeClickHandler: handleNodeClick,
 						...(canManageAssets && {
 							onAddUpstream: handleAddUpstream,

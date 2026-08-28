@@ -15,6 +15,7 @@ import (
 type Repository interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error)
+	CreateLineageEdgeWithColumns(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string, columnLineage []ColumnEdge) (string, error)
 	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
@@ -46,15 +47,24 @@ type LineageNode struct {
 } // @name LineageNode
 
 type LineageEdge struct {
-	ID               string     `json:"id"`
-	Source           string     `json:"source"`
-	Target           string     `json:"target"`
-	Type             string     `json:"type"`
-	Origin           string     `json:"origin,omitempty"`
-	ObservationCount int        `json:"observation_count,omitempty"`
-	LastSeenAt       *time.Time `json:"last_seen_at,omitempty"`
-	JobMRN           string     `json:"job_mrn,omitempty"`
+	ID               string       `json:"id"`
+	Source           string       `json:"source"`
+	Target           string       `json:"target"`
+	Type             string       `json:"type"`
+	Origin           string       `json:"origin,omitempty"`
+	ObservationCount int          `json:"observation_count,omitempty"`
+	LastSeenAt       *time.Time   `json:"last_seen_at,omitempty"`
+	JobMRN           string       `json:"job_mrn,omitempty"`
+	ColumnLineage    []ColumnEdge `json:"column_lineage,omitempty"`
 } // @name LineageEdge
+
+// ColumnEdge maps one or more source columns to a target column on a LineageEdge; Transform is a free-form string like "SUM(x)" for display only and Confidence is 0..1 with zero treated as 1.0 by the UI.
+type ColumnEdge struct {
+	FromColumns []string `json:"from_columns"`
+	ToColumn    string   `json:"to_column"`
+	Transform   string   `json:"transform,omitempty"`
+	Confidence  float32  `json:"confidence,omitempty"`
+} // @name ColumnEdge
 
 type PostgresRepository struct {
 	db *pgxpool.Pool
@@ -74,7 +84,7 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
                     ELSE 'DEFAULT'
                 END
             ) as type,
-            e.origin, e.observation_count, e.last_seen_at
+            e.origin, e.observation_count, e.last_seen_at, e.column_lineage
         FROM lineage_edges e
         JOIN assets a1 ON e.source_mrn = a1.mrn
         JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -82,6 +92,7 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
 
 	var edge LineageEdge
 	var jobMRN *string
+	var columnLineageJSON []byte
 
 	err := r.db.QueryRow(ctx, query, edgeID).Scan(
 		&edge.ID,
@@ -92,6 +103,7 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
 		&edge.Origin,
 		&edge.ObservationCount,
 		&edge.LastSeenAt,
+		&columnLineageJSON,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -102,6 +114,11 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
 
 	if jobMRN != nil {
 		edge.JobMRN = *jobMRN
+	}
+	if len(columnLineageJSON) > 0 {
+		if err := json.Unmarshal(columnLineageJSON, &edge.ColumnLineage); err != nil {
+			return nil, fmt.Errorf("unmarshaling column lineage: %w", err)
+		}
 	}
 
 	return &edge, nil
@@ -162,19 +179,35 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 }
 
 func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
-	// Check if edge already exists
+	return r.CreateLineageEdgeWithColumns(ctx, sourceMRN, targetMRN, lineageType, jobMRN, nil)
+}
+
+func (r *PostgresRepository) CreateLineageEdgeWithColumns(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string, columnLineage []ColumnEdge) (string, error) {
 	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
 		return "", fmt.Errorf("checking edge existence: %w", err)
 	}
 	if exists {
-		// Return existing edge ID
+		// Existing edge: keep its ID, but merge in new column lineage if any
+		// was supplied. Newer parse results win over older ones.
 		var edgeID string
 		err := r.db.QueryRow(ctx,
 			"SELECT id FROM lineage_edges WHERE source_mrn = $1 AND target_mrn = $2 LIMIT 1",
 			sourceMRN, targetMRN).Scan(&edgeID)
 		if err != nil {
 			return "", fmt.Errorf("getting existing edge ID: %w", err)
+		}
+		if len(columnLineage) > 0 {
+			columnLineageJSON, err := json.Marshal(columnLineage)
+			if err != nil {
+				return "", fmt.Errorf("marshaling column lineage: %w", err)
+			}
+			if _, err := r.db.Exec(ctx,
+				`UPDATE lineage_edges SET column_lineage = $1 WHERE id = $2`,
+				columnLineageJSON, edgeID,
+			); err != nil {
+				return "", fmt.Errorf("updating column lineage: %w", err)
+			}
 		}
 		return edgeID, nil
 	}
@@ -206,10 +239,10 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 
 	_, err = tx.Exec(ctx, `
         INSERT INTO lineage_events (
-            event_id, 
-            event_time, 
-            event_type, 
-            event_data 
+            event_id,
+            event_time,
+            event_type,
+            event_data
         )
         VALUES ($1, $2, $3, $4)`,
 		eventID,
@@ -232,10 +265,18 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 		job = &jobMRN
 	}
 
+	var columnLineageJSON []byte
+	if len(columnLineage) > 0 {
+		columnLineageJSON, err = json.Marshal(columnLineage)
+		if err != nil {
+			return "", fmt.Errorf("marshaling column lineage: %w", err)
+		}
+	}
+
 	_, err = tx.Exec(ctx, `
-        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, job_mrn)
-        VALUES ($1, $2, $3, $4, $5, 'declared', $6)`,
-		edgeID, sourceMRN, targetMRN, eventID, lineageType, job,
+        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, job_mrn, column_lineage)
+        VALUES ($1, $2, $3, $4, $5, 'declared', $6, $7)`,
+		edgeID, sourceMRN, targetMRN, eventID, lineageType, job, columnLineageJSON,
 	)
 	if err != nil {
 		return "", fmt.Errorf("inserting lineage edge: %w", err)
@@ -415,7 +456,8 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 			) as type,
 			e.origin,
 			e.observation_count,
-			e.last_seen_at
+			e.last_seen_at,
+			e.column_lineage
 		FROM lineage_edges e
 		JOIN assets a1 ON e.source_mrn = a1.mrn
 		JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -430,11 +472,17 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 	for rows.Next() {
 		var edge LineageEdge
 		var jobMRN *string
-		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type, &edge.Origin, &edge.ObservationCount, &edge.LastSeenAt); err != nil {
+		var columnLineageJSON []byte
+		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type, &edge.Origin, &edge.ObservationCount, &edge.LastSeenAt, &columnLineageJSON); err != nil {
 			return nil, fmt.Errorf("scanning edge: %w", err)
 		}
 		if jobMRN != nil {
 			edge.JobMRN = *jobMRN
+		}
+		if len(columnLineageJSON) > 0 {
+			if err := json.Unmarshal(columnLineageJSON, &edge.ColumnLineage); err != nil {
+				return nil, fmt.Errorf("unmarshaling column lineage: %w", err)
+			}
 		}
 		edges = append(edges, edge)
 	}

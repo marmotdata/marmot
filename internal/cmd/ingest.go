@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -123,10 +124,11 @@ type AssetSource struct {
 }
 
 type CreateLineageRequest struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"`
-	JobMRN string `json:"job_mrn,omitempty"`
+	Source        string               `json:"source"`
+	Target        string               `json:"target"`
+	Type          string               `json:"type"`
+	JobMRN        string               `json:"job_mrn,omitempty"`
+	ColumnLineage []lineage.ColumnEdge `json:"column_lineage,omitempty"`
 }
 
 type CreateDocRequest struct {
@@ -556,13 +558,14 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				})
 			}
 
-			lineage := make([]CreateLineageRequest, 0, len(result.Lineage))
+			lineageBatch := make([]CreateLineageRequest, 0, len(result.Lineage))
 			for _, edge := range result.Lineage {
-				lineage = append(lineage, CreateLineageRequest{
-					Source: edge.Source,
-					Target: edge.Target,
-					Type:   edge.Type,
-					JobMRN: edge.JobMRN,
+				lineageBatch = append(lineageBatch, CreateLineageRequest{
+					Source:        edge.Source,
+					Target:        edge.Target,
+					Type:          edge.Type,
+					JobMRN:        edge.JobMRN,
+					ColumnLineage: edge.ColumnLineage,
 				})
 			}
 
@@ -606,7 +609,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 
 			batchReq := BatchCreateRequest{
 				Assets:        assets,
-				Lineage:       lineage,
+				Lineage:       lineageBatch,
 				Documentation: documentation,
 				RunHistory:    runHistory,
 				GlossaryTerms: glossaryTerms,

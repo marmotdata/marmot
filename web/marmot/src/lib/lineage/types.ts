@@ -7,6 +7,13 @@ export interface LineageNode {
 	depth: number;
 }
 
+export interface ColumnEdge {
+	from_columns: string[];
+	to_column: string;
+	transform?: string;
+	confidence?: number;
+}
+
 export interface LineageEdge {
 	id: string;
 	source: string;
@@ -16,6 +23,7 @@ export interface LineageEdge {
 	observation_count?: number;
 	last_seen_at?: string;
 	job_mrn?: string;
+	column_lineage?: ColumnEdge[];
 }
 
 export interface LineageResponse {
