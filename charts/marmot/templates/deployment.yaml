@@ -142,6 +142,12 @@ spec:
             {{- end }}
             {{- end }}
 
+            # ---- Plugin cache (rootfs is read-only) ----
+            {{- if not (hasKey .Values.env "MARMOT_PLUGINS_DIR") }}
+            - name: MARMOT_PLUGINS_DIR
+              value: /var/lib/marmot/plugins
+            {{- end }}
+
             # ---- Additional environment variables ----
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
@@ -151,6 +157,11 @@ spec:
             - name: config
               mountPath: /etc/marmot
               readOnly: true
+            - name: plugins
+              mountPath: /var/lib/marmot/plugins
+            # plugin sockets and scratch space
+            - name: tmp
+              mountPath: /tmp
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -170,6 +181,10 @@ spec:
         - name: config
           configMap:
             name: {{ include "marmot.fullname" . }}-config
+        - name: plugins
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
