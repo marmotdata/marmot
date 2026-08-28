@@ -227,6 +227,17 @@ tests:
             emptyDir: {}
         template: deployment.yaml
 
+  - it: should render with env set to null
+    set:
+      env: null
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_PLUGINS_DIR
+            value: /var/lib/marmot/plugins
+        template: deployment.yaml
+
   - it: should let env override the plugin dir without a duplicate entry
     set:
       env:
