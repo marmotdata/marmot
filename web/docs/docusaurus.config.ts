@@ -347,7 +347,7 @@ const config: Config = {
               href: "https://github.com/marmotdata/marmot/",
             },
             {
-              label: "Security",
+              label: "Security & Bug Bounty",
               to: "/security",
             },
             {
