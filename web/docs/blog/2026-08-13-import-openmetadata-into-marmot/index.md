@@ -19,7 +19,11 @@ import { ThemedImg } from '@site/src/components/ThemedImg';
 import { CalloutCard } from '@site/src/components/DocCard';
 
 <div style={{textAlign: 'center', marginBottom: '2rem'}}>
-  <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
+  <img
+    src="/img/marmot-openmetadata-banner.png"
+    alt="The Marmot mascot in a Marmot bin holding pages of metadata extracted from OpenMetadata"
+    style={{maxWidth: 'min(100%, 340px)'}}
+  />
 </div>
 
 This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](https://plugins.marmotdata.io/marmotdata/openmetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot does all of it for free.
