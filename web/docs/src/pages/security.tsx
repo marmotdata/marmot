@@ -5,7 +5,7 @@ export default function Security(): JSX.Element {
   return (
     <Layout
       title="Security"
-      description="Marmot's bug bounty and Vulnerability Research Program: scope, rules of engagement, rewards and how to report a vulnerability."
+      description="Marmot's vulnerability disclosure and research programs: scope, rules of engagement and how to report a vulnerability."
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen">
         {/* Hero */}
@@ -26,9 +26,9 @@ export default function Security(): JSX.Element {
             <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed">
               Marmot holds the map of everything your company has: every table,
               topic, service and pipeline, and who owns it. That is exactly the
-              kind of thing worth protecting well, so we run a bug bounty and a
-              Vulnerability Research Program. This page is the whole program:
-              how to report, what is in scope, the rules, and what we pay.
+              kind of thing worth protecting well, so we run a disclosure
+              program and a Vulnerability Research Program. This page is the
+              whole program: how to report, what is in scope, and the rules.
             </p>
           </div>
         </section>
@@ -104,7 +104,7 @@ export default function Security(): JSX.Element {
             </li>
           </ul>
 
-          <h2 id="qualifies">What we pay for</h2>
+          <h2 id="qualifies">What qualifies</h2>
           <p>
             Anything that breaks the security model of the catalog or the
             platform it runs on. The clearest examples:
@@ -150,7 +150,7 @@ export default function Security(): JSX.Element {
             <li>Username or email enumeration, and password policy opinions</li>
             <li>
               Denial of service and rate-limit testing. Do not do this at all;
-              it is against the rules below, not just unrewarded.
+              it is against the rules below, not just non-qualifying.
             </li>
             <li>
               Vulnerable dependency reports without a reachable path through
@@ -193,21 +193,10 @@ export default function Security(): JSX.Element {
             </li>
           </ul>
 
-          <h2 id="rewards">Rewards</h2>
-          <p>
-            We pay at our discretion, scaled to impact and to the quality of
-            the report. A tenant isolation break on Cloud pays the most a
-            report can pay; a missing header on a static page pays nothing. We
-            are a small company and this is not a platform-run program with a
-            public payout table, and we would rather say that plainly than
-            pretend otherwise. What we can promise: real findings get paid,
-            promptly, and reporters get credited by name in the advisory and
-            the release notes if they want to be.
-          </p>
-
           <h2 id="research">The Vulnerability Research Program</h2>
           <p>
-            The bounty covers what we run. The research program covers what we
+            The disclosure program covers what we run. The research program
+            covers what we
             ship. Marmot is MIT licensed and runs as one binary and a Postgres
             database, which makes it an unusually convenient research target:
             clone it, read the source, run it, fuzz it, and attack your own
@@ -240,7 +229,11 @@ export default function Security(): JSX.Element {
           <p>
             Marmot got better because people ran it and told us plainly where
             it fell short. Security research is that same feedback loop with
-            higher stakes, and we are glad to have you in it.
+            higher stakes, and we are glad to have you in it. We are still
+            getting the company off the ground, so this is not a paid program
+            yet, but good findings do not go unanswered: we send swag and
+            merch scaled to impact, and we credit reporters by name in the
+            advisory and the release notes if they want to be.
           </p>
         </article>
       </div>
