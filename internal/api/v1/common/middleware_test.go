@@ -19,6 +19,7 @@ func TestPasswordChangeGate(t *testing.T) {
 	}{
 		{name: "pending change is refused everywhere else", user: &user.User{MustChangePassword: true}, path: "/api/v1/assets", want: http.StatusForbidden},
 		{name: "pending change may change the password", user: &user.User{MustChangePassword: true}, path: "/api/v1/users/update-password", want: http.StatusOK},
+		{name: "the trailing-slash variant is exempt too", user: &user.User{MustChangePassword: true}, path: "/api/v1/users/update-password/", want: http.StatusOK},
 		{name: "settled user passes", user: &user.User{}, path: "/api/v1/assets", want: http.StatusOK},
 		{name: "non-user principals pass", user: nil, path: "/api/v1/assets", want: http.StatusOK},
 	}
@@ -54,8 +55,9 @@ func TestWithAuthPasswordChangePending(t *testing.T) {
 	})
 
 	for path, want := range map[string]int{
-		"/api/v1/assets":                http.StatusForbidden,
-		"/api/v1/users/update-password": http.StatusOK,
+		"/api/v1/assets":         http.StatusForbidden,
+		UpdatePasswordPath:       http.StatusOK,
+		UpdatePasswordPath + "/": http.StatusOK,
 	} {
 		req := httptest.NewRequest(http.MethodPost, path, nil)
 		req.Header.Set("X-API-Key", "key")
