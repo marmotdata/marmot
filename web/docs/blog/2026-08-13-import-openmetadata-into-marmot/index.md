@@ -22,7 +22,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img
     src="/img/marmot-openmetadata-banner.png"
     alt="The Marmot mascot in a Marmot bin holding pages of metadata extracted from OpenMetadata"
-    style={{maxWidth: 'min(100%, 340px)'}}
+    style={{maxWidth: 'min(100%, 272px)'}}
   />
 </div>
 
