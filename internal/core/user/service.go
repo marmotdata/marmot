@@ -23,7 +23,6 @@ var (
 	ErrPasswordRequired       = errors.New("password is required for non-OAuth users")
 	ErrCannotDeleteSelf       = errors.New("user can't delete self")
 	ErrCannotDeleteAdmin      = errors.New("can't delete admin user")
-	ErrPasswordChangeRequired = errors.New("password change required")
 )
 
 type User struct {

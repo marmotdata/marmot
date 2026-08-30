@@ -54,11 +54,35 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 	return globalOAuthAuthorizeCompleter
 }
 
+// UpdatePasswordPath is the route passwordChangeGate exempts. RegisterRoutes
+// registers the handler under it, so that drift between the two cannot lock a
+// user with a pending change out of the only endpoint that can clear it.
+const UpdatePasswordPath = "/api/v1/users/update-password"
+
+// passwordChangeGate blocks every request from a user whose
+// must_change_password is still set, except the password change itself.
+// Without it the forced change would only exist in the login UI: a token
+// obtained with an initial password would work on the whole API without the
+// password ever being changed.
+func passwordChangeGate(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := r.Context().Value(UserContextKey).(*user.User)
+		// Every route is registered under a trailing-slash variant too, so the
+		// exemption has to match the same two spellings the mux does.
+		if ok && u.MustChangePassword && strings.TrimSuffix(r.URL.Path, "/") != UpdatePasswordPath {
+			RespondError(w, http.StatusForbidden, "Password change required")
+			return
+		}
+		next(w, r)
+	}
+}
+
 // WithAuth middleware handles API key, JWT, and K8s ServiceAccount token authentication.
 func WithAuth(userService user.Service, authService auth.Service, cfg *config.Config) func(http.HandlerFunc) http.HandlerFunc {
 	resolver := auth.NewResolver(userService)
 	k8sValidator := globalK8sValidator
 	return func(next http.HandlerFunc) http.HandlerFunc {
+		next = passwordChangeGate(next)
 		return func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
 
