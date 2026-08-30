@@ -344,6 +344,10 @@ const config: Config = {
               href: "https://github.com/marmotdata/marmot/",
             },
             {
+              label: "Security",
+              to: "/security",
+            },
+            {
               label: "Privacy Policy",
               to: "/privacy",
             },
