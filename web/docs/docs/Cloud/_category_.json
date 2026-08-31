@@ -1,0 +1,8 @@
+{
+  "label": "Marmot Cloud",
+  "position": 5,
+  "link": {
+    "type": "doc",
+    "id": "Cloud/index"
+  }
+}
