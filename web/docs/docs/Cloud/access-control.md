@@ -78,6 +78,14 @@ Grants use the roles you already have. Create a role holding exactly the
 permissions a scoped principal should have, assign it to nobody
 organization-wide, and grant it where it is needed.
 
+Marmot ships no role for this — `admin`, `editor` and `user` are the only
+built-in roles, and none of them is a scoped reader. That is deliberate: built-in
+roles are system roles, and system roles cannot be edited, so a shipped
+"catalog reader" would be a permission set you could never tune. Whether a
+scoped reader should also see lineage neighbours, or glossary terms, is a
+decision only you can make. `catalog-reader` below is a name used throughout
+these docs for a role you create yourself.
+
 ```bash
 # A role for principals whose access is granted per resource.
 curl -X POST "$MARMOT_HOST/api/v1/roles" \
