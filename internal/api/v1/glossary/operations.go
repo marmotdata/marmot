@@ -10,7 +10,6 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/limits"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
@@ -61,9 +60,9 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
 
@@ -76,7 +75,9 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(owners) == 0 {
-		owners = []glossary.OwnerInput{{ID: usr.ID, Type: "user"}}
+		if usr := principal.AsUser(); usr != nil {
+			owners = []glossary.OwnerInput{{ID: usr.ID, Type: "user"}}
+		}
 	}
 
 	input := glossary.CreateTermInput{

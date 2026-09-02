@@ -82,12 +82,12 @@ type JobRun struct {
 }
 
 // Validate validates this job run
-func (m *JobRun) Validate(formats strfmt.Registry) error {
+func (m *JobRun) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this job run based on context it is used
-func (m *JobRun) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *JobRun) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -43,7 +43,7 @@ type User struct {
 	ProfilePicture string `json:"profile_picture,omitempty"`
 
 	// roles
-	Roles []*Role `json:"roles"`
+	Roles []*UserRole `json:"roles"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`

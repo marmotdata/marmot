@@ -111,7 +111,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteRolesIDContext] instead.
 func (a *Client) DeleteRolesID(params *DeleteRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteRolesIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -178,7 +178,7 @@ func (a *Client) DeleteRolesIDContext(ctx context.Context, params *DeleteRolesID
 // If you need to pass a specific context, use [Client.GetPermissionsContext] instead.
 func (a *Client) GetPermissions(params *GetPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPermissionsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -245,7 +245,7 @@ func (a *Client) GetPermissionsContext(ctx context.Context, params *GetPermissio
 // If you need to pass a specific context, use [Client.GetRolesContext] instead.
 func (a *Client) GetRoles(params *GetRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -312,7 +312,7 @@ func (a *Client) GetRolesContext(ctx context.Context, params *GetRolesParams, au
 // If you need to pass a specific context, use [Client.GetRolesIDContext] instead.
 func (a *Client) GetRolesID(params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -379,7 +379,7 @@ func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams
 // If you need to pass a specific context, use [Client.PatchRolesIDContext] instead.
 func (a *Client) PatchRolesID(params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -446,7 +446,7 @@ func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDPa
 // If you need to pass a specific context, use [Client.PostRolesContext] instead.
 func (a *Client) PostRoles(params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -513,7 +513,7 @@ func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, 
 // If you need to pass a specific context, use [Client.PostRolesIDPermissionsContext] instead.
 func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

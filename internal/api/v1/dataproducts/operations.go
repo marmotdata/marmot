@@ -81,9 +81,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
 
@@ -95,8 +95,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Default the owner to the creator only when the creator is a person. A
+	// product created by an ingestion identity is better left unowned than
+	// owned by a robot nobody can ask about it.
 	if len(owners) == 0 {
-		owners = []dataproduct.OwnerInput{{ID: usr.ID, Type: "user"}}
+		if usr := principal.AsUser(); usr != nil {
+			owners = []dataproduct.OwnerInput{{ID: usr.ID, Type: "user"}}
+		}
 	}
 
 	rules := make([]dataproduct.RuleInput, len(req.Rules))
@@ -424,13 +429,13 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
 
-	err := h.dataProductService.AddAssets(r.Context(), id, req.AssetIDs, usr.ID)
+	err := h.dataProductService.AddAssets(r.Context(), id, req.AssetIDs, principal.ID())
 	if err != nil {
 		switch {
 		case errors.Is(err, dataproduct.ErrNotFound):

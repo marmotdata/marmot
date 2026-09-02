@@ -18,17 +18,32 @@ import (
 // swagger:model Role
 type Role struct {
 
+	// created at
+	CreatedAt string `json:"created_at,omitempty"`
+
+	// deleted at
+	DeletedAt string `json:"deleted_at,omitempty"`
+
 	// description
 	Description string `json:"description,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
 
+	// is system
+	IsSystem bool `json:"is_system,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
 	// permissions
-	Permissions []*Permission `json:"permissions"`
+	Permissions []*RolePermission `json:"permissions"`
+
+	// updated at
+	UpdatedAt string `json:"updated_at,omitempty"`
+
+	// user count
+	UserCount int64 `json:"user_count,omitempty"`
 }
 
 // Validate validates this role

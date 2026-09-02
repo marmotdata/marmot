@@ -22,12 +22,12 @@ type AddMemberRequest struct {
 }
 
 // Validate validates this add member request
-func (m *AddMemberRequest) Validate(formats strfmt.Registry) error {
+func (m *AddMemberRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this add member request based on context it is used
-func (m *AddMemberRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AddMemberRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

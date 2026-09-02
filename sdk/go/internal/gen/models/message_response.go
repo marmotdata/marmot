@@ -19,12 +19,12 @@ type MessageResponse struct {
 }
 
 // Validate validates this message response
-func (m *MessageResponse) Validate(formats strfmt.Registry) error {
+func (m *MessageResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this message response based on context it is used
-func (m *MessageResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *MessageResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
