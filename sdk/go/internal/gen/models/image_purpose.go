@@ -70,6 +70,6 @@ func (m ImagePurpose) Validate(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this image purpose based on context it is used
-func (m ImagePurpose) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m ImagePurpose) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }

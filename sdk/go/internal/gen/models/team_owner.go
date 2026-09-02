@@ -34,12 +34,12 @@ type TeamOwner struct {
 }
 
 // Validate validates this team owner
-func (m *TeamOwner) Validate(formats strfmt.Registry) error {
+func (m *TeamOwner) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this team owner based on context it is used
-func (m *TeamOwner) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *TeamOwner) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

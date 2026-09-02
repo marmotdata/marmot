@@ -50,7 +50,7 @@ func (m *UpdatePasswordRequest) validateNewPassword(formats strfmt.Registry) err
 }
 
 // ContextValidate validates this update password request based on context it is used
-func (m *UpdatePasswordRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdatePasswordRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

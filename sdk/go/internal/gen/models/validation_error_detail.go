@@ -22,12 +22,12 @@ type ValidationErrorDetail struct {
 }
 
 // Validate validates this validation error detail
-func (m *ValidationErrorDetail) Validate(formats strfmt.Registry) error {
+func (m *ValidationErrorDetail) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this validation error detail based on context it is used
-func (m *ValidationErrorDetail) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ValidationErrorDetail) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

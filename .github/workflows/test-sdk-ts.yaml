@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: "sdk/ts/pnpm-lock.yaml"
 
       - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Lint TS SDK
         run: make sdk-ts-lint
