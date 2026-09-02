@@ -11,11 +11,11 @@ Do not edit the class manually.
 
 import unittest
 
-from marmot.generated.models.role import Role
+from marmot.generated.models.user_role import UserRole
 
 
-class TestRole(unittest.TestCase):
-    """Role unit test stubs"""
+class TestUserRole(unittest.TestCase):
+    """UserRole unit test stubs"""
 
     def setUp(self):
         pass
@@ -23,40 +23,35 @@ class TestRole(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> Role:
-        """Test Role
+    def make_instance(self, include_optional) -> UserRole:
+        """Test UserRole
         include_optional is a boolean, when False only required
         params are included, when True both required and
         optional params are included"""
-        # uncomment below to create an instance of `Role`
+        # uncomment below to create an instance of `UserRole`
         """
-        model = Role()
+        model = UserRole()
         if include_optional:
-            return Role(
-                created_at = '',
-                deleted_at = '',
+            return UserRole(
                 description = '',
                 id = '',
-                is_system = True,
                 name = '',
                 permissions = [
-                    marmot.generated.models.role_permission.RolePermission(
+                    marmot.generated.models.permission.Permission(
                         action = '',
                         description = '',
                         id = '',
                         name = '',
                         resource_type = '', )
-                    ],
-                updated_at = '',
-                user_count = 56
+                    ]
             )
         else:
-            return Role(
+            return UserRole(
         )
         """
 
-    def testRole(self):
-        """Test Role"""
+    def testUserRole(self):
+        """Test UserRole"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

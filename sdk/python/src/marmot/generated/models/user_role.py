@@ -16,38 +16,23 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
-from marmot.generated.models.role_permission import RolePermission
+from marmot.generated.models.permission import Permission
 
 
-class Role(BaseModel):
+class UserRole(BaseModel):
     """
-    Role
+    UserRole
     """
 
-    created_at: StrictStr | None = None
-    deleted_at: StrictStr | None = None
     description: StrictStr | None = None
     id: StrictStr | None = None
-    is_system: StrictBool | None = None
     name: StrictStr | None = None
-    permissions: list[RolePermission] | None = None
-    updated_at: StrictStr | None = None
-    user_count: StrictInt | None = None
-    __properties: ClassVar[list[str]] = [
-        "created_at",
-        "deleted_at",
-        "description",
-        "id",
-        "is_system",
-        "name",
-        "permissions",
-        "updated_at",
-        "user_count",
-    ]
+    permissions: list[Permission] | None = None
+    __properties: ClassVar[list[str]] = ["description", "id", "name", "permissions"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -66,7 +51,7 @@ class Role(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self | None:
-        """Create an instance of Role from a JSON string"""
+        """Create an instance of UserRole from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> dict[str, Any]:
@@ -97,7 +82,7 @@ class Role(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
-        """Create an instance of Role from a dict"""
+        """Create an instance of UserRole from a dict"""
         if obj is None:
             return None
 
@@ -106,16 +91,11 @@ class Role(BaseModel):
 
         return cls.model_validate(
             {
-                "created_at": obj.get("created_at"),
-                "deleted_at": obj.get("deleted_at"),
                 "description": obj.get("description"),
                 "id": obj.get("id"),
-                "is_system": obj.get("is_system"),
                 "name": obj.get("name"),
-                "permissions": [RolePermission.from_dict(_item) for _item in obj["permissions"]]
+                "permissions": [Permission.from_dict(_item) for _item in obj["permissions"]]
                 if obj.get("permissions") is not None
                 else None,
-                "updated_at": obj.get("updated_at"),
-                "user_count": obj.get("user_count"),
             }
         )
