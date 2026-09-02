@@ -8,7 +8,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,13 +52,17 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user from context
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
+	createdByType := "user"
+	if principal.AsUser() == nil {
+		createdByType = string(principal.Type())
+	}
 
-	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, "user", usr.ID); err != nil {
+	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, createdByType, principal.ID()); err != nil {
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
