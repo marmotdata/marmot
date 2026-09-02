@@ -57,12 +57,18 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
-	createdByType := "user"
-	if principal.AsUser() == nil {
-		createdByType = string(principal.Type())
+	// created_by is a foreign key into users, so only a person belongs there and
+	// passing a service account id fails the insert. Machine identities are named
+	// in source instead, and created_by is left NULL.
+	source := "user"
+	author := ""
+	if usr := principal.AsUser(); usr != nil {
+		author = usr.ID
+	} else {
+		source = string(principal.Type())
 	}
 
-	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, createdByType, principal.ID()); err != nil {
+	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, source, author); err != nil {
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
