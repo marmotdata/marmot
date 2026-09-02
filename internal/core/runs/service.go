@@ -107,10 +107,11 @@ type DocumentationResult struct {
 }
 
 type LineageInput struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"`
-	JobMRN string `json:"job_mrn,omitempty"`
+	Source        string               `json:"source"`
+	Target        string               `json:"target"`
+	Type          string               `json:"type"`
+	JobMRN        string               `json:"job_mrn,omitempty"`
+	ColumnLineage []lineage.ColumnEdge `json:"column_lineage,omitempty"`
 }
 
 type DocumentationInput struct {
@@ -487,11 +488,9 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			status = StatusUpdated
 		}
 
-		if status == StatusCreated {
-			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
-				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
-				status = StatusFailed
-			}
+		if _, err := s.lineageService.CreateLineageEdgeWithColumns(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN, lin.ColumnLineage); err != nil {
+			log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
+			status = StatusFailed
 		}
 
 		result := LineageResult{

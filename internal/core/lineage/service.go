@@ -20,6 +20,7 @@ type LineageChangeObserver interface {
 type Service interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error)
+	CreateLineageEdgeWithColumns(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string, columnLineage []ColumnEdge) (string, error)
 	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
@@ -79,12 +80,16 @@ func (s *service) GetDirectLineage(ctx context.Context, edgeID string) (*Lineage
 }
 
 func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
+	return s.CreateLineageEdgeWithColumns(ctx, sourceMRN, targetMRN, lineageType, jobMRN, nil)
+}
+
+func (s *service) CreateLineageEdgeWithColumns(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string, columnLineage []ColumnEdge) (string, error) {
 	existed, err := s.repo.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
 		return "", err
 	}
 
-	edgeID, err := s.repo.CreateDirectLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN)
+	edgeID, err := s.repo.CreateLineageEdgeWithColumns(ctx, sourceMRN, targetMRN, lineageType, jobMRN, columnLineage)
 	if err != nil {
 		return "", err
 	}

@@ -459,9 +459,11 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	lineageInput := make([]LineageInput, 0, len(result.Lineage))
 	for _, l := range result.Lineage {
 		lineageInput = append(lineageInput, LineageInput{
-			Source: l.Source,
-			Target: l.Target,
-			Type:   l.Type,
+			Source:        l.Source,
+			Target:        l.Target,
+			Type:          l.Type,
+			JobMRN:        l.JobMRN,
+			ColumnLineage: l.ColumnLineage,
 		})
 	}
 

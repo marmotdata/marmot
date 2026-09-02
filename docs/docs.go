@@ -9191,6 +9191,26 @@ const docTemplate = `{
                 }
             }
         },
+        "ColumnEdge": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number"
+                },
+                "from_columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "to_column": {
+                    "type": "string"
+                },
+                "transform": {
+                    "type": "string"
+                }
+            }
+        },
         "CompleteRunRequest": {
             "type": "object",
             "required": [
@@ -9415,6 +9435,12 @@ const docTemplate = `{
         "CreateLineageRequest": {
             "type": "object",
             "properties": {
+                "column_lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ColumnEdge"
+                    }
+                },
                 "job_mrn": {
                     "type": "string"
                 },
@@ -10354,6 +10380,12 @@ const docTemplate = `{
         "LineageEdge": {
             "type": "object",
             "properties": {
+                "column_lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ColumnEdge"
+                    }
+                },
                 "id": {
                     "type": "string"
                 },
