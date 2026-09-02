@@ -43,6 +43,7 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.search,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
 				common.WithRateLimit(h.config, 50, 60), // 50 requests per 60 seconds
 			},
 		},
