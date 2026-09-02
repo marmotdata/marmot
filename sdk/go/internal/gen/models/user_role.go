@@ -13,16 +13,10 @@ import (
 	"github.com/go-openapi/swag/typeutils"
 )
 
-// Role role
+// UserRole user role
 //
-// swagger:model Role
-type Role struct {
-
-	// created at
-	CreatedAt string `json:"created_at,omitempty"`
-
-	// deleted at
-	DeletedAt string `json:"deleted_at,omitempty"`
+// swagger:model UserRole
+type UserRole struct {
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -30,24 +24,15 @@ type Role struct {
 	// id
 	ID string `json:"id,omitempty"`
 
-	// is system
-	IsSystem bool `json:"is_system,omitempty"`
-
 	// name
 	Name string `json:"name,omitempty"`
 
 	// permissions
-	Permissions []*RolePermission `json:"permissions"`
-
-	// updated at
-	UpdatedAt string `json:"updated_at,omitempty"`
-
-	// user count
-	UserCount int64 `json:"user_count,omitempty"`
+	Permissions []*Permission `json:"permissions"`
 }
 
-// Validate validates this role
-func (m *Role) Validate(formats strfmt.Registry) error {
+// Validate validates this user role
+func (m *UserRole) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validatePermissions(formats); err != nil {
@@ -60,7 +45,7 @@ func (m *Role) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Role) validatePermissions(formats strfmt.Registry) error {
+func (m *UserRole) validatePermissions(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.Permissions) { // not required
 		return nil
 	}
@@ -90,8 +75,8 @@ func (m *Role) validatePermissions(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this role based on the context it is used
-func (m *Role) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this user role based on the context it is used
+func (m *UserRole) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidatePermissions(ctx, formats); err != nil {
@@ -104,7 +89,7 @@ func (m *Role) ContextValidate(ctx context.Context, formats strfmt.Registry) err
 	return nil
 }
 
-func (m *Role) contextValidatePermissions(ctx context.Context, formats strfmt.Registry) error {
+func (m *UserRole) contextValidatePermissions(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Permissions); i++ {
 
@@ -134,7 +119,7 @@ func (m *Role) contextValidatePermissions(ctx context.Context, formats strfmt.Re
 }
 
 // MarshalBinary interface implementation
-func (m *Role) MarshalBinary() ([]byte, error) {
+func (m *UserRole) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -142,8 +127,8 @@ func (m *Role) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *Role) UnmarshalBinary(b []byte) error {
-	var res Role
+func (m *UserRole) UnmarshalBinary(b []byte) error {
+	var res UserRole
 	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}

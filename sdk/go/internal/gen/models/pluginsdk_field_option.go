@@ -22,12 +22,12 @@ type PluginsdkFieldOption struct {
 }
 
 // Validate validates this pluginsdk field option
-func (m *PluginsdkFieldOption) Validate(formats strfmt.Registry) error {
+func (m *PluginsdkFieldOption) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this pluginsdk field option based on context it is used
-func (m *PluginsdkFieldOption) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *PluginsdkFieldOption) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

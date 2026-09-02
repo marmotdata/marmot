@@ -34,12 +34,12 @@ type ToolCall struct {
 }
 
 // Validate validates this tool call
-func (m *ToolCall) Validate(formats strfmt.Registry) error {
+func (m *ToolCall) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this tool call based on context it is used
-func (m *ToolCall) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ToolCall) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

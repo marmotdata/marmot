@@ -40,12 +40,12 @@ type LineageEdge struct {
 }
 
 // Validate validates this lineage edge
-func (m *LineageEdge) Validate(formats strfmt.Registry) error {
+func (m *LineageEdge) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this lineage edge based on context it is used
-func (m *LineageEdge) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *LineageEdge) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

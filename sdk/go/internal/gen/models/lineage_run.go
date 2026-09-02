@@ -22,12 +22,12 @@ type LineageRun struct {
 }
 
 // Validate validates this lineage run
-func (m *LineageRun) Validate(formats strfmt.Registry) error {
+func (m *LineageRun) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this lineage run based on context it is used
-func (m *LineageRun) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *LineageRun) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
