@@ -10,8 +10,14 @@ GO_FILES=$(shell find . -name '*.go')
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo "v0.0.0")
 LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)"
 
-swagger:
-	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
+SWAG_VERSION := v1.16.6
+SWAG := $(shell go env GOPATH)/bin/swag
+
+$(SWAG):
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
+
+swagger: $(SWAG)
+	$(SWAG) init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
 	rm -f $(SDK_OPENAPI3)
 
 build:
@@ -69,7 +75,7 @@ docker-build:
 
 dev-deps:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.9.0
-	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
 sdk: sdk-go sdk-py sdk-ts
