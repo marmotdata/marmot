@@ -106,39 +106,59 @@ jobs:
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
 
       - name: Log in to GHCR
-        run: |
-          mkdir -p ~/.docker
-          echo '{"auths":{"ghcr.io":{"auth":"'"$(printf '%s:%s' '${{ github.actor }}' '${{ secrets.GITHUB_TOKEN }}' | base64 -w0)"'"}}}' > ~/.docker/config.json
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install oras
+        uses: oras-project/setup-oras@v1
+
+      # One manifest per platform, then an index over them. This is the
+      # shape internal/plugin/install reads: platform manifests whose layer
+      # is the gzipped binary with the Marmot plugin media type.
       - name: Push plugin OCI artefacts
         id: push
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}
           VERSION: ${{ steps.meta.outputs.version }}
-          WORKDIR: ${{ steps.meta.outputs.workdir }}
+          DIST: ${{ steps.meta.outputs.workdir }}/dist
+          SOURCE: https://github.com/${{ github.repository }}
         run: |
           set -euo pipefail
-          output=$(go run ./cmd plugin push \
-            "${REGISTRY}/${PLUGIN}:${VERSION}" \
-            --source "${WORKDIR}" \
-            --dist "${WORKDIR}/dist" \
-            --repo-url "https://github.com/${{ github.repository }}" \
-            | tee /dev/stderr)
-          {
-            echo "index_digest=$(awk '$1=="index:"{print $2}' <<<"$output")"
-            echo "info_digest=$(awk '$1=="info:"{print $2}' <<<"$output")"
-          } >> "$GITHUB_OUTPUT"
+          repo="${REGISTRY}/${PLUGIN}"
+          tags=()
+          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            os=${platform%/*}
+            arch=${platform#*/}
+            binary=$(find "$DIST" -type f -name "marmot-plugin-${PLUGIN}" -path "*_${os}_${arch}*" | head -n 1)
+            if [ -z "$binary" ]; then
+              echo "no binary for ${platform} under ${DIST}" >&2
+              exit 1
+            fi
+            work=$(mktemp -d)
+            gzip -c "$binary" > "${work}/marmot-plugin-${PLUGIN}"
+            (cd "$work" && oras push "${repo}:${VERSION}-${os}-${arch}" \
+              --artifact-type application/vnd.marmot.plugin.v1 \
+              --artifact-platform "${platform}" \
+              --annotation "org.opencontainers.image.version=${VERSION}" \
+              --annotation "org.opencontainers.image.source=${SOURCE}" \
+              "marmot-plugin-${PLUGIN}:application/vnd.marmot.plugin.v1+gzip")
+            tags+=("${VERSION}-${os}-${arch}")
+          done
+          oras manifest index create "${repo}:${VERSION}" "${tags[@]}" \
+            --annotation "org.opencontainers.image.version=${VERSION}" \
+            --annotation "org.opencontainers.image.source=${SOURCE}"
+          echo "index_digest=$(oras resolve "${repo}:${VERSION}")" >> "$GITHUB_OUTPUT"
 
       - name: Sign OCI artefacts
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}
           INDEX_DIGEST: ${{ steps.push.outputs.index_digest }}
-          INFO_DIGEST: ${{ steps.push.outputs.info_digest }}
         run: |
           set -euo pipefail
-          REPO="${REGISTRY}/${PLUGIN}"
-          cosign sign --yes "${REPO}@${INDEX_DIGEST}"
-          cosign sign --yes "${REPO}@${INFO_DIGEST}"
+          cosign sign --yes "${REGISTRY}/${PLUGIN}@${INDEX_DIGEST}"
 
       - name: Release summary
         env:
