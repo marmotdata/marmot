@@ -79,7 +79,7 @@ func (m *DocumentationCreateRequest) validateSource(formats strfmt.Registry) err
 }
 
 // ContextValidate validates this documentation create request based on context it is used
-func (m *DocumentationCreateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DocumentationCreateRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

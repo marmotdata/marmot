@@ -70,24 +70,34 @@ func NewPostgresStore(db *pgxpool.Pool) Store {
 	return &PostgresStore{db: db}
 }
 
+// roleSelectBase counts users and collects permissions in subqueries rather than
+// by joining both tables at once.
+//
+// Joining them together fans out: every permission row is repeated once per user
+// holding the role, so a role with 181 users and 7 permissions reported 1267 of
+// them. COUNT(DISTINCT ...) hid the same fan-out on the user side, which is why
+// only the permission count looked wrong.
 const roleSelectBase = `
 	SELECT r.id, r.name, r.description, r.is_system, r.deleted_at, r.created_at, r.updated_at,
-	       COUNT(DISTINCT ur.user_id) AS user_count,
-	       COALESCE(json_agg(json_build_object(
-	           'id', p.id, 'name', p.name, 'description', p.description,
-	           'resource_type', p.resource_type, 'action', p.action
-	       )) FILTER (WHERE p.id IS NOT NULL), '[]'::json) AS permissions
-	FROM roles r
-	LEFT JOIN user_roles ur ON ur.role_id = r.id
-	LEFT JOIN role_permissions rp ON rp.role_id = r.id
-	LEFT JOIN permissions p ON p.id = rp.permission_id`
+	       (SELECT COUNT(DISTINCT ur.user_id)
+	          FROM user_roles ur WHERE ur.role_id = r.id) AS user_count,
+	       COALESCE((
+	           SELECT json_agg(json_build_object(
+	               'id', p.id, 'name', p.name, 'description', p.description,
+	               'resource_type', p.resource_type, 'action', p.action
+	           ) ORDER BY p.resource_type, p.action)
+	             FROM role_permissions rp
+	             JOIN permissions p ON p.id = rp.permission_id
+	            WHERE rp.role_id = r.id
+	       ), '[]'::json) AS permissions
+	FROM roles r`
 
 func (s *PostgresStore) List(ctx context.Context, includeDeleted bool) ([]*Role, error) {
 	q := roleSelectBase
 	if !includeDeleted {
 		q += ` WHERE r.deleted_at IS NULL`
 	}
-	q += ` GROUP BY r.id ORDER BY r.created_at ASC`
+	q += ` ORDER BY r.created_at ASC`
 
 	rows, err := s.db.Query(ctx, q)
 	if err != nil {
@@ -98,7 +108,7 @@ func (s *PostgresStore) List(ctx context.Context, includeDeleted bool) ([]*Role,
 }
 
 func (s *PostgresStore) Get(ctx context.Context, id string) (*Role, error) {
-	q := roleSelectBase + ` WHERE r.id = $1 GROUP BY r.id`
+	q := roleSelectBase + ` WHERE r.id = $1`
 	rows, err := s.db.Query(ctx, q, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting role: %w", err)
@@ -116,7 +126,7 @@ func (s *PostgresStore) Get(ctx context.Context, id string) (*Role, error) {
 }
 
 func (s *PostgresStore) GetByName(ctx context.Context, name string) (*Role, error) {
-	q := roleSelectBase + ` WHERE r.name = $1 AND r.deleted_at IS NULL GROUP BY r.id`
+	q := roleSelectBase + ` WHERE r.name = $1 AND r.deleted_at IS NULL`
 	rows, err := s.db.Query(ctx, q, name)
 	if err != nil {
 		return nil, fmt.Errorf("getting role by name: %w", err)

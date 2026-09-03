@@ -213,6 +213,7 @@ __all__ = [
     "UpdateUserInput",
     "User",
     "UserIdentity",
+    "UserRole",
     "V1RolesCreateRoleRequest",
     "V1RolesReplacePermissionsRequest",
     "V1RolesUpdateRoleRequest",
@@ -569,6 +570,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.update_user_input import UpdateUserInput as UpdateUserInput
     from marmot.generated.models.user import User as User
     from marmot.generated.models.user_identity import UserIdentity as UserIdentity
+    from marmot.generated.models.user_role import UserRole as UserRole
     from marmot.generated.models.v1_roles_create_role_request import (
         V1RolesCreateRoleRequest as V1RolesCreateRoleRequest,
     )
@@ -797,6 +799,7 @@ from marmot.generated.models.update_term_request import UpdateTermRequest as Upd
 from marmot.generated.models.update_user_input import UpdateUserInput as UpdateUserInput
 from marmot.generated.models.user import User as User
 from marmot.generated.models.user_identity import UserIdentity as UserIdentity
+from marmot.generated.models.user_role import UserRole as UserRole
 from marmot.generated.models.v1_roles_create_role_request import V1RolesCreateRoleRequest as V1RolesCreateRoleRequest
 from marmot.generated.models.v1_roles_replace_permissions_request import V1RolesReplacePermissionsRequest as V1RolesReplacePermissionsRequest
 from marmot.generated.models.v1_roles_update_role_request import V1RolesUpdateRoleRequest as V1RolesUpdateRoleRequest

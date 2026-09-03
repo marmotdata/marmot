@@ -37,12 +37,12 @@ type Documentation struct {
 }
 
 // Validate validates this documentation
-func (m *Documentation) Validate(formats strfmt.Registry) error {
+func (m *Documentation) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this documentation based on context it is used
-func (m *Documentation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Documentation) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

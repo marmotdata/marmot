@@ -14,6 +14,10 @@ import (
 
 const JWTSigningKeyID = "jwt_signing_key"
 
+// TokenTTL is how long an access token stays valid. The OAuth token endpoint
+// reports it as expires_in.
+const TokenTTL = 24 * time.Hour
+
 type Claims struct {
 	Roles       []string               `json:"roles"`
 	Permissions []string               `json:"permissions"`
@@ -87,7 +91,7 @@ func (s *service) GenerateTokenForPrincipal(ctx context.Context, p Principal, pr
 		Permissions: p.Permissions(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   p.ID(),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},

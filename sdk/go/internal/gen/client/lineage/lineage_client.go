@@ -105,7 +105,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteLineageDirectIDContext] instead.
 func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -172,7 +172,7 @@ func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *Delet
 // If you need to pass a specific context, use [Client.GetLineageAssetsIDContext] instead.
 func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -239,7 +239,7 @@ func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLinea
 // If you need to pass a specific context, use [Client.GetLineageDirectIDContext] instead.
 func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -306,7 +306,7 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 // If you need to pass a specific context, use [Client.PostLineageContext] instead.
 func (a *Client) PostLineage(params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -373,7 +373,7 @@ func (a *Client) PostLineageContext(ctx context.Context, params *PostLineagePara
 // If you need to pass a specific context, use [Client.PostLineageBatchContext] instead.
 func (a *Client) PostLineageBatch(params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -440,7 +440,7 @@ func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineag
 // If you need to pass a specific context, use [Client.PostLineageDirectContext] instead.
 func (a *Client) PostLineageDirect(params *PostLineageDirectParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageDirectOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
