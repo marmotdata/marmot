@@ -25,12 +25,12 @@ type PreviewResponse struct {
 }
 
 // Validate validates this preview response
-func (m *PreviewResponse) Validate(formats strfmt.Registry) error {
+func (m *PreviewResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this preview response based on context it is used
-func (m *PreviewResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *PreviewResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

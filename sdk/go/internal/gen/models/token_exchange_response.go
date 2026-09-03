@@ -28,12 +28,12 @@ type TokenExchangeResponse struct {
 }
 
 // Validate validates this token exchange response
-func (m *TokenExchangeResponse) Validate(formats strfmt.Registry) error {
+func (m *TokenExchangeResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this token exchange response based on context it is used
-func (m *TokenExchangeResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *TokenExchangeResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

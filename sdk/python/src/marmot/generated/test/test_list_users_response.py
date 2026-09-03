@@ -57,7 +57,7 @@ class TestListUsersResponse(unittest.TestCase):
                         preferences = { },
                         profile_picture = '',
                         roles = [
-                            marmot.generated.models.role.Role(
+                            marmot.generated.models.user_role.UserRole(
                                 description = '',
                                 id = '',
                                 name = '',

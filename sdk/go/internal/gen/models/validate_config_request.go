@@ -22,12 +22,12 @@ type ValidateConfigRequest struct {
 }
 
 // Validate validates this validate config request
-func (m *ValidateConfigRequest) Validate(formats strfmt.Registry) error {
+func (m *ValidateConfigRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this validate config request based on context it is used
-func (m *ValidateConfigRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ValidateConfigRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

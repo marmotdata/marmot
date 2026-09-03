@@ -99,7 +99,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteSsoTeamMappingsIDContext] instead.
 func (a *Client) DeleteSsoTeamMappingsID(params *DeleteSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -166,7 +166,7 @@ func (a *Client) DeleteSsoTeamMappingsIDContext(ctx context.Context, params *Del
 // If you need to pass a specific context, use [Client.GetSsoTeamMappingsContext] instead.
 func (a *Client) GetSsoTeamMappings(params *GetSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -233,7 +233,7 @@ func (a *Client) GetSsoTeamMappingsContext(ctx context.Context, params *GetSsoTe
 // If you need to pass a specific context, use [Client.GetSsoTeamMappingsIDContext] instead.
 func (a *Client) GetSsoTeamMappingsID(params *GetSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -300,7 +300,7 @@ func (a *Client) GetSsoTeamMappingsIDContext(ctx context.Context, params *GetSso
 // If you need to pass a specific context, use [Client.PostSsoTeamMappingsContext] instead.
 func (a *Client) PostSsoTeamMappings(params *PostSsoTeamMappingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostSsoTeamMappingsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -367,7 +367,7 @@ func (a *Client) PostSsoTeamMappingsContext(ctx context.Context, params *PostSso
 // If you need to pass a specific context, use [Client.PutSsoTeamMappingsIDContext] instead.
 func (a *Client) PutSsoTeamMappingsID(params *PutSsoTeamMappingsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutSsoTeamMappingsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

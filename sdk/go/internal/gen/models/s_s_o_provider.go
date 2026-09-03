@@ -25,12 +25,12 @@ type SSOProvider struct {
 }
 
 // Validate validates this s s o provider
-func (m *SSOProvider) Validate(formats strfmt.Registry) error {
+func (m *SSOProvider) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this s s o provider based on context it is used
-func (m *SSOProvider) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *SSOProvider) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

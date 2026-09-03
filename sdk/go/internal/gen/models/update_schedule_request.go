@@ -31,12 +31,12 @@ type UpdateScheduleRequest struct {
 }
 
 // Validate validates this update schedule request
-func (m *UpdateScheduleRequest) Validate(formats strfmt.Registry) error {
+func (m *UpdateScheduleRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this update schedule request based on context it is used
-func (m *UpdateScheduleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateScheduleRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

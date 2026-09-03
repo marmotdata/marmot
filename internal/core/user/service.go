@@ -12,17 +12,17 @@ import (
 )
 
 var (
-	ErrUserNotFound           = errors.New("user not found")
-	ErrRoleNotFound           = errors.New("role not found")
-	ErrInvalidInput           = errors.New("invalid input")
-	ErrAlreadyExists          = errors.New("user already exists")
-	ErrReservedUsername       = errors.New("reserved username")
-	ErrInvalidPassword        = errors.New("invalid password")
-	ErrUnauthorized           = errors.New("unauthorized")
-	ErrInvalidAPIKey          = errors.New("invalid API key")
-	ErrPasswordRequired       = errors.New("password is required for non-OAuth users")
-	ErrCannotDeleteSelf       = errors.New("user can't delete self")
-	ErrCannotDeleteAdmin      = errors.New("can't delete admin user")
+	ErrUserNotFound      = errors.New("user not found")
+	ErrRoleNotFound      = errors.New("role not found")
+	ErrInvalidInput      = errors.New("invalid input")
+	ErrAlreadyExists     = errors.New("user already exists")
+	ErrReservedUsername  = errors.New("reserved username")
+	ErrInvalidPassword   = errors.New("invalid password")
+	ErrUnauthorized      = errors.New("unauthorized")
+	ErrInvalidAPIKey     = errors.New("invalid API key")
+	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
+	ErrCannotDeleteSelf  = errors.New("user can't delete self")
+	ErrCannotDeleteAdmin = errors.New("can't delete admin user")
 )
 
 type User struct {
@@ -44,7 +44,11 @@ type Role struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Permissions []Permission `json:"permissions,omitempty"`
-} // @name Role
+	// Named UserRole in the API docs, not Role: core/role.Role also declared
+	// "@name Role", so swag emitted whichever it saw first and documented the
+	// /roles endpoints with this summary shape instead of the fuller model they
+	// actually return.
+} // @name UserRole
 
 type Permission struct {
 	ID           string `json:"id"`

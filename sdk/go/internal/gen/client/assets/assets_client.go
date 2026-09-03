@@ -219,7 +219,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteAssetsIDContext] instead.
 func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -286,7 +286,7 @@ func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssets
 // If you need to pass a specific context, use [Client.DeleteAssetsTagsIDContext] instead.
 func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -353,7 +353,7 @@ func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAs
 // If you need to pass a specific context, use [Client.DeleteAssetsTermsIDContext] instead.
 func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -420,7 +420,7 @@ func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteA
 // If you need to pass a specific context, use [Client.GetAssetsByGlossaryTermTermIDContext] instead.
 func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -487,7 +487,7 @@ func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, param
 // If you need to pass a specific context, use [Client.GetAssetsDocumentationMrnContext] instead.
 func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -554,7 +554,7 @@ func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *G
 // If you need to pass a specific context, use [Client.GetAssetsIDContext] instead.
 func (a *Client) GetAssetsID(params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -621,7 +621,7 @@ func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDPara
 // If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryContext] instead.
 func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -688,7 +688,7 @@ func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAs
 // If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryHistogramContext] instead.
 func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -755,7 +755,7 @@ func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, para
 // If you need to pass a specific context, use [Client.GetAssetsLookupTypeServiceNameContext] instead.
 func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -822,7 +822,7 @@ func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, para
 // If you need to pass a specific context, use [Client.GetAssetsMatchPatternContext] instead.
 func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -889,7 +889,7 @@ func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAs
 // If you need to pass a specific context, use [Client.GetAssetsMyAssetsContext] instead.
 func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -956,7 +956,7 @@ func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssets
 // If you need to pass a specific context, use [Client.GetAssetsPreviewIDContext] instead.
 func (a *Client) GetAssetsPreviewID(params *GetAssetsPreviewIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsPreviewIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1023,7 +1023,7 @@ func (a *Client) GetAssetsPreviewIDContext(ctx context.Context, params *GetAsset
 // If you need to pass a specific context, use [Client.GetAssetsQualifiedNameQualifiedNameContext] instead.
 func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1090,7 +1090,7 @@ func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context,
 // If you need to pass a specific context, use [Client.GetAssetsSearchContext] instead.
 func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1157,7 +1157,7 @@ func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSe
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataFieldsContext] instead.
 func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1224,7 +1224,7 @@ func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, 
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataValuesContext] instead.
 func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1291,7 +1291,7 @@ func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, 
 // If you need to pass a specific context, use [Client.GetAssetsSuggestionsTagsContext] instead.
 func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1358,7 +1358,7 @@ func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *Ge
 // If you need to pass a specific context, use [Client.GetAssetsSummaryContext] instead.
 func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1425,7 +1425,7 @@ func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsS
 // If you need to pass a specific context, use [Client.GetAssetsTermsIDContext] instead.
 func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1492,7 +1492,7 @@ func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsT
 // If you need to pass a specific context, use [Client.PostAssetsContext] instead.
 func (a *Client) PostAssets(params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1559,7 +1559,7 @@ func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams
 // If you need to pass a specific context, use [Client.PostAssetsDocumentationContext] instead.
 func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1626,7 +1626,7 @@ func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *Pos
 // If you need to pass a specific context, use [Client.PostAssetsDocumentationBatchContext] instead.
 func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1693,7 +1693,7 @@ func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params
 // If you need to pass a specific context, use [Client.PostAssetsTagsIDContext] instead.
 func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1760,7 +1760,7 @@ func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssets
 // If you need to pass a specific context, use [Client.PostAssetsTermsIDContext] instead.
 func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1827,7 +1827,7 @@ func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAsset
 // If you need to pass a specific context, use [Client.PutAssetsIDContext] instead.
 func (a *Client) PutAssetsID(params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
