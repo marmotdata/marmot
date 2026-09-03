@@ -7,7 +7,7 @@
 
 _The open-source context layer for your AI. Catalog your tables, topics, queues and APIs then expose real metadata to your AI agents._
 
-[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Deploy](https://marmotdata.io/docs/Deploy) • [Community](https://discord.gg/TWCk7hVFN4)
+[Documentation](https://marmotdata.io/docs/introduction) • [Deploy](https://marmotdata.io/docs/Deploy) • [Community](https://discord.gg/TWCk7hVFN4)
 
 </div>
 
@@ -41,7 +41,7 @@ Unlike traditional catalogs that require extensive infrastructure and configurat
 
 ## Deploy
 
-**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup, or try the [live demo](https://demo.marmotdata.io).
+**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup.
 
 ## Development
 
@@ -100,7 +100,6 @@ Marmot supports cataloging various data asset types through its plugin system:
 | Method | Description |
 |--------|-------------|
 | **Documentation Guide** | Follow the [Deploy](https://marmotdata.io/docs/Deploy) guide for step-by-step setup |
-| **Live Demo** | Try the [live demo](https://demo.marmotdata.io) before deploying |
 | **Single Binary** | Download and run the single binary for your platform |
 
 ### Is Marmot Free?
@@ -122,7 +121,6 @@ All contributions are welcome:
 | **Documentation** | [marmotdata.io/docs](https://marmotdata.io/docs/introduction) |
 | **Discord Community** | [Join Discord](https://discord.gg/TWCk7hVFN4) |
 | **GitHub Issues** | [Report issues](https://github.com/marmotdata/marmot/issues) |
-| **Live Demo** | [Try demo](https://demo.marmotdata.io) |
 
 ## License
 

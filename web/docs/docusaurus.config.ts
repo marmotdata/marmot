@@ -262,12 +262,6 @@ const config: Config = {
           className: "header-github-link",
           "aria-label": "GitHub repository",
         },
-        {
-          href: "https://demo.marmotdata.io",
-          label: "Live Demo",
-          position: "right",
-          className: "demo-button",
-        },
       ],
     },
     footer: {
@@ -333,10 +327,6 @@ const config: Config = {
             {
               label: "Pricing",
               to: "/pricing",
-            },
-            {
-              label: "Live Demo",
-              href: "https://demo.marmotdata.io",
             },
             {
               label: "API Reference",

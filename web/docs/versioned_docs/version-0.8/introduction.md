@@ -13,10 +13,10 @@ Marmot is an open-source data catalog designed for teams who want powerful data 
 import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 <CalloutCard
-  title="See Marmot in Action"
-  description="Explore the interface and features with the interactive demo - no installation required."
-  href="https://demo.marmotdata.io"
-  buttonText="Try Live Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 

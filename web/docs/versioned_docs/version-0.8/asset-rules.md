@@ -9,10 +9,10 @@ import { CalloutCard } from '@site/src/components/DocCard';
 Asset Rules automatically apply enrichments to assets matching specific criteria. Define a rule once and Marmot keeps everything in sync as your Catalog changes, including new assets that match.
 
 <CalloutCard
-  title="Try It Out"
-  description="See Asset Rules in action with the interactive demo."
-  href="https://demo.marmotdata.io/asset-rules"
-  buttonText="View Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 

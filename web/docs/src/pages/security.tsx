@@ -92,10 +92,6 @@ export default function Security(): JSX.Element {
               with no accounts and nothing sensitive behind it.
             </li>
             <li>
-              demo.marmotdata.io. It is shared, intentionally open and resets
-              itself.
-            </li>
-            <li>
               Cloud instances that are not yours. Never test against another
               tenant, under any circumstances.
             </li>

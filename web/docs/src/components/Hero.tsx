@@ -48,12 +48,12 @@ export default function Hero(): JSX.Element {
             </svg>
           </a>
           <a
-            href="https://demo.marmotdata.io"
+            href="https://github.com/marmotdata/marmot"
             target="_blank"
             rel="noopener noreferrer"
-            className="group demo-btn inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 transition-all duration-200 hover:-translate-y-0.5"
+            className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-earthy-brown-200/70 dark:border-gray-700/70 transition-all duration-200 hover:-translate-y-0.5"
           >
-            Live demo
+            View on GitHub
           </a>
         </div>
       </div>
