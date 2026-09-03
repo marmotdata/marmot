@@ -44,7 +44,9 @@ def one_client_many_apis() -> None:
     hits = SearchApi(client).get_search_sync(q=QUERY, limit=5)
     print(f"\n{hits.total} assets match {QUERY!r}; first {len(hits.results or [])}:")
     for result in hits.results or []:
-        print(f"  {result.type or '?':12} {result.name}")
+        # `type` is an enum whose str() is the member name, so show its value
+        kind = result.type.value if result.type else "?"
+        print(f"  {kind:12} {result.name}")
 
     total = MetricsApi(client).get_metrics_assets_total_sync()
     print(f"assets in the catalog: {total.count}")

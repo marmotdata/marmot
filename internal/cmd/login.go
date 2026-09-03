@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -20,11 +21,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	loginForce           bool
+	loginPrintToken      bool
+	loginNoLaunchBrowser bool
+)
+
 var loginCmd = &cobra.Command{
 	Use:   "login [url]",
 	Short: "Authenticate with a Marmot instance via browser",
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  runLogin,
+	Long: `Authenticate with a Marmot instance.
+
+A valid cached token is reused. Otherwise a browser opens to sign in and the
+token that comes back is cached under the instance's context. The token
+carries the user's roles and permissions and expires after 24 hours.
+
+The token is also registered with the Docker credential store, so oras,
+crane and docker can push plugins to the registry the instance serves.`,
+	Example: `  marmot login https://marmot.example.com
+  marmot login marmot.example.com --force
+  marmot login marmot.example.com --no-launch-browser
+  crane auth login marmot.example.com -u oauth2accesstoken -p "$(marmot login marmot.example.com --print-token)"`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runLogin,
 }
 
 var logoutCmd = &cobra.Command{
@@ -34,6 +53,9 @@ var logoutCmd = &cobra.Command{
 }
 
 func init() {
+	loginCmd.Flags().BoolVar(&loginForce, "force", false, "Sign in again even if a valid token is cached")
+	loginCmd.Flags().BoolVar(&loginPrintToken, "print-token", false, "Print the access token on stdout (status messages go to stderr)")
+	loginCmd.Flags().BoolVar(&loginNoLaunchBrowser, "no-launch-browser", false, "Print the sign-in URL instead of opening a browser")
 	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(logoutCmd)
 }
@@ -62,14 +84,54 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	if err := setContext(contextName, ContextEntry{Host: host}); err != nil {
 		return fmt.Errorf("saving context: %w", err)
 	}
 
+	// Status goes to stderr so --print-token leaves only the token on stdout.
+	status := cmd.ErrOrStderr()
+
+	entry, ok := getCachedTokenEntry(contextName)
+	if ok && !loginForce {
+		fmt.Fprintf(status, "Already logged in to %s (token expires %s). Use --force to sign in again.\n",
+			contextName, formatExpiry(entry.ExpiresAt))
+	} else {
+		tok, err := browserLogin(host, contextName, status, cmd.InOrStdin(), !loginNoLaunchBrowser)
+		if err != nil {
+			return err
+		}
+		if err := setCachedToken(contextName, tok.AccessToken, tok.TokenType, tok.ExpiresIn); err != nil {
+			return fmt.Errorf("saving token: %w", err)
+		}
+		entry = newTokenEntry(tok.AccessToken, tok.TokenType, tok.ExpiresIn)
+		fmt.Fprintf(status, "Logged in to %s (token expires %s).\n", contextName, formatExpiry(entry.ExpiresAt))
+	}
+
+	if line := describeIdentity(cmd.Context()); line != "" {
+		fmt.Fprintln(status, line)
+	}
+
+	reg, err := configureRegistryAuth(host, entry.AccessToken)
+	if err != nil {
+		fmt.Fprintf(status, "Warning: could not register the token with the Docker credential store: %v\n", err)
+	} else {
+		fmt.Fprint(status, reg.describe())
+	}
+	fmt.Fprintf(status, "Context %q is active.\n", contextName)
+
+	if loginPrintToken {
+		fmt.Fprintln(cmd.OutOrStdout(), entry.AccessToken)
+	}
+	return nil
+}
+
+// browserLogin runs the OAuth authorization code flow with PKCE. The code
+// arrives on a loopback listener, or pasted on stdin as the URL the browser
+// landed on when it runs on another machine.
+func browserLogin(host, contextName string, status io.Writer, in io.Reader, launchBrowser bool) (*tokenResponse, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return fmt.Errorf("starting local server: %w", err)
+		return nil, fmt.Errorf("starting local server: %w", err)
 	}
 	defer func() { _ = listener.Close() }()
 
@@ -78,17 +140,17 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 	clientID, err := registerClient(host, redirectURI)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	verifier, challenge, err := generatePKCE()
 	if err != nil {
-		return fmt.Errorf("generating PKCE: %w", err)
+		return nil, fmt.Errorf("generating PKCE: %w", err)
 	}
 
 	state, err := generateState()
 	if err != nil {
-		return fmt.Errorf("generating state: %w", err)
+		return nil, fmt.Errorf("generating state: %w", err)
 	}
 
 	authURL := fmt.Sprintf("%s/oauth/authorize?response_type=code&client_id=%s&redirect_uri=%s&state=%s&code_challenge=%s&code_challenge_method=S256&scope=openid",
@@ -99,31 +161,26 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		url.QueryEscape(challenge),
 	)
 
-	resultCh := make(chan callbackResult, 1)
+	// Two producers, the listener and stdin, so neither blocks after a result.
+	resultCh := make(chan callbackResult, 2)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		if errStr := q.Get("error"); errStr != "" {
-			desc := q.Get("error_description")
+		result := parseCallback(r.URL.Query())
+		if result.Err != "" {
 			writeCallbackPage(w, callbackPageData{
 				Title:   "Authentication failed",
 				Message: "Something went wrong during sign-in. You can close this window and try again.",
 				IsError: true,
 			})
-			resultCh <- callbackResult{Err: fmt.Sprintf("%s: %s", errStr, desc)}
-			return
+		} else {
+			writeCallbackPage(w, callbackPageData{
+				Title:   "Authentication complete",
+				Message: "You're now signed in. You can close this window.",
+				IsError: false,
+			})
 		}
-
-		writeCallbackPage(w, callbackPageData{
-			Title:   "Authentication complete",
-			Message: "You're now signed in. You can close this window.",
-			IsError: false,
-		})
-		resultCh <- callbackResult{
-			Code:  q.Get("code"),
-			State: q.Get("state"),
-		}
+		resultCh <- result
 	})
 
 	server := &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
@@ -134,65 +191,116 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		_ = server.Shutdown(ctx)
 	}()
 
-	fmt.Printf("Opening browser to authenticate with %s...\n", contextName)
-	if err := openBrowser(authURL); err != nil {
-		fmt.Printf("Could not open browser. Please visit this URL manually:\n%s\n", authURL)
+	opened := false
+	if launchBrowser {
+		fmt.Fprintf(status, "Opening browser to authenticate with %s...\n", contextName)
+		opened = openBrowser(authURL) == nil
 	}
+	if !opened {
+		fmt.Fprintf(status, "Open this URL in a browser to sign in to %s:\n\n%s\n\n", contextName, authURL)
+		fmt.Fprintln(status, "If the browser runs on another machine, paste the URL it lands on here and press enter.")
+	}
+	go readPastedCallback(in, resultCh)
 
 	select {
 	case result := <-resultCh:
 		if result.Err != "" {
-			return fmt.Errorf("authentication failed: %s", result.Err)
+			return nil, fmt.Errorf("authentication failed: %s", result.Err)
 		}
-
 		if result.State != state {
-			return fmt.Errorf("state mismatch — possible CSRF attack")
+			return nil, fmt.Errorf("state mismatch, possible CSRF attack")
 		}
-
 		if result.Code == "" {
-			return fmt.Errorf("no authorization code received")
+			return nil, fmt.Errorf("no authorization code received")
 		}
-
 		tok, err := exchangeCode(host, clientID, result.Code, redirectURI, verifier)
 		if err != nil {
-			return fmt.Errorf("token exchange failed: %w", err)
+			return nil, fmt.Errorf("token exchange failed: %w", err)
 		}
-
-		if err := setCachedToken(contextName, tok.AccessToken, tok.TokenType, tok.ExpiresIn); err != nil {
-			return fmt.Errorf("saving token: %w", err)
-		}
-
-		fmt.Printf("Successfully logged in to %s\n", contextName)
-		if tok.ExpiresIn > 0 {
-			expiry := time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second)
-			fmt.Printf("Token expires at %s\n", expiry.UTC().Format("2006-01-02 15:04:05 UTC"))
-		}
-		fmt.Printf("Context %q created and activated.\n", contextName)
-		return nil
+		return tok, nil
 
 	case <-time.After(5 * time.Minute):
-		return fmt.Errorf("timed out waiting for authentication (5 minutes)")
+		return nil, fmt.Errorf("timed out waiting for authentication (5 minutes)")
 	}
 }
 
+// parseCallback reads the code and state, or the error, from callback query
+// parameters.
+func parseCallback(q url.Values) callbackResult {
+	if errStr := q.Get("error"); errStr != "" {
+		return callbackResult{Err: fmt.Sprintf("%s: %s", errStr, q.Get("error_description"))}
+	}
+	return callbackResult{Code: q.Get("code"), State: q.Get("state")}
+}
+
+// readPastedCallback waits for one line on stdin and treats it as the URL the
+// browser landed on. Empty input and EOF are ignored.
+func readPastedCallback(in io.Reader, resultCh chan<- callbackResult) {
+	line, _ := bufio.NewReader(in).ReadString('\n')
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return
+	}
+	u, err := url.Parse(line)
+	if err != nil {
+		resultCh <- callbackResult{Err: fmt.Sprintf("pasted text is not a URL: %v", err)}
+		return
+	}
+	resultCh <- parseCallback(u.Query())
+}
+
+// describeIdentity asks the server who the token belongs to. Login has
+// already succeeded, so a failure here only costs the line.
+func describeIdentity(ctx context.Context) string {
+	c, err := newClient()
+	if err != nil {
+		return ""
+	}
+	u, err := c.Users.Me(ctx)
+	if err != nil {
+		return ""
+	}
+	roles := make([]string, 0, len(u.Roles))
+	for _, r := range u.Roles {
+		roles = append(roles, r.Name)
+	}
+	if len(roles) == 0 {
+		return fmt.Sprintf("Signed in as %s.", u.Username)
+	}
+	return fmt.Sprintf("Signed in as %s with roles: %s.", u.Username, strings.Join(roles, ", "))
+}
+
+func formatExpiry(t time.Time) string {
+	return t.UTC().Format("2006-01-02 15:04 UTC")
+}
+
 func runLogout(cmd *cobra.Command, args []string) error {
-	name := currentContextName()
+	name, ctx := getActiveContext()
 	if name == "" {
-		return fmt.Errorf("no active context — nothing to log out from")
+		return fmt.Errorf("no active context, nothing to log out from")
 	}
 
 	if err := deleteCachedToken(name); err != nil {
 		return fmt.Errorf("removing token: %w", err)
 	}
+	if err := removeRegistryAuth(ctx.Host); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: could not remove the registry credential for %s: %v\n", name, err)
+	}
 
-	fmt.Printf("Logged out from %s\n", name)
+	fmt.Fprintf(cmd.ErrOrStderr(), "Logged out from %s\n", name)
 	return nil
 }
 
 // resolveLoginHost determines the host and context name for login.
 func resolveLoginHost(args []string) (host, contextName string, err error) {
 	if len(args) > 0 {
-		host = normalizeHost(args[0])
+		// A bare name that matches a saved context keeps that context's
+		// URL, so "marmot login localhost:8080" does not turn http into https.
+		if ctx, ok := getContexts()[args[0]]; ok && !strings.Contains(args[0], "://") {
+			host, contextName = ctx.Host, args[0]
+		} else {
+			host = normalizeHost(args[0])
+		}
 	} else if name, ctx := getActiveContext(); ctx != nil {
 		host = ctx.Host
 		contextName = name
@@ -222,15 +330,28 @@ func resolveLoginHost(args []string) (host, contextName string, err error) {
 	return host, contextName, nil
 }
 
-// normalizeHost ensures the URL has a scheme.
+// normalizeHost adds a scheme when there is none: http for the local machine,
+// https for everything else.
 func normalizeHost(s string) string {
 	if s == "" {
 		return ""
 	}
-	if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
-		s = "https://" + s
+	if !strings.Contains(s, "://") {
+		scheme := "https://"
+		if isLoopback(s) {
+			scheme = "http://"
+		}
+		s = scheme + s
 	}
 	return strings.TrimRight(s, "/")
+}
+
+func isLoopback(hostport string) bool {
+	host := hostport
+	if h, _, err := net.SplitHostPort(hostport); err == nil {
+		host = h
+	}
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
 }
 
 // registerClient performs Dynamic Client Registration.
@@ -238,7 +359,7 @@ func registerClient(host, redirectURI string) (string, error) {
 	body := fmt.Sprintf(`{"redirect_uris":[%q],"client_name":"marmot-cli","token_endpoint_auth_method":"none"}`, redirectURI)
 	resp, err := http.Post(host+"/oauth/register", "application/json", strings.NewReader(body)) //nolint:gosec // host is user-provided target server
 	if err != nil {
-		return "", fmt.Errorf("could not connect to %s — check that Marmot is running and the address is correct", host)
+		return "", fmt.Errorf("could not connect to %s, check that Marmot is running and the address is correct", host)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -251,7 +372,7 @@ func registerClient(host, redirectURI string) (string, error) {
 		if oauthErr.Description != "" {
 			return "", fmt.Errorf("login failed: %s", oauthErr.Description)
 		}
-		return "", fmt.Errorf("login failed (HTTP %d) — check that Marmot is running and the address is correct", resp.StatusCode)
+		return "", fmt.Errorf("login failed (HTTP %d), check that Marmot is running and the address is correct", resp.StatusCode)
 	}
 
 	var dcr dcrClientResponse

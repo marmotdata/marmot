@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from "react";
+import { Icon } from "@iconify/react";
+import { agents } from "./agents";
 
 function MagnifyIcon({ className }: { className?: string }) {
   return (
@@ -33,11 +35,11 @@ interface ChatMessage {
 const messages: ChatMessage[] = [
   {
     role: "user",
-    text: "What tables do we have related to customer orders?",
+    text: "Where do we hold customer PII?",
   },
   {
     role: "assistant",
-    text: 'I found 3 assets matching "customer orders": the orders table in the warehouse, an orders_raw Kafka topic, and a daily_orders_summary view.',
+    text: "Four assets are tagged pii: the customers, orders and support_tickets tables in Postgres, plus the user_events topic in Kafka. All four are owned by the Data Platform team.",
     tool: { name: "discover_data", icon: "mdi:magnify" },
   },
   {
@@ -48,7 +50,7 @@ const messages: ChatMessage[] = [
     role: "assistant",
     text: "The daily_orders_summary view and the Revenue Overview dashboard both depend on that column. The table is owned by the Data Platform team, so check with Sarah Chen first.",
     tool: {
-      name: "get_lineage",
+      name: "trace_lineage",
       icon: "custom:lineage",
     },
   },
@@ -142,12 +144,18 @@ export default function MCPShowcase(): JSX.Element {
           {/* Left: copy */}
           <div className="lg:w-2/5 text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-              Answers, not guesses
+              Everyone answers their own questions
             </h2>
+            <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
+              Where a number came from. Whether a column is safe to change. Who
+              owns this table. Questions that used to sit in the data team's
+              queue. Marmot answers them without anyone needing to know where
+              to look.
+            </p>
             <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">
-              Questions that used to land in a team's Slack channel get
-              answered on the spot, from your catalog instead of a schema
-              someone pasted into a prompt. One MCP server, not one per source.
+              Same goes for agents. They are limited to whatever context you
+              paste into the prompt. With Marmot they can go and find it
+              themselves.
             </p>
             <a
               href="/docs/MCP/"
@@ -168,6 +176,14 @@ export default function MCPShowcase(): JSX.Element {
                 />
               </svg>
             </a>
+
+            <div className="mcp-clients">
+              {agents.map((a) => (
+                <span key={a.label} className="agent-mark" title={a.label}>
+                  <Icon icon={a.icon} className="agent-mark-icon" aria-hidden="true" />
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Right: chat */}

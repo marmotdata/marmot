@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "@iconify/react";
+import { agents } from "./agents";
 
 /* Two ways in, one catalog, many ways out.
  *
@@ -53,13 +54,6 @@ const consumers: Chip[] = [
   { label: "Web UI", icon: "mdi:monitor-dashboard", glyph: true },
   { label: "REST API", icon: "mdi:api", glyph: true },
   { label: "CLI", icon: "mdi:console", glyph: true },
-];
-
-const agents: Chip[] = [
-  { label: "Claude", icon: "simple-icons:anthropic" },
-  { label: "Cursor", icon: "simple-icons:cursor" },
-  { label: "ChatGPT", icon: "simple-icons:openai" },
-  { label: "Copilot", icon: "simple-icons:githubcopilot" },
 ];
 
 const stores = [
@@ -250,11 +244,6 @@ function Ecosystem() {
         />
       </svg>
 
-      {/* Narrow: one arrow, since the strip is stacked rather than in thirds. */}
-      <svg className="cl-eco-feed-narrow" width="16" height="48" viewBox="0 0 16 48" aria-hidden="true">
-        <path d="M8,48 V14" stroke="var(--cl-accent)" strokeWidth="1.75" fill="none" strokeLinecap="round" opacity="0.9" />
-        <path d="M2.5,15 L8,3 L13.5,15 z" fill="var(--cl-accent)" />
-      </svg>
       <div className="cl-eco-grid">
         {categories.map((c) => (
           <div key={c.label} className="cl-eco-group">
@@ -269,24 +258,12 @@ function Ecosystem() {
           </div>
         ))}
       </div>
-      <a
-        className="cl-eco-more"
-        href="https://plugins.marmotdata.io/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Browse all plugins
-        <svg className="cl-eco-more-arrow" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M13 7l5 5m0 0l-5 5m5-5H6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </a>
+      {/* Narrow: one arrow down into the hub, which sits below the strip once
+          stacked. Wide uses the converging curves above instead. */}
+      <svg className="cl-eco-feed-narrow" width="16" height="46" viewBox="0 0 16 46" aria-hidden="true">
+        <path d="M8,0 V32" stroke="var(--cl-accent)" strokeWidth="1.75" fill="none" strokeLinecap="round" opacity="0.9" />
+        <path d="M2.5,31 L8,43 L13.5,31 z" fill="var(--cl-accent)" />
+      </svg>
     </div>
   );
 }
@@ -316,8 +293,8 @@ export default function ContextDiagram(): JSX.Element {
               <span className="cl-agent-tick" aria-hidden="true" />
               <div className="cl-agents">
                 {agents.map((a) => (
-                  <span key={a.label} className="cl-agent" title={a.label}>
-                    <ChipIcon chip={a} className="cl-agent-icon" />
+                  <span key={a.label} className="agent-mark" title={a.label}>
+                    <ChipIcon chip={a} className="agent-mark-icon" />
                   </span>
                 ))}
               </div>
@@ -328,15 +305,21 @@ export default function ContextDiagram(): JSX.Element {
           </div>
         </div>
 
-        {/* Narrow layout: the same three stages, stacked. */}
-        <div className="cl-stack">
+        {/* Narrow layout, split around the ecosystem strip. Plugins are an
+            input, so stacked they belong above the hub with the code paths,
+            not below the query column. */}
+        <div className="cl-stack cl-stack-in">
           <p className="cl-eyebrow m-0">Manage via</p>
           <div className="cl-stack-chips">
             {pushFromCode.map((c) => (
               <ChipRow key={c.label} chip={c} />
             ))}
           </div>
-          <span className="cl-stack-conn" aria-hidden="true" />
+        </div>
+
+        <Ecosystem />
+
+        <div className="cl-stack cl-stack-out">
           <Hub />
           <span className="cl-stack-conn" aria-hidden="true" />
           <p className="cl-eyebrow m-0">Query via</p>
@@ -347,15 +330,13 @@ export default function ContextDiagram(): JSX.Element {
           </div>
           <div className="cl-agents cl-agents-stack">
             {agents.map((a) => (
-              <span key={a.label} className="cl-agent" title={a.label}>
-                <ChipIcon chip={a} className="cl-agent-icon" />
+              <span key={a.label} className="agent-mark" title={a.label}>
+                <ChipIcon chip={a} className="agent-mark-icon" />
               </span>
             ))}
           </div>
           <p className="cl-agents-note m-0">via MCP</p>
         </div>
-
-        <Ecosystem />
       </figure>
     </section>
   );

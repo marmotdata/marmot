@@ -31,12 +31,12 @@ type ToolCallPayload struct {
 }
 
 // Validate validates this tool call payload
-func (m *ToolCallPayload) Validate(formats strfmt.Registry) error {
+func (m *ToolCallPayload) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this tool call payload based on context it is used
-func (m *ToolCallPayload) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ToolCallPayload) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -78,10 +78,16 @@ async def main() -> None:
         # Marmot.
         setting_sources=[],
         system_prompt=SYSTEM_PROMPT,
+        # Every tool the Marmot MCP server exposes. Under bypassPermissions this
+        # is a permission allowlist, not a filter: the agent still sees any tool
+        # the server offers, so listing a subset here does not hide the rest.
         allowed_tools=[
             "mcp__marmot__discover_data",
             "mcp__marmot__find_ownership",
             "mcp__marmot__lookup_term",
+            "mcp__marmot__explore_data_products",
+            "mcp__marmot__explore_teams",
+            "mcp__marmot__trace_lineage",
         ],
     )
 
@@ -100,7 +106,7 @@ async def main() -> None:
                 print(f"agent error: {message.errors or message.result}", file=sys.stderr)
 
     print("\nagent registered as:", tracker.agent_mrn or "(not yet registered)")
-    print(f"check the UI: /discover/Agent/LangChain/{AGENT_NAME}?tab=runs")
+    print(f"check the UI: /discover/Agent/ClaudeAgent/{AGENT_NAME}?tab=runs")
 
 
 if __name__ == "__main__":

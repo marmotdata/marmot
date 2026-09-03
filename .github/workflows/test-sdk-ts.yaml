@@ -3,18 +3,8 @@ name: Test TS SDK
 on:
   push:
     branches: [main]
-    paths:
-      - 'sdk/ts/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-ts.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'sdk/ts/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-ts.yaml'
 
 permissions:
   contents: read
@@ -46,7 +36,7 @@ jobs:
           cache-dependency-path: "sdk/ts/pnpm-lock.yaml"
 
       - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Lint TS SDK
         run: make sdk-ts-lint

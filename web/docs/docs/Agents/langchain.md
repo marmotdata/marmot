@@ -53,38 +53,54 @@ A minimal agent that searches the catalog, registers itself and writes lineage:
 <TabPanel value="py">
 
 ```python
-import marmot
-from marmot.integrations.langchain import MarmotCallbackHandler, catalog_tools
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig, RunnableLambda
 from langchain_openai import ChatOpenAI
 
-with marmot.connect() as client:
-    tools = catalog_tools(client)
+from marmot import AuthenticatedApiClient
+from marmot.auth import resolve_credential, resolve_host
+from marmot.integrations import MarmotCatalog
+from marmot.integrations.langchain import MarmotCallbackHandler, catalog_tools
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a data analyst with access to the Marmot catalog."),
-        ("human", "{input}"),
-        ("placeholder", "{agent_scratchpad}"),
-    ])
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    executor = AgentExecutor(agent=agent, tools=tools)
+AGENT_NAME = "catalog-explorer"
+MODEL = "gpt-4o-mini"
 
-    handler = MarmotCallbackHandler(
-        client,
-        name="catalog-explorer",
-        model="gpt-4o-mini",
-        owner="data-eng",
-        tools=tools,
+SYSTEM_PROMPT = (
+    "You answer questions about an organisation's data using the Marmot catalog. "
+    "Always consult the marmot tools; never guess from memory."
+)
+
+catalog = MarmotCatalog(AuthenticatedApiClient.connect())
+
+tools = catalog_tools(catalog)
+handler = MarmotCallbackHandler(
+    catalog,
+    name=AGENT_NAME,
+    model=MODEL,
+    owner="data-eng",
+    tools=tools,
+)
+
+llm = ChatOpenAI(model=MODEL, temperature=0).bind_tools(tools)
+
+
+# The handler tracks a *chain* run: it registers the agent when the root chain
+# starts and flushes on its end, attributing every nested tool and model call to
+# it. `config` must be forwarded so those nested runs inherit the root.
+def pipeline(question: str, config: RunnableConfig) -> str:
+    answer = llm.invoke(
+        [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config
     )
+    return str(answer.content)
 
-    executor.invoke(
-        {"input": "Find a postgres table about orders and summarise it."},
-        config={"callbacks": [handler]},
-    )
 
-    print("agent registered as:", handler.agent_mrn)
+reply = RunnableLambda(pipeline).invoke(
+    "Find a postgres table about orders and summarise it.",
+    config=RunnableConfig(callbacks=[handler]),
+)
+
+print(reply)
+print("agent registered as:", handler.agent_mrn)
 ```
 
 </TabPanel>

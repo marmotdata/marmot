@@ -243,7 +243,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteProductsAssetsIDAssetIDContext] instead.
 func (a *Client) DeleteProductsAssetsIDAssetID(params *DeleteProductsAssetsIDAssetIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsAssetsIDAssetIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -310,7 +310,7 @@ func (a *Client) DeleteProductsAssetsIDAssetIDContext(ctx context.Context, param
 // If you need to pass a specific context, use [Client.DeleteProductsIDContext] instead.
 func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -377,7 +377,7 @@ func (a *Client) DeleteProductsIDContext(ctx context.Context, params *DeleteProd
 // If you need to pass a specific context, use [Client.DeleteProductsImagesIDPurposeContext] instead.
 func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -444,7 +444,7 @@ func (a *Client) DeleteProductsImagesIDPurposeContext(ctx context.Context, param
 // If you need to pass a specific context, use [Client.DeleteProductsRulesIDRuleIDContext] instead.
 func (a *Client) DeleteProductsRulesIDRuleID(params *DeleteProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteProductsRulesIDRuleIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -511,7 +511,7 @@ func (a *Client) DeleteProductsRulesIDRuleIDContext(ctx context.Context, params 
 // If you need to pass a specific context, use [Client.GetProductsAssetsIDContext] instead.
 func (a *Client) GetProductsAssetsID(params *GetProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -578,7 +578,7 @@ func (a *Client) GetProductsAssetsIDContext(ctx context.Context, params *GetProd
 // If you need to pass a specific context, use [Client.GetProductsIDContext] instead.
 func (a *Client) GetProductsID(params *GetProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -645,7 +645,7 @@ func (a *Client) GetProductsIDContext(ctx context.Context, params *GetProductsID
 // If you need to pass a specific context, use [Client.GetProductsImagesIDContext] instead.
 func (a *Client) GetProductsImagesID(params *GetProductsImagesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsImagesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -712,7 +712,7 @@ func (a *Client) GetProductsImagesIDContext(ctx context.Context, params *GetProd
 // If you need to pass a specific context, use [Client.GetProductsImagesIDPurposeContext] instead.
 func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -779,7 +779,7 @@ func (a *Client) GetProductsImagesIDPurposeContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetProductsListContext] instead.
 func (a *Client) GetProductsList(params *GetProductsListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsListOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -846,7 +846,7 @@ func (a *Client) GetProductsListContext(ctx context.Context, params *GetProducts
 // If you need to pass a specific context, use [Client.GetProductsResolvedAssetsIDContext] instead.
 func (a *Client) GetProductsResolvedAssetsID(params *GetProductsResolvedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsResolvedAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -913,7 +913,7 @@ func (a *Client) GetProductsResolvedAssetsIDContext(ctx context.Context, params 
 // If you need to pass a specific context, use [Client.GetProductsRulesIDContext] instead.
 func (a *Client) GetProductsRulesID(params *GetProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsRulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -980,7 +980,7 @@ func (a *Client) GetProductsRulesIDContext(ctx context.Context, params *GetProdu
 // If you need to pass a specific context, use [Client.GetProductsSearchContext] instead.
 func (a *Client) GetProductsSearch(params *GetProductsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetProductsSearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1047,7 +1047,7 @@ func (a *Client) GetProductsSearchContext(ctx context.Context, params *GetProduc
 // If you need to pass a specific context, use [Client.PostProductsContext] instead.
 func (a *Client) PostProducts(params *PostProductsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1114,7 +1114,7 @@ func (a *Client) PostProductsContext(ctx context.Context, params *PostProductsPa
 // If you need to pass a specific context, use [Client.PostProductsAssetsIDContext] instead.
 func (a *Client) PostProductsAssetsID(params *PostProductsAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1181,7 +1181,7 @@ func (a *Client) PostProductsAssetsIDContext(ctx context.Context, params *PostPr
 // If you need to pass a specific context, use [Client.PostProductsImagesIDPurposeContext] instead.
 func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1248,7 +1248,7 @@ func (a *Client) PostProductsImagesIDPurposeContext(ctx context.Context, params 
 // If you need to pass a specific context, use [Client.PostProductsRulePreviewContext] instead.
 func (a *Client) PostProductsRulePreview(params *PostProductsRulePreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulePreviewOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1315,7 +1315,7 @@ func (a *Client) PostProductsRulePreviewContext(ctx context.Context, params *Pos
 // If you need to pass a specific context, use [Client.PostProductsRulesIDContext] instead.
 func (a *Client) PostProductsRulesID(params *PostProductsRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostProductsRulesIDCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1382,7 +1382,7 @@ func (a *Client) PostProductsRulesIDContext(ctx context.Context, params *PostPro
 // If you need to pass a specific context, use [Client.PutProductsIDContext] instead.
 func (a *Client) PutProductsID(params *PutProductsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1449,7 +1449,7 @@ func (a *Client) PutProductsIDContext(ctx context.Context, params *PutProductsID
 // If you need to pass a specific context, use [Client.PutProductsRulesIDRuleIDContext] instead.
 func (a *Client) PutProductsRulesIDRuleID(params *PutProductsRulesIDRuleIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutProductsRulesIDRuleIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

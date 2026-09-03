@@ -46,7 +46,7 @@ const config: Config = {
   },
   stylesheets: [
     {
-      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&display=swap",
       type: "text/css",
     },
   ],
@@ -203,6 +203,9 @@ const config: Config = {
           changefreq: "weekly",
           priority: 0.5,
           filename: "sitemap.xml",
+          // /bounty serves the same page as /security; keep the duplicate
+          // out of the sitemap so /security stays the indexed URL.
+          ignorePatterns: ["/bounty"],
         },
       } satisfies Preset.Options,
     ],
@@ -342,6 +345,10 @@ const config: Config = {
             {
               label: "GitHub",
               href: "https://github.com/marmotdata/marmot/",
+            },
+            {
+              label: "Security & Bug Bounty",
+              to: "/security",
             },
             {
               label: "Privacy Policy",

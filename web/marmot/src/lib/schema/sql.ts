@@ -6,6 +6,10 @@ import type { Field } from './types';
  *   { "column_name": "id", "data_type": "integer", "is_nullable": "YES", ... },
  *   ...
  * ]
+ *
+ * This is the consumer side of the column-schema contract that plugins emit under
+ * Asset.Schema["columns"]. When changing the keys or aliases recognized below, keep
+ * the "Column Schema" section of web/docs/docs/Develop/creating-plugins.md in sync.
  */
 
 interface SqlColumn {

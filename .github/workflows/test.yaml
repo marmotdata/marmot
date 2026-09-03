@@ -3,16 +3,8 @@ name: Test
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'sdk/**'
-      - 'web/docs/**'
-      - '.github/workflows/test-sdk-*.yaml'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - 'sdk/**'
-      - 'web/docs/**'
-      - '.github/workflows/test-sdk-*.yaml'
 
 permissions:
   contents: read

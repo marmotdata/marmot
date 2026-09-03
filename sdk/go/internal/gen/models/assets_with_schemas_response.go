@@ -25,12 +25,12 @@ type AssetsWithSchemasResponse struct {
 }
 
 // Validate validates this assets with schemas response
-func (m *AssetsWithSchemasResponse) Validate(formats strfmt.Registry) error {
+func (m *AssetsWithSchemasResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this assets with schemas response based on context it is used
-func (m *AssetsWithSchemasResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetsWithSchemasResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

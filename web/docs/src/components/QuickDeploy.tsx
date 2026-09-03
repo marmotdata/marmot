@@ -17,15 +17,15 @@ export default function QuickDeploy(): JSX.Element {
         >
           <div className="lg:w-1/2 text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-              Two services. Not seven.
+              Up in minutes
             </h2>
             <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">
-              Marmot is one binary and a Postgres database. Other catalogs want
-              Elasticsearch, Kafka, Neo4j, MySQL and Airflow running before they
-              show you a single table.
+              Marmot is one service and a Postgres database you already run.
+              Most catalog projects spend their first quarter standing up
+              infrastructure. Marmot spends it on your data.
             </p>
             <a
-              href="/docs/Quick%20Start/"
+              href="/docs/quick-start"
               className="inline-flex items-center gap-1 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-semibold transition-colors"
             >
               Quick start
@@ -41,19 +41,19 @@ export default function QuickDeploy(): JSX.Element {
                   <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
                   <div className="w-3 h-3 rounded-full bg-[#28c840]" />
                 </div>
-                <span className="text-[11px] text-gray-500 font-mono tracking-wide">
-                  ~ / marmot
+                <span className="text-[11px] text-gray-500 terminal-mono tracking-wide">
+                  ~/marmot
                 </span>
                 <div className="w-[52px]" />
               </div>
 
-              <div className="bg-[#1c1c1e] dark:bg-[#111113] px-6 py-5 font-mono text-[13px] leading-relaxed">
+              <div className="bg-[#1c1c1e] dark:bg-[#111113] px-6 py-5 terminal-mono text-[15px] leading-relaxed">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400 select-none">$</span>
                   <span className="text-gray-200">docker compose up -d</span>
                 </div>
 
-                <div className="mt-4 space-y-1 text-xs text-gray-500">
+                <div className="mt-4 space-y-1 text-[13.5px] text-gray-500">
                   <div>
                     <span className="text-gray-600">[+]</span> Container
                     postgres-1{" "}
@@ -72,7 +72,7 @@ export default function QuickDeploy(): JSX.Element {
                       icon="mdi:check-circle"
                       className="w-4 h-4 text-emerald-400"
                     />
-                    <span className="text-emerald-400/90 text-xs">
+                    <span className="text-emerald-400/90 text-[13.5px]">
                       Marmot is running at{" "}
                       <span className="underline decoration-emerald-400/30">
                         http://localhost:8080
