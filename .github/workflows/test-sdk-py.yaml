@@ -40,7 +40,7 @@ jobs:
           cache-dependency-glob: "sdk/python/uv.lock"
 
       - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Lint Python SDK
         run: make sdk-py-lint

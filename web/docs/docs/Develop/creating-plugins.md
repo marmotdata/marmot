@@ -202,6 +202,43 @@ After running, you should see two new assets in your catalog:
 2. An asset named "world"
 3. A lineage relationship showing "hello" produces "world"
 
+## 6. Publish the Plugin
+
+Publish your plugin to any OCI registry with [oras](https://oras.land). Build one binary per platform first (GoReleaser works well), then:
+
+```bash
+REPO=ghcr.io/you/plugins/helloworld
+VERSION=0.1.0
+
+for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+  os=${platform%/*}
+  arch=${platform#*/}
+  gzip -c "dist/helloworld_${os}_${arch}/marmot-plugin-helloworld" > marmot-plugin-helloworld
+  oras push "$REPO:$VERSION-$os-$arch" \
+    --artifact-type application/vnd.marmot.plugin.v1 \
+    --artifact-platform "$platform" \
+    marmot-plugin-helloworld:application/vnd.marmot.plugin.v1+gzip
+done
+
+oras manifest index create "$REPO:$VERSION" \
+  "$VERSION-linux-amd64" "$VERSION-linux-arm64" "$VERSION-darwin-amd64" "$VERSION-darwin-arm64"
+```
+
+That pushes one manifest per platform and an index that ties them together. Drop the platforms you do not build for.
+
+### Install a published plugin
+
+On the machine running Marmot, pull the binary into the plugins directory and restart Marmot:
+
+```bash
+tmp=$(mktemp -d)
+oras pull ghcr.io/you/plugins/helloworld:0.1.0 --platform linux/amd64 -o "$tmp"
+gunzip -c "$tmp/marmot-plugin-helloworld" > ~/.marmot/plugins/marmot-plugin-helloworld
+chmod +x ~/.marmot/plugins/marmot-plugin-helloworld
+```
+
+Marmot loads every `marmot-plugin-*` binary in `~/.marmot/plugins` (or `MARMOT_PLUGINS_DIR`) at startup, so the plugin is available after a restart.
+
 ## Configuration Spec Generation
 
 The `pluginsdk.GenerateConfigSpec()` function automatically generates a UI-ready configuration schema from your Config struct using struct tags:

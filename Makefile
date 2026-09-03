@@ -10,8 +10,20 @@ GO_FILES=$(shell find . -name '*.go')
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo "v0.0.0")
 LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)"
 
-swagger:
-	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
+SWAG_VERSION := v1.16.6
+GO_SWAGGER_VERSION := v0.36.5
+SWAG := $(shell go env GOPATH)/bin/swag
+
+$(SWAG):
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
+
+GO_SWAGGER := $(shell go env GOPATH)/bin/swagger
+
+$(GO_SWAGGER):
+	go install github.com/go-swagger/go-swagger/cmd/swagger@$(GO_SWAGGER_VERSION)
+
+swagger: $(SWAG)
+	$(SWAG) init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
 	rm -f $(SDK_OPENAPI3)
 
 build:
@@ -69,10 +81,11 @@ docker-build:
 
 dev-deps:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.9.0
-	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
+	go install github.com/go-swagger/go-swagger/cmd/swagger@$(GO_SWAGGER_VERSION)
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
-sdk: sdk-go sdk-py sdk-ts
+sdk: sdk-generate
 sdk-generate: sdk-go-generate sdk-py-generate sdk-ts-generate
 sdk-lint: sdk-go-lint sdk-py-lint sdk-ts-lint
 sdk-test: sdk-go-test sdk-py-test sdk-ts-test
@@ -84,10 +97,10 @@ SDK_PY_DIR := sdk/python
 SDK_TS_DIR := sdk/ts
 SDK_OPENAPI3 := docs/.openapi3.yaml
 
-sdk-go-generate: swagger
+sdk-go-generate: swagger $(GO_SWAGGER)
 	rm -rf $(SDK_GO_DIR)/internal/gen
 	mkdir -p $(SDK_GO_DIR)/internal/gen
-	swagger generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
+	$(GO_SWAGGER) generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
 	cd $(SDK_GO_DIR) && go mod tidy
 
 sdk-go-lint:

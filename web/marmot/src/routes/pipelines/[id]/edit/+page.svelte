@@ -498,7 +498,7 @@
 						<div class="space-y-3">
 							{#each linksValue as item, index (index)}
 								<div
-									class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
+									class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
 								>
 									<div class="flex items-end justify-end mb-3">
 										<button
@@ -744,7 +744,7 @@
 										<div class="space-y-3">
 											{#each arrayValue as item, index (index)}
 												<div
-													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
+													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
 												>
 													<div class="flex items-end justify-end mb-3">
 														<button
@@ -827,7 +827,7 @@
 									<button
 										type="button"
 										onclick={() => toggleSection(fieldPath)}
-										class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors text-left"
+										class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
 									>
 										<div class="flex items-center">
 											<IconifyIcon
@@ -851,7 +851,7 @@
 									</button>
 									{#if isExpanded(fieldPath)}
 										<div
-											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-750/50"
+											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
 										>
 											<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
 												{#each field.fields as nestedField (nestedField.name)}
@@ -875,7 +875,7 @@
 						{:else if field.type === 'bool' || field.type === 'boolean'}
 							<div class="md:col-span-2">
 								<label
-									class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer transition-colors"
+									class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
 								>
 									<input
 										type="checkbox"
@@ -1145,7 +1145,7 @@
 						<button
 							type="button"
 							onclick={() => toggleSection('asset_filter')}
-							class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {isExpanded(
+							class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {isExpanded(
 								'asset_filter'
 							)
 								? 'rounded-b-none border-b-0'

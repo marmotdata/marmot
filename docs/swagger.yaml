@@ -1693,16 +1693,26 @@ definitions:
     - ResultTypeDataProduct
   Role:
     properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_system:
+        type: boolean
       name:
         type: string
       permissions:
         items:
-          $ref: '#/definitions/Permission'
+          $ref: '#/definitions/RolePermission'
         type: array
+      updated_at:
+        type: string
+      user_count:
+        type: integer
     type: object
   RolePermission:
     properties:
@@ -2416,7 +2426,7 @@ definitions:
         type: string
       roles:
         items:
-          $ref: '#/definitions/Role'
+          $ref: '#/definitions/UserRole'
         type: array
       updated_at:
         type: string
@@ -2442,6 +2452,19 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  UserRole:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/Permission'
+        type: array
     type: object
   ValidateConfigRequest:
     properties:

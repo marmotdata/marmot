@@ -22,12 +22,12 @@ type V1RolesUpdateRoleRequest struct {
 }
 
 // Validate validates this v1 roles update role request
-func (m *V1RolesUpdateRoleRequest) Validate(formats strfmt.Registry) error {
+func (m *V1RolesUpdateRoleRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this v1 roles update role request based on context it is used
-func (m *V1RolesUpdateRoleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *V1RolesUpdateRoleRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

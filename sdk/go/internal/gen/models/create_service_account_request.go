@@ -25,12 +25,12 @@ type CreateServiceAccountRequest struct {
 }
 
 // Validate validates this create service account request
-func (m *CreateServiceAccountRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateServiceAccountRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create service account request based on context it is used
-func (m *CreateServiceAccountRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateServiceAccountRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -12,7 +12,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/runs"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
@@ -173,20 +172,20 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
 
-	run, err := h.runService.StartRun(r.Context(), req.PipelineName, req.SourceName, usr.Username, req.Config)
+	run, err := h.runService.StartRun(r.Context(), req.PipelineName, req.SourceName, principal.DisplayName(), req.Config)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to start run: %v", err))
 		return
 	}
 
 	if h.scheduleSvc != nil {
-		if _, err := h.scheduleSvc.CreateCLIJobRun(r.Context(), req.PipelineName, req.SourceName, run.ID, usr.Username); err != nil {
+		if _, err := h.scheduleSvc.CreateCLIJobRun(r.Context(), req.PipelineName, req.SourceName, run.ID, principal.DisplayName()); err != nil {
 			log.Warn().Err(err).Msg("Failed to create job run for CLI ingestion")
 		}
 	}

@@ -10956,11 +10956,20 @@ const docTemplate = `{
         "Role": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_system": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -10968,8 +10977,14 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Permission"
+                        "$ref": "#/definitions/RolePermission"
                     }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -12046,7 +12061,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Role"
+                        "$ref": "#/definitions/UserRole"
                     }
                 },
                 "updated_at": {
@@ -12084,6 +12099,26 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "UserRole": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Permission"
+                    }
                 }
             }
         },

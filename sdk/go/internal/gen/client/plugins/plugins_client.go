@@ -79,7 +79,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetPluginsContext] instead.
 func (a *Client) GetPlugins(params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -143,7 +143,7 @@ func (a *Client) GetPluginsContext(ctx context.Context, params *GetPluginsParams
 // If you need to pass a specific context, use [Client.GetPluginsAwsCredentialsStatusContext] instead.
 func (a *Client) GetPluginsAwsCredentialsStatus(params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

@@ -25,12 +25,12 @@ type QueryCount struct {
 }
 
 // Validate validates this query count
-func (m *QueryCount) Validate(formats strfmt.Registry) error {
+func (m *QueryCount) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this query count based on context it is used
-func (m *QueryCount) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *QueryCount) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
