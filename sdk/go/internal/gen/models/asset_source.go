@@ -28,12 +28,12 @@ type AssetSource struct {
 }
 
 // Validate validates this asset source
-func (m *AssetSource) Validate(formats strfmt.Registry) error {
+func (m *AssetSource) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this asset source based on context it is used
-func (m *AssetSource) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetSource) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -22,12 +22,12 @@ type PluginsdkShowWhen struct {
 }
 
 // Validate validates this pluginsdk show when
-func (m *PluginsdkShowWhen) Validate(formats strfmt.Registry) error {
+func (m *PluginsdkShowWhen) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this pluginsdk show when based on context it is used
-func (m *PluginsdkShowWhen) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *PluginsdkShowWhen) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -15,7 +15,7 @@ jobs:
     name: Build wheel + sdist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-go@v5
         with:
@@ -31,7 +31,7 @@ jobs:
           enable-cache: true
 
       - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Verify tag matches pyproject version
         if: startsWith(github.ref, 'refs/tags/sdk-py-v')

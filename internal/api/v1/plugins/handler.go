@@ -5,26 +5,46 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/pkg/config"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
-type Handler struct{}
-
-func NewHandler() *Handler {
-	return &Handler{}
+type Handler struct {
+	userService user.Service
+	authService auth.Service
+	config      *config.Config
 }
 
+func NewHandler(userService user.Service, authService auth.Service, config *config.Config) *Handler {
+	return &Handler{userService: userService, authService: authService, config: config}
+}
+
+// Both routes answer with deployment state: which plugins this server has
+// registered, and whether it holds AWS credentials. Neither is public.
 func (h *Handler) Routes() []common.Route {
+	authenticated := common.WithAuth(h.userService, h.authService, h.config)
 	return []common.Route{
 		{
-			Path:    "/api/v1/plugins",
-			Method:  http.MethodGet,
+			Path:   "/api/v1/plugins",
+			Method: http.MethodGet,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				authenticated,
+				common.RequirePermission(h.userService, "ingestion", "view"),
+			},
 			Handler: h.listPlugins,
 		},
 		{
-			Path:    "/api/v1/plugins/aws/credentials/status",
-			Method:  http.MethodGet,
+			// manage rather than view: this reports the server's own credential
+			// environment, and only the pipeline editor asks for it.
+			Path:   "/api/v1/plugins/aws/credentials/status",
+			Method: http.MethodGet,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				authenticated,
+				common.RequirePermission(h.userService, "ingestion", "manage"),
+			},
 			Handler: h.awsCredentialStatus,
 		},
 	}

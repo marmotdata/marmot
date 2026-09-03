@@ -8,9 +8,14 @@ import (
 	"net/url"
 	"testing"
 
+	"context"
+
+	jwt "github.com/golang-jwt/jwt/v5"
+	coreauth "github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/user"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
-	"github.com/ory/fosite"
 	"github.com/marmotdata/marmot/pkg/config"
+	"github.com/ory/fosite"
 )
 
 func newAuthorizeHandler() *Handler {
@@ -215,5 +220,55 @@ func TestCompleteAuthorize_Flow(t *testing.T) {
 	checkReq.AddCookie(sessionCookie)
 	if h.HasPendingAuthorize(checkReq) {
 		t.Fatal("expected no pending authorize after completion")
+	}
+}
+
+// handleAuthorizeComplete authenticates outside WithAuth, so the password
+// change gate does not cover it; it has to refuse a pending change itself.
+func TestHandleAuthorizeComplete_PasswordChangePending(t *testing.T) {
+	h := newAuthorizeHandler()
+	h.authService = &mockAuthService{
+		validateTokenFn: func(_ context.Context, _ string) (*coreauth.Claims, error) {
+			return &coreauth.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1"}}, nil
+		},
+	}
+	h.userService = &mockUserService{
+		getFn: func(_ context.Context, _ string) (*user.User, error) {
+			return &user.User{ID: "u-1", Username: "admin", Active: true, MustChangePassword: true}, nil
+		},
+	}
+
+	verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+	hash := sha256.Sum256([]byte(verifier))
+	challenge := base64.RawURLEncoding.EncodeToString(hash[:])
+	params := url.Values{
+		"response_type":         {"code"},
+		"client_id":             {"test-client-1"},
+		"redirect_uri":          {"http://localhost:9999/callback"},
+		"state":                 {"test-state-123"},
+		"code_challenge":        {challenge},
+		"code_challenge_method": {"S256"},
+		"scope":                 {"openid"},
+	}
+	authRec := httptest.NewRecorder()
+	h.handleAuthorize(authRec, httptest.NewRequest(http.MethodGet, "/oauth/authorize?"+params.Encode(), nil))
+	var sessionCookie *http.Cookie
+	for _, c := range authRec.Result().Cookies() {
+		if c.Name == "oauth_session" {
+			sessionCookie = c
+		}
+	}
+	if sessionCookie == nil {
+		t.Fatal("no oauth_session cookie")
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/oauth/authorize/complete", nil)
+	req.Header.Set("Authorization", "Bearer initial-password-token")
+	req.AddCookie(sessionCookie)
+	rec := httptest.NewRecorder()
+	h.handleAuthorizeComplete(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for pending password change, got %d", rec.Code)
 	}
 }

@@ -111,7 +111,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetRunsContext] instead.
 func (a *Client) GetRuns(params *GetRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -178,7 +178,7 @@ func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, auth
 // If you need to pass a specific context, use [Client.GetRunsIDContext] instead.
 func (a *Client) GetRunsID(params *GetRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -245,7 +245,7 @@ func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, 
 // If you need to pass a specific context, use [Client.GetRunsIDEntitiesContext] instead.
 func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -312,7 +312,7 @@ func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsID
 // If you need to pass a specific context, use [Client.PostRunsAssetsBatchContext] instead.
 func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -379,7 +379,7 @@ func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRun
 // If you need to pass a specific context, use [Client.PostRunsCleanupContext] instead.
 func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCleanupOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -446,7 +446,7 @@ func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCle
 // If you need to pass a specific context, use [Client.PostRunsCompleteContext] instead.
 func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsCompleteOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -513,7 +513,7 @@ func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCo
 // If you need to pass a specific context, use [Client.PostRunsStartContext] instead.
 func (a *Client) PostRunsStart(params *PostRunsStartParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRunsStartOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

@@ -126,6 +126,13 @@ func (h *Handler) handleAuthorizeComplete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// This endpoint authenticates on its own rather than through WithAuth, so
+	// the gate there does not cover it.
+	if usr.MustChangePassword {
+		common.RespondError(w, http.StatusForbidden, "Password change required")
+		return
+	}
+
 	if !h.HasPendingAuthorize(r) {
 		common.RespondError(w, http.StatusBadRequest, "No pending authorization")
 		return

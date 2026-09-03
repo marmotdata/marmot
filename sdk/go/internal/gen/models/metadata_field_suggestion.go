@@ -34,12 +34,12 @@ type MetadataFieldSuggestion struct {
 }
 
 // Validate validates this metadata field suggestion
-func (m *MetadataFieldSuggestion) Validate(formats strfmt.Registry) error {
+func (m *MetadataFieldSuggestion) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this metadata field suggestion based on context it is used
-func (m *MetadataFieldSuggestion) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *MetadataFieldSuggestion) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

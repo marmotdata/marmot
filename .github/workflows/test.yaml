@@ -3,16 +3,8 @@ name: Test
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'sdk/**'
-      - 'web/docs/**'
-      - '.github/workflows/test-sdk-*.yaml'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - 'sdk/**'
-      - 'web/docs/**'
-      - '.github/workflows/test-sdk-*.yaml'
 
 permissions:
   contents: read
@@ -23,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v5
