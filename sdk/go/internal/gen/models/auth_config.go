@@ -19,12 +19,12 @@ type AuthConfig struct {
 }
 
 // Validate validates this auth config
-func (m *AuthConfig) Validate(formats strfmt.Registry) error {
+func (m *AuthConfig) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this auth config based on context it is used
-func (m *AuthConfig) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AuthConfig) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

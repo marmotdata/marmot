@@ -37,12 +37,12 @@ type APIKey struct {
 }
 
 // Validate validates this API key
-func (m *APIKey) Validate(formats strfmt.Registry) error {
+func (m *APIKey) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this API key based on context it is used
-func (m *APIKey) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *APIKey) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

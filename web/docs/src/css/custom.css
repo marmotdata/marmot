@@ -505,6 +505,517 @@ html[data-theme="dark"] .gradient-text {
   animation: flowPulse 2.5s ease-in-out infinite;
 }
 
+/* ============================================
+   Hero
+   ============================================ */
+
+/* One glow, anchored under the diagram rather than floating in the sky:
+   the warmth on this page comes off the context object itself. */
+.hero-glow {
+  background-image: radial-gradient(
+    ellipse 70% 55% at 50% 100%,
+    rgba(210, 90, 48, 0.06),
+    transparent 70%
+  );
+}
+
+html[data-theme="dark"] .hero-glow {
+  background-image: radial-gradient(
+    ellipse 70% 55% at 50% 100%,
+    rgba(210, 90, 48, 0.1),
+    transparent 70%
+  );
+}
+
+/* ============================================
+   Terminal
+   ============================================ */
+
+.terminal-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+  font-weight: 400;
+}
+
+/* ============================================
+   Context layer diagram (hero centrepiece)
+   ============================================ */
+
+:root {
+  --cl-chip: #ffffff;
+  --cl-ink: #33302c;
+  --cl-muted: #8a7e74;
+  --cl-accent: #d25a30;
+  --cl-border: rgba(123, 89, 53, 0.22);
+  --cl-rule: rgba(123, 89, 53, 0.12);
+  --cl-band: #fdf0e9;
+}
+
+html[data-theme="dark"] {
+  --cl-chip: #272320;
+  --cl-ink: #d6cfc7;
+  --cl-muted: #9a9088;
+  --cl-accent: #f7885e;
+  --cl-border: rgba(255, 255, 255, 0.12);
+  --cl-rule: rgba(255, 255, 255, 0.08);
+  --cl-band: #33261f;
+}
+
+/* No plate: the diagram sits straight on the page. */
+.cl-figure {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+/* --- Wide layout --- */
+
+.cl-grid {
+  display: none;
+}
+
+/* Outer columns are equal fractions, so the hub is the true centre of the
+   figure and everything below can align to 50% instead of a magic offset.
+   Both outer columns are the same fixed width, so the hub is the true centre
+   of the figure and everything below can align to 50%. Total is 1110px, so
+   the wide layout needs a 1240px viewport (figure = viewport - 128). */
+@media (min-width: 1240px) {
+  .cl-grid {
+    display: grid;
+    grid-template-columns: 240px 140px 350px 140px 240px;
+    grid-template-rows: auto 380px;
+    justify-content: center;
+    align-items: start;
+    column-gap: 0;
+    row-gap: 1.75rem;
+  }
+}
+
+/* Each label hugs the outer edge of its own column, so it lands on the first
+   chip's leading edge rather than floating toward the middle. */
+.cl-head-in {
+  grid-column: 1;
+  grid-row: 1;
+  text-align: left;
+}
+
+.cl-head-out {
+  grid-column: 5;
+  grid-row: 1;
+  text-align: right;
+}
+
+.cl-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--cl-accent);
+}
+
+.cl-col {
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 380px;
+}
+
+.cl-col-out {
+  align-items: flex-start;
+}
+
+.cl-col-out .cl-row {
+  position: relative;
+}
+
+.cl-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 240px;
+  height: 52px;
+  padding: 0 0.9375rem;
+  background: var(--cl-chip);
+  border: 1px solid var(--cl-border);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.cl-chip-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* CLI, REST API, SDK and friends are generic tools, not brands. Rendering
+   them in ink keeps the coloured logos meaning "a product you run". */
+.cl-glyph {
+  color: var(--cl-muted);
+}
+
+.cl-chip-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--cl-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Agents hang off the MCP chip, because that is how they actually connect. */
+/* Agents sit under the MCP chip, tied to it by a short tick. Keeping them out
+   of the row's width is what lets both outer columns match. */
+.cl-agent-tick {
+  position: absolute;
+  top: 100%;
+  left: 27px;
+  width: 1px;
+  height: 11px;
+  background: var(--cl-accent);
+  opacity: 0.45;
+}
+
+.cl-agents {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.cl-col-out .cl-agents {
+  position: absolute;
+  top: calc(100% + 11px);
+  left: 15px;
+}
+
+/* Bare marks, not tiles: agents are clients of the MCP server, not another
+   interface. Shared with the MCP section so both rows render identically. */
+.agent-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cl-ink);
+  opacity: 0.72;
+  flex-shrink: 0;
+}
+
+.agent-mark-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Same marks as the diagram, laid out for the copy column. */
+.mcp-clients {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .mcp-clients {
+    justify-content: flex-start;
+  }
+}
+
+.cl-wire {
+  grid-row: 2;
+  display: block;
+}
+
+/* --- Hub --- */
+
+.cl-hub {
+  grid-row: 2;
+  width: 350px;
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+  background: var(--cl-chip);
+  border: 1px solid var(--cl-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px -14px rgba(141, 55, 24, 0.3);
+}
+
+html[data-theme="dark"] .cl-hub {
+  box-shadow: 0 16px 38px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* The one bold element on the page. Everything else stays quiet. */
+.cl-hub-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1.375rem;
+  background: var(--cl-band);
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.cl-hub-mascot {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+/* The wordmark ships white, which is what the terracotta band needs in both
+   themes, so there is no light/dark swap here. */
+/* No `display` here on purpose: the dark:hidden / dark:inline toggle sets it,
+   and a later rule in this file would override the utility. */
+.cl-hub-wordmark {
+  height: 42px;
+  width: auto;
+}
+
+.cl-hub-list {
+  list-style: none;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-hub-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  flex: 1;
+}
+
+.cl-hub-item + .cl-hub-item {
+  border-top: 1px solid var(--cl-rule);
+}
+
+.cl-hub-item-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--cl-accent);
+  flex-shrink: 0;
+}
+
+.cl-hub-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cl-ink);
+}
+
+/* --- Narrow layout --- */
+
+.cl-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cl-stack .cl-eyebrow {
+  margin-bottom: 1rem;
+}
+
+.cl-stack-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.cl-stack .cl-chip {
+  width: auto;
+  height: 46px;
+}
+
+.cl-stack .cl-hub {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+.cl-stack .cl-hub-item {
+  padding: 0.875rem 1.25rem;
+}
+
+.cl-stack-conn {
+  width: 1px;
+  height: 32px;
+  margin: 1rem 0;
+  background: var(--cl-accent);
+  opacity: 0.6;
+}
+
+.cl-agents-stack {
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.cl-agents-note {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--cl-muted);
+}
+
+/* Declared after the narrow-layout rules on purpose: same specificity, so
+   source order is what actually decides which layout wins. */
+@media (min-width: 1240px) {
+  .cl-stack {
+    display: none;
+  }
+}
+
+/* --- Ecosystem strip: the breadth, under the shape --- */
+
+.cl-eco {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Stacked, the strip sits between the code paths and the hub, so it needs
+   breathing room on both sides rather than just above. */
+.cl-stack-in {
+  margin-bottom: 2rem;
+}
+
+.cl-stack-out {
+  margin-top: 0.5rem;
+}
+
+/* Wide gets the converging curves, narrow gets a single arrow down into the
+   hub, which sits below the strip once stacked. */
+.cl-eco-feed {
+  display: none;
+}
+
+.cl-eco-feed-narrow {
+  display: block;
+  margin: 1.5rem auto 0;
+}
+
+@media (min-width: 1240px) {
+  .cl-eco-feed {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .cl-eco-feed-narrow {
+    display: none;
+  }
+}
+
+.cl-eco-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  justify-items: center;
+  max-width: 1080px;
+  margin: 0.75rem auto 0;
+}
+
+@media (min-width: 768px) {
+  .cl-eco-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+
+  .cl-eco-group + .cl-eco-group {
+    border-left: 1px solid var(--cl-rule);
+  }
+}
+
+.cl-eco-group {
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.cl-eco-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cl-muted);
+  margin-bottom: 0.875rem;
+}
+
+.cl-eco-icons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cl-eco-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--cl-chip);
+  border: 1px solid var(--cl-border);
+  color: var(--cl-ink);
+}
+
+.cl-eco-glyph {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+/* --- Motion --- */
+
+/* A dim base line keeps the diagram readable, and a short bright segment
+   travels it. The gap is longer than any path here, so only one segment is on
+   a line at a time and it reads as continuous flow rather than marching ants. */
+.cl-line-base {
+  opacity: 0.42;
+}
+
+.cl-line-flow {
+  stroke-dasharray: 18 260;
+  animation: cl-flow 2.6s linear infinite;
+}
+
+@keyframes cl-flow {
+  from {
+    stroke-dashoffset: 278;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- Reveal: one wipe per side, once. --- */
+
+.cl-wipe {
+  transform: scaleX(0);
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.cl-figure.animate-in .cl-wipe {
+  transform: scaleX(1);
+  transition: transform 750ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cl-figure.animate-in .cl-wipe-in {
+  transition-delay: 250ms;
+}
+
+.cl-figure.animate-in .cl-wipe-out {
+  transition-delay: 800ms;
+}
+
+
+@keyframes hero-mesh-drift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 50% 100%; }
+  50%      { background-position: 8% 4%, 92% 8%, 45% 96%; }
+}
+.gradient-mesh-hero {
+  background-size: 120% 120%, 120% 120%, 120% 120%;
+  animation: hero-mesh-drift 22s ease-in-out infinite;
+}
+
 @keyframes hubPulse {
   0%,
   100% {
@@ -1424,6 +1935,23 @@ html[data-theme="dark"] .typing-dot {
     transition: none;
   }
 
+  /* Diagram renders complete: both wire fans fully revealed. Selector has to
+     match the .cl-figure.animate-in specificity or the transition survives. */
+  .cl-wipe,
+  .cl-figure.animate-in .cl-wipe {
+    transform: scaleX(1);
+    transition: none;
+  }
+
+  /* No travelling segment; the base line carries the diagram on its own. */
+  .cl-line-flow {
+    display: none;
+  }
+
+  .cl-line-base {
+    opacity: 0.9;
+  }
+
   .chat-animated .chat-msg {
     opacity: 1;
     transform: none;
@@ -1894,4 +2422,15 @@ html[data-theme="dark"] .demo-btn::after {
   .demo-btn::after {
     animation: none;
   }
+}
+
+/* --- Legal page tables --- */
+
+/* Tailwind's prose styles remove the horizontal padding from a table's first
+   and last columns, expecting a borderless table that aligns with the text
+   edge. Infima draws borders on every cell, so that text sits flush against
+   them. Give every cell Infima's own padding instead. */
+.prose table th,
+.prose table td {
+  padding: var(--ifm-table-cell-padding);
 }

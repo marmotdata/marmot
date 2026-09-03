@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/apache/arrow-go/v18 v18.5.2-0.20260220015023-a886a5722b87
-	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
+	github.com/marmotdata/plugin-sdk v0.0.0-20260828112447-5043b82394fb
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )

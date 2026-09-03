@@ -28,12 +28,12 @@ type CreateSSOMappingRequest struct {
 }
 
 // Validate validates this create s s o mapping request
-func (m *CreateSSOMappingRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateSSOMappingRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create s s o mapping request based on context it is used
-func (m *CreateSSOMappingRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateSSOMappingRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

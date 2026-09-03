@@ -148,7 +148,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/users/update-password",
+			Path:    common.UpdatePasswordPath,
 			Method:  http.MethodPost,
 			Handler: h.updatePassword,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{

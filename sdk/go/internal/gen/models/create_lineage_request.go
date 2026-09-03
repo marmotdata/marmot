@@ -28,12 +28,12 @@ type CreateLineageRequest struct {
 }
 
 // Validate validates this create lineage request
-func (m *CreateLineageRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateLineageRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create lineage request based on context it is used
-func (m *CreateLineageRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateLineageRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

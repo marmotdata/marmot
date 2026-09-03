@@ -123,7 +123,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetAuthProviderCallbackContext] instead.
 func (a *Client) GetAuthProviderCallback(params *GetAuthProviderCallbackParams, opts ...ClientOption) error {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -178,7 +178,7 @@ func (a *Client) GetAuthProviderCallbackContext(ctx context.Context, params *Get
 // If you need to pass a specific context, use [Client.GetAuthProviderLoginContext] instead.
 func (a *Client) GetAuthProviderLogin(params *GetAuthProviderLoginParams, opts ...ClientOption) error {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -233,7 +233,7 @@ func (a *Client) GetAuthProviderLoginContext(ctx context.Context, params *GetAut
 // If you need to pass a specific context, use [Client.GetAuthProvidersContext] instead.
 func (a *Client) GetAuthProviders(params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -299,7 +299,7 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 // If you need to pass a specific context, use [Client.GetSsoProvidersContext] instead.
 func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSsoProvidersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -368,7 +368,7 @@ func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvi
 // If you need to pass a specific context, use [Client.PostOauthTokenContext] instead.
 func (a *Client) PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

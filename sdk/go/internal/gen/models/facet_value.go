@@ -22,12 +22,12 @@ type FacetValue struct {
 }
 
 // Validate validates this facet value
-func (m *FacetValue) Validate(formats strfmt.Registry) error {
+func (m *FacetValue) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this facet value based on context it is used
-func (m *FacetValue) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *FacetValue) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

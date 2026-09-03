@@ -122,5 +122,17 @@ else
     chmod +x "${INSTALL_DIR}/${BINARY_NAME}${BINARY_SUFFIX}"
 fi
 
+# docker, crane and oras run docker-credential-marmot to fetch the token
+# from `marmot login`. The helper is the marmot binary under that name.
+if [ "$OS" != "windows" ]; then
+    HELPER_NAME="docker-credential-marmot"
+    if [ "$USE_SUDO" = true ]; then
+        sudo ln -sf "${BINARY_NAME}" "${INSTALL_DIR}/${HELPER_NAME}"
+    else
+        ln -sf "${BINARY_NAME}" "${INSTALL_DIR}/${HELPER_NAME}"
+    fi
+    echo "Linked ${INSTALL_DIR}/${HELPER_NAME} for registry pushes"
+fi
+
 echo "Marmot ${VERSION} has been installed successfully to ${INSTALL_DIR}/${BINARY_NAME}"
 echo "Run 'marmot --help' to get started"

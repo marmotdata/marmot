@@ -31,12 +31,12 @@ type AssetCount struct {
 }
 
 // Validate validates this asset count
-func (m *AssetCount) Validate(formats strfmt.Registry) error {
+func (m *AssetCount) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this asset count based on context it is used
-func (m *AssetCount) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetCount) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

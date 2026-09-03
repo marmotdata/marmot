@@ -28,12 +28,12 @@ type DataProductResolvedAssets struct {
 }
 
 // Validate validates this data product resolved assets
-func (m *DataProductResolvedAssets) Validate(formats strfmt.Registry) error {
+func (m *DataProductResolvedAssets) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this data product resolved assets based on context it is used
-func (m *DataProductResolvedAssets) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProductResolvedAssets) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -1,0 +1,43 @@
+name: Prow commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.comment.user.type != 'Bot' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.comment.author_association) && (
+        contains(github.event.comment.body, '/lgtm') ||
+        contains(github.event.comment.body, '/hold') ||
+        contains(github.event.comment.body, '/area') ||
+        contains(github.event.comment.body, '/kind') ||
+        contains(github.event.comment.body, '/priority') ||
+        contains(github.event.comment.body, '/remove') ||
+        contains(github.event.comment.body, '/retitle') ||
+        contains(github.event.comment.body, '/milestone') ||
+        contains(github.event.comment.body, '/close') ||
+        contains(github.event.comment.body, '/reopen')
+      )
+    steps:
+      - uses: cncf/prow-github-actions@c44ac3a57d67639e39e4a4988b52049ef45b80dd
+        with:
+          github-token: ${{ secrets.PROW_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          prow-commands: |
+            /lgtm
+            /hold
+            /area
+            /kind
+            /priority
+            /remove
+            /retitle
+            /milestone
+            /close
+            /reopen

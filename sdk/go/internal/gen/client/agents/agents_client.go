@@ -91,7 +91,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetAgentsAssetIDActivityContext] instead.
 func (a *Client) GetAgentsAssetIDActivity(params *GetAgentsAssetIDActivityParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAgentsAssetIDActivityOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -154,7 +154,7 @@ func (a *Client) GetAgentsAssetIDActivityContext(ctx context.Context, params *Ge
 // If you need to pass a specific context, use [Client.GetAgentsAssetIDRunsContext] instead.
 func (a *Client) GetAgentsAssetIDRuns(params *GetAgentsAssetIDRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAgentsAssetIDRunsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -217,7 +217,7 @@ func (a *Client) GetAgentsAssetIDRunsContext(ctx context.Context, params *GetAge
 // If you need to pass a specific context, use [Client.GetAgentsAssetIDStatsContext] instead.
 func (a *Client) GetAgentsAssetIDStats(params *GetAgentsAssetIDStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAgentsAssetIDStatsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -280,7 +280,7 @@ func (a *Client) GetAgentsAssetIDStatsContext(ctx context.Context, params *GetAg
 // If you need to pass a specific context, use [Client.PostAgentsRunsContext] instead.
 func (a *Client) PostAgentsRuns(params *PostAgentsRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAgentsRunsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

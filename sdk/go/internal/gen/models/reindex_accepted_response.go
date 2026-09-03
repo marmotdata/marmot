@@ -24,12 +24,12 @@ type ReindexAcceptedResponse struct {
 }
 
 // Validate validates this reindex accepted response
-func (m *ReindexAcceptedResponse) Validate(formats strfmt.Registry) error {
+func (m *ReindexAcceptedResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this reindex accepted response based on context it is used
-func (m *ReindexAcceptedResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ReindexAcceptedResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

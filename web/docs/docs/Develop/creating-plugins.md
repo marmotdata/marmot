@@ -202,6 +202,43 @@ After running, you should see two new assets in your catalog:
 2. An asset named "world"
 3. A lineage relationship showing "hello" produces "world"
 
+## 6. Publish the Plugin
+
+Publish your plugin to any OCI registry with [oras](https://oras.land). Build one binary per platform first (GoReleaser works well), then:
+
+```bash
+REPO=ghcr.io/you/plugins/helloworld
+VERSION=0.1.0
+
+for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+  os=${platform%/*}
+  arch=${platform#*/}
+  gzip -c "dist/helloworld_${os}_${arch}/marmot-plugin-helloworld" > marmot-plugin-helloworld
+  oras push "$REPO:$VERSION-$os-$arch" \
+    --artifact-type application/vnd.marmot.plugin.v1 \
+    --artifact-platform "$platform" \
+    marmot-plugin-helloworld:application/vnd.marmot.plugin.v1+gzip
+done
+
+oras manifest index create "$REPO:$VERSION" \
+  "$VERSION-linux-amd64" "$VERSION-linux-arm64" "$VERSION-darwin-amd64" "$VERSION-darwin-arm64"
+```
+
+That pushes one manifest per platform and an index that ties them together. Drop the platforms you do not build for.
+
+### Install a published plugin
+
+On the machine running Marmot, pull the binary into the plugins directory and restart Marmot:
+
+```bash
+tmp=$(mktemp -d)
+oras pull ghcr.io/you/plugins/helloworld:0.1.0 --platform linux/amd64 -o "$tmp"
+gunzip -c "$tmp/marmot-plugin-helloworld" > ~/.marmot/plugins/marmot-plugin-helloworld
+chmod +x ~/.marmot/plugins/marmot-plugin-helloworld
+```
+
+Marmot loads every `marmot-plugin-*` binary in `~/.marmot/plugins` (or `MARMOT_PLUGINS_DIR`) at startup, so the plugin is available after a restart.
+
 ## Configuration Spec Generation
 
 The `pluginsdk.GenerateConfigSpec()` function automatically generates a UI-ready configuration schema from your Config struct using struct tags:
@@ -242,6 +279,86 @@ Supported tags:
 The `default` tag pre-fills the UI form, but configs written by hand (a CLI ingest file, for example) skip the form. Call `pluginsdk.ApplyDefaults(config, rawConfig)` in `Validate` so the defaults apply either way: it sets every field with a `default` tag whose key is absent from the raw config. Tag values are parsed as JSON (`default:"true"`, `default:"30"`, `default:"[\"a\",\"b\"]"`); values that are not valid JSON apply verbatim to string fields (`default:"production"`).
 
 `BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
+
+## Column Schema
+
+Table-shaped assets can attach a column list that Marmot renders as a tabular "Formatted" view on the asset's Schema tab, with a "Raw" JSON view alongside it. `pluginsdk.SetColumns` marshals a slice of columns into the JSON shape Marmot expects and stores it under the `columns` key of `Asset.Schema`:
+
+```go
+cols := []pluginsdk.Column{
+    {Name: "id", DataType: "INTEGER", Nullable: false, PrimaryKey: true, Description: "Surrogate key"},
+    {Name: "email", DataType: "VARCHAR", Nullable: true},
+}
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+`Column` is a convenience, not a requirement: `SetColumns` accepts a slice of any type that marshals to the recognized shape. To add source-specific fields, embed `Column` in your own type. Embedding flattens it into the same JSON object, so the view reads the canonical fields and the extras stay in the Raw view:
+
+```go
+type clickhouseColumn struct {
+    pluginsdk.Column
+    Codec string `json:"codec,omitempty"`
+}
+
+cols := []clickhouseColumn{
+    {Column: pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true}},
+    {Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"}, Codec: "ZSTD"},
+}
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+which stores under `Asset.Schema["columns"]`:
+
+```json
+[
+  {
+    "column_name": "id",
+    "data_type": "UInt64",
+    "is_nullable": false,
+    "is_primary_key": true
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "DateTime",
+    "is_nullable": false,
+    "codec": "ZSTD"
+  }
+]
+```
+
+`SetColumns` replaces the column list on every call, so build the whole list and set it once. To mix different column types in one call, a plain `Column` and an extended one, wrap them in a `[]any`:
+
+```go
+cols := []any{
+    pluginsdk.Column{Name: "id", DataType: "UInt64", PrimaryKey: true},
+    clickhouseColumn{Column: pluginsdk.Column{Name: "created_at", DataType: "DateTime"}, Codec: "ZSTD"},
+}
+if err := pluginsdk.SetColumns(asset, cols); err != nil {
+    return nil, fmt.Errorf("attaching columns: %w", err)
+}
+```
+
+Marmot detects the format when the first element has a string `column_name` and a string `data_type`. Recognized keys:
+
+| Key | Type | Notes |
+| --- | --- | --- |
+| `column_name` | string | Required. The column name. |
+| `data_type` | string | Rendered as the type badge. Falls back to `unknown` when absent. |
+| `is_nullable` | bool or string | Drives the Required/Optional badge. Boolean `false`, or the Trino-style string `"NO"`, marks the column Required. Omit the key to show no badge. |
+| `is_primary_key` | bool | `true` adds a Primary Key annotation. `primary_key` is also accepted. |
+| `is_sorting_key` | bool | `true` adds a Sorting Key annotation. |
+| `description` | string | Column description. `comment` is also accepted. |
+| `default_expression` | any | Shown as the column default. |
+
+Only `column_name` and `data_type` are required. Any other keys you emit are preserved in the Raw view but ignored by the Formatted view.
+
+`Column` also carries `is_foreign_key` and `is_pii` (both `bool`, omitted when false). They are recorded ahead of column-level lineage and governance work; the Formatted view does not render them yet, so for now they show only in the Raw view.
+
+Pick one spelling per key and stay consistent. The accepted aliases (`primary_key` for `is_primary_key`, `comment` for `description`, the string form of `is_nullable`) exist because the core plugins predate a single convention; the Formatted view reads all of them so every plugin renders correctly. New plugins should prefer the keys in the table above.
 
 ## Plugin Interface
 

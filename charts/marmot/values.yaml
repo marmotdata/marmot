@@ -57,9 +57,12 @@ resources:
   limits:
     cpu: 2000m
     memory: 2Gi
+    # the plugin cache downloaded at startup is over 1Gi
+    ephemeral-storage: 2Gi
   requests:
     cpu: 500m
     memory: 512Mi
+    ephemeral-storage: 2Gi
 
 livenessProbe:
   httpGet:

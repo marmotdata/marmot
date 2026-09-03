@@ -1,0 +1,19 @@
+name: Prow lgtm merger
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cncf/prow-github-actions@c44ac3a57d67639e39e4a4988b52049ef45b80dd
+        with:
+          github-token: ${{ secrets.PROW_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          jobs: lgtm
+          merge-method: squash
