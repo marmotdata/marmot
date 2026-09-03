@@ -153,7 +153,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteUsersApikeysIDContext] instead.
 func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -220,7 +220,7 @@ func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *Delete
 // If you need to pass a specific context, use [Client.DeleteUsersIDContext] instead.
 func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -287,7 +287,7 @@ func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersID
 // If you need to pass a specific context, use [Client.DeleteUsersOauthUnlinkIDProviderContext] instead.
 func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -354,7 +354,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, pa
 // If you need to pass a specific context, use [Client.GetUsersContext] instead.
 func (a *Client) GetUsers(params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -421,7 +421,7 @@ func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, au
 // If you need to pass a specific context, use [Client.GetUsersApikeysContext] instead.
 func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -488,7 +488,7 @@ func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApi
 // If you need to pass a specific context, use [Client.GetUsersIDContext] instead.
 func (a *Client) GetUsersID(params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -555,7 +555,7 @@ func (a *Client) GetUsersIDContext(ctx context.Context, params *GetUsersIDParams
 // If you need to pass a specific context, use [Client.GetUsersMeContext] instead.
 func (a *Client) GetUsersMe(params *GetUsersMeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -622,7 +622,7 @@ func (a *Client) GetUsersMeContext(ctx context.Context, params *GetUsersMeParams
 // If you need to pass a specific context, use [Client.PostUsersContext] instead.
 func (a *Client) PostUsers(params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -689,7 +689,7 @@ func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, 
 // If you need to pass a specific context, use [Client.PostUsersApikeysContext] instead.
 func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -756,7 +756,7 @@ func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersA
 // If you need to pass a specific context, use [Client.PostUsersLoginContext] instead.
 func (a *Client) PostUsersLogin(params *PostUsersLoginParams, opts ...ClientOption) (*PostUsersLoginOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -822,7 +822,7 @@ func (a *Client) PostUsersLoginContext(ctx context.Context, params *PostUsersLog
 // If you need to pass a specific context, use [Client.PostUsersOauthLinkContext] instead.
 func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -889,7 +889,7 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 // If you need to pass a specific context, use [Client.PostUsersUpdatePasswordContext] instead.
 func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -956,7 +956,7 @@ func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *Pos
 // If you need to pass a specific context, use [Client.PutUsersIDContext] instead.
 func (a *Client) PutUsersID(params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1023,7 +1023,7 @@ func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams
 // If you need to pass a specific context, use [Client.PutUsersPreferencesContext] instead.
 func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

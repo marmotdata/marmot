@@ -34,12 +34,12 @@ type PreviewRequest struct {
 }
 
 // Validate validates this preview request
-func (m *PreviewRequest) Validate(formats strfmt.Registry) error {
+func (m *PreviewRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this preview request based on context it is used
-func (m *PreviewRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *PreviewRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

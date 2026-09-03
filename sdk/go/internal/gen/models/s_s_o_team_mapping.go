@@ -37,12 +37,12 @@ type SSOTeamMapping struct {
 }
 
 // Validate validates this s s o team mapping
-func (m *SSOTeamMapping) Validate(formats strfmt.Registry) error {
+func (m *SSOTeamMapping) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this s s o team mapping based on context it is used
-func (m *SSOTeamMapping) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *SSOTeamMapping) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

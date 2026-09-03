@@ -51,7 +51,7 @@ jobs:
 
       - name: Generate swagger docs
         run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
+          go install github.com/swaggo/swag/cmd/swag@v1.16.6
           make swagger
 
       - name: Build frontend

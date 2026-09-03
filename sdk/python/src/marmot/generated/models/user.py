@@ -20,8 +20,8 @@ from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
-from marmot.generated.models.role import Role
 from marmot.generated.models.user_identity import UserIdentity
+from marmot.generated.models.user_role import UserRole
 
 
 class User(BaseModel):
@@ -37,7 +37,7 @@ class User(BaseModel):
     name: StrictStr | None = None
     preferences: dict[str, Any] | None = None
     profile_picture: StrictStr | None = None
-    roles: list[Role] | None = None
+    roles: list[UserRole] | None = None
     updated_at: StrictStr | None = None
     username: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
@@ -128,7 +128,7 @@ class User(BaseModel):
                 "name": obj.get("name"),
                 "preferences": obj.get("preferences"),
                 "profile_picture": obj.get("profile_picture"),
-                "roles": [Role.from_dict(_item) for _item in obj["roles"]]
+                "roles": [UserRole.from_dict(_item) for _item in obj["roles"]]
                 if obj.get("roles") is not None
                 else None,
                 "updated_at": obj.get("updated_at"),
