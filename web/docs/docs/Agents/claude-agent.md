@@ -54,30 +54,51 @@ A minimal agent that searches the catalog, registers itself and writes lineage:
 
 ```python
 import asyncio
-from marmot import Client, resolve
-from marmot.integrations.claude_agent import MarmotAgentTracker
-from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+import sys
 
-async def main():
-    base_url, credential = resolve(base_url=None)
-    client = Client(base_url=base_url, credential=credential)
+from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+
+from marmot import AuthenticatedApiClient, SecurityScheme, mcp_url
+from marmot.auth import resolve_credential, resolve_host
+from marmot.integrations import MarmotCatalog
+from marmot.integrations.claude_agent import MarmotAgentTracker
+
+SYSTEM_PROMPT = (
+    "You answer questions about an organisation's data using the Marmot catalog. "
+    "Always consult the marmot tools; never guess from memory."
+)
+
+
+async def main() -> None:
+    client = AuthenticatedApiClient.connect()
     tracker = MarmotAgentTracker(
-        client,
+        MarmotCatalog(client),
         name="catalog-explorer",
         model="claude-sonnet-4-5",
         owner="data-eng",
+    )
+
+    token = credential.get_token()
+    mcp_headers = (
+        {"Authorization": f"Bearer {token}"}
+        if credential.scheme is SecurityScheme.bearer
+        else {"X-API-Key": token}
     )
 
     options = ClaudeAgentOptions(
         mcp_servers={
             "marmot": {
                 "type": "http",
-                "url": f"{base_url}/api/v1/mcp",
-                "headers": {"Authorization": f"Bearer {credential.token}"},
+                "url": mcp_url(client),
+                "headers": mcp_headers,
             }
         },
         hooks=tracker.hooks(),
         permission_mode="bypassPermissions",
+        # Without this the agent loads your own settings and CLAUDE.md files, and
+        # answers catalog questions from that context instead of asking Marmot.
+        setting_sources=[],
+        system_prompt=SYSTEM_PROMPT,
     )
 
     async with ClaudeSDKClient(options=options) as agent:
@@ -85,7 +106,8 @@ async def main():
         async for _ in agent.receive_response():
             pass
 
-    print("agent registered as:", tracker.agent_mrn)
+    print("agent registered as:", tracker.agent_mrn, file=sys.stderr)
+
 
 asyncio.run(main())
 ```
@@ -159,6 +181,8 @@ To restrict the agent to a subset:
 options = ClaudeAgentOptions(
     mcp_servers={"marmot": {...}},
     hooks=tracker.hooks(),
+    setting_sources=[],
+    system_prompt=SYSTEM_PROMPT,
     allowed_tools=["mcp__marmot__discover_data", "mcp__marmot__find_ownership"],
 )
 ```

@@ -1,45 +1,32 @@
 import React from "react";
-import { Icon } from "@iconify/react";
-
-const assistants = [
-  { label: "Claude", icon: "simple-icons:anthropic" },
-  { label: "Cursor", icon: "simple-icons:cursor" },
-  { label: "Copilot", icon: "simple-icons:githubcopilot" },
-  { label: "Gemini", icon: "simple-icons:googlegemini" },
-  { label: "ChatGPT", icon: "simple-icons:openai" },
-  { label: "Windsurf", icon: "simple-icons:codeium" },
-];
+import ContextDiagram from "./ContextDiagram";
 
 export default function Hero(): JSX.Element {
   return (
-    <header className="relative pt-28 pb-20 sm:pt-32 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 gradient-mesh-hero overflow-hidden">
-      <div className="relative max-w-4xl mx-auto text-center">
+    <header className="relative pt-32 pb-8 sm:pt-40 sm:pb-10 lg:pt-44 lg:pb-12 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 hero-glow overflow-hidden">
+      <div className="relative max-w-6xl mx-auto text-center">
         <h1
           data-animate
-          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.05]"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.05]"
+          style={{ textWrap: "balance" }}
         >
-          {/* Inline on small screens so the line wraps naturally; two
-              deliberate lines once there is room for them. */}
-          <span className="sm:block">AI agents are only as good as</span>{" "}
-          <span className="gradient-text sm:block">
-            the context they can reach.
-          </span>
+          AI agents are only as good as{" "}
+          <span className="gradient-text">the context they can reach.</span>
         </h1>
 
         <p
           data-animate
           data-animate-delay="2"
-          className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-500 dark:text-gray-400 leading-relaxed"
+          className="mt-8 text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
         >
-          Marmot is the open source context layer. It catalogs what you run,
-          what it means and who owns it, then serves that to your team in the
-          UI and to every assistant over one MCP server.
+          Marmot is an open source context layer for engineers and AI agents.
+          It tracks schemas, ownership and lineage across your entire stack.
         </p>
 
         <div
           data-animate
           data-animate-delay="3"
-          className="mt-9 flex flex-row items-center justify-center gap-3"
+          className="mt-10 flex flex-row items-center justify-center gap-3"
         >
           <a
             href="/docs/introduction"
@@ -71,25 +58,10 @@ export default function Hero(): JSX.Element {
         </div>
       </div>
 
-      <div
-        data-animate
-        data-animate-delay="4"
-        className="relative max-w-3xl mx-auto mt-16 sm:mt-20"
-      >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 text-center mb-5">
-          Works with
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          {assistants.map((a) => (
-            <div
-              key={a.label}
-              className="flex items-center gap-2 text-gray-400 dark:text-gray-500"
-            >
-              <Icon icon={a.icon} className="w-5 h-5" />
-              <span className="text-sm font-medium">{a.label}</span>
-            </div>
-          ))}
-        </div>
+      {/* The figure is part of the same header unit: the headline makes the
+          claim, the figure is the evidence. */}
+      <div className="relative mt-12">
+        <ContextDiagram />
       </div>
     </header>
   );

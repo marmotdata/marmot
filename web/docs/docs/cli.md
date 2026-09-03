@@ -26,24 +26,46 @@ import { CliInstall } from '@site/src/components/CliInstall';
 
 ## Authentication
 
-The recommended way to authenticate is with `marmot login`, which opens a browser to sign in using your organisation's identity provider (Google, Okta, Keycloak, etc.) via OAuth 2.0 PKCE. API keys are still fully supported.
-
-### Browser Login (Recommended)
+Sign in once with `marmot login`. It opens your browser, you sign in the way you always do, and the CLI keeps a token for you.
 
 ```bash
-# First time — prompts for your Marmot URL, opens browser
-marmot login
-
-# Or pass the URL directly
 marmot login https://marmot.example.com
 ```
 
-The token is cached locally at `~/.config/marmot/credentials.json` and used automatically by all subsequent commands. Tokens expire after 24 hours — just run `marmot login` again to re-authenticate.
+That is all most people need. Every other command uses the token from then on. It lasts 24 hours; run `marmot login` again when it has expired.
+
+### Useful options
 
 ```bash
-# Remove cached token
+# Skip the browser and print the sign-in link instead.
+# Open it anywhere, then paste the address the browser ends up on back here.
+marmot login https://marmot.example.com --no-launch-browser
+
+# Sign in again even if you still have a valid token
+marmot login https://marmot.example.com --force
+
+# Print the token, for scripts
+marmot login https://marmot.example.com --print-token
+
+# Forget the token
 marmot logout
 ```
+
+### What happens behind the scenes
+
+The CLI opens the Marmot sign-in page in your browser and waits on a local port for the browser to come back with a code. It swaps that code for a token and saves it in `~/.config/marmot/credentials.json`. The token is a signed JWT with your user id, your roles and their permissions, and an expiry. This is plain OAuth 2.0 with PKCE. There is no client secret and nothing to configure.
+
+### Pushing to a registry on your Marmot host
+
+Login also makes the token available to `docker`, `crane` and `oras` for the Marmot host, so those tools can push to a registry served there without a `docker login`.
+
+This needs `docker-credential-marmot` on your `PATH`. It is just the marmot binary under another name, and the install script sets it up. If you installed marmot some other way:
+
+```bash
+ln -s "$(command -v marmot)" "$(dirname "$(command -v marmot)")/docker-credential-marmot"
+```
+
+Without it, login writes the token straight into `~/.docker/config.json`. That works until the token expires, and not at all if Docker Desktop manages your credentials. Login tells you when that is the case.
 
 ### API Keys
 
@@ -147,11 +169,13 @@ All list commands support `--limit` and `--offset` for pagination. Destructive c
 marmot login [url] [flags]
 ```
 
-Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. If no URL is provided and no context is active, prompts for one. Creates a context automatically.
+Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. A valid cached token is reused. If no URL is provided and no context is active, prompts for one. Creates a context automatically and registers the token with the Docker credential store for the instance's host.
 
 | Flag | Description |
 | --- | --- |
-| `--force` | Re-authenticate even if a valid token exists |
+| `--force` | Sign in again even if a valid token is cached |
+| `--print-token` | Print the access token on stdout; status messages go to stderr |
+| `--no-launch-browser` | Print the sign-in URL instead of opening a browser; the callback URL can be pasted on stdin |
 
 ### marmot logout
 
@@ -159,7 +183,7 @@ Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. If no URL 
 marmot logout
 ```
 
-Remove the cached authentication token for the active context.
+Remove the cached authentication token for the active context, and the registry credential login registered for its host.
 
 ### marmot context
 

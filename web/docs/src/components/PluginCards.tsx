@@ -4,7 +4,7 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import { useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
 
-interface Plugin {
+export interface Plugin {
   name: string;
   description: string;
   docId: string;
@@ -13,7 +13,7 @@ interface Plugin {
   hasDarkIcon?: boolean;
 }
 
-const plugins: Plugin[] = [
+export const plugins: Plugin[] = [
   {
     name: "Airflow",
     description: "Ingest DAGs, tasks, and dataset lineage from Apache Airflow",
@@ -205,6 +205,13 @@ const plugins: Plugin[] = [
     description: "Catalog topics from Amazon SNS",
     docId: "Plugins/SNS",
     icon: "logos:aws-sns",
+  },
+  {
+    name: "SQLite",
+    description: "Discover tables, views, and relationships from SQLite database files",
+    docId: "Plugins/SQLite",
+    icon: "sqlite.png",
+    useLocalIcon: true,
   },
   {
     name: "SQS",

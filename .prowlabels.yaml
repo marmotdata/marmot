@@ -1,0 +1,27 @@
+area:
+  - server
+  - frontend
+  - plugins
+  - sdk
+  - chart
+  - docs
+  - search
+  - auth
+  - mcp
+  - build
+
+kind:
+  - bug
+  - feature
+  - cleanup
+  - documentation
+  - flake
+  - regression
+  - dependency
+  - good-first-issue
+  - help-wanted
+
+priority:
+  - critical
+  - important
+  - backlog

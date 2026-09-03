@@ -20,6 +20,7 @@ import (
 
 type mockAuthService struct {
 	generateTokenFn func(ctx context.Context, u *user.User, prefs map[string]interface{}) (string, error)
+	validateTokenFn func(ctx context.Context, token string) (*coreauth.Claims, error)
 }
 
 func (m *mockAuthService) GenerateToken(ctx context.Context, u *user.User, prefs map[string]interface{}) (string, error) {
@@ -34,6 +35,9 @@ func (m *mockAuthService) GenerateTokenForPrincipal(ctx context.Context, p corea
 }
 
 func (m *mockAuthService) ValidateToken(ctx context.Context, token string) (*coreauth.Claims, error) {
+	if m.validateTokenFn != nil {
+		return m.validateTokenFn(ctx, token)
+	}
 	return nil, nil
 }
 

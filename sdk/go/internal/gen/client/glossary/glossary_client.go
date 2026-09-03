@@ -117,7 +117,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteGlossaryIDContext] instead.
 func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -184,7 +184,7 @@ func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlos
 // If you need to pass a specific context, use [Client.GetGlossaryAncestorsIDContext] instead.
 func (a *Client) GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -251,7 +251,7 @@ func (a *Client) GetGlossaryAncestorsIDContext(ctx context.Context, params *GetG
 // If you need to pass a specific context, use [Client.GetGlossaryChildrenIDContext] instead.
 func (a *Client) GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -318,7 +318,7 @@ func (a *Client) GetGlossaryChildrenIDContext(ctx context.Context, params *GetGl
 // If you need to pass a specific context, use [Client.GetGlossaryIDContext] instead.
 func (a *Client) GetGlossaryID(params *GetGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +385,7 @@ func (a *Client) GetGlossaryIDContext(ctx context.Context, params *GetGlossaryID
 // If you need to pass a specific context, use [Client.GetGlossaryListContext] instead.
 func (a *Client) GetGlossaryList(params *GetGlossaryListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryListOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -452,7 +452,7 @@ func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossary
 // If you need to pass a specific context, use [Client.GetGlossarySearchContext] instead.
 func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -519,7 +519,7 @@ func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossa
 // If you need to pass a specific context, use [Client.PostGlossaryContext] instead.
 func (a *Client) PostGlossary(params *PostGlossaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -586,7 +586,7 @@ func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryPa
 // If you need to pass a specific context, use [Client.PutGlossaryIDContext] instead.
 func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

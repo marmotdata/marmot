@@ -13,27 +13,26 @@ from dataclasses import dataclass
 
 import httpx
 
-from marmot.auth.workload import SubjectToken
+from marmot.auth.workload import SubjectToken, register_source
+from marmot.config import ENVIRONMENT_HOST
 
 METADATA_HOST = "metadata.google.internal"
 IDENTITY_PATH = "/computeMetadata/v1/instance/service-accounts/default/identity"
 METADATA_HEADER = {"Metadata-Flavor": "Google"}
 
 
+@register_source
 @dataclass
 class GCPWorkloadIdentitySource:
     name: str = "gcp"
     audience: str | None = None  # defaults to the Marmot host at fetch time
     timeout: float = 2.0
 
-    def fetch(self) -> SubjectToken | None:
-        # Cheap presence check — avoids a multi-second hang on machines without
-        # the metadata server. The env var is set on every Google compute env
-        # by the runtime; if it's absent we skip immediately.
+    def fetch(self, audience: str | None = None) -> SubjectToken | None:
         if not _looks_like_gcp():
             return None
 
-        audience = self.audience or os.environ.get("MARMOT_HOST")
+        audience = self.audience or audience or os.environ.get(ENVIRONMENT_HOST)
         if not audience:
             return None
 
@@ -53,11 +52,10 @@ class GCPWorkloadIdentitySource:
         token = resp.text.strip()
         if not token:
             return None
-        return SubjectToken(token=token)
+        return SubjectToken(token=token, source=self.name)
 
 
 def _looks_like_gcp() -> bool:
-    """Quick env signal — true on every Google managed runtime."""
     return any(
         var in os.environ
         for var in (

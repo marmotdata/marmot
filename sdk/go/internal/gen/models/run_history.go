@@ -46,12 +46,12 @@ type RunHistory struct {
 }
 
 // Validate validates this run history
-func (m *RunHistory) Validate(formats strfmt.Registry) error {
+func (m *RunHistory) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this run history based on context it is used
-func (m *RunHistory) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *RunHistory) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

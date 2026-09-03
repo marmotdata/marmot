@@ -46,12 +46,12 @@ type Team struct {
 }
 
 // Validate validates this team
-func (m *Team) Validate(formats strfmt.Registry) error {
+func (m *Team) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this team based on context it is used
-func (m *Team) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Team) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

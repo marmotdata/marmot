@@ -194,6 +194,79 @@ tests:
           value: false
         template: deployment.yaml
 
+  - it: should give the plugin cache and /tmp writable emptyDirs
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_PLUGINS_DIR
+            value: /var/lib/marmot/plugins
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: plugins
+            mountPath: /var/lib/marmot/plugins
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: tmp
+            mountPath: /tmp
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: plugins
+            emptyDir: {}
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: tmp
+            emptyDir: {}
+        template: deployment.yaml
+
+  - it: should render with env set to null
+    set:
+      env: null
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_PLUGINS_DIR
+            value: /var/lib/marmot/plugins
+        template: deployment.yaml
+
+  - it: should let env override the plugin dir without a duplicate entry
+    set:
+      env:
+        MARMOT_PLUGINS_DIR: /data/plugins
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_PLUGINS_DIR
+            value: /var/lib/marmot/plugins
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_PLUGINS_DIR
+            value: /data/plugins
+        template: deployment.yaml
+
+  - it: should request ephemeral storage for the plugin cache by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests["ephemeral-storage"]
+          value: 2Gi
+        template: deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits["ephemeral-storage"]
+          value: 2Gi
+        template: deployment.yaml
+
   - it: should set custom image tag
     set:
       image.tag: "custom-tag"

@@ -15,12 +15,12 @@ Requires ``langchain-core``. Install via ``pip install marmot-sdk[langchain]``.
 
 from __future__ import annotations
 
-from marmot.integrations.langchain._callback import (
+from marmot.integrations.langchain.callback import (
     MarmotCallbackHandler,
     MarmotTool,
     marmot_tool,
 )
-from marmot.integrations.langchain._tools import catalog_tools
+from marmot.integrations.langchain.tools import catalog_tools
 
 __all__ = [
     "MarmotCallbackHandler",

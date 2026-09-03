@@ -52,7 +52,6 @@ import CassandraIcon from '~icons/logos/cassandra';
 import MariaDBIcon from '~icons/logos/mariadb-icon';
 import Db2Icon from '~icons/logos/ibm';
 import CockroachIcon from '~icons/simple-icons/cockroachlabs';
-import SQLiteIcon from '~icons/logos/sqlite';
 import CouchbaseIcon from '~icons/logos/couchbase';
 import DruidIcon from '~icons/simple-icons/apachedruid';
 import AirbyteIcon from '~icons/simple-icons/airbyte';
@@ -180,6 +179,8 @@ export const providerIconMap: Record<
 	amqp: { default: RabbitMQIcon, displayName: 'AMQP' },
 	rabbitmq: { default: RabbitMQIcon, displayName: 'RabbitMQ' },
 	duckdb: { default: DuckDBIcon, displayName: 'DuckDB' },
+	// sqlite intentionally omitted: it resolves to the raster logo at
+	// /images/asset-logos/sqlite.png via the IconLoader fallback.
 	openlineage: {
 		default: OpenLineage,
 		class: 'text-gray-900 dark:text-gray-100',
@@ -312,7 +313,6 @@ export const providerIconMap: Record<
 	mariadb: { default: MariaDBIcon, displayName: 'MariaDB' },
 	db2: { default: Db2Icon, displayName: 'Db2' },
 	cockroachdb: { default: CockroachIcon, class: 'text-[#6933FF]', displayName: 'CockroachDB' },
-	sqlite: { default: SQLiteIcon, displayName: 'SQLite' },
 	couchbase: { default: CouchbaseIcon, displayName: 'Couchbase' },
 	druid: { default: DruidIcon, class: 'text-[#29F1FB]', displayName: 'Druid' },
 	airbyte: { default: AirbyteIcon, class: 'text-[#615EFF]', displayName: 'Airbyte' },

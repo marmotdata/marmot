@@ -168,6 +168,7 @@ export type UpdateTermRequest = S["UpdateTermRequest"];
 export type UpdateUserInput = S["UpdateUserInput"];
 export type User = S["User"];
 export type UserIdentity = S["UserIdentity"];
+export type UserRole = S["UserRole"];
 export type ValidateConfigRequest = S["ValidateConfigRequest"];
 export type ValidateConfigResponse = S["ValidateConfigResponse"];
 export type ValidationErrorDetail = S["ValidationErrorDetail"];

@@ -19,12 +19,12 @@ type ErrorResponse struct {
 }
 
 // Validate validates this error response
-func (m *ErrorResponse) Validate(formats strfmt.Registry) error {
+func (m *ErrorResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this error response based on context it is used
-func (m *ErrorResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ErrorResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "marmot-sdk"
-version = "0.3.0"
+version = "0.4.0"
 description = "Python SDK for Marmot — read the catalog and self-document automation, agents, and pipelines."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -22,10 +22,13 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "attrs>=23.2",
-    "httpx>=0.27",
+    "httpx>=0.28.1",
+    "typing-extensions>=4.7.1",
+    "python-dateutil>=2.8.2",
+    "pydantic>=2.11",
+    "lazy-imports (>=1,<2)",
     "pyyaml>=6.0",
-    "typing-extensions>=4.9; python_version < '3.12'",
+    "strenum",
 ]
 
 [project.urls]
@@ -35,14 +38,15 @@ Issues = "https://github.com/marmotdata/marmot/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0",
+    "pytest>=8.4.2",
+    "pytest-cov>= 2.8.1",
+    "types-python-dateutil>= 2.8.19.14",
     "pytest-httpx>=0.30",
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
     "pip>=26.2",
     "pip-audit>=2.7",
-    "openapi-python-client>=0.21",
 ]
 langchain = [
     "langchain-core>=0.3",
@@ -53,7 +57,17 @@ claude-agent = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/marmot"]
+exclude = [
+    "src/marmot/generated/test/",
+]
 
+[tool.hatch.build]
+exclude = [
+    "src/marmot/.openapi-generator/",
+    "src/marmot/.openapi-generator-ignore",
+    "src/marmot/generated/docs/",
+    "*.md",
+]
 # Ruff handles linting + formatting. Includes pycodestyle (E/W), pyflakes (F),
 # pyupgrade (UP), bugbear (B), bandit-equivalent security (S), naming (N),
 # isort (I), simplify (SIM), pytest style (PT), pathlib (PTH), and more.
@@ -61,7 +75,6 @@ packages = ["src/marmot"]
 line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
-extend-exclude = ["src/marmot/_gen"]
 
 [tool.ruff.lint]
 select = [
@@ -96,6 +109,11 @@ ignore = [
     "C901",      # function complexity — case-by-case via noqa where actually warranted
 ]
 
+[tool.ruff.lint.pep8-naming]
+# pydantic wraps these implicitly; without this N805's unsafe fix rewrites the
+# generated validators' `cls` to `self`, which pydantic v2 rejects at import time.
+classmethod-decorators = ["pydantic.field_validator", "pydantic.model_validator"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "S101",      # assert OK in tests
@@ -115,24 +133,41 @@ ignore = [
     "BLE001",    # smoketest catches everything to keep running
     "T201",      # print is the point
 ]
+"src/marmot/generated/*" = [
+    "B904",  # except should raise from err
+    "N802",  # function names should be lowercase
+    "N818",  # exceptions should have an Error suffix
+    "PTH",  # openapi-generator-cli does not use Pathlib
+    "PLW",  # ignore pylint warning
+    "PLR",  # ignore pylint refactor
+    "RUF012",  #  mutable default value for class attribute
+    "S101",  # assert
+    "TRY004",  # prefer `TypeError` exception for invalid type
+    "TRY203",  # remove exception handler; error is immediately re-raised
+]
 
 [tool.mypy]
 python_version = "3.10"
 strict = true
-warn_return_any = false  # endpoints return untyped JSON; resource methods promise dict[str, Any]
 warn_unused_ignores = true
 warn_redundant_casts = true
 exclude = [
-    "src/marmot/_gen",
-    "src/marmot/integrations",
+    "src/marmot/generated/*",
     "tests",
     "dist",
     ".venv",
 ]
 
 [[tool.mypy.overrides]]
-module = ["marmot._gen.*"]
-ignore_errors = true
+# Optional extras are absent in a bare install, where their types resolve to Any.
+module = ["langchain_core.*", "claude_agent_sdk.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Whether an ignore is needed here depends on which extras are installed, so the
+# integrations must not be judged on ignores that look unused.
+module = "marmot.integrations.*"
+warn_unused_ignores = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

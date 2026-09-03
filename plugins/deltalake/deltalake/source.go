@@ -87,7 +87,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}()
 
 	for _, tablePath := range config.TablePaths {
-		localPath, cleanup, err := filesource.ResolveFilePath(ctx, config.FileSourceConfig, tablePath)
+		// Only _delta_log is read, so fetching the data files alongside it
+		// would download the entire table for nothing.
+		localPath, cleanup, err := filesource.ResolveFilePath(ctx, config.FileSourceConfig, tablePath, filesource.WithSubdirs("_delta_log"))
 		if err != nil {
 			log.Warn().Err(err).Str("path", tablePath).Msg("Failed to resolve Delta table path")
 			continue

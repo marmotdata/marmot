@@ -86,7 +86,7 @@ func (m *UpdateUserInput) validateRoleNames(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this update user input based on context it is used
-func (m *UpdateUserInput) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateUserInput) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
