@@ -133,7 +133,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteIngestionSchedulesIDContext] instead.
 func (a *Client) DeleteIngestionSchedulesID(params *DeleteIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteIngestionSchedulesIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -196,7 +196,7 @@ func (a *Client) DeleteIngestionSchedulesIDContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetIngestionRunsContext] instead.
 func (a *Client) GetIngestionRuns(params *GetIngestionRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -259,7 +259,7 @@ func (a *Client) GetIngestionRunsContext(ctx context.Context, params *GetIngesti
 // If you need to pass a specific context, use [Client.GetIngestionRunsIDContext] instead.
 func (a *Client) GetIngestionRunsID(params *GetIngestionRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -322,7 +322,7 @@ func (a *Client) GetIngestionRunsIDContext(ctx context.Context, params *GetInges
 // If you need to pass a specific context, use [Client.GetIngestionRunsIDEntitiesContext] instead.
 func (a *Client) GetIngestionRunsIDEntities(params *GetIngestionRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsIDEntitiesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +385,7 @@ func (a *Client) GetIngestionRunsIDEntitiesContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetIngestionSchedulesContext] instead.
 func (a *Client) GetIngestionSchedules(params *GetIngestionSchedulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionSchedulesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -448,7 +448,7 @@ func (a *Client) GetIngestionSchedulesContext(ctx context.Context, params *GetIn
 // If you need to pass a specific context, use [Client.GetIngestionSchedulesIDContext] instead.
 func (a *Client) GetIngestionSchedulesID(params *GetIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionSchedulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -511,7 +511,7 @@ func (a *Client) GetIngestionSchedulesIDContext(ctx context.Context, params *Get
 // If you need to pass a specific context, use [Client.PostIngestionRunsIDCancelContext] instead.
 func (a *Client) PostIngestionRunsIDCancel(params *PostIngestionRunsIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionRunsIDCancelNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -574,7 +574,7 @@ func (a *Client) PostIngestionRunsIDCancelContext(ctx context.Context, params *P
 // If you need to pass a specific context, use [Client.PostIngestionSchedulesContext] instead.
 func (a *Client) PostIngestionSchedules(params *PostIngestionSchedulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -637,7 +637,7 @@ func (a *Client) PostIngestionSchedulesContext(ctx context.Context, params *Post
 // If you need to pass a specific context, use [Client.PostIngestionSchedulesIDTriggerContext] instead.
 func (a *Client) PostIngestionSchedulesIDTrigger(params *PostIngestionSchedulesIDTriggerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesIDTriggerCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -700,7 +700,7 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 // If you need to pass a specific context, use [Client.PostIngestionValidateContext] instead.
 func (a *Client) PostIngestionValidate(params *PostIngestionValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionValidateOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -763,7 +763,7 @@ func (a *Client) PostIngestionValidateContext(ctx context.Context, params *PostI
 // If you need to pass a specific context, use [Client.PutIngestionSchedulesIDContext] instead.
 func (a *Client) PutIngestionSchedulesID(params *PutIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutIngestionSchedulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

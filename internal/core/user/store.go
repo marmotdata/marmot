@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -744,15 +746,16 @@ func (r *PostgresRepository) DeleteUserIdentity(ctx context.Context, userID stri
 func (r *PostgresRepository) CreateAPIKey(ctx context.Context, apiKey *APIKey, keyHash string) error {
 	query := `
 		INSERT INTO api_keys (
-			user_id, name, key_hash, expires_at, created_at
+			user_id, name, key_hash, key_lookup, expires_at, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
 	err := r.db.QueryRow(ctx, query,
 		apiKey.UserID,
 		apiKey.Name,
 		keyHash,
+		APIKeyLookup(apiKey.Key),
 		apiKey.ExpiresAt,
 		apiKey.CreatedAt,
 	).Scan(&apiKey.ID)
@@ -794,11 +797,50 @@ func (r *PostgresRepository) GetAPIKey(ctx context.Context, id string) (*APIKey,
 	return &apiKey, nil
 }
 
+// APIKeyLookup is the indexed handle for a key: a SHA-256 of the key itself.
+//
+// Duplicated from core/serviceaccount rather than shared, because core/user must
+// not depend on it. The two must agree, which is easy: both are a plain SHA-256
+// of the key. A fast hash is right here and wrong for a password, since the
+// input is 32 bytes from crypto/rand and there is no dictionary to attack.
+// bcrypt still does the verifying.
+func APIKeyLookup(key string) string {
+	sum := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(sum[:])
+}
+
 func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate string) (*APIKey, error) {
+	// Fast path: one indexed lookup, one bcrypt comparison. WithAuth tries user
+	// keys before service-account keys, so every authenticated request reaches
+	// this, and it has to be O(1) rather than a scan of the whole table.
+	var found APIKey
+	var foundHash string
+	err := r.db.QueryRow(ctx, `
+        SELECT id, user_id, name, key_hash, expires_at, last_used_at, created_at
+        FROM api_keys
+        WHERE key_lookup = $1 AND (expires_at IS NULL OR expires_at > NOW())`,
+		APIKeyLookup(keyToValidate)).
+		Scan(&found.ID, &found.UserID, &found.Name, &foundHash,
+			&found.ExpiresAt, &found.LastUsedAt, &found.CreatedAt)
+	switch {
+	case err == nil:
+		if bcrypt.CompareHashAndPassword([]byte(foundHash), []byte(keyToValidate)) == nil {
+			return &found, nil
+		}
+		// A lookup hit whose bcrypt does not verify means the row was tampered
+		// with. Refuse rather than falling through to the scan.
+		return nil, ErrInvalidAPIKey
+	case !errors.Is(err, pgx.ErrNoRows):
+		return nil, fmt.Errorf("looking up API key: %w", err)
+	}
+
+	// Slow path, for keys issued before key_lookup existed. It cannot be
+	// backfilled: deriving the lookup needs the key, and only the bcrypt hash
+	// was kept. The set only shrinks as those keys are rotated.
 	rows, err := r.db.Query(ctx, `
         SELECT id, user_id, name, key_hash, expires_at, last_used_at, created_at
         FROM api_keys
-        WHERE (expires_at IS NULL OR expires_at > NOW())`)
+        WHERE key_lookup IS NULL AND (expires_at IS NULL OR expires_at > NOW())`)
 	if err != nil {
 		return nil, fmt.Errorf("querying API keys: %w", err)
 	}

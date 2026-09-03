@@ -31,12 +31,12 @@ type LineageResult struct {
 }
 
 // Validate validates this lineage result
-func (m *LineageResult) Validate(formats strfmt.Registry) error {
+func (m *LineageResult) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this lineage result based on context it is used
-func (m *LineageResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *LineageResult) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

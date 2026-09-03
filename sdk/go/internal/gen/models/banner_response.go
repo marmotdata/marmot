@@ -31,12 +31,12 @@ type BannerResponse struct {
 }
 
 // Validate validates this banner response
-func (m *BannerResponse) Validate(formats strfmt.Registry) error {
+func (m *BannerResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this banner response based on context it is used
-func (m *BannerResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *BannerResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

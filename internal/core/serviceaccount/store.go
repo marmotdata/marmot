@@ -2,6 +2,8 @@ package serviceaccount
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,20 +29,20 @@ type ServiceAccount struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description,omitempty"`
 	Active      bool         `json:"active"`
-	Roles       []*role.Role `json:"roles,omitempty"`
+	Roles       []*role.Role `json:"roles"`
 	CreatedBy   *string      `json:"created_by,omitempty"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at"`
 } // @name ServiceAccount
 
 type APIKey struct {
-	ID                string     `json:"id"`
-	ServiceAccountID  string     `json:"service_account_id"`
-	Name              string     `json:"name"`
-	Key               string     `json:"key,omitempty"`
-	ExpiresAt         *time.Time `json:"expires_at,omitempty"`
-	LastUsedAt        *time.Time `json:"last_used_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
+	ID               string     `json:"id"`
+	ServiceAccountID string     `json:"service_account_id"`
+	Name             string     `json:"name"`
+	Key              string     `json:"key,omitempty"`
+	ExpiresAt        *time.Time `json:"expires_at,omitempty"`
+	LastUsedAt       *time.Time `json:"last_used_at,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
 } // @name ServiceAccountAPIKey
 
 type CreateInput struct {
@@ -122,11 +124,21 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*ServiceAccoun
 		SELECT sa.id, sa.name, sa.description, sa.active, sa.created_by, sa.created_at, sa.updated_at,
 		       COALESCE(json_agg(json_build_object(
 		           'id', ro.id, 'name', ro.name, 'description', ro.description,
-		           'is_system', ro.is_system, 'created_at', ro.created_at, 'updated_at', ro.updated_at
+		           'is_system', ro.is_system, 'created_at', ro.created_at, 'updated_at', ro.updated_at,
+		           'permissions', COALESCE(rp.permissions, '[]'::json)
 		       )) FILTER (WHERE ro.id IS NOT NULL), '[]'::json) AS roles
 		FROM service_accounts sa
 		LEFT JOIN service_account_roles sar ON sar.service_account_id = sa.id
 		LEFT JOIN roles ro ON ro.id = sar.role_id AND ro.deleted_at IS NULL
+		LEFT JOIN LATERAL (
+		    SELECT json_agg(json_build_object(
+		               'id', p.id, 'name', p.name, 'description', p.description,
+		               'resource_type', p.resource_type, 'action', p.action
+		           )) AS permissions
+		      FROM role_permissions rpm
+		      JOIN permissions p ON p.id = rpm.permission_id
+		     WHERE rpm.role_id = ro.id
+		) rp ON TRUE
 		WHERE sa.id = $1 AND sa.deleted_at IS NULL
 		GROUP BY sa.id`
 
@@ -138,11 +150,21 @@ func (r *PostgresRepository) List(ctx context.Context) ([]*ServiceAccount, error
 		SELECT sa.id, sa.name, sa.description, sa.active, sa.created_by, sa.created_at, sa.updated_at,
 		       COALESCE(json_agg(json_build_object(
 		           'id', ro.id, 'name', ro.name, 'description', ro.description,
-		           'is_system', ro.is_system, 'created_at', ro.created_at, 'updated_at', ro.updated_at
+		           'is_system', ro.is_system, 'created_at', ro.created_at, 'updated_at', ro.updated_at,
+		           'permissions', COALESCE(rp.permissions, '[]'::json)
 		       )) FILTER (WHERE ro.id IS NOT NULL), '[]'::json) AS roles
 		FROM service_accounts sa
 		LEFT JOIN service_account_roles sar ON sar.service_account_id = sa.id
 		LEFT JOIN roles ro ON ro.id = sar.role_id AND ro.deleted_at IS NULL
+		LEFT JOIN LATERAL (
+		    SELECT json_agg(json_build_object(
+		               'id', p.id, 'name', p.name, 'description', p.description,
+		               'resource_type', p.resource_type, 'action', p.action
+		           )) AS permissions
+		      FROM role_permissions rpm
+		      JOIN permissions p ON p.id = rpm.permission_id
+		     WHERE rpm.role_id = ro.id
+		) rp ON TRUE
 		WHERE sa.deleted_at IS NULL
 		GROUP BY sa.id
 		ORDER BY sa.created_at DESC`
@@ -264,12 +286,13 @@ func (r *PostgresRepository) AssignRoles(ctx context.Context, saID string, roleI
 
 func (r *PostgresRepository) CreateAPIKey(ctx context.Context, saID string, apiKey *APIKey, keyHash string) error {
 	query := `
-		INSERT INTO service_account_api_keys (service_account_id, name, key_hash, expires_at, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO service_account_api_keys
+			(service_account_id, name, key_hash, key_lookup, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
 	err := r.db.QueryRow(ctx, query,
-		saID, apiKey.Name, keyHash, apiKey.ExpiresAt, apiKey.CreatedAt,
+		saID, apiKey.Name, keyHash, APIKeyLookup(apiKey.Key), apiKey.ExpiresAt, apiKey.CreatedAt,
 	).Scan(&apiKey.ID)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -297,11 +320,51 @@ func (r *PostgresRepository) GetAPIKey(ctx context.Context, id string) (*APIKey,
 	return &k, nil
 }
 
+// APIKeyLookup is the indexed handle for a key: a SHA-256 of the key itself.
+//
+// It exists so authentication can find the one row to verify instead of
+// bcrypt-comparing every row in the table. A fast hash is right here and wrong
+// for a password, because the input is 32 bytes from crypto/rand rather than
+// something a person chose, so there is no dictionary to attack. bcrypt still
+// does the verifying.
+func APIKeyLookup(key string) string {
+	sum := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(sum[:])
+}
+
 func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate string) (*APIKey, error) {
-	rows, err := r.db.Query(ctx,
+	// Fast path: one indexed lookup, one bcrypt comparison.
+	var k APIKey
+	var keyHash string
+	err := r.db.QueryRow(ctx,
 		`SELECT id, service_account_id, name, key_hash, expires_at, last_used_at, created_at
-		 FROM service_account_api_keys
-		 WHERE (expires_at IS NULL OR expires_at > NOW())`)
+		   FROM service_account_api_keys
+		  WHERE key_lookup = $1 AND (expires_at IS NULL OR expires_at > NOW())`,
+		APIKeyLookup(keyToValidate)).
+		Scan(&k.ID, &k.ServiceAccountID, &k.Name, &keyHash, &k.ExpiresAt, &k.LastUsedAt, &k.CreatedAt)
+	switch {
+	case err == nil:
+		if bcrypt.CompareHashAndPassword([]byte(keyHash), []byte(keyToValidate)) == nil {
+			return &k, nil
+		}
+		// A lookup hit whose bcrypt does not verify means the row was tampered
+		// with. Refuse rather than falling through to the scan.
+		return nil, ErrKeyNotFound
+	case !errors.Is(err, pgx.ErrNoRows):
+		return nil, fmt.Errorf("looking up api key: %w", err)
+	}
+
+	// Slow path, for keys issued before key_lookup existed. Keys of a deleted or
+	// inactive account are excluded: they could never authenticate anyway, so
+	// comparing them was pure cost.
+	rows, err := r.db.Query(ctx,
+		`SELECT k.id, k.service_account_id, k.name, k.key_hash,
+		        k.expires_at, k.last_used_at, k.created_at
+		   FROM service_account_api_keys k
+		   JOIN service_accounts sa ON sa.id = k.service_account_id
+		  WHERE k.key_lookup IS NULL
+		    AND (k.expires_at IS NULL OR k.expires_at > NOW())
+		    AND sa.deleted_at IS NULL AND sa.active`)
 	if err != nil {
 		return nil, fmt.Errorf("querying api keys: %w", err)
 	}

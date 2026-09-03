@@ -28,12 +28,12 @@ type DocumentationResult struct {
 }
 
 // Validate validates this documentation result
-func (m *DocumentationResult) Validate(formats strfmt.Registry) error {
+func (m *DocumentationResult) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this documentation result based on context it is used
-func (m *DocumentationResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DocumentationResult) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

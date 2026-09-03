@@ -122,7 +122,7 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"access_token": token,
 		"token_type":   "Bearer",
-		"expires_in":   86400,
+		"expires_in":   int(coreauth.TokenTTL.Seconds()),
 	})
 }
 
@@ -201,5 +201,6 @@ func (h *Handler) respondWithMarmotToken(w http.ResponseWriter, r *http.Request,
 		AccessToken:     token,
 		IssuedTokenType: tokenTypeAccessToken,
 		TokenType:       "Bearer",
+		ExpiresIn:       int(coreauth.TokenTTL.Seconds()),
 	})
 }

@@ -57,7 +57,7 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 // UpdatePasswordPath is the route passwordChangeGate exempts. RegisterRoutes
 // registers the handler under it, so that drift between the two cannot lock a
 // user with a pending change out of the only endpoint that can clear it.
-const UpdatePasswordPath = "/api/v1/users/update-password"
+const UpdatePasswordPath = "/api/v1/users/update-password" //nolint:gosec // G101: a route path, not a credential
 
 // passwordChangeGate blocks every request from a user whose
 // must_change_password is still set, except the password change itself.

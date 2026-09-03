@@ -37,12 +37,12 @@ type ServiceAccountAPIKey struct {
 }
 
 // Validate validates this service account API key
-func (m *ServiceAccountAPIKey) Validate(formats strfmt.Registry) error {
+func (m *ServiceAccountAPIKey) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this service account API key based on context it is used
-func (m *ServiceAccountAPIKey) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ServiceAccountAPIKey) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

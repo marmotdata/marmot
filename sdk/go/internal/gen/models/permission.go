@@ -31,12 +31,12 @@ type Permission struct {
 }
 
 // Validate validates this permission
-func (m *Permission) Validate(formats strfmt.Registry) error {
+func (m *Permission) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this permission based on context it is used
-func (m *Permission) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Permission) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 
