@@ -25,12 +25,12 @@ type Environment struct {
 }
 
 // Validate validates this environment
-func (m *Environment) Validate(formats strfmt.Registry) error {
+func (m *Environment) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this environment based on context it is used
-func (m *Environment) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Environment) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

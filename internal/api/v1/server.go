@@ -558,7 +558,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		websocket.NewHandler(wsHub, config),
 		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
 		serviceaccountsAPI.NewHandler(serviceAccountSvc, userSvc, authSvc, config),
-		plugins.NewHandler(),
+		plugins.NewHandler(userSvc, authSvc, config),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
@@ -696,6 +696,14 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		})
 	}
+
+	// Anything under /api that matched no route above is a JSON 404 rather than
+	// the SPA the static handler would serve: a client asking for an endpoint
+	// that does not exist must not get HTML and a 200. Registered patterns are
+	// more specific, so they still win.
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
+		common.RespondError(w, http.StatusNotFound, "Not found")
+	})
 
 	registerSwagger(mux)
 }

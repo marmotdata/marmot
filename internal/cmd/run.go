@@ -6,10 +6,12 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
+	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
 	"github.com/marmotdata/marmot/internal/telemetry"
@@ -128,7 +130,7 @@ func runMarmot(_ *cobra.Command) error {
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 
-	handler := securityHeaders(mux, cfg.Server.CustomResponseHeaders)
+	handler := securityHeaders(apiPaths(mux), cfg.Server.CustomResponseHeaders)
 
 	if cfg.Server.TLS != nil {
 		tlsCfg, err := cfg.Server.TLS.ToServerTLSConfig()
@@ -164,6 +166,20 @@ func runMarmot(_ *cobra.Command) error {
 }
 
 // securityHeaders wraps an http.Handler to set default security headers on every response.
+// apiPaths keeps case-shifted API requests off the SPA fallback. ServeMux matches
+// paths exactly, so /API/v1/users matches no route and would otherwise be answered
+// with the console HTML and a 200.
+func apiPaths(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := r.URL.Path
+		if !strings.HasPrefix(p, "/api/") && strings.HasPrefix(strings.ToLower(p), "/api/") {
+			common.RespondError(w, http.StatusNotFound, "Not found")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func securityHeaders(next http.Handler, custom map[string]string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws: wss:; frame-ancestors 'self'")

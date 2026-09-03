@@ -98,7 +98,7 @@ func (m *OwnerRequest) validateType(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this owner request based on context it is used
-func (m *OwnerRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *OwnerRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -31,12 +31,12 @@ type Dataset struct {
 }
 
 // Validate validates this dataset
-func (m *Dataset) Validate(formats strfmt.Registry) error {
+func (m *Dataset) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this dataset based on context it is used
-func (m *Dataset) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Dataset) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

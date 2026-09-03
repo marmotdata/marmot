@@ -55,12 +55,12 @@ type Schedule struct {
 }
 
 // Validate validates this schedule
-func (m *Schedule) Validate(formats strfmt.Registry) error {
+func (m *Schedule) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this schedule based on context it is used
-func (m *Schedule) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Schedule) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

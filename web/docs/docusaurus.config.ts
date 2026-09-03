@@ -203,6 +203,9 @@ const config: Config = {
           changefreq: "weekly",
           priority: 0.5,
           filename: "sitemap.xml",
+          // /bounty serves the same page as /security; keep the duplicate
+          // out of the sitemap so /security stays the indexed URL.
+          ignorePatterns: ["/bounty"],
         },
       } satisfies Preset.Options,
     ],
@@ -342,6 +345,10 @@ const config: Config = {
             {
               label: "GitHub",
               href: "https://github.com/marmotdata/marmot/",
+            },
+            {
+              label: "Security & Bug Bounty",
+              to: "/security",
             },
             {
               label: "Privacy Policy",

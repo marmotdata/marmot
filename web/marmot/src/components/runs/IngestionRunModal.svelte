@@ -500,7 +500,7 @@
 											class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
 										>
 											{#each entities as entity (entity.id)}
-												<tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+												<tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
 													<td class="px-3 py-2">
 														<div class="max-w-xs flex items-center space-x-2">
 															<div class="flex-1 min-w-0">

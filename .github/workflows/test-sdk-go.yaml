@@ -3,18 +3,8 @@ name: Test Go SDK
 on:
   push:
     branches: [main]
-    paths:
-      - 'sdk/go/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-go.yaml'
   pull_request:
     branches: [main]
-    paths:
-      - 'sdk/go/**'
-      - 'docs/swagger.yaml'
-      - 'Makefile'
-      - '.github/workflows/test-sdk-go.yaml'
 
 permissions:
   contents: read
@@ -35,8 +25,8 @@ jobs:
 
       - name: Install dev dependencies
         run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          go install github.com/go-swagger/go-swagger/cmd/swagger@latest
+          go install github.com/swaggo/swag/cmd/swag@v1.16.6
+          go install github.com/go-swagger/go-swagger/cmd/swagger@v0.36.5
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.9.0
 
       - name: Generate Go SDK

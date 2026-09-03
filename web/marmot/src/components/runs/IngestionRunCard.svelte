@@ -35,7 +35,7 @@
 </script>
 
 <div
-	class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+	class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
 	on:click={onClick}
 	role="button"
 	tabindex="0"

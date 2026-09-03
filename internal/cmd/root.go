@@ -23,6 +23,9 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "marmot",
 	Short: "Marmot is a simple to use Data Catalog.",
+	// A failed request is not a usage error, so do not print the usage text
+	// after it. Flag and argument mistakes still show it.
+	SilenceUsage: true,
 }
 
 func init() {

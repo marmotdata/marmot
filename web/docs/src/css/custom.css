@@ -2423,3 +2423,14 @@ html[data-theme="dark"] .demo-btn::after {
     animation: none;
   }
 }
+
+/* --- Legal page tables --- */
+
+/* Tailwind's prose styles remove the horizontal padding from a table's first
+   and last columns, expecting a borderless table that aligns with the text
+   edge. Infima draws borders on every cell, so that text sits flush against
+   them. Give every cell Infima's own padding instead. */
+.prose table th,
+.prose table td {
+  padding: var(--ifm-table-cell-padding);
+}

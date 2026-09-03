@@ -81,7 +81,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetAdminSearchReindexContext] instead.
 func (a *Client) GetAdminSearchReindex(params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -148,7 +148,7 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 // If you need to pass a specific context, use [Client.PostAdminSearchReindexContext] instead.
 func (a *Client) PostAdminSearchReindex(params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

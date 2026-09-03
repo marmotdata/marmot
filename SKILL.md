@@ -14,7 +14,7 @@ curl -fsSL get.marmotdata.io | sh
 marmot login https://marmot.example.com
 ```
 
-`marmot login` opens a browser for OAuth 2.0 PKCE authentication and caches the token locally. Alternatively, use an API key:
+`marmot login` opens a browser for OAuth 2.0 PKCE authentication and caches the token locally. The token expires after 24 hours and carries the user's roles and permissions as claims. Login also registers the token with the Docker credential store for the instance's host, so `oras push`, `crane push` and `docker push` can publish plugins to the registry the instance serves. This goes through the `docker-credential-marmot` helper, a symlink to the marmot binary that `install.sh` creates; if the helper is not on your PATH, login writes the token itself into `~/.docker/config.json` the way `docker login` does. Alternatively, use an API key:
 
 ```bash
 export MARMOT_HOST=https://marmot.example.com
@@ -108,9 +108,12 @@ Filter with `--pipelines` and `--statuses`.
 ### Authentication
 
 ```bash
-marmot login                              # authenticate via browser (OAuth PKCE)
+marmot login                              # authenticate via browser (OAuth PKCE); reuses a valid cached token
 marmot login https://marmot.example.com   # authenticate to a specific instance
-marmot logout                             # remove cached token
+marmot login <url> --force                # sign in again even if a token is cached
+marmot login <url> --print-token          # print the access token on stdout (status goes to stderr)
+marmot login <url> --no-launch-browser    # print the sign-in URL; paste the callback URL back to finish
+marmot logout                             # remove cached token and registry credential
 marmot context list                       # list contexts (* = active)
 marmot context use <name>                 # switch active context
 marmot context delete <name>              # remove context and token
