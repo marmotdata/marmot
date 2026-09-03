@@ -7,6 +7,7 @@
 
 	export let code: unknown;
 	export let language: string = 'json';
+	export let wrap: boolean = false;
 
 	let formatted: string;
 	let element: HTMLElement;
@@ -77,7 +78,7 @@
 			{/if}
 		</button>
 
-		<pre class="p-6 overflow-x-auto"><code bind:this={element} class="language-{language}"
+		<pre class="p-6 overflow-x-auto" class:wrap><code bind:this={element} class="language-{language}"
 				>{formatted}</code
 			></pre>
 	</div>
@@ -98,6 +99,15 @@
 		white-space: pre;
 		width: max-content;
 		min-width: 100%;
+	}
+	pre.wrap {
+		overflow-x: visible;
+	}
+	pre.wrap code {
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+		width: auto;
+		min-width: 0;
 	}
 
 	/* Light theme - Earthy colors matching Docusaurus */

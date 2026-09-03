@@ -8,7 +8,9 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/gateway"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
@@ -28,7 +30,9 @@ type ToolContext struct {
 	dataProductService DataProductService
 	lineageService     lineage.Service
 	searchService      search.Service
+	gatewayService     gateway.Service
 	user               *user.User
+	principal          auth.Principal
 	config             *config.Config
 	lookups            lookups.Recorder
 }

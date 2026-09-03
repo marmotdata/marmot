@@ -6,6 +6,7 @@
 	import Button from '$components/ui/Button.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import RoleSelector from '$lib/components/RoleSelector.svelte';
+	import GrantsSection from '$components/gateway/GrantsSection.svelte';
 	import { toasts } from '$lib/stores/toast';
 	import {
 		getServiceAccount,
@@ -307,6 +308,10 @@
 							emptyMessage="No roles available."
 						/>
 					</div>
+
+					{#if sa}
+						<GrantsSection principalType="service_account" principalId={sa.id} />
+					{/if}
 
 					<div class="flex justify-end">
 						<Button

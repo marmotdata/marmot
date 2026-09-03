@@ -43,9 +43,12 @@
 		icon?: string;
 		category?: string;
 		config_spec?: ConfigField[];
+		supports_query?: boolean;
 	}
 
 	let plugins = $state<Plugin[]>([]);
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(false);
 	let loadingPlugins = $state(true);
 	let loadingPipeline = $state(true);
 	let pluginsStillLoading = $state(false);
@@ -75,6 +78,7 @@
 	let loadingAwsStatus = $state(false);
 
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
+	let queryCapable = $derived(selectedPlugin?.supports_query === true);
 
 	let configSpec = $derived(selectedPlugin?.config_spec || null);
 	let hasSchedule = $derived(cronExpression.trim() !== '');
@@ -181,6 +185,8 @@
 			selectedPluginId = pipeline.plugin_id;
 			cronExpression = pipeline.cron_expression || '';
 			disableSchedule = !pipeline.enabled && !!pipeline.cron_expression;
+			queryEnabled = pipeline.queryable === true;
+			ingestOnQuery = pipeline.ingest_on_query === true;
 			config = pipeline.config || {};
 
 			// Ensure base fields have proper defaults
@@ -240,7 +246,10 @@
 				plugin_id: selectedPluginId,
 				config: cleanedConfig,
 				cron_expression: cronExpression,
-				enabled
+				enabled,
+				queryable: (selectedPlugin?.supports_query === true) && queryEnabled,
+				query_modes: ['direct'],
+				ingest_on_query: (selectedPlugin?.supports_query === true) && queryEnabled && ingestOnQuery
 			};
 
 			const response = await fetchApi(`/ingestion/schedules/${pipelineId}`, {
@@ -1027,6 +1036,65 @@
 							{/if}
 						{/each}
 					</div>
+				</div>
+			{/if}
+
+			{#if queryCapable}
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+				>
+					<button
+						type="button"
+						onclick={() => (queryEnabled = !queryEnabled)}
+						aria-pressed={queryEnabled}
+						class="w-full text-left flex items-start gap-3"
+					>
+						<IconifyIcon
+							icon="material-symbols:bolt"
+							class="h-6 w-6 mt-0.5 {queryEnabled ? 'text-earthy-terracotta-600' : 'text-gray-400'}"
+						/>
+						<div class="flex-1">
+							<div class="flex items-center gap-2">
+								<span class="text-base font-semibold text-gray-900 dark:text-gray-100"
+									>Answer agent queries</span
+								>
+								<span
+									class="ml-auto relative inline-flex h-5 w-9 items-center rounded-full transition-colors {queryEnabled
+										? 'bg-earthy-terracotta-600'
+										: 'bg-gray-300 dark:bg-gray-600'}"
+								>
+									<span
+										class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {queryEnabled
+											? 'translate-x-4'
+											: 'translate-x-0.5'}"
+									></span>
+								</span>
+							</div>
+							<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+								Agents query this source through Marmot instead of holding its credentials. Every
+								query is checked against the agent's grants and recorded in the audit log. Use grants
+								to choose which agents get access, and what they can see.
+							</p>
+						</div>
+					</button>
+
+					{#if queryEnabled}
+						<label
+							class="mt-4 flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer"
+						>
+							<input type="checkbox" bind:checked={ingestOnQuery} class="mt-0.5 rounded" />
+							<div>
+								<span class="text-sm font-medium text-gray-900 dark:text-gray-100"
+									>Refresh the catalog when queried</span
+								>
+								<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+									When an agent runs a query, Marmot refreshes this source in the background so
+									results keep their context up to date. It runs at most once an hour for each source
+									and never slows a query down.
+								</p>
+							</div>
+						</label>
+					{/if}
 				</div>
 			{/if}
 

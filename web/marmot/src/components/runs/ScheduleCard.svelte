@@ -12,6 +12,7 @@
 		config: unknown;
 		cron_expression: string;
 		enabled: boolean;
+		queryable?: boolean;
 		last_run_at?: string;
 		last_run_status?: string;
 		next_run_at?: string;
@@ -26,10 +27,20 @@
 		onEdit?: (schedule: Schedule) => void;
 		onDelete?: (schedule: Schedule) => void;
 		onTrigger?: (schedule: Schedule) => void;
+		onToggleExpand?: (schedule: Schedule) => void;
+		expanded?: boolean;
 		isRunning?: boolean;
 	}
 
-	let { schedule, onEdit, onDelete, onTrigger, isRunning = false }: Props = $props();
+	let {
+		schedule,
+		onEdit,
+		onDelete,
+		onTrigger,
+		onToggleExpand,
+		expanded = false,
+		isRunning = false
+	}: Props = $props();
 
 	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
 	let isOperatorManaged = $derived(!!schedule.managed_by);
@@ -83,6 +94,20 @@
 	<!-- Icon & Name -->
 	<td class="px-6 py-4">
 		<div class="flex items-center gap-3">
+			{#if onToggleExpand}
+				<button
+					class="flex-shrink-0 p-1 -ml-2 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+					title={expanded ? 'Hide run history' : 'Show run history'}
+					aria-expanded={expanded}
+					aria-label="Toggle run history for {schedule.name}"
+					onclick={() => onToggleExpand?.(schedule)}
+				>
+					<IconifyIcon
+						icon="material-symbols:chevron-right"
+						class="h-5 w-5 transition-transform {expanded ? 'rotate-90' : ''}"
+					/>
+				</button>
+			{/if}
 			<div class="flex-shrink-0">
 				<Icon name={schedule.plugin_id} size="sm" showLabel={false} />
 			</div>
@@ -99,7 +124,18 @@
 						</span>
 					{/if}
 				</div>
-				<div class="text-xs text-gray-500 dark:text-gray-400 capitalize">{schedule.plugin_id}</div>
+				<div class="flex items-center gap-2">
+					<div class="text-xs text-gray-500 dark:text-gray-400 capitalize">{schedule.plugin_id}</div>
+					{#if schedule.queryable}
+						<span
+							class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-300"
+							title="Agents can query this source through the gateway"
+						>
+							<IconifyIcon icon="material-symbols:bolt" class="h-3 w-3" />
+							Queryable
+						</span>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</td>

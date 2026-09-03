@@ -42,6 +42,7 @@
 		icon?: string;
 		category?: string;
 		config_spec?: ConfigField[];
+		supports_query?: boolean;
 	}
 
 	let plugins = $state<Plugin[]>([]);
@@ -52,6 +53,8 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(true);
 	type ConfigValue =
 		| string
 		| number
@@ -110,6 +113,7 @@
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
 	let configSpec = $derived(selectedPlugin?.config_spec || null);
+	let queryCapable = $derived(selectedPlugin?.supports_query === true);
 
 	let isAWSPlugin = $derived(
 		selectedPluginId && ['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(selectedPluginId)
@@ -194,7 +198,10 @@
 				plugin_id: selectedPluginId,
 				config: cleanedConfig,
 				cron_expression: cronExpression,
-				enabled
+				enabled,
+				queryable: queryCapable && queryEnabled,
+				query_modes: ['direct'],
+				ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
 			};
 
 			const response = await fetchApi('/ingestion/schedules', {
@@ -1369,8 +1376,99 @@
 			{/if}
 		{/if}
 
-		<!-- Step 4: Schedule Configuration -->
+		<!-- Step 4: Capabilities, Schedule & Filtering -->
 		{#if currentStep === totalSteps}
+			{#if queryCapable}
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6"
+				>
+					<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center">
+						<IconifyIcon
+							icon="material-symbols:tune"
+							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
+						/>
+						What should this connection do?
+					</h3>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+						You've set up one connection to {selectedPlugin?.name}. Now choose what Marmot does with
+						it. It can keep the catalog up to date, let agents query the data, or both.
+					</p>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<div
+							class="rounded-lg border-2 p-4 border-earthy-terracotta-500 bg-earthy-terracotta-50/60 dark:bg-earthy-terracotta-900/20"
+						>
+							<div class="flex items-center gap-2">
+								<IconifyIcon
+									icon="material-symbols:dataset-outline"
+									class="h-5 w-5 text-earthy-terracotta-600"
+								/>
+								<span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Catalog</span>
+							</div>
+							<p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+								Marmot brings this source's tables, schemas and lineage into the catalog, on the
+								schedule you set below. Leave the schedule empty if you only want to query it.
+							</p>
+						</div>
+
+						<button
+							type="button"
+							onclick={() => (queryEnabled = !queryEnabled)}
+							aria-pressed={queryEnabled}
+							class="text-left rounded-lg border-2 p-4 transition-all {queryEnabled
+								? 'border-earthy-terracotta-500 bg-earthy-terracotta-50/60 dark:bg-earthy-terracotta-900/20'
+								: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+						>
+							<div class="flex items-center gap-2">
+								<IconifyIcon
+									icon="material-symbols:bolt"
+									class="h-5 w-5 {queryEnabled
+										? 'text-earthy-terracotta-600'
+										: 'text-gray-400'}"
+								/>
+								<span class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+									>Answer agent queries</span
+								>
+								<span
+									class="ml-auto relative inline-flex h-5 w-9 items-center rounded-full transition-colors {queryEnabled
+										? 'bg-earthy-terracotta-600'
+										: 'bg-gray-300 dark:bg-gray-600'}"
+								>
+									<span
+										class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {queryEnabled
+											? 'translate-x-4'
+											: 'translate-x-0.5'}"
+									></span>
+								</span>
+							</div>
+							<p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+								Agents query this source through Marmot instead of holding its credentials. Every
+								query is checked against the agent's grants and recorded in the audit log. You choose
+								which agents get access, and what they can see.
+							</p>
+						</button>
+					</div>
+
+					{#if queryEnabled}
+						<label
+							class="mt-3 flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer"
+						>
+							<input type="checkbox" bind:checked={ingestOnQuery} class="mt-0.5 rounded" />
+							<div>
+								<span class="text-sm font-medium text-gray-900 dark:text-gray-100"
+									>Refresh the catalog when queried</span
+								>
+								<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+									When an agent runs a query, Marmot refreshes this source in the background so
+									results keep their context up to date. It runs at most once an hour for each source
+									and never slows a query down. This is useful for sources you only query, so their
+									catalog stays populated on its own.
+								</p>
+							</div>
+						</label>
+					{/if}
+				</div>
+			{/if}
+
 			<div
 				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
 			>

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/rs/zerolog/log"
 )
@@ -42,6 +43,13 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The principal drives query-tool authorization; it is the user for
+	// human callers and the machine identity for service accounts.
+	principal, ok := common.PrincipalFromContext(r.Context())
+	if !ok {
+		principal = auth.NewUserPrincipal(user)
+	}
+
 	log.Debug().
 		Str("method", r.Method).
 		Str("path", r.URL.Path).
@@ -54,7 +62,7 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 
 	mcpHandler := mcpsdk.NewStreamableHTTPHandler(
 		func(req *http.Request) *mcpsdk.Server {
-			server := h.mcpServer.CreateMCPServer(req.Context(), user)
+			server := h.mcpServer.CreateMCPServer(req.Context(), user, principal)
 			log.Debug().
 				Str("user_id", user.ID).
 				Str("username", user.Username).

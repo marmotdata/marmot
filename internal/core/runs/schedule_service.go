@@ -33,13 +33,16 @@ func (s *ScheduleService) SetBroadcaster(broadcaster EventBroadcaster) {
 
 // Schedule operations
 
-func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, createdBy *string) (*Schedule, error) {
+func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable bool, queryModes []string, ingestOnQuery bool, createdBy *string) (*Schedule, error) {
 	schedule := &Schedule{
 		Name:           name,
 		PluginID:       pluginID,
 		Config:         config,
 		CronExpression: cronExpression,
 		Enabled:        enabled,
+		Queryable:      queryable,
+		QueryModes:     queryModes,
+		IngestOnQuery:  ingestOnQuery,
 		CreatedBy:      createdBy,
 	}
 
@@ -66,7 +69,7 @@ func (s *ScheduleService) GetScheduleForAsset(ctx context.Context, assetID strin
 	return s.repo.GetScheduleForAsset(ctx, assetID)
 }
 
-func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool) (*Schedule, error) {
+func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable bool, queryModes []string, ingestOnQuery bool) (*Schedule, error) {
 	existing, err := s.repo.GetSchedule(ctx, id)
 	if err != nil {
 		return nil, err
@@ -77,6 +80,9 @@ func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, p
 	existing.Config = config
 	existing.CronExpression = cronExpression
 	existing.Enabled = enabled
+	existing.Queryable = queryable
+	existing.QueryModes = queryModes
+	existing.IngestOnQuery = ingestOnQuery
 
 	if err := s.repo.UpdateSchedule(ctx, existing); err != nil {
 		return nil, err

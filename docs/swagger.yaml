@@ -715,10 +715,18 @@ definitions:
         type: string
       enabled:
         type: boolean
+      ingest_on_query:
+        type: boolean
       name:
         type: string
       plugin_id:
         type: string
+      query_modes:
+        items:
+          type: string
+        type: array
+      queryable:
+        type: boolean
     type: object
   CreateServiceAccountAPIKeyRequest:
     properties:
@@ -1107,6 +1115,243 @@ definitions:
         additionalProperties:
           type: integer
         type: object
+    type: object
+  GatewayAssetContext:
+    properties:
+      description:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  GatewayAuditEntry:
+    properties:
+      audit_subject:
+        type: string
+      completed_at:
+        type: string
+      decision:
+        type: string
+      decision_detail:
+        additionalProperties: {}
+        type: object
+      error:
+        type: string
+      id:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      query_text:
+        type: string
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      rows_returned:
+        type: integer
+      session_id:
+        type: string
+      source:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      target_id:
+        type: string
+      target_name:
+        type: string
+    type: object
+  GatewayCreateGrantInput:
+    properties:
+      expires_at:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        enum:
+        - service_account
+        - user
+        type: string
+      reason:
+        type: string
+      resource_selector:
+        type: string
+    required:
+    - principal_id
+    - principal_type
+    - resource_selector
+    type: object
+  GatewayGrant:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      created_by:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      reason:
+        type: string
+      resource_selector:
+        type: string
+      revoked_at:
+        type: string
+      revoked_by:
+        type: string
+    type: object
+  GatewayOpenSessionRequest:
+    properties:
+      purpose:
+        type: string
+    type: object
+  GatewayOpenSessionResponse:
+    properties:
+      session:
+        $ref: '#/definitions/GatewaySession'
+      targets:
+        items:
+          $ref: '#/definitions/GatewaySessionTargetEntry'
+        type: array
+    type: object
+  GatewayQueryColumn:
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  GatewayQueryInput:
+    properties:
+      max_rows:
+        type: integer
+      session_id:
+        type: string
+      statement:
+        type: string
+      target:
+        type: string
+    required:
+    - session_id
+    - statement
+    - target
+    type: object
+  GatewayQueryResult:
+    properties:
+      audit_id:
+        type: string
+      columns:
+        items:
+          $ref: '#/definitions/GatewayQueryColumn'
+        type: array
+      context:
+        items:
+          $ref: '#/definitions/GatewayAssetContext'
+        type: array
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      row_count:
+        type: integer
+      rows:
+        items:
+          items: {}
+          type: array
+        type: array
+      session_id:
+        type: string
+      truncated:
+        type: boolean
+    type: object
+  GatewayRevokeGrantRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  GatewaySession:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      last_activity_at:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      purpose:
+        type: string
+      revoked_at:
+        type: string
+    type: object
+  GatewaySessionTargetEntry:
+    properties:
+      modes:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  GatewayTarget:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      created_at:
+        type: string
+      created_by:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      ingest_on_query:
+        description: |-
+          IngestOnQuery asks the gateway to refresh this source's catalog
+          (asynchronously, rate-limited) after a successful query.
+        type: boolean
+      modes:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      plugin_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  GatewayTargetStatusResponse:
+    properties:
+      instances:
+        items:
+          $ref: '#/definitions/PluginInstanceStatus'
+        type: array
     type: object
   GetMetricsRequest:
     properties:
@@ -1520,6 +1765,19 @@ definitions:
       name:
         type: string
       resource_type:
+        type: string
+    type: object
+  PluginInstanceStatus:
+    properties:
+      active_queries:
+        type: integer
+      last_used_at:
+        type: string
+      plugin_id:
+        type: string
+      restarts:
+        type: integer
+      started_at:
         type: string
     type: object
   PluginRun:
@@ -1976,6 +2234,8 @@ definitions:
         type: boolean
       id:
         type: string
+      ingest_on_query:
+        type: boolean
       last_run_at:
         type: string
       last_run_status:
@@ -1988,6 +2248,12 @@ definitions:
         type: string
       plugin_id:
         type: string
+      query_modes:
+        items:
+          type: string
+        type: array
+      queryable:
+        type: boolean
       updated_at:
         type: string
     type: object
@@ -2331,10 +2597,18 @@ definitions:
         type: string
       enabled:
         type: boolean
+      ingest_on_query:
+        type: boolean
       name:
         type: string
       plugin_id:
         type: string
+      query_modes:
+        items:
+          type: string
+        type: array
+      queryable:
+        type: boolean
     type: object
   UpdateServiceAccountRequest:
     properties:
@@ -2572,6 +2846,8 @@ definitions:
       status:
         type: string
       supports_data_preview:
+        type: boolean
+      supports_query:
         type: boolean
     type: object
   pluginsdk.ShowWhen:
@@ -4019,6 +4295,280 @@ paths:
       summary: Add glossary terms to asset
       tags:
       - assets
+  /api/v1/gateway/audit:
+    get:
+      operationId: getGatewayAudit
+      parameters:
+      - description: Principal ID
+        in: query
+        name: principal_id
+        type: string
+      - description: Session ID
+        in: query
+        name: session_id
+        type: string
+      - description: Target name
+        in: query
+        name: target
+        type: string
+      - description: Decision (allowed|denied)
+        in: query
+        name: decision
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/GatewayAuditEntry'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List query audit log
+      tags:
+      - gateway
+  /api/v1/gateway/grants:
+    get:
+      operationId: getGatewayGrants
+      parameters:
+      - description: Principal type
+        in: query
+        name: principal_type
+        type: string
+      - description: Principal ID
+        in: query
+        name: principal_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/GatewayGrant'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List grants
+      tags:
+      - gateway
+    post:
+      consumes:
+      - application/json
+      operationId: postGatewayGrants
+      parameters:
+      - description: Grant
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GatewayCreateGrantInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/GatewayGrant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Create grant
+      tags:
+      - gateway
+  /api/v1/gateway/grants/{id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: deleteGatewayGrant
+      parameters:
+      - description: Grant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Revocation reason
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/GatewayRevokeGrantRequest'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Revoke grant
+      tags:
+      - gateway
+  /api/v1/gateway/query:
+    post:
+      consumes:
+      - application/json
+      operationId: postGatewayQuery
+      parameters:
+      - description: Query
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GatewayQueryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GatewayQueryResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Execute query
+      tags:
+      - gateway
+  /api/v1/gateway/sessions:
+    get:
+      operationId: getGatewaySessions
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/GatewaySession'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List sessions
+      tags:
+      - gateway
+    post:
+      consumes:
+      - application/json
+      operationId: postGatewaySessions
+      parameters:
+      - description: Session purpose
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/GatewayOpenSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/GatewayOpenSessionResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Open session
+      tags:
+      - gateway
+  /api/v1/gateway/sessions/{id}:
+    delete:
+      operationId: deleteGatewaySession
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Revoke session
+      tags:
+      - gateway
+  /api/v1/gateway/targets:
+    get:
+      operationId: getGatewayTargets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/GatewayTarget'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List query targets
+      tags:
+      - gateway
+  /api/v1/gateway/targets/status:
+    get:
+      operationId: getGatewayTargetsStatus
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GatewayTargetStatusResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query gateway instance status
+      tags:
+      - gateway
   /api/v1/glossary/:
     post:
       consumes:

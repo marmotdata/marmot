@@ -118,6 +118,12 @@ type ExternalSource struct {
 	path string
 }
 
+// BinaryPath returns the plugin binary's path so the instance manager can
+// keep a long-running process of the same image.
+func (s *ExternalSource) BinaryPath() string {
+	return s.path
+}
+
 func (s *ExternalSource) Validate(config RawPluginConfig) (RawPluginConfig, error) {
 	process, err := pluginsdk.Open(s.path, pluginLogger())
 	if err != nil {

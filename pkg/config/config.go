@@ -154,6 +154,21 @@ type Config struct {
 		// startup. Defaults to true.
 		Autoinstall bool `mapstructure:"autoinstall"`
 	} `mapstructure:"plugins"`
+
+	Gateway struct {
+		Enabled         bool  `mapstructure:"enabled"`
+		SessionTTL      int   `mapstructure:"session_ttl"`       // seconds
+		QueryTimeout    int   `mapstructure:"query_timeout"`     // seconds
+		MaxRowsDefault  int64 `mapstructure:"max_rows_default"`
+		MaxRowsCap      int64 `mapstructure:"max_rows_cap"`
+		InstanceIdleTTL int   `mapstructure:"instance_idle_ttl"` // seconds
+		// Ingest-on-query rate limits, in seconds. IngestOnQuerySourceInterval
+		// is the minimum gap between auto-ingests of one source;
+		// IngestOnQueryGlobalInterval is a hard floor between any two
+		// auto-ingests across all sources.
+		IngestOnQuerySourceInterval int `mapstructure:"ingest_on_query_source_interval"`
+		IngestOnQueryGlobalInterval int `mapstructure:"ingest_on_query_global_interval"`
+	} `mapstructure:"gateway"`
 }
 
 type BannerConfig struct {
@@ -358,6 +373,16 @@ func loadConfig(configPath string) error {
 	v.BindEnv("operator.namespace")
 	v.BindEnv("operator.service_account")
 
+	// Gateway env vars
+	v.BindEnv("gateway.enabled")
+	v.BindEnv("gateway.session_ttl")
+	v.BindEnv("gateway.query_timeout")
+	v.BindEnv("gateway.max_rows_default")
+	v.BindEnv("gateway.max_rows_cap")
+	v.BindEnv("gateway.instance_idle_ttl")
+	v.BindEnv("gateway.ingest_on_query_source_interval")
+	v.BindEnv("gateway.ingest_on_query_global_interval")
+
 	// Telemetry env vars
 	v.BindEnv("telemetry.enabled")
 	v.BindEnv("telemetry.endpoint")
@@ -494,6 +519,16 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pipelines.scheduler_interval", 60)
 	v.SetDefault("pipelines.lease_expiry", 300)
 	v.SetDefault("pipelines.claim_expiry", 30)
+
+	// Gateway defaults
+	v.SetDefault("gateway.enabled", true)
+	v.SetDefault("gateway.session_ttl", 86400)
+	v.SetDefault("gateway.query_timeout", 60)
+	v.SetDefault("gateway.max_rows_default", 1000)
+	v.SetDefault("gateway.max_rows_cap", 10000)
+	v.SetDefault("gateway.instance_idle_ttl", 300)
+	v.SetDefault("gateway.ingest_on_query_source_interval", 3600) // 1h per source
+	v.SetDefault("gateway.ingest_on_query_global_interval", 60)   // hard global floor
 
 	// Operator defaults
 	v.SetDefault("operator.service_account", "marmot-ingest")

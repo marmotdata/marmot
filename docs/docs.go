@@ -2226,6 +2226,460 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/gateway/audit": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "List query audit log",
+                "operationId": "getGatewayAudit",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Principal ID",
+                        "name": "principal_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target name",
+                        "name": "target",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Decision (allowed|denied)",
+                        "name": "decision",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GatewayAuditEntry"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/grants": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "List grants",
+                "operationId": "getGatewayGrants",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Principal type",
+                        "name": "principal_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Principal ID",
+                        "name": "principal_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GatewayGrant"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Create grant",
+                "operationId": "postGatewayGrants",
+                "parameters": [
+                    {
+                        "description": "Grant",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GatewayCreateGrantInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayGrant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/grants/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Revoke grant",
+                "operationId": "deleteGatewayGrant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Grant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Revocation reason",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayRevokeGrantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/query": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Execute query",
+                "operationId": "postGatewayQuery",
+                "parameters": [
+                    {
+                        "description": "Query",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GatewayQueryInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayQueryResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "List sessions",
+                "operationId": "getGatewaySessions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GatewaySession"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Open session",
+                "operationId": "postGatewaySessions",
+                "parameters": [
+                    {
+                        "description": "Session purpose",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayOpenSessionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayOpenSessionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/sessions/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Revoke session",
+                "operationId": "deleteGatewaySession",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/targets": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "List query targets",
+                "operationId": "getGatewayTargets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GatewayTarget"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/gateway/targets/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gateway"
+                ],
+                "summary": "Query gateway instance status",
+                "operationId": "getGatewayTargetsStatus",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GatewayTargetStatusResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/glossary/": {
             "post": {
                 "security": [
@@ -9490,11 +9944,23 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "ingest_on_query": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "query_modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "queryable": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10077,6 +10543,361 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": {
                         "type": "integer"
+                    }
+                }
+            }
+        },
+        "GatewayAssetContext": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayAuditEntry": {
+            "type": "object",
+            "properties": {
+                "audit_subject": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "decision_detail": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "query_text": {
+                    "type": "string"
+                },
+                "referenced_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rows_returned": {
+                    "type": "integer"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_id": {
+                    "type": "string"
+                },
+                "target_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayCreateGrantInput": {
+            "type": "object",
+            "required": [
+                "principal_id",
+                "principal_type",
+                "resource_selector"
+            ],
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string",
+                    "enum": [
+                        "service_account",
+                        "user"
+                    ]
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "resource_selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayGrant": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "resource_selector": {
+                    "type": "string"
+                },
+                "revoked_at": {
+                    "type": "string"
+                },
+                "revoked_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayOpenSessionRequest": {
+            "type": "object",
+            "properties": {
+                "purpose": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayOpenSessionResponse": {
+            "type": "object",
+            "properties": {
+                "session": {
+                    "$ref": "#/definitions/GatewaySession"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GatewaySessionTargetEntry"
+                    }
+                }
+            }
+        },
+        "GatewayQueryColumn": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayQueryInput": {
+            "type": "object",
+            "required": [
+                "session_id",
+                "statement",
+                "target"
+            ],
+            "properties": {
+                "max_rows": {
+                    "type": "integer"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "statement": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayQueryResult": {
+            "type": "object",
+            "properties": {
+                "audit_id": {
+                    "type": "string"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GatewayQueryColumn"
+                    }
+                },
+                "context": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GatewayAssetContext"
+                    }
+                },
+                "referenced_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "row_count": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "truncated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "GatewayRevokeGrantRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewaySession": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_activity_at": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "type": "string"
+                },
+                "revoked_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewaySessionTargetEntry": {
+            "type": "object",
+            "properties": {
+                "modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayTarget": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ingest_on_query": {
+                    "description": "IngestOnQuery asks the gateway to refresh this source's catalog\n(asynchronously, rate-limited) after a successful query.",
+                    "type": "boolean"
+                },
+                "modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "GatewayTargetStatusResponse": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PluginInstanceStatus"
                     }
                 }
             }
@@ -10696,6 +11517,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "PluginInstanceStatus": {
+            "type": "object",
+            "properties": {
+                "active_queries": {
+                    "type": "integer"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "restarts": {
+                    "type": "integer"
+                },
+                "started_at": {
                     "type": "string"
                 }
             }
@@ -11378,6 +12219,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "ingest_on_query": {
+                    "type": "boolean"
+                },
                 "last_run_at": {
                     "type": "string"
                 },
@@ -11395,6 +12239,15 @@ const docTemplate = `{
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "query_modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "queryable": {
+                    "type": "boolean"
                 },
                 "updated_at": {
                     "type": "string"
@@ -11919,11 +12772,23 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "ingest_on_query": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "query_modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "queryable": {
+                    "type": "boolean"
                 }
             }
         },
@@ -12276,6 +13141,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "supports_data_preview": {
+                    "type": "boolean"
+                },
+                "supports_query": {
                     "type": "boolean"
                 }
             }

@@ -310,9 +310,9 @@
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
 							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:play-circle-outline" />
+								<Icon icon="material-symbols:extension-outline" />
 							</span>
-							<span>Runs</span>
+							<span>Plugins</span>
 						</a>
 
 						<a

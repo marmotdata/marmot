@@ -164,6 +164,7 @@ tags:
 type Source struct {
 	config            *Config
 	db                *sql.DB
+	dbConfigHash      string
 	catalogConnectors map[string]string // catalog name → connector name
 }
 

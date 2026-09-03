@@ -5,7 +5,9 @@ import (
 
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/gateway"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
@@ -69,6 +71,7 @@ type Server struct {
 	dataProductService DataProductService
 	lineageService     lineage.Service
 	searchService      search.Service
+	gatewayService     gateway.Service
 	config             *config.Config
 	lookups            lookups.Recorder
 }
@@ -81,6 +84,7 @@ func NewServer(
 	dataProductService DataProductService,
 	lineageService lineage.Service,
 	searchService search.Service,
+	gatewayService gateway.Service,
 	config *config.Config,
 	lookupsRecorder lookups.Recorder,
 ) *Server {
@@ -92,12 +96,16 @@ func NewServer(
 		dataProductService: dataProductService,
 		lineageService:     lineageService,
 		searchService:      searchService,
+		gatewayService:     gatewayService,
 		config:             config,
 		lookups:            lookupsRecorder,
 	}
 }
 
-func (s *Server) CreateMCPServer(ctx context.Context, user *user.User) *mcpsdk.Server {
+// CreateMCPServer builds a request-scoped MCP server. The principal is the
+// authenticated caller; user is its underlying user record (nil for machine
+// principals) which the catalogue tools use for "my teams"-style queries.
+func (s *Server) CreateMCPServer(ctx context.Context, user *user.User, principal auth.Principal) *mcpsdk.Server {
 	server := mcpsdk.NewServer(
 		&mcpsdk.Implementation{
 			Name:    "marmot-catalog",
@@ -106,12 +114,12 @@ func (s *Server) CreateMCPServer(ctx context.Context, user *user.User) *mcpsdk.S
 		nil,
 	)
 
-	s.registerTools(server, user)
+	s.registerTools(server, user, principal)
 
 	return server
 }
 
-func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
+func (s *Server) registerTools(server *mcpsdk.Server, user *user.User, principal auth.Principal) {
 	tc := &ToolContext{
 		assetService:       s.assetService,
 		glossaryService:    s.glossaryService,
@@ -120,7 +128,9 @@ func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
 		dataProductService: s.dataProductService,
 		lineageService:     s.lineageService,
 		searchService:      s.searchService,
+		gatewayService:     s.gatewayService,
 		user:               user,
+		principal:          principal,
 		config:             s.config,
 		lookups:            s.lookups,
 	}
@@ -253,4 +263,45 @@ Optional:
 Returns upstream dependencies and downstream consumers grouped by distance from the asset.
 </instructions>`,
 	}, tc.traceLineage)
+
+	// Query tools are only mounted when the gateway is configured.
+	if s.gatewayService == nil {
+		return
+	}
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "list_query_targets",
+		Description: `<usecase>
+Use this to see which live engines you can run SQL against through Marmot. Call it before
+query_data to learn the target names and which plugin backs each. Returns nothing if no
+targets are configured.
+</usecase>
+
+<instructions>
+Takes no parameters: {}. Returns each target's name (use as the "target" argument to
+query_data), the plugin that backs it, and its modes.
+</instructions>`,
+	}, tc.listQueryTargets)
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "query_data",
+		Description: `<usecase>
+Use this to actually READ data — run a SQL SELECT against a connected engine (e.g. Trino)
+through Marmot, rather than only browsing metadata. Marmot checks your access per referenced
+table, runs the query, and returns rows together with the catalogue context (descriptions,
+owners, tags) of every table touched. Every query is audited.
+</usecase>
+
+<instructions>
+Provide:
+- target: a target name from list_query_targets (e.g. "trino-local")
+- statement: a single SQL SELECT statement in the engine's dialect. For Trino, fully qualify
+  tables as catalog.schema.table, e.g. SELECT * FROM postgresql.public.orders LIMIT 10
+- max_rows: optional cap on rows returned
+
+Access is deny-by-default and enforced per table: if a referenced table is not granted to you,
+the whole query is refused with the reason. Prefer LIMIT on exploratory queries. Do not send
+DDL/DML — this is for reading.
+</instructions>`,
+	}, tc.queryData)
 }

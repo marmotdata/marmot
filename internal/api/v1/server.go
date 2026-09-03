@@ -18,6 +18,7 @@ import (
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
 	agentsAPI "github.com/marmotdata/marmot/internal/api/v1/agents"
 	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
+	gatewayAPI "github.com/marmotdata/marmot/internal/api/v1/gateway"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
@@ -38,6 +39,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
+	gatewayService "github.com/marmotdata/marmot/internal/core/gateway"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
@@ -110,6 +112,9 @@ type Server struct {
 	// Operator Run CRD syncer
 	operatorSyncer *operatorSync.Syncer
 
+	// Long-running plugin instances for the query gateway
+	pluginInstances *plugin.InstanceManager
+
 	handlers []interface{ Routes() []common.Route }
 }
 
@@ -138,6 +143,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
+
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
 	glossarySvc := glossaryService.NewService(glossaryRepo)
@@ -236,6 +242,26 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	scheduleRepo := runService.NewSchedulePostgresRepository(db)
 	scheduleSvc := runService.NewScheduleService(scheduleRepo)
+
+	// Query gateway: a query target is a queryable ingestion source, resolved
+	// through the schedule service, so one connection both catalogues and serves
+	// queries.
+	var gatewaySvc gatewayService.Service
+	var pluginInstances *plugin.InstanceManager
+	if config.Gateway.Enabled {
+		pluginInstances = plugin.NewInstanceManager(time.Duration(config.Gateway.InstanceIdleTTL) * time.Second)
+		gatewayRepo := gatewayService.NewPostgresRepository(db)
+		targetProvider := gatewayAPI.NewScheduleTargetProvider(scheduleSvc)
+		ingestTrigger := gatewayAPI.NewScheduleIngestTrigger(scheduleSvc)
+		gatewaySvc = gatewayService.NewService(gatewayRepo, targetProvider, assetSvc, pluginInstances, ingestTrigger, gatewayEncryptor(config), gatewayService.Options{
+			SessionTTL:           time.Duration(config.Gateway.SessionTTL) * time.Second,
+			QueryTimeout:         time.Duration(config.Gateway.QueryTimeout) * time.Second,
+			MaxRowsDefault:       config.Gateway.MaxRowsDefault,
+			MaxRowsCap:           config.Gateway.MaxRowsCap,
+			IngestSourceInterval: time.Duration(config.Gateway.IngestOnQuerySourceInterval) * time.Second,
+			IngestGlobalInterval: time.Duration(config.Gateway.IngestOnQueryGlobalInterval) * time.Second,
+		})
+	}
 
 	wsHub := websocket.NewHub(userSvc, authSvc, config)
 	wsHub.Start(context.Background())
@@ -542,7 +568,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		users.NewHandler(userSvc, authSvc, config),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, gatewaySvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
@@ -562,6 +588,10 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+	}
+	if gatewaySvc != nil {
+		server.pluginInstances = pluginInstances
+		server.handlers = append(server.handlers, gatewayAPI.NewHandler(gatewaySvc, userSvc, authSvc, config))
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled
@@ -631,6 +661,20 @@ func (s *Server) Stop() {
 	if s.metricsService != nil {
 		s.metricsService.Stop()
 	}
+	if s.pluginInstances != nil {
+		s.pluginInstances.Stop()
+	}
+}
+
+// gatewayEncryptor mirrors the ingestion scheduler's stance on encryption:
+// use the configured key when present, otherwise store target configs
+// unencrypted (the allow_unencrypted escape hatch).
+func gatewayEncryptor(config *config.Config) *crypto.Encryptor {
+	encryptor, err := runService.GetEncryptor(config)
+	if err != nil {
+		return nil
+	}
+	return encryptor
 }
 
 func (s *Server) RegisterRoutes(mux *http.ServeMux) {

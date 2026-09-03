@@ -242,6 +242,9 @@ type CreateScheduleRequest struct{
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
+	Queryable      bool                   `json:"queryable"`
+	QueryModes     []string               `json:"query_modes,omitempty"`
+	IngestOnQuery  bool                   `json:"ingest_on_query"`
 } // @name CreateScheduleRequest
 
 type UpdateScheduleRequest struct {
@@ -250,6 +253,9 @@ type UpdateScheduleRequest struct {
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
+	Queryable      bool                   `json:"queryable"`
+	QueryModes     []string               `json:"query_modes,omitempty"`
+	IngestOnQuery  bool                   `json:"ingest_on_query"`
 } // @name UpdateScheduleRequest
 
 type ListSchedulesResponse struct {
@@ -320,6 +326,9 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Config,
 		req.CronExpression,
 		req.Enabled,
+		req.Queryable,
+		req.QueryModes,
+		req.IngestOnQuery,
 		createdBy,
 	)
 
@@ -497,6 +506,9 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Config,
 		req.CronExpression,
 		req.Enabled,
+		req.Queryable,
+		req.QueryModes,
+		req.IngestOnQuery,
 	)
 
 	if err != nil {

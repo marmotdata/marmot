@@ -41,6 +41,9 @@ type Schedule struct {
 	Config             map[string]interface{} `json:"config"`
 	CronExpression     string                 `json:"cron_expression"`
 	Enabled            bool                   `json:"enabled"`
+	Queryable          bool                   `json:"queryable"`
+	QueryModes         []string               `json:"query_modes,omitempty"`
+	IngestOnQuery      bool                   `json:"ingest_on_query"`
 	LastRunAt          *time.Time             `json:"last_run_at,omitempty"`
 	LastRunStatus      *string                `json:"last_run_status,omitempty"`
 	NextRunAt          *time.Time             `json:"next_run_at,omitempty"`
@@ -154,9 +157,13 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 		return fmt.Errorf("marshaling config: %w", err)
 	}
 
+	if schedule.QueryModes == nil {
+		schedule.QueryModes = []string{"direct"}
+	}
+
 	query := `
-		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, next_run_at, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, query_modes, ingest_on_query, next_run_at, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at, updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -165,6 +172,9 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 		configJSON,
 		schedule.CronExpression,
 		schedule.Enabled,
+		schedule.Queryable,
+		schedule.QueryModes,
+		schedule.IngestOnQuery,
 		schedule.NextRunAt,
 		schedule.CreatedBy,
 	).Scan(&schedule.ID, &schedule.CreatedAt, &schedule.UpdatedAt)
@@ -182,7 +192,7 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 
 func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, query_modes, ingest_on_query, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE id = $1`
 
@@ -195,6 +205,9 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 		&configJSON,
 		&schedule.CronExpression,
 		&schedule.Enabled,
+		&schedule.Queryable,
+		&schedule.QueryModes,
+		&schedule.IngestOnQuery,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
 		&schedule.ManagedBy,
@@ -220,7 +233,7 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 
 func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, query_modes, ingest_on_query, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE name = $1`
 
@@ -233,6 +246,9 @@ func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name
 		&configJSON,
 		&schedule.CronExpression,
 		&schedule.Enabled,
+		&schedule.Queryable,
+		&schedule.QueryModes,
+		&schedule.IngestOnQuery,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
 		&schedule.ManagedBy,
@@ -269,10 +285,14 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 		return fmt.Errorf("marshaling config: %w", err)
 	}
 
+	if schedule.QueryModes == nil {
+		schedule.QueryModes = []string{"direct"}
+	}
+
 	query := `
 		UPDATE ingestion_schedules
-		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, updated_at = NOW()
-		WHERE id = $6
+		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, queryable = $6, query_modes = $7, ingest_on_query = $8, updated_at = NOW()
+		WHERE id = $9
 		RETURNING updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -281,6 +301,9 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 		configJSON,
 		schedule.CronExpression,
 		schedule.Enabled,
+		schedule.Queryable,
+		schedule.QueryModes,
+		schedule.IngestOnQuery,
 		schedule.ID,
 	).Scan(&schedule.UpdatedAt)
 
@@ -323,7 +346,7 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules WHERE enabled = $1`
 		listQuery = `
 			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
+				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.query_modes, s.ingest_on_query,
 				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
@@ -341,7 +364,7 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules`
 		listQuery = `
 			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
+				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.query_modes, s.ingest_on_query,
 				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
@@ -385,6 +408,9 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 			&configJSON,
 			&schedule.CronExpression,
 			&schedule.Enabled,
+			&schedule.Queryable,
+			&schedule.QueryModes,
+			&schedule.IngestOnQuery,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
 			&schedule.ManagedBy,
@@ -448,7 +474,7 @@ func (r *SchedulePostgresRepository) UpdateScheduleLastRun(ctx context.Context, 
 
 func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, query_modes, ingest_on_query, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE enabled = true AND managed_by IS NULL AND next_run_at IS NOT NULL AND next_run_at <= NOW()
 		ORDER BY next_run_at
@@ -471,6 +497,9 @@ func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, 
 			&configJSON,
 			&schedule.CronExpression,
 			&schedule.Enabled,
+			&schedule.Queryable,
+			&schedule.QueryModes,
+			&schedule.IngestOnQuery,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
 			&schedule.ManagedBy,

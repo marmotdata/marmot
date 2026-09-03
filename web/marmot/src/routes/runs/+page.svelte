@@ -12,19 +12,23 @@
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import IngestionRunCard from '$components/runs/IngestionRunCard.svelte';
 	import IngestionRunModal from '$components/runs/IngestionRunModal.svelte';
 	import ScheduleCard from '$components/runs/ScheduleCard.svelte';
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
+	import SessionsView from '$components/gateway/SessionsView.svelte';
+	import AuditView from '$components/gateway/AuditView.svelte';
+	import { getStatusColor, getStatusIcon } from '$lib/utils/status';
+	import { formatRelativeTime } from '$lib/utils/format';
 
 	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
+	let canViewGateway = $derived(auth.hasPermission('gateway', 'view'));
 
 	let unsubscribe: (() => void) | null = null;
 	let fetchRunsTimeout: ReturnType<typeof setTimeout> | null = null;
 	let wsConnected = $state(false);
 	let wsCheckInterval: ReturnType<typeof setInterval> | null = null;
 
-	type Tab = 'history' | 'pipelines';
+	type Tab = 'pipelines' | 'sessions' | 'audit';
 
 	interface IngestionRun {
 		id: string;
@@ -58,6 +62,7 @@
 		config: Record<string, unknown>;
 		cron_expression: string;
 		enabled: boolean;
+		queryable?: boolean;
 		last_run_at?: string;
 		last_run_status?: string;
 		next_run_at?: string;
@@ -101,6 +106,35 @@
 
 	let runningPipelines: SvelteSet<string> = new SvelteSet();
 
+	// Per-source run history, revealed by expanding a source row.
+	let expandedSourceId = $state<string | null>(null);
+	let sourceRuns = $state<Record<string, IngestionRun[]>>({});
+	let sourceRunsLoading = $state<Record<string, boolean>>({});
+
+	async function toggleSourceExpand(schedule: { id: string }) {
+		if (expandedSourceId === schedule.id) {
+			expandedSourceId = null;
+			return;
+		}
+		expandedSourceId = schedule.id;
+		await fetchSourceRuns(schedule.id);
+	}
+
+	async function fetchSourceRuns(scheduleId: string) {
+		sourceRunsLoading = { ...sourceRunsLoading, [scheduleId]: true };
+		try {
+			const response = await fetchApi(`/ingestion/runs?schedule_id=${scheduleId}&limit=8`);
+			if (!response.ok) throw new Error('Failed to fetch runs');
+			const data: IngestionRunsResponse = await response.json();
+			sourceRuns = { ...sourceRuns, [scheduleId]: data.runs || [] };
+		} catch (err) {
+			console.error('Error fetching source runs:', err);
+			sourceRuns = { ...sourceRuns, [scheduleId]: [] };
+		} finally {
+			sourceRunsLoading = { ...sourceRunsLoading, [scheduleId]: false };
+		}
+	}
+
 	let totalPages = $derived(Math.ceil(total / pageSize));
 	let offset = $derived((currentPage - 1) * pageSize);
 	let pipelinesTotalPages = $derived(Math.ceil(pipelinesTotal / pipelinesPageSize));
@@ -116,10 +150,12 @@
 			const statusesParam = urlParams.get('statuses');
 			const runParam = urlParams.get('run');
 
-			if (tabParam === 'history') {
-				activeTab = 'history';
-			} else if (tabParam === 'pipelines') {
-				activeTab = 'pipelines';
+			if (
+				tabParam === 'pipelines' ||
+				tabParam === 'sessions' ||
+				tabParam === 'audit'
+			) {
+				activeTab = tabParam;
 			} else {
 				activeTab = 'pipelines';
 			}
@@ -149,12 +185,9 @@
 	function switchTab(tab: Tab) {
 		activeTab = tab;
 		const url = new URL($page.url);
+		url.searchParams.set('tab', tab);
 		if (tab === 'pipelines') {
-			url.searchParams.set('tab', 'pipelines');
 			fetchPipelines();
-		} else {
-			url.searchParams.set('tab', 'history');
-			fetchRuns();
 		}
 		goto(resolve(`/runs${url.search}`), { replaceState: true, noScroll: true });
 	}
@@ -439,8 +472,13 @@
 			}
 		}
 
-		// Only update runs list if we're on the history tab
-		if (activeTab !== 'history') return;
+		// Keep the expanded source's run list fresh as its jobs progress.
+		if (jobRun.schedule_id && expandedSourceId === jobRun.schedule_id) {
+			fetchSourceRuns(jobRun.schedule_id);
+		}
+
+		// The rest maintains the legacy flat runs list, unused by the current UI.
+		if (activeTab !== 'pipelines') return;
 
 		switch (event.type) {
 			case 'job_run_created':
@@ -482,9 +520,7 @@
 	}
 
 	onMount(() => {
-		if (activeTab === 'history') {
-			fetchRuns();
-		} else if (activeTab === 'pipelines') {
+		if (activeTab === 'pipelines') {
 			fetchPipelines();
 		}
 
@@ -521,8 +557,10 @@
 
 <div class="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Runs</h1>
-		<p class="text-gray-600 dark:text-gray-400 mt-1">Monitor ingestion runs and manage pipelines</p>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Plugins</h1>
+		<p class="text-gray-600 dark:text-gray-400 mt-1">
+			Sources Marmot catalogs and lets agents query, and the agent activity that flows through them
+		</p>
 	</div>
 
 	<!-- Tab Navigation -->
@@ -536,21 +574,39 @@
 					: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
 			>
 				<IconifyIcon
-					icon="material-symbols:account-tree"
+					icon="material-symbols:hub-outline"
 					class="inline-block h-5 w-5 mr-2 -mt-0.5"
 				/>
-				Pipelines
+				Sources
 			</button>
-			<button
-				onclick={() => switchTab('history')}
-				class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab ===
-				'history'
-					? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
-					: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
-			>
-				<IconifyIcon icon="material-symbols:history" class="inline-block h-5 w-5 mr-2 -mt-0.5" />
-				Run History
-			</button>
+			{#if canViewGateway}
+				<button
+					onclick={() => switchTab('sessions')}
+					class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab ===
+					'sessions'
+						? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
+						: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
+				>
+					<IconifyIcon
+						icon="material-symbols:badge-outline"
+						class="inline-block h-5 w-5 mr-2 -mt-0.5"
+					/>
+					Sessions
+				</button>
+				<button
+					onclick={() => switchTab('audit')}
+					class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab ===
+					'audit'
+						? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
+						: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
+				>
+					<IconifyIcon
+						icon="material-symbols:receipt-long-outline"
+						class="inline-block h-5 w-5 mr-2 -mt-0.5"
+					/>
+					Query Audit
+				</button>
+			{/if}
 		</nav>
 	</div>
 
@@ -647,7 +703,7 @@
 						variant="filled"
 						click={() => goto(resolve('/pipelines/new'))}
 						icon="material-symbols:add"
-						text="Create Pipeline"
+						text="Add source"
 						disabled={!$encryptionConfigured}
 					/>
 				</div>
@@ -659,7 +715,7 @@
 						icon="material-symbols:account-tree"
 						class="mx-auto h-12 w-12 text-gray-400 mb-4"
 					/>
-					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Pipelines</h3>
+					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No sources yet</h3>
 					<p class="text-gray-500 dark:text-gray-400 mb-6">
 						{#if canManageIngestion}
 							Create a pipeline to ingest data - run on a schedule or trigger manually
@@ -672,7 +728,7 @@
 							variant="filled"
 							click={() => goto(resolve('/pipelines/new'))}
 							icon="material-symbols:add"
-							text="Create Pipeline"
+							text="Add source"
 							disabled={!$encryptionConfigured}
 						/>
 					{/if}
@@ -680,7 +736,7 @@
 			{:else}
 				<div class="mb-4">
 					<p class="text-gray-600 dark:text-gray-400">
-						Showing {pipelines.length} of {pipelinesTotal} pipelines
+						Showing {pipelines.length} of {pipelinesTotal} sources
 					</p>
 				</div>
 
@@ -696,7 +752,7 @@
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Pipeline
+									Source
 								</th>
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
@@ -733,8 +789,61 @@
 										: undefined}
 									onDelete={handleDeletePipeline}
 									onTrigger={$encryptionConfigured ? handleTriggerPipeline : undefined}
+									onToggleExpand={toggleSourceExpand}
+									expanded={expandedSourceId === pipeline.id}
 									isRunning={runningPipelines.has(pipeline.id)}
 								/>
+								{#if expandedSourceId === pipeline.id}
+									<tr class="bg-gray-50 dark:bg-gray-900/40">
+										<td colspan="7" class="px-6 py-4">
+											<div class="flex items-center justify-between mb-3">
+												<h4
+													class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+												>
+													Recent runs
+												</h4>
+											</div>
+											{#if sourceRunsLoading[pipeline.id]}
+												<div class="flex items-center justify-center py-6">
+													<div
+														class="animate-spin rounded-full h-5 w-5 border-b-2 border-earthy-terracotta-700"
+													></div>
+												</div>
+											{:else if (sourceRuns[pipeline.id] || []).length === 0}
+												<p class="text-sm text-gray-500 dark:text-gray-400 py-2">
+													No runs yet. Trigger one with the play button, or it will run on its schedule.
+												</p>
+											{:else}
+												<div class="space-y-1">
+													{#each sourceRuns[pipeline.id] as run (run.id)}
+														<button
+															class="w-full flex items-center gap-4 text-left px-3 py-2 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
+															onclick={() => handleRunClick(run)}
+														>
+															<span
+																class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getStatusColor(
+																	run.status
+																)}"
+															>
+																<IconifyIcon
+																	icon={getStatusIcon(run.status)}
+																	class="h-3.5 w-3.5 mr-1.5"
+																/>
+																{run.status.charAt(0).toUpperCase() + run.status.slice(1)}
+															</span>
+															<span class="text-sm text-gray-600 dark:text-gray-400 tabular-nums">
+																{formatRelativeTime(run.created_at)}
+															</span>
+															<span class="text-xs text-gray-500 dark:text-gray-500 ml-auto">
+																{run.assets_created} created · {run.assets_updated} updated
+															</span>
+														</button>
+													{/each}
+												</div>
+											{/if}
+										</td>
+									</tr>
+								{/if}
 							{/each}
 						</tbody>
 					</table>
@@ -767,247 +876,10 @@
 				{/if}
 			{/if}
 		{/if}
-	{:else if activeTab === 'history'}
-		{#if loading}
-			<div class="flex items-center justify-center py-12">
-				<div
-					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
-		{:else if error}
-			<div
-				class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex">
-					<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
-					<div class="ml-3">
-						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-						<p class="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
-					</div>
-				</div>
-			</div>
-		{:else}
-			<!-- Filters -->
-			<div
-				class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6"
-			>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<!-- Status Filter -->
-					<div class="relative">
-						<button
-							class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700"
-							onclick={() => (showStatusDropdown = !showStatusDropdown)}
-						>
-							<span class="flex items-center">
-								<IconifyIcon icon="material-symbols:filter-list" class="h-4 w-4 mr-2" />
-								{selectedStatuses.length === 0
-									? 'All Statuses'
-									: selectedStatuses.length === 1
-										? selectedStatuses[0].charAt(0).toUpperCase() + selectedStatuses[0].slice(1)
-										: `${selectedStatuses.length} Statuses`}
-							</span>
-							<IconifyIcon icon="material-symbols:expand-more" class="h-4 w-4" />
-						</button>
-
-						{#if showStatusDropdown}
-							<div
-								class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto"
-							>
-								{#each availableStatuses as status (status)}
-									<div
-										class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 dark:hover:bg-gray-600"
-										onclick={() => handleStatusToggle(status)}
-										onkeydown={(e) => e.key === 'Enter' && handleStatusToggle(status)}
-										role="button"
-										tabindex="0"
-									>
-										<div class="flex items-center">
-											<input
-												type="checkbox"
-												checked={selectedStatuses.includes(status)}
-												class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-												readonly
-											/>
-											<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize">{status}</span>
-										</div>
-									</div>
-								{/each}
-							</div>
-						{/if}
-					</div>
-
-					<!-- Clear Filters -->
-					<Button variant="clear" click={resetFilters} text="Clear Filters" class="w-full" />
-				</div>
-			</div>
-
-			<!-- Top Pagination -->
-			{#if totalPages > 1}
-				<div class="flex items-center justify-between mb-6">
-					<div class="text-sm text-gray-600 dark:text-gray-400">
-						Page {currentPage} of {totalPages}
-					</div>
-
-					<div class="flex items-center gap-2">
-						{#if currentPage > 2}
-							<Button variant="clear" click={() => goToPage(1)} text="1" />
-							{#if currentPage > 3}
-								<span class="text-gray-500">...</span>
-							{/if}
-						{/if}
-
-						{#if currentPage > 1}
-							<Button
-								variant="clear"
-								click={() => goToPage(currentPage - 1)}
-								text={(currentPage - 1).toString()}
-							/>
-						{/if}
-
-						<Button variant="filled" text={currentPage.toString()} disabled />
-
-						{#if currentPage < totalPages}
-							<Button
-								variant="clear"
-								click={() => goToPage(currentPage + 1)}
-								text={(currentPage + 1).toString()}
-							/>
-						{/if}
-
-						{#if currentPage < totalPages - 1}
-							{#if currentPage < totalPages - 2}
-								<span class="text-gray-500">...</span>
-							{/if}
-							<Button
-								variant="clear"
-								click={() => goToPage(totalPages)}
-								text={totalPages.toString()}
-							/>
-						{/if}
-					</div>
-
-					<div class="flex items-center gap-2">
-						<Button
-							variant="clear"
-							click={() => goToPage(currentPage - 1)}
-							disabled={currentPage === 1}
-							icon="material-symbols:chevron-left"
-							text="Previous"
-						/>
-						<Button
-							variant="clear"
-							click={() => goToPage(currentPage + 1)}
-							disabled={currentPage === totalPages}
-							text="Next"
-							icon="material-symbols:chevron-right"
-						/>
-					</div>
-				</div>
-			{/if}
-
-			{#if runs.length === 0}
-				<div class="text-center py-12">
-					<IconifyIcon icon="material-symbols:sync" class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-						No Ingestion Runs
-					</h3>
-					<p class="text-gray-500 dark:text-gray-400">
-						{selectedStatuses.length > 0
-							? 'No runs match your current filters'
-							: 'No ingestion runs have been executed yet'}
-					</p>
-				</div>
-			{:else}
-				<div class="mb-4">
-					<p class="text-gray-600 dark:text-gray-400">
-						Showing {runs.length} of {total} runs
-						{selectedStatuses.length > 0 ? `with selected statuses` : ''}
-					</p>
-				</div>
-
-				<div class="grid gap-4 mb-6">
-					{#each runs as run (run.id)}
-						<IngestionRunCard {run} onClick={() => handleRunClick(run)} />
-					{/each}
-				</div>
-
-				<!-- Bottom Pagination -->
-				{#if totalPages > 1}
-					<div class="flex items-center justify-between">
-						<div class="text-sm text-gray-600 dark:text-gray-400">
-							Page {currentPage} of {totalPages}
-						</div>
-
-						<div class="flex items-center gap-2">
-							{#if currentPage > 2}
-								<Button variant="clear" click={() => goToPage(1)} text="1" />
-								{#if currentPage > 3}
-									<span class="text-gray-500">...</span>
-								{/if}
-							{/if}
-
-							{#if currentPage > 1}
-								<Button
-									variant="clear"
-									click={() => goToPage(currentPage - 1)}
-									text={(currentPage - 1).toString()}
-								/>
-							{/if}
-
-							<Button variant="filled" text={currentPage.toString()} disabled />
-
-							{#if currentPage < totalPages}
-								<Button
-									variant="clear"
-									click={() => goToPage(currentPage + 1)}
-									text={(currentPage + 1).toString()}
-								/>
-							{/if}
-
-							{#if currentPage < totalPages - 1}
-								{#if currentPage < totalPages - 2}
-									<span class="text-gray-500">...</span>
-								{/if}
-								<Button
-									variant="clear"
-									click={() => goToPage(totalPages)}
-									text={totalPages.toString()}
-								/>
-							{/if}
-						</div>
-
-						<div class="flex items-center gap-2">
-							<Button
-								variant="clear"
-								click={() => goToPage(currentPage - 1)}
-								disabled={currentPage === 1}
-								icon="material-symbols:chevron-left"
-								text="Previous"
-							/>
-							<Button
-								variant="clear"
-								click={() => goToPage(currentPage + 1)}
-								disabled={currentPage === totalPages}
-								text="Next"
-								icon="material-symbols:chevron-right"
-							/>
-						</div>
-					</div>
-				{/if}
-			{/if}
-
-			{#if showStatusDropdown}
-				<div
-					class="fixed inset-0 z-5"
-					onclick={() => {
-						showStatusDropdown = false;
-					}}
-					onkeydown={(e) => e.key === 'Escape' && (showStatusDropdown = false)}
-					role="button"
-					tabindex="-1"
-				></div>
-			{/if}
-		{/if}
+	{:else if activeTab === 'sessions'}
+		<SessionsView />
+	{:else if activeTab === 'audit'}
+		<AuditView />
 	{/if}
 </div>
 
