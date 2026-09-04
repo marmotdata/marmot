@@ -76,7 +76,7 @@ jobs:
 
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
           args: release --clean --skip=validate
