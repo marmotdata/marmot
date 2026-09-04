@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -15,7 +16,9 @@ import (
 )
 
 // newPostgresRepository connects to the database named by
-// MARMOT_TEST_POSTGRES_DSN and creates the two tables migration 000052 adds.
+// MARMOT_TEST_POSTGRES_DSN and creates the two tables the oauth flow state
+// migration adds. It finds that migration by name rather than by number, so
+// renumbering it cannot silently skip the schema and fail every test below.
 // Without that variable the test is skipped, so `go test ./...` stays offline.
 func newPostgresRepository(t *testing.T) (Repository, context.Context) {
 	t.Helper()
@@ -32,7 +35,11 @@ func newPostgresRepository(t *testing.T) (Repository, context.Context) {
 	}
 	t.Cleanup(pool.Close)
 
-	schema, err := os.ReadFile("../store/postgres/migrations/000052_oauth_flow_state.sql")
+	matches, err := filepath.Glob("../store/postgres/migrations/*_oauth_flow_state.sql")
+	if err != nil || len(matches) != 1 {
+		t.Fatalf("expected exactly one oauth flow state migration, got %v (%v)", matches, err)
+	}
+	schema, err := os.ReadFile(matches[0])
 	if err != nil {
 		t.Fatalf("read migration: %v", err)
 	}
