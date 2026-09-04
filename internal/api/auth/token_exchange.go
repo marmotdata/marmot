@@ -16,9 +16,9 @@ import (
 
 // RFC 8693 grant type and token type identifiers.
 const (
-	grantTypeTokenExchange = "urn:ietf:params:oauth:grant-type:token-exchange"  //nolint:gosec // OAuth URI, not a credential
-	tokenTypeIDToken       = "urn:ietf:params:oauth:token-type:id_token"        //nolint:gosec // OAuth URI, not a credential
-	tokenTypeAccessToken   = "urn:ietf:params:oauth:token-type:access_token"    //nolint:gosec // OAuth URI, not a credential
+	grantTypeTokenExchange = "urn:ietf:params:oauth:grant-type:token-exchange" //nolint:gosec // OAuth URI, not a credential
+	tokenTypeIDToken       = "urn:ietf:params:oauth:token-type:id_token"       //nolint:gosec // OAuth URI, not a credential
+	tokenTypeAccessToken   = "urn:ietf:params:oauth:token-type:access_token"   //nolint:gosec // OAuth URI, not a credential
 )
 
 // tokenExchangeResponse is the RFC 8693 Section 2.2.1 token response.
@@ -114,6 +114,10 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 		log.Error().Err(err).Msg("Failed to generate token")
 		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
 		return
+	}
+
+	if err := h.oauthProvider.Store.KeepClientAlive(ctx, accessReq.GetClient().GetID()); err != nil {
+		log.Error().Err(err).Msg("Failed to extend OAuth client lease")
 	}
 
 	w.Header().Set("Content-Type", "application/json")

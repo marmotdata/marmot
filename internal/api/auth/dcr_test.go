@@ -12,7 +12,7 @@ import (
 )
 
 func newDCRHandler() *Handler {
-	provider := marmotOAuth2.NewProvider([]byte("test-secret-key-for-dcr-tests"))
+	provider := marmotOAuth2.NewProvider([]byte("test-secret-key-for-dcr-tests"), marmotOAuth2.NewMemoryRepository())
 	return &Handler{
 		oauthProvider: provider,
 		config:        &config.Config{},

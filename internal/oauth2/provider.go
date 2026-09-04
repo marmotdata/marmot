@@ -12,12 +12,12 @@ type Provider struct {
 	Store *Store
 }
 
-func NewProvider(hmacSecret []byte) *Provider {
-	store := NewStore()
+func NewProvider(hmacSecret []byte, repo Repository) *Provider {
+	store := NewStore(repo)
 
 	config := &fosite.Config{
 		GlobalSecret:                hmacSecret,
-		AuthorizeCodeLifespan:       10 * time.Minute,
+		AuthorizeCodeLifespan:       authorizeCodeLifespan,
 		AccessTokenLifespan:         24 * time.Hour,
 		EnforcePKCE:                 true,
 		EnablePKCEPlainChallengeMethod: false,

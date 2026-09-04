@@ -15,30 +15,28 @@ import (
 	"github.com/marmotdata/marmot/internal/core/user"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	"github.com/marmotdata/marmot/pkg/config"
-	"github.com/ory/fosite"
 )
 
 func newAuthorizeHandler() *Handler {
 	secret := []byte("test-secret-key-for-authorize--!")
-	provider := marmotOAuth2.NewProvider(secret)
-	store := marmotOAuth2.NewAuthorizeSessionStore()
+	provider := marmotOAuth2.NewProvider(secret, marmotOAuth2.NewMemoryRepository())
 
 	cfg := &config.Config{}
 	cfg.Server.RootURL = "http://localhost:8080"
 
-	provider.Store.RegisterClient(&fosite.DefaultClient{
+	if err := provider.Store.RegisterClient(context.Background(), &marmotOAuth2.ClientRecord{
 		ID:            "test-client-1",
-		Public:        true,
 		RedirectURIs:  []string{"http://localhost:9999/callback"},
 		GrantTypes:    []string{"authorization_code"},
 		ResponseTypes: []string{"code"},
 		Scopes:        []string{"openid"},
-	})
+	}); err != nil {
+		panic(err)
+	}
 
 	return &Handler{
-		oauthProvider:         provider,
-		authorizeSessionStore: store,
-		config:                cfg,
+		oauthProvider: provider,
+		config:        cfg,
 	}
 }
 

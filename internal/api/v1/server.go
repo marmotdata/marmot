@@ -436,10 +436,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	if signingKeyErr != nil {
 		log.Fatal().Err(signingKeyErr).Msg("Failed to get signing key for OAuth2 provider")
 	}
-	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey)
-	authorizeSessionStore := marmotOAuth2.NewAuthorizeSessionStore()
-	oauthFositeProvider.Store.StartCleanup(context.Background(), 5*time.Minute)
-	authorizeSessionStore.StartCleanup(context.Background(), time.Minute)
+	// OAuth flow state lives in Postgres rather than in this process: a sign-in
+	// spans four requests and an instance can serve each from a different replica.
+	oauthRepo := marmotOAuth2.NewPostgresRepository(db)
+	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey, oauthRepo)
+	marmotOAuth2.StartCleanup(context.Background(), oauthRepo, 5*time.Minute)
 
 	// Webhook service for external notifications
 	webhookRepo := webhookService.NewPostgresRepository(db)
@@ -533,7 +534,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	schedulesHandler := schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured)
 
-	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider, authorizeSessionStore)
+	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider)
 	common.SetOAuthAuthorizeCompleter(authHandler)
 
 	server.handlers = []interface{ Routes() []common.Route }{

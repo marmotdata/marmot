@@ -2,16 +2,29 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/ory/fosite"
+	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
+	"github.com/rs/zerolog/log"
+)
+
+// Registration is unauthenticated and every accepted request becomes a row, so
+// the bounds below are what stops anyone from filling the database with it.
+const (
+	maxDCRBodyBytes    = 4 << 10
+	maxDCRRedirectURIs = 5
+	maxRedirectURILen  = 256
 )
 
 func isLoopbackRedirectURI(raw string) bool {
+	if len(raw) > maxRedirectURILen {
+		return false
+	}
 	u, err := url.Parse(raw)
 	if err != nil || u.Scheme != "http" {
 		return false
@@ -40,6 +53,8 @@ type dcrResponse struct {
 }
 
 func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxDCRBodyBytes)
+
 	var req dcrRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
@@ -52,12 +67,22 @@ func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(req.RedirectURIs) > maxDCRRedirectURIs {
+		respondOAuthError(w, http.StatusBadRequest, "invalid_client_metadata",
+			fmt.Sprintf("at most %d redirect_uris are accepted", maxDCRRedirectURIs))
+		return
+	}
+
 	for _, uri := range req.RedirectURIs {
 		if !isLoopbackRedirectURI(uri) {
 			respondOAuthError(w, http.StatusBadRequest, "invalid_redirect_uri",
 				"redirect_uris must be loopback http URLs (http://localhost, http://127.0.0.1, or http://[::1])")
 			return
 		}
+	}
+
+	if len(req.ClientName) > 128 {
+		req.ClientName = req.ClientName[:128]
 	}
 
 	if req.TokenEndpointAuthMethod != "" && req.TokenEndpointAuthMethod != "none" {
@@ -68,16 +93,20 @@ func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
 
 	clientID := uuid.New().String()
 
-	client := &fosite.DefaultClient{
+	client := &marmotOAuth2.ClientRecord{
 		ID:            clientID,
-		Public:        true,
 		RedirectURIs:  req.RedirectURIs,
 		GrantTypes:    []string{"authorization_code"},
 		ResponseTypes: []string{"code"},
 		Scopes:        []string{"openid"},
 	}
 
-	h.oauthProvider.Store.RegisterClient(client)
+	if err := h.oauthProvider.Store.RegisterClient(r.Context(), client); err != nil {
+		log.Error().Err(err).Msg("Failed to store dynamically registered OAuth client")
+		respondOAuthError(w, http.StatusInternalServerError, "server_error",
+			"Could not register the client")
+		return
+	}
 
 	resp := dcrResponse{
 		ClientID:                clientID,

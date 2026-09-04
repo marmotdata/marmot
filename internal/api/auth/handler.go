@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/auth"
@@ -11,25 +12,31 @@ import (
 )
 
 type Handler struct {
-	authService           auth.Service
-	userService           user.Service
-	oauthManager          *auth.OAuthManager
-	oauthProvider         *marmotOAuth2.Provider
-	authorizeSessionStore *marmotOAuth2.AuthorizeSessionStore
-	loginHandoffStore     *LoginHandoffStore
-	config                *config.Config
+	authService   auth.Service
+	userService   user.Service
+	oauthManager  *auth.OAuthManager
+	oauthProvider *marmotOAuth2.Provider
+	config        *config.Config
 }
 
-func NewHandler(authService auth.Service, oauthManager *auth.OAuthManager, userService user.Service, config *config.Config, oauthProvider *marmotOAuth2.Provider, authorizeSessionStore *marmotOAuth2.AuthorizeSessionStore) *Handler {
+func NewHandler(authService auth.Service, oauthManager *auth.OAuthManager, userService user.Service, config *config.Config, oauthProvider *marmotOAuth2.Provider) *Handler {
 	return &Handler{
-		authService:           authService,
-		userService:           userService,
-		oauthManager:          oauthManager,
-		oauthProvider:         oauthProvider,
-		authorizeSessionStore: authorizeSessionStore,
-		loginHandoffStore:     NewLoginHandoffStore(),
-		config:                config,
+		authService:   authService,
+		userService:   userService,
+		oauthManager:  oauthManager,
+		oauthProvider: oauthProvider,
+		config:        config,
 	}
+}
+
+// cookiesAreSecure reports whether the cookies this handler sets should carry
+// the Secure flag. It follows the configured root URL rather than a forwarded
+// header, so a proxy that forgets to set one does not silently downgrade them.
+func (h *Handler) cookiesAreSecure(r *http.Request) bool {
+	if root := h.config.Server.RootURL; root != "" {
+		return strings.HasPrefix(root, "https://")
+	}
+	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
 func (h *Handler) Routes() []common.Route {

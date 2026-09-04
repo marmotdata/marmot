@@ -1,101 +1,40 @@
 package auth
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"sync"
-	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
+	"github.com/rs/zerolog/log"
 )
 
-const (
-	loginHandoffCookieName = "marmot_login_ticket"
-	loginHandoffTTL        = 60 * time.Second
-)
+const loginHandoffCookieName = "marmot_login_ticket"
 
-type LoginHandoffStore struct {
-	mu      sync.Mutex
-	tickets map[string]loginHandoffEntry
-}
-
-type loginHandoffEntry struct {
-	token     string
-	expiresAt time.Time
-}
-
-func NewLoginHandoffStore() *LoginHandoffStore {
-	return &LoginHandoffStore{tickets: make(map[string]loginHandoffEntry)}
-}
-
-func (s *LoginHandoffStore) Put(ticket, token string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.tickets[ticket] = loginHandoffEntry{
-		token:     token,
-		expiresAt: time.Now().Add(loginHandoffTTL),
-	}
-}
-
-func (s *LoginHandoffStore) Take(ticket string) string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	entry, ok := s.tickets[ticket]
-	if !ok {
-		return ""
-	}
-	delete(s.tickets, ticket)
-	if time.Now().After(entry.expiresAt) {
-		return ""
-	}
-	return entry.token
-}
-
-func (s *LoginHandoffStore) StartCleanup(ctx context.Context, interval time.Duration) {
-	go func() {
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				s.cleanup()
-			}
-		}
-	}()
-}
-
-func (s *LoginHandoffStore) cleanup() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	now := time.Now()
-	for k, e := range s.tickets {
-		if now.After(e.expiresAt) {
-			delete(s.tickets, k)
-		}
-	}
-}
-
-func (h *Handler) issueLoginHandoff(w http.ResponseWriter, r *http.Request, token string) error {
+// issueLoginHandoff parks the user an SSO callback just authenticated under a
+// one-time ticket, so the page it redirects to can trade the ticket for a
+// token. The ticket goes out in a cookie; nothing but the user id is stored.
+func (h *Handler) issueLoginHandoff(w http.ResponseWriter, r *http.Request, userID string) error {
 	buf := make([]byte, 32)
 	if _, err := rand.Read(buf); err != nil {
 		return fmt.Errorf("generating handoff ticket: %w", err)
 	}
 	ticket := base64.RawURLEncoding.EncodeToString(buf)
 
-	h.loginHandoffStore.Put(ticket, token)
+	if err := h.oauthProvider.Store.PutLoginHandoff(r.Context(), ticket, userID); err != nil {
+		return fmt.Errorf("storing handoff ticket: %w", err)
+	}
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     loginHandoffCookieName,
 		Value:    ticket,
 		Path:     "/",
-		MaxAge:   int(loginHandoffTTL.Seconds()),
+		MaxAge:   int(marmotOAuth2.LoginHandoffTTL.Seconds()),
 		Secure:   isSecure,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -110,9 +49,10 @@ func (h *Handler) handleLoginExchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := h.loginHandoffStore.Take(cookie.Value)
+	// Redeem first, so a failure later cannot leave the ticket usable.
+	userID, takeErr := h.oauthProvider.Store.TakeLoginHandoff(r.Context(), cookie.Value)
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     loginHandoffCookieName,
 		Value:    "",
@@ -123,8 +63,27 @@ func (h *Handler) handleLoginExchange(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	if token == "" {
+	if takeErr != nil {
+		if !errors.Is(takeErr, marmotOAuth2.ErrNoRecord) {
+			log.Error().Err(takeErr).Msg("Failed to redeem login handoff ticket")
+		}
 		common.RespondError(w, http.StatusUnauthorized, "Login handoff expired or already used")
+		return
+	}
+
+	usr, err := h.userService.Get(r.Context(), userID)
+	if err != nil {
+		log.Error().Err(err).Str("user_id", userID).Msg("Failed to look up user for login handoff")
+		common.RespondError(w, http.StatusUnauthorized, "Login handoff expired or already used")
+		return
+	}
+
+	// Minted here rather than at the callback, so no token is ever written to
+	// the database.
+	token, err := h.authService.GenerateToken(r.Context(), usr, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to generate token for login handoff")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to complete login")
 		return
 	}
 

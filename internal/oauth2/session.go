@@ -42,6 +42,18 @@ func (s *MarmotSession) GetSubject() string {
 	return s.UserID
 }
 
+// copyInto overwrites dst with this session. Fosite hands a storage lookup an
+// empty session to fill in, and validates the code against that one before it
+// swaps in the returned request's session.
+func (s *MarmotSession) copyInto(dst *MarmotSession) {
+	dst.UserID = s.UserID
+	dst.Username = s.Username
+	dst.ExpiresAt = make(map[fosite.TokenType]time.Time, len(s.ExpiresAt))
+	for k, v := range s.ExpiresAt {
+		dst.ExpiresAt[k] = v
+	}
+}
+
 func (s *MarmotSession) Clone() fosite.Session {
 	expiresAt := make(map[fosite.TokenType]time.Time, len(s.ExpiresAt))
 	for k, v := range s.ExpiresAt {
