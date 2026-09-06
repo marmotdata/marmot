@@ -10,13 +10,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// setupTestConfigDir points the config directory at a temp dir. HOME is set
+// as well as XDG_CONFIG_HOME because os.UserConfigDir only honours XDG on
+// Linux; on macOS it uses $HOME/Library/Application Support, so without this
+// the tests read and write the developer's real credentials file.
 func setupTestConfigDir(t *testing.T) (string, func()) {
 	t.Helper()
 	tmpDir := t.TempDir()
 	origXDG := os.Getenv("XDG_CONFIG_HOME")
+	origHome := os.Getenv("HOME")
 	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 	return tmpDir, func() {
 		_ = os.Setenv("XDG_CONFIG_HOME", origXDG)
+		_ = os.Setenv("HOME", origHome)
 	}
 }
 
@@ -138,6 +145,7 @@ func TestCredentialsDirCreated(t *testing.T) {
 	tmpDir := t.TempDir()
 	nested := filepath.Join(tmpDir, "deep", "nested")
 	t.Setenv("XDG_CONFIG_HOME", nested)
+	t.Setenv("HOME", nested)
 
 	require.NoError(t, setCachedToken("example.com", "tok", "Bearer", 3600))
 
