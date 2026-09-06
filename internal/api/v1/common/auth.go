@@ -63,6 +63,28 @@ func GetAnonymousContext(ctx context.Context) (AnonymousContext, bool) {
 	return val, ok
 }
 
+// CreatedBy returns the id to store in a created_by column that references
+// users, or nil when the caller has no row there. Anonymous access and the
+// operator token reach handlers with a user built in memory, and a service
+// account has no user at all. Inserting any of their ids fails the foreign
+// key, which surfaced as "Failed to create service account" for an anonymous
+// admin.
+func CreatedBy(ctx context.Context) *string {
+	u, ok := GetAuthenticatedUser(ctx)
+	if !ok || u == nil || IsSyntheticUser(u) {
+		return nil
+	}
+	id := u.ID
+	return &id
+}
+
+// IsSyntheticUser reports whether u was built in memory for anonymous or
+// operator access rather than loaded from the users table. Both usernames are
+// reserved, so a real user can never match.
+func IsSyntheticUser(u *user.User) bool {
+	return u.Username == "anonymous" || u.Username == "operator"
+}
+
 // PrincipalFromContext retrieves the authenticated Principal from the request context.
 func PrincipalFromContext(ctx context.Context) (auth.Principal, bool) {
 	p, ok := ctx.Value(PrincipalContextKey).(auth.Principal)

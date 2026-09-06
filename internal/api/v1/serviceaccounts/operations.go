@@ -77,10 +77,7 @@ func (h *Handler) createServiceAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var createdBy *string
-	if u, ok := common.GetAuthenticatedUser(r.Context()); ok {
-		createdBy = &u.ID
-	}
+	createdBy := common.CreatedBy(r.Context())
 
 	sa, err := h.svcService.Create(r.Context(), serviceaccount.CreateInput{
 		Name:        req.Name,

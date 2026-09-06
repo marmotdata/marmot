@@ -11,7 +11,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
@@ -840,11 +839,7 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 		contentType = http.DetectContentType(data)
 	}
 
-	// Get user for created_by
-	var createdBy *string
-	if usr, ok := r.Context().Value(common.UserContextKey).(*user.User); ok {
-		createdBy = &usr.ID
-	}
+	createdBy := common.CreatedBy(r.Context())
 
 	input := dataproduct.UploadImageInput{
 		Filename:    header.Filename,
