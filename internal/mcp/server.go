@@ -5,6 +5,7 @@ import (
 
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
@@ -97,7 +98,9 @@ func NewServer(
 	}
 }
 
-func (s *Server) CreateMCPServer(ctx context.Context, user *user.User) *mcpsdk.Server {
+// CreateMCPServer builds a server scoped to one caller. Any principal the
+// API accepts can use MCP: users, and service accounts an agent runs as.
+func (s *Server) CreateMCPServer(ctx context.Context, principal auth.Principal) *mcpsdk.Server {
 	server := mcpsdk.NewServer(
 		&mcpsdk.Implementation{
 			Name:    "marmot-catalog",
@@ -106,12 +109,12 @@ func (s *Server) CreateMCPServer(ctx context.Context, user *user.User) *mcpsdk.S
 		nil,
 	)
 
-	s.registerTools(server, user)
+	s.registerTools(server, principal)
 
 	return server
 }
 
-func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
+func (s *Server) registerTools(server *mcpsdk.Server, principal auth.Principal) {
 	tc := &ToolContext{
 		assetService:       s.assetService,
 		glossaryService:    s.glossaryService,
@@ -120,7 +123,7 @@ func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
 		dataProductService: s.dataProductService,
 		lineageService:     s.lineageService,
 		searchService:      s.searchService,
-		user:               user,
+		principal:          principal,
 		config:             s.config,
 		lookups:            s.lookups,
 	}

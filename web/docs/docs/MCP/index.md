@@ -101,6 +101,8 @@ MCP uses the same authentication as Marmot's REST API. You'll need an API key to
 
 The AI assistant will have the same permissions as your user account, respecting all role-based access controls.
 
+An agent that runs on its own identity uses a service account key instead. Create the service account on the **Service Accounts** page (`/service-accounts`), give it a role with `assets:view`, `glossary:view` and `teams:view`, and put one of its keys in the MCP client configuration. The agent then has the service account's permissions, not any person's.
+
 ## Available Tools
 
 Marmot's MCP server provides these tools to AI assistants:
