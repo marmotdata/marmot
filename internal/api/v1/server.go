@@ -702,7 +702,20 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 	// the SPA the static handler would serve: a client asking for an endpoint
 	// that does not exist must not get HTML and a 200. Registered patterns are
 	// more specific, so they still win.
-	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+		// Access policies are a known endpoint this build does not implement,
+		// which is not the same as a path that means nothing. A bare 404 sends
+		// the caller looking for a mistyped resource id, so name the reason.
+		//
+		// This lives in the fallback rather than in a route of its own so that
+		// a distribution serving the real endpoints shadows it for free: the
+		// fallback only runs when nothing else matched.
+		if strings.HasPrefix(r.URL.Path, "/api/v1/iam/") {
+			common.RespondError(w, http.StatusNotImplemented,
+				"Access policies are not available in this edition of Marmot. "+
+					"They are part of Marmot Cloud and Marmot Enterprise: https://cloud.marmotdata.io")
+			return
+		}
 		common.RespondError(w, http.StatusNotFound, "Not found")
 	})
 
