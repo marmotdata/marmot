@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -103,6 +104,7 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
 // @ID deleteUsersApikeysID
 // @Router /api/v1/users/apikeys/{id} [delete]
 func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +122,12 @@ func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
 
 	err := h.userService.DeleteAPIKey(r.Context(), usr.ID, keyID)
 	if err != nil {
+		// Absent and not-yours get the same answer: separating them would
+		// confirm another user's key to anyone guessing ids.
+		if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, user.ErrUnauthorized) {
+			common.RespondError(w, http.StatusNotFound, "API key not found")
+			return
+		}
 		log.Error().Err(err).Str("user_id", usr.ID).Str("key_id", keyID).Msg("Failed to delete API key")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to delete API key")
 		return

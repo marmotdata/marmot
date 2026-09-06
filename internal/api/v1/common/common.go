@@ -33,7 +33,7 @@ type LimitErrorResponse struct {
 type ValidationErrorResponse struct {
 	Error  string            `json:"error"`
 	Fields []ValidationError `json:"fields,omitempty"`
-}
+} // @name ValidationErrorResponse
 
 // ValidationError represents a field-level validation error
 type ValidationError struct {

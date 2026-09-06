@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -53,13 +54,14 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 	authenticatedUser, err := h.userService.Authenticate(r.Context(), input.Username, input.Password)
 	if err != nil {
-		switch err {
-		case user.ErrInvalidPassword, user.ErrUnauthorized:
+		// errors.Is, not ==: these are bare today, but the rest of core/user
+		// wraps its sentinels and a value comparison would silently rot.
+		if errors.Is(err, user.ErrInvalidPassword) || errors.Is(err, user.ErrUnauthorized) {
 			common.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
-		default:
-			log.Error().Err(err).Str("username", input.Username).Msg("Authentication failed")
-			common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
+			return
 		}
+		log.Error().Err(err).Str("username", input.Username).Msg("Authentication failed")
+		common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
 		return
 	}
 
@@ -187,6 +189,9 @@ func (h *Handler) updatePassword(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := h.userService.UpdatePassword(r.Context(), usr.ID, input.NewPassword)
 	if err != nil {
+		if respondUserError(w, err) {
+			return
+		}
 		log.Error().Err(err).Str("user_id", usr.ID).Msg("Failed to update password")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to update password")
 		return
