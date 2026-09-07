@@ -85,6 +85,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Flink",
+    description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
+    docId: "Plugins/Flink",
+    icon: "logos:apache-flink",
+  },
+  {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
     docId: "Plugins/Google Cloud Storage",
