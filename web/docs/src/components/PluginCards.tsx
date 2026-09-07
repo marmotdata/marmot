@@ -116,6 +116,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:apachekafka",
   },
   {
+    name: "Kinesis",
+    description: "Discover Kinesis Data Streams from AWS accounts",
+    docId: "Plugins/Kinesis",
+    icon: "logos:aws-kinesis",
+  },
+  {
     name: "Kubernetes",
     description: "Discover namespaces, services, workloads, and cron jobs from self-managed Kubernetes clusters",
     docId: "Plugins/Kubernetes",
