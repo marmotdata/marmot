@@ -41,6 +41,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "Cassandra",
+    description: "Discover keyspaces, tables, and materialized views from Apache Cassandra clusters",
+    docId: "Plugins/Cassandra",
+    icon: "logos:cassandra",
+  },
+  {
     name: "ClickHouse",
     description: "Discover databases, tables, and views from ClickHouse instances",
     docId: "Plugins/ClickHouse",
