@@ -134,6 +134,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:apachekafka",
   },
   {
+    name: "Kinesis",
+    description: "Discover Kinesis Data Streams from AWS accounts",
+    docId: "Plugins/Kinesis",
+    icon: "logos:aws-kinesis",
+  },
+  {
     name: "Kafka Connect",
     description: "Discover connectors, tasks and topics from Kafka Connect with lineage to the systems they move data between",
     docId: "Plugins/Kafka Connect",
