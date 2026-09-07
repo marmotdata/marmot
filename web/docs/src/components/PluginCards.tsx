@@ -134,6 +134,12 @@ export const plugins: Plugin[] = [
     icon: "logos:google-icon",
   },
   {
+    name: "Metabase",
+    description: "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
+    docId: "Plugins/Metabase",
+    icon: "logos:metabase",
+  },
+  {
     name: "MongoDB",
     description: "Discover databases and collections from MongoDB instances",
     docId: "Plugins/MongoDB",
