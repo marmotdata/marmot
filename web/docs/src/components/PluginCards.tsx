@@ -176,6 +176,12 @@ export const plugins: Plugin[] = [
     icon: "material-symbols:book-2-outline",
   },
   {
+    name: "Oracle",
+    description: "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
+    docId: "Plugins/Oracle",
+    icon: "logos:oracle",
+  },
+  {
     name: "PostgreSQL",
     description: "Discover tables, views, and relationships from PostgreSQL databases",
     docId: "Plugins/PostgreSQL",
