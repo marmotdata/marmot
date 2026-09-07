@@ -176,6 +176,12 @@ export const plugins: Plugin[] = [
     icon: "material-symbols:book-2-outline",
   },
   {
+    name: "Pinot",
+    description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
+    docId: "Plugins/Pinot",
+    icon: "simple-icons:apachepinot",
+  },
+  {
     name: "PostgreSQL",
     description: "Discover tables, views, and relationships from PostgreSQL databases",
     docId: "Plugins/PostgreSQL",
