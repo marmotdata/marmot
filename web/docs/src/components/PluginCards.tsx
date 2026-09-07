@@ -134,6 +134,12 @@ export const plugins: Plugin[] = [
     icon: "logos:google-icon",
   },
   {
+    name: "MLflow",
+    description: "Discover registered models, experiments and training datasets from MLflow",
+    docId: "Plugins/MLflow",
+    icon: "simple-icons:mlflow",
+  },
+  {
     name: "MongoDB",
     description: "Discover databases and collections from MongoDB instances",
     docId: "Plugins/MongoDB",
