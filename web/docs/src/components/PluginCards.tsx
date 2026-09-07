@@ -164,6 +164,12 @@ export const plugins: Plugin[] = [
     icon: "logos:google-icon",
   },
   {
+    name: "MariaDB",
+    description: "Discover databases, tables, views and sequences from MariaDB servers",
+    docId: "Plugins/MariaDB",
+    icon: "logos:mariadb-icon",
+  },
+  {
     name: "Metabase",
     description: "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
     docId: "Plugins/Metabase",
