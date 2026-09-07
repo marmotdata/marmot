@@ -53,6 +53,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:clickhouse",
   },
   {
+    name: "CockroachDB",
+    description: "Discover databases, tables, views and foreign keys from CockroachDB clusters",
+    docId: "Plugins/CockroachDB",
+    icon: "simple-icons:cockroachlabs",
+  },
+  {
     name: "Confluent Cloud",
     description: "Discover Kafka topics from Confluent Cloud clusters",
     docId: "Plugins/Confluent Cloud",
@@ -89,6 +95,12 @@ export const plugins: Plugin[] = [
     description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
     docId: "Plugins/Elasticsearch",
     icon: "logos:elasticsearch",
+  },
+  {
+    name: "Flink",
+    description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
+    docId: "Plugins/Flink",
+    icon: "logos:apache-flink",
   },
   {
     name: "Google Cloud Storage",
