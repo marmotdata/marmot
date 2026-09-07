@@ -116,6 +116,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:apachekafka",
   },
   {
+    name: "Kafka Connect",
+    description: "Discover connectors, tasks and topics from Kafka Connect with lineage to the systems they move data between",
+    docId: "Plugins/Kafka Connect",
+    icon: "devicon:apachekafka",
+  },
+  {
     name: "Kubernetes",
     description: "Discover namespaces, services, workloads, and cron jobs from self-managed Kubernetes clusters",
     docId: "Plugins/Kubernetes",
@@ -238,7 +244,7 @@ function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: bool
   return (
     <Icon
       icon={plugin.icon}
-      className={`w-8 h-8 ${plugin.name === "Kafka" ? "kafka-icon" : ""}`}
+      className={`w-8 h-8 ${plugin.name === "Kafka" || plugin.name === "Kafka Connect" ? "kafka-icon" : ""}`}
     />
   );
 }
