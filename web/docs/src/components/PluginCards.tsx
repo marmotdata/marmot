@@ -164,10 +164,15 @@ export const plugins: Plugin[] = [
     icon: "logos:google-icon",
   },
   {
+    name: "Metabase",
+    description: "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
+    docId: "Plugins/Metabase",
+    icon: "logos:metabase",
+  },
+  {
     name: "MLflow",
     description: "Discover registered models, experiments and training datasets from MLflow",
     docId: "Plugins/MLflow",
-    icon: "simple-icons:mlflow",
   },
   {
     name: "MongoDB",
