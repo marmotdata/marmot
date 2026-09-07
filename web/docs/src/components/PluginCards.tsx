@@ -97,6 +97,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Grafana",
+    description: "Discover dashboards, panels and data sources from Grafana",
+    docId: "Plugins/Grafana",
+    icon: "logos:grafana",
+  },
+  {
     name: "Iceberg",
     description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
     docId: "Plugins/Iceberg",
