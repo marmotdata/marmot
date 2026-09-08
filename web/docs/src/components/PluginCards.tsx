@@ -207,6 +207,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sns",
   },
   {
+    name: "Spline",
+    description: "Discover Spark applications and their lineage from a Spline server",
+    docId: "Plugins/Spline",
+    icon: "logos:apache-spark",
+  },
+  {
     name: "SQLite",
     description: "Discover tables, views, and relationships from SQLite database files",
     docId: "Plugins/SQLite",
