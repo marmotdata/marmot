@@ -71,6 +71,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:clickhouse",
   },
   {
+    name: "Cloud Run",
+    description: "Discover services and jobs from Google Cloud Run, with lineage to the buckets they mount",
+    docId: "Plugins/Cloud Run",
+    icon: "logos:google-cloud-run",
+  },
+  {
     name: "CockroachDB",
     description: "Discover databases, tables, views and foreign keys from CockroachDB clusters",
     docId: "Plugins/CockroachDB",
