@@ -122,8 +122,8 @@ The following metadata fields are available:
 | schema_type | string | Schema type (AVRO, PROTOCOL_BUFFER) |
 | state | string | Topic or subscription state |
 | subscription_count | int | Number of subscriptions attached to the topic |
-| subscription_name | string | Full resource name, projects/{project}/subscriptions/{subscription} |
+| subscription_name | string | Full resource name, `projects/{project}/subscriptions/{subscription}` |
 | subscriptions | []string | Ids of the subscriptions attached to the topic |
 | topic | string | Id of the topic the subscription reads |
-| topic_name | string | Full resource name, projects/{project}/topics/{topic} |
+| topic_name | string | Full resource name, `projects/{project}/topics/{topic}` |
 | url | string | Link to the resource in the Google Cloud console |
