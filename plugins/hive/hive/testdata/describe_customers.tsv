@@ -1,0 +1,46 @@
+id	int	Customer id
+name	string	Full name
+email	string	
+balance	decimal(10,2)	Account balance
+attributes	map<string,string>	
+recent_items	array<struct<sku:string,qty:int>>	
+		
+# Detailed Table Information		
+Database:           	sales               	
+OwnerType:          	USER                	
+Owner:              	hive                	
+CreateTime:         	Tue Sep 08 02:21:24 UTC 2026	
+LastAccessTime:     	UNKNOWN             	
+Retention:          	0                   	
+Location:           	file:/opt/hive/data/warehouse/sales.db/customers	
+Table Type:         	EXTERNAL_TABLE      	
+Table Parameters:		
+	COLUMN_STATS_ACCURATE	{"BASIC_STATS":"true"}
+	EXTERNAL            	TRUE                
+	TRANSLATED_TO_EXTERNAL	TRUE                
+	bucketing_version   	2                   
+	comment             	Customer master data
+	external.table.purge	TRUE                
+	numFiles            	1                   
+	numRows             	2                   
+	rawDataSize         	101                 
+	totalSize           	103                 
+	transient_lastDdlTime	1788834089          
+		
+# Storage Information		
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	
+Compressed:         	No                  	
+Num Buckets:        	-1                  	
+Bucket Columns:     	[]                  	
+Sort Columns:       	[]                  	
+Storage Desc Params:		
+	serialization.format	1                   
+		
+# Constraints		
+		
+# Primary Key		
+Table:              	sales.customers     	
+Constraint Name:    	pk_85855715_1788834084624_0	
+Column Name:        	id                  	
