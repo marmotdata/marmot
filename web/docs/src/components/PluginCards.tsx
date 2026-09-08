@@ -394,6 +394,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sqs",
   },
   {
+    name: "Superset",
+    description: "Discover dashboards, charts, datasets and database connections from Apache Superset",
+    docId: "Plugins/Superset",
+    icon: "simple-icons:apachesuperset",
+  },
+  {
     name: "StarRocks",
     description: "Discover databases, tables, views, and materialized views from StarRocks clusters",
     docId: "Plugins/StarRocks",
