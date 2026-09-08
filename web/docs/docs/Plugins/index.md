@@ -2,6 +2,17 @@
 
 Plugins automatically discover and catalog your data assets in Marmot. They connect to external systems, extract metadata and lineage, and create asset entries with minimal effort.
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Browse the plugin registry"
+  description="See every available plugin, with configuration and usage for each, on the Marmot plugin registry."
+  href="https://plugins.marmotdata.io"
+  buttonText="View all plugins"
+  variant="external"
+  icon="mdi:puzzle"
+/>
+
 Marmot isn't limited to plugin-based ingestion. You can also use:
 
 ### Infrastructure as Code
@@ -14,13 +25,6 @@ These approaches enable version-controlled asset definitions and integration wit
 ### API
 
 The [Marmot API](/docs/Populating/API) lets you programmatically create, update, and manage assets.
-
-## Available Plugins
-
-import PluginCards from '@site/src/components/PluginCards';
-import { CalloutCard } from '@site/src/components/DocCard';
-
-<PluginCards />
 
 <CalloutCard
   title="Don't see your data source?"
