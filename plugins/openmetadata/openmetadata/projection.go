@@ -149,9 +149,12 @@ var projections = map[string]projection{
 	// Catalog, which plugins/glue already catalogues under the Glue
 	// provider, naming each table by its bare name. Naming it Athena
 	// would file one table twice, once per route.
-	"Athena":       {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
-	"Databricks":   {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"UnityCatalog": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Athena":     {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
+	"Databricks": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
+	// A UnityCatalog service is a Unity Catalog server, which is not a
+	// Databricks workspace: it can run on its own, so plugins/unitycatalog
+	// catalogues it under its own provider and both routes must agree.
+	"UnityCatalog": {Provider: "Unity Catalog", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"AzureSQL":     {Provider: "SQL Server", TableName: fullyQualified},
 	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified},
 	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Namespace"},

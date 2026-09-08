@@ -200,6 +200,25 @@ func TestProjection_RedpandaIsCataloguedAsKafka(t *testing.T) {
 	assert.Equal(t, "Kafka", projectionFor("KafkaConnect").Provider)
 }
 
+func TestProjection_UnityCatalogIsNotDatabricks(t *testing.T) {
+	// A Unity Catalog server can run on its own, so it is catalogued under
+	// its own provider, the one plugins/unitycatalog sets. A Databricks
+	// workspace keeps the Databricks provider.
+	assert.Equal(t, "Unity Catalog", projectionFor("UnityCatalog").Provider)
+	assert.Equal(t, "Databricks", projectionFor("Databricks").Provider)
+}
+
+func TestProjection_UnityCatalogTableMatchesTheUnityCatalogPlugin(t *testing.T) {
+	// plugins/unitycatalog/unitycatalog/assets.go names a table by its
+	// three-part catalog.schema.table name, under a Catalog container.
+	p := projectionFor("UnityCatalog")
+
+	assert.Equal(t, "shop.sales.orders", p.TableName("shop", "sales", "orders"))
+	assert.Equal(t, "Catalog", p.TableGroupType)
+	assert.Equal(t, "mrn://table/unity catalog/shop.sales.orders",
+		mrn.New("Table", p.Provider, p.TableName("shop", "sales", "orders")))
+}
+
 func TestProjection_UnknownServiceKeepsItsOwnName(t *testing.T) {
 	p := projectionFor("SomeNewWarehouse")
 
@@ -409,6 +428,7 @@ func TestProjection_ProvidersWithASpaceKeepItInTheMRN(t *testing.T) {
 		"SAP ERP":            true,
 		"Microsoft Fabric":   true,
 		"Azure Data Factory": true,
+		"Unity Catalog":      true,
 	}, spaced)
 
 	// And the space really does reach the MRN, unslugged.
