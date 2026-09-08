@@ -42,7 +42,7 @@ func (c *collector) discoverTopics(ctx context.Context, client *client) error {
 			putIf(metadata, "schema_type", t.MessageSchema.SchemaType)
 		}
 
-		asset := c.newAsset(t.entityBase, "topic", "Topic", p, c.mrnName(topicName, t.FullyQualifiedName), metadata)
+		asset := c.newAsset(t.entityBase, "topic", p.TopicType, p, c.mrnName(topicName, t.FullyQualifiedName), metadata)
 
 		if t.MessageSchema != nil {
 			if c.config.IncludeColumns {
