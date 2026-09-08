@@ -10,7 +10,7 @@ import (
 	run "google.golang.org/api/run/v2"
 )
 
-const jobMRN = "mrn://job/cloud run/europe-west1-nightly-export"
+const jobMRN = "mrn://job/cloud-run/europe-west1-nightly-export"
 
 func jobRunHistory(t *testing.T, fake *fakeAPI) pluginsdk.AssetRunHistory {
 	t.Helper()

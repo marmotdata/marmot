@@ -8,36 +8,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The provider keeps its space: mrn.New lowercases the service but only
-// replaces slashes and spaces inside the name.
+// The provider loses its space: mrn.New lowercases every part and replaces
+// slashes and spaces in all three.
 
 func TestModelMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://model/vertex ai/churn-predictor", assetMRN("Model", "churn-predictor"))
+	assert.Equal(t, "mrn://model/vertex-ai/churn-predictor", assetMRN("Model", "churn-predictor"))
 }
 
 func TestModelMRN_CarriesTheIDWhenDisplayNamesCollide(t *testing.T) {
 	// The space between the display name and the id becomes a hyphen.
 	assert.Equal(t,
-		"mrn://model/vertex ai/fraud-detector-(2000000000000000002)",
+		"mrn://model/vertex-ai/fraud-detector-(2000000000000000002)",
 		assetMRN("Model", "fraud-detector (2000000000000000002)"))
 }
 
 func TestEndpointMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://endpoint/vertex ai/churn-prod", assetMRN("Endpoint", "churn-prod"))
+	assert.Equal(t, "mrn://endpoint/vertex-ai/churn-prod", assetMRN("Endpoint", "churn-prod"))
 }
 
 func TestDatasetMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://dataset/vertex ai/churn-training-data", assetMRN("Dataset", "churn-training-data"))
+	assert.Equal(t, "mrn://dataset/vertex-ai/churn-training-data", assetMRN("Dataset", "churn-training-data"))
 }
 
 func TestFeatureGroupMRN_IsADatasetNamedAfterTheGroupID(t *testing.T) {
 	// A feature group and a managed dataset are both Datasets, so a group
 	// id equal to a dataset display name would resolve to one asset.
-	assert.Equal(t, "mrn://dataset/vertex ai/customer_features", assetMRN("Dataset", "customer_features"))
+	assert.Equal(t, "mrn://dataset/vertex-ai/customer_features", assetMRN("Dataset", "customer_features"))
 }
 
 func TestPipelineJobMRN_IsAJobNamedAfterTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://job/vertex ai/churn-training", assetMRN("Job", "churn-training"))
+	assert.Equal(t, "mrn://job/vertex-ai/churn-training", assetMRN("Job", "churn-training"))
 }
 
 func TestBigQueryTableMRN_MatchesWhatTheBigQueryPluginProduces(t *testing.T) {
@@ -123,7 +123,7 @@ func TestEveryEdgeThisPluginOwnsBothEndsOf_PointsAtADiscoveredAsset(t *testing.T
 		for _, endpoint := range []string{edge.Source, edge.Target} {
 			parsed, err := mrn.Parse(endpoint)
 			require.NoError(t, err)
-			if parsed.Service != "vertex ai" {
+			if parsed.Service != "vertex-ai" {
 				// The other end belongs to the BigQuery or GCS plugin.
 				continue
 			}

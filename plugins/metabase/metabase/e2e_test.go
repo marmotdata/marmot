@@ -127,7 +127,7 @@ func TestE2E_DiscoverLinksDashboardsToTheirCards(t *testing.T) {
 	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-revenue-by-customer", "CONTAINS"))
 	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-totals-from-model", "CONTAINS"))
 	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-recent-order-count", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://data model object/metabase/marmot-finance-customer-orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://data-model-object/metabase/marmot-finance-customer-orders", "CONTAINS"))
 }
 
 func TestE2E_DiscoverCataloguesANativeQuestionAsAChartWithItsSQL(t *testing.T) {
@@ -153,7 +153,7 @@ func TestE2E_DiscoverCataloguesANativeQuestionAsAChartWithItsSQL(t *testing.T) {
 func TestE2E_DiscoverCataloguesAModelAsADataModelObject(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	model := findByMRN(result, "mrn://data model object/metabase/marmot-finance-customer-orders")
+	model := findByMRN(result, "mrn://data-model-object/metabase/marmot-finance-customer-orders")
 	require.NotNil(t, model)
 	assert.Equal(t, "Data Model Object", model.Type)
 	assert.Equal(t, "model", model.Metadata["card_type"])
@@ -198,7 +198,7 @@ func TestE2E_DiscoverLinksAQuestionToTheModelItBuildsOn(t *testing.T) {
 	result := discoverE2E(t, nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://data model object/metabase/marmot-finance-customer-orders",
+		"mrn://data-model-object/metabase/marmot-finance-customer-orders",
 		"mrn://chart/metabase/marmot-finance-totals-from-model", "FEEDS"))
 }
 

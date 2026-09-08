@@ -207,7 +207,7 @@ func TestDataLineage_SQLServerTableIsQualifiedWithDatabaseAndSchema(t *testing.T
 	result, task := single(t, f,
 		processor("p1", "Write", "org.apache.nifi.processors.standard.PutDatabaseRecord").with("Table Name", "orders").with("Database Connection Pooling Service", "cs-pool"))
 
-	assert.True(t, hasEdge(result, task, "mrn://table/sql server/shop.dbo.orders", "PRODUCES"))
+	assert.True(t, hasEdge(result, task, "mrn://table/sql-server/shop.dbo.orders", "PRODUCES"))
 }
 
 func TestDataLineage_SQLServerPrefersTheProcessorsDatabaseAndSchemaProperties(t *testing.T) {
@@ -219,7 +219,7 @@ func TestDataLineage_SQLServerPrefersTheProcessorsDatabaseAndSchemaProperties(t 
 			with("Table Name", "orders").with("Schema Name", "sales").with("Database Name", "shop").
 			with("Database Connection Pooling Service", "cs-pool"))
 
-	assert.True(t, hasEdge(result, task, "mrn://table/sql server/shop.sales.orders", "PRODUCES"))
+	assert.True(t, hasEdge(result, task, "mrn://table/sql-server/shop.sales.orders", "PRODUCES"))
 }
 
 func TestDataLineage_SQLServerWithoutADatabaseIsSkipped(t *testing.T) {

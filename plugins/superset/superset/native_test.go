@@ -57,7 +57,7 @@ func TestBackendMap_RedshiftIsFullyQualified(t *testing.T) {
 }
 
 func TestBackendMap_SQLServerIsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
 }
 
 func TestBackendMap_CockroachDBIsFullyQualified(t *testing.T) {

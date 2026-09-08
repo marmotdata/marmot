@@ -33,7 +33,7 @@ func TestWorkGroupMRN_IsTheWorkGroupNameUnderAthena(t *testing.T) {
 func TestSavedQueryMRN_FoldsTheWorkGroupIntoTheName(t *testing.T) {
 	// mrn.New turns the separating slash into a hyphen, so the workgroup
 	// stays part of the identity without splitting the MRN.
-	assert.Equal(t, "mrn://data model object/athena/analytics-daily-revenue",
+	assert.Equal(t, "mrn://data-model-object/athena/analytics-daily-revenue",
 		savedQueryMRN("analytics", "daily-revenue"))
 }
 

@@ -215,7 +215,7 @@ func TestProjection_UnityCatalogTableMatchesTheUnityCatalogPlugin(t *testing.T) 
 
 	assert.Equal(t, "shop.sales.orders", p.TableName("shop", "sales", "orders"))
 	assert.Equal(t, "Catalog", p.TableGroupType)
-	assert.Equal(t, "mrn://table/unity catalog/shop.sales.orders",
+	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders",
 		mrn.New("Table", p.Provider, p.TableName("shop", "sales", "orders")))
 }
 
@@ -432,7 +432,7 @@ func TestProjection_ProvidersWithASpaceKeepItInTheMRN(t *testing.T) {
 	}, spaced)
 
 	// And the space really does reach the MRN, unslugged.
-	assert.Equal(t, "mrn://table/delta lake/orders",
+	assert.Equal(t, "mrn://table/delta-lake/orders",
 		mrn.New("Table", projectionFor("DeltaLake").Provider, "orders"))
 }
 

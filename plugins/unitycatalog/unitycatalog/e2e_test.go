@@ -335,7 +335,7 @@ func TestE2E_DiscoversASeededTableWithItsMetadata(t *testing.T) {
 
 	table := findAsset(result, "Table", "shop.sales.orders")
 	require.NotNil(t, table)
-	assert.Equal(t, "mrn://table/unity catalog/shop.sales.orders", *table.MRN)
+	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders", *table.MRN)
 	assert.Equal(t, "shop", table.Metadata["catalog"])
 	assert.Equal(t, "sales", table.Metadata["schema"])
 	assert.Equal(t, "orders", table.Metadata["table_name"])

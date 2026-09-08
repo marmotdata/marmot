@@ -291,8 +291,8 @@ func TestNames_FallsBackToTheIDWhenThereIsNoDisplayName(t *testing.T) {
 func TestEdgeSet_KeepsOneCopyOfARepeatedEdge(t *testing.T) {
 	edges := newEdgeSet()
 
-	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex ai/churn", "FEEDS")
-	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex ai/churn", "FEEDS")
+	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex-ai/churn", "FEEDS")
+	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex-ai/churn", "FEEDS")
 
 	assert.Len(t, edges.all(), 1)
 }
@@ -312,7 +312,7 @@ func TestEdgeSet_KeepsTheOrderEdgesWereAddedIn(t *testing.T) {
 func TestEdgeSet_IgnoresAnEdgeWithAMissingEnd(t *testing.T) {
 	edges := newEdgeSet()
 
-	edges.add("", "mrn://model/vertex ai/churn", "FEEDS")
+	edges.add("", "mrn://model/vertex-ai/churn", "FEEDS")
 
 	assert.Empty(t, edges.all())
 }

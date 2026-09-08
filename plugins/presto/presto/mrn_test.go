@@ -84,15 +84,15 @@ func TestCatalogAsset_IsNotAPrefixOfTheTablesItHolds(t *testing.T) {
 	assert.NotContains(t, table, "pg")
 }
 
-func TestTableMRN_ProviderWithASpaceLandsInTheMRN(t *testing.T) {
-	// mrn.New sanitises the name but not the service, so "Delta Lake"
-	// puts a literal space in the MRN. That is what the Trino plugin
-	// already emits for the same table, and matching it is the point.
+func TestTableMRN_ProviderWithASpaceIsDashedInTheMRN(t *testing.T) {
+	// mrn.New sanitises the service the same way it sanitises the name, so
+	// "Delta Lake" becomes "delta-lake". That is what the Trino plugin
+	// emits for the same table, and matching it is the point.
 	s := &Source{config: &Config{}}
 
 	a := s.createTableAsset("dl", "default", "events", "BASE TABLE", "delta", connectorInfoForName("delta"))
 
-	assert.Equal(t, "mrn://table/delta lake/dl.default.events", *a.MRN)
+	assert.Equal(t, "mrn://table/delta-lake/dl.default.events", *a.MRN)
 	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 }
 

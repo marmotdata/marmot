@@ -376,7 +376,7 @@ func TestDiscover_CreatesAQueryAsADataModelObject(t *testing.T) {
 
 	query := assetNamed(t, result, "Data Model Object", "Orders by day")
 
-	assert.Equal(t, "mrn://data model object/redash/orders-by-day", *query.MRN)
+	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", *query.MRN)
 	assert.Equal(t, 1, query.Metadata["id"])
 	assert.Equal(t, "shop", query.Metadata["data_source"])
 }
@@ -602,13 +602,13 @@ func TestDiscover_DashboardContainsItsCharts(t *testing.T) {
 func TestDiscover_QueryFeedsTheChartThatRendersIt(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://data model object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_DataSourceFeedsTheQueriesThatRunOnIt(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://datasource/redash/shop", "mrn://data model object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_TablesFeedTheQueryThatReadsThem(t *testing.T) {
@@ -616,8 +616,8 @@ func TestDiscover_TablesFeedTheQueryThatReadsThem(t *testing.T) {
 	// lands on that plugin's asset instead of minting a second one.
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/redash/orders-by-day", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://data model object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_EmitsNoLineageWhenTurnedOff(t *testing.T) {

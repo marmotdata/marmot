@@ -39,30 +39,29 @@ func testDatabase() databaseInfo {
 }
 
 func TestTableMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders",
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders",
 		assetMRN("Table", qualifiedName("shop", "dbo", "orders")))
 }
 
 func TestDatabaseMRN_IsTheBareDatabaseName(t *testing.T) {
-	assert.Equal(t, "mrn://database/sql server/shop", assetMRN("Database", "shop"))
+	assert.Equal(t, "mrn://database/sql-server/shop", assetMRN("Database", "shop"))
 }
 
 func TestViewMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://view/sql server/shop.dbo.order_totals",
+	assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals",
 		assetMRN("View", qualifiedName("shop", "dbo", "order_totals")))
 }
 
 func TestFunctionMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://function/sql server/shop.dbo.get_customer",
+	assert.Equal(t, "mrn://function/sql-server/shop.dbo.get_customer",
 		assetMRN("Function", qualifiedName("shop", "dbo", "get_customer")))
 }
 
-func TestProviderName_KeepsItsSpaceInTheMRN(t *testing.T) {
-	// mrn.New replaces spaces in the name but not in the service, so the
-	// provider "SQL Server" becomes "sql server", not "sql-server". The
-	// lookup API needs it URL-encoded as SQL%20Server.
+func TestProviderName_LosesItsSpaceInTheMRN(t *testing.T) {
+	// The provider keeps its space where it is displayed, but mrn.New dashes
+	// it so the MRN needs no escaping in a URL or a lineage edge.
 	assert.Equal(t, providerName, "SQL Server")
-	assert.Contains(t, assetMRN("Table", "shop.dbo.orders"), "/sql server/")
+	assert.Contains(t, assetMRN("Table", "shop.dbo.orders"), "/sql-server/")
 }
 
 func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
@@ -91,7 +90,7 @@ func TestDatabaseAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	asset := testSource().databaseAsset(testDatabase(), serverInfo{}, 2, 3, 2)
 
 	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://database/sql server/shop", *asset.MRN)
+	assert.Equal(t, "mrn://database/sql-server/shop", *asset.MRN)
 }
 
 func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
@@ -100,7 +99,7 @@ func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
 
 	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", *asset.MRN)
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", *asset.MRN)
 	assert.Equal(t, "shop.dbo.orders", *asset.Name)
 }
 
@@ -110,7 +109,7 @@ func TestViewAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	asset := testSource().objectAsset(testDatabase(), object, "View", "", "SELECT 1", nil, nil)
 
 	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://view/sql server/shop.dbo.order_totals", *asset.MRN)
+	assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals", *asset.MRN)
 }
 
 func TestFunctionAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
@@ -119,7 +118,7 @@ func TestFunctionAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	asset := testSource().routineAsset(testDatabase(), routine)
 
 	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://function/sql server/shop.dbo.get_customer", *asset.MRN)
+	assert.Equal(t, "mrn://function/sql-server/shop.dbo.get_customer", *asset.MRN)
 }
 
 func TestTableAsset_MRNMatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
@@ -131,7 +130,7 @@ func TestTableAsset_MRNMatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
 
 	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
 
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.customers", *asset.MRN)
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.customers", *asset.MRN)
 	assert.Equal(t, []string{"SQL Server"}, asset.Providers)
 }
 
@@ -143,7 +142,7 @@ func TestTableAsset_MRNSurvivesASchemaNameWithASpace(t *testing.T) {
 
 	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
 
-	assert.Equal(t, "mrn://table/sql server/shop.order-archive.orders", *asset.MRN)
+	assert.Equal(t, "mrn://table/sql-server/shop.order-archive.orders", *asset.MRN)
 
 	parsed, err := mrn.Parse(*asset.MRN)
 	require.NoError(t, err)
@@ -156,8 +155,8 @@ func TestForeignKeyEdge_PointsAtMRNsThisRunCreates(t *testing.T) {
 	source := assetMRN("Table", qualifiedName("shop", "dbo", "orders"))
 	target := assetMRN("Table", qualifiedName("shop", "dbo", "customers"))
 
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", source)
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.customers", target)
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", source)
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.customers", target)
 }
 
 func TestContainsEdge_LinksTheDatabaseToATableWhoseNameIsNotItsPrefix(t *testing.T) {
@@ -167,8 +166,8 @@ func TestContainsEdge_LinksTheDatabaseToATableWhoseNameIsNotItsPrefix(t *testing
 	database := assetMRN("Database", "shop")
 	table := assetMRN("Table", qualifiedName("shop", "dbo", "orders"))
 
-	assert.Equal(t, "mrn://database/sql server/shop", database)
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", table)
+	assert.Equal(t, "mrn://database/sql-server/shop", database)
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", table)
 	assert.NotEqual(t, database, table)
 }
 

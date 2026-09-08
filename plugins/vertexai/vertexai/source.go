@@ -444,15 +444,21 @@ func gcsBucket(uri string) string {
 	return bucket
 }
 
+// edgeKey is the identity of a lineage edge. LineageEdge itself holds a
+// column-lineage slice, which makes it unusable as a map key.
+type edgeKey struct {
+	source, target, edgeType string
+}
+
 // edgeSet collects lineage edges without duplicates, keeping the order they
 // were added in so a run's output does not shuffle between runs.
 type edgeSet struct {
-	seen  map[pluginsdk.LineageEdge]bool
+	seen  map[edgeKey]bool
 	edges []pluginsdk.LineageEdge
 }
 
 func newEdgeSet() *edgeSet {
-	return &edgeSet{seen: map[pluginsdk.LineageEdge]bool{}}
+	return &edgeSet{seen: map[edgeKey]bool{}}
 }
 
 func (e *edgeSet) add(source, target, edgeType string) {
@@ -460,13 +466,13 @@ func (e *edgeSet) add(source, target, edgeType string) {
 		return
 	}
 
-	edge := pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType}
-	if e.seen[edge] {
+	key := edgeKey{source, target, edgeType}
+	if e.seen[key] {
 		return
 	}
 
-	e.seen[edge] = true
-	e.edges = append(e.edges, edge)
+	e.seen[key] = true
+	e.edges = append(e.edges, pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType})
 }
 
 func (e *edgeSet) all() []pluginsdk.LineageEdge {

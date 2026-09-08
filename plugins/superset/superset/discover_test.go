@@ -275,7 +275,7 @@ func TestDiscover_SurvivesAMissingConnectionEndpoint(t *testing.T) {
 	db := findAsset(result, "DataSource", "Shop")
 	require.NotNil(t, db)
 	assert.NotContains(t, db.Metadata, "host")
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/superset/public.orders", "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
 		"a bare-named backend needs no connection details for table lineage")
 }
 
@@ -320,7 +320,7 @@ func TestDiscover_LinksADatabaseToItsDatasets(t *testing.T) {
 func TestDiscover_LinksAPhysicalDatasetToThePostgresTableItReads(t *testing.T) {
 	result := discover(t, shop(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/superset/public.orders", "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
 		"the table end is the MRN the PostgreSQL plugin gives the table")
 }
 
@@ -481,9 +481,12 @@ func TestDiscover_LineagePointsAtRealAssets(t *testing.T) {
 func TestDiscover_EmitsEachEdgeOnce(t *testing.T) {
 	result := discover(t, shop(), nil)
 
-	seen := make(map[pluginsdk.LineageEdge]int)
+	// LineageEdge holds a column-lineage slice and so cannot be a map key.
+	type edgeKey struct{ source, target, edgeType string }
+
+	seen := make(map[edgeKey]int)
 	for _, edge := range result.Lineage {
-		seen[edge]++
+		seen[edgeKey{edge.Source, edge.Target, edge.Type}]++
 	}
 	for edge, count := range seen {
 		assert.Equal(t, 1, count, "edge %+v emitted more than once", edge)

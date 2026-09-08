@@ -224,12 +224,12 @@ func TestSQLTableMRNs_NamesPostgreSQLTablesBare(t *testing.T) {
 }
 
 func TestSQLTableMRNs_UsesTheDataSourcesDatabaseForSQLServer(t *testing.T) {
-	assert.Equal(t, []string{"mrn://table/sql server/sales.dbo.orders"},
+	assert.Equal(t, []string{"mrn://table/sql-server/sales.dbo.orders"},
 		sqlTableMRNs("mssql", "sales", "SELECT * FROM orders"))
 }
 
 func TestSQLTableMRNs_QueryDatabaseWinsOverTheDataSourcesForSQLServer(t *testing.T) {
-	assert.Equal(t, []string{"mrn://table/sql server/archive.dbo.orders"},
+	assert.Equal(t, []string{"mrn://table/sql-server/archive.dbo.orders"},
 		sqlTableMRNs("mssql", "sales", "SELECT * FROM archive.dbo.orders"))
 }
 

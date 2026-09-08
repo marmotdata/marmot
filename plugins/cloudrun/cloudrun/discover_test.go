@@ -269,7 +269,7 @@ func TestDiscover_EmitsAnExecutionCountStatisticForEveryJob(t *testing.T) {
 	result := discover(t, newFakeAPI(), nil)
 
 	require.Len(t, result.Statistics, 1)
-	assert.Equal(t, "mrn://job/cloud run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
+	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
 	assert.Equal(t, "asset.execution_count", result.Statistics[0].MetricName)
 	assert.Equal(t, float64(3), result.Statistics[0].Value)
 }
@@ -293,12 +293,12 @@ func TestDiscover_EmitsAFeedsEdgeFromEveryMountedBucket(t *testing.T) {
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
 		Source: "mrn://bucket/gcs/order-archive",
-		Target: "mrn://service/cloud run/europe-west1-checkout-api",
+		Target: "mrn://service/cloud-run/europe-west1-checkout-api",
 		Type:   "FEEDS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
 		Source: "mrn://bucket/gcs/order-archive",
-		Target: "mrn://job/cloud run/europe-west1-nightly-export",
+		Target: "mrn://job/cloud-run/europe-west1-nightly-export",
 		Type:   "FEEDS",
 	})
 }

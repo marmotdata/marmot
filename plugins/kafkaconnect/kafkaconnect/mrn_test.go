@@ -13,11 +13,11 @@ import (
 // provider has a space in it, which mrn.New keeps.
 
 func TestPipelineMRN_IsTheConnectorName(t *testing.T) {
-	assert.Equal(t, "mrn://pipeline/kafka connect/orders-file-source", assetMRN("Pipeline", "orders-file-source"))
+	assert.Equal(t, "mrn://pipeline/kafka-connect/orders-file-source", assetMRN("Pipeline", "orders-file-source"))
 }
 
 func TestTaskMRN_IsTheConnectorNameAndTaskId(t *testing.T) {
-	assert.Equal(t, "mrn://task/kafka connect/orders-file-source.task-0", assetMRN("Task", taskName("orders-file-source", 0)))
+	assert.Equal(t, "mrn://task/kafka-connect/orders-file-source.task-0", assetMRN("Task", taskName("orders-file-source", 0)))
 }
 
 func TestTopicMRN_MatchesWhatTheKafkaPluginProduces(t *testing.T) {
@@ -32,7 +32,7 @@ func TestDatasetMRNs_MatchTheOwningPlugins(t *testing.T) {
 	assert.Equal(t, "mrn://table/postgresql/orders", datasetMRN(dataset{"Table", "PostgreSQL", "orders"}))
 	assert.Equal(t, "mrn://table/mysql/orders", datasetMRN(dataset{"Table", "MySQL", "orders"}))
 	assert.Equal(t, "mrn://table/mariadb/orders", datasetMRN(dataset{"Table", "MariaDB", "orders"}))
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", datasetMRN(dataset{"Table", "SQL Server", "shop.dbo.orders"}))
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", datasetMRN(dataset{"Table", "SQL Server", "shop.dbo.orders"}))
 	assert.Equal(t, "mrn://table/oracle/shop.orders", datasetMRN(dataset{"Table", "Oracle", "SHOP.ORDERS"}))
 	assert.Equal(t, "mrn://table/snowflake/shop.raw.orders", datasetMRN(dataset{"Table", "Snowflake", "SHOP.RAW.ORDERS"}))
 	assert.Equal(t, "mrn://table/redshift/dev.public.orders", datasetMRN(dataset{"Table", "Redshift", "dev.public.orders"}))

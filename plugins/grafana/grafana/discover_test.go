@@ -358,7 +358,7 @@ func TestDiscover_ReadsTheDatabaseFromJSONDataWhenTheFieldIsEmpty(t *testing.T) 
 
 	chart := findAsset(result, "Chart", "MSSQL/Orders")
 	require.NotNil(t, chart)
-	assert.True(t, hasEdge(result, "mrn://table/sql server/sales.dbo.orders", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://table/sql-server/sales.dbo.orders", *chart.MRN, "FEEDS"))
 }
 
 // Lineage
@@ -417,10 +417,15 @@ func TestDiscover_NonSQLDataSourcesProduceNoTableEdges(t *testing.T) {
 func TestDiscover_EmitsEachEdgeOnce(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	seen := make(map[pluginsdk.LineageEdge]bool)
+	// LineageEdge holds a column-lineage slice and so cannot be a map key.
+	// Source, target and type are what make an edge unique here.
+	type edgeKey struct{ source, target, edgeType string }
+
+	seen := make(map[edgeKey]bool)
 	for _, edge := range result.Lineage {
-		assert.False(t, seen[edge], "duplicate edge %v", edge)
-		seen[edge] = true
+		key := edgeKey{edge.Source, edge.Target, edge.Type}
+		assert.False(t, seen[key], "duplicate edge %v", edge)
+		seen[key] = true
 	}
 }
 

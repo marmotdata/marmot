@@ -53,7 +53,7 @@ func TestEngineMap_RedshiftIsDatabaseSchemaTable(t *testing.T) {
 }
 
 func TestEngineMap_SQLServerIsDatabaseSchemaTable(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders",
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders",
 		pgTable("sqlserver", map[string]any{"db": "shop"}, "dbo", "orders"))
 }
 
