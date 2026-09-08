@@ -21,7 +21,7 @@ import SnowflakeIcon from '~icons/logos/snowflake-icon';
 import KubernetesIcon from '~icons/logos/kubernetes';
 import EksIcon from '~icons/logos/aws-eks';
 import GkeIcon from '~icons/logos/google-icon';
-import BigQueryIcon from '~icons/logos/google-cloud';
+import GoogleCloudIcon from '~icons/logos/google-cloud';
 import DuckDBIcon from '~icons/devicon/duckdb';
 import DatabricksIcon from '~icons/simple-icons/databricks';
 import ClickHouseIcon from '~icons/devicon/clickhouse';
@@ -111,7 +111,6 @@ import TableEyeOutline from '~icons/material-symbols/table-eye-outline';
 import FolderOutline from '~icons/material-symbols/folder-outline';
 import HardDriveOutline from '~icons/material-symbols/hard-drive-outline';
 import SqlServerIcon from '~icons/simple-icons/microsoftsqlserver';
-import GoogleCloudIcon from '~icons/simple-icons/googlecloud';
 import MicrosoftIcon from '~icons/simple-icons/microsoft';
 import ImpalaIcon from '~icons/logos/impala';
 import GridOnOutline from '~icons/material-symbols/grid-on';
@@ -177,7 +176,7 @@ export const providerIconMap: Record<
 	kubernetes: { default: KubernetesIcon, displayName: 'Kubernetes' },
 	eks: { default: EksIcon, displayName: 'Amazon EKS' },
 	gke: { default: GkeIcon, displayName: 'Google GKE' },
-	bigquery: { default: BigQueryIcon, displayName: 'BigQuery' },
+	bigquery: { default: GoogleCloudIcon, displayName: 'BigQuery' },
 	amqp: { default: RabbitMQIcon, displayName: 'AMQP' },
 	rabbitmq: { default: RabbitMQIcon, displayName: 'RabbitMQ' },
 	duckdb: { default: DuckDBIcon, displayName: 'DuckDB' },
@@ -208,8 +207,8 @@ export const providerIconMap: Record<
 	postgres: { default: PostgresqlIcon, displayName: 'Postgres' },
 	azureblob: { default: AzureIcon, displayName: 'Azure Blob Storage' },
 	'azure-blob': { default: AzureIcon, displayName: 'Azure Blob Storage' },
-	gcs: { default: BigQueryIcon, displayName: 'Google Cloud Storage' },
-	'google-cloud-storage': { default: BigQueryIcon, displayName: 'Google Cloud Storage' },
+	gcs: { default: GoogleCloudIcon, displayName: 'Google Cloud Storage' },
+	'google-cloud-storage': { default: GoogleCloudIcon, displayName: 'Google Cloud Storage' },
 	materialize: {
 		default: DatabaseOutlineIcon,
 		class: 'text-gray-900 dark:text-gray-100',
@@ -264,8 +263,8 @@ export const providerIconMap: Record<
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'HTTP'
 	},
-	googlepubsub: { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
-	'google-pubsub': { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
+	googlepubsub: { default: GoogleCloudIcon, displayName: 'Google Pub/Sub' },
+	'google-pubsub': { default: GoogleCloudIcon, displayName: 'Google Pub/Sub' },
 	tableau: { default: TableauIcon, class: 'text-[#E97627]', displayName: 'Tableau' },
 	looker: { default: LookerIcon, displayName: 'Looker' },
 	langchain: {
@@ -303,11 +302,6 @@ export const providerIconMap: Record<
 		default: RobotOutline,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'SageMaker'
-	},
-	'vertex-ai': {
-		default: RobotOutline,
-		class: 'text-gray-900 dark:text-gray-100',
-		displayName: 'Vertex AI'
 	},
 	presto: { default: PrestoIcon, displayName: 'Presto' },
 	hive: { default: HiveIcon, class: 'text-[#FDEE21] dark:text-[#FDEE21]', displayName: 'Hive' },
