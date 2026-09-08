@@ -152,6 +152,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Glue Pipelines",
+    description: "Discover workflows, tasks and run history from AWS Glue",
+    docId: "Plugins/Glue Pipelines",
+    icon: "logos:aws-glue",
+  },
+  {
     name: "Google Pub/Sub",
     description: "Discover topics and subscriptions from Google Cloud Pub/Sub",
     docId: "Plugins/Google Pub Sub",
