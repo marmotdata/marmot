@@ -394,6 +394,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sqs",
   },
   {
+    name: "TimescaleDB",
+    description: "Discover hypertables, continuous aggregates and policies from TimescaleDB instances",
+    docId: "Plugins/TimescaleDB",
+    icon: "simple-icons:timescale",
+  },
+  {
     name: "Superset",
     description: "Discover dashboards, charts, datasets and database connections from Apache Superset",
     docId: "Plugins/Superset",
