@@ -128,6 +128,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Firehose",
+    description: "Discover delivery streams and their lineage from Amazon Data Firehose",
+    docId: "Plugins/Firehose",
+    icon: "logos:aws-kinesis",
+  },
+  {
     name: "Flink",
     description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
     docId: "Plugins/Flink",
