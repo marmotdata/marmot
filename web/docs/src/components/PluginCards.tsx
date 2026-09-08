@@ -97,6 +97,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Glue Pipelines",
+    description: "Discover workflows, tasks and run history from AWS Glue",
+    docId: "Plugins/Glue Pipelines",
+    icon: "logos:aws-glue",
+  },
+  {
     name: "Iceberg",
     description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
     docId: "Plugins/Iceberg",
