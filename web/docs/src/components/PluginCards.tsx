@@ -201,6 +201,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-s3",
   },
   {
+    name: "SFTP",
+    description: "Discover directories and files from an SFTP server",
+    docId: "Plugins/SFTP",
+    icon: "mdi:folder-network-outline",
+  },
+  {
     name: "SNS",
     description: "Catalog topics from Amazon SNS",
     docId: "Plugins/SNS",
