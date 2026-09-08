@@ -369,6 +369,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sns",
   },
   {
+    name: "Spline",
+    description: "Discover Spark applications and their lineage from a Spline server",
+    docId: "Plugins/Spline",
+    icon: "logos:apache-spark",
+  },
+  {
     name: "SQL Server",
     description: "Discover databases, tables, views and routines from Microsoft SQL Server instances",
     docId: "Plugins/SQL Server",
