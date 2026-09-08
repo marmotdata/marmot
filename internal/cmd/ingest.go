@@ -608,6 +608,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				Assets:        assets,
 				Lineage:       lineage,
 				Documentation: documentation,
+				Statistics:    statisticRequests(result.Statistics),
 				RunHistory:    runHistory,
 				GlossaryTerms: glossaryTerms,
 				Config:        maskedConfig,
@@ -753,6 +754,21 @@ func processGlossaryResult(result *GlossaryResult, runSummary *plugin.RunSummary
 	if result.TermsUpdated > 0 {
 		printChange(symbolUpdate, "glossary", "", fmt.Sprintf("%d terms", result.TermsUpdated), statusUpdated)
 	}
+}
+
+// statisticRequests carries the metrics a plugin measured while it was
+// connected to the source. Only the plugin can take them, so they travel with
+// the batch that carries the assets they belong to.
+func statisticRequests(statistics []plugin.Statistic) []CreateStatisticRequest {
+	requests := make([]CreateStatisticRequest, 0, len(statistics))
+	for _, statistic := range statistics {
+		requests = append(requests, CreateStatisticRequest{
+			AssetMRN:   statistic.AssetMRN,
+			MetricName: statistic.MetricName,
+			Value:      statistic.Value,
+		})
+	}
+	return requests
 }
 
 func convertExternalLinks(links []asset.ExternalLink) []map[string]string {
