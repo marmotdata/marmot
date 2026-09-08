@@ -314,6 +314,14 @@ func TestProjection_MatchesTheNameEachNativePluginSets(t *testing.T) {
 			authority: "plugins/deltalake/deltalake/table.go: filepath.Base(location)",
 		},
 		{
+			// A Hive table name is only unique within its database, so
+			// plugins/hive keeps the database in the Name.
+			name: "hive", serviceType: "Hive",
+			database: "default", schema: "sales", object: "orders",
+			wantProvider: "Hive", wantName: "sales.orders",
+			authority: "plugins/hive/hive/source.go: qualifiedName(database, table)",
+		},
+		{
 			name: "dynamodb", serviceType: "DynamoDB",
 			database: "default", schema: "default", object: "orders",
 			wantProvider: "DynamoDB", wantName: "orders",
@@ -343,7 +351,7 @@ func TestProjection_MatchesTheNameEachNativePluginSets(t *testing.T) {
 // schema.table, but OpenMetadata reads whole accounts and must keep the
 // database to stop two databases colliding.
 func TestProjection_WarehousesWithoutAPluginKeepEveryLevel(t *testing.T) {
-	for _, serviceType := range []string{"Snowflake", "Redshift", "Mssql", "Databricks", "Hive", "Trino", "Presto"} {
+	for _, serviceType := range []string{"Snowflake", "Redshift", "Mssql", "Databricks", "Trino", "Presto"} {
 		t.Run(serviceType, func(t *testing.T) {
 			assert.Equal(t, "db.schema.orders",
 				projectionFor(serviceType).TableName("db", "schema", "orders"))
@@ -593,13 +601,12 @@ func TestProjection_AgreesWithTheTrinoPlugin(t *testing.T) {
 		"Oracle":      schemaName,
 		"Cassandra":   schemaName,
 		"Druid":       schemaName,
-		"Hive":        fullName,
 	}
 
 	byProvider := map[string]projection{}
 	for _, serviceType := range []string{
 		"Postgres", "Mysql", "MariaDB", "SingleStore", "MongoDB", "PinotDB",
-		"Oracle", "Cassandra", "Druid", "Hive",
+		"Oracle", "Cassandra", "Druid",
 	} {
 		p := projectionFor(serviceType)
 		byProvider[p.Provider] = p
@@ -633,6 +640,37 @@ func TestProjection_FollowsTheClickHousePluginNotTrino(t *testing.T) {
 	assert.Equal(t, "ClickHouse", p.Provider)
 	assert.Equal(t, "events", p.TableName("default", "analytics", "events"),
 		"matches plugins/clickhouse's Name, not plugins/trino's schema.table")
+}
+
+// Hive is the second place this table and plugins/trino disagree, for the
+// same reason as ClickHouse: plugins/trino names a Hive table
+// catalog.schema.table, while plugins/hive, which owns the technology,
+// names it database.table (a Hive database is what Trino calls a schema).
+// This table follows plugins/hive. Reading the same Hive table through
+// Trino files it separately until plugins/trino drops the catalog from
+// the name, which renames existing assets and belongs in a release of its
+// own.
+func TestProjection_FollowsTheHivePluginNotTrino(t *testing.T) {
+	p := projectionFor("Hive")
+
+	assert.Equal(t, "Hive", p.Provider)
+	assert.Equal(t, "sales.orders", p.TableName("default", "sales", "orders"),
+		"matches plugins/hive's database.table Name, not plugins/trino's catalog.schema.table")
+	assert.Equal(t, mrn.New("Table", "Hive", "sales.orders"),
+		mrn.New("Table", p.Provider, p.TableName("default", "sales", "orders")))
+}
+
+func TestProjection_HiveGroupsTablesUnderTheHiveDatabase(t *testing.T) {
+	// OpenMetadata gives a Hive service a placeholder database level and
+	// puts the Hive database at the schema level. plugins/hive emits a
+	// Database asset named by the bare Hive database, so the container is
+	// the schema level and its type stays Database.
+	p := projectionFor("Hive")
+
+	assert.Equal(t, groupSchema, p.TableGroup)
+	assert.Equal(t, "Database", p.TableGroupType)
+	assert.Equal(t, mrn.New("Database", "Hive", "sales"),
+		mrn.New(p.TableGroupType, p.Provider, "sales"))
 }
 
 func TestProjection_DivergesFromTrinoOnlyWhereTrinoCannotSeeTheDatabase(t *testing.T) {

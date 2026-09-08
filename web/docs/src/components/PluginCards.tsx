@@ -97,6 +97,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Hive",
+    description: "Discover databases, tables and views from Apache Hive through HiveServer2",
+    docId: "Plugins/Hive",
+    icon: "simple-icons:apachehive",
+  },
+  {
     name: "Iceberg",
     description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
     docId: "Plugins/Iceberg",
