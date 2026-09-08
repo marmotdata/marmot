@@ -199,6 +199,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:nats",
   },
   {
+    name: "NiFi",
+    description: "Discover process groups, processors and data flow lineage from Apache NiFi",
+    docId: "Plugins/NiFi",
+    icon: "simple-icons:apachenifi",
+  },
+  {
     name: "OpenSearch",
     description: "Discover indices, data streams, and aliases from OpenSearch clusters",
     docId: "Plugins/OpenSearch",
