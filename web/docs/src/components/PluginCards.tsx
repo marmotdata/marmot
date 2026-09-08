@@ -134,6 +134,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Firebase",
+    description: "Discover Firestore collections and Realtime Database instances from Firebase projects",
+    docId: "Plugins/Firebase",
+    icon: "logos:firebase",
+  },
+  {
     name: "Firehose",
     description: "Discover delivery streams and their lineage from Amazon Data Firehose",
     docId: "Plugins/Firehose",
