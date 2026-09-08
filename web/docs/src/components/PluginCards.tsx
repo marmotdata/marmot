@@ -35,6 +35,12 @@ export const plugins: Plugin[] = [
     hasDarkIcon: true,
   },
   {
+    name: "Athena",
+    description: "Discover databases, tables, workgroups, and saved queries from Amazon Athena",
+    docId: "Plugins/Athena",
+    icon: "logos:aws-athena",
+  },
+  {
     name: "Azure Blob Storage",
     description: "Discover containers from Azure Blob Storage accounts",
     docId: "Plugins/Azure Blob Storage",
