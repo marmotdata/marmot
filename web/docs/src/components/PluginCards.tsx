@@ -220,6 +220,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sqs",
   },
   {
+    name: "TimescaleDB",
+    description: "Discover hypertables, continuous aggregates and policies from TimescaleDB instances",
+    docId: "Plugins/TimescaleDB",
+    icon: "simple-icons:timescale",
+  },
+  {
     name: "Trino",
     description: "Discover catalogs, schemas, tables and views from Trino clusters",
     docId: "Plugins/Trino",
