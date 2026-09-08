@@ -53,6 +53,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "Cassandra",
+    description: "Discover keyspaces, tables, and materialized views from Apache Cassandra clusters",
+    docId: "Plugins/Cassandra",
+    icon: "logos:cassandra",
+  },
+  {
     name: "Bigtable",
     description: "Discover instances, tables, and column families from Google Cloud Bigtable",
     docId: "Plugins/Bigtable",
@@ -134,6 +140,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Firebase",
+    description: "Discover Firestore collections and Realtime Database instances from Firebase projects",
+    docId: "Plugins/Firebase",
+    icon: "logos:firebase",
+  },
+  {
     name: "Firehose",
     description: "Discover delivery streams and their lineage from Amazon Data Firehose",
     docId: "Plugins/Firehose",
@@ -143,7 +155,7 @@ export const plugins: Plugin[] = [
     name: "Flink",
     description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
     docId: "Plugins/Flink",
-    icon: "logos:apache-flink",
+    icon: "logos:apache-flink-icon",
   },
   {
     name: "Google Cloud Storage",
@@ -246,6 +258,8 @@ export const plugins: Plugin[] = [
     name: "MLflow",
     description: "Discover registered models, experiments and training datasets from MLflow",
     docId: "Plugins/MLflow",
+    icon: "mlflow",
+    useLocalIcon: true,
   },
   {
     name: "MongoDB",
@@ -305,7 +319,8 @@ export const plugins: Plugin[] = [
     name: "Pinot",
     description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
     docId: "Plugins/Pinot",
-    icon: "simple-icons:apachepinot",
+    icon: "pinot",
+    useLocalIcon: true,
   },
   {
     name: "PostgreSQL",
@@ -335,7 +350,8 @@ export const plugins: Plugin[] = [
     name: "QuestDB",
     description: "Discover tables, views and materialized views from QuestDB instances",
     docId: "Plugins/QuestDB",
-    icon: "mdi:database-clock-outline",
+    icon: "questdb",
+    useLocalIcon: true,
   },
   {
     name: "Redis",
@@ -428,6 +444,12 @@ export const plugins: Plugin[] = [
     description: "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
     docId: "Plugins/Unity Catalog",
     icon: "simple-icons:databricks",
+  },
+  {
+    name: "Vertex AI",
+    description: "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
+    docId: "Plugins/Vertex AI",
+    icon: "material-symbols:robot-2-outline",
   },
 ];
 
