@@ -53,6 +53,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "Cassandra",
+    description: "Discover keyspaces, tables, and materialized views from Apache Cassandra clusters",
+    docId: "Plugins/Cassandra",
+    icon: "logos:cassandra",
+  },
+  {
     name: "Bigtable",
     description: "Discover instances, tables, and column families from Google Cloud Bigtable",
     docId: "Plugins/Bigtable",
