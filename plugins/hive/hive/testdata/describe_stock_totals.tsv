@@ -1,0 +1,39 @@
+sku	string	
+total	bigint	
+		
+# Detailed Table Information		
+Database:           	sales               	
+OwnerType:          	USER                	
+Owner:              	hive                	
+CreateTime:         	Tue Sep 08 02:26:48 UTC 2026	
+LastAccessTime:     	UNKNOWN             	
+Retention:          	0                   	
+Location:           	file:/opt/hive/data/warehouse/sales.db/stock_totals	
+Table Type:         	MATERIALIZED_VIEW   	
+Table Parameters:		
+	COLUMN_STATS_ACCURATE	{"BASIC_STATS":"true","COLUMN_STATS":{"sku":"true","total":"true"}}
+	bucketing_version   	2                   
+	numFiles            	1                   
+	numRows             	2                   
+	rawDataSize         	188                 
+	totalSize           	308                 
+	transient_lastDdlTime	1788834408          
+		
+# Storage Information		
+SerDe Library:      	org.apache.hadoop.hive.ql.io.orc.OrcSerde	
+InputFormat:        	org.apache.hadoop.hive.ql.io.orc.OrcInputFormat	
+OutputFormat:       	org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat	
+Compressed:         	No                  	
+Num Buckets:        	-1                  	
+Bucket Columns:     	[]                  	
+Sort Columns:       	[]                  	
+		
+# Materialized View Information		
+Original Query:     	SELECT sku, SUM(qty) AS total FROM sales.stock GROUP BY sku	
+Expanded Query:     	SELECT `stock`.`sku`, SUM(`stock`.`qty`) AS `total` FROM `sales`.`stock` GROUP BY `stock`.`sku`	
+Rewrite Enabled:    	Yes                 	
+Outdated for Rewriting:	Unknown             	
+		
+# Materialized View Source table information		
+Table name	Snapshot	
+sales.stock	:1:9223372036854775807::	
