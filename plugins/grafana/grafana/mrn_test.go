@@ -81,9 +81,9 @@ func TestTableEdge_PinsTheMySQLPluginsMRN(t *testing.T) {
 }
 
 func TestTableEdge_PinsTheSQLServerPluginsMRN(t *testing.T) {
-	// The SQL Server provider has a space in it, and that space lands in
-	// the MRN because that is what plugins/openmetadata produces too.
-	assert.Equal(t, []string{"mrn://table/sql server/sales.dbo.orders"},
+	// The SQL Server provider has a space in it, which mrn.New dashes,
+	// landing on the same MRN plugins/openmetadata produces.
+	assert.Equal(t, []string{"mrn://table/sql-server/sales.dbo.orders"},
 		sqlTableMRNs("mssql", "sales", "SELECT * FROM orders"))
 }
 

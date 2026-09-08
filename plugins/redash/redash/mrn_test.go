@@ -23,10 +23,10 @@ func TestChartMRN_JoinsTheDashboardAndVisualizationNames(t *testing.T) {
 	assert.Equal(t, "mrn://chart/redash/revenue-orders-by-day", assetMRN("Chart", "Revenue/Orders by day"))
 }
 
-func TestQueryMRN_KeepsTheSpacesInTheDataModelObjectType(t *testing.T) {
-	// mrn.New lowercases the type but does not replace spaces in it, only
-	// in the name, so the type stays "data model object".
-	assert.Equal(t, "mrn://data model object/redash/orders-by-day", assetMRN("Data Model Object", "Orders by day"))
+func TestQueryMRN_DashesTheSpacesInTheDataModelObjectType(t *testing.T) {
+	// mrn.New lowercases the type and replaces its spaces the same way it
+	// does in the name, so the type reads "data-model-object".
+	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", assetMRN("Data Model Object", "Orders by day"))
 }
 
 func TestDataSourceMRN_IsTheDataSourceName(t *testing.T) {
@@ -93,7 +93,7 @@ func TestDiscover_ProducesTheExpectedMRNSetForTheFixture(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{
 		"mrn://datasource/redash/shop",
-		"mrn://data model object/redash/orders-by-day",
+		"mrn://data-model-object/redash/orders-by-day",
 		"mrn://dashboard/redash/revenue",
 		"mrn://chart/redash/revenue-orders-by-day",
 	}, mrns)
@@ -109,10 +109,10 @@ func TestDiscover_ProducesTheExpectedLineageForTheFixture(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, []edge{
-		{"mrn://datasource/redash/shop", "mrn://data model object/redash/orders-by-day", "FEEDS"},
-		{"mrn://table/postgresql/orders", "mrn://data model object/redash/orders-by-day", "FEEDS"},
-		{"mrn://table/postgresql/customers", "mrn://data model object/redash/orders-by-day", "FEEDS"},
+		{"mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
+		{"mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
+		{"mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
 		{"mrn://dashboard/redash/revenue", "mrn://chart/redash/revenue-orders-by-day", "CONTAINS"},
-		{"mrn://data model object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"},
+		{"mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"},
 	}, edges)
 }

@@ -26,7 +26,7 @@ func TestChartMRN_IsTheCollectionPathAndName(t *testing.T) {
 func TestDataModelObjectMRN_KeepsTheSpacedType(t *testing.T) {
 	// The type is used as-is by mrn.New, which is also how the
 	// OpenMetadata plugin addresses a Metabase model, so the two merge.
-	assert.Equal(t, "mrn://data model object/metabase/marmot-finance-customer-orders",
+	assert.Equal(t, "mrn://data-model-object/metabase/marmot-finance-customer-orders",
 		assetMRN("Data Model Object", "Marmot/Finance/Customer orders"))
 }
 

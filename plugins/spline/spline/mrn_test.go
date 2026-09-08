@@ -60,7 +60,7 @@ func TestNativeMRN_SQLServerTableKeepsTheSpaceInTheProvider(t *testing.T) {
 	ref, ok := parseDataSourceURI("jdbc:sqlserver://sql.internal:1433;databaseName=shop:sales.orders")
 	require.True(t, ok)
 
-	assert.Equal(t, "mrn://table/sql server/shop.sales.orders", nativeMRN(ref))
+	assert.Equal(t, "mrn://table/sql-server/shop.sales.orders", nativeMRN(ref))
 }
 
 func TestNativeMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {

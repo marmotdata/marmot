@@ -105,12 +105,12 @@ func TestDataSourceMap_RedshiftIamUsesTheDbnameOption(t *testing.T) {
 }
 
 func TestDataSourceMap_MssqlUsesTheDbOption(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders",
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders",
 		tableMRNFor(t, "mssql", map[string]any{"db": "shop"}, "SELECT * FROM dbo.orders"))
 }
 
 func TestDataSourceMap_MssqlOdbcUsesTheDbOption(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders",
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders",
 		tableMRNFor(t, "mssql_odbc", map[string]any{"db": "shop"}, "SELECT * FROM [dbo].[orders]"))
 }
 

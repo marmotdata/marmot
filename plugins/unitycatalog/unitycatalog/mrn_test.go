@@ -14,27 +14,27 @@ import (
 // space in it, which mrn.New lowercases but keeps.
 
 func TestCatalogMRN_IsTheCatalogName(t *testing.T) {
-	assert.Equal(t, "mrn://catalog/unity catalog/unity", assetMRN("Catalog", "unity"))
+	assert.Equal(t, "mrn://catalog/unity-catalog/unity", assetMRN("Catalog", "unity"))
 }
 
 func TestTableMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://table/unity catalog/unity.default.numbers", assetMRN("Table", "unity.default.numbers"))
+	assert.Equal(t, "mrn://table/unity-catalog/unity.default.numbers", assetMRN("Table", "unity.default.numbers"))
 }
 
 func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/unity catalog/shop.sales.big_orders", assetMRN("View", "shop.sales.big_orders"))
+	assert.Equal(t, "mrn://view/unity-catalog/shop.sales.big_orders", assetMRN("View", "shop.sales.big_orders"))
 }
 
 func TestVolumeMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://volume/unity catalog/unity.default.txt_files", assetMRN("Volume", "unity.default.txt_files"))
+	assert.Equal(t, "mrn://volume/unity-catalog/unity.default.txt_files", assetMRN("Volume", "unity.default.txt_files"))
 }
 
 func TestFunctionMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://function/unity catalog/unity.default.sum", assetMRN("Function", "unity.default.sum"))
+	assert.Equal(t, "mrn://function/unity-catalog/unity.default.sum", assetMRN("Function", "unity.default.sum"))
 }
 
 func TestModelMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://model/unity catalog/ml.models.churn", assetMRN("Model", "ml.models.churn"))
+	assert.Equal(t, "mrn://model/unity-catalog/ml.models.churn", assetMRN("Model", "ml.models.churn"))
 }
 
 func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCatalogMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
 	parsed, err := mrn.Parse(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, "unity catalog", parsed.Service)
+	assert.Equal(t, "unity-catalog", parsed.Service)
 	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
 }
 
@@ -85,7 +85,7 @@ func TestTableMRN_MatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
 	// The OpenMetadata plugin projects a UnityCatalog service onto the
 	// same provider and the same catalog.schema.table name, so a table
 	// reached through either route lands on one asset.
-	assert.Equal(t, "mrn://table/unity catalog/shop.sales.orders",
+	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders",
 		mrn.New("Table", "Unity Catalog", "shop.sales.orders"))
 	assert.Equal(t, assetMRN("Table", "shop.sales.orders"),
 		mrn.New("Table", "Unity Catalog", "shop.sales.orders"))

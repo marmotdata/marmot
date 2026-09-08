@@ -53,12 +53,12 @@ func TestChartMRN_IsTheGroupDashboardAndChart(t *testing.T) {
 		assetMRN("Chart", dashboardProviderFor("superset"), name))
 }
 
-func TestTableMRN_DeltaLakeProviderKeepsItsSpace(t *testing.T) {
-	// A provider with a space lands that space in the MRN, which is
-	// where the Delta Lake plugin lands too.
+func TestTableMRN_DeltaLakeProviderLosesItsSpace(t *testing.T) {
+	// mrn.New dashes the space in the provider, which is where the Delta
+	// Lake plugin lands too.
 	p := projectionFor("delta")
 
-	assert.Equal(t, "mrn://table/delta lake/orders",
+	assert.Equal(t, "mrn://table/delta-lake/orders",
 		assetMRN("Table", p.Provider, p.TableName("delta", "prod", "sales", "orders")))
 }
 

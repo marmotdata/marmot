@@ -22,13 +22,13 @@ func TestChartMRN_IsTheSliceName(t *testing.T) {
 }
 
 func TestDatasetMRN_IsSchemaDotTable(t *testing.T) {
-	// The type keeps its spaces: mrn.New lowercases the type but only
-	// sanitises the name, and the server derives the same string.
-	assert.Equal(t, "mrn://data model object/superset/public.orders", assetMRN("Data Model Object", "public.orders"))
+	// The type loses its spaces: mrn.New sanitises the type the same way
+	// it sanitises the name, and the server derives the same string.
+	assert.Equal(t, "mrn://data-model-object/superset/public.orders", assetMRN("Data Model Object", "public.orders"))
 }
 
 func TestDatasetMRN_WithoutASchemaIsTheTable(t *testing.T) {
-	assert.Equal(t, "mrn://data model object/superset/events", assetMRN("Data Model Object", datasetName("", "events")))
+	assert.Equal(t, "mrn://data-model-object/superset/events", assetMRN("Data Model Object", datasetName("", "events")))
 }
 
 func TestDataSourceMRN_IsTheDatabaseName(t *testing.T) {
@@ -85,5 +85,5 @@ func TestNativeTableMRN_MatchesTheSnowflakeProjection(t *testing.T) {
 func TestNativeTableMRN_KeepsTheSpaceInSQLServer(t *testing.T) {
 	// "SQL Server" is the provider string with a space; mrn.New keeps it
 	// in the service component, so the two plugins land on one asset.
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
 }

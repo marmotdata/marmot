@@ -40,7 +40,7 @@ func TestTableMRN_IsThePostgreSQLPluginsIdentity(t *testing.T) {
 }
 
 func TestTableMRN_IsTheSQLServerPluginsIdentity(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql server/shop.dbo.orders", nativeMRN("Table", "SQL Server", "shop.dbo.orders"))
+	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", nativeMRN("Table", "SQL Server", "shop.dbo.orders"))
 }
 
 func TestPipelineMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {

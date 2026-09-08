@@ -105,7 +105,7 @@ func TestE2E_DiscoversBothConnectorsAsPipelines(t *testing.T) {
 	source := findAsset(result, "Pipeline", sourceConnector)
 	require.NotNil(t, source)
 	assert.Equal(t, []string{"Kafka Connect"}, source.Providers)
-	assert.Equal(t, "mrn://pipeline/kafka connect/orders-file-source", *source.MRN)
+	assert.Equal(t, "mrn://pipeline/kafka-connect/orders-file-source", *source.MRN)
 	assert.Equal(t, "source", source.Metadata["connector_type"])
 	assert.Equal(t, "RUNNING", source.Metadata["state"])
 	assert.Equal(t, "org.apache.kafka.connect.file.FileStreamSourceConnector", source.Metadata["connector_class"])
@@ -128,8 +128,8 @@ func TestE2E_DiscoversTasksUnderTheirPipelines(t *testing.T) {
 		assert.Equal(t, "RUNNING", task.Metadata["state"])
 		assert.Equal(t, connector, task.Metadata["connector"])
 		assert.True(t, hasEdge(result,
-			"mrn://pipeline/kafka connect/"+connector,
-			"mrn://task/kafka connect/"+connector+".task-0",
+			"mrn://pipeline/kafka-connect/"+connector,
+			"mrn://task/kafka-connect/"+connector+".task-0",
 			"CONTAINS"), connector)
 	}
 }
@@ -149,12 +149,12 @@ func TestE2E_LinksSourceToTopicAndTopicToSink(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/kafka connect/orders-file-source",
+		"mrn://pipeline/kafka-connect/orders-file-source",
 		"mrn://topic/kafka/orders-events",
 		"PRODUCES"))
 	assert.True(t, hasEdge(result,
 		"mrn://topic/kafka/orders-events",
-		"mrn://pipeline/kafka connect/orders-file-sink",
+		"mrn://pipeline/kafka-connect/orders-file-sink",
 		"FEEDS"))
 }
 

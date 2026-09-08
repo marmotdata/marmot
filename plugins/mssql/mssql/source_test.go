@@ -529,10 +529,10 @@ func TestViewOfEdges_PointFromTheBaseTableToTheView(t *testing.T) {
 	require.Len(t, edges, 2)
 	for _, edge := range edges {
 		assert.Equal(t, "VIEW_OF", edge.Type)
-		assert.Equal(t, "mrn://view/sql server/shop.dbo.order_totals", edge.Target)
+		assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals", edge.Target)
 	}
 	assert.ElementsMatch(t,
-		[]string{"mrn://table/sql server/shop.dbo.customers", "mrn://table/sql server/shop.dbo.orders"},
+		[]string{"mrn://table/sql-server/shop.dbo.customers", "mrn://table/sql-server/shop.dbo.orders"},
 		[]string{edges[0].Source, edges[1].Source})
 }
 

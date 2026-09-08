@@ -9,17 +9,17 @@ import (
 )
 
 // A Cloud Run workload is addressed by region and id, because one id can exist
-// in several regions of the same project. mrn.New lowercases the service and
-// turns the slash in the name into a hyphen, so the provider keeps its space
-// and the name loses its slash.
+// in several regions of the same project. mrn.New lowercases every part and
+// turns slashes and spaces into hyphens, so the provider loses its space and
+// the name loses its slash.
 
 func TestServiceMRN_IsTheRegionAndServiceID(t *testing.T) {
-	assert.Equal(t, "mrn://service/cloud run/europe-west1-checkout-api",
+	assert.Equal(t, "mrn://service/cloud-run/europe-west1-checkout-api",
 		assetMRN(typeService, "europe-west1/checkout-api"))
 }
 
 func TestJobMRN_IsTheRegionAndJobID(t *testing.T) {
-	assert.Equal(t, "mrn://job/cloud run/europe-west1-nightly-export",
+	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export",
 		assetMRN(typeJob, "europe-west1/nightly-export"))
 }
 

@@ -133,7 +133,7 @@ func TestDiscover_NamesDashboardsByTheirCollectionPath(t *testing.T) {
 func TestDiscover_CataloguesModelsAsDataModelObjects(t *testing.T) {
 	result := discover(t, shopFixture(), nil)
 
-	model := findAsset(result, "mrn://data model object/metabase/marmot-finance-customer-orders")
+	model := findAsset(result, "mrn://data-model-object/metabase/marmot-finance-customer-orders")
 	require.NotNil(t, model)
 	assert.Equal(t, "Data Model Object", model.Type)
 	assert.Equal(t, "model", model.Metadata["card_type"])
@@ -251,7 +251,7 @@ func TestDiscover_LinksDashboardsToTheirCards(t *testing.T) {
 
 	dash := "mrn://dashboard/metabase/marmot-finance-finance-overview"
 	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-revenue-by-customer", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://data model object/metabase/marmot-finance-customer-orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://data-model-object/metabase/marmot-finance-customer-orders", "CONTAINS"))
 	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-totals-from-model", "CONTAINS"))
 	assert.False(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-orders-table", "CONTAINS"), "not on the dashboard")
 }
@@ -303,7 +303,7 @@ func TestDiscover_LinksAQuestionToTheModelItBuildsOn(t *testing.T) {
 	result := discover(t, shopFixture(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://data model object/metabase/marmot-finance-customer-orders",
+		"mrn://data-model-object/metabase/marmot-finance-customer-orders",
 		"mrn://chart/metabase/marmot-finance-totals-from-model", "FEEDS"))
 }
 
@@ -314,7 +314,7 @@ func TestDiscover_LinksANativeCardToTheCardItReferences(t *testing.T) {
 		nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://data model object/metabase/marmot-finance-customer-orders",
+		"mrn://data-model-object/metabase/marmot-finance-customer-orders",
 		"mrn://chart/metabase/marmot-on-top-of-model", "FEEDS"))
 }
 
@@ -344,7 +344,7 @@ func TestDiscover_ReadsLegacyQueryBuilderQueries(t *testing.T) {
 	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", joined, "FEEDS"))
 	assert.True(t, hasEdge(result, "mrn://table/postgresql/regions", joined, "FEEDS"))
 	assert.True(t, hasEdge(result,
-		"mrn://data model object/metabase/marmot-finance-customer-orders",
+		"mrn://data-model-object/metabase/marmot-finance-customer-orders",
 		"mrn://chart/metabase/marmot-legacy-on-model", "FEEDS"))
 }
 
@@ -423,7 +423,7 @@ func TestDiscover_OmitsChartsWhenTurnedOff(t *testing.T) {
 	result := discover(t, shopFixture(), pluginsdk.RawConfig{"include_charts": false})
 
 	assert.Nil(t, findAsset(result, "mrn://chart/metabase/marmot-finance-revenue-by-customer"))
-	assert.NotNil(t, findAsset(result, "mrn://data model object/metabase/marmot-finance-customer-orders"))
+	assert.NotNil(t, findAsset(result, "mrn://data-model-object/metabase/marmot-finance-customer-orders"))
 	assert.NotNil(t, findAsset(result, "mrn://dashboard/metabase/marmot-finance-finance-overview"))
 
 	// The dashboard still learns which tables feed it through the
@@ -438,11 +438,11 @@ func TestDiscover_OmitsChartsWhenTurnedOff(t *testing.T) {
 func TestDiscover_OmitsModelsWhenTurnedOff(t *testing.T) {
 	result := discover(t, shopFixture(), pluginsdk.RawConfig{"include_models": false})
 
-	assert.Nil(t, findAsset(result, "mrn://data model object/metabase/marmot-finance-customer-orders"))
+	assert.Nil(t, findAsset(result, "mrn://data-model-object/metabase/marmot-finance-customer-orders"))
 	assert.NotNil(t, findAsset(result, "mrn://chart/metabase/marmot-finance-revenue-by-customer"))
 	for _, edge := range result.Lineage {
-		assert.NotContains(t, edge.Source, "mrn://data model object/")
-		assert.NotContains(t, edge.Target, "mrn://data model object/")
+		assert.NotContains(t, edge.Source, "mrn://data-model-object/")
+		assert.NotContains(t, edge.Target, "mrn://data-model-object/")
 	}
 }
 

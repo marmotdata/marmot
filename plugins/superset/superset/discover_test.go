@@ -275,7 +275,7 @@ func TestDiscover_SurvivesAMissingConnectionEndpoint(t *testing.T) {
 	db := findAsset(result, "DataSource", "Shop")
 	require.NotNil(t, db)
 	assert.NotContains(t, db.Metadata, "host")
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/superset/public.orders", "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
 		"a bare-named backend needs no connection details for table lineage")
 }
 
@@ -320,7 +320,7 @@ func TestDiscover_LinksADatabaseToItsDatasets(t *testing.T) {
 func TestDiscover_LinksAPhysicalDatasetToThePostgresTableItReads(t *testing.T) {
 	result := discover(t, shop(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/superset/public.orders", "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
 		"the table end is the MRN the PostgreSQL plugin gives the table")
 }
 

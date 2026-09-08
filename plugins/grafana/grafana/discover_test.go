@@ -358,7 +358,7 @@ func TestDiscover_ReadsTheDatabaseFromJSONDataWhenTheFieldIsEmpty(t *testing.T) 
 
 	chart := findAsset(result, "Chart", "MSSQL/Orders")
 	require.NotNil(t, chart)
-	assert.True(t, hasEdge(result, "mrn://table/sql server/sales.dbo.orders", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://table/sql-server/sales.dbo.orders", *chart.MRN, "FEEDS"))
 }
 
 // Lineage

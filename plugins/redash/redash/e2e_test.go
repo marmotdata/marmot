@@ -221,7 +221,7 @@ func TestE2E_DiscoversThePublishedQueryWithItsSQL(t *testing.T) {
 
 	query := findAsset(t, result, "Data Model Object", "Orders by day")
 
-	assert.Equal(t, "mrn://data model object/redash/orders-by-day", *query.MRN)
+	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", *query.MRN)
 	require.NotNil(t, query.Query)
 	assert.Contains(t, *query.Query, "FROM public.orders o JOIN public.customers c")
 	require.NotNil(t, query.QueryLanguage)
@@ -297,13 +297,13 @@ func TestE2E_DashboardContainsItsCharts(t *testing.T) {
 func TestE2E_QueryFeedsTheChartThatRendersIt(t *testing.T) {
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://data model object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
 }
 
 func TestE2E_DataSourceFeedsTheQuery(t *testing.T) {
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://datasource/redash/shop", "mrn://data model object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestE2E_PostgresTablesFeedTheQueryThatReadsThem(t *testing.T) {
@@ -311,8 +311,8 @@ func TestE2E_PostgresTablesFeedTheQueryThatReadsThem(t *testing.T) {
 	// merges with that plugin's assets rather than minting new ones.
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://table/postgresql/orders", "mrn://data model object/redash/orders-by-day", "FEEDS"))
-	assert.True(t, findsEdge(result, "mrn://table/postgresql/customers", "mrn://data model object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestE2E_IncludesDraftsByDefault(t *testing.T) {

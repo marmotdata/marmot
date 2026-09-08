@@ -12,7 +12,7 @@ func TestEndpoint_IsNamedAfterItsDisplayName(t *testing.T) {
 
 	endpoint := assetNamed(t, result, "Endpoint", "churn-prod")
 
-	assert.Equal(t, "mrn://endpoint/vertex ai/churn-prod", *endpoint.MRN)
+	assert.Equal(t, "mrn://endpoint/vertex-ai/churn-prod", *endpoint.MRN)
 }
 
 func TestEndpoint_CarriesItsDescription(t *testing.T) {
@@ -55,8 +55,8 @@ func TestEndpoint_LinksEachModelItServes(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	assert.True(t, hasEdge(result,
-		"mrn://model/vertex ai/churn-predictor",
-		"mrn://endpoint/vertex ai/churn-prod",
+		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://endpoint/vertex-ai/churn-prod",
 		"FEEDS"))
 }
 
@@ -67,7 +67,7 @@ func TestEndpoint_SkipsAModelThisRunDidNotFind(t *testing.T) {
 
 	count := 0
 	for _, edge := range result.Lineage {
-		if edge.Target == "mrn://endpoint/vertex ai/churn-prod" {
+		if edge.Target == "mrn://endpoint/vertex-ai/churn-prod" {
 			count++
 		}
 	}
@@ -117,8 +117,8 @@ func TestEndpoint_ResolvesAModelDeployedByVersion(t *testing.T) {
 	result := discoverWith(t, fake)
 
 	assert.True(t, hasEdge(result,
-		"mrn://model/vertex ai/churn-predictor",
-		"mrn://endpoint/vertex ai/churn-prod",
+		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://endpoint/vertex-ai/churn-prod",
 		"FEEDS"))
 }
 

@@ -249,12 +249,12 @@ func TestE2E_DiscoverReturnsTheServiceAndTheJob(t *testing.T) {
 	assert.Equal(t, "Service", service.Type)
 	assert.Equal(t, []string{"Cloud Run"}, service.Providers)
 	require.NotNil(t, service.MRN)
-	assert.Equal(t, "mrn://service/cloud run/europe-west1-checkout-api", *service.MRN)
+	assert.Equal(t, "mrn://service/cloud-run/europe-west1-checkout-api", *service.MRN)
 
 	job := e2eAssetNamed(t, result, "europe-west1/nightly-export")
 	assert.Equal(t, "Job", job.Type)
 	require.NotNil(t, job.MRN)
-	assert.Equal(t, "mrn://job/cloud run/europe-west1-nightly-export", *job.MRN)
+	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export", *job.MRN)
 }
 
 func TestE2E_DiscoverCarriesServiceMetadataOverTheWire(t *testing.T) {
@@ -289,12 +289,12 @@ func TestE2E_DiscoverEmitsTheBucketLineageEdges(t *testing.T) {
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
 		Source: "mrn://bucket/gcs/marmot-e2e-archive",
-		Target: "mrn://service/cloud run/europe-west1-checkout-api",
+		Target: "mrn://service/cloud-run/europe-west1-checkout-api",
 		Type:   "FEEDS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
 		Source: "mrn://bucket/gcs/marmot-e2e-archive",
-		Target: "mrn://job/cloud run/europe-west1-nightly-export",
+		Target: "mrn://job/cloud-run/europe-west1-nightly-export",
 		Type:   "FEEDS",
 	})
 }
@@ -313,7 +313,7 @@ func TestE2E_DiscoverEmitsTheJobExecutionCount(t *testing.T) {
 	result := e2eDiscover(t)
 
 	require.Len(t, result.Statistics, 1)
-	assert.Equal(t, "mrn://job/cloud run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
+	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
 	assert.Equal(t, "asset.execution_count", result.Statistics[0].MetricName)
 	assert.Equal(t, float64(2), result.Statistics[0].Value)
 }
@@ -323,7 +323,7 @@ func TestE2E_DiscoverEmitsTheJobRunHistory(t *testing.T) {
 
 	require.Len(t, result.RunHistory, 1)
 	history := result.RunHistory[0]
-	assert.Equal(t, "mrn://job/cloud run/europe-west1-nightly-export", history.AssetMRN)
+	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export", history.AssetMRN)
 
 	byType := map[string]string{}
 	for _, event := range history.Runs {

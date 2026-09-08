@@ -24,7 +24,7 @@ func TestDiscover_CreatesAPipelinePerConnector(t *testing.T) {
 	source := findAsset(result, "Pipeline", "orders-file-source")
 	require.NotNil(t, source)
 	assert.Equal(t, []string{"Kafka Connect"}, source.Providers)
-	assert.Equal(t, "mrn://pipeline/kafka connect/orders-file-source", *source.MRN)
+	assert.Equal(t, "mrn://pipeline/kafka-connect/orders-file-source", *source.MRN)
 
 	sink := findAsset(result, "Pipeline", "orders-file-sink")
 	require.NotNil(t, sink)
@@ -99,15 +99,15 @@ func TestDiscover_CreatesATaskPerTaskAndContainsEdges(t *testing.T) {
 	task := findAsset(result, "Task", "orders-file-source.task-0")
 	require.NotNil(t, task)
 	assert.Equal(t, []string{"Kafka Connect"}, task.Providers)
-	assert.Equal(t, "mrn://task/kafka connect/orders-file-source.task-0", *task.MRN)
+	assert.Equal(t, "mrn://task/kafka-connect/orders-file-source.task-0", *task.MRN)
 	assert.Equal(t, 0, task.Metadata["task_id"])
 	assert.Equal(t, "RUNNING", task.Metadata["state"])
 	assert.Equal(t, "marmot-test-kafkaconnect-connect:8083", task.Metadata["worker_id"])
 	assert.Equal(t, "orders-file-source", task.Metadata["connector"])
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/kafka connect/orders-file-source",
-		"mrn://task/kafka connect/orders-file-source.task-0",
+		"mrn://pipeline/kafka-connect/orders-file-source",
+		"mrn://task/kafka-connect/orders-file-source.task-0",
 		"CONTAINS"))
 }
 
@@ -184,12 +184,12 @@ func TestDiscover_LinksSourceToTopicAndTopicToSink(t *testing.T) {
 	result := discover(t, twoFileConnectors(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/kafka connect/orders-file-source",
+		"mrn://pipeline/kafka-connect/orders-file-source",
 		"mrn://topic/kafka/orders-events",
 		"PRODUCES"))
 	assert.True(t, hasEdge(result,
 		"mrn://topic/kafka/orders-events",
-		"mrn://pipeline/kafka connect/orders-file-sink",
+		"mrn://pipeline/kafka-connect/orders-file-sink",
 		"FEEDS"))
 }
 
@@ -348,7 +348,7 @@ func TestDiscover_DebeziumSourceLinksTablesAndTopics(t *testing.T) {
 		"table.include.list": "public.orders,public.customers",
 	}), nil)
 
-	pipeline := "mrn://pipeline/kafka connect/shop-cdc"
+	pipeline := "mrn://pipeline/kafka-connect/shop-cdc"
 	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", pipeline, "FEEDS"))
 	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", pipeline, "FEEDS"))
 	assert.True(t, hasEdge(result, pipeline, "mrn://topic/kafka/shop.public.orders", "PRODUCES"))
@@ -370,7 +370,7 @@ func TestDiscover_DebeziumSourceAppliesRegexRouter(t *testing.T) {
 		"schema.history.internal.kafka.topic": "shop-history",
 	}), nil)
 
-	assert.True(t, hasEdge(result, "mrn://pipeline/kafka connect/shop-cdc", "mrn://topic/kafka/shop.orders", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://pipeline/kafka-connect/shop-cdc", "mrn://topic/kafka/shop.orders", "PRODUCES"))
 	assert.Nil(t, findAsset(result, "Topic", "shop.public.orders"))
 }
 
@@ -401,7 +401,7 @@ func TestDiscover_SinkTargetsUseTheRoutedTopicName(t *testing.T) {
 			"transforms.route.replacement": "$1",
 		}), nil)
 
-	pipeline := "mrn://pipeline/kafka connect/pg-sink"
+	pipeline := "mrn://pipeline/kafka-connect/pg-sink"
 	assert.True(t, hasEdge(result, "mrn://topic/kafka/shop.public.orders", pipeline, "FEEDS"),
 		"the topic edge uses the real topic name")
 	assert.True(t, hasEdge(result, pipeline, "mrn://table/postgresql/orders", "PRODUCES"),
@@ -415,7 +415,7 @@ func TestDiscover_StorageSinkFansEveryTopicIntoOneBucket(t *testing.T) {
 		"topics":          "orders,payments",
 	}), nil)
 
-	pipeline := "mrn://pipeline/kafka connect/lake"
+	pipeline := "mrn://pipeline/kafka-connect/lake"
 	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders", pipeline, "FEEDS"))
 	assert.True(t, hasEdge(result, "mrn://topic/kafka/payments", pipeline, "FEEDS"))
 	assert.True(t, hasEdge(result, pipeline, "mrn://bucket/s3/data-lake", "PRODUCES"))
@@ -429,7 +429,7 @@ func TestDiscover_UnknownClassLinksTopicsOnly(t *testing.T) {
 		"table":           "should-not-be-used",
 	}), nil)
 
-	pipeline := "mrn://pipeline/kafka connect/custom"
+	pipeline := "mrn://pipeline/kafka-connect/custom"
 	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders", pipeline, "FEEDS"))
 	for _, edge := range result.Lineage {
 		if edge.Source == pipeline {
@@ -451,7 +451,7 @@ func TestDiscover_OutboxRouterWithAStaticRouteNamesThatTopic(t *testing.T) {
 	pipeline := findAsset(result, "Pipeline", "outbox")
 	require.NotNil(t, pipeline)
 	assert.Equal(t, []string{"domain-events"}, pipeline.Metadata["topics"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/outbox", "mrn://pipeline/kafka connect/outbox", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://table/postgresql/outbox", "mrn://pipeline/kafka-connect/outbox", "FEEDS"))
 }
 
 func TestDiscover_OutboxRouterWithADynamicRouteDerivesNoTopics(t *testing.T) {

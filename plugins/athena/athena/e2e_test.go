@@ -343,7 +343,7 @@ func TestE2E_SavedQueryCarriesItsSQL(t *testing.T) {
 	query := findAsset(t, result, "analytics/daily-revenue")
 
 	assert.Equal(t, "Data Model Object", query.Type)
-	assert.Equal(t, "mrn://data model object/athena/analytics-daily-revenue", *query.MRN)
+	assert.Equal(t, "mrn://data-model-object/athena/analytics-daily-revenue", *query.MRN)
 	require.NotNil(t, query.Query)
 	assert.Contains(t, *query.Query, "JOIN customers c")
 	assert.Equal(t, "shop", query.Metadata["database"])
@@ -362,7 +362,7 @@ func TestE2E_ContainmentLineage(t *testing.T) {
 
 	assertEdge(t, result, "mrn://catalog/athena/awsdatacatalog", "mrn://database/glue/shop", "CONTAINS")
 	assertEdge(t, result, "mrn://database/glue/shop", "mrn://table/glue/orders", "CONTAINS")
-	assertEdge(t, result, "mrn://workgroup/athena/analytics", "mrn://data model object/athena/analytics-daily-revenue", "CONTAINS")
+	assertEdge(t, result, "mrn://workgroup/athena/analytics", "mrn://data-model-object/athena/analytics-daily-revenue", "CONTAINS")
 }
 
 func TestE2E_BucketFeedsTheTableItStores(t *testing.T) {
@@ -379,7 +379,7 @@ func TestE2E_WorkGroupProducesItsResultBucket(t *testing.T) {
 
 func TestE2E_TablesASavedQueryReadsFeedIt(t *testing.T) {
 	result := discover(t)
-	target := "mrn://data model object/athena/analytics-daily-revenue"
+	target := "mrn://data-model-object/athena/analytics-daily-revenue"
 
 	assertEdge(t, result, "mrn://table/glue/orders", target, "FEEDS")
 	assertEdge(t, result, "mrn://table/glue/customers", target, "FEEDS")

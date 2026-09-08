@@ -14,7 +14,7 @@ func TestPipelineJob_IsNamedAfterItsDisplayName(t *testing.T) {
 
 	job := assetNamed(t, result, "Job", "churn-training")
 
-	assert.Equal(t, "mrn://job/vertex ai/churn-training", *job.MRN)
+	assert.Equal(t, "mrn://job/vertex-ai/churn-training", *job.MRN)
 }
 
 func TestPipelineJob_RecordsItsStateAndTimestamps(t *testing.T) {
@@ -151,7 +151,7 @@ func TestPipelineJob_SkipsAnEventWithAnUnreadableTimestamp(t *testing.T) {
 
 	result := discoverWith(t, fake, withPipelineJobs)
 
-	history := runHistoryFor(result, "mrn://job/vertex ai/churn-training")
+	history := runHistoryFor(result, "mrn://job/vertex-ai/churn-training")
 	require.NotNil(t, history)
 	require.Len(t, history.Runs, 1)
 	assert.Equal(t, "START", history.Runs[0].EventType)
@@ -168,7 +168,7 @@ func TestPipelineJob_EmitsNoRunHistoryWithoutAnyTimestamp(t *testing.T) {
 	result := discoverWith(t, fake, withPipelineJobs)
 
 	assetNamed(t, result, "Job", "churn-training")
-	assert.Nil(t, runHistoryFor(result, "mrn://job/vertex ai/churn-training"))
+	assert.Nil(t, runHistoryFor(result, "mrn://job/vertex-ai/churn-training"))
 }
 
 func TestPipelineJobs_QualifyBothSidesOfADisplayNameCollision(t *testing.T) {

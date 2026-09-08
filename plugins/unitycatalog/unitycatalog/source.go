@@ -15,7 +15,7 @@ import (
 
 // provider is the exact string every asset carries in Providers and the
 // service component of every MRN. It has a space in it, which mrn.New
-// keeps: mrn://table/unity catalog/shop.sales.orders.
+// dashes: mrn://table/unity-catalog/shop.sales.orders.
 const provider = "Unity Catalog"
 
 // Config for the Unity Catalog plugin.

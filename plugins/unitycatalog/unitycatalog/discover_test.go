@@ -80,7 +80,7 @@ func TestDiscover_NamesTablesCatalogSchemaTable(t *testing.T) {
 	table := findAsset(result, "Table", "unity.default.numbers")
 	require.NotNil(t, table)
 	assert.Equal(t, "unity.default.numbers", *table.Name)
-	assert.Equal(t, "mrn://table/unity catalog/unity.default.numbers", *table.MRN)
+	assert.Equal(t, "mrn://table/unity-catalog/unity.default.numbers", *table.MRN)
 	assert.Equal(t, "Table", table.Type)
 }
 

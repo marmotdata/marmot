@@ -9,7 +9,7 @@ import (
 )
 
 // providerName is the exact provider string Marmot uses for SQL Server. It
-// contains a space; mrn.New lowercases it to "sql server".
+// contains a space, which mrn.New lowercases and dashes to "sql-server".
 const providerName = "SQL Server"
 
 // assetMRN is the single place a SQL Server MRN is built. Every pass (assets,
