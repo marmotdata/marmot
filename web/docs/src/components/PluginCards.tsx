@@ -182,6 +182,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "QuestDB",
+    description: "Discover tables, views and materialized views from QuestDB instances",
+    docId: "Plugins/QuestDB",
+    icon: "mdi:database-clock-outline",
+  },
+  {
     name: "Redis",
     description: "Discover databases from Redis instances",
     docId: "Plugins/Redis",
