@@ -54,6 +54,12 @@ export const plugins: Plugin[] = [
     useLocalIcon: true,
   },
   {
+    name: "Couchbase",
+    description: "Discover buckets, scopes and collections from Couchbase clusters",
+    docId: "Plugins/Couchbase",
+    icon: "logos:couchbase",
+  },
+  {
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
     docId: "Plugins/DBT",
