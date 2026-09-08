@@ -308,6 +308,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Redash",
+    description: "Discover dashboards, charts, queries and data sources from Redash",
+    docId: "Plugins/Redash",
+    icon: "simple-icons:redash",
+  },
+  {
     name: "Presto",
     description: "Discover catalogs, schemas, tables and views from Presto clusters",
     docId: "Plugins/Presto",
