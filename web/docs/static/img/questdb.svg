@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1.7 26.35 26.35">
+<defs>
+<linearGradient id="questdb-a" x1="323.795" x2="72.114" y1="283.316" y2="22.646" gradientTransform="scale(.08058 .08127)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#892c6c"/><stop offset="1" stop-color="#d14671"/></linearGradient>
+<linearGradient id="questdb-b" x1="57.988" x2="318.658" y1="17.51" y2="279.464" gradientTransform="scale(.08058 .08127)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#c34170"/><stop offset="1" stop-color="#8b2c6c"/></linearGradient>
+<linearGradient id="questdb-c" x1="312.238" x2="46.432" y1="276.898" y2="17.512" gradientTransform="scale(.08058 .08127)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#882b6b"/><stop offset="1" stop-color="#cf4671"/></linearGradient>
+</defs>
+<path fill="url(#questdb-a)" d="M4.336 11.508c0-3.973 3.242-7.172 7.266-7.172 1.453 0 2.793.402 3.91 1.14l3.129-3.054A11.63 11.63 0 0011.6.066C5.196.066.017 5.18.017 11.508c0 6.332 5.18 11.445 11.586 11.445v-4.27c-4.024 0-7.266-3.199-7.266-7.175zm0 0"/>
+<path fill="url(#questdb-b)" d="M18.863 11.508h4.32c0-3.016-1.19-5.774-3.128-7.836L17 6.692a7.192 7.192 0 011.863 4.816zm0 0"/>
+<path fill="url(#questdb-c)" d="M15.14 11.879H8.77l11.25 11.11 6.332-.036zm0 0"/>
+</svg>

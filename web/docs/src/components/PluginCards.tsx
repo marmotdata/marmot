@@ -53,6 +53,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "Cassandra",
+    description: "Discover keyspaces, tables, and materialized views from Apache Cassandra clusters",
+    docId: "Plugins/Cassandra",
+    icon: "logos:cassandra",
+  },
+  {
     name: "Bigtable",
     description: "Discover instances, tables, and column families from Google Cloud Bigtable",
     docId: "Plugins/Bigtable",
@@ -137,7 +143,7 @@ export const plugins: Plugin[] = [
     name: "Flink",
     description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
     docId: "Plugins/Flink",
-    icon: "logos:apache-flink",
+    icon: "logos:apache-flink-icon",
   },
   {
     name: "Google Cloud Storage",
@@ -240,6 +246,8 @@ export const plugins: Plugin[] = [
     name: "MLflow",
     description: "Discover registered models, experiments and training datasets from MLflow",
     docId: "Plugins/MLflow",
+    icon: "mlflow",
+    useLocalIcon: true,
   },
   {
     name: "MongoDB",
@@ -299,7 +307,8 @@ export const plugins: Plugin[] = [
     name: "Pinot",
     description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
     docId: "Plugins/Pinot",
-    icon: "simple-icons:apachepinot",
+    icon: "pinot",
+    useLocalIcon: true,
   },
   {
     name: "PostgreSQL",
@@ -329,7 +338,8 @@ export const plugins: Plugin[] = [
     name: "QuestDB",
     description: "Discover tables, views and materialized views from QuestDB instances",
     docId: "Plugins/QuestDB",
-    icon: "mdi:database-clock-outline",
+    icon: "questdb",
+    useLocalIcon: true,
   },
   {
     name: "Redis",
