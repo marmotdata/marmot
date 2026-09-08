@@ -225,6 +225,12 @@ export const plugins: Plugin[] = [
     docId: "Plugins/Trino",
     icon: "simple-icons:trino",
   },
+  {
+    name: "Unity Catalog",
+    description: "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
+    docId: "Plugins/Unity Catalog",
+    icon: "simple-icons:databricks",
+  },
 ];
 
 function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: boolean }) {
