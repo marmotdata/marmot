@@ -47,6 +47,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:clickhouse",
   },
   {
+    name: "CockroachDB",
+    description: "Discover databases, tables, views and foreign keys from CockroachDB clusters",
+    docId: "Plugins/CockroachDB",
+    icon: "simple-icons:cockroachlabs",
+  },
+  {
     name: "Confluent Cloud",
     description: "Discover Kafka topics from Confluent Cloud clusters",
     docId: "Plugins/Confluent Cloud",
@@ -85,6 +91,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Flink",
+    description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
+    docId: "Plugins/Flink",
+    icon: "logos:apache-flink",
+  },
+  {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
     docId: "Plugins/Google Cloud Storage",
@@ -95,6 +107,12 @@ export const plugins: Plugin[] = [
     description: "Discover jobs, databases, tables and crawlers from AWS Glue",
     docId: "Plugins/Glue",
     icon: "logos:aws-glue",
+  },
+  {
+    name: "Grafana",
+    description: "Discover dashboards, panels and data sources from Grafana",
+    docId: "Plugins/Grafana",
+    icon: "logos:grafana",
   },
   {
     name: "Iceberg",
@@ -116,6 +134,18 @@ export const plugins: Plugin[] = [
     icon: "devicon:apachekafka",
   },
   {
+    name: "Kinesis",
+    description: "Discover Kinesis Data Streams from AWS accounts",
+    docId: "Plugins/Kinesis",
+    icon: "logos:aws-kinesis",
+  },
+  {
+    name: "Kafka Connect",
+    description: "Discover connectors, tasks and topics from Kafka Connect with lineage to the systems they move data between",
+    docId: "Plugins/Kafka Connect",
+    icon: "devicon:apachekafka",
+  },
+  {
     name: "Kubernetes",
     description: "Discover namespaces, services, workloads, and cron jobs from self-managed Kubernetes clusters",
     docId: "Plugins/Kubernetes",
@@ -134,6 +164,23 @@ export const plugins: Plugin[] = [
     icon: "logos:google-icon",
   },
   {
+    name: "MariaDB",
+    description: "Discover databases, tables, views and sequences from MariaDB servers",
+    docId: "Plugins/MariaDB",
+    icon: "logos:mariadb-icon",
+  },
+  {
+    name: "Metabase",
+    description: "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
+    docId: "Plugins/Metabase",
+    icon: "logos:metabase",
+  },
+  {
+    name: "MLflow",
+    description: "Discover registered models, experiments and training datasets from MLflow",
+    docId: "Plugins/MLflow",
+  },
+  {
     name: "MongoDB",
     description: "Discover databases and collections from MongoDB instances",
     docId: "Plugins/MongoDB",
@@ -150,6 +197,12 @@ export const plugins: Plugin[] = [
     description: "Discover JetStream streams from NATS servers",
     docId: "Plugins/NATS",
     icon: "devicon:nats",
+  },
+  {
+    name: "NiFi",
+    description: "Discover process groups, processors and data flow lineage from Apache NiFi",
+    docId: "Plugins/NiFi",
+    icon: "simple-icons:apachenifi",
   },
   {
     name: "OpenSearch",
@@ -180,6 +233,12 @@ export const plugins: Plugin[] = [
     description: "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
     docId: "Plugins/Oracle",
     icon: "logos:oracle",
+  },
+  {
+    name: "Pinot",
+    description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
+    docId: "Plugins/Pinot",
+    icon: "simple-icons:apachepinot",
   },
   {
     name: "PostgreSQL",
@@ -213,6 +272,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sns",
   },
   {
+    name: "SQL Server",
+    description: "Discover databases, tables, views and routines from Microsoft SQL Server instances",
+    docId: "Plugins/SQL Server",
+    icon: "simple-icons:microsoftsqlserver",
+  },
+  {
     name: "SQLite",
     description: "Discover tables, views, and relationships from SQLite database files",
     docId: "Plugins/SQLite",
@@ -244,7 +309,7 @@ function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: bool
   return (
     <Icon
       icon={plugin.icon}
-      className={`w-8 h-8 ${plugin.name === "Kafka" ? "kafka-icon" : ""}`}
+      className={`w-8 h-8 ${plugin.name === "Kafka" || plugin.name === "Kafka Connect" ? "kafka-icon" : ""}`}
     />
   );
 }
