@@ -7,9 +7,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
-	import { fetchApi } from '$lib/api';
 	import UserIcon from '~icons/heroicons/user-16-solid';
 	import Icon from '@iconify/svelte';
+	import { userProfile } from '$lib/stores/user';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
 	import { tablePreviewEnabled } from '$lib/stores/features';
 	import Banner from '$lib/components/Banner.svelte';
@@ -27,13 +27,6 @@
 		id: string;
 	}
 
-	interface UserProfile {
-		id: string;
-		username: string;
-		name: string;
-		profile_picture?: string;
-	}
-
 	let bannerConfig: BannerConfig | null = null;
 	let isDropdownOpen = false;
 	let isGovernanceOpen = false;
@@ -42,7 +35,6 @@
 	let manualNavigation = false;
 	let showSearchModal = false;
 	let searchInput: GlobalSearch;
-	let userProfile: UserProfile | null = null;
 
 	const isMac = browser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
@@ -132,15 +124,7 @@
 
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
-
-			try {
-				const profileRes = await fetchApi('/users/me');
-				if (profileRes.ok) {
-					userProfile = await profileRes.json();
-				}
-			} catch (err) {
-				console.error('Failed to fetch user profile:', err);
-			}
+			userProfile.load();
 		}
 
 		if (browser) {
@@ -198,6 +182,7 @@
 	function handleLogout() {
 		withManualNav(() => {
 			auth.clearToken();
+			userProfile.clear();
 			window.location.href = '/';
 		});
 	}
@@ -413,10 +398,10 @@
 										toggleDropdown();
 									}}
 								>
-									{#if userProfile}
+									{#if $userProfile}
 										<Avatar
-											name={userProfile.name || userProfile.username}
-											profilePicture={userProfile.profile_picture}
+											name={$userProfile.name || $userProfile.username}
+											profilePicture={$userProfile.profile_picture}
 											size="sm"
 										/>
 									{:else}
