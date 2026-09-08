@@ -109,6 +109,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Google Pub/Sub",
+    description: "Discover topics and subscriptions from Google Cloud Pub/Sub",
+    docId: "Plugins/Google Pub Sub",
+    icon: "logos:google-cloud",
+  },
+  {
     name: "Grafana",
     description: "Discover dashboards, panels and data sources from Grafana",
     docId: "Plugins/Grafana",
