@@ -41,6 +41,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "Bigtable",
+    description: "Discover instances, tables, and column families from Google Cloud Bigtable",
+    docId: "Plugins/Bigtable",
+    icon: "devicon:googlecloud",
+  },
+  {
     name: "ClickHouse",
     description: "Discover databases, tables, and views from ClickHouse instances",
     docId: "Plugins/ClickHouse",
