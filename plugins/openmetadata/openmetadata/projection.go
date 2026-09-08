@@ -58,6 +58,11 @@ type projection struct {
 	// Marmot's Elasticsearch and OpenSearch plugins catalogue indices as
 	// tables, so those services follow suit.
 	IndexType string
+
+	// TopicType is the asset type for a messaging topic. Empty means
+	// Topic; Marmot's Kinesis plugin catalogues a stream as a Stream, so
+	// that service follows suit.
+	TopicType string
 }
 
 // groupLevel names the OpenMetadata level a technology's tables are
@@ -182,7 +187,7 @@ var projections = map[string]projection{
 	// Messaging
 	"Kafka":    {Provider: "Kafka"},
 	"Redpanda": {Provider: "Kafka"},
-	"Kinesis":  {Provider: "Kinesis"},
+	"Kinesis":  {Provider: "Kinesis", TopicType: "Stream"},
 
 	// Drives
 	"GoogleDrive": {Provider: "GoogleDrive"},
@@ -301,6 +306,9 @@ func projectionFor(serviceType string) projection {
 	}
 	if p.IndexType == "" {
 		p.IndexType = "Index"
+	}
+	if p.TopicType == "" {
+		p.TopicType = "Topic"
 	}
 	return p
 }
