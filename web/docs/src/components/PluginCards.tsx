@@ -253,6 +253,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Presto",
+    description: "Discover catalogs, schemas, tables and views from Presto clusters",
+    docId: "Plugins/Presto",
+    icon: "logos:presto",
+  },
+  {
     name: "Prefect",
     description: "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
     docId: "Plugins/Prefect",
