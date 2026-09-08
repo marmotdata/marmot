@@ -49,7 +49,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "flink",
-		Name:        "Flink",
+		Name:        "Apache Flink",
 		Description: "Discover jobs and their vertices from an Apache Flink JobManager",
 		Icon:        "flink",
 		Category:    "orchestration",

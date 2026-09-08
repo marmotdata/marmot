@@ -64,7 +64,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "cloudrun",
-		Name:        "Cloud Run",
+		Name:        "Google Cloud Run",
 		Description: "Discover services and jobs from Google Cloud Run",
 		Icon:        "cloud-run",
 		Category:    "container",

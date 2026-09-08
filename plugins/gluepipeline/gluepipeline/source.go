@@ -18,7 +18,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "gluepipeline",
-		Name:        "Glue Pipelines",
+		Name:        "AWS Glue Pipelines",
 		Description: "Discover workflows, tasks and run history from AWS Glue",
 		Icon:        "glue",
 		Category:    "orchestration",

@@ -236,7 +236,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "gluepipeline", meta.ID)
-	assert.Equal(t, "Glue Pipelines", meta.Name)
+	assert.Equal(t, "AWS Glue Pipelines", meta.Name)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Contains(t, meta.Features, "Run History")
 }

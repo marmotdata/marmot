@@ -12,7 +12,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "kafkaconnect", meta.ID)
-	assert.Equal(t, "Kafka Connect", meta.Name)
+	assert.Equal(t, "Apache Kafka Connect", meta.Name)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Equal(t, "kafka", meta.Icon)
 	assert.Equal(t, []string{"Assets", "Lineage"}, meta.Features)

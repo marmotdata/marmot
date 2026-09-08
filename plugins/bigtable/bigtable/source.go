@@ -56,7 +56,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "bigtable",
-		Name:        "Bigtable",
+		Name:        "Google Bigtable",
 		Description: "Discover instances, tables and column families from Google Cloud Bigtable",
 		Icon:        "bigtable",
 		Category:    "database",

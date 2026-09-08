@@ -52,7 +52,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "eks",
-		Name:        "Elastic Kubernetes Service",
+		Name:        "AWS EKS",
 		Description: "Discover namespaces, services, workloads, and cron jobs from Amazon EKS clusters",
 		Icon:        "eks",
 		Category:    "compute",

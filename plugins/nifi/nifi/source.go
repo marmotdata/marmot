@@ -55,7 +55,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "nifi",
-		Name:        "NiFi",
+		Name:        "Apache NiFi",
 		Description: "Discover process groups, processors and data flow lineage from Apache NiFi",
 		Icon:        "nifi",
 		Category:    "orchestration",

@@ -208,7 +208,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "cassandra", meta.ID)
-	assert.Equal(t, "Cassandra", meta.Name)
+	assert.Equal(t, "Apache Cassandra", meta.Name)
 	assert.Equal(t, "database", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")

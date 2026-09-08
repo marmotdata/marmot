@@ -36,7 +36,7 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "airflow",
-		Name:        "Airflow",
+		Name:        "Apache Airflow",
 		Description: "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
 		Icon:        "airflow",
 		Category:    "orchestration",

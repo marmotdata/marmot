@@ -218,7 +218,7 @@ func TestMeta_DeclaresAssetsAndLineage(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "oracle", meta.ID)
-	assert.Equal(t, "Oracle", meta.Name)
+	assert.Equal(t, "Oracle Database", meta.Name)
 	assert.Equal(t, "oracle", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

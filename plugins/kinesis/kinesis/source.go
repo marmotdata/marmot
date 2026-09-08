@@ -23,7 +23,7 @@ const provider = "Kinesis"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "kinesis",
-		Name:        "Kinesis",
+		Name:        "AWS Kinesis",
 		Description: "Discover Kinesis Data Streams from AWS accounts",
 		Icon:        "kinesis",
 		Category:    "messaging",

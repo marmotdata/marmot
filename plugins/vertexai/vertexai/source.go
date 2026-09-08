@@ -23,7 +23,7 @@ const provider = "Vertex AI"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "vertexai",
-		Name:        "Vertex AI",
+		Name:        "Google Vertex AI",
 		Description: "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
 		Icon:        "vertex-ai",
 		Category:    "ml",

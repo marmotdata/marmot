@@ -50,7 +50,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "firebase",
-		Name:        "Firebase",
+		Name:        "Google Firebase",
 		Description: "Discover Firestore collections and Realtime Database instances from Firebase projects",
 		Icon:        "firebase",
 		Category:    "database",

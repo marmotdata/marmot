@@ -136,7 +136,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "superset", meta.ID)
-	assert.Equal(t, "Superset", meta.Name)
+	assert.Equal(t, "Apache Superset", meta.Name)
 	assert.Equal(t, "superset", meta.Icon)
 	assert.Equal(t, "dashboard", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

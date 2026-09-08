@@ -14,7 +14,7 @@ func TestMeta_DescribesTheDorisPlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "doris", meta.ID)
-	assert.Equal(t, "Doris", meta.Name)
+	assert.Equal(t, "Apache Doris", meta.Name)
 	assert.Equal(t, "doris", meta.Icon)
 	assert.Equal(t, "data-warehouse", meta.Category)
 	assert.Equal(t, []string{"Assets", "Lineage"}, meta.Features)

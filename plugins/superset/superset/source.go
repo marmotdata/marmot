@@ -49,7 +49,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "superset",
-		Name:        "Superset",
+		Name:        "Apache Superset",
 		Description: "Discover dashboards, charts, datasets and database connections from Apache Superset",
 		Icon:        "superset",
 		Category:    "dashboard",

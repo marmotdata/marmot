@@ -58,7 +58,7 @@ type SchemaRegistryConfig struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "kafka",
-		Name:        "Kafka",
+		Name:        "Apache Kafka",
 		Description: "Discover Kafka topics from Kafka clusters",
 		Icon:        "kafka",
 		Category:    "streaming",

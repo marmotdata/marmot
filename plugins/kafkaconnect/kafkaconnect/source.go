@@ -53,7 +53,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "kafkaconnect",
-		Name:        "Kafka Connect",
+		Name:        "Apache Kafka Connect",
 		Description: "Discover connectors, tasks and topics from Kafka Connect clusters with lineage to the systems they move data between",
 		Icon:        "kafka",
 		Category:    "orchestration",

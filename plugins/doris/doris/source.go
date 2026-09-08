@@ -24,7 +24,7 @@ const provider = "Doris"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "doris",
-		Name:        "Doris",
+		Name:        "Apache Doris",
 		Description: "Discover databases, tables, views and materialized views from Apache Doris clusters",
 		Icon:        "doris",
 		Category:    "data-warehouse",

@@ -12,7 +12,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "nifi", meta.ID)
-	assert.Equal(t, "NiFi", meta.Name)
+	assert.Equal(t, "Apache NiFi", meta.Name)
 	assert.Equal(t, "nifi", meta.Icon)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

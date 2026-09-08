@@ -18,7 +18,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "mssql",
-		Name:        "SQL Server",
+		Name:        "Microsoft SQL Server",
 		Description: "Discover databases, tables, views and routines from Microsoft SQL Server instances",
 		Icon:        "sql-server",
 		Category:    "database",

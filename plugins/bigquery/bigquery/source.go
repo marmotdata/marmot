@@ -22,7 +22,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "bigquery",
-		Name:        "BigQuery",
+		Name:        "Google BigQuery",
 		Description: "Discover datasets and tables from Google BigQuery projects",
 		Icon:        "bigquery",
 		Category:    "data-warehouse",

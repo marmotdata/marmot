@@ -15,7 +15,7 @@ func TestMeta_DescribesTheBigtablePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "bigtable", meta.ID)
-	assert.Equal(t, "Bigtable", meta.Name)
+	assert.Equal(t, "Google Bigtable", meta.Name)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)
 	assert.Equal(t, []string{"Assets", "Lineage"}, meta.Features)

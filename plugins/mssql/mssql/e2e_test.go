@@ -197,7 +197,7 @@ func TestE2E_MetaOverTheWire(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "mssql", meta.ID)
-	assert.Equal(t, "SQL Server", meta.Name)
+	assert.Equal(t, "Microsoft SQL Server", meta.Name)
 	assert.Equal(t, "sql-server", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, []string{"Assets", "Lineage"}, meta.Features)
