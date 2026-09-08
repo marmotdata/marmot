@@ -253,6 +253,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Prefect",
+    description: "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
+    docId: "Plugins/Prefect",
+    icon: "simple-icons:prefect",
+  },
+  {
     name: "QuestDB",
     description: "Discover tables, views and materialized views from QuestDB instances",
     docId: "Plugins/QuestDB",
