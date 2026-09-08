@@ -21,6 +21,12 @@ export const plugins: Plugin[] = [
     icon: "logos:airflow-icon",
   },
   {
+    name: "Amundsen",
+    description: "Import an Amundsen graph, cataloguing every table as the technology it belongs to",
+    docId: "Plugins/Amundsen",
+    icon: "mdi:compass-outline",
+  },
+  {
     name: "AsyncAPI",
     description: "Discover services, topics, and queues from AsyncAPI specifications",
     docId: "Plugins/AsyncAPI",
