@@ -351,6 +351,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-s3",
   },
   {
+    name: "SFTP",
+    description: "Discover directories and files from an SFTP server",
+    docId: "Plugins/SFTP",
+    icon: "mdi:folder-network-outline",
+  },
+  {
     name: "SageMaker",
     description: "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
     docId: "Plugins/SageMaker",
