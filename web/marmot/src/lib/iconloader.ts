@@ -111,6 +111,7 @@ import FolderOutline from '~icons/material-symbols/folder-outline';
 import HardDriveOutline from '~icons/material-symbols/hard-drive-outline';
 import SqlServerIcon from '~icons/simple-icons/microsoftsqlserver';
 import GoogleCloudIcon from '~icons/simple-icons/googlecloud';
+import CloudRunIcon from '~icons/logos/google-cloud-run';
 import MicrosoftIcon from '~icons/simple-icons/microsoft';
 import ImpalaIcon from '~icons/logos/impala';
 import GridOnOutline from '~icons/material-symbols/grid-on';
@@ -147,6 +148,7 @@ export const providerIconMap: Record<
 	'sql-server': { default: SqlServerIcon, displayName: 'SQL Server' },
 	'azure-synapse': { default: AzureIcon, displayName: 'Azure Synapse' },
 	'vertex-ai': { default: GoogleCloudIcon, displayName: 'Vertex AI' },
+	'cloud-run': { default: CloudRunIcon, displayName: 'Cloud Run' },
 	ssis: { default: MicrosoftIcon, displayName: 'SSIS' },
 	impala: { default: ImpalaIcon, displayName: 'Impala' },
 
