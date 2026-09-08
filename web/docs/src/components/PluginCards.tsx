@@ -78,6 +78,13 @@ export const plugins: Plugin[] = [
     useLocalIcon: true,
   },
   {
+    name: "Dagster",
+    description: "Discover jobs, ops, and software-defined assets from Dagster",
+    docId: "Plugins/Dagster",
+    icon: "dagster.png",
+    useLocalIcon: true,
+  },
+  {
     name: "Couchbase",
     description: "Discover buckets, scopes and collections from Couchbase clusters",
     docId: "Plugins/Couchbase",
