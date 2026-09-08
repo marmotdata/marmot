@@ -182,6 +182,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Redash",
+    description: "Discover dashboards, charts, queries and data sources from Redash",
+    docId: "Plugins/Redash",
+    icon: "simple-icons:redash",
+  },
+  {
     name: "Redis",
     description: "Discover databases from Redis instances",
     docId: "Plugins/Redis",
