@@ -201,6 +201,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-s3",
   },
   {
+    name: "SageMaker",
+    description: "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
+    docId: "Plugins/SageMaker",
+    icon: "material-symbols:robot-2-outline",
+  },
+  {
     name: "SNS",
     description: "Catalog topics from Amazon SNS",
     docId: "Plugins/SNS",
