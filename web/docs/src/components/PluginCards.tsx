@@ -266,6 +266,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sns",
   },
   {
+    name: "SQL Server",
+    description: "Discover databases, tables, views and routines from Microsoft SQL Server instances",
+    docId: "Plugins/SQL Server",
+    icon: "simple-icons:microsoftsqlserver",
+  },
+  {
     name: "SQLite",
     description: "Discover tables, views, and relationships from SQLite database files",
     docId: "Plugins/SQLite",
