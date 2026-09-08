@@ -487,11 +487,16 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			status = StatusUpdated
 		}
 
-		if status == StatusCreated {
-			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
-				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
-				status = StatusFailed
-			}
+		// Every run writes the edge, whatever the checkpoint says. An edge
+		// is rejected when either end is missing, which happens routinely:
+		// a plugin emits an edge to a table another source has not been
+		// ingested yet. The failure is still checkpointed, and a checkpoint
+		// alone used to be taken as proof the edge was already there, so
+		// the edge was never written again under that pipeline name.
+		// Writing an edge that exists returns the existing one.
+		if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
+			log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
+			status = StatusFailed
 		}
 
 		result := LineageResult{
