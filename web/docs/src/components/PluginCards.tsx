@@ -423,6 +423,12 @@ export const plugins: Plugin[] = [
     docId: "Plugins/Unity Catalog",
     icon: "simple-icons:databricks",
   },
+  {
+    name: "Vertex AI",
+    description: "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
+    docId: "Plugins/Vertex AI",
+    icon: "material-symbols:robot-2-outline",
+  },
 ];
 
 function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: boolean }) {
