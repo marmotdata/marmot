@@ -220,6 +220,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sqs",
   },
   {
+    name: "StarRocks",
+    description: "Discover databases, tables, views, and materialized views from StarRocks clusters",
+    docId: "Plugins/StarRocks",
+    icon: "carbon:datastore",
+  },
+  {
     name: "Trino",
     description: "Discover catalogs, schemas, tables and views from Trino clusters",
     docId: "Plugins/Trino",
