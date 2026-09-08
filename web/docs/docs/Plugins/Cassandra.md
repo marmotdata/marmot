@@ -113,7 +113,7 @@ The following metadata fields are available:
 | comment | string | Table comment |
 | compaction_class | string | Compaction strategy |
 | compression_class | string | Compressor |
-| data_type | string | CQL type as stored, for example map<text, int> or frozen<address> |
+| data_type | string | CQL type as stored, for example map\<text, int> or frozen\<address> |
 | datacenter | string | Datacenter of the node queried |
 | default_ttl | int | Default time to live in seconds, 0 for none |
 | durable_writes | bool | Whether writes go through the commit log |
