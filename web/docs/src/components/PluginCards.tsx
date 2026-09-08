@@ -21,12 +21,24 @@ export const plugins: Plugin[] = [
     icon: "logos:airflow-icon",
   },
   {
+    name: "Amundsen",
+    description: "Import an Amundsen graph, cataloguing every table as the technology it belongs to",
+    docId: "Plugins/Amundsen",
+    icon: "mdi:compass-outline",
+  },
+  {
     name: "AsyncAPI",
     description: "Discover services, topics, and queues from AsyncAPI specifications",
     docId: "Plugins/AsyncAPI",
     icon: "asyncapi",
     useLocalIcon: true,
     hasDarkIcon: true,
+  },
+  {
+    name: "Athena",
+    description: "Discover databases, tables, workgroups, and saved queries from Amazon Athena",
+    docId: "Plugins/Athena",
+    icon: "logos:aws-athena",
   },
   {
     name: "Azure Blob Storage",
@@ -38,6 +50,12 @@ export const plugins: Plugin[] = [
     name: "BigQuery",
     description: "Catalog datasets, tables, and views from Google BigQuery projects",
     docId: "Plugins/BigQuery",
+    icon: "devicon:googlecloud",
+  },
+  {
+    name: "Bigtable",
+    description: "Discover instances, tables, and column families from Google Cloud Bigtable",
+    docId: "Plugins/Bigtable",
     icon: "devicon:googlecloud",
   },
   {
@@ -60,6 +78,19 @@ export const plugins: Plugin[] = [
     useLocalIcon: true,
   },
   {
+    name: "Dagster",
+    description: "Discover jobs, ops, and software-defined assets from Dagster",
+    docId: "Plugins/Dagster",
+    icon: "dagster.png",
+    useLocalIcon: true,
+  },
+  {
+    name: "Couchbase",
+    description: "Discover buckets, scopes and collections from Couchbase clusters",
+    docId: "Plugins/Couchbase",
+    icon: "logos:couchbase",
+  },
+  {
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
     docId: "Plugins/DBT",
@@ -71,6 +102,12 @@ export const plugins: Plugin[] = [
     docId: "Plugins/Delta Lake",
     icon: "deltalake",
     useLocalIcon: true,
+  },
+  {
+    name: "Doris",
+    description: "Discover databases, tables, views, and materialized views from Apache Doris clusters",
+    docId: "Plugins/Doris",
+    icon: "simple-icons:apachedoris",
   },
   {
     name: "DuckDB",
@@ -91,6 +128,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Firehose",
+    description: "Discover delivery streams and their lineage from Amazon Data Firehose",
+    docId: "Plugins/Firehose",
+    icon: "logos:aws-kinesis",
+  },
+  {
     name: "Flink",
     description: "Discover jobs, vertices and run history from Apache Flink JobManagers",
     docId: "Plugins/Flink",
@@ -106,6 +149,18 @@ export const plugins: Plugin[] = [
     name: "Glue",
     description: "Discover jobs, databases, tables and crawlers from AWS Glue",
     docId: "Plugins/Glue",
+    icon: "logos:aws-glue",
+  },
+  {
+    name: "Hive",
+    description: "Discover databases, tables and views from Apache Hive through HiveServer2",
+    docId: "Plugins/Hive",
+    icon: "simple-icons:apachehive",
+  },
+  {
+    name: "Glue Pipelines",
+    description: "Discover workflows, tasks and run history from AWS Glue",
+    docId: "Plugins/Glue Pipelines",
     icon: "logos:aws-glue",
   },
   {
@@ -253,6 +308,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Redash",
+    description: "Discover dashboards, charts, queries and data sources from Redash",
+    docId: "Plugins/Redash",
+    icon: "simple-icons:redash",
+  },
+  {
     name: "Presto",
     description: "Discover catalogs, schemas, tables and views from Presto clusters",
     docId: "Plugins/Presto",
@@ -290,10 +351,28 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-s3",
   },
   {
+    name: "SFTP",
+    description: "Discover directories and files from an SFTP server",
+    docId: "Plugins/SFTP",
+    icon: "mdi:folder-network-outline",
+  },
+  {
+    name: "SageMaker",
+    description: "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
+    docId: "Plugins/SageMaker",
+    icon: "material-symbols:robot-2-outline",
+  },
+  {
     name: "SNS",
     description: "Catalog topics from Amazon SNS",
     docId: "Plugins/SNS",
     icon: "logos:aws-sns",
+  },
+  {
+    name: "Spline",
+    description: "Discover Spark applications and their lineage from a Spline server",
+    docId: "Plugins/Spline",
+    icon: "logos:apache-spark",
   },
   {
     name: "SQL Server",
@@ -315,10 +394,34 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-sqs",
   },
   {
+    name: "TimescaleDB",
+    description: "Discover hypertables, continuous aggregates and policies from TimescaleDB instances",
+    docId: "Plugins/TimescaleDB",
+    icon: "simple-icons:timescale",
+  },
+  {
+    name: "Superset",
+    description: "Discover dashboards, charts, datasets and database connections from Apache Superset",
+    docId: "Plugins/Superset",
+    icon: "simple-icons:apachesuperset",
+  },
+  {
+    name: "StarRocks",
+    description: "Discover databases, tables, views, and materialized views from StarRocks clusters",
+    docId: "Plugins/StarRocks",
+    icon: "carbon:datastore",
+  },
+  {
     name: "Trino",
     description: "Discover catalogs, schemas, tables and views from Trino clusters",
     docId: "Plugins/Trino",
     icon: "simple-icons:trino",
+  },
+  {
+    name: "Unity Catalog",
+    description: "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
+    docId: "Plugins/Unity Catalog",
+    icon: "simple-icons:databricks",
   },
 ];
 

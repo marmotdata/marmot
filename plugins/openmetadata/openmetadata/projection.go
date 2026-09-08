@@ -149,22 +149,28 @@ var projections = map[string]projection{
 	// Catalog, which plugins/glue already catalogues under the Glue
 	// provider, naming each table by its bare name. Naming it Athena
 	// would file one table twice, once per route.
-	"Athena":       {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
-	"Databricks":   {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"UnityCatalog": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Athena":     {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
+	"Databricks": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
+	// A UnityCatalog service is a Unity Catalog server, which is not a
+	// Databricks workspace: it can run on its own, so plugins/unitycatalog
+	// catalogues it under its own provider and both routes must agree.
+	"UnityCatalog": {Provider: "Unity Catalog", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"AzureSQL":     {Provider: "SQL Server", TableName: fullyQualified},
 	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified},
 	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Namespace"},
 	"DeltaLake":    {Provider: "Delta Lake", TableName: nameOnly, TableGroup: groupNone},
-	"Hive":         {Provider: "Hive", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Impala":       {Provider: "Impala", TableName: schemaQualified, TableGroup: groupSchema},
-	"Trino":        {Provider: "Trino", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Presto":       {Provider: "Presto", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Dremio":       {Provider: "Dremio", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Glue":         {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
-	"Doris":        {Provider: "Doris", TableName: schemaQualified, TableGroup: groupSchema},
-	"Druid":        {Provider: "Druid", TableName: schemaQualified, TableGroup: groupSchema},
-	"PinotDB":      {Provider: "Pinot", TableName: nameOnly, TableGroup: groupNone},
+	// plugins/hive names a table database.table under a Database named by
+	// the Hive database; OpenMetadata's database level for Hive is a
+	// placeholder, so it stays out of the name.
+	"Hive":    {Provider: "Hive", TableName: schemaQualified, TableGroup: groupSchema},
+	"Impala":  {Provider: "Impala", TableName: schemaQualified, TableGroup: groupSchema},
+	"Trino":   {Provider: "Trino", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Presto":  {Provider: "Presto", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Dremio":  {Provider: "Dremio", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Glue":    {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
+	"Doris":   {Provider: "Doris", TableName: schemaQualified, TableGroup: groupSchema},
+	"Druid":   {Provider: "Druid", TableName: schemaQualified, TableGroup: groupSchema},
+	"PinotDB": {Provider: "Pinot", TableName: nameOnly, TableGroup: groupNone},
 
 	// Document, key-value and wide-column stores
 	"MongoDB":   {Provider: "MongoDB", TableName: nameOnly, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
