@@ -67,6 +67,7 @@ import SharePointIcon from '~icons/simple-icons/microsoftsharepoint';
 import OneDriveIcon from '~icons/logos/microsoft-onedrive';
 import DorisIcon from '~icons/simple-icons/apachedoris';
 import MatillionIcon from '~icons/simple-icons/matillion';
+import FirebaseIcon from '~icons/logos/firebase';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -169,6 +170,7 @@ export const providerIconMap: Record<
 	opensearch: { default: OpenSearchIcon, displayName: 'OpenSearch' },
 	mysql: { default: MySqlIcon, displayName: 'MySQL' },
 	mongodb: { default: MongoDBIcon, displayName: 'MongoDB' },
+	firebase: { default: FirebaseIcon, displayName: 'Firebase' },
 	s3: { default: S3Icon, displayName: 'S3' },
 	spark: { default: SparkIcon, displayName: 'Spark' },
 	snowflake: { default: SnowflakeIcon, displayName: 'Snowflake' },
