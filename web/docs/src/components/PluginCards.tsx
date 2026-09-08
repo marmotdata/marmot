@@ -182,6 +182,12 @@ export const plugins: Plugin[] = [
     icon: "devicon:postgresql",
   },
   {
+    name: "Prefect",
+    description: "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
+    docId: "Plugins/Prefect",
+    icon: "simple-icons:prefect",
+  },
+  {
     name: "Redis",
     description: "Discover databases from Redis instances",
     docId: "Plugins/Redis",
