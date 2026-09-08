@@ -67,6 +67,12 @@ export const plugins: Plugin[] = [
     useLocalIcon: true,
   },
   {
+    name: "Doris",
+    description: "Discover databases, tables, views, and materialized views from Apache Doris clusters",
+    docId: "Plugins/Doris",
+    icon: "simple-icons:apachedoris",
+  },
+  {
     name: "DuckDB",
     description: "Discover schemas, tables, views, and relationships from DuckDB database files",
     docId: "Plugins/DuckDB",
