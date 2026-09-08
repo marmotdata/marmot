@@ -174,6 +174,24 @@ func TestProjection_ObjectStoresCallTopLevelContainersBuckets(t *testing.T) {
 	assert.Equal(t, "Container", projectionFor("ADLS").ContainerType)
 }
 
+func TestProjection_KinesisStreamsAreStreams(t *testing.T) {
+	// plugins/kinesis catalogues a stream as (Stream, Kinesis, bare name).
+	// OpenMetadata files it under its topic entity, so the projection has
+	// to rename the type or the two routes land on two assets.
+	p := projectionFor("Kinesis")
+
+	assert.Equal(t, "Kinesis", p.Provider)
+	assert.Equal(t, "Stream", p.TopicType)
+	assert.Equal(t, mrn.New("Stream", "Kinesis", "orders"),
+		mrn.New(p.TopicType, p.Provider, "orders"))
+}
+
+func TestProjection_OtherMessagingServicesKeepTheTopicType(t *testing.T) {
+	assert.Equal(t, "Topic", projectionFor("Kafka").TopicType)
+	assert.Equal(t, "Topic", projectionFor("Redpanda").TopicType)
+	assert.Equal(t, "Topic", projectionFor("PubSub").TopicType)
+}
+
 func TestProjection_RedpandaIsCataloguedAsKafka(t *testing.T) {
 	// The Redpanda plugin reports Kafka as the provider, so topics from
 	// either route land on the same asset.
@@ -199,6 +217,7 @@ func TestProjection_EveryEntryHasADefaultedRule(t *testing.T) {
 		require.NotEmpty(t, p.TableGroupType, serviceType)
 		require.NotEmpty(t, p.ContainerType, serviceType)
 		require.NotEmpty(t, p.IndexType, serviceType)
+		require.NotEmpty(t, p.TopicType, serviceType)
 	}
 }
 
