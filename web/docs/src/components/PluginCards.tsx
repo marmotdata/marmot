@@ -97,6 +97,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Google Pub/Sub",
+    description: "Discover topics and subscriptions from Google Cloud Pub/Sub",
+    docId: "Plugins/Google Pub Sub",
+    icon: "logos:google-cloud",
+  },
+  {
     name: "Iceberg",
     description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
     docId: "Plugins/Iceberg",
