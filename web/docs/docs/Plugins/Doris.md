@@ -94,7 +94,7 @@ The following metadata fields are available:
 | column_name | string | Column name |
 | comment | string | Table or view comment |
 | created | string | Creation timestamp |
-| data_type | string | Declared type as Doris prints it (decimalv3(9, 2), array<int>) |
+| data_type | string | Declared type as Doris prints it (decimalv3(9, 2), array\<int>) |
 | database | string | Database name |
 | ddl | string | SHOW CREATE output |
 | default_expression | string | Default value |
