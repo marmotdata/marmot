@@ -65,7 +65,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "oracle",
-		Name:        "Oracle",
+		Name:        "Oracle Database",
 		Description: "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
 		Icon:        "oracle",
 		Category:    "database",

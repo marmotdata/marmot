@@ -254,7 +254,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "sagemaker", meta.ID)
-	assert.Equal(t, "SageMaker", meta.Name)
+	assert.Equal(t, "AWS SageMaker", meta.Name)
 	assert.Equal(t, "ml", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")

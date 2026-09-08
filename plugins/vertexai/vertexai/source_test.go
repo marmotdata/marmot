@@ -31,7 +31,7 @@ func TestMeta_DeclaresTheFeaturesDiscoverEmits(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "vertexai", meta.ID)
-	assert.Equal(t, "Vertex AI", meta.Name)
+	assert.Equal(t, "Google Vertex AI", meta.Name)
 	assert.Equal(t, "ml", meta.Category)
 	assert.Equal(t, "vertex-ai", meta.Icon)
 	assert.Equal(t, "experimental", meta.Status)

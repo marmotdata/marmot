@@ -223,7 +223,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "cloudrun", meta.ID)
-	assert.Equal(t, "Cloud Run", meta.Name)
+	assert.Equal(t, "Google Cloud Run", meta.Name)
 	assert.Equal(t, "container", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)
 	assert.Contains(t, meta.Features, "Assets")

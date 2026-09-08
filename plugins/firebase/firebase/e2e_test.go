@@ -214,7 +214,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "firebase", meta.ID)
-	assert.Equal(t, "Firebase", meta.Name)
+	assert.Equal(t, "Google Firebase", meta.Name)
 	assert.Equal(t, "database", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")

@@ -63,7 +63,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "cassandra",
-		Name:        "Cassandra",
+		Name:        "Apache Cassandra",
 		Description: "Discover keyspaces, tables and materialized views from Apache Cassandra clusters",
 		Icon:        "cassandra",
 		Category:    "database",

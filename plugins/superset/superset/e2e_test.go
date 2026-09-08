@@ -81,7 +81,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "superset", meta.ID)
-	assert.Equal(t, "Superset", meta.Name)
+	assert.Equal(t, "Apache Superset", meta.Name)
 	assert.Equal(t, "dashboard", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")

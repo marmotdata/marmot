@@ -23,7 +23,7 @@ const maxPartitionValues = 20
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "hive",
-		Name:        "Hive",
+		Name:        "Apache Hive",
 		Description: "Discover databases, tables and views from Apache Hive through HiveServer2",
 		Icon:        "hive",
 		Category:    "data-warehouse",

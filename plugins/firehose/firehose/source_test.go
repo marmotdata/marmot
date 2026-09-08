@@ -41,7 +41,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "firehose", meta.ID)
-	assert.Equal(t, "Firehose", meta.Name)
+	assert.Equal(t, "AWS Firehose", meta.Name)
 	assert.Equal(t, "messaging", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)
 	assert.Equal(t, []string{"Assets", "Lineage"}, meta.Features)

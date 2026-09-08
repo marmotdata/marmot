@@ -121,7 +121,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "cassandra", meta.ID)
-	assert.Equal(t, "Cassandra", meta.Name)
+	assert.Equal(t, "Apache Cassandra", meta.Name)
 	assert.Equal(t, "cassandra", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

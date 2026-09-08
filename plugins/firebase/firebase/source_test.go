@@ -12,7 +12,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "firebase", meta.ID)
-	assert.Equal(t, "Firebase", meta.Name)
+	assert.Equal(t, "Google Firebase", meta.Name)
 	assert.Equal(t, "firebase", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

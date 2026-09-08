@@ -12,7 +12,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "cloudrun", meta.ID)
-	assert.Equal(t, "Cloud Run", meta.Name)
+	assert.Equal(t, "Google Cloud Run", meta.Name)
 	// The UI looks an icon up by the provider, lowercased with spaces turned
 	// into hyphens, so the icon id has to be the provider in that form.
 	assert.Equal(t, "cloud-run", meta.Icon)

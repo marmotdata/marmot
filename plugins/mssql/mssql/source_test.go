@@ -23,7 +23,7 @@ func TestMeta_UsesTheProviderIconKey(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "mssql", meta.ID)
-	assert.Equal(t, "SQL Server", meta.Name)
+	assert.Equal(t, "Microsoft SQL Server", meta.Name)
 	assert.Equal(t, "sql-server", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 }

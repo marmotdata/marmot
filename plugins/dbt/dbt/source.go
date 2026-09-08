@@ -21,7 +21,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "dbt",
-		Name:        "DBT",
+		Name:        "dbt",
 		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
 		Icon:        "dbt",
 		Category:    "transformation",

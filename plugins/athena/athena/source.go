@@ -32,7 +32,7 @@ const (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "athena",
-		Name:        "Athena",
+		Name:        "AWS Athena",
 		Description: "Discover databases, tables, workgroups and saved queries from Amazon Athena",
 		Icon:        "athena",
 		Category:    "data-warehouse",

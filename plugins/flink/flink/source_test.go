@@ -106,7 +106,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "flink", meta.ID)
-	assert.Equal(t, "Flink", meta.Name)
+	assert.Equal(t, "Apache Flink", meta.Name)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)
 	assert.Equal(t, []string{"Assets", "Lineage", "Run History"}, meta.Features)

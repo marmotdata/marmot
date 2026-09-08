@@ -110,7 +110,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "pinot", meta.ID)
-	assert.Equal(t, "Pinot", meta.Name)
+	assert.Equal(t, "Apache Pinot", meta.Name)
 	assert.Equal(t, "pinot", meta.Icon)
 	assert.Equal(t, "database", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

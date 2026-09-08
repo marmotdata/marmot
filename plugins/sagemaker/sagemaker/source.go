@@ -21,7 +21,7 @@ const provider = "SageMaker"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "sagemaker",
-		Name:        "SageMaker",
+		Name:        "AWS SageMaker",
 		Description: "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
 		Icon:        "sagemaker",
 		Category:    "ml",

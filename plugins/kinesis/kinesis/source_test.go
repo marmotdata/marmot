@@ -12,7 +12,7 @@ func TestMeta_DescribesTheKinesisPlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "kinesis", meta.ID)
-	assert.Equal(t, "Kinesis", meta.Name)
+	assert.Equal(t, "AWS Kinesis", meta.Name)
 	assert.Equal(t, "kinesis", meta.Icon)
 	assert.Equal(t, "messaging", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

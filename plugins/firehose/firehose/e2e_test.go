@@ -230,7 +230,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "firehose", meta.ID)
-	assert.Equal(t, "Firehose", meta.Name)
+	assert.Equal(t, "AWS Firehose", meta.Name)
 	assert.Equal(t, "messaging", meta.Category)
 	assert.Equal(t, "firehose", meta.Icon)
 	assert.Contains(t, meta.Features, "Assets")

@@ -284,7 +284,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "doris", meta.ID)
-	assert.Equal(t, "Doris", meta.Name)
+	assert.Equal(t, "Apache Doris", meta.Name)
 	assert.Equal(t, "data-warehouse", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")

@@ -575,7 +575,7 @@ func TestMeta_DescribesThePlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "hive", meta.ID)
-	assert.Equal(t, "Hive", meta.Name)
+	assert.Equal(t, "Apache Hive", meta.Name)
 	assert.Equal(t, "hive", meta.Icon)
 	assert.Equal(t, "data-warehouse", meta.Category)
 	assert.Equal(t, "experimental", meta.Status)

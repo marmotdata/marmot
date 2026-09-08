@@ -210,7 +210,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "kinesis", meta.ID)
-	assert.Equal(t, "Kinesis", meta.Name)
+	assert.Equal(t, "AWS Kinesis", meta.Name)
 	assert.Equal(t, "messaging", meta.Category)
 	assert.Equal(t, []string{"Assets"}, meta.Features)
 	assert.True(t, meta.SupportsDataPreview, "Serve flags the DataFetcher implementation")

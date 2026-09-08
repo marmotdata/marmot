@@ -22,7 +22,7 @@ func TestMeta_DeclaresTheFeaturesDiscoverEmits(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "sagemaker", meta.ID)
-	assert.Equal(t, "SageMaker", meta.Name)
+	assert.Equal(t, "AWS SageMaker", meta.Name)
 	assert.Equal(t, "ml", meta.Category)
 	assert.Equal(t, "sagemaker", meta.Icon)
 	assert.Equal(t, []string{"Assets", "Lineage", "Run History"}, meta.Features)

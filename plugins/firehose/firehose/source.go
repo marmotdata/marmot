@@ -28,7 +28,7 @@ const assetType = "DeliveryStream"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "firehose",
-		Name:        "Firehose",
+		Name:        "AWS Firehose",
 		Description: "Discover Amazon Data Firehose delivery streams from AWS accounts",
 		Icon:        "firehose",
 		Category:    "messaging",

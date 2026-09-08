@@ -12,7 +12,7 @@ func TestMeta_IsAnOrchestrationPlugin(t *testing.T) {
 	meta := Meta()
 
 	assert.Equal(t, "gluepipeline", meta.ID)
-	assert.Equal(t, "Glue Pipelines", meta.Name)
+	assert.Equal(t, "AWS Glue Pipelines", meta.Name)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Equal(t, "glue", meta.Icon)
 }

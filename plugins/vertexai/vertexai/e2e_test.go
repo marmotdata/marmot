@@ -278,7 +278,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "vertexai", meta.ID)
-	assert.Equal(t, "Vertex AI", meta.Name)
+	assert.Equal(t, "Google Vertex AI", meta.Name)
 	assert.Equal(t, "ml", meta.Category)
 	assert.Equal(t, "vertex-ai", meta.Icon)
 	assert.Contains(t, meta.Features, "Assets")

@@ -50,7 +50,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "gke",
-		Name:        "Google Kubernetes Engine",
+		Name:        "Google GKE",
 		Description: "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
 		Icon:        "gke",
 		Category:    "compute",

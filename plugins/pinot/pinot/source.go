@@ -54,7 +54,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "pinot",
-		Name:        "Pinot",
+		Name:        "Apache Pinot",
 		Description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
 		Icon:        "pinot",
 		Category:    "database",

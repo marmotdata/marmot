@@ -77,7 +77,7 @@ func TestE2E_Meta(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "kafkaconnect", meta.ID)
-	assert.Equal(t, "Kafka Connect", meta.Name)
+	assert.Equal(t, "Apache Kafka Connect", meta.Name)
 	assert.Equal(t, "orchestration", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")
