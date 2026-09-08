@@ -85,6 +85,12 @@ export const plugins: Plugin[] = [
     icon: "logos:elasticsearch",
   },
   {
+    name: "Firehose",
+    description: "Discover delivery streams and their lineage from Amazon Data Firehose",
+    docId: "Plugins/Firehose",
+    icon: "logos:aws-kinesis",
+  },
+  {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
     docId: "Plugins/Google Cloud Storage",
