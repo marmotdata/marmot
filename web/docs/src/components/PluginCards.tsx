@@ -229,6 +229,12 @@ export const plugins: Plugin[] = [
     icon: "material-symbols:book-2-outline",
   },
   {
+    name: "Oracle",
+    description: "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
+    docId: "Plugins/Oracle",
+    icon: "logos:oracle",
+  },
+  {
     name: "Pinot",
     description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
     docId: "Plugins/Pinot",
