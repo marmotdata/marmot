@@ -152,6 +152,12 @@ export const plugins: Plugin[] = [
     icon: "logos:aws-glue",
   },
   {
+    name: "Hive",
+    description: "Discover databases, tables and views from Apache Hive through HiveServer2",
+    docId: "Plugins/Hive",
+    icon: "simple-icons:apachehive",
+  },
+  {
     name: "Glue Pipelines",
     description: "Discover workflows, tasks and run history from AWS Glue",
     docId: "Plugins/Glue Pipelines",
