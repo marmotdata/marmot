@@ -92,7 +92,11 @@ func contextForRegistry(server string) (string, bool) {
 	if want == "" {
 		return "", false
 	}
-	for name, ctx := range getContexts() {
+	contexts, err := loadContexts()
+	if err != nil {
+		return "", false
+	}
+	for name, ctx := range contexts {
 		if registryHost(ctx.Host) == want {
 			return name, true
 		}
@@ -103,7 +107,11 @@ func contextForRegistry(server string) (string, bool) {
 // helperList maps every registry with a live token to its user name.
 func helperList() map[string]string {
 	out := map[string]string{}
-	for name, ctx := range getContexts() {
+	contexts, err := loadContexts()
+	if err != nil {
+		return out
+	}
+	for name, ctx := range contexts {
 		if _, ok := getCachedToken(name); ok {
 			out[registryHost(ctx.Host)] = registryUsername
 		}
