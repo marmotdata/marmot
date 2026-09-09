@@ -74,11 +74,13 @@ jobs:
             echo "cgo=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Pinned: CURRENT_TAG names a bare vX.Y.Z we never tag, and 2.18 made
+      # reading it a hard error.
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: "~> v2"
+          version: "2.17.1"
           args: release --clean --skip=validate
           workdir: ${{ steps.meta.outputs.workdir }}
         env:
