@@ -72,6 +72,14 @@ func Meta() pluginsdk.Meta {
 		// export destinations, so the manifest declares Lineage too.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(TopicFields{}, "Topic",
+				"The metadata fields the plugin emits for topic assets."),
+			pluginsdk.AssetSchemaOf(SubscriptionFields{}, "Subscription",
+				"The metadata fields the plugin emits for subscription assets."),
+			pluginsdk.AssetSchemaOf(TopicColumnFields{}, "Topic Column",
+				"The per-field entries the plugin derives from a topic's Avro schema. Only the top level of the record is expanded."),
+		},
 	}
 }
 

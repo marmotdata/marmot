@@ -26,6 +26,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MySQLFields{}, "MySQL",
+				"MySQL-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(MySQLColumnFields{}, "Column",
+				"MySQL column-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(MySQLForeignKeyFields{}, "Foreign Key",
+				"MySQL foreign key relationship fields"),
+		},
 	}
 }
 

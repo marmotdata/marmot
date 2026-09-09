@@ -73,6 +73,14 @@ func Meta() pluginsdk.Meta {
 		// and reports job executions, so the manifest declares all three.
 		Features:   []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(ServiceFields{}, "Service",
+				"The metadata the Cloud Run plugin emits for a Service asset."),
+			pluginsdk.AssetSchemaOf(JobFields{}, "Job",
+				"The metadata the Cloud Run plugin emits for a Job asset."),
+			pluginsdk.AssetSchemaOf(RunFacetFields{}, "Run Facet",
+				"The facets attached to each job run event."),
+		},
 	}
 }
 

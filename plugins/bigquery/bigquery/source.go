@@ -29,6 +29,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(BigQueryDatasetFields{}, "Dataset",
+				""),
+			pluginsdk.AssetSchemaOf(BigQueryTableFields{}, "Table",
+				""),
+			pluginsdk.AssetSchemaOf(BigQueryColumnFields{}, "Column",
+				""),
+		},
 	}
 }
 

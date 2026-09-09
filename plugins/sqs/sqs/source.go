@@ -26,6 +26,10 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SQSFields{}, "AWS SQS",
+				"SQS-specific metadata fields"),
+		},
 	}
 }
 

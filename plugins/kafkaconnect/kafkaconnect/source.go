@@ -60,6 +60,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(KafkaConnectPipelineFields{}, "Pipeline",
+				"The metadata fields the plugin emits for a connector's Pipeline asset."),
+			pluginsdk.AssetSchemaOf(KafkaConnectTaskFields{}, "Task",
+				"The metadata fields the plugin emits for a Task asset."),
+			pluginsdk.AssetSchemaOf(KafkaConnectTopicFields{}, "Topic",
+				"The metadata fields the plugin emits for a Topic asset."),
+		},
 	}
 }
 

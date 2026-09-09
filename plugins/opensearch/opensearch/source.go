@@ -30,6 +30,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(OpenSearchIndexFields{}, "Index",
+				""),
+			pluginsdk.AssetSchemaOf(OpenSearchDataStreamFields{}, "Data Stream",
+				""),
+			pluginsdk.AssetSchemaOf(OpenSearchAliasFields{}, "Alias",
+				""),
+		},
 	}
 }
 

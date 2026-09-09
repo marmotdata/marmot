@@ -24,6 +24,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MongoDBFields{}, "MongoDB",
+				"MongoDB-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(MongoDBIndexFields{}, "Index",
+				"MongoDB index metadata"),
+			pluginsdk.AssetSchemaOf(MongoDBSchemaFields{}, "Schema",
+				"MongoDB schema metadata from schema sampling"),
+		},
 	}
 }
 

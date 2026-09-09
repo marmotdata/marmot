@@ -38,6 +38,12 @@ func Meta() pluginsdk.Meta {
 		// declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(FirehoseFields{}, "AWS Firehose",
+				"The metadata fields the Firehose plugin emits for a delivery stream asset."),
+			pluginsdk.AssetSchemaOf(FirehoseDestinationFields{}, "Destination",
+				"The fields of the `destination` sub-map. Which of them are present depends on the destination type."),
+		},
 	}
 }
 

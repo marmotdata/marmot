@@ -31,6 +31,14 @@ func Meta() pluginsdk.Meta {
 		// manifest has to declare Lineage the way postgresql and mysql do.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(ClickHouseDatabaseFields{}, "Database",
+				"ClickHouse database-specific metadata fields."),
+			pluginsdk.AssetSchemaOf(ClickHouseTableFields{}, "Table",
+				"ClickHouse table-specific metadata fields."),
+			pluginsdk.AssetSchemaOf(ClickHouseColumnFields{}, "Column",
+				"ClickHouse column-specific metadata fields."),
+		},
 	}
 }
 

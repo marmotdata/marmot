@@ -62,6 +62,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(NiFiPipelineFields{}, "Pipeline",
+				"The metadata fields the NiFi plugin emits for process group (Pipeline) assets."),
+			pluginsdk.AssetSchemaOf(NiFiTaskFields{}, "Task",
+				"The metadata fields emitted for processor (Task) assets."),
+			pluginsdk.AssetSchemaOf(NiFiPortFields{}, "Port",
+				"The extra metadata emitted for input and output ports when include_ports is on. Ports are Task assets and share id, group_id, pipeline, state, comments and url with processors."),
+			pluginsdk.AssetSchemaOf(NiFiTopicFields{}, "Topic",
+				"The metadata emitted for the Kafka Topic assets created from PublishKafka and ConsumeKafka processors."),
+		},
 	}
 }
 

@@ -54,6 +54,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(GrafanaDashboardFields{}, "Dashboard",
+				"The metadata fields the Grafana plugin emits for Dashboard assets."),
+			pluginsdk.AssetSchemaOf(GrafanaChartFields{}, "Chart",
+				"The metadata fields emitted for Chart assets, one per dashboard panel."),
+			pluginsdk.AssetSchemaOf(GrafanaDatasourceFields{}, "Datasource",
+				"The metadata fields emitted for DataSource assets. Credentials are never read."),
+		},
 	}
 }
 

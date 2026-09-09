@@ -44,6 +44,14 @@ func Meta() pluginsdk.Meta {
 		// Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SQLiteFields{}, "SQLite",
+				"The metadata fields the SQLite plugin emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(SQLiteColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(SQLiteForeignKeyFields{}, "Foreign Key",
+				"The fields of a discovered foreign key relationship."),
+		},
 	}
 }
 

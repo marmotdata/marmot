@@ -32,6 +32,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(StarRocksDatabaseFields{}, "Database",
+				"The metadata on a Database asset."),
+			pluginsdk.AssetSchemaOf(StarRocksTableFields{}, "Table",
+				"The metadata on Table and View assets."),
+			pluginsdk.AssetSchemaOf(StarRocksColumnFields{}, "Column",
+				"The per-column fields in an asset's schema."),
+		},
 	}
 }
 

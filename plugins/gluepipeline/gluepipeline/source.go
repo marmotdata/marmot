@@ -25,6 +25,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(PipelineFields{}, "Pipeline",
+				"The metadata a workflow Pipeline asset carries."),
+			pluginsdk.AssetSchemaOf(TaskFields{}, "Task",
+				"The metadata a workflow step Task asset carries."),
+			pluginsdk.AssetSchemaOf(RunFacetFields{}, "Run Facet",
+				"The facets attached to run history events."),
+		},
 	}
 }
 

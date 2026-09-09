@@ -32,6 +32,22 @@ func Meta() pluginsdk.Meta {
 		// pipeline jobs, so the manifest declares all three features.
 		Features:   []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(VertexAICommonFields{}, "Common",
+				"The metadata every Vertex AI asset carries, whatever its kind."),
+			pluginsdk.AssetSchemaOf(VertexAIModelFields{}, "Model",
+				"The metadata a Model asset carries."),
+			pluginsdk.AssetSchemaOf(VertexAIEndpointFields{}, "Endpoint",
+				"The metadata an Endpoint asset carries."),
+			pluginsdk.AssetSchemaOf(VertexAIDatasetFields{}, "Dataset",
+				"The metadata a managed dataset carries. Feature groups are Datasets too, and carry the feature group fields below instead."),
+			pluginsdk.AssetSchemaOf(VertexAIFeatureGroupFields{}, "Feature Group",
+				"The metadata a feature group Dataset asset carries."),
+			pluginsdk.AssetSchemaOf(VertexAIFeatureFields{}, "Feature",
+				"The per-feature fields embedded in a feature group's schema."),
+			pluginsdk.AssetSchemaOf(VertexAIPipelineJobFields{}, "Pipeline Job",
+				"The metadata a pipeline Job asset carries."),
+		},
 	}
 }
 

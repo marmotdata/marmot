@@ -36,6 +36,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  spec,
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(IcebergNamespaceFields{}, "Namespace",
+				"Iceberg namespace metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergTableFields{}, "Table",
+				"Iceberg table metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergViewFields{}, "View",
+				"Iceberg view metadata fields"),
+		},
 	}
 }
 

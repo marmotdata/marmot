@@ -31,6 +31,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(CouchbaseBucketFields{}, "Bucket",
+				"The metadata fields the Couchbase plugin emits for bucket assets."),
+			pluginsdk.AssetSchemaOf(CouchbaseCollectionFields{}, "Collection",
+				"The metadata fields the Couchbase plugin emits for collection assets."),
+			pluginsdk.AssetSchemaOf(CouchbaseColumnFields{}, "Column",
+				"The per-field entries embedded in a collection asset's schema, inferred from sampled documents."),
+		},
 	}
 }
 

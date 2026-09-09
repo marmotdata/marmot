@@ -34,6 +34,16 @@ func Meta() pluginsdk.Meta {
 		Status:     "experimental",
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(AmundsenTableFields{}, "Table",
+				"The metadata fields the plugin emits on a table or view asset."),
+			pluginsdk.AssetSchemaOf(AmundsenColumnFields{}, "Column",
+				"The per-column fields embedded in a table asset's schema."),
+			pluginsdk.AssetSchemaOf(AmundsenDashboardFields{}, "Dashboard",
+				"The metadata fields the plugin emits on a dashboard asset."),
+			pluginsdk.AssetSchemaOf(AmundsenChartFields{}, "Chart",
+				"The metadata fields the plugin emits on a chart asset."),
+		},
 	}
 }
 

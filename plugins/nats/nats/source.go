@@ -25,6 +25,10 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(NATSStreamFields{}, "Stream",
+				"NATSStreamFields defines metadata fields for NATS JetStream streams"),
+		},
 	}
 }
 

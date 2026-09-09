@@ -25,6 +25,10 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(AzureBlobContainerFields{}, "Container",
+				"AzureBlobContainerFields defines metadata fields for Azure Blob containers"),
+		},
 	}
 }
 

@@ -56,6 +56,12 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(FlinkPipelineFields{}, "Pipeline",
+				"The metadata fields the Flink plugin emits for Pipeline assets (one per job)."),
+			pluginsdk.AssetSchemaOf(FlinkTaskFields{}, "Task",
+				"The metadata fields the Flink plugin emits for Task assets (one per job vertex)."),
+		},
 	}
 }
 

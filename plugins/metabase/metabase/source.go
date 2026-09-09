@@ -58,6 +58,12 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MetabaseDashboardFields{}, "Dashboard",
+				"The metadata fields the plugin emits for Dashboard assets."),
+			pluginsdk.AssetSchemaOf(MetabaseCardFields{}, "Card",
+				"The metadata fields the plugin emits for Chart and Data Model Object assets, which Metabase both calls cards."),
+		},
 	}
 }
 

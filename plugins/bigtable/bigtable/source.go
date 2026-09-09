@@ -65,6 +65,14 @@ func Meta() pluginsdk.Meta {
 		// the manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(BigtableInstanceFields{}, "Instance",
+				"The metadata fields the Bigtable plugin emits for instance assets."),
+			pluginsdk.AssetSchemaOf(BigtableTableFields{}, "Table",
+				"The metadata fields the Bigtable plugin emits for table assets."),
+			pluginsdk.AssetSchemaOf(BigtableColumnFields{}, "Column",
+				"The per-column fields embedded in a table asset's schema. Bigtable declares column families but not the qualifiers under them, so everything below comes from a sample of rows."),
+		},
 	}
 }
 

@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.31
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.30
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.53.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260908205906-1dada43f5cdf
+	github.com/marmotdata/plugin-sdk v0.0.0-20260909081240-b7392d965ec6
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )

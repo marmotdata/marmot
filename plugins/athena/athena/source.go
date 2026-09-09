@@ -41,6 +41,20 @@ func Meta() pluginsdk.Meta {
 		// declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(AthenaTableFields{}, "Table",
+				"The metadata the plugin records for a table or view. The fields live under the `athena` key of the asset metadata, because the asset itself is owned by the Glue provider and shared with the Glue plugin."),
+			pluginsdk.AssetSchemaOf(AthenaDatabaseFields{}, "Database",
+				"The metadata recorded for a database, under the `athena` key of the asset metadata."),
+			pluginsdk.AssetSchemaOf(AthenaColumnFields{}, "Column",
+				"The per-column fields embedded in a table asset's schema."),
+			pluginsdk.AssetSchemaOf(AthenaWorkGroupFields{}, "Work Group",
+				"The metadata recorded for a workgroup."),
+			pluginsdk.AssetSchemaOf(AthenaSavedQueryFields{}, "Saved Query",
+				"The metadata recorded for a saved query."),
+			pluginsdk.AssetSchemaOf(AthenaCatalogFields{}, "Catalog",
+				"The metadata recorded for a data catalog."),
+		},
 	}
 }
 

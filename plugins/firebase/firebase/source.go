@@ -59,6 +59,18 @@ func Meta() pluginsdk.Meta {
 		// from collections to their subcollections.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(FirebaseProjectFields{}, "Project",
+				"The project-level metadata fields the plugin adds to every asset. They are kept as documentation-only structs so downstream tooling can introspect the shape of the metadata map."),
+			pluginsdk.AssetSchemaOf(FirestoreDatabaseFields{}, "Firestore Database",
+				"The metadata fields the plugin emits for a Firestore database asset."),
+			pluginsdk.AssetSchemaOf(RealtimeDatabaseFields{}, "Realtime Database",
+				"The metadata fields the plugin emits for a Realtime Database instance asset."),
+			pluginsdk.AssetSchemaOf(FirestoreCollectionFields{}, "Firestore Collection",
+				"The metadata fields the plugin emits for a Firestore collection asset."),
+			pluginsdk.AssetSchemaOf(FirestoreColumnFields{}, "Firestore Column",
+				"The per-field columns inferred from the sampled documents and stored in an asset's schema."),
+		},
 	}
 }
 

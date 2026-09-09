@@ -60,6 +60,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(RedashDashboardFields{}, "Dashboard",
+				"The metadata on a Dashboard asset."),
+			pluginsdk.AssetSchemaOf(RedashChartFields{}, "Chart",
+				"The metadata on a Chart asset."),
+			pluginsdk.AssetSchemaOf(RedashQueryFields{}, "Query",
+				"The metadata on a Data Model Object asset, which is how a saved Redash query is catalogued."),
+			pluginsdk.AssetSchemaOf(RedashDataSourceFields{}, "Data Source",
+				"The metadata on a DataSource asset. The connection options are copied through an allowlist, so a password is never recorded even when the API returns one."),
+		},
 	}
 }
 

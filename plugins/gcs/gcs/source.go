@@ -39,6 +39,10 @@ func Meta() pluginsdk.Meta {
 		Icon:        "gcs",
 		Category:    "storage",
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(GCSBucketFields{}, "Bucket",
+				"GCSBucketFields defines metadata fields for GCS buckets"),
+		},
 	}
 }
 

@@ -27,6 +27,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(GlueJobFields{}, "Job",
+				"Glue Job metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueDatabaseFields{}, "Database",
+				"Glue Database metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueTableFields{}, "Table",
+				"Glue Table metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueCrawlerFields{}, "Crawler",
+				"Glue Crawler metadata fields"),
+		},
 	}
 }
 

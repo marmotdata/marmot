@@ -152,6 +152,47 @@ jobs:
             --annotation "org.opencontainers.image.source=${SOURCE}"
           echo "index_digest=$(oras resolve "${repo}:${VERSION}")" >> "$GITHUB_OUTPUT"
 
+      # plugins.marmotdata.io reads a plugin's docs from an info referrer on the
+      # index. Without it the plugin still installs, but its page has no
+      # Overview, Configuration or Assets Emitted tab.
+      - name: Attach plugin info
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          WORKDIR: ${{ steps.meta.outputs.workdir }}
+          DIST: ${{ steps.meta.outputs.workdir }}/dist
+          INDEX_DIGEST: ${{ steps.push.outputs.index_digest }}
+          SOURCE: https://github.com/${{ github.repository }}
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          files=()
+
+          # Ask the plugin for its own metadata, config spec and asset schemas
+          # alike, so what is published can never drift from the binary beside it.
+          binary=$(find "$DIST" -type f -name "marmot-plugin-${PLUGIN}" -path "*_linux_amd64*" | head -n 1)
+          if [ -z "$binary" ]; then
+            echo "no linux/amd64 binary under ${DIST}" >&2
+            exit 1
+          fi
+          chmod +x "$binary"
+          "$binary" --dump-metadata > "${work}/metadata.json"
+          files+=("metadata.json:application/vnd.marmot.plugin.metadata.v1+json")
+
+          if [ -f "${WORKDIR}/README.md" ]; then
+            cp "${WORKDIR}/README.md" "${work}/README.md"
+            files+=("README.md:application/vnd.marmot.plugin.readme.v1+markdown")
+          fi
+
+          # GHCR has no referrers API, so pin the tag fallback rather than let
+          # oras probe for one it will not find.
+          (cd "$work" && oras attach "${REGISTRY}/${PLUGIN}@${INDEX_DIGEST}" \
+            --artifact-type application/vnd.marmot.plugin.info.v1+json \
+            --distribution-spec v1.1-referrers-tag \
+            --annotation "org.opencontainers.image.version=${VERSION}" \
+            --annotation "org.opencontainers.image.source=${SOURCE}" \
+            "${files[@]}")
+
       - name: Sign OCI artefacts
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}

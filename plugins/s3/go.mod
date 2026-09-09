@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	github.com/aws/aws-sdk-go-v2 v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260908205906-1dada43f5cdf
+	github.com/marmotdata/plugin-sdk v0.0.0-20260909081240-b7392d965ec6
 	github.com/rs/zerolog v1.35.1
 )
 

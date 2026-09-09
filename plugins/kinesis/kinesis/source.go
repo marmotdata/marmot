@@ -30,6 +30,12 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(KinesisStreamFields{}, "Stream",
+				"The metadata fields the Kinesis plugin emits for Stream assets."),
+			pluginsdk.AssetSchemaOf(KinesisSampleFields{}, "Sample",
+				"The columns of a stream's data preview."),
+		},
 	}
 }
 
