@@ -74,38 +74,28 @@ jobs:
             echo "cgo=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Pinned: CURRENT_TAG names a bare vX.Y.Z we never tag, and 2.18 made
-      # reading it a hard error.
+      # Only the binaries are wanted: the steps below push and sign them, and
+      # every plugin sets release.disable. Building keeps GoReleaser out of the
+      # git tag entirely, which a plugin tag could never satisfy anyway.
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: "2.17.1"
-          args: release --clean --skip=validate
+          version: "2.18.1"
+          args: build --clean --snapshot
           workdir: ${{ steps.meta.outputs.workdir }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
 
       # cgo plugins need cross toolchains for the darwin builds.
       - name: Run GoReleaser (cgo)
         if: steps.cgo.outputs.cgo == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
         run: |
           docker run --rm \
             -e CGO_ENABLED=1 \
-            -e GITHUB_TOKEN \
-            -e GORELEASER_CURRENT_TAG \
-            -e ACTIONS_ID_TOKEN_REQUEST_URL \
-            -e ACTIONS_ID_TOKEN_REQUEST_TOKEN \
-            -e COSIGN_YES=true \
             -v "$PWD:/workspace" \
             -w "/workspace/${{ steps.meta.outputs.workdir }}" \
             --entrypoint /bin/sh \
             ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
-            'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
+            'git config --global --add safe.directory /workspace && goreleaser build --clean --snapshot'
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
