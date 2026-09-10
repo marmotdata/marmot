@@ -296,7 +296,11 @@ func resolveLoginHost(args []string) (host, contextName string, err error) {
 	if len(args) > 0 {
 		// A bare name that matches a saved context keeps that context's
 		// URL, so "marmot login localhost:8080" does not turn http into https.
-		if ctx, ok := getContexts()[args[0]]; ok && !strings.Contains(args[0], "://") {
+		contexts, err := loadContexts()
+		if err != nil {
+			return "", "", err
+		}
+		if ctx, ok := contexts[args[0]]; ok && !strings.Contains(args[0], "://") {
 			host, contextName = ctx.Host, args[0]
 		} else {
 			host = normalizeHost(args[0])
