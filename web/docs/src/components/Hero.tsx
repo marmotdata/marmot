@@ -1,5 +1,6 @@
 import React from "react";
 import ContextDiagram from "./ContextDiagram";
+import ProofRow from "./ProofRow";
 
 export default function Hero(): JSX.Element {
   return (
@@ -19,8 +20,9 @@ export default function Hero(): JSX.Element {
           data-animate-delay="2"
           className="mt-8 text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
         >
-          Marmot is an open source context layer for engineers and AI agents.
-          It tracks schemas, ownership and lineage across your entire stack.
+          Your company already sits on the context it needs. Marmot puts it
+          within reach of every employee and every agent, in the browser or
+          over MCP.
         </p>
 
         <div
@@ -56,6 +58,8 @@ export default function Hero(): JSX.Element {
             View on GitHub
           </a>
         </div>
+
+        <ProofRow />
       </div>
 
       {/* The figure is part of the same header unit: the headline makes the

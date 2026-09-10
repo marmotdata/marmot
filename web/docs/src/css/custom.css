@@ -704,6 +704,11 @@ html[data-theme="dark"] {
   height: 24px;
 }
 
+/* logos:grok-icon ships no fill, so it renders black in dark mode. */
+.agent-mark-icon path {
+  fill: currentColor;
+}
+
 /* Same marks as the diagram, laid out for the copy column. */
 .mcp-clients {
   display: flex;
@@ -2267,4 +2272,140 @@ html[data-theme="dark"] .DocSearch-Button:hover {
 .prose table th,
 .prose table td {
   padding: var(--ifm-table-cell-padding);
+}
+
+/* --- Hero proof row --- */
+
+.proof-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  /* Matches the max-w-3xl paragraph above it. */
+  max-width: 48rem;
+  margin: 3.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(123, 89, 53, 0.16);
+}
+
+.proof-sep {
+  width: 1px;
+  height: 1.125rem;
+  background: rgba(123, 89, 53, 0.2);
+}
+
+.gfs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gfs-mark {
+  width: 1.0625rem;
+  height: 1.0625rem;
+  flex-shrink: 0;
+}
+
+.gfs-text {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: #8a8078;
+  white-space: nowrap;
+}
+
+.gfs-text strong {
+  font-weight: 600;
+  color: #3f3a35;
+}
+
+.proof-fact-link {
+  text-decoration: none;
+}
+
+.proof-fact-link:hover {
+  text-decoration: none;
+}
+
+.proof-fact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.proof-value {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #3f3a35;
+  font-variant-numeric: tabular-nums;
+}
+
+.proof-label {
+  font-size: 0.8125rem;
+  color: #8a8078;
+}
+
+.proof-claim {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #3f3a35;
+  white-space: nowrap;
+}
+
+.proof-fact-link:hover .proof-value,
+.proof-fact-link:hover .proof-claim {
+  color: #b34822;
+}
+
+html[data-theme="dark"] .proof-row {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .proof-sep {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .gfs-text,
+html[data-theme="dark"] .proof-label {
+  color: #8b8783;
+}
+
+html[data-theme="dark"] .gfs-text strong,
+html[data-theme="dark"] .proof-value,
+html[data-theme="dark"] .proof-claim {
+  color: #e5e2df;
+}
+
+html[data-theme="dark"] .proof-fact-link:hover .proof-value,
+html[data-theme="dark"] .proof-fact-link:hover .proof-claim {
+  color: #f7885e;
+}
+
+.proof-fact-link:focus-visible {
+  outline: 2px solid #b34822;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+html[data-theme="dark"] .proof-fact-link:focus-visible {
+  outline-color: #f7885e;
+}
+
+@media (max-width: 640px) {
+  .proof-row {
+    gap: 0.875rem 1.25rem;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+  }
+
+  .gfs {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .proof-row > .gfs + .proof-sep {
+    display: none;
+  }
 }
