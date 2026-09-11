@@ -131,7 +131,7 @@ Both are open source data catalogs, both ship a native MCP server, and both have
       { status: "yes", text: "Via MCP and API, column-level lineage" },
     ]},
     { feature: "Connectors", cells: [
-      "~28 plugins, plus catalog-as-code",
+      "70+ plugins, plus catalog-as-code",
       "120+ pre-built connectors",
     ]},
     { feature: "Ingestion methods", cells: [
@@ -196,7 +196,7 @@ Marmot runs every MCP and API query with the permissions of the API key behind i
 
 **This is OpenMetadata's strongest column.** Its connector library is the widest in open source, well past 120 sources spanning warehouses, databases, dashboards, pipelines and messaging, all driven through its ingestion framework. If you want the most of your stack catalogued out of the box with no extra work, OpenMetadata leads here and it is not close.
 
-Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. The trade is real: if raw pre-built connector count is your deciding factor, OpenMetadata wins. If you provision with Terraform or Pulumi, the gap closes quickly, and you avoid running an ingestion framework to do it.
+Marmot ships 70+ plugins spanning databases, warehouses, lakes, object storage, streaming, orchestration, compute, BI and search. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. OpenMetadata still has the larger library, and if raw connector count is your deciding factor it wins the column. What has changed is that Marmot's 70+ plugins cover the same categories, so for most stacks the choice comes down to whether you want to run an ingestion framework rather than whether your sources are supported.
 
 ---
 

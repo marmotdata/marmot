@@ -23,7 +23,7 @@ import Head from '@docusaurus/Head';
 <Head>
   <link rel="canonical" href="https://marmotdata.io/resources/data-catalogs-for-ai-agents" />
   <meta property="article:published_time" content="2026-06-29" />
-  <meta property="article:modified_time" content="2026-06-29" />
+  <meta property="article:modified_time" content="2026-09-11" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Best Data Catalogs for AI Agents in 2026: The AI Context Layer Compared" />
   <meta name="twitter:description" content="The best data catalogs for AI agents in 2026, compared on native MCP, governed context and footprint. Marmot, OpenMetadata, DataHub, Atlan and more." />
@@ -109,7 +109,7 @@ import Head from '@docusaurus/Head';
         { "@type": "ListItem", "position": 4, "name": "Atlan", "url": "https://atlan.com" },
         { "@type": "ListItem", "position": 5, "name": "Collibra", "url": "https://www.collibra.com" },
         { "@type": "ListItem", "position": 6, "name": "Secoda", "url": "https://www.secoda.co" },
-        { "@type": "ListItem", "position": 7, "name": "Amundsen", "url": "https://www.amundsen.io" },
+        { "@type": "ListItem", "position": 7, "name": "Amundsen", "url": "https://github.com/amundsen-io/amundsen" },
         { "@type": "ListItem", "position": 8, "name": "Apache Atlas", "url": "https://atlas.apache.org" }
       ]
     })}
@@ -155,17 +155,17 @@ Defining the criteria up front matters because an AI context layer is only usefu
 
 ## Comparison matrix {#comparison-matrix}
 
-**Here is how the eight catalogs compare as AI context layers, as of June 2026.** MCP cells reflect what we could confirm from each vendor's current documentation and repositories. Where a vendor is actively shipping MCP, we say so; we have not assumed any tool "can't" just to flatter the column.
+**Here is how the eight catalogs compare as AI context layers, as of September 2026.** MCP cells reflect what we could confirm from each vendor's current documentation and repositories. Where a vendor is actively shipping MCP, we say so; we have not assumed any tool "can't" just to flatter the column. One note on the table below: Amundsen was archived by its maintainers on 10 September 2026 and is included here for teams who still run it.
 
 | Tool | MCP support | CLI | Agent-queryable API | Lineage exposed to AI | Core dependencies | Deploy footprint | Connectors | Open source | Best for |
 |------|-------------|-----|---------------------|------------------------|-------------------|------------------|------------|-------------|----------|
-| **[Marmot](https://github.com/marmotdata/marmot)** | Native (built in) | Full | Yes, REST | Yes, via MCP, CLI, SDK and API | Postgres only (Elasticsearch optional) | Single Go binary | ~28 plugins + IaC | Yes (MIT) | Native MCP with the smallest footprint |
+| **[Marmot](https://github.com/marmotdata/marmot)** | Native (built in) | Full | Yes, REST | Yes, via MCP, CLI, SDK and API | Postgres only (Elasticsearch optional) | Single Go binary | 70+ plugins + IaC | Yes (MIT) | Native MCP with the smallest footprint |
 | **[OpenMetadata](https://open-metadata.org)** | Native (built in) | Partial (ingestion) | Yes, REST | Yes | Elasticsearch or OpenSearch, ingestion framework | Multi-service | 120+ | Yes (Apache 2.0) | Broad coverage, open source |
 | **[DataHub](https://datahub.com)** | Official (separate server) | Full | Yes, REST and GraphQL | Yes, via MCP and API | Kafka, graph store, Elasticsearch | Heavy, multi-service | Extensive | Yes (Apache 2.0) | Broad ecosystem, existing Kafka stacks |
 | **[Atlan](https://atlan.com)** | Native (hosted) | Partial (contracts) | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Large managed library | No | Enterprise hosted context layer |
 | **[Collibra](https://www.collibra.com)** | Official (server) | Partial | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Extensive enterprise | No | Regulated, governance-heavy orgs |
 | **[Secoda](https://www.secoda.co)** | Native (hosted) | None | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Broad managed | No | AI-first hosted catalog |
-| **[Amundsen](https://www.amundsen.io)** | Community (unofficial) | None | Yes, REST | Yes (in UI), limited via API | Neo4j or Atlas, Elasticsearch | Multi-service | Community-driven | Yes (Apache 2.0) | Search-led discovery, existing users |
+| **[Amundsen](https://github.com/amundsen-io/amundsen)** | None | None | Yes, REST | Yes (in UI), limited via API | Neo4j or Atlas, Elasticsearch | Multi-service | Databuilder, unmaintained | Yes (Apache 2.0), archived | Existing estates planning a migration |
 | **[Apache Atlas](https://atlas.apache.org)** | Community (unofficial) | Partial (admin/import) | Yes, REST | Yes | JanusGraph, HBase, Solr, Kafka | Heavy, Hadoop-era | Hadoop ecosystem | Yes (Apache 2.0) | Hadoop and Cloudera estates |
 
 ---
@@ -194,7 +194,7 @@ Marmot is the open source catalog built for the AI context job from the ground u
 
 **Marmot cons:**
 
-- **Smaller connector library today.** Around 28 plugins against 120+ for OpenMetadata, in a fast-growing ecosystem. For anything without a plugin yet, the Terraform and Pulumi providers or the Go, TypeScript and Python SDKs populate assets and lineage straight from your existing infrastructure and code, so the gap is bridged rather than left open.
+- **Fewer connectors than the largest libraries.** 70+ plugins against 120+ for OpenMetadata, covering databases, warehouses, lakes, object storage, streaming, orchestration, compute, BI and search. For anything without a plugin yet, the Terraform and Pulumi providers or the Go, TypeScript and Python SDKs populate assets and lineage straight from your existing infrastructure and code, so the gap is bridged rather than left open.
 
 If a source has no plugin yet, you populate it from the Terraform you are writing anyway, so the catalog grows with your existing infrastructure rather than waiting on a connector. We cover why Postgres alone is enough to back a catalog in [Postgres: One Database to Rule Them All](/blog/postgres-one-database-to-rule-them-all), and the low-infrastructure goal in [Data catalog without the complex infrastructure](/blog/data-catalog-without-complex-infrastructure).
 
@@ -290,21 +290,23 @@ Secoda is a hosted catalog built around AI from the start, with MCP support and 
 
 ### Amundsen {#amundsen}
 
-**Best for:** existing users running it for search-led discovery.
+**Best for:** teams who already run it and need a migration path. It is not a starting point in 2026.
 
-Amundsen, originally from Lyft, helped define modern data discovery with strong search over a metadata graph.
+Amundsen, originally from Lyft, helped define modern data discovery with strong search over a metadata graph, and it was donated to the LF AI & Data Foundation as an incubation project in 2020. Development slowed through 2024, and on 10 September 2026 the maintainers [archived the repository](https://github.com/amundsen-io/amundsen), which is now read-only. The amundsen.io domain no longer serves the project either, so the archived repository is the only reliable reference left.
 
 **Amundsen pros:**
 
-- **Strong search-led discovery** over a graph backed by Neo4j or Atlas and Elasticsearch.
+- **Strong search-led discovery** over a graph backed by Neo4j or Atlas and Elasticsearch, which is what made it widely adopted in the first place.
 - **REST API and lineage** rendered in the UI.
-- **Apache 2.0 licensed.**
+- **Apache 2.0 licensed**, and the code stays available for historical purposes.
 
 **Amundsen cons:**
 
-- **No first-class MCP.** There is a community MCP server (the unofficial [`amundsen-mcp`](https://github.com/BrianLondon/amundsen-mcp) project), but nothing maintained by the project itself, so exposing Amundsen to agents means relying on a third-party tool or building your own.
-- **Slower development pace** relative to OpenMetadata and DataHub.
-- **Multi-service deployment.**
+- **Archived and unmaintained.** No new features, no bug fixes and no security patches. Anything you run from here, you are maintaining yourself.
+- **No MCP, first-class or otherwise.** There is no maintained community server to fall back on, so exposing an Amundsen graph to agents means building and owning the integration yourself.
+- **Multi-service deployment** of Neo4j or Atlas plus Elasticsearch, now with no upstream behind it.
+
+**If you are running Amundsen today,** Marmot's [Amundsen plugin](https://plugins.marmotdata.io/marmotdata/amundsen) reads an existing metadata graph over Bolt and imports tables, columns, owners, tags, badges, dashboards and lineage. Each table is projected onto the provider and identifier its own technology's plugin already uses, so the import and a later native run land on one asset rather than two. That means you can move off the archived stack without losing the metadata you have built up, and pick the native plugins back up afterwards.
 
 ### Apache Atlas {#apache-atlas}
 
