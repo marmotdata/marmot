@@ -44,6 +44,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	DiscoverJobs      bool `json:"discover_jobs" description:"Whether to discover Glue jobs" default:"true"`
 	DiscoverDatabases bool `json:"discover_databases" description:"Whether to discover Glue databases" default:"true"`
@@ -90,6 +91,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

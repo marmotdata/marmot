@@ -115,23 +115,29 @@ type googleClient struct {
 // set. An emulator speaks plaintext gRPC and has no credentials, so both are
 // turned off explicitly rather than relying on the PUBSUB_EMULATOR_HOST
 // environment variable, which the ingest process may not have.
-func newGoogleClient(ctx context.Context, projectID, emulatorHost, credentialsFile, credentialsJSON string) (*googleClient, error) {
+func newGoogleClient(ctx context.Context, config *Config) (*googleClient, error) {
 	var opts []option.ClientOption
 
 	switch {
-	case emulatorHost != "":
+	case config.EmulatorHost != "":
 		opts = append(opts,
-			option.WithEndpoint(emulatorHost),
+			option.WithEndpoint(config.EmulatorHost),
 			option.WithoutAuthentication(),
 			option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 		)
-	case credentialsJSON != "":
-		opts = append(opts, option.WithCredentialsJSON([]byte(credentialsJSON)))
-	case credentialsFile != "":
-		opts = append(opts, option.WithCredentialsFile(credentialsFile))
+	case config.WorkloadIdentityProvider != "":
+		ts, err := config.gcpCredentials().TokenSource(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
+		}
+		opts = append(opts, option.WithTokenSource(ts))
+	case config.CredentialsJSON != "":
+		opts = append(opts, option.WithCredentialsJSON([]byte(config.CredentialsJSON)))
+	case config.CredentialsFile != "":
+		opts = append(opts, option.WithCredentialsFile(config.CredentialsFile))
 	}
 
-	pub, err := gpubsub.NewClient(ctx, projectID, opts...)
+	pub, err := gpubsub.NewClient(ctx, config.ProjectID, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Pub/Sub client: %w", err)
 	}
@@ -141,7 +147,7 @@ func newGoogleClient(ctx context.Context, projectID, emulatorHost, credentialsFi
 	// Schemas live behind a second client. It is optional: an emulator does
 	// not implement the schema service at all, so a failure here must not
 	// stop topic discovery.
-	schemas, err := gpubsub.NewSchemaClient(ctx, projectID, opts...)
+	schemas, err := gpubsub.NewSchemaClient(ctx, config.ProjectID, opts...)
 	if err == nil {
 		c.schemas = schemas
 	}

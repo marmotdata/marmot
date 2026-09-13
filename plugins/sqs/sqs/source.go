@@ -37,6 +37,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	DiscoverDLQ bool `json:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
 }
@@ -63,6 +64,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

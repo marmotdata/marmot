@@ -30,6 +30,7 @@ const gkeScope = "https://www.googleapis.com/auth/cloud-platform"
 type Config struct {
 	kubernetes.DiscoveryConfig `json:",inline"`
 	pluginsdk.GCPConfig        `json:",inline"`
+	pluginsdk.Federation       `json:",inline"`
 
 	ProjectID string `json:"project_id" label:"Project ID" description:"GCP project ID" validate:"required"`
 	Location  string `json:"location" description:"Cluster region or zone, for example us-central1" validate:"required"`
@@ -79,6 +80,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := config.DiscoveryConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := config.GCPConfig.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

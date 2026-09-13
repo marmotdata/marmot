@@ -61,3 +61,7 @@ Unit tests need nothing. The end-to-end tests run against a Glue endpoint:
 docker run -d --name marmot-test-gluepipeline -p 15560:5000 motoserver/moto:latest
 MARMOT_TEST_GLUEPIPELINE_ENDPOINT=http://localhost:15560 go test ./...
 ```
+
+## Keyless authentication
+
+On Marmot Cloud or Marmot Enterprise the pipeline can present its own identity instead of access keys. Register your Marmot instance as an IAM OIDC identity provider (client id `sts.amazonaws.com`), create a role whose trust policy allows `sts:AssumeRoleWithWebIdentity` for that provider with `<issuer host>:sub` equal to the pipeline's subject, `pipeline:<name>` as reported by the pipeline API, and set `credentials.role_arn` and `credentials.region`. No key exists anywhere; Marmot mints a short-lived token for each run.

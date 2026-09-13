@@ -1,6 +1,7 @@
 package bigtable
 
 import (
+	"context"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -117,13 +118,17 @@ func TestClientOptions_TurnOffAuthForAnEmulator(t *testing.T) {
 	// transport, because the emulator serves plain gRPC.
 	s := &Source{config: &Config{ProjectID: "test-project", EmulatorHost: "localhost:8086"}}
 
-	assert.Len(t, s.clientOptions(), 3)
+	opts, err := s.clientOptions(context.Background())
+	require.NoError(t, err)
+	assert.Len(t, opts, 3)
 }
 
 func TestClientOptions_AreEmptyWhenTheEnvironmentSuppliesCredentials(t *testing.T) {
 	s := &Source{config: &Config{ProjectID: "analytics"}}
 
-	assert.Empty(t, s.clientOptions(), "no options means Application Default Credentials")
+	opts, err := s.clientOptions(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, opts, "no options means Application Default Credentials")
 }
 
 func TestTableName_PutsTheInstanceInFront(t *testing.T) {

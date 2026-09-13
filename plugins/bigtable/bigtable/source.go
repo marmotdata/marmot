@@ -27,6 +27,7 @@ const provider = "Bigtable"
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	pluginsdk.GCPConfig  `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	ProjectID    string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
 	Instances    []string `json:"instances,omitempty" description:"Instance IDs to discover. Leave empty to discover every instance in the project"`
@@ -103,7 +104,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	config.EmulatorHost = strings.TrimSpace(config.EmulatorHost)
 	if config.EmulatorHost != "" {
-		if config.Credentials.CredentialsJSON != "" || config.Credentials.CredentialsFile != "" {
+		if config.Credentials.CredentialsJSON != "" || config.Credentials.CredentialsFile != "" || config.Credentials.WorkloadIdentityProvider != "" {
 			return nil, fmt.Errorf("emulator_host cannot be combined with credentials: an emulator has no Google account to authenticate against")
 		}
 		if len(config.Instances) == 0 {
@@ -112,6 +113,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.GCPConfig.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 
@@ -180,7 +185,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 
 // discoverInstance builds the instance asset and one asset per table in it.
 func (s *Source) discoverInstance(ctx context.Context, instance instanceDetail) (*pluginsdk.DiscoveryResult, error) {
-	adminClient, err := bt.NewAdminClient(ctx, s.config.ProjectID, instance.ID, s.clientOptions()...)
+	opts, err := s.clientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	adminClient, err := bt.NewAdminClient(ctx, s.config.ProjectID, instance.ID, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating admin client: %w", err)
 	}
@@ -197,7 +206,7 @@ func (s *Source) discoverInstance(ctx context.Context, instance instanceDetail) 
 
 	var dataClient *bt.Client
 	if s.config.IncludeColumns || s.config.IncludeStatistics {
-		dataClient, err = bt.NewClient(ctx, s.config.ProjectID, instance.ID, s.clientOptions()...)
+		dataClient, err = bt.NewClient(ctx, s.config.ProjectID, instance.ID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("creating data client: %w", err)
 		}
@@ -410,7 +419,11 @@ func (s *Source) FetchSampleData(ctx context.Context, rawConfig pluginsdk.RawCon
 	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	client, err := bt.NewClient(fetchCtx, s.config.ProjectID, instanceID, s.clientOptions()...)
+	opts, err := s.clientOptions(fetchCtx)
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := bt.NewClient(fetchCtx, s.config.ProjectID, instanceID, opts...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("connecting to Bigtable: %w", err)
 	}

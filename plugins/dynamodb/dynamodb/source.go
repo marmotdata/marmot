@@ -35,6 +35,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	pluginsdk.AWSConfig  `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 }
 
 // Example configuration for the plugin.
@@ -59,6 +60,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 
