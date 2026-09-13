@@ -49,6 +49,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	IncludeEndpoints     bool `json:"include_endpoints" description:"Whether to discover inference endpoints" default:"true"`
 	IncludeModelPackages bool `json:"include_model_packages" description:"Whether to discover model package groups from the model registry" default:"true"`
@@ -97,6 +98,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 
