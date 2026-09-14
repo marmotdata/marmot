@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/jackc/tern/v2 v2.3.5
+	github.com/jackc/tern/v2 v2.4.3
 	github.com/marmotdata/marmot/sdk/go v0.0.0-00010101000000-000000000000
 	github.com/marmotdata/plugin-sdk v0.0.0-20260913214252-a0eb271320a7
 	github.com/modelcontextprotocol/go-sdk v1.7.0
@@ -58,7 +58,7 @@ require (
 	github.com/FZambia/eagle v0.2.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.4.0 // indirect
+	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.43.0 // indirect
