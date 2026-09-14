@@ -50,26 +50,32 @@ type rowReader interface {
 // authentication. All of it comes from the config rather than the
 // BIGTABLE_EMULATOR_HOST environment variable, so one pipeline cannot
 // change how another one connects.
-func (s *Source) clientOptions() []option.ClientOption {
+func (s *Source) clientOptions(ctx context.Context) ([]option.ClientOption, error) {
 	if s.config.EmulatorHost != "" {
 		return []option.ClientOption{
 			option.WithEndpoint(s.config.EmulatorHost),
 			option.WithoutAuthentication(),
 			option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-		}
+		}, nil
 	}
 
 	switch {
+	case s.config.Credentials.Federated():
+		ts, err := s.config.GCPConfig.TokenSource(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
+		}
+		return []option.ClientOption{option.WithTokenSource(ts)}, nil
 	case s.config.Credentials.CredentialsJSON != "":
-		return []option.ClientOption{option.WithCredentialsJSON([]byte(s.config.Credentials.CredentialsJSON))}
+		return []option.ClientOption{option.WithCredentialsJSON([]byte(s.config.Credentials.CredentialsJSON))}, nil
 	case s.config.Credentials.CredentialsFile != "":
-		return []option.ClientOption{option.WithCredentialsFile(s.config.Credentials.CredentialsFile)}
+		return []option.ClientOption{option.WithCredentialsFile(s.config.Credentials.CredentialsFile)}, nil
 	}
 
 	// Neither key given: fall back to the credentials the environment
 	// already provides (Workload Identity, a service account attached to
 	// the machine, or GOOGLE_APPLICATION_CREDENTIALS).
-	return nil
+	return nil, nil
 }
 
 // listInstances resolves the instances to discover, filling in as much
@@ -85,7 +91,11 @@ func (s *Source) listInstances(ctx context.Context) ([]instanceDetail, error) {
 		return details, nil
 	}
 
-	client, err := bt.NewInstanceAdminClient(ctx, s.config.ProjectID, s.clientOptions()...)
+	opts, err := s.clientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	client, err := bt.NewInstanceAdminClient(ctx, s.config.ProjectID, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating instance admin client: %w", err)
 	}

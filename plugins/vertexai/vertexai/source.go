@@ -54,13 +54,16 @@ func Meta() pluginsdk.Meta {
 // Config for the Vertex AI plugin.
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
-	ProjectID       string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	Locations       []string `json:"locations" description:"Regions to scan" validate:"required,min=1"`
-	CredentialsFile string   `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
-	CredentialsJSON string   `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	Endpoint        string   `json:"endpoint,omitempty" description:"Custom endpoint URL, for testing against a local server"`
-	DisableAuth     bool     `json:"disable_auth,omitempty" description:"Disable authentication, for local testing"`
+	ProjectID                string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
+	Locations                []string `json:"locations" description:"Regions to scan" validate:"required,min=1"`
+	CredentialsFile          string   `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
+	CredentialsJSON          string   `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
+	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string   `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string   `json:"endpoint,omitempty" description:"Custom endpoint URL, for testing against a local server"`
+	DisableAuth              bool     `json:"disable_auth,omitempty" description:"Disable authentication, for local testing"`
 
 	IncludeEndpoints     bool `json:"include_endpoints" description:"Whether to discover prediction endpoints" default:"true"`
 	IncludeDatasets      bool `json:"include_datasets" description:"Whether to discover managed datasets" default:"true"`
@@ -114,6 +117,15 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
+	}
+
+	creds := config.gcpCredentials()
+	if err := creds.Federate(rawConfig); err != nil {
+		return nil, err
+	}
+	config.WorkloadIdentityProvider = creds.WorkloadIdentityProvider
+	if config.WorkloadIdentityProvider != "" && config.DisableAuth {
+		return nil, fmt.Errorf("workload_identity_provider excludes disable_auth")
 	}
 
 	s.config = config
@@ -520,4 +532,15 @@ func putBool(m map[string]any, key string, value bool) {
 		return
 	}
 	m[key] = true
+}
+
+// gcpCredentials is the plugin's flat credential fields in the SDK's
+// shape, which knows how to federate.
+func (c *Config) gcpCredentials() *pluginsdk.GCPCredentials {
+	return &pluginsdk.GCPCredentials{
+		CredentialsJSON:          c.CredentialsJSON,
+		CredentialsFile:          c.CredentialsFile,
+		WorkloadIdentityProvider: c.WorkloadIdentityProvider,
+		ServiceAccount:           c.ServiceAccount,
+	}
 }

@@ -36,11 +36,14 @@ const (
 // Config for the Google Pub/Sub plugin.
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
-	ProjectID       string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	EmulatorHost    string `json:"emulator_host,omitempty" label:"Emulator Host" description:"Address of a Pub/Sub emulator, for example localhost:8085"`
-	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to a service account JSON file"`
-	CredentialsJSON string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
+	ProjectID                string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
+	EmulatorHost             string `json:"emulator_host,omitempty" label:"Emulator Host" description:"Address of a Pub/Sub emulator, for example localhost:8085"`
+	CredentialsFile          string `json:"credentials_file,omitempty" description:"Path to a service account JSON file"`
+	CredentialsJSON          string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
+	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
 
 	IncludeSubscriptions    bool `json:"include_subscriptions" description:"Whether to discover subscriptions" default:"true"`
 	IncludeSchemas          bool `json:"include_schemas" description:"Whether to attach topic schemas and their fields" default:"true"`
@@ -111,6 +114,15 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
+	}
+
+	creds := config.gcpCredentials()
+	if err := creds.Federate(rawConfig); err != nil {
+		return nil, err
+	}
+	config.WorkloadIdentityProvider = creds.WorkloadIdentityProvider
+	if config.WorkloadIdentityProvider != "" && config.EmulatorHost != "" {
+		return nil, fmt.Errorf("workload_identity_provider excludes emulator_host")
 	}
 
 	s.config = config
@@ -532,7 +544,7 @@ func (s *Source) connect(ctx context.Context) (client, error) {
 	if s.newClient != nil {
 		return s.newClient(ctx, s.config)
 	}
-	return newGoogleClient(ctx, s.config.ProjectID, s.config.EmulatorHost, s.config.CredentialsFile, s.config.CredentialsJSON)
+	return newGoogleClient(ctx, s.config)
 }
 
 // topicURL deep links into the Google Cloud console. An emulator has no
@@ -614,4 +626,15 @@ func subscriptionIDs(subs []subscriptionInfo) []string {
 // project, so the bare id is the name.
 func assetMRN(assetType, name string) string {
 	return mrn.New(assetType, provider, name)
+}
+
+// gcpCredentials is the plugin's flat credential fields in the SDK's
+// shape, which knows how to federate.
+func (c *Config) gcpCredentials() *pluginsdk.GCPCredentials {
+	return &pluginsdk.GCPCredentials{
+		CredentialsJSON:          c.CredentialsJSON,
+		CredentialsFile:          c.CredentialsFile,
+		WorkloadIdentityProvider: c.WorkloadIdentityProvider,
+		ServiceAccount:           c.ServiceAccount,
+	}
 }

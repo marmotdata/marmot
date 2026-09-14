@@ -10,12 +10,12 @@
       "digest": "sha256:3856eb7d71bc2b5f424548e826fdbad54abd55ccd045f395b2208518544cfa39"
     },
     "azureblob": {
-      "version": "0.1.1",
-      "digest": "sha256:9f1c16369d591bdcc77c53111e1bc95f5c69aba31eba8b2ddbc708f08eb7d5d4"
+      "version": "0.1.2",
+      "digest": "sha256:f2f07ff63a005eb0f947304b23e0a2d100fced394849f3e1b8d8a602f615caf4"
     },
     "bigquery": {
-      "version": "0.1.1",
-      "digest": "sha256:43ebc2e3d3bc6edc0a7ecb038de218a9563a38061cd95334c2681a12bf0285d6"
+      "version": "0.1.2",
+      "digest": "sha256:9e033bbf77b70342023965a222967e334ee53011c92c5ecf4b584bd1303a2b9d"
     },
     "clickhouse": {
       "version": "0.1.1",
@@ -38,32 +38,32 @@
       "digest": "sha256:61ee4cbea18537fbc0ef08a1316202b3d5a3792946fead400fbbf5f46abc4c4f"
     },
     "dynamodb": {
-      "version": "0.1.1",
-      "digest": "sha256:dbff08ed9a166d3bdd7b7a31a0156b7082084b1d8ae5ab3f42d0771e25ecde7f"
+      "version": "0.1.2",
+      "digest": "sha256:006c49faae29e9a1179f96052f46be4e1a440cce519a9a379b5282446641f231"
     },
     "eks": {
-      "version": "0.1.1",
-      "digest": "sha256:a36e9a9551a5a28716a4a581173b91857d1f8228a587b361c91add241cd23065"
+      "version": "0.1.2",
+      "digest": "sha256:7cc43a3100a496dcd3fd0f090e20c3fdaa4a8e3c71c9d2f5c5cd6c994c2a8f26"
     },
     "elasticsearch": {
       "version": "0.1.1",
       "digest": "sha256:f8fb1edb3fe43e1d337a4544b79890d961b83b62e32bb3ea82f8d71f16f8f79c"
     },
     "gcs": {
-      "version": "0.1.2",
-      "digest": "sha256:1d0cca335576f2f188333ec1b5c69790bab90abc77f4682ba4cbbf527561fda2"
+      "version": "0.1.3",
+      "digest": "sha256:82b410f4ee8f872f38feecb56f19151a85d1237bce0472b92ceb0d44b7a95cdd"
     },
     "gke": {
-      "version": "0.1.1",
-      "digest": "sha256:fdc2b41898489bcff7cd0f3acfcfebcafd1e64906a6225c03d7bb0dfb3f97634"
+      "version": "0.1.2",
+      "digest": "sha256:ab8b3eeab5940d639dd25ae0bac7368983e2a53f1e6d54b0cce2a20bbb673e2a"
     },
     "glue": {
-      "version": "0.1.1",
-      "digest": "sha256:d5a8b13dae19604a98dedfacc0b62b84f6d7152f91e2b253e045ab1439337e73"
+      "version": "0.1.2",
+      "digest": "sha256:a7e3dbe7f03d161c6e81429ec6c4d43e132a46da0b4f162e67db98456decd96a"
     },
     "iceberg": {
-      "version": "0.1.1",
-      "digest": "sha256:61215be83089325176a1233ad7cdee661f3e3324e2410dc533a67ba99794946e"
+      "version": "0.1.2",
+      "digest": "sha256:249cca376e22a84827aadb48175d83b07df7b739a460a5855dd9e40f6eba76de"
     },
     "kafka": {
       "version": "0.1.1",
@@ -74,8 +74,8 @@
       "digest": "sha256:45ceccb81961aaecb08d7641a27a89733b2ca65b614bcb771b023d9a133414fa"
     },
     "lambda": {
-      "version": "0.1.1",
-      "digest": "sha256:a11bd76b1931bd751165ee6b81c68fe6cfb1359637bb38d78f4bafa6f3fc72f1"
+      "version": "0.1.2",
+      "digest": "sha256:1bd0198ba3c734f548dd490d31087aa14d4b227afb14ec0d12687f19f285ae2a"
     },
     "mongodb": {
       "version": "0.1.1",
@@ -110,16 +110,16 @@
       "digest": "sha256:11acb2c260ad03ba1b06155a87814da170c0ea44708768657ac6dee1fe8cd7b0"
     },
     "s3": {
-      "version": "0.1.1",
-      "digest": "sha256:40e68a9046f63ffc3bf046639cc4b076fcbd7c18888a895e0eaf24fb9f70a60f"
+      "version": "0.1.2",
+      "digest": "sha256:2187e66f61911456d47282b6a3676b76469106bd537dc1042f6fd0b9929a4e66"
     },
     "sns": {
-      "version": "0.1.1",
-      "digest": "sha256:dbeb46c3728fe22fd8e458509924ddde42f49d6a023b35a11c362f6da1af0b67"
+      "version": "0.1.2",
+      "digest": "sha256:884435ec45c3400f7f7f6e205a2550086b241f2b5f95982725b56b898fc6c6ae"
     },
     "sqs": {
-      "version": "0.1.1",
-      "digest": "sha256:6f6577588a1821cfe714e7409a8d8bb32e6db8ee21a4224d30ddf7dbe18c560a"
+      "version": "0.1.2",
+      "digest": "sha256:8353b88d0795a1b365d55653dbd1512106474e4b1f7bd09a661a1b8f87b69b6c"
     },
     "trino": {
       "version": "0.1.1",

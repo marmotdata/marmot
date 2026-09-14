@@ -45,6 +45,12 @@ func newClient(ctx context.Context, config *Config) (*client, error) {
 	switch {
 	case config.DisableAuth:
 		opts = append(opts, option.WithoutAuthentication())
+	case config.WorkloadIdentityProvider != "":
+		ts, err := config.gcpCredentials().TokenSource(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
+		}
+		opts = append(opts, option.WithTokenSource(ts))
 	case config.CredentialsJSON != "":
 		opts = append(opts, option.WithCredentialsJSON([]byte(config.CredentialsJSON)))
 	case config.CredentialsFile != "":

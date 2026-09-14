@@ -42,6 +42,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	pluginsdk.GCPConfig  `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	// Access
 	ImpersonateUser string `json:"impersonate_user,omitempty" description:"Workspace user to act as. Needed to read a whole organisation's Drive, and requires domain-wide delegation on the service account. Without it, only files shared with the service account are visible"`
@@ -94,6 +95,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
+	}
+
+	if err := config.GCPConfig.Federate(rawConfig); err != nil {
+		return nil, err
+	}
+	if config.ImpersonateUser != "" && config.Credentials.Federated() {
+		return nil, fmt.Errorf("impersonate_user needs a service account key: domain-wide delegation is not available to a federated identity")
 	}
 
 	s.config = config

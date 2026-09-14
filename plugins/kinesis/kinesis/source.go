@@ -43,6 +43,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	IncludeConsumers bool `json:"include_consumers" description:"Whether to list the enhanced fan-out consumers registered on each stream" default:"true"`
 	IncludeShards    bool `json:"include_shards" description:"Whether to list shards to count total and open shards per stream" default:"true"`
@@ -92,6 +93,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 
