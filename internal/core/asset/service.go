@@ -14,6 +14,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,6 +32,9 @@ type ExternalLink struct {
 } // @name AssetExternalLink
 
 type Asset struct {
+	Version         int64                  `json:"version"`
+	BusinessAreaID  *string                `json:"business_area_id,omitempty"`
+	OwnerRefs       []string               `json:"-"`
 	ID              string                 `json:"id,omitempty"`
 	ParentMRN       *string                `json:"parent_mrn,omitempty"`
 	Name            *string                `json:"name,omitempty"`
@@ -66,24 +70,29 @@ type Environment struct {
 } // @name Environment
 
 type CreateInput struct {
-	Name          *string                `json:"name" validate:"required"`
-	MRN           *string                `json:"mrn" validate:"required"`
-	Type          string                 `json:"type" validate:"required"`
-	Providers     []string               `json:"providers" validate:"required"`
-	Description   *string                `json:"description"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	Schema        map[string]string      `json:"schema"`
-	Tags          []string               `json:"tags"`
-	CreatedBy     string                 `json:"created_by" validate:"required"`
-	Sources       []AssetSource          `json:"sources"`
-	Environments  map[string]Environment `json:"environments"`
-	ExternalLinks []ExternalLink         `json:"external_links"`
-	Query         *string                `json:"query,omitempty"`
-	QueryLanguage *string                `json:"query_language,omitempty"`
-	IsStub        bool                   `json:"is_stub"`
+	BusinessAreaID *string                `json:"business_area_id,omitempty"`
+	Fields         map[string]any         `json:"fields,omitempty"`
+	Name           *string                `json:"name" validate:"required"`
+	MRN            *string                `json:"mrn" validate:"required"`
+	Type           string                 `json:"type" validate:"required"`
+	Providers      []string               `json:"providers" validate:"required"`
+	Description    *string                `json:"description"`
+	Metadata       map[string]interface{} `json:"metadata"`
+	Schema         map[string]string      `json:"schema"`
+	Tags           []string               `json:"tags"`
+	CreatedBy      string                 `json:"created_by" validate:"required"`
+	Sources        []AssetSource          `json:"sources"`
+	Environments   map[string]Environment `json:"environments"`
+	ExternalLinks  []ExternalLink         `json:"external_links"`
+	Query          *string                `json:"query,omitempty"`
+	QueryLanguage  *string                `json:"query_language,omitempty"`
+	IsStub         bool                   `json:"is_stub"`
 }
 
 type UpdateInput struct {
+	BusinessAreaID   *string                `json:"business_area_id,omitempty"`
+	ExpectedVersion  *int64                 `json:"-"`
+	GovernedFields   map[string]any         `json:"-"`
 	Name             *string                `json:"name"`
 	Description      *string                `json:"description"`
 	UserDescription  *string                `json:"user_description"`
@@ -194,6 +203,8 @@ type Service interface {
 	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
+	PatchFields(ctx context.Context, id string, version int64, fields map[string]any) (*Asset, error)
+	Metamodel() metamodel.Schema
 	Delete(ctx context.Context, id string) error
 	DeleteByMRN(ctx context.Context, mrn string) error
 	AddTag(ctx context.Context, id string, tag string) (*Asset, error)
@@ -251,6 +262,7 @@ const summaryCacheTTL = 5 * time.Second
 const metadataFieldsCacheTTL = 30 * time.Second
 
 type service struct {
+	metamodel            *metamodel.Registry
 	repo                 Repository
 	validator            *validator.Validate
 	metrics              MetricsClient
@@ -449,30 +461,40 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 
 	now := time.Now()
 	asset := &Asset{
-		ID:            uuid.New().String(),
-		Name:          input.Name,
-		MRN:           input.MRN,
-		Type:          input.Type,
-		Providers:     input.Providers,
-		Description:   input.Description,
-		Metadata:      input.Metadata,
-		Schema:        input.Schema,
-		Sources:       input.Sources,
-		Environments:  input.Environments,
-		Tags:          input.Tags,
-		ExternalLinks: input.ExternalLinks,
-		CreatedBy:     input.CreatedBy,
-		CreatedAt:     now,
-		UpdatedAt:     now,
-		LastSyncAt:    now,
-		Query:         input.Query,
-		QueryLanguage: input.QueryLanguage,
-		IsStub:        input.IsStub,
+		ID:             uuid.New().String(),
+		Version:        1,
+		BusinessAreaID: input.BusinessAreaID,
+		Name:           input.Name,
+		MRN:            input.MRN,
+		Type:           input.Type,
+		Providers:      input.Providers,
+		Description:    input.Description,
+		Metadata:       input.Metadata,
+		Schema:         input.Schema,
+		Sources:        input.Sources,
+		Environments:   input.Environments,
+		Tags:           input.Tags,
+		ExternalLinks:  input.ExternalLinks,
+		CreatedBy:      input.CreatedBy,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		LastSyncAt:     now,
+		Query:          input.Query,
+		QueryLanguage:  input.QueryLanguage,
+		IsStub:         input.IsStub,
 	}
 	if asset.Tags == nil {
 		asset.Tags = []string{}
 	}
 
+	if len(input.Fields) > 0 {
+		if err := applyFields(s.registry(), asset, input.Fields); err != nil {
+			return nil, err
+		}
+	}
+	if err := s.validateAsset(asset); err != nil {
+		return nil, err
+	}
 	if err := s.repo.Create(ctx, asset); err != nil {
 		if errors.Is(err, ErrConflict) {
 			return nil, ErrAlreadyExists
@@ -569,12 +591,19 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
 
-	// Detect which fields are being changed before updating
+	if err := s.preserveGoverned(asset, &input); err != nil {
+		return nil, err
+	}
+
 	oldAsset := *asset
 	changedFields := detectChangedFields(&oldAsset, &input)
 
 	updated := false
 	schemaUpdated := false
+	if input.BusinessAreaID != nil {
+		asset.BusinessAreaID = input.BusinessAreaID
+		updated = true
+	}
 
 	if input.Name != nil {
 		asset.Name = input.Name
@@ -630,14 +659,27 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		asset.QueryLanguage = input.QueryLanguage
 		updated = true
 	}
+	if len(input.GovernedFields) > 0 {
+		if err := applyFields(s.registry(), asset, input.GovernedFields); err != nil {
+			return nil, err
+		}
+		updated = true
+	}
 
 	if !updated {
 		return asset, nil
 	}
 
+	if err := s.validateAsset(asset); err != nil {
+		return nil, err
+	}
+
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {
+		if errors.Is(err, ErrVersionConflict) {
+			return nil, err
+		}
 		return nil, fmt.Errorf("failed to update asset: %w", err)
 	}
 
@@ -845,6 +887,9 @@ func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, er
 	}
 
 	asset.Tags = append(asset.Tags, tag)
+	if err := s.validateAsset(asset); err != nil {
+		return nil, err
+	}
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {
@@ -887,6 +932,9 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 	}
 
 	asset.Tags = newTags
+	if err := s.validateAsset(asset); err != nil {
+		return nil, err
+	}
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {
