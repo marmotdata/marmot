@@ -2,7 +2,7 @@ blank_issues_enabled: false
 contact_links:
   - name: This fork (origin)
     url: https://github.com/dgu-development/marmot
-    about: dgu-development/marmot — README, CONTRIBUTING, and the issue forms on this page. Use those forms for fork-specific work (templates, kernel behaviour that is not upstream).
+    about: dgu-development/marmot — FORK.md, README, CONTRIBUTING, and the issue forms on this page. Product work targets branch dgu.
   - name: Upstream Marmot
     url: https://github.com/marmotdata/marmot/issues
     about: File there only if it also reproduces on marmotdata/marmot. Generic catalogue/API/Discover defects belong upstream when they are not fork-specific.

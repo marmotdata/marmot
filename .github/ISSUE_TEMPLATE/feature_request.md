@@ -26,7 +26,7 @@ EN: Reusable generic behaviour. For example, corporate YAML metamodel profile an
 
 ## Where it should live
 
-- [ ] Native data already (asset types, metadata, glossary, products, rules, lineage) — maybe docs or a small API/UI fix
+- [ ] Native data already (asset types, metadata, glossary, products, rules, lineage) — maybe docs or a small API/UI fix. Product PRs still target `dgu`.
 - [ ] Discovery plugin (`plugin-sdk`, ingest only: no HTTP, no UI, no RBAC)
 - [ ] Kernel Go (service, store, migration, `/api/v1`)
 - [ ] Discover UI (`web/marmot`, Svelte 5; no second UI framework)
