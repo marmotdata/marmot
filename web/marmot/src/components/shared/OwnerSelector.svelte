@@ -9,7 +9,7 @@
 
 	export let selectedOwners: Owner[] | null = [];
 	export let onChange: (owners: Owner[]) => void = () => {};
-	export let placeholder = m.owners_search_placeholder();
+	export let placeholder: string | undefined = undefined;
 	export let className = '';
 	export let minSearchLength = 2;
 	export let disabled = false;
@@ -18,7 +18,9 @@
 	export let hideSelectedOwners = false; // If true, hide the selected owners badges
 
 	$: safeSelectedOwners = selectedOwners || [];
-	$: searchPlaceholder = userOnly ? m.owners_search_users_placeholder() : placeholder;
+	$: searchPlaceholder = userOnly
+		? m.owners_search_users_placeholder()
+		: (placeholder ?? m.owners_search_placeholder());
 	$: availableResults = searchResults.filter(
 		(o) => !safeSelectedOwners.some((so) => so.id === o.id && so.type === o.type)
 	);

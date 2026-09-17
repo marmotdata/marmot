@@ -10,7 +10,7 @@
 		onQueryChange,
 		initiallyExpanded = false,
 		showRunButton = true,
-		runButtonText = m.query_run_button(),
+		runButtonText,
 		runButtonIcon = 'mdi:play-circle',
 		onRunClick
 	}: {
@@ -1001,7 +1001,7 @@
 					class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600"
 				>
 					<IconifyIcon icon={runButtonIcon} class="w-4 h-4" />
-					{runButtonText}
+					{runButtonText ?? m.query_run_button()}
 				</button>
 			{/if}
 		</div>

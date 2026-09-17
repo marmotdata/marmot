@@ -15,7 +15,7 @@
 	import { m } from '$lib/paraglide/messages';
 
 	export let value: string = '';
-	export let placeholder: string = m.editor_placeholder();
+	export let placeholder: string | undefined = undefined;
 	export let disabled: boolean = false;
 	export let enableMentions: boolean = false;
 
@@ -23,6 +23,9 @@
 	let element: HTMLElement;
 	let turndownService: TurndownService;
 	let isUpdating = false;
+	let editorPlaceholder: string;
+
+	$: editorPlaceholder = placeholder ?? m.editor_placeholder();
 
 	// Debounce helper
 	function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
@@ -207,7 +210,7 @@
 				}
 			}),
 			Placeholder.configure({
-				placeholder: placeholder
+				placeholder: editorPlaceholder
 			}),
 			Link.configure({
 				openOnClick: false,
