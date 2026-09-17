@@ -34,14 +34,14 @@ class _FakeRegistry:
         self.runs: list[AgentRunRecord] = []
         self.edges: list[LineageEdge] = []
 
-    def register_agent(self, spec: AgentSpec) -> Asset:
+    async def aregister_agent(self, spec: AgentSpec) -> Asset:
         self.specs.append(spec)
         return Asset(id="agent-1", mrn=self.agent_mrn)
 
-    def record_run(self, run: AgentRunRecord) -> None:
+    async def arecord_run(self, run: AgentRunRecord) -> None:
         self.runs.append(run)
 
-    def write_edges(self, edges: Any) -> None:
+    async def awrite_edges(self, edges: Any) -> None:
         self.edges.extend(edges)
 
 
