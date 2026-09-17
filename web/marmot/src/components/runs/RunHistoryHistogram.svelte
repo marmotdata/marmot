@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import * as d3 from 'd3';
@@ -44,14 +46,14 @@
 			const response = await fetchApi(`/assets/run-history-histogram/${assetId}?period=${period}`);
 
 			if (!response.ok) {
-				throw new Error('Failed to fetch histogram data');
+				throw new Error(m.runs_histogram_fetch_error());
 			}
 
 			const data: HistogramResponse = await response.json();
 			histogramData = data.buckets;
 		} catch (err) {
 			console.error('Error fetching histogram data:', err);
-			error = err instanceof Error ? err.message : 'Failed to load histogram data';
+			error = err instanceof Error ? err.message : m.runs_histogram_load_error();
 		} finally {
 			loading = false;
 		}
@@ -120,7 +122,7 @@
 					.style('box-shadow', '0 4px 6px -1px rgba(0, 0, 0, 0.1)');
 
 				const date = new Date(d.data.date + 'T00:00:00');
-				const formattedDate = date.toLocaleDateString('en-US', {
+				const formattedDate = date.toLocaleDateString(getLocale(), {
 					month: 'short',
 					day: 'numeric'
 				});
@@ -129,12 +131,12 @@
 					.html(
 						`
 					<div><strong>${formattedDate}</strong></div>
-					<div>Total: ${d.data.total}</div>
-					${d.data.complete ? `<div>✓ Complete: ${d.data.complete}</div>` : ''}
-					${d.data.fail ? `<div>✗ Failed: ${d.data.fail}</div>` : ''}
-					${d.data.running ? `<div>● Running: ${d.data.running}</div>` : ''}
-					${d.data.abort ? `<div>⬜ Aborted: ${d.data.abort}</div>` : ''}
-					${d.data.other ? `<div>○ Other: ${d.data.other}</div>` : ''}
+					<div>${m.runs_histogram_tooltip_total({ count: d.data.total })}</div>
+					${d.data.complete ? `<div>${m.runs_histogram_tooltip_complete({ count: d.data.complete })}</div>` : ''}
+					${d.data.fail ? `<div>${m.runs_histogram_tooltip_failed({ count: d.data.fail })}</div>` : ''}
+					${d.data.running ? `<div>${m.runs_histogram_tooltip_running({ count: d.data.running })}</div>` : ''}
+					${d.data.abort ? `<div>${m.runs_histogram_tooltip_aborted({ count: d.data.abort })}</div>` : ''}
+					${d.data.other ? `<div>${m.runs_histogram_tooltip_other({ count: d.data.other })}</div>` : ''}
 				`
 					)
 					.style('left', event.pageX + 10 + 'px')
@@ -167,7 +169,11 @@
 <div class="w-full">
 	<div class="flex items-center justify-between mb-2">
 		<div class="text-sm text-gray-600 dark:text-gray-400">
-			Last {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}
+			{period === '7d'
+				? m.runs_period_7d()
+				: period === '30d'
+					? m.runs_period_30d()
+					: m.runs_period_90d()}
 		</div>
 		<div class="flex gap-1">
 			<button
@@ -214,13 +220,15 @@
 			<div class="text-gray-600 dark:text-gray-400 mb-3">
 				<IconifyIcon icon="mdi:chart-bar" class="w-12 h-12 mx-auto" />
 			</div>
-			<h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No Run History</h4>
+			<h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+				{m.runs_histogram_empty_heading()}
+			</h4>
 			<p class="text-sm text-gray-500 dark:text-gray-400">
-				No runs found in the last {period === '7d'
-					? '7 days'
+				{period === '7d'
+					? m.runs_histogram_no_runs_7d()
 					: period === '30d'
-						? '30 days'
-						: '90 days'}
+						? m.runs_histogram_no_runs_30d()
+						: m.runs_histogram_no_runs_90d()}
 			</p>
 		</div>
 	{:else}

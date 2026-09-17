@@ -5,6 +5,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import SchemaSummary from './SchemaSummary.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		asset
@@ -61,11 +62,15 @@
 			} else {
 				const errorData = await response.json();
 				console.error('Failed to update schema:', errorData);
-				alert('Failed to update schema: ' + (errorData.error || 'Unknown error'));
+				alert(m.schema_update_error({ error: errorData.error || m.schema_error_unknown() }));
 			}
 		} catch (error) {
 			console.error('Error updating schema:', error);
-			alert('Error updating schema: ' + (error instanceof Error ? error.message : 'Unknown error'));
+			alert(
+				m.schema_update_error_generic({
+					error: error instanceof Error ? error.message : m.schema_error_unknown()
+				})
+			);
 		} finally {
 			saving = false;
 		}
@@ -164,7 +169,7 @@
 				class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
 			>
 				<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-				Add Schema
+				{m.schema_add_button()}
 			</button>
 		{/if}
 	</div>
@@ -177,13 +182,13 @@
 				icon="material-symbols:schema-outline"
 				class="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-3"
 			/>
-			<p class="text-gray-500 dark:text-gray-400">No schemas defined</p>
+			<p class="text-gray-500 dark:text-gray-400">{m.schema_none_defined()}</p>
 			{#if canManageAssets}
 				<button
 					onclick={() => (showAddSchema = true)}
 					class="mt-3 text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-300"
 				>
-					Add your first schema
+					{m.schema_add_first()}
 				</button>
 			{/if}
 		</div>
@@ -198,7 +203,7 @@
 						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
 						onclick={() => (showRawSchema = !showRawSchema)}
 					>
-						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+						{showRawSchema ? m.schema_show_formatted() : m.schema_show_raw()}
 					</button>
 				{/if}
 				<div class="flex flex-wrap gap-2">
@@ -208,7 +213,7 @@
 							aria-selected={true}
 						>
 							<IconifyIcon icon="material-symbols:add" class="w-4 h-4 inline-block mr-1" />
-							New Schema
+							{m.schema_new_button()}
 						</button>
 					{/if}
 					{#each Object.keys(schemas) as schemaKey (schemaKey)}
@@ -234,24 +239,24 @@
 						<button
 							onclick={() => (showAddSchema = true)}
 							class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
-							title="Add schema"
+							title={m.schema_add_title()}
 						>
 							<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-							Add Schema
+							{m.schema_add_button()}
 						</button>
 					{/if}
 					{#if activeTab && !showAddSchema}
 						<button
 							onclick={() => startEdit(activeTab)}
 							class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-							title="Edit schema"
+							title={m.schema_edit_title()}
 						>
 							<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
 						</button>
 						<button
 							onclick={() => promptDelete(activeTab)}
 							class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-							title="Delete schema"
+							title={m.schema_delete_title()}
 						>
 							<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
 						</button>
@@ -268,7 +273,7 @@
 						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
 						onclick={() => (showRawSchema = !showRawSchema)}
 					>
-						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+						{showRawSchema ? m.schema_show_formatted() : m.schema_show_raw()}
 					</button>
 				{/if}
 			</div>
@@ -276,23 +281,23 @@
 				<button
 					onclick={() => (showAddSchema = true)}
 					class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
-					title="Add schema"
+					title={m.schema_add_title()}
 				>
 					<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-					Add Schema
+					{m.schema_add_button()}
 				</button>
 				{#if activeTab}
 					<button
 						onclick={() => startEdit(activeTab)}
 						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-						title="Edit schema"
+						title={m.schema_edit_title()}
 					>
 						<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
 					</button>
 					<button
 						onclick={() => promptDelete(activeTab)}
 						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-						title="Delete schema"
+						title={m.schema_delete_title()}
 					>
 						<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
 					</button>
@@ -307,7 +312,7 @@
 					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
 					onclick={() => (showRawSchema = !showRawSchema)}
 				>
-					{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+					{showRawSchema ? m.schema_show_formatted() : m.schema_show_raw()}
 				</button>
 			{/if}
 		</div>
@@ -322,25 +327,25 @@
 			>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Name
+						{m.schema_name_label()}
 					</label>
 					<input
 						type="text"
 						bind:value={newSchemaName}
 						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="e.g., user_schema"
+						placeholder={m.schema_name_placeholder()}
 					/>
 				</div>
 
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Content
+						{m.schema_content_label()}
 					</label>
 					<textarea
 						bind:value={newSchemaContent}
 						rows="12"
 						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="Paste your schema here (JSON, AVRO, or Protobuf)"
+						placeholder={m.schema_content_placeholder()}
 					></textarea>
 				</div>
 
@@ -350,14 +355,14 @@
 						disabled={saving}
 						class="px-4 py-2 text-sm font-medium rounded-md bg-earthy-terracotta-600 text-white hover:bg-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
-						{saving ? 'Saving...' : 'Add Schema'}
+						{saving ? m.schema_saving() : m.schema_add_button()}
 					</button>
 					<button
 						onclick={cancelAdd}
 						disabled={saving}
 						class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 				</div>
 			</div>
@@ -368,25 +373,25 @@
 			>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Name
+						{m.schema_name_label()}
 					</label>
 					<input
 						type="text"
 						bind:value={editSchemaName}
 						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="e.g., user_schema"
+						placeholder={m.schema_name_placeholder()}
 					/>
 				</div>
 
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Content
+						{m.schema_content_label()}
 					</label>
 					<textarea
 						bind:value={editSchemaContent}
 						rows="12"
 						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="Paste your schema here (JSON, AVRO, or Protobuf)"
+						placeholder={m.schema_content_placeholder()}
 					></textarea>
 				</div>
 
@@ -396,14 +401,14 @@
 						disabled={saving}
 						class="px-4 py-2 text-sm font-medium rounded-md bg-earthy-terracotta-600 text-white hover:bg-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
-						{saving ? 'Saving...' : 'Save'}
+						{saving ? m.schema_saving() : m.common_save()}
 					</button>
 					<button
 						onclick={cancelEdit}
 						disabled={saving}
 						class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 				</div>
 			</div>
@@ -420,8 +425,8 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete Schema"
-	message="Are you sure you want to delete this schema? This action cannot be undone."
+	title={m.schema_delete_modal_title()}
+	message={m.schema_delete_confirm()}
 	onConfirm={confirmDelete}
 	onCancel={() => {
 		showDeleteModal = false;

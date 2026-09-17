@@ -10,14 +10,15 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const tabs = [
-		{ id: 'users', label: 'Users' },
-		{ id: 'teams', label: 'Teams' },
-		{ id: 'roles', label: 'Roles' },
-		{ id: 'service_accounts', label: 'Service Accounts' },
-		{ id: 'federation', label: 'Authentication' },
-		{ id: 'system', label: 'System' }
+		{ id: 'users', label: m.admin_tab_users() },
+		{ id: 'teams', label: m.admin_tab_teams() },
+		{ id: 'roles', label: m.admin_tab_roles() },
+		{ id: 'service_accounts', label: m.admin_tab_service_accounts() },
+		{ id: 'federation', label: m.admin_tab_authentication() },
+		{ id: 'system', label: m.admin_tab_system() }
 	];
 
 	$: activeTab = $page.url.searchParams.get('tab') || tabs[0]?.id;

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		tags = $bindable([]),
 		disabled = false,
-		placeholder = 'Type a tag and press Enter...'
+		placeholder = m.tags_input_placeholder()
 	}: { tags: string[]; disabled?: boolean; placeholder?: string } = $props();
 
 	let tagInput = $state('');
@@ -25,7 +26,7 @@
 </script>
 
 <div class="space-y-3">
-	<label for="tags-input" class="sr-only">Add tags</label>
+	<label for="tags-input" class="sr-only">{m.tags_add_tags_label()}</label>
 	<input
 		id="tags-input"
 		type="text"
@@ -33,7 +34,7 @@
 		onkeydown={handleKeydown}
 		{disabled}
 		{placeholder}
-		aria-label="Add tags"
+		aria-label={m.tags_add_tags_label()}
 		class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 transition-all"
 	/>
 	{#if tags.length > 0}
@@ -47,7 +48,7 @@
 						type="button"
 						onclick={() => removeTag(tag)}
 						{disabled}
-						aria-label="Remove tag {tag}"
+						aria-label={m.tags_remove_tag_aria({ tag })}
 						class="text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
 					>
 						<IconifyIcon icon="material-symbols:close" class="w-4 h-4" aria-hidden="true" />

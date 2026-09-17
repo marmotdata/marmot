@@ -4,6 +4,7 @@
 	import Button from '$components/ui/Button.svelte';
 	import IconPicker from '$components/shared/IconPicker.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		links = $bindable([]),
@@ -34,11 +35,11 @@
 
 	function validateUrl(url: string): boolean {
 		if (!url.trim()) {
-			urlError = 'URL is required';
+			urlError = m.links_url_required();
 			return false;
 		}
 		if (!url.startsWith('http://') && !url.startsWith('https://')) {
-			urlError = 'URL must start with http:// or https://';
+			urlError = m.links_url_invalid_scheme();
 			return false;
 		}
 		urlError = '';
@@ -141,7 +142,7 @@
 							onclick={() => removeLink(i)}
 							disabled={saving}
 							class="absolute -top-1.5 -right-1.5 hidden group-hover:flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 shadow-sm"
-							aria-label="Remove link {link.name}"
+							aria-label={m.links_remove_link_aria({ name: link.name })}
 						>
 							<IconifyIcon
 								icon="material-symbols:close-rounded"
@@ -170,7 +171,7 @@
 					class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border border-dashed border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-earthy-terracotta-400 dark:hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-earthy-terracotta-50/50 dark:hover:bg-earthy-terracotta-900/10 disabled:opacity-50 transition-colors"
 				>
 					<IconifyIcon icon="material-symbols:add-link" class="w-4 h-4" aria-hidden="true" />
-					Add link
+					{m.links_add_link()}
 				</button>
 			{/if}
 		</div>
@@ -184,8 +185,8 @@
 					onkeydown={(e) => {
 						if (e.key === 'Escape') resetForm();
 					}}
-					placeholder="Link name"
-					aria-label="Link name"
+					placeholder={m.links_name_label()}
+					aria-label={m.links_name_label()}
 					class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600"
 					autofocus
 				/>
@@ -200,7 +201,7 @@
 						if (urlError) urlError = '';
 					}}
 					placeholder="https://..."
-					aria-label="Link URL"
+					aria-label={m.links_url_aria()}
 					class="w-56 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 {urlError
 						? 'border-red-400 dark:border-red-500'
 						: ''}"
@@ -210,18 +211,18 @@
 						onclick={addLink}
 						disabled={saving || !newName.trim() || !newUrl.trim()}
 						class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-earthy-terracotta-700 text-white hover:bg-earthy-terracotta-800 disabled:opacity-40 transition-colors"
-						aria-label="Add link"
+						aria-label={m.links_add_link()}
 					>
 						<IconifyIcon icon="material-symbols:check-rounded" class="w-4 h-4" aria-hidden="true" />
-						Add
+						{m.common_add()}
 					</button>
 					<button
 						onclick={resetForm}
 						disabled={saving}
 						class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-						aria-label="Cancel adding link"
+						aria-label={m.links_cancel_adding_aria()}
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 				</div>
 				{#if urlError}

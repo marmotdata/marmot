@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatNumber } from '$lib/utils';
 
 	interface ChartData {
 		label: string;
@@ -87,7 +89,7 @@
 		tooltipX = event.pageX + 10;
 		tooltipY = event.pageY - 10;
 		tooltipLabel = data.label;
-		tooltipValue = `Count: ${data.value.toLocaleString()}`;
+		tooltipValue = m.metrics_tooltip_count({ count: formatNumber(data.value) });
 		tooltipVisible = true;
 	}
 
@@ -130,7 +132,7 @@
 		<div class="flex items-center justify-center" style="height: {height}px">
 			<div class="text-center">
 				<IconifyIcon icon="mdi:chart-pie" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
-				<p class="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
+				<p class="text-gray-500 dark:text-gray-400 text-sm">{m.metrics_no_data()}</p>
 			</div>
 		</div>
 	{:else}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PermissionEditor from '$lib/components/PermissionEditor.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import { Shield, Lock, Users } from 'lucide-svelte';
 	import type { Role } from '$lib/roles/types';
 
@@ -26,7 +27,7 @@
 							class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
 						>
 							<Lock class="h-3 w-3" />
-							system
+							{m.ui_role_system_badge()}
 						</span>
 					{/if}
 				</div>
@@ -36,12 +37,10 @@
 				<div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
 					<span class="inline-flex items-center gap-1">
 						<Users class="h-3.5 w-3.5" />
-						{role.user_count ?? 0} user{(role.user_count ?? 0) === 1 ? '' : 's'} assigned
+						{m.roles_users_assigned_count({ count: role.user_count ?? 0 })}
 					</span>
 					<span>
-						{(role.permissions ?? []).length} permission{(role.permissions ?? []).length === 1
-							? ''
-							: 's'} granted
+						{m.roles_permissions_granted_count({ count: (role.permissions ?? []).length })}
 					</span>
 				</div>
 			</div>
@@ -54,7 +53,7 @@
 					class="px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 rounded-md"
 					on:click={onEdit}
 				>
-					Edit
+					{m.common_edit()}
 				</button>
 			{/if}
 			<button
@@ -62,15 +61,19 @@
 				class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
 				on:click={onClose}
 			>
-				Close
+				{m.common_close()}
 			</button>
 		</div>
 	</div>
 
 	<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-		<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Granted permissions</h4>
+		<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+			{m.roles_granted_permissions_heading()}
+		</h4>
 		{#if (role.permissions ?? []).length === 0}
-			<p class="text-sm text-gray-500 dark:text-gray-400 italic">No permissions granted</p>
+			<p class="text-sm text-gray-500 dark:text-gray-400 italic">
+				{m.roles_no_permissions_granted()}
+			</p>
 		{:else}
 			<PermissionEditor selectedIds={selectedPermIds} readonly={true} />
 		{/if}

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import Icons from 'unplugin-icons/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { generateIconBundle } from './scripts/generate-icon-bundle.mjs';
@@ -24,6 +25,11 @@ function iconBundlePlugin() {
 export default defineConfig({
 	plugins: [
 		iconBundlePlugin(),
+		paraglideVitePlugin({
+			project: './project.inlang',
+			outdir: './src/lib/paraglide',
+			strategy: ['localStorage', 'preferredLanguage', 'baseLocale']
+		}),
 		sveltekit(),
 		Icons({
 			compiler: 'svelte',

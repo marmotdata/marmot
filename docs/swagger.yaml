@@ -2212,6 +2212,8 @@ definitions:
         type: boolean
       banner:
         $ref: '#/definitions/BannerResponse'
+      default_language:
+        type: string
       encryption_configured:
         type: boolean
       table_preview_enabled:
@@ -2581,6 +2583,8 @@ definitions:
       status:
         type: string
       supports_data_preview:
+        type: boolean
+      supports_query:
         type: boolean
     type: object
   pluginsdk.ShowWhen:

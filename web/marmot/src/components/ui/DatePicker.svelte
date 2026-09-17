@@ -1,15 +1,24 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let value: string = '';
 	export let min: string | null = null;
 	export let id: string | undefined = undefined;
-	export let placeholder: string = 'Select date';
+	export let placeholder: string = m.ui_datepicker_placeholder();
 
 	let open = false;
 	let container: HTMLDivElement;
 
-	const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+	const weekdays = [
+		m.ui_datepicker_weekday_mo(),
+		m.ui_datepicker_weekday_tu(),
+		m.ui_datepicker_weekday_we(),
+		m.ui_datepicker_weekday_th(),
+		m.ui_datepicker_weekday_fr(),
+		m.ui_datepicker_weekday_sa(),
+		m.ui_datepicker_weekday_su()
+	];
 	const today = new Date();
 
 	let viewYear = today.getFullYear();
@@ -131,13 +140,13 @@
 		<div
 			class="absolute left-0 top-full mt-2 z-20 w-64 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
 			role="dialog"
-			aria-label="Choose date"
+			aria-label={m.ui_datepicker_choose_date_aria()}
 		>
 			<div class="flex items-center justify-between mb-2">
 				<button
 					type="button"
 					onclick={previousMonth}
-					aria-label="Previous month"
+					aria-label={m.ui_datepicker_previous_month_aria()}
 					class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
 				>
 					<span class="block w-4 h-4"><Icon icon="material-symbols:chevron-left" /></span>
@@ -146,7 +155,7 @@
 				<button
 					type="button"
 					onclick={nextMonth}
-					aria-label="Next month"
+					aria-label={m.ui_datepicker_next_month_aria()}
 					class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
 				>
 					<span class="block w-4 h-4"><Icon icon="material-symbols:chevron-right" /></span>

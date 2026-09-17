@@ -2,6 +2,7 @@
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import EditUserForm from './EditUserForm.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import { Lock, Mail } from 'lucide-svelte';
@@ -29,12 +30,12 @@
 				toasts.error(errorMsg);
 				return;
 			}
-			toasts.success(`User "${userToDelete.username}" deleted successfully`);
+			toasts.success(m.users_delete_success({ name: userToDelete.username }));
 			onDelete(userToDelete.id);
 			showDeleteModal = false;
 			userToDelete = null;
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete user');
+			toasts.error(err instanceof Error ? err.message : m.users_error_delete());
 		}
 	}
 
@@ -57,27 +58,27 @@
 			<tr>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Username</th
+					>{m.users_username_label()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Name</th
+					>{m.common_name()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Auth</th
+					>{m.users_header_auth()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Roles</th
+					>{m.users_header_roles()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Status</th
+					>{m.common_status()}</th
 				>
 				<th
 					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Actions</th
+					>{m.common_actions()}</th
 				>
 			</tr>
 		</thead>
@@ -117,7 +118,7 @@
 									class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 								>
 									<Mail class="h-3 w-3 mr-1" />
-									Password
+									{m.users_auth_password_badge()}
 								</span>
 							{/if}
 						</td>
@@ -135,7 +136,7 @@
 							<span
 								class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}
 							>
-								{user.active ? 'Active' : 'Inactive'}
+								{user.active ? m.common_active() : m.common_inactive()}
 							</span>
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -145,7 +146,7 @@
 									class="text-earthy-terracotta-700 hover:text-earthy-terracotta-800 dark:text-earthy-terracotta-500 dark:hover:text-earthy-terracotta-400 mr-3"
 									on:click={() => onEdit(user.id)}
 								>
-									Edit
+									{m.common_edit()}
 								</button>
 							{/if}
 							{#if currentUserId !== user.id && user.username !== 'admin'}
@@ -157,7 +158,7 @@
 										showDeleteModal = true;
 									}}
 								>
-									Delete
+									{m.common_delete()}
 								</button>
 							{/if}
 						</td>
@@ -170,9 +171,9 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete User"
-	message="Are you sure you want to delete this user? This action cannot be undone."
-	confirmText="Delete"
+	title={m.users_delete_title()}
+	message={m.users_delete_confirm_message()}
+	confirmText={m.common_delete()}
 	resourceName={userToDelete?.username || ''}
 	requireConfirmation={true}
 	onConfirm={handleDelete}
