@@ -76,7 +76,7 @@
 		"dompurify": ">=3.4.14",
 		"emoji-picker-element": "^1.29.1",
 		"hast-util-to-html": "^9.0.5",
-		"js-yaml": "^5.4.1",
+		"js-yaml": "^4.3.2",
 		"lowlight": "^3.3.0",
 		"lucide-svelte": "^0.511.0",
 		"marked": "^15.0.12",
