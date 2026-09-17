@@ -46,7 +46,7 @@
 						{m.asset_agent_spec_framework()}
 					</div>
 					<div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
-						{framework || '—'}
+						{framework || m.common_unknown()}
 					</div>
 				</div>
 			</div>

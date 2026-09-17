@@ -168,7 +168,7 @@
 						? 'cursor-pointer'
 						: 'cursor-default'} transition-colors"
 					title={owner.type === 'user'
-						? `@${owner.username}`
+						? m.owners_user_title({ name: owner.username ? `@${owner.username}` : owner.name })
 						: m.owners_team_title({ name: owner.name })}
 				>
 					{#if owner.type === 'team'}
