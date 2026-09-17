@@ -3,6 +3,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		assetId: string;
@@ -19,12 +20,12 @@
 	}
 
 	const notificationTypes = [
-		{ type: 'asset_change', label: 'Asset Changes' },
-		{ type: 'schema_change', label: 'Schema Changes' },
-		{ type: 'upstream_schema_change', label: 'Upstream Schema' },
-		{ type: 'downstream_schema_change', label: 'Downstream Schema' },
-		{ type: 'lineage_change', label: 'Lineage Changes' },
-		{ type: 'asset_deleted', label: 'Asset Deletions' }
+		{ type: 'asset_change', label: m.asset_subscribe_type_asset_changes() },
+		{ type: 'schema_change', label: m.asset_subscribe_type_schema_changes() },
+		{ type: 'upstream_schema_change', label: m.asset_subscribe_type_upstream_schema() },
+		{ type: 'downstream_schema_change', label: m.asset_subscribe_type_downstream_schema() },
+		{ type: 'lineage_change', label: m.asset_subscribe_type_lineage_changes() },
+		{ type: 'asset_deleted', label: m.asset_subscribe_type_asset_deletions() }
 	];
 
 	let subscription: Subscription | null = $state(null);
@@ -182,10 +183,10 @@
 					: 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}
 			{loading ? 'opacity-50 cursor-not-allowed' : !isLoggedIn ? '' : 'cursor-pointer'}"
 		title={!isLoggedIn
-			? 'You must be logged in to subscribe to assets'
+			? m.asset_subscribe_login_required_title()
 			: subscription
-				? 'Manage subscription'
-				: 'Subscribe to notifications'}
+				? m.asset_subscribe_manage_title()
+				: m.asset_subscribe_notifications_title()}
 	>
 		<IconifyIcon
 			icon={subscription
@@ -194,7 +195,7 @@
 			class={variant === 'icon-only' ? 'w-4 h-4' : 'w-3.5 h-3.5'}
 		/>
 		{#if variant === 'default'}
-			{subscription ? 'Subscribed' : 'Subscribe'}
+			{subscription ? m.asset_subscribed_button() : m.asset_subscribe_button()}
 		{/if}
 	</button>
 
@@ -231,7 +232,7 @@
 					onclick={unsubscribe}
 					class="w-full px-2 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-left cursor-pointer"
 				>
-					Unsubscribe
+					{m.asset_unsubscribe_button()}
 				</button>
 			</div>
 		</div>

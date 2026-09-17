@@ -2,6 +2,7 @@
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { data } = $props<{
 		data: {
@@ -21,7 +22,11 @@
 	}
 
 	let originPrefix = $derived(
-		data.originKind === 'declared' ? 'DECLARED' : data.originKind === 'mixed' ? 'MIXED' : 'OBSERVED'
+		data.originKind === 'declared'
+			? m.lineage_origin_declared()
+			: data.originKind === 'mixed'
+				? m.lineage_origin_mixed()
+				: m.lineage_origin_observed()
 	);
 	let originIcon = $derived(
 		data.originKind === 'declared'
@@ -46,10 +51,9 @@
 					<span>{originPrefix} · {data.provider}</span>
 				</div>
 				<div class="subtitle">
-					{data.count}
-					{data.assetType}{data.count === 1 ? '' : 's'}
+					{m.lineage_cluster_asset_count({ count: data.count, type: data.assetType })}
 					{#if data.totalObservations > 0}
-						· {data.totalObservations} lookups
+						· {m.lineage_lookup_count({ count: data.totalObservations })}
 					{/if}
 				</div>
 			</div>
@@ -57,11 +61,11 @@
 		<button
 			class="collapse-btn"
 			onclick={handleCollapse}
-			title="Collapse this group"
-			aria-label="Collapse group"
+			title={m.lineage_collapse_group_title()}
+			aria-label={m.lineage_collapse_group_aria()}
 		>
 			<IconifyIcon icon="material-symbols:unfold-less-rounded" class="w-4 h-4" />
-			<span>Collapse</span>
+			<span>{m.lineage_collapse_label()}</span>
 		</button>
 	</div>
 </div>

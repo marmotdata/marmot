@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { IconLoader, type IconResult } from '$lib/iconloader.ts';
+	import { m } from '$lib/paraglide/messages';
 
 	export let name: string;
 	export let showLabel: boolean = true;
@@ -68,7 +69,11 @@
 			<svelte:component this={iconResult.component} class="{sizeClasses[size]} object-contain" />
 		</div>
 	{:else if iconResult && typeof iconResult === 'string'}
-		<img src={iconResult} alt={`${name} icon`} class="{sizeClasses[size]} object-contain" />
+		<img
+			src={iconResult}
+			alt={m.ui_icon_alt({ name })}
+			class="{sizeClasses[size]} object-contain"
+		/>
 	{/if}
 	{#if showLabel}
 		<span class="font-medium text-gray-900 dark:text-gray-100 text-center">{name}</span>

@@ -4,9 +4,6 @@ Both the LangChain and Claude Agent SDK integrations register an agent asset,
 record runs and write lineage edges. They depend on the protocols here rather
 than on the generated client, so integration code carries no endpoint knowledge
 and can be driven by a fake in tests.
-
-Split in two on purpose: tools only read (:class:`CatalogReader`), trackers only
-write agent telemetry (:class:`AgentRegistry`). :class:`MarmotCatalog` provides both.
 """
 
 from __future__ import annotations
@@ -146,30 +143,28 @@ class AgentSpec(BaseModel):
 
 @runtime_checkable
 class CatalogReader(Protocol):
-    """Read-only catalog access, as exposed to agent tools."""
+    """Catalog read access, as exposed to agent tools."""
 
-    def search(self, query: str, *, limit: int = 20) -> SearchResponse: ...
+    async def asearch(self, query: str, *, limit: int = 20) -> SearchResponse: ...
 
-    def get_asset(self, asset_id: str) -> Asset: ...
+    async def aget_asset(self, asset_id: str) -> Asset: ...
 
-    def lookup_asset(self, *, asset_type: str, service: str, name: str) -> Asset | None:
-        """Return the asset with this natural key, or None if there is none."""
-        ...
+    async def alookup_asset(self, *, asset_type: str, service: str, name: str) -> Asset | None: ...
 
-    def upstream_lineage(self, asset_id: str, *, depth: int = 2) -> LineageResponse: ...
+    async def aget_upstream_lineage(self, asset_id: str, *, depth: int = 2) -> LineageResponse: ...
 
 
 @runtime_checkable
 class AgentRegistry(Protocol):
-    """Everything an agent tracker needs to report itself and its runs."""
+    """Catalog write access for agent telemetry."""
 
-    def register_agent(self, spec: AgentSpec) -> Asset:
+    async def aregister_agent(self, spec: AgentSpec) -> Asset:
         """Create or update the agent's asset and return it."""
         ...
 
-    def record_run(self, run: AgentRunRecord) -> None: ...
+    async def arecord_run(self, run: AgentRunRecord) -> None: ...
 
-    def write_edges(self, edges: Sequence[LineageEdge]) -> None: ...
+    async def awrite_edges(self, edges: Sequence[LineageEdge]) -> None: ...
 
 
 class MarmotCatalog:
@@ -187,38 +182,41 @@ class MarmotCatalog:
         self._lineage = LineageApi(api_client=client)
         self._search = SearchApi(api_client=client)
 
-    def search(self, query: str, *, limit: int = 20) -> SearchResponse:
-        return self._search.get_search_sync(q=query, limit=limit)
+    async def asearch(self, query: str, *, limit: int = 20) -> SearchResponse:
+        return await self._search.get_search(q=query, limit=limit)
 
-    def get_asset(self, asset_id: str) -> Asset:
-        return self._assets.get_assets_id_sync(id=asset_id)
+    async def aget_asset(self, asset_id: str) -> Asset:
+        return await self._assets.get_assets_id(id=asset_id)
 
-    def lookup_asset(self, *, asset_type: str, service: str, name: str) -> Asset | None:
+    async def alookup_asset(self, *, asset_type: str, service: str, name: str) -> Asset | None:
         try:
-            return self._assets.get_assets_lookup_type_service_name_sync(
+            return await self._assets.get_assets_lookup_type_service_name(
                 type=asset_type, service=service, name=name
             )
         except NotFoundError:
             return None
 
-    def upstream_lineage(self, asset_id: str, *, depth: int = 2) -> LineageResponse:
-        return self._lineage.get_lineage_assets_id_sync(id=UUID(asset_id), limit=depth)
+    async def aget_upstream_lineage(self, asset_id: str, *, depth: int = 2) -> LineageResponse:
+        return await self._lineage.get_lineage_assets_id(id=UUID(asset_id), limit=depth)
 
-    def register_agent(self, spec: AgentSpec) -> Asset:
-        existing = self.lookup_asset(
-            asset_type=AGENT_ASSET_TYPE, service=spec.service, name=spec.name
-        )
+    async def aregister_agent(self, spec: AgentSpec) -> Asset:
+        try:
+            existing = await self._assets.get_assets_lookup_type_service_name(
+                type=AGENT_ASSET_TYPE, service=spec.service, name=spec.name
+            )
+        except NotFoundError:
+            existing = None
         if existing is None:
-            return self._assets.post_assets_sync(create_asset_request=spec.to_create_request())
+            return await self._assets.post_assets(create_asset_request=spec.to_create_request())
         if existing.id:
-            return self._assets.put_assets_id_sync(
+            return await self._assets.put_assets_id(
                 id=existing.id, update_asset_request=spec.to_update_request()
             )
         return existing
 
-    def record_run(self, run: AgentRunRecord) -> None:
-        self._agents.post_agents_runs_sync(record_run_request=run.to_request())
+    async def arecord_run(self, run: AgentRunRecord) -> None:
+        await self._agents.post_agents_runs(record_run_request=run.to_request())
 
-    def write_edges(self, edges: Sequence[LineageEdge]) -> None:
+    async def awrite_edges(self, edges: Sequence[LineageEdge]) -> None:
         if edges:
-            self._lineage.post_lineage_batch_sync(lineage_edge=list(edges))
+            await self._lineage.post_lineage_batch(lineage_edge=list(edges))

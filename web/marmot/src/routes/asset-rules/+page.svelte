@@ -7,6 +7,8 @@
 	import { auth } from '$lib/stores/auth';
 	import { searchAssetRules } from '$lib/assetrules/api';
 	import type { AssetRule, AssetRulesListResponse } from '$lib/assetrules/types';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate, formatRelativeTime } from '$lib/utils';
 
 	let rules = $state<AssetRule[]>([]);
 	let recentRules = $state<AssetRule[]>([]);
@@ -40,7 +42,7 @@
 			recentRules = sortedByRecent.slice(0, 4);
 			rules = sortedByRecent;
 		} catch (e: unknown) {
-			error = e instanceof Error ? e.message : 'Failed to load asset rules';
+			error = e instanceof Error ? e.message : m.assetrules_load_error();
 		} finally {
 			isLoading = false;
 		}
@@ -52,32 +54,14 @@
 		searchTimeout = setTimeout(() => loadRules(), 300);
 	}
 
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
-	function formatRelativeTime(dateString: string | undefined): string {
-		if (!dateString) return 'Never';
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-		return formatDate(dateString);
+	function relativeTime(dateString: string | undefined): string {
+		if (!dateString) return m.common_never();
+		return formatRelativeTime(dateString);
 	}
 </script>
 
 <svelte:head>
-	<title>Asset Rules - Marmot</title>
+	<title>{m.assetrules_page_title()}</title>
 </svelte:head>
 
 <div class="h-full overflow-y-auto">
@@ -85,16 +69,18 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between mb-6">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Asset Rules</h1>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+					{m.assetrules_heading()}
+				</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					Automatically apply external links and glossary terms to matching assets
+					{m.assetrules_subheading()}
 				</p>
 			</div>
 			{#if canManage}
 				<Button
 					click={() => goto(resolve('/asset-rules/new'))}
 					icon="material-symbols:add"
-					text="New Asset Rule"
+					text={m.assetrules_new_rule_button()}
 					variant="filled"
 				/>
 			{/if}
@@ -157,17 +143,16 @@
 					/>
 				</div>
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-					No asset rules yet
+					{m.assetrules_empty_heading()}
 				</h2>
 				<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-					Asset rules automatically apply external links and glossary terms to assets matching
-					specific criteria.
+					{m.assetrules_empty_description()}
 				</p>
 				{#if canManage}
 					<Button
 						click={() => goto(resolve('/asset-rules/new'))}
 						icon="material-symbols:add"
-						text="Create your first asset rule"
+						text={m.assetrules_create_first_button()}
 						variant="filled"
 					/>
 				{/if}
@@ -179,7 +164,7 @@
 					<h2
 						class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4"
 					>
-						Recently Updated
+						{m.assetrules_recently_updated_heading()}
 					</h2>
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 						{#each recentRules as rule (rule.id)}
@@ -205,7 +190,9 @@
 										{rule.description}
 									</p>
 								{:else}
-									<p class="text-xs text-gray-400 dark:text-gray-500 italic mb-3">No description</p>
+									<p class="text-xs text-gray-400 dark:text-gray-500 italic mb-3">
+										{m.assetrules_no_description()}
+									</p>
 								{/if}
 								<div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
 									{#if rule.links?.length > 0}
@@ -222,7 +209,7 @@
 									{/if}
 									<span class="flex-1"></span>
 									<span class="text-gray-400 dark:text-gray-500">
-										{formatRelativeTime(rule.updated_at)}
+										{relativeTime(rule.updated_at)}
 									</span>
 								</div>
 							</button>
@@ -242,7 +229,7 @@
 						type="text"
 						value={searchQuery}
 						oninput={handleSearch}
-						placeholder="Search asset rules..."
+						placeholder={m.assetrules_search_placeholder()}
 						class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
 					/>
 				</div>
@@ -259,10 +246,10 @@
 						/>
 					</div>
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-						No matching asset rules
+						{m.assetrules_no_matching_heading()}
 					</h2>
 					<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-						Try adjusting your search terms
+						{m.assetrules_no_matching_hint()}
 					</p>
 				</div>
 			{:else}
@@ -272,11 +259,10 @@
 						<h2
 							class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
 						>
-							All Rules
+							{m.assetrules_all_rules_heading()}
 						</h2>
 						<span class="text-xs text-gray-500 dark:text-gray-400">
-							{total}
-							{total === 1 ? 'rule' : 'rules'}
+							{m.assetrules_rule_count({ count: total })}
 						</span>
 					</div>
 					<div
@@ -314,7 +300,7 @@
 									{#if rule.links?.length > 0}
 										<span
 											class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-											title="Links"
+											title={m.assetrules_links_title()}
 										>
 											<IconifyIcon icon="material-symbols:link" class="w-3.5 h-3.5" />
 											{rule.links.length}
@@ -323,7 +309,7 @@
 									{#if rule.term_ids?.length > 0}
 										<span
 											class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-											title="Terms"
+											title={m.assetrules_terms_title()}
 										>
 											<IconifyIcon icon="material-symbols:book" class="w-3.5 h-3.5" />
 											{rule.term_ids.length}
@@ -331,7 +317,7 @@
 									{/if}
 									<span
 										class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-										title="Matched assets"
+										title={m.assetrules_matched_assets_title()}
 									>
 										<IconifyIcon icon="material-symbols:database" class="w-3.5 h-3.5" />
 										{rule.membership_count || 0}
@@ -341,13 +327,13 @@
 											? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
 											: 'bg-gray-100 dark:bg-gray-700 text-gray-500'}"
 									>
-										{rule.is_enabled ? 'Active' : 'Disabled'}
+										{rule.is_enabled ? m.common_active() : m.common_disabled()}
 									</span>
 									<span
 										class="text-xs text-gray-400 dark:text-gray-500 w-16 text-right"
 										title={rule.updated_at ? formatDate(rule.updated_at) : ''}
 									>
-										{formatRelativeTime(rule.updated_at)}
+										{relativeTime(rule.updated_at)}
 									</span>
 									<IconifyIcon
 										icon="mdi:chevron-right"

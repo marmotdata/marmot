@@ -11757,6 +11757,9 @@ const docTemplate = `{
                 "banner": {
                     "$ref": "#/definitions/BannerResponse"
                 },
+                "default_language": {
+                    "type": "string"
+                },
                 "encryption_configured": {
                     "type": "boolean"
                 },
@@ -12308,6 +12311,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "supports_data_preview": {
+                    "type": "boolean"
+                },
+                "supports_query": {
                     "type": "boolean"
                 }
             }

@@ -3,6 +3,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role } from '$lib/roles/types';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		selectedIds: string[];
@@ -17,8 +18,8 @@
 		selectedIds,
 		onChange,
 		roles: providedRoles,
-		placeholder = 'Search roles by name or description...',
-		emptyMessage = 'No roles found.',
+		placeholder = m.ui_roleselector_search_placeholder(),
+		emptyMessage = m.ui_roleselector_empty(),
 		pageSize = 6
 	}: Props = $props();
 
@@ -62,7 +63,7 @@
 			loading = true;
 			internalRoles = await listRoles();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load roles';
+			error = err instanceof Error ? err.message : m.ui_roles_load_error();
 		} finally {
 			loading = false;
 		}
@@ -105,7 +106,7 @@
 				type="button"
 				onclick={() => (query = '')}
 				class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-				aria-label="Clear search"
+				aria-label={m.ui_roleselector_clear_search_aria()}
 			>
 				<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 			</button>
@@ -116,19 +117,20 @@
 	<div class="flex items-center justify-between text-xs">
 		<span class="text-gray-500 dark:text-gray-400">
 			{#if filtered.length === 0}
-				No results
+				{m.ui_roleselector_no_results()}
+			{:else if query}
+				{m.ui_roleselector_showing_matched({
+					from: showingFrom,
+					to: showingTo,
+					count: filtered.length
+				})}
 			{:else}
-				<span class="font-medium text-gray-700 dark:text-gray-300">{showingFrom}–{showingTo}</span>
-				of <span class="font-medium text-gray-700 dark:text-gray-300">{filtered.length}</span>
-				{filtered.length === 1 ? 'role' : 'roles'}{query ? ' matched' : ''}
+				{m.ui_roleselector_showing({ from: showingFrom, to: showingTo, count: filtered.length })}
 			{/if}
 		</span>
 		<div class="flex items-center gap-3">
 			<span class="text-gray-500 dark:text-gray-400">
-				<span class="font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
-					>{selectedIds.length}</span
-				>
-				selected
+				{m.ui_roleselector_selected_count({ count: selectedIds.length })}
 			</span>
 			{#if selectedIds.length > 0}
 				<button
@@ -136,7 +138,7 @@
 					class="text-xs text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline"
 					onclick={clearSelection}
 				>
-					Clear
+					{m.common_clear()}
 				</button>
 			{/if}
 		</div>
@@ -156,7 +158,7 @@
 			<div class="p-4 text-sm text-red-600 dark:text-red-400">{error}</div>
 		{:else if filtered.length === 0}
 			<div class="p-8 text-sm text-gray-500 dark:text-gray-400 text-center">
-				{query ? `No roles match "${query}".` : emptyMessage}
+				{query ? m.ui_roleselector_no_match({ query }) : emptyMessage}
 			</div>
 		{:else}
 			<ul class="divide-y divide-gray-100 dark:divide-gray-700/60">
@@ -185,7 +187,7 @@
 											class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
 										>
 											<IconifyIcon icon="material-symbols:lock" class="h-2.5 w-2.5" />
-											system
+											{m.ui_role_system_badge()}
 										</span>
 									{/if}
 								</div>
@@ -215,8 +217,7 @@
 					class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40"
 				>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
-						Page <span class="font-medium text-gray-700 dark:text-gray-300">{page}</span>
-						of <span class="font-medium text-gray-700 dark:text-gray-300">{totalPages}</span>
+						{m.ui_roleselector_page_of({ page, total: totalPages })}
 					</span>
 					<div class="flex items-center gap-1">
 						<button
@@ -224,7 +225,7 @@
 							onclick={prev}
 							disabled={page <= 1}
 							class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-							aria-label="Previous page"
+							aria-label={m.ui_roleselector_prev_page_aria()}
 						>
 							<IconifyIcon icon="material-symbols:chevron-left" class="h-4 w-4" />
 						</button>
@@ -233,7 +234,7 @@
 							onclick={next}
 							disabled={page >= totalPages}
 							class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-							aria-label="Next page"
+							aria-label={m.ui_roleselector_next_page_aria()}
 						>
 							<IconifyIcon icon="material-symbols:chevron-right" class="h-4 w-4" />
 						</button>

@@ -3,6 +3,8 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import Arrow from '$components/ui/Arrow.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDateTime } from '$lib/utils';
 
 	export let sources = [];
 	let expandedSources = new SvelteSet();
@@ -32,7 +34,7 @@
 							role="button"
 							tabindex="0"
 							aria-expanded={expandedSources.has(source.name)}
-							aria-label="Toggle {source.name} source details"
+							aria-label={m.asset_sources_toggle_aria({ name: source.name })}
 						>
 							<div class="mr-2">
 								<Arrow expanded={expandedSources.has(source.name)} />
@@ -45,7 +47,7 @@
 									{source.name}
 								</h4>
 								<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-									Last synced: {new Date(source.last_sync_at).toLocaleString()}
+									{m.asset_sources_last_synced({ date: formatDateTime(source.last_sync_at) })}
 								</p>
 							</div>
 						</div>

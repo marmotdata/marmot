@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
+
 	export let show = false;
 	export let title: string;
 	export let message: string;
-	export let confirmText = 'Delete';
+	export let confirmText = m.common_delete();
 	export let resourceName = '';
 	export let requireConfirmation = false;
 	export let onConfirm: () => void;
@@ -61,7 +63,7 @@
 									for="confirm-text"
 									class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
 								>
-									Type "{resourceName}" to confirm deletion
+									{m.ui_deletemodal_type_to_confirm({ name: resourceName })}
 								</label>
 								<input
 									type="text"
@@ -88,7 +90,7 @@
 						class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 sm:mt-0 sm:w-auto sm:text-sm"
 						on:click={onCancel}
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 				</div>
 			</div>

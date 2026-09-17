@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { listRoles } from '$lib/roles/api';
+	import { m } from '$lib/paraglide/messages';
 	import RoleTable from './RoleTable.svelte';
 	import type { Role } from '$lib/roles/types';
 
@@ -20,7 +21,7 @@
 			roles = await listRoles();
 			applyFilter();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			error = err instanceof Error ? err.message : m.roles_error_generic();
 		} finally {
 			loading = false;
 		}
@@ -68,7 +69,7 @@
 			<div class="flex-1 max-w-md">
 				<input
 					type="text"
-					placeholder="Search roles..."
+					placeholder={m.roles_search_placeholder()}
 					bind:value={roleQuery}
 					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
 				/>
@@ -77,7 +78,7 @@
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={goCreate}
 			>
-				Add Role
+				{m.roles_add_button()}
 			</button>
 		</div>
 
@@ -102,7 +103,7 @@
 
 			{#if filteredRoles.length === 0}
 				<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-					{roleQuery ? 'No roles match your search' : 'No roles defined'}
+					{roleQuery ? m.roles_no_match_search() : m.roles_none_defined()}
 				</p>
 			{/if}
 		{/if}

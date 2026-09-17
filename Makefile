@@ -12,6 +12,7 @@ LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)
 
 SWAG_VERSION := v1.16.6
 GO_SWAGGER_VERSION := v0.36.5
+UV_VERSION := 0.12
 SWAG := $(shell go env GOPATH)/bin/swag
 
 $(SWAG):
@@ -70,6 +71,9 @@ frontend-lint:
 frontend-typecheck:
 	cd web/marmot && pnpm install && pnpm run check
 
+frontend-i18n-check:
+	cd web/marmot && pnpm install && pnpm run i18n:check
+
 fix:
 	cd web/marmot && pnpm run format
 
@@ -119,7 +123,7 @@ $(SDK_OPENAPI3): docs/swagger.yaml
 	npx --yes swagger2openapi@7 docs/swagger.yaml --outfile $(SDK_OPENAPI3) --yaml
 
 sdk-py-deps:
-	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh)
+	@command -v uv >/dev/null 2>&1 || (echo "Installing uv $(UV_VERSION)..." && curl -LsSf https://astral.sh/uv/install.sh | UV_VERSION=$(UV_VERSION) sh)
 
 sdk-py-install: sdk-py-deps
 	cd $(SDK_PY_DIR) && uv sync --all-extras

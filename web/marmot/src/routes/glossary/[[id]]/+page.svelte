@@ -22,6 +22,8 @@
 	import Tags from '$components/shared/Tags.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 
 	const terms: Writable<GlossaryTerm[]> = writable([]);
 	const totalTerms: Writable<number> = writable(0);
@@ -90,7 +92,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to fetch terms');
+				throw new Error(errorData.error || m.glossary_fetch_error());
 			}
 
 			const data: TermsListResponse = await response.json();
@@ -102,7 +104,7 @@
 			terms.set(processedTerms);
 			totalTerms.set(data.total || 0);
 		} catch (err) {
-			error.set(err instanceof Error ? err.message : 'Failed to fetch terms');
+			error.set(err instanceof Error ? err.message : m.glossary_fetch_error());
 		} finally {
 			isLoading.set(false);
 		}
@@ -179,7 +181,7 @@
 
 	async function createTerm() {
 		if (!newTermName || !newTermDefinition) {
-			createError = 'Name and definition are required';
+			createError = m.glossary_error_name_definition_required();
 			return;
 		}
 
@@ -211,7 +213,7 @@
 			showCreateModal = false;
 			fetchTerms();
 		} catch (err) {
-			createError = err instanceof Error ? err.message : 'Failed to create term';
+			createError = err instanceof Error ? err.message : m.glossary_create_error();
 		} finally {
 			isCreating = false;
 		}
@@ -275,7 +277,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to update term');
+				throw new Error(errorData.error || m.glossary_update_error());
 			}
 
 			const updated = await response.json();
@@ -286,7 +288,7 @@
 			isEditing = false;
 			editedTerm = null;
 		} catch (err) {
-			error.set(err instanceof Error ? err.message : 'Failed to update term');
+			error.set(err instanceof Error ? err.message : m.glossary_update_error());
 		}
 	}
 
@@ -300,19 +302,21 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to delete term');
+				throw new Error(errorData.error || m.glossary_delete_error());
 			}
 
 			showDeleteConfirm = false;
 			selectedTerm = null;
 			fetchTerms();
 		} catch (err) {
-			error.set(err instanceof Error ? err.message : 'Failed to delete term');
+			error.set(err instanceof Error ? err.message : m.glossary_delete_error());
 		}
 	}
 
 	afterUpdate(() => {
-		document.title = `${selectedTerm?.name || 'Glossary'} - Marmot`;
+		document.title = selectedTerm?.name
+			? m.glossary_term_page_title({ name: selectedTerm.name })
+			: m.glossary_page_title();
 	});
 
 	onMount(() => {
@@ -345,7 +349,9 @@
 					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
 				>
 					<div class="flex items-center justify-between mb-4">
-						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Glossary</h1>
+						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+							{m.glossary_heading()}
+						</h1>
 						{#if canManageGlossary}
 							<Button
 								click={handleNewTerm}
@@ -360,12 +366,11 @@
 						value={searchQuery}
 						onQueryChange={handleSearch}
 						onSubmit={handleSearchSubmit}
-						placeholder="Search terms..."
+						placeholder={m.glossary_search_placeholder()}
 					/>
 
 					<div class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-						{$totalTerms}
-						{$totalTerms === 1 ? 'term' : 'terms'}
+						{m.glossary_term_count({ count: $totalTerms })}
 					</div>
 				</div>
 
@@ -391,7 +396,7 @@
 								class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600"
 							/>
 							<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-								{searchQuery ? 'No terms found' : 'No terms yet'}
+								{searchQuery ? m.glossary_no_terms_found() : m.glossary_no_terms_yet()}
 							</p>
 						</div>
 					{:else}
@@ -432,7 +437,7 @@
 										type="text"
 										bind:value={editedTerm.name}
 										class="w-full text-2xl font-bold bg-transparent border-b-2 border-earthy-terracotta-300 dark:border-earthy-terracotta-700 focus:outline-none focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 text-gray-900 dark:text-gray-100 pb-2 mb-3"
-										placeholder="Term name"
+										placeholder={m.glossary_term_name_placeholder()}
 									/>
 								{:else}
 									<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
@@ -446,7 +451,7 @@
 										bind:value={editedTerm.definition}
 										rows="2"
 										class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none"
-										placeholder="Clear, concise definition..."
+										placeholder={m.glossary_definition_edit_placeholder()}
 									></textarea>
 								{:else}
 									<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -467,7 +472,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 										>
-											Owners
+											{m.common_owners()}
 										</h3>
 									</div>
 									{#if isEditing && editedTerm}
@@ -498,7 +503,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 										>
-											Tags
+											{m.common_tags()}
 										</h3>
 									</div>
 									<Tags
@@ -519,7 +524,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 										>
-											Metadata
+											{m.glossary_metadata_heading()}
 										</h3>
 									</div>
 									{#if isEditing && editedTerm}
@@ -551,19 +556,19 @@
 											<h3
 												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 											>
-												Description
+												{m.common_description()}
 											</h3>
 										</div>
 										{#if isEditing && editedTerm}
 											<RichTextEditor
 												bind:value={editedTerm.description}
-												placeholder="Add a detailed description with examples, context, or usage notes..."
+												placeholder={m.glossary_description_edit_placeholder()}
 											/>
 										{:else if selectedTerm.description}
 											<MarkdownRenderer content={selectedTerm.description} />
 										{:else}
 											<p class="text-sm text-gray-400 dark:text-gray-500 italic">
-												No description provided
+												{m.glossary_no_description()}
 											</p>
 										{/if}
 									</div>
@@ -579,28 +584,24 @@
 										<h3
 											class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 										>
-											Details
+											{m.common_details()}
 										</h3>
 									</div>
 									<dl class="grid grid-cols-2 gap-4">
 										<div>
-											<dt class="text-xs text-gray-500 dark:text-gray-400">Created</dt>
+											<dt class="text-xs text-gray-500 dark:text-gray-400">
+												{m.glossary_created_label()}
+											</dt>
 											<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-												{new Date(selectedTerm.created_at).toLocaleDateString('en-US', {
-													year: 'numeric',
-													month: 'short',
-													day: 'numeric'
-												})}
+												{formatDate(selectedTerm.created_at)}
 											</dd>
 										</div>
 										<div>
-											<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
+											<dt class="text-xs text-gray-500 dark:text-gray-400">
+												{m.glossary_last_updated_label()}
+											</dt>
 											<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-												{new Date(selectedTerm.updated_at).toLocaleDateString('en-US', {
-													year: 'numeric',
-													month: 'short',
-													day: 'numeric'
-												})}
+												{formatDate(selectedTerm.updated_at)}
 											</dd>
 										</div>
 									</dl>
@@ -616,10 +617,10 @@
 												<Button
 													click={saveEdit}
 													icon="material-symbols:check"
-													text="Save Changes"
+													text={m.glossary_save_changes()}
 													variant="filled"
 												/>
-												<Button click={cancelEdit} text="Cancel" variant="clear" />
+												<Button click={cancelEdit} text={m.common_cancel()} variant="clear" />
 											</div>
 										{:else}
 											<button
@@ -627,7 +628,7 @@
 												class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 											>
 												<Icon icon="material-symbols:edit-outline" class="w-4 h-4" />
-												Edit
+												{m.common_edit()}
 											</button>
 										{/if}
 
@@ -636,7 +637,7 @@
 											class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-500 border border-red-300 dark:border-red-600 hover:border-transparent rounded-lg transition-colors"
 										>
 											<Icon icon="material-symbols:delete-outline" class="w-4 h-4" />
-											Delete
+											{m.common_delete()}
 										</button>
 									</div>
 								{/if}
@@ -654,16 +655,16 @@
 							/>
 						</div>
 						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-							No glossary terms yet
+							{m.glossary_empty_heading()}
 						</h2>
 						<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-							Glossary terms help you describe your business definitions and data concepts.
+							{m.glossary_empty_description()}
 						</p>
 						{#if canManageGlossary}
 							<Button
 								click={handleNewTerm}
 								icon="material-symbols:add"
-								text="Create your first term"
+								text={m.glossary_create_first_button()}
 								variant="filled"
 							/>
 						{/if}
@@ -678,10 +679,10 @@
 								class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4"
 							/>
 							<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-								No Term Selected
+								{m.glossary_no_term_selected_heading()}
 							</h3>
 							<p class="text-sm text-gray-500 dark:text-gray-400">
-								Select a term from the list to view its details
+								{m.glossary_no_term_selected_hint()}
 							</p>
 						</div>
 					</div>
@@ -706,7 +707,9 @@
 			<div
 				class="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-xl shadow-2xl max-w-2xl w-full p-6 z-10 border border-gray-200/50 dark:border-gray-700/50"
 			>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Create New Term</h3>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+					{m.glossary_create_modal_heading()}
+				</h3>
 
 				{#if createError}
 					<div class="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
@@ -725,14 +728,14 @@
 							for="term-name"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 						>
-							Name <span class="text-red-500">*</span>
+							{m.common_name()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							id="term-name"
 							type="text"
 							bind:value={newTermName}
 							disabled={isCreating}
-							placeholder="e.g., Customer Lifetime Value"
+							placeholder={m.glossary_name_placeholder()}
 							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
 							required
 						/>
@@ -743,13 +746,13 @@
 							for="term-definition"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 						>
-							Definition <span class="text-red-500">*</span>
+							{m.glossary_definition_label()} <span class="text-red-500">*</span>
 						</label>
 						<textarea
 							id="term-definition"
 							bind:value={newTermDefinition}
 							disabled={isCreating}
-							placeholder="Clear, concise definition of the business term..."
+							placeholder={m.glossary_definition_placeholder()}
 							rows="3"
 							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
 							required
@@ -761,28 +764,28 @@
 							for="term-description"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 						>
-							Description (Optional)
+							{m.glossary_description_optional_label()}
 						</label>
 						<RichTextEditor
 							bind:value={newTermDescription}
 							disabled={isCreating}
-							placeholder="Additional context, usage examples, or detailed explanation..."
+							placeholder={m.glossary_description_placeholder()}
 						/>
 					</div>
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-							Owners (Optional)
+							{m.glossary_owners_optional_label()}
 						</label>
 						<OwnerSelector
 							bind:selectedOwners={newTermOwners}
 							onChange={(owners) => {
 								newTermOwners = owners;
 							}}
-							placeholder="Search and select owners..."
+							placeholder={m.glossary_owners_placeholder()}
 						/>
 						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-							Leave empty to default to yourself
+							{m.glossary_owners_default_hint()}
 						</p>
 					</div>
 
@@ -791,14 +794,14 @@
 							type="button"
 							click={() => (showCreateModal = false)}
 							disabled={isCreating}
-							text="Cancel"
+							text={m.common_cancel()}
 							variant="clear"
 						/>
 						<Button
 							type="submit"
 							disabled={isCreating}
 							loading={isCreating}
-							text={isCreating ? 'Creating...' : 'Create Term'}
+							text={isCreating ? m.glossary_creating() : m.glossary_create_term_button()}
 							variant="filled"
 						/>
 					</div>
@@ -823,22 +826,24 @@
 			<div
 				class="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-xl shadow-2xl max-w-lg w-full p-6 z-10 border border-gray-200/50 dark:border-gray-700/50"
 			>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Delete Term</h3>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+					{m.glossary_delete_modal_heading()}
+				</h3>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-					Are you sure you want to delete "{selectedTerm?.name}"? This action cannot be undone.
+					{m.glossary_delete_confirm({ name: selectedTerm?.name ?? '' })}
 				</p>
 				<div class="flex justify-end gap-3">
 					<button
 						on:click={() => (showDeleteConfirm = false)}
 						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 					<button
 						on:click={deleteTerm}
 						class="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
 					>
-						Delete
+						{m.common_delete()}
 					</button>
 				</div>
 			</div>

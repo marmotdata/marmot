@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages';
 
 	export let isLoading: boolean;
 	export let tags: { [key: string]: number };
@@ -10,7 +11,7 @@
 </script>
 
 <div class="space-y-4 w-full">
-	<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Popular Tags</h2>
+	<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.tags_popular_heading()}</h2>
 	<div class="flex flex-wrap gap-4">
 		{#if isLoading}
 			{#each Array(12) as _, i (i)}

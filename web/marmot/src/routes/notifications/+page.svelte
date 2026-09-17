@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { notifications, type Notification } from '$lib/stores/notifications';
-	import { formatRelativeTime } from '$lib/utils/format';
+	import { formatRelativeTime, formatList } from '$lib/utils/format';
+	import { m } from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -105,6 +106,142 @@
 		}
 	}
 
+	// Copy is rebuilt from the stored type and data so it translates, falling back to the server's English for old rows and unknown types
+	function text(data: Record<string, unknown> | undefined, key: string): string | null {
+		const value = data?.[key];
+		return typeof value === 'string' && value.length > 0 ? value : null;
+	}
+
+	function count(data: Record<string, unknown> | undefined, key: string): number | null {
+		const value = data?.[key];
+		return typeof value === 'number' ? value : null;
+	}
+
+	function isBatched(notification: Notification): boolean {
+		return count(notification.data, 'asset_count') !== null;
+	}
+
+	function renderNotificationTitle(notification: Notification): string {
+		const batched = isBatched(notification);
+		switch (notification.type) {
+			case 'schema_change':
+				return m.notif_schema_change_title();
+			case 'upstream_schema_change':
+				return m.notif_upstream_schema_change_title();
+			case 'downstream_schema_change':
+				return m.notif_downstream_schema_change_title();
+			case 'lineage_change':
+				return batched ? m.notif_batch_lineage_change_title() : m.notif_lineage_change_title();
+			case 'asset_deleted':
+				return batched ? m.notif_batch_asset_deleted_title() : m.notif_asset_deleted_title();
+			case 'asset_change':
+				return batched ? m.notif_batch_asset_change_title() : m.notif_asset_change_title();
+			case 'job_complete':
+				switch (text(notification.data, 'status')) {
+					case 'failed':
+						return m.notif_job_failed_title();
+					case 'cancelled':
+						return m.notif_job_cancelled_title();
+					case 'completed':
+						return m.notif_job_complete_title();
+					default:
+						return notification.title;
+				}
+			case 'team_invite':
+				return m.notif_team_invite_title();
+			case 'mention':
+				return text(notification.data, 'mention_target') === 'team'
+					? m.notif_mention_team_title()
+					: m.notif_mention_user_title();
+			default:
+				return notification.title;
+		}
+	}
+
+	function renderNotificationMessage(notification: Notification): string {
+		const data = notification.data;
+		const assetName = text(data, 'asset_name');
+		const assetCount = count(data, 'asset_count');
+
+		switch (notification.type) {
+			case 'schema_change':
+				return assetName
+					? m.notif_schema_change_message({ name: assetName })
+					: notification.message;
+			case 'upstream_schema_change':
+				return assetName
+					? m.notif_upstream_schema_change_message({ name: assetName })
+					: notification.message;
+			case 'downstream_schema_change':
+				return assetName
+					? m.notif_downstream_schema_change_message({ name: assetName })
+					: notification.message;
+			case 'lineage_change':
+				if (assetCount !== null) return m.notif_batch_lineage_change_message({ count: assetCount });
+				return assetName
+					? m.notif_lineage_change_message({ name: assetName })
+					: notification.message;
+			case 'asset_deleted':
+				if (assetCount !== null) return m.notif_batch_asset_deleted_message({ count: assetCount });
+				return assetName
+					? m.notif_asset_deleted_message({ name: assetName })
+					: notification.message;
+			case 'asset_change': {
+				const eventCount = count(data, 'count');
+				if (assetCount !== null && eventCount !== null) {
+					return m.notif_batch_asset_change_message({ count: eventCount, assetCount });
+				}
+				const fields = data?.changed_fields;
+				if (assetName && Array.isArray(fields) && fields.length > 0) {
+					return m.notif_asset_change_message({
+						fields: formatList(fields.map(String)),
+						name: assetName
+					});
+				}
+				return notification.message;
+			}
+			case 'job_complete': {
+				const pipeline = text(data, 'pipeline_name');
+				if (!pipeline) return notification.message;
+				switch (text(data, 'status')) {
+					case 'completed': {
+						const entities = count(data, 'total_entities');
+						return entities !== null
+							? m.notif_job_complete_message_entities({ name: pipeline, count: entities })
+							: m.notif_job_complete_message({ name: pipeline });
+					}
+					case 'failed': {
+						const error = text(data, 'error_message');
+						return error
+							? m.notif_job_failed_message_reason({ name: pipeline, error })
+							: m.notif_job_failed_message({ name: pipeline });
+					}
+					case 'cancelled':
+						return m.notif_job_cancelled_message({ name: pipeline });
+					default:
+						return notification.message;
+				}
+			}
+			case 'team_invite': {
+				const teamName = text(data, 'team_name');
+				const role = text(data, 'role');
+				return teamName && role
+					? m.notif_team_invite_message({ name: teamName, role })
+					: notification.message;
+			}
+			case 'mention': {
+				const actor = text(data, 'mentioner');
+				const page = text(data, 'page_title');
+				if (!actor || !page) return notification.message;
+				return text(data, 'mention_target') === 'team'
+					? m.notif_mention_team_message({ actor, page })
+					: m.notif_mention_user_message({ actor, page });
+			}
+			default:
+				return notification.message;
+		}
+	}
+
 	async function handleNotificationClick(notification: Notification) {
 		if (!notification.read) {
 			await notifications.markAsRead(notification.id);
@@ -148,16 +285,16 @@
 </script>
 
 <svelte:head>
-	<title>Notifications - Marmot</title>
+	<title>{m.notif_page_title()}</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-6">
 		<div>
-			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Notifications</h1>
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.notif_heading()}</h1>
 			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-				{state.summary.unread_count} unread, {state.summary.total_count} total
+				{m.notif_summary({ unread: state.summary.unread_count, total: state.summary.total_count })}
 			</p>
 		</div>
 		<div class="flex items-center gap-2">
@@ -167,7 +304,7 @@
 					onclick={handleMarkAllAsRead}
 					class="px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
-					Mark all as read
+					{m.notif_mark_all_read()}
 				</button>
 			{/if}
 			{#if state.notifications.some((n) => n.read)}
@@ -176,7 +313,7 @@
 					onclick={handleClearRead}
 					class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
-					Clear read
+					{m.notif_clear_read()}
 				</button>
 			{/if}
 		</div>
@@ -191,7 +328,7 @@
 				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
 				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
 		>
-			All
+			{m.common_all()}
 		</button>
 		<button
 			type="button"
@@ -201,7 +338,7 @@
 				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
 				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
 		>
-			Unread
+			{m.notif_filter_unread()}
 			{#if state.summary.unread_count > 0}
 				<span
 					class="px-1.5 py-0.5 text-xs rounded-full bg-earthy-terracotta-700/10 text-earthy-terracotta-700"
@@ -217,7 +354,7 @@
 				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
 				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
 		>
-			Read
+			{m.notif_filter_read()}
 		</button>
 	</div>
 
@@ -241,14 +378,16 @@
 						d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
 					/>
 				</svg>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No notifications</h3>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+					{m.notif_empty_heading()}
+				</h3>
 				<p class="text-sm text-gray-500 dark:text-gray-400">
 					{#if filter === 'unread'}
-						You're all caught up!
+						{m.notif_empty_unread()}
 					{:else if filter === 'read'}
-						No read notifications yet.
+						{m.notif_empty_read()}
 					{:else}
-						You don't have any notifications yet.
+						{m.notif_empty_all()}
 					{/if}
 				</p>
 			</div>
@@ -281,10 +420,10 @@
 											? ''
 											: 'font-medium'}"
 									>
-										{notification.title}
+										{renderNotificationTitle(notification)}
 									</p>
 									<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-										{notification.message}
+										{renderNotificationMessage(notification)}
 									</p>
 									<div class="flex items-center gap-2 mt-2">
 										<span class="text-xs text-gray-400 dark:text-gray-500">
@@ -294,7 +433,7 @@
 											<span
 												class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
 											>
-												via team
+												{m.notif_via_team()}
 											</span>
 										{/if}
 									</div>
@@ -305,7 +444,7 @@
 											type="button"
 											onclick={(e) => handleMarkAsRead(e, notification.id)}
 											class="p-1.5 text-gray-400 hover:text-earthy-green-700 dark:hover:text-earthy-green-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-											title="Mark as read"
+											title={m.notif_mark_read_title()}
 										>
 											<Icon icon="material-symbols:check-circle-outline" class="w-4 h-4" />
 										</button>
@@ -314,7 +453,7 @@
 										type="button"
 										onclick={(e) => handleDelete(e, notification.id)}
 										class="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-										title="Delete notification"
+										title={m.notif_delete_title()}
 									>
 										<Icon icon="material-symbols:delete-outline" class="w-4 h-4" />
 									</button>
@@ -333,7 +472,7 @@
 						disabled={state.loading}
 						class="w-full py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
 					>
-						{state.loading ? 'Loading...' : 'Load more notifications'}
+						{state.loading ? m.common_loading() : m.notif_load_more()}
 					</button>
 				</div>
 			{/if}
