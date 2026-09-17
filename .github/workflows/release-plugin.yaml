@@ -79,7 +79,7 @@ jobs:
       # git tag entirely, which a plugin tag could never satisfy anyway.
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "2.18.1"
           args: build --clean --snapshot
