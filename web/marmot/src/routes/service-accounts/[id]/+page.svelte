@@ -7,6 +7,7 @@
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import RoleSelector from '$lib/components/RoleSelector.svelte';
 	import { toasts } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import {
 		getServiceAccount,
 		updateServiceAccount,
@@ -60,7 +61,7 @@
 			active = account.active;
 			selectedRoleIds = account.roles.map((r) => r.id);
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load service account';
+			error = err instanceof Error ? err.message : m.serviceaccounts_error_load();
 		} finally {
 			loading = false;
 		}
@@ -77,9 +78,9 @@
 				role_ids: selectedRoleIds
 			});
 			sa = updated;
-			toasts.success('Service account updated');
+			toasts.success(m.serviceaccounts_updated_success());
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to update');
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_update());
 		} finally {
 			savingDetails = false;
 		}
@@ -89,10 +90,10 @@
 		if (!sa) return;
 		try {
 			await deleteServiceAccount(sa.id);
-			toasts.success(`Service account "${sa.name}" deleted`);
+			toasts.success(m.serviceaccounts_deleted_success({ name: sa.name }));
 			goto(resolve('/admin?tab=service_accounts'));
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete');
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete());
 		} finally {
 			showDeleteModal = false;
 		}
@@ -102,10 +103,10 @@
 		if (!sa || !keyToDelete) return;
 		try {
 			await deleteAPIKey(sa.id, keyToDelete.id);
-			toasts.success(`API key "${keyToDelete.name}" deleted`);
+			toasts.success(m.serviceaccounts_key_deleted_success({ name: keyToDelete.name }));
 			keys = keys.filter((k) => k.id !== keyToDelete?.id);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete key');
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete_key());
 		} finally {
 			showDeleteKeyModal = false;
 			keyToDelete = null;
@@ -152,7 +153,7 @@
 						type="button"
 						onclick={goBack}
 						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-						aria-label="Back"
+						aria-label={m.common_back()}
 					>
 						<IconifyIcon
 							icon="material-symbols:arrow-back"
@@ -166,7 +167,7 @@
 								class="h-6 w-6 text-gray-500 dark:text-gray-400 shrink-0"
 							/>
 							<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
-								{sa?.name ?? 'Service Account'}
+								{sa?.name ?? m.serviceaccounts_detail_title()}
 							</h1>
 							{#if sa}
 								<span
@@ -175,7 +176,7 @@
 										? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
 										: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}"
 								>
-									{sa.active ? 'Active' : 'Inactive'}
+									{sa.active ? m.common_active() : m.common_inactive()}
 								</span>
 							{/if}
 						</div>
@@ -190,7 +191,7 @@
 					<Button
 						variant="clear"
 						icon="material-symbols:delete-outline"
-						text="Delete"
+						text={m.common_delete()}
 						click={() => (showDeleteModal = true)}
 					/>
 				{/if}
@@ -221,16 +222,18 @@
 						class="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"
 					/>
 					<div class="flex-1">
-						<p class="text-sm font-medium text-green-800 dark:text-green-200">API key created</p>
+						<p class="text-sm font-medium text-green-800 dark:text-green-200">
+							{m.serviceaccounts_key_created_banner()}
+						</p>
 						<p class="text-xs text-green-700 dark:text-green-300 mt-0.5">
-							Make sure you saved the plaintext key — it can't be shown again.
+							{m.serviceaccounts_key_created_banner_hint()}
 						</p>
 					</div>
 					<button
 						type="button"
 						class="text-green-700 dark:text-green-400 hover:text-green-900"
 						onclick={() => goto(resolve(`/service-accounts/${sa!.id}`))}
-						aria-label="Dismiss"
+						aria-label={m.serviceaccounts_dismiss_aria()}
 					>
 						<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 					</button>
@@ -250,7 +253,7 @@
 								icon="material-symbols:info-outline"
 								class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 							/>
-							Details
+							{m.common_details()}
 						</h2>
 
 						<div class="space-y-4">
@@ -258,7 +261,7 @@
 								<label
 									for="detail-name"
 									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-									>Name</label
+									>{m.common_name()}</label
 								>
 								<input
 									id="detail-name"
@@ -271,7 +274,7 @@
 								<label
 									for="detail-desc"
 									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-									>Description</label
+									>{m.common_description()}</label
 								>
 								<textarea
 									id="detail-desc"
@@ -282,7 +285,7 @@
 							</div>
 							<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
 								<input type="checkbox" bind:checked={active} class="rounded" />
-								Active
+								{m.common_active()}
 							</label>
 						</div>
 					</div>
@@ -297,14 +300,14 @@
 								icon="material-symbols:shield-outline"
 								class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 							/>
-							Roles
+							{m.serviceaccounts_step_roles()}
 						</h2>
 
 						<RoleSelector
 							roles={availableRoles}
 							selectedIds={selectedRoleIds}
 							onChange={(ids) => (selectedRoleIds = ids)}
-							emptyMessage="No roles available."
+							emptyMessage={m.serviceaccounts_no_roles_available()}
 						/>
 					</div>
 
@@ -312,7 +315,9 @@
 						<Button
 							variant="filled"
 							click={saveDetails}
-							text={savingDetails ? 'Saving...' : 'Save changes'}
+							text={savingDetails
+								? m.serviceaccounts_saving_label()
+								: m.serviceaccounts_save_changes()}
 							disabled={savingDetails || !name.trim()}
 							icon="material-symbols:check"
 						/>
@@ -334,7 +339,9 @@
 								>
 									<IconifyIcon icon="material-symbols:key-outline" class="h-4 w-4" />
 								</div>
-								<h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">API Keys</h2>
+								<h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+									{m.serviceaccounts_api_keys_heading()}
+								</h2>
 							</div>
 							<div class="flex items-center gap-1.5">
 								<span class="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -370,10 +377,10 @@
 										/>
 									</div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-										No API keys yet
+										{m.serviceaccounts_no_keys()}
 									</p>
 									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-										Create a key to authenticate as this account.
+										{m.serviceaccounts_no_keys_hint()}
 									</p>
 								</div>
 							{:else}
@@ -413,7 +420,11 @@
 																icon="material-symbols:schedule-outline"
 																class="h-3 w-3"
 															/>
-															<span>Created {formatDate(key.created_at)}</span>
+															<span
+																>{m.serviceaccounts_key_created_date({
+																	date: formatDate(key.created_at)
+																})}</span
+															>
 														</div>
 													</div>
 												</div>
@@ -424,7 +435,7 @@
 														keyToDelete = key;
 														showDeleteKeyModal = true;
 													}}
-													aria-label="Delete key"
+													aria-label={m.serviceaccounts_delete_key_aria()}
 												>
 													<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
 												</button>
@@ -440,7 +451,7 @@
 															icon="material-symbols:error-outline"
 															class="h-2.5 w-2.5"
 														/>
-														Expired
+														{m.serviceaccounts_key_expired()}
 													</span>
 												{:else if status === 'expiring' && daysLeft !== null}
 													<span
@@ -450,7 +461,7 @@
 															icon="material-symbols:warning-outline"
 															class="h-2.5 w-2.5"
 														/>
-														Expires in {daysLeft}d
+														{m.serviceaccounts_key_expires_in_days({ days: daysLeft })}
 													</span>
 												{:else if key.expires_at}
 													<span
@@ -460,7 +471,9 @@
 															icon="material-symbols:event-outline"
 															class="h-2.5 w-2.5"
 														/>
-														Expires {formatDate(key.expires_at)}
+														{m.serviceaccounts_key_expires_date({
+															date: formatDate(key.expires_at)
+														})}
 													</span>
 												{:else}
 													<span
@@ -470,7 +483,7 @@
 															icon="material-symbols:all-inclusive"
 															class="h-2.5 w-2.5"
 														/>
-														No expiry
+														{m.serviceaccounts_key_no_expiry()}
 													</span>
 												{/if}
 
@@ -482,7 +495,9 @@
 															icon="material-symbols:check-circle-outline"
 															class="h-2.5 w-2.5"
 														/>
-														Used {formatDate(key.last_used_at)}
+														{m.serviceaccounts_key_used_date({
+															date: formatDate(key.last_used_at)
+														})}
 													</span>
 												{:else}
 													<span
@@ -492,7 +507,7 @@
 															icon="material-symbols:circle-outline"
 															class="h-2.5 w-2.5"
 														/>
-														Unused
+														{m.serviceaccounts_key_unused()}
 													</span>
 												{/if}
 											</div>
@@ -511,7 +526,7 @@
 									: 'border-earthy-terracotta-300 dark:border-earthy-terracotta-800 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:border-earthy-terracotta-500 hover:bg-earthy-terracotta-50/60 dark:hover:bg-earthy-terracotta-900/20'}"
 							>
 								<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-								<span class="text-sm font-medium">Create API Key</span>
+								<span class="text-sm font-medium">{m.serviceaccounts_create_key_button()}</span>
 							</button>
 							{#if keys.length >= MAX_KEYS}
 								<div
@@ -522,7 +537,7 @@
 										class="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
 									/>
 									<p class="text-xs text-amber-800 dark:text-amber-200">
-										Reached the {MAX_KEYS}-key limit. Delete an existing key to add a new one.
+										{m.serviceaccounts_key_limit_reached({ max: MAX_KEYS })}
 									</p>
 								</div>
 							{/if}
@@ -537,9 +552,9 @@
 {#if sa}
 	<DeleteModal
 		show={showDeleteModal}
-		title="Delete Service Account"
-		message="Are you sure you want to delete this service account? All associated API keys will be revoked."
-		confirmText="Delete"
+		title={m.serviceaccounts_delete_title()}
+		message={m.serviceaccounts_delete_confirm()}
+		confirmText={m.common_delete()}
 		resourceName={sa.name}
 		requireConfirmation={true}
 		onConfirm={handleDelete}
@@ -550,9 +565,9 @@
 {#if keyToDelete}
 	<DeleteModal
 		show={showDeleteKeyModal}
-		title="Delete API Key"
-		message="Anything using this key will immediately stop working."
-		confirmText="Delete"
+		title={m.serviceaccounts_delete_key_title()}
+		message={m.serviceaccounts_delete_key_confirm()}
+		confirmText={m.common_delete()}
 		resourceName={keyToDelete.name}
 		requireConfirmation={false}
 		onConfirm={handleDeleteKey}

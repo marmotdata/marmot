@@ -2,6 +2,7 @@
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { data } = $props<{
 		data: {
@@ -42,8 +43,8 @@
 	<button
 		class="add-lineage-btn add-upstream"
 		onclick={handleAddUpstream}
-		title="Add upstream dependency"
-		aria-label="Add upstream dependency to {data.name}"
+		title={m.lineage_add_upstream_dep_title()}
+		aria-label={m.lineage_add_upstream_dep_aria({ name: data.name })}
 	>
 		<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" aria-hidden="true" />
 	</button>
@@ -56,10 +57,10 @@
 <div
 	class="node {data.isCurrent ? 'current' : ''} {data.isStub ? 'stub' : ''}"
 	onclick={handleClick}
-	title={data.isStub ? 'Stub asset created by OpenLineage' : ''}
+	title={data.isStub ? m.lineage_stub_asset_title() : ''}
 >
 	{#if data.isStub}
-		<div class="stub-corner" title="Stub asset created by OpenLineage">
+		<div class="stub-corner" title={m.lineage_stub_asset_title()}>
 			<IconifyIcon
 				icon="bi:ticket-perforated-fill"
 				class="w-4 h-4 text-white absolute"
@@ -95,8 +96,8 @@
 	<button
 		class="add-lineage-btn add-downstream"
 		onclick={handleAddDownstream}
-		title="Add downstream dependency"
-		aria-label="Add downstream dependency to {data.name}"
+		title={m.lineage_add_downstream_dep_title()}
+		aria-label={m.lineage_add_downstream_dep_aria({ name: data.name })}
 	>
 		<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" aria-hidden="true" />
 	</button>

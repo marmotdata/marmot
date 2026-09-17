@@ -3,13 +3,14 @@
 	import IconifyIcon from '@iconify/svelte';
 	import QueryInput from './QueryInput.svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		query = '',
 		onQueryChange,
 		initiallyExpanded = false,
 		showRunButton = true,
-		runButtonText = 'Run Query',
+		runButtonText = m.query_run_button(),
 		runButtonIcon = 'mdi:play-circle',
 		onRunClick
 	}: {
@@ -113,14 +114,19 @@
 		{
 			value: 'kind',
 			label: '@kind',
-			description: 'Resource kind (asset, glossary, team)',
+			description: m.query_field_kind_description(),
 			category: 'Simple Field'
 		},
-		{ value: 'type', label: '@type', description: 'Asset type', category: 'Simple Field' },
+		{
+			value: 'type',
+			label: '@type',
+			description: m.query_field_type_description(),
+			category: 'Simple Field'
+		},
 		{
 			value: 'provider',
 			label: '@provider',
-			description: 'Data provider',
+			description: m.query_field_provider_description(),
 			category: 'Simple Field'
 		}
 	];
@@ -138,14 +144,14 @@
 	let allFields = $derived([...simpleFields, ...metadataFields]);
 
 	const operators: { value: Operator; label: string }[] = [
-		{ value: '=', label: 'Equals (=)' },
-		{ value: 'contains', label: 'Contains' },
-		{ value: '!=', label: 'Not Equals (!=)' },
-		{ value: '>', label: 'Greater Than (>)' },
-		{ value: '<', label: 'Less Than (<)' },
-		{ value: '>=', label: 'Greater or Equal (>=)' },
-		{ value: '<=', label: 'Less or Equal (<=)' },
-		{ value: 'range', label: 'Range [FROM TO]' }
+		{ value: '=', label: m.query_op_equals() },
+		{ value: 'contains', label: m.query_op_contains() },
+		{ value: '!=', label: m.query_op_not_equals() },
+		{ value: '>', label: m.query_op_greater() },
+		{ value: '<', label: m.query_op_less() },
+		{ value: '>=', label: m.query_op_greater_equal() },
+		{ value: '<=', label: m.query_op_less_equal() },
+		{ value: 'range', label: m.query_op_range() }
 	];
 
 	const booleanOperators: BooleanOperator[] = ['AND', 'OR', 'NOT'];
@@ -622,7 +628,7 @@
 			</div>
 			<div class="text-left">
 				<span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-					{expanded ? 'Hide' : 'Show'} Advanced Search
+					{expanded ? m.query_hide_advanced() : m.query_show_advanced()}
 				</span>
 				{#if !expanded && rawQuery}
 					<p
@@ -646,7 +652,7 @@
 						icon={mode === 'builder' ? 'mdi:code-braces' : 'mdi:tune-variant'}
 						class="w-4 h-4"
 					/>
-					{mode === 'builder' ? 'Code' : 'Builder'}
+					{mode === 'builder' ? m.query_mode_code() : m.query_mode_builder()}
 				</button>
 			{/if}
 			<IconifyIcon
@@ -673,9 +679,11 @@
 								class="w-4 h-4 text-gray-600 dark:text-gray-400"
 							/>
 							<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-								>Full-Text Search</span
+								>{m.query_full_text_search_label()}</span
 							>
-							<span class="text-xs text-gray-500 dark:text-gray-400">(Optional)</span>
+							<span class="text-xs text-gray-500 dark:text-gray-400"
+								>{m.query_optional_suffix()}</span
+							>
 						</div>
 						<IconifyIcon
 							icon={freeTextExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
@@ -687,7 +695,7 @@
 							<input
 								type="text"
 								bind:value={freeText}
-								placeholder="Search across all fields..."
+								placeholder={m.query_free_text_placeholder()}
 								class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							/>
 						</div>
@@ -707,7 +715,8 @@
 								icon="mdi:filter-variant"
 								class="w-4 h-4 text-gray-600 dark:text-gray-400"
 							/>
-							<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Field Filters</span
+							<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+								>{m.query_field_filters_label()}</span
 							>
 							<span
 								class="text-xs px-2 py-0.5 bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 rounded-full font-medium"
@@ -744,7 +753,7 @@
 											onfocus={(e) => handleFieldFocus(index, e.currentTarget)}
 											onblur={handleFieldBlur}
 											onkeydown={(e) => handleFieldKeydown(e, index)}
-											placeholder="Field (e.g., kind, type, metadata.owner)"
+											placeholder={m.query_field_placeholder()}
 											class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono"
 										/>
 									</div>
@@ -760,7 +769,7 @@
 										>
 											<span
 												>{operators.find((op) => op.value === filter.operator)?.label ||
-													'Select...'}</span
+													m.query_select_placeholder()}</span
 											>
 											<IconifyIcon icon="mdi:chevron-down" class="w-4 h-4 text-gray-500" />
 										</button>
@@ -771,14 +780,16 @@
 											<input
 												type="text"
 												bind:value={filter.rangeFrom}
-												placeholder="From"
+												placeholder={m.query_range_from_placeholder()}
 												class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 											/>
-											<span class="text-xs text-gray-500 dark:text-gray-400 font-semibold">TO</span>
+											<span class="text-xs text-gray-500 dark:text-gray-400 font-semibold"
+												>{m.query_range_separator()}</span
+											>
 											<input
 												type="text"
 												bind:value={filter.rangeTo}
-												placeholder="To"
+												placeholder={m.query_range_to_placeholder()}
 												class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 											/>
 										</div>
@@ -792,7 +803,7 @@
 												onblur={handleValueBlur}
 												oninput={() => handleValueInput(index)}
 												onkeydown={(e) => handleValueKeydown(e, index)}
-												placeholder="Value (use * for wildcards)"
+												placeholder={m.query_value_placeholder()}
 												class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 											/>
 										</div>
@@ -801,7 +812,7 @@
 									<button
 										onclick={() => removeFilter(filter.id)}
 										class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-										title="Remove filter"
+										title={m.query_remove_filter_title()}
 									>
 										<IconifyIcon icon="mdi:close-circle" class="w-4 h-4" />
 									</button>
@@ -828,7 +839,7 @@
 								>
 									{#if filteredSuggestions.length === 0}
 										<div class="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-											No suggestions found
+											{m.query_no_suggestions()}
 										</div>
 									{:else}
 										{#if simpleFiltered.length > 0}
@@ -837,7 +848,7 @@
 											>
 												<span
 													class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide"
-													>Simple Fields</span
+													>{m.query_simple_fields_heading()}</span
 												>
 											</div>
 											{#each simpleFiltered as field, idx (field.value)}
@@ -868,7 +879,7 @@
 											>
 												<span
 													class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide"
-													>Metadata Fields</span
+													>{m.query_metadata_fields_heading()}</span
 												>
 											</div>
 											{#each metadataFiltered as field, idx (field.value)}
@@ -903,7 +914,7 @@
 								>
 									{#if valueSuggestions.length === 0}
 										<div class="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-											No suggestions found
+											{m.query_no_suggestions()}
 										</div>
 									{:else}
 										{#each valueSuggestions as suggestion, idx (suggestion.value)}
@@ -945,7 +956,7 @@
 								class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600"
 							>
 								<IconifyIcon icon="mdi:plus-circle" class="w-4 h-4" />
-								Add Filter
+								{m.query_add_filter()}
 							</button>
 						</div>
 					{/if}
@@ -959,12 +970,12 @@
 							class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
 						>
 							<IconifyIcon icon="mdi:code-tags" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
-							Raw Query
+							{m.query_raw_query_label()}
 						</label>
 					</div>
 					<QueryInput
 						bind:value={rawQuery}
-						placeholder="e.g @kind = &quot;asset&quot; AND @type = &quot;table&quot;"
+						placeholder={m.query_raw_query_placeholder()}
 						onQueryChange={(q) => (rawQuery = q)}
 						onSubmit={applyQuery}
 					/>
@@ -982,7 +993,7 @@
 				class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-300 transition-colors"
 			>
 				<IconifyIcon icon="mdi:book-open-variant" class="w-4 h-4" />
-				View Documentation
+				{m.query_view_documentation()}
 			</a>
 			{#if showRunButton}
 				<button

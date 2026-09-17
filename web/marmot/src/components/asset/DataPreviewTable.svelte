@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
+
 	interface Props {
 		columnNames: string[];
 		rows: unknown[][];
@@ -62,13 +64,13 @@
 			<div
 				class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4 text-red-600 dark:text-red-400 max-w-2xl"
 			>
-				<div class="font-semibold mb-1">Preview Not Available</div>
+				<div class="font-semibold mb-1">{m.asset_preview_not_available()}</div>
 				<div class="text-sm">{error}</div>
 			</div>
 		</div>
 	{:else if columnNames.length === 0 || rows.length === 0}
 		<div class="flex items-center justify-center py-12">
-			<div class="text-gray-500 dark:text-gray-400">No data available for preview</div>
+			<div class="text-gray-500 dark:text-gray-400">{m.asset_preview_no_data()}</div>
 		</div>
 	{:else}
 		<div
@@ -115,7 +117,7 @@
 									title={cell != null ? String(cell) : ''}
 								>
 									{#if cell == null}
-										<span class="text-gray-400 italic">null</span>
+										<span class="text-gray-400 italic">{m.asset_preview_null_value()}</span>
 									{:else if typeof cell === 'number'}
 										<span class="font-mono">{String(cell)}</span>
 									{:else if typeof cell === 'object'}
@@ -132,7 +134,7 @@
 		</div>
 
 		<div class="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-			Showing {rows.length} row{rows.length !== 1 ? 's' : ''}
+			{m.asset_preview_row_count({ count: rows.length })}
 		</div>
 	{/if}
 </div>

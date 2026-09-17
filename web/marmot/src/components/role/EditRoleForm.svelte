@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toasts } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import { updateRole, replacePermissions } from '$lib/roles/api';
 	import PermissionEditor from '$lib/components/PermissionEditor.svelte';
 	import { Shield } from 'lucide-svelte';
@@ -27,10 +28,10 @@
 			}
 
 			updated = await replacePermissions(role.id, { permission_ids: selectedPermIds });
-			toasts.success(`Role "${updated.name}" updated`);
+			toasts.success(m.roles_update_success({ name: updated.name }));
 			onUpdate(updated);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to update role');
+			toasts.error(err instanceof Error ? err.message : m.roles_error_update());
 		} finally {
 			loading = false;
 		}
@@ -42,7 +43,7 @@
 >
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
 		<Shield class="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
-		Edit Role
+		{m.roles_edit_heading()}
 	</h3>
 
 	<div class="space-y-6">
@@ -52,7 +53,7 @@
 					for="edit-role-name"
 					class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 				>
-					Name
+					{m.common_name()}
 				</label>
 				<input
 					id="edit-role-name"
@@ -66,7 +67,7 @@
 					for="edit-role-description"
 					class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 				>
-					Description
+					{m.common_description()}
 				</label>
 				<input
 					id="edit-role-description"
@@ -78,7 +79,9 @@
 		</div>
 
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Permissions</h4>
+			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+				{m.roles_header_permissions()}
+			</h4>
 			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
 		</div>
 	</div>
@@ -89,7 +92,7 @@
 			class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium"
 			on:click={onCancel}
 		>
-			Cancel
+			{m.common_cancel()}
 		</button>
 		<button
 			type="button"
@@ -100,7 +103,7 @@
 			{#if loading}
 				<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
 			{/if}
-			Save Changes
+			{m.roles_save_changes()}
 		</button>
 	</div>
 </div>

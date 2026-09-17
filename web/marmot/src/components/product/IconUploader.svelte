@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
 	import IconifyIcon from '@iconify/svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import type { ProductImageMeta } from '$lib/dataproducts/types';
@@ -52,14 +53,14 @@
 		return new Promise((resolve) => {
 			// Check file type
 			if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-				error = 'Please select a valid image file (JPEG, PNG, GIF, or WebP)';
+				error = m.products_icon_invalid_type();
 				resolve(false);
 				return;
 			}
 
 			// Check file size (5MB max)
 			if (file.size > 5 * 1024 * 1024) {
-				error = 'Image must be less than 5MB';
+				error = m.products_icon_too_large();
 				resolve(false);
 				return;
 			}
@@ -70,7 +71,7 @@
 				URL.revokeObjectURL(img.src);
 				// Check minimum dimensions
 				if (img.width < 32 || img.height < 32) {
-					error = 'Image must be at least 32x32 pixels';
+					error = m.products_icon_too_small();
 					resolve(false);
 					return;
 				}
@@ -78,7 +79,7 @@
 			};
 			img.onerror = () => {
 				URL.revokeObjectURL(img.src);
-				error = 'Invalid image file';
+				error = m.products_icon_invalid_file();
 				resolve(false);
 			};
 			img.src = URL.createObjectURL(file);
@@ -194,7 +195,7 @@
 				canvasRef.toBlob(
 					(b) => {
 						if (b) resolve(b);
-						else reject(new Error('Failed to create image blob'));
+						else reject(new Error(m.products_icon_blob_error()));
 					},
 					'image/png',
 					0.9
@@ -219,7 +220,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to upload icon');
+				throw new Error(errorData.error || m.products_icon_upload_error());
 			}
 
 			const meta: ProductImageMeta = await response.json();
@@ -228,7 +229,7 @@
 			onIconChange?.(cacheBustUrl);
 			closeModal();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to upload icon';
+			error = err instanceof Error ? err.message : m.products_icon_upload_error();
 		} finally {
 			uploading = false;
 		}
@@ -256,12 +257,12 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to delete icon');
+				throw new Error(errorData.error || m.products_icon_delete_error());
 			}
 
 			onIconChange?.(null);
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to delete icon';
+			error = err instanceof Error ? err.message : m.products_icon_delete_error();
 		} finally {
 			uploading = false;
 		}
@@ -299,7 +300,7 @@
 		{#if currentIconUrl}
 			<AuthenticatedImage
 				src={currentIconUrl}
-				alt="Product icon"
+				alt={m.products_icon_upload_alt()}
 				class="w-full h-full object-cover"
 				fallback={defaultIcon}
 			/>
@@ -326,7 +327,7 @@
 				onclick={openFileDialog}
 				disabled={disabled || uploading}
 				class="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors disabled:opacity-50"
-				title={currentIconUrl ? 'Change icon' : 'Upload icon'}
+				title={currentIconUrl ? m.products_icon_change_title() : m.products_icon_upload_title()}
 			>
 				<IconifyIcon icon="material-symbols:edit" class="w-4 h-4" />
 			</button>
@@ -336,7 +337,7 @@
 					onclick={handleDeleteIcon}
 					disabled={disabled || uploading}
 					class="p-1.5 rounded-lg bg-white/20 hover:bg-red-500/80 text-white transition-colors disabled:opacity-50"
-					title="Remove icon"
+					title={m.products_icon_remove_title()}
 				>
 					<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
 				</button>
@@ -372,9 +373,11 @@
 			role="document"
 		>
 			<div class="p-4 border-b border-gray-200 dark:border-gray-700">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Crop Icon</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+					{m.products_icon_crop_heading()}
+				</h3>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					Drag the selection to position. Icons will be cropped to a square.
+					{m.products_icon_crop_hint()}
 				</p>
 			</div>
 
@@ -386,7 +389,7 @@
 				>
 					<img
 						src={imageSrc}
-						alt="Preview"
+						alt={m.products_icon_preview_alt()}
 						class="max-w-full max-h-[400px] object-contain pointer-events-none"
 						onload={handleImageLoad}
 						draggable="false"
@@ -429,7 +432,7 @@
 							"
 							onmousedown={handleMouseDown}
 							role="slider"
-							aria-label="Crop selection"
+							aria-label={m.products_icon_crop_selection_aria()}
 							aria-valuenow={cropArea.x}
 							tabindex="0"
 						>
@@ -472,7 +475,7 @@
 					disabled={uploading}
 					class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
 				>
-					Cancel
+					{m.common_cancel()}
 				</button>
 				<button
 					type="button"
@@ -482,10 +485,10 @@
 				>
 					{#if uploading}
 						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-						Uploading...
+						{m.products_icon_uploading()}
 					{:else}
 						<IconifyIcon icon="material-symbols:check" class="w-4 h-4" />
-						Save Icon
+						{m.products_icon_save()}
 					{/if}
 				</button>
 			</div>

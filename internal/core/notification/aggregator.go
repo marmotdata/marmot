@@ -223,6 +223,8 @@ func (a *assetChangeAggregator) sendAssetNotification(owner Recipient, asset ass
 	}
 
 	data["asset_mrn"] = asset.assetMRN
+	// The asset name rides along so the UI can rebuild the copy from type and data in the viewer's language
+	data["asset_name"] = asset.assetName
 	if len(asset.changedFields) > 0 {
 		data["changed_fields"] = asset.changedFields
 	}

@@ -4,6 +4,7 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { asset }: { asset: Asset } = $props();
 
@@ -42,7 +43,7 @@
 				</div>
 				<div class="min-w-0">
 					<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-						Framework
+						{m.asset_agent_spec_framework()}
 					</div>
 					<div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
 						{framework || '—'}
@@ -61,7 +62,9 @@
 					/>
 				</div>
 				<div class="min-w-0">
-					<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Model</div>
+					<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+						{m.asset_agent_spec_model()}
+					</div>
 					<div class="text-base font-semibold text-gray-900 dark:text-gray-100 font-mono truncate">
 						{model || '—'}
 					</div>
@@ -80,13 +83,10 @@
 				</div>
 				<div class="min-w-0">
 					<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-						Capabilities
+						{m.asset_agent_spec_capabilities()}
 					</div>
 					<div class="text-base font-semibold text-gray-900 dark:text-gray-100">
-						{toolNames.length}
-						<span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-							{toolNames.length === 1 ? 'tool' : 'tools'}
-						</span>
+						{m.asset_agent_spec_tool_unit({ count: toolNames.length })}
 					</div>
 				</div>
 			</div>
@@ -104,9 +104,11 @@
 			>
 				<div class="flex items-center gap-2">
 					<IconifyIcon icon="material-symbols:format-quote-outline" class="w-5 h-5 text-gray-400" />
-					<span class="text-sm font-medium text-gray-900 dark:text-gray-100">System Prompt</span>
+					<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+						{m.asset_agent_spec_system_prompt()}
+					</span>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{prompt.length} chars
+						{m.asset_agent_spec_char_count({ count: prompt.length })}
 					</span>
 				</div>
 				<IconifyIcon
