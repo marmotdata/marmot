@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import { m } from '$lib/paraglide/messages';
 
 	export let tabs: { id: string; label: string }[];
 
@@ -18,7 +19,7 @@
 	<div
 		class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 	>
-		<nav class="space-y-1 p-2" aria-label="Admin navigation">
+		<nav class="space-y-1 p-2" aria-label={m.ui_sidebar_admin_nav_aria()}>
 			{#each tabs as tab (tab.id)}
 				<button
 					class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {activeTab ===

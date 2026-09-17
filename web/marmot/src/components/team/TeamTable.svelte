@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import { Users, Lock, Trash2 } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -29,7 +30,7 @@
 			});
 
 			if (response.ok) {
-				toasts.success(`Team "${teamToDelete.name}" deleted successfully`);
+				toasts.success(m.teams_delete_success({ name: teamToDelete.name }));
 				dispatch('delete', teamToDelete.id);
 				showDeleteModal = false;
 				teamToDelete = null;
@@ -38,7 +39,7 @@
 				toasts.error(errorMsg);
 			}
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'An error occurred');
+			toasts.error(err instanceof Error ? err.message : m.teams_error_generic());
 		} finally {
 			deletingTeamId = null;
 		}
@@ -59,22 +60,22 @@
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 				>
-					Team
+					{m.teams_header_team()}
 				</th>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 				>
-					Description
+					{m.common_description()}
 				</th>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 				>
-					Source
+					{m.teams_header_source()}
 				</th>
 				<th
 					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 				>
-					Actions
+					{m.common_actions()}
 				</th>
 			</tr>
 		</thead>
@@ -105,13 +106,13 @@
 								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
 							>
 								<Lock class="h-3 w-3 mr-1" />
-								SSO ({team.sso_provider})
+								{m.teams_sso_provider_badge({ provider: team.sso_provider })}
 							</span>
 						{:else}
 							<span
 								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 							>
-								Manual
+								{m.teams_manual_badge()}
 							</span>
 						{/if}
 					</td>
@@ -127,14 +128,14 @@
 								}}
 								disabled={deletingTeamId === team.id}
 								class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-								title="Delete team"
+								title={m.teams_delete_tooltip()}
 							>
 								<Trash2 class="h-4 w-4" />
 							</button>
 						{:else}
 							<span
 								class="text-gray-400 dark:text-gray-600"
-								title="SSO-managed teams cannot be deleted"
+								title={m.teams_sso_cannot_delete_title()}
 							>
 								<Lock class="h-4 w-4" />
 							</span>
@@ -146,7 +147,7 @@
 	</table>
 
 	{#if teams.length === 0}
-		<div class="text-center py-8 text-gray-500 dark:text-gray-400">No teams found</div>
+		<div class="text-center py-8 text-gray-500 dark:text-gray-400">{m.teams_no_teams_found()}</div>
 	{/if}
 
 	{#if totalPages > 1}
@@ -159,22 +160,24 @@
 					disabled={currentPage === 1}
 					class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Previous
+					{m.common_previous()}
 				</button>
 				<button
 					on:click={() => dispatch('pageChange', offset + limit)}
 					disabled={currentPage === totalPages}
 					class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Next
+					{m.common_next()}
 				</button>
 			</div>
 			<div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
 				<div>
 					<p class="text-sm text-gray-700 dark:text-gray-300">
-						Showing <span class="font-medium">{offset + 1}</span> to
-						<span class="font-medium">{Math.min(offset + limit, totalTeams)}</span> of
-						<span class="font-medium">{totalTeams}</span> teams
+						{m.teams_pagination_showing({
+							from: offset + 1,
+							to: Math.min(offset + limit, totalTeams),
+							total: totalTeams
+						})}
 					</p>
 				</div>
 				<div>
@@ -184,14 +187,14 @@
 							disabled={currentPage === 1}
 							class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
 						>
-							Previous
+							{m.common_previous()}
 						</button>
 						<button
 							on:click={() => dispatch('pageChange', offset + limit)}
 							disabled={currentPage === totalPages}
 							class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
 						>
-							Next
+							{m.common_next()}
 						</button>
 					</nav>
 				</div>
@@ -202,9 +205,9 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete Team"
-	message="Are you sure you want to delete this team? This action cannot be undone."
-	confirmText="Delete"
+	title={m.teams_delete_title()}
+	message={m.teams_delete_confirm_message()}
+	confirmText={m.common_delete()}
 	resourceName={teamToDelete?.name || ''}
 	requireConfirmation={true}
 	onConfirm={handleDeleteTeam}

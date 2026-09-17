@@ -11,6 +11,7 @@
 	import type { ExternalLink, CreateAssetRuleInput } from '$lib/assetrules/types';
 	import { searchTerms } from '$lib/glossary/api';
 	import type { GlossaryTerm } from '$lib/glossary/types';
+	import { m } from '$lib/paraglide/messages';
 
 	// Step state
 	let currentStep = $state(1);
@@ -46,7 +47,7 @@
 
 	function handleNextStep() {
 		if (currentStep === 1 && !name.trim()) {
-			error = 'Name is required';
+			error = m.assetrules_validation_name_required();
 			return;
 		}
 		if (currentStep < totalSteps) {
@@ -104,7 +105,7 @@
 			});
 			previewCount = result.asset_count;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to preview rule';
+			error = e instanceof Error ? e.message : m.assetrules_preview_error();
 		} finally {
 			previewing = false;
 		}
@@ -114,18 +115,18 @@
 	async function handleSave() {
 		error = null;
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.assetrules_validation_name_required();
 			currentStep = 1;
 			return;
 		}
 		const validLinks = links.filter((l) => l.name.trim() && l.url.trim());
 		if (validLinks.length === 0 && selectedTerms.length === 0) {
-			error = 'At least one link or glossary term is required';
+			error = m.assetrules_validation_enrichment_required();
 			currentStep = 2;
 			return;
 		}
 		if (!queryExpression.trim()) {
-			error = 'Query expression is required';
+			error = m.assetrules_validation_query_required();
 			return;
 		}
 
@@ -144,7 +145,7 @@
 			const created = await createAssetRule(input);
 			goto(resolve(`/asset-rules/${created.id}`));
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to create asset rule';
+			error = e instanceof Error ? e.message : m.assetrules_create_error();
 		} finally {
 			saving = false;
 		}
@@ -152,7 +153,7 @@
 </script>
 
 <svelte:head>
-	<title>New Asset Rule - Marmot</title>
+	<title>{m.assetrules_new_page_title()}</title>
 </svelte:head>
 
 <div class="min-h-screen">
@@ -162,7 +163,7 @@
 			<div class="flex items-center gap-4">
 				<button
 					onclick={() => goto(resolve('/asset-rules'))}
-					aria-label="Back to asset rules"
+					aria-label={m.assetrules_back_aria()}
 					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
 					<IconifyIcon
@@ -171,9 +172,11 @@
 					/>
 				</button>
 				<div>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">New Asset Rule</h1>
+					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{m.assetrules_new_rule_heading()}
+					</h1>
 					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						Step {currentStep} of {totalSteps}
+						{m.assetrules_step_of({ current: currentStep, total: totalSteps })}
 					</p>
 				</div>
 			</div>
@@ -189,9 +192,9 @@
 				onStepClick={(step) => (currentStep = step)}
 				{canNavigateToStep}
 			>
-				<Step title="Basic Info" icon="material-symbols:info-outline" />
-				<Step title="Enrichments" icon="material-symbols:link" />
-				<Step title="Query" icon="material-symbols:filter-list" />
+				<Step title={m.assetrules_step_basic_info()} icon="material-symbols:info-outline" />
+				<Step title={m.assetrules_step_enrichments()} icon="material-symbols:link" />
+				<Step title={m.assetrules_step_query()} icon="material-symbols:filter-list" />
 			</Stepper>
 		</div>
 	</div>
@@ -222,18 +225,18 @@
 						icon="material-symbols:info-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Basic Information
+					{m.assetrules_basic_information_heading()}
 				</h3>
 
 				<div class="space-y-5">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Name <span class="text-red-500">*</span>
+							{m.common_name()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							type="text"
 							bind:value={name}
-							placeholder="e.g., AWS Console Links"
+							placeholder={m.assetrules_name_placeholder()}
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							required
 						/>
@@ -241,12 +244,12 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Description
+							{m.common_description()}
 						</label>
 						<textarea
 							bind:value={description}
 							rows="2"
-							placeholder="Optional description of what this rule does"
+							placeholder={m.assetrules_description_placeholder()}
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
 						></textarea>
 					</div>
@@ -268,7 +271,7 @@
 							icon="material-symbols:link"
 							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 						/>
-						External Links
+						{m.assetrules_external_links_heading()}
 					</h3>
 
 					<ExternalLinks bind:links canEdit={true} />
@@ -285,7 +288,7 @@
 							icon="material-symbols:book"
 							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 						/>
-						Glossary Terms
+						{m.assetrules_glossary_terms_heading()}
 					</h3>
 
 					{#if selectedTerms.length > 0}
@@ -312,7 +315,7 @@
 									</div>
 									<button
 										onclick={() => removeTerm(term.id)}
-										aria-label="Remove term {term.name}"
+										aria-label={m.assetrules_remove_term_aria({ name: term.name })}
 										class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded flex-shrink-0"
 									>
 										<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
@@ -333,7 +336,7 @@
 								value={termSearchQuery}
 								oninput={handleTermSearch}
 								onfocus={() => (showTermSearch = true)}
-								placeholder="Search glossary terms to add..."
+								placeholder={m.assetrules_term_search_placeholder()}
 								class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent"
 							/>
 						</div>
@@ -342,7 +345,9 @@
 								class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
 							>
 								{#if isSearchingTerms}
-									<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Searching...</div>
+									<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+										{m.assetrules_searching()}
+									</div>
 								{:else}
 									{#each termSearchResults as term (term.id)}
 										<button
@@ -365,7 +370,7 @@
 					</div>
 
 					<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-						Add at least one link or glossary term to apply to matched assets.
+						{m.assetrules_enrichments_hint()}
 					</p>
 				</div>
 			</div>
@@ -381,12 +386,11 @@
 						icon="material-symbols:filter-list"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Query
+					{m.assetrules_query_heading()}
 				</h3>
 
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Define a query to match assets. Enrichments will be automatically applied to all matching
-					assets.
+					{m.assetrules_query_description()}
 				</p>
 
 				<QueryBuilder
@@ -394,7 +398,7 @@
 					onQueryChange={(q) => (queryExpression = q)}
 					initiallyExpanded={true}
 					showRunButton={true}
-					runButtonText={previewing ? 'Previewing...' : 'Preview'}
+					runButtonText={previewing ? m.assetrules_previewing() : m.assetrules_preview()}
 					runButtonIcon={previewing ? 'mdi:loading' : 'material-symbols:visibility'}
 					onRunClick={() => handlePreview()}
 				/>
@@ -404,7 +408,7 @@
 						class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center gap-2"
 					>
 						<IconifyIcon icon="material-symbols:check-circle" class="w-4 h-4" />
-						This rule matches {previewCount} asset{previewCount !== 1 ? 's' : ''}
+						{m.assetrules_rule_matches_count({ count: previewCount })}
 					</div>
 				{/if}
 			</div>
@@ -420,10 +424,14 @@
 						variant="clear"
 						click={() => currentStep--}
 						icon="material-symbols:arrow-back"
-						text="Previous"
+						text={m.common_previous()}
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto(resolve('/asset-rules'))} text="Cancel" />
+					<Button
+						variant="clear"
+						click={() => goto(resolve('/asset-rules'))}
+						text={m.common_cancel()}
+					/>
 				{/if}
 			</div>
 			<div>
@@ -431,7 +439,7 @@
 					<Button
 						variant="filled"
 						click={handleNextStep}
-						text="Next"
+						text={m.common_next()}
 						icon="material-symbols:arrow-forward"
 						disabled={currentStep === 1 && !canProceedFromStep1}
 					/>
@@ -439,7 +447,7 @@
 					<Button
 						variant="filled"
 						click={handleSave}
-						text={saving ? 'Creating...' : 'Create Asset Rule'}
+						text={saving ? m.assetrules_creating() : m.assetrules_create_rule_button()}
 						disabled={saving}
 						icon="material-symbols:check"
 					/>

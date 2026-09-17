@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import Button from '$components/ui/Button.svelte';
 
 	let enabledProviders = $state<string[]>([]);
@@ -11,12 +12,12 @@
 		try {
 			const response = await fetchApi('/auth-providers', { skipAuth: true, prefix: '' });
 			if (!response.ok) {
-				throw new Error('Failed to fetch auth configuration');
+				throw new Error(m.oauth_fetch_config_error());
 			}
 			const data = await response.json();
 			enabledProviders = data.enabled_providers;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load OAuth providers';
+			error = err instanceof Error ? err.message : m.oauth_load_error();
 		} finally {
 			loading = false;
 		}
@@ -44,7 +45,7 @@
 		</div>
 		<div class="relative flex justify-center text-sm">
 			<span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-				>Or continue with</span
+				>{m.oauth_continue_with()}</span
 			>
 		</div>
 	</div>
@@ -54,7 +55,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:google"
-				text="Sign in with Google"
+				text={m.oauth_signin_with({ provider: 'Google' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('google')}
 			/>
@@ -63,7 +64,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:github"
-				text="Sign in with GitHub"
+				text={m.oauth_signin_with({ provider: 'GitHub' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('github')}
 			/>
@@ -72,7 +73,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:gitlab"
-				text="Sign in with GitLab"
+				text={m.oauth_signin_with({ provider: 'GitLab' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('gitlab')}
 			/>
@@ -81,7 +82,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:keycloak"
-				text="Sign in with Keycloak"
+				text={m.oauth_signin_with({ provider: 'Keycloak' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('keycloak')}
 			/>
@@ -90,7 +91,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:okta"
-				text="Sign in with Okta"
+				text={m.oauth_signin_with({ provider: 'Okta' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('okta')}
 			/>
@@ -99,7 +100,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:slack"
-				text="Sign in with Slack"
+				text={m.oauth_signin_with({ provider: 'Slack' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('slack')}
 			/>
@@ -108,7 +109,7 @@
 			<Button
 				variant="clear"
 				icon="simple-icons:auth0"
-				text="Sign in with Auth0"
+				text={m.oauth_signin_with({ provider: 'Auth0' })}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('auth0')}
 			/>
@@ -117,7 +118,7 @@
 			<Button
 				variant="clear"
 				icon="mdi:shield-key-outline"
-				text="Sign in with SSO"
+				text={m.oauth_signin_sso()}
 				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
 				click={() => handleOAuthLogin('generic_oidc')}
 			/>

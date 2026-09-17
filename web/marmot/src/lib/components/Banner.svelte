@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let enabled: boolean = false;
 	export let dismissible: boolean = true;
@@ -139,7 +140,7 @@
 					<button
 						onclick={dismiss}
 						class="flex-shrink-0 p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-all hover:scale-110"
-						aria-label="Dismiss banner"
+						aria-label={m.ui_banner_dismiss_aria()}
 					>
 						<Icon icon="material-symbols:close" class="w-4 h-4" />
 					</button>

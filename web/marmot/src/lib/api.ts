@@ -1,6 +1,7 @@
 import { auth } from './stores/auth';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { m } from '$lib/paraglide/messages';
 
 interface FetchApiOptions extends RequestInit {
 	skipAuth?: boolean;
@@ -51,7 +52,7 @@ export async function fetchAssetPreview(assetId: string): Promise<AssetPreviewRe
 	const response = await fetchApi(`/assets/preview/${assetId}`);
 	if (!response.ok) {
 		const errorData = await response.json();
-		const error: ApiError = new Error(errorData.error || 'Failed to fetch preview');
+		const error: ApiError = new Error(errorData.error || m.ui_preview_fetch_error());
 		error.status = response.status;
 		throw error;
 	}

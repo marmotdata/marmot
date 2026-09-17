@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		tags = $bindable([]),
@@ -112,7 +113,7 @@
 						onclick={() => removeTag(tag)}
 						disabled={saving}
 						class="hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
-						aria-label="Remove tag {tag}"
+						aria-label={m.tags_remove_tag_aria({ tag })}
 					>
 						<IconifyIcon
 							icon="material-symbols:close-small-rounded"
@@ -133,8 +134,8 @@
 						if (e.key === 'Enter') addTag();
 						if (e.key === 'Escape') cancelAdding();
 					}}
-					placeholder="New tag..."
-					aria-label="Enter new tag"
+					placeholder={m.tags_new_tag_placeholder()}
+					aria-label={m.tags_enter_new_tag_aria()}
 					class="w-24 text-xs bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
 					autofocus
 				/>
@@ -142,8 +143,8 @@
 					onclick={addTag}
 					disabled={saving || !newTag.trim()}
 					class="p-0.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50"
-					title="Add"
-					aria-label="Add tag"
+					title={m.common_add()}
+					aria-label={m.tags_add_tag()}
 				>
 					<IconifyIcon icon="material-symbols:check-rounded" class="w-4 h-4" aria-hidden="true" />
 				</button>
@@ -151,8 +152,8 @@
 					onclick={cancelAdding}
 					disabled={saving}
 					class="p-0.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-					title="Cancel"
-					aria-label="Cancel adding tag"
+					title={m.common_cancel()}
+					aria-label={m.tags_cancel_adding_aria()}
 				>
 					<IconifyIcon icon="material-symbols:close-rounded" class="w-4 h-4" aria-hidden="true" />
 				</button>
@@ -166,12 +167,12 @@
 				class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 disabled:opacity-50 transition-colors"
 			>
 				<IconifyIcon icon="material-symbols:add-rounded" class="w-3.5 h-3.5" aria-hidden="true" />
-				Add tag
+				{m.tags_add_tag()}
 			</button>
 		{/if}
 	</div>
 
 	{#if tags.length === 0 && !canEdit}
-		<p class="text-sm text-gray-400 dark:text-gray-500 italic">No tags</p>
+		<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.tags_none()}</p>
 	{/if}
 </div>
