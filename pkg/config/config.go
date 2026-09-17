@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -104,6 +106,10 @@ type Config struct {
 		Slack       *OAuthProviderConfig `mapstructure:"slack"`
 		Auth0       *OAuthProviderConfig `mapstructure:"auth0"`
 		Anonymous   AnonymousAuthConfig  `mapstructure:"anonymous"`
+		DCR         struct {
+			// AllowedRedirectHosts permits https redirect URIs on these hosts; empty keeps DCR loopback-only.
+			AllowedRedirectHosts []string `mapstructure:"allowed_redirect_hosts"`
+		} `mapstructure:"dcr"`
 	} `mapstructure:"auth"`
 
 	OpenLineage struct {
@@ -330,6 +336,8 @@ func loadConfig(configPath string) error {
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
+
+	v.BindEnv("auth.dcr.allowed_redirect_hosts")
 
 	v.BindEnv("openlineage.auth.enabled")
 
@@ -592,5 +600,37 @@ func validate(cfg *Config) error {
 		return fmt.Errorf("invalid pipelines.claim_expiry: must be at least 1 second")
 	}
 
+	for i, entry := range cfg.Auth.DCR.AllowedRedirectHosts {
+		normalised := strings.ToLower(strings.TrimSpace(entry))
+		host := normalised
+		if strings.Contains(normalised, ":") {
+			h, port, err := net.SplitHostPort(normalised)
+			if err != nil {
+				return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: entries must be a hostname or hostname:port", entry)
+			}
+			if n, err := strconv.Atoi(port); err != nil || n < 1 || n > 65535 {
+				return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: port must be between 1 and 65535", entry)
+			}
+			host = h
+		}
+		if !validRedirectHost(host) {
+			return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: entries must be a hostname or hostname:port", entry)
+		}
+		cfg.Auth.DCR.AllowedRedirectHosts[i] = normalised
+	}
+
 	return nil
+}
+
+// validRedirectHost rejects anything that cannot appear in a lowercased DNS hostname, so wildcards and typos fail at load rather than silently never matching.
+func validRedirectHost(host string) bool {
+	if host == "" {
+		return false
+	}
+	for _, r := range host {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '.' && r != '-' {
+			return false
+		}
+	}
+	return true
 }

@@ -3,7 +3,6 @@ package mcp
 import (
 	"context"
 
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
@@ -12,6 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/marmot/pkg/config"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -30,6 +30,8 @@ type TeamService interface {
 	ListTeams(ctx context.Context, limit, offset int) ([]*Team, int, error)
 	ListMembers(ctx context.Context, teamID string) ([]*TeamMember, error)
 	ListUserTeams(ctx context.Context, userID string) ([]*Team, error)
+	AddAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error
+	RemoveAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error
 }
 
 type DataProductService interface {
@@ -256,4 +258,63 @@ Optional:
 Returns upstream dependencies and downstream consumers grouped by distance from the asset.
 </instructions>`,
 	}, tc.traceLineage)
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "update_documentation",
+		Description: `<usecase>
+Use this to write or clear the human-authored documentation on an asset, for example to add a
+plain-language description of what a table is for. This writes the user_description field and
+never overwrites the description a plugin ingested, so it is safe for a person's own notes.
+</usecase>
+
+<instructions>
+Identify the asset with {"id": "asset-id"} or {"mrn": "mrn://..."}, then pass "documentation"
+with the text to set (an empty string clears it).
+
+This tool is two-phase and safe by default:
+- Call WITHOUT "confirm" (or "confirm": false) to PREVIEW. It returns the current and proposed
+  text and changes nothing.
+- Only after a human has approved the preview, call again with "confirm": true to apply it.
+
+Requires the assets:manage permission. If the caller lacks it the tool refuses and nothing changes.
+</instructions>`,
+	}, tc.updateDocumentation)
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "manage_tags",
+		Description: `<usecase>
+Use this to add or remove tags on an asset, for example tagging a table "pii" or "deprecated".
+</usecase>
+
+<instructions>
+Identify the asset with {"id": "asset-id"} or {"mrn": "mrn://..."}, then pass "add_tags" and/or
+"remove_tags" as string arrays. Tags already in the desired state are ignored.
+
+This tool is two-phase and safe by default:
+- Call WITHOUT "confirm" to PREVIEW the tags that would be added and removed. Nothing changes.
+- Only after a human has approved the preview, call again with "confirm": true to apply it.
+
+Requires the assets:manage permission.
+</instructions>`,
+	}, tc.manageTags)
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "manage_owners",
+		Description: `<usecase>
+Use this to add or remove an owner on an asset. An owner is a user or a team.
+</usecase>
+
+<instructions>
+Identify the asset with {"id": "asset-id"} or {"mrn": "mrn://..."}, then pass:
+- "action": "add" or "remove"
+- "owner_type": "user" or "team"
+- "owner_id": the id of the user or team (resolve names to ids with explore_teams or find_ownership first)
+
+This tool is two-phase and safe by default:
+- Call WITHOUT "confirm" to PREVIEW the change. Nothing changes.
+- Only after a human has approved the preview, call again with "confirm": true to apply it.
+
+Requires the assets:manage permission.
+</instructions>`,
+	}, tc.manageOwners)
 }

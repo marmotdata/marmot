@@ -40,6 +40,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	IncludeWorkflows  bool `json:"include_workflows" description:"Whether to discover Glue workflows" default:"true"`
 	IncludeTriggers   bool `json:"include_triggers" description:"Whether to read trigger definitions" default:"true"`
@@ -90,6 +91,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

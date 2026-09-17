@@ -62,6 +62,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	Catalogs         []string `json:"catalogs,omitempty" description:"Data catalogs to discover. All catalogs when empty"`
 	ExcludeCatalogs  []string `json:"exclude_catalogs,omitempty" description:"Data catalogs to skip"`
@@ -121,6 +122,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	pluginsdk.ApplyDefaults(config, rawConfig)
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

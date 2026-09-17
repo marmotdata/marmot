@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -192,6 +193,100 @@ func (tc *ToolContext) renderAssetDetails(ctx context.Context, a *asset.Asset) (
 	}, nil, nil
 }
 
+type filterKind int
+
+const (
+	filterKindType filterKind = iota
+	filterKindProvider
+	filterKindTag
+)
+
+func (k filterKind) String() string {
+	switch k {
+	case filterKindType:
+		return "type"
+	case filterKindProvider:
+		return "provider"
+	default:
+		return "tag"
+	}
+}
+
+// canonicaliseFilterValues maps each supplied filter value to the matching value the catalog actually stores, so an agent's "postgres" reaches "PostgreSQL" and "kafka" reaches "Kafka" instead of matching nothing. A value with no match is passed through unchanged so a genuinely absent filter still returns an honest empty result. The second return lists every rewrite so callers can surface which filters actually ran.
+func canonicaliseFilterValues(values []string, kind filterKind, summary *asset.AssetSummary) ([]string, []string) {
+	if len(values) == 0 || summary == nil {
+		return values, nil
+	}
+
+	var known []string
+	switch kind {
+	case filterKindType:
+		for t := range summary.Types {
+			known = append(known, t)
+		}
+	case filterKindProvider:
+		for p := range summary.Providers {
+			known = append(known, p)
+		}
+	case filterKindTag:
+		for t := range summary.Tags {
+			known = append(known, t)
+		}
+	}
+	// A stable order makes the match deterministic when several known values would satisfy the same looser rule.
+	sort.Strings(known)
+
+	out := make([]string, len(values))
+	var rewrites []string
+	for i, v := range values {
+		out[i] = v
+		if canonical, ok := bestFilterMatch(v, known); ok {
+			out[i] = canonical
+			if canonical != v {
+				rewrites = append(rewrites, fmt.Sprintf("%s %q matched catalog value %q", kind, v, canonical))
+			}
+		}
+	}
+	return out, rewrites
+}
+
+// filterRewriteNote tells the agent which filter values were canonicalised so results are never silently presented under a different filter than the one requested.
+func filterRewriteNote(rewrites []string) string {
+	if len(rewrites) == 0 {
+		return ""
+	}
+	return "_Filter values adjusted to catalog vocabulary: " + strings.Join(rewrites, "; ") + "_"
+}
+
+// bestFilterMatch finds the catalog value that best corresponds to a supplied filter value, trying an exact case-insensitive match first, then a prefix relationship in either direction so both "postgres" against "PostgreSQL" and a plural "databases" against "Database" resolve, and finally a substring containment for values of three or more characters so a stray short value cannot latch onto an arbitrary catalog entry. It reports whether any rule matched.
+func bestFilterMatch(value string, known []string) (string, bool) {
+	v := strings.ToLower(strings.TrimSpace(value))
+	if v == "" {
+		return "", false
+	}
+
+	var prefixMatch, containsMatch string
+	for _, k := range known {
+		lk := strings.ToLower(k)
+		if lk == v {
+			return k, true
+		}
+		if prefixMatch == "" && (strings.HasPrefix(lk, v) || strings.HasPrefix(v, lk)) {
+			prefixMatch = k
+		}
+		if len(v) >= 3 && containsMatch == "" && (strings.Contains(lk, v) || strings.Contains(v, lk)) {
+			containsMatch = k
+		}
+	}
+	if prefixMatch != "" {
+		return prefixMatch, true
+	}
+	if containsMatch != "" {
+		return containsMatch, true
+	}
+	return "", false
+}
+
 func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput) (*mcpsdk.CallToolResult, any, error) {
 	if args.Limit == 0 {
 		args.Limit = 20
@@ -203,6 +298,26 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 	query := args.Query
 	if query == "*" {
 		query = ""
+	}
+
+	// An agent tends to guess filter values from natural language and lands on lowercase or abbreviated forms like "postgres" or "kafka" whereas assets store "PostgreSQL" and "Kafka", so canonicalise the supplied types, providers and tags against the values actually in the catalog before either search backend applies its exact matching. A summary fetch failure leaves the values untouched rather than failing the search.
+	var rewrites []string
+	if len(args.Types)+len(args.Providers)+len(args.Tags) > 0 {
+		summary, err := tc.assetService.Summary(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("MCP filter canonicalisation skipped: summary unavailable")
+		} else {
+			var r []string
+			args.Types, r = canonicaliseFilterValues(args.Types, filterKindType, summary)
+			rewrites = append(rewrites, r...)
+			args.Providers, r = canonicaliseFilterValues(args.Providers, filterKindProvider, summary)
+			rewrites = append(rewrites, r...)
+			args.Tags, r = canonicaliseFilterValues(args.Tags, filterKindTag, summary)
+			rewrites = append(rewrites, r...)
+			if len(rewrites) > 0 {
+				log.Debug().Strs("filter_rewrites", rewrites).Msg("MCP filter values canonicalised")
+			}
+		}
 	}
 
 	log.Debug().
@@ -218,13 +333,13 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 	// Use ES-backed search for text queries when available and no metadata_filters
 	// (metadata_filters require full asset objects which ES results don't have)
 	if tc.searchService != nil && query != "" && len(args.MetadataFilters) == 0 {
-		return tc.searchAssetsES(ctx, args, query)
+		return tc.searchAssetsES(ctx, args, query, rewrites)
 	}
 
-	return tc.searchAssetsPG(ctx, args, query)
+	return tc.searchAssetsPG(ctx, args, query, rewrites)
 }
 
-func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInput, query string) (*mcpsdk.CallToolResult, any, error) {
+func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInput, query string, rewrites []string) (*mcpsdk.CallToolResult, any, error) {
 	filter := search.Filter{
 		Query:      query,
 		Types:      []search.ResultType{search.ResultTypeAsset},
@@ -251,6 +366,9 @@ func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInpu
 
 	formatted := FormatAssetList(assets, total, tc.config.Server.RootURL)
 	formatted += "\n\n" + FormatSearchSummary(total, len(assets), nil)
+	if note := filterRewriteNote(rewrites); note != "" {
+		formatted += "\n\n" + note
+	}
 
 	var nextActions map[string]string
 	switch {
@@ -289,7 +407,7 @@ func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInpu
 	}, nil, nil
 }
 
-func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInput, query string) (*mcpsdk.CallToolResult, any, error) {
+func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInput, query string, rewrites []string) (*mcpsdk.CallToolResult, any, error) {
 	filter := asset.SearchFilter{
 		Query:        query,
 		Types:        args.Types,
@@ -330,6 +448,9 @@ func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInpu
 
 	formatted := FormatAssetList(assets, total, tc.config.Server.RootURL)
 	formatted += "\n\n" + FormatSearchSummary(total, len(assets), availableFilters)
+	if note := filterRewriteNote(rewrites); note != "" {
+		formatted += "\n\n" + note
+	}
 
 	var nextActions map[string]string
 	switch {
