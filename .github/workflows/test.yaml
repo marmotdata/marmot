@@ -60,6 +60,9 @@ jobs:
       - name: Lint frontend
         run: make frontend-lint
 
+      - name: Check message catalogue
+        run: make frontend-i18n-check
+
       - name: Lint server (Go)
         run: make server-lint
 

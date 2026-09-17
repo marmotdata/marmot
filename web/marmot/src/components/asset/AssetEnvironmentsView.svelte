@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Environment } from '$lib/assets/types';
 	import MetadataView from '$components/shared/MetadataView.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let environments: Record<string, Environment>;
 
@@ -58,7 +59,7 @@
 <div class="space-y-4 p-4">
 	{#if Object.keys(environments).length === 0}
 		<div class="p-6 bg-earthy-brown-50 dark:bg-gray-800 rounded-lg">
-			<p class="text-gray-500 dark:text-gray-400 italic">No environments available</p>
+			<p class="text-gray-500 dark:text-gray-400 italic">{m.asset_environments_empty()}</p>
 		</div>
 	{:else}
 		{#each Object.entries(environments) as [key, env] (key)}
@@ -69,7 +70,7 @@
 					class="w-full px-6 py-4 flex flex-col text-left hover:bg-earthy-brown-100 dark:hover:bg-gray-700 transition-colors"
 					on:click={() => toggleEnvironment(key)}
 					aria-expanded={expandedEnvironments[key]}
-					aria-label="Toggle {key} environment details"
+					aria-label={m.asset_environments_toggle_aria({ name: key })}
 				>
 					<div class="flex items-center justify-between">
 						<div class="flex items-center space-x-3">
@@ -125,8 +126,7 @@
 								<span class="text-gray-300 dark:text-gray-600">•</span>
 							{/each}
 							<span class="text-xs text-gray-500 dark:text-gray-500 italic">
-								{Object.keys(env.metadata).length}
-								{Object.keys(env.metadata).length === 1 ? 'field' : 'fields'}
+								{m.asset_environments_field_count({ count: Object.keys(env.metadata).length })}
 							</span>
 						</div>
 					{/if}

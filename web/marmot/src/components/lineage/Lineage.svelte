@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet, SvelteMap } from 'svelte/reactivity';
 	import type { Asset } from '$lib/assets/types';
@@ -252,7 +253,7 @@
 						type: 'cycleReturn',
 						data: {
 							targetId: edge.target,
-							targetName: targetNode?.asset.name || 'Unknown',
+							targetName: targetNode?.asset.name || m.common_unknown(),
 							targetType: targetNode?.asset.type || 'unknown'
 						},
 						position: { x: 0, y: 0 }
@@ -697,7 +698,7 @@
 			const response = await fetchApi(`/lineage/assets/${currentAsset.id}?depth=${depth}`);
 
 			if (!response.ok) {
-				throw new Error('Failed to fetch lineage');
+				throw new Error(m.lineage_fetch_error());
 			}
 
 			const data = await response.json();
@@ -708,7 +709,7 @@
 			edges = elements.edges;
 		} catch (err) {
 			console.error('Error fetching lineage:', err);
-			error = err instanceof Error ? err.message : 'Failed to load lineage';
+			error = err instanceof Error ? err.message : m.lineage_load_error();
 		} finally {
 			loading = false;
 		}
@@ -777,7 +778,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to create lineage');
+				throw new Error(errorData.error || m.lineage_create_error());
 			}
 
 			// Refresh the lineage graph
@@ -892,25 +893,29 @@
 				<button
 					onclick={toggleFullscreen}
 					class="flex items-center gap-1.5 px-3 py-2 rounded-lg shadow-lg bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 text-white transition-colors"
-					title="Exit fullscreen (Esc)"
-					aria-label="Exit fullscreen"
+					title={m.lineage_exit_fullscreen_title()}
+					aria-label={m.lineage_exit_fullscreen()}
 				>
 					<IconifyIcon icon="material-symbols:fullscreen-exit-rounded" class="w-4 h-4" />
-					<span class="text-xs font-semibold">Exit fullscreen</span>
-					<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20">Esc</span>
+					<span class="text-xs font-semibold">{m.lineage_exit_fullscreen()}</span>
+					<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20"
+						>{m.lineage_esc_key_label()}</span
+					>
 				</button>
 			{:else}
 				<button
 					onclick={toggleFullscreen}
 					class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-					title="Enter fullscreen"
-					aria-label="Enter fullscreen"
+					title={m.lineage_enter_fullscreen()}
+					aria-label={m.lineage_enter_fullscreen()}
 				>
 					<IconifyIcon icon="material-symbols:fullscreen-rounded" class="w-4 h-4" />
 				</button>
 			{/if}
 			<div class="flex flex-col items-end gap-1">
-				<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">Depth</span>
+				<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">
+					{m.lineage_depth_label()}
+				</span>
 				<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
 					<div class="flex flex-col items-center p-1">
 						<button
@@ -944,11 +949,11 @@
 					icon="bi:ticket-perforated-fill"
 					class="w-3 h-3 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 rotate-12"
 				/>
-				<span class="text-gray-600 dark:text-gray-300">Stub Asset</span>
+				<span class="text-gray-600 dark:text-gray-300">{m.lineage_stub_asset_legend()}</span>
 			</div>
 			<div class="flex items-center gap-1">
 				<div class="w-4 h-0.5 bg-earthy-terracotta-600"></div>
-				<span>Returns to</span>
+				<span>{m.lineage_returns_to()}</span>
 			</div>
 		</div>
 
@@ -968,14 +973,14 @@
 				<span
 					class="text-[11px] font-semibold uppercase tracking-wider text-earthy-green-800 dark:text-earthy-green-300"
 				>
-					Observed
+					{m.lineage_observed_toggle()}
 				</span>
 				<span class="text-[11px] text-earthy-green-700 dark:text-earthy-green-500 font-mono">
 					{observedEdgeCount}
 				</span>
 				<span
 					class="w-3.5 h-3.5 inline-flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-semibold text-gray-500 dark:text-gray-400 cursor-help"
-					title="Runtime-observed access — captured from real execution, not declared data flow."
+					title={m.lineage_observed_tooltip()}
 				>
 					?
 				</span>
@@ -1000,14 +1005,14 @@
 				<span
 					class="text-[11px] font-semibold uppercase tracking-wider text-earthy-green-800 dark:text-earthy-green-300"
 				>
-					Structure
+					{m.lineage_structure_toggle()}
 				</span>
 				<span class="text-[11px] text-earthy-green-700 dark:text-earthy-green-500 font-mono">
 					{structuralEdgeCount}
 				</span>
 				<span
 					class="w-3.5 h-3.5 inline-flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-semibold text-gray-500 dark:text-gray-400 cursor-help"
-					title="Containment — a database holding a table, a dashboard holding a chart. Turn off to see only how data moves."
+					title={m.lineage_structure_tooltip()}
 				>
 					?
 				</span>
@@ -1018,10 +1023,10 @@
 			<button
 				onclick={collapseAllClusters}
 				class="absolute left-4 top-[calc(6rem+2.25rem)] z-[5] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-earthy-green-200 dark:border-earthy-green-800/50 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors text-[11px] font-semibold uppercase tracking-wider text-earthy-green-800 dark:text-earthy-green-300"
-				title="Recollapse all expanded observed groups"
+				title={m.lineage_collapse_groups_title()}
 			>
 				<IconifyIcon icon="material-symbols:unfold-less-rounded" class="w-3.5 h-3.5" />
-				<span>Collapse groups</span>
+				<span>{m.lineage_collapse_groups()}</span>
 				<span class="font-mono text-earthy-green-700 dark:text-earthy-green-500">
 					{expandedClusters.size}
 				</span>
@@ -1112,20 +1117,20 @@
 			/>
 			<div>
 				<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-					Delete this lineage connection?
+					{m.lineage_delete_confirm()}
 				</p>
 				<div class="flex gap-2">
 					<button
 						onclick={handleCancelDelete}
 						class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 					>
-						Cancel
+						{m.common_cancel()}
 					</button>
 					<button
 						onclick={handleDeleteLineage}
 						class="px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors"
 					>
-						Delete
+						{m.common_delete()}
 					</button>
 				</div>
 			</div>

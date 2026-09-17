@@ -13,6 +13,8 @@
 	import IconifyIcon from '@iconify/svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDateTime } from '$lib/utils';
 
 	export let product: DataProduct | null = null;
 	export let onClose: () => void;
@@ -46,10 +48,6 @@
 	}
 
 	$: syncProductChange(product?.id ?? null);
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleString();
-	}
 
 	async function fetchResolvedAssets() {
 		if (!product?.id || loadingAssets) return;
@@ -130,7 +128,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to delete data product');
+				throw new Error(errorData.error || m.products_error_delete());
 			}
 
 			showDeleteModal = false;
@@ -142,7 +140,7 @@
 				window.location.reload();
 			}
 		} catch (err) {
-			deleteError = err instanceof Error ? err.message : 'Failed to delete data product';
+			deleteError = err instanceof Error ? err.message : m.products_error_delete();
 		} finally {
 			isDeleting = false;
 		}
@@ -172,7 +170,9 @@
 				type="button"
 				onclick={onToggleCollapse}
 				class="flex-shrink-0 w-8 flex items-center justify-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+				aria-label={collapsed
+					? m.asset_blade_expand_sidebar_aria()
+					: m.asset_blade_collapse_sidebar_aria()}
 			>
 				<svg
 					class="w-4 h-4 text-gray-600 dark:text-gray-400 transition-transform {collapsed
@@ -192,13 +192,15 @@
 				<div
 					class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
 				>
-					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Product Details</h2>
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{m.products_blade_details_heading()}
+					</h2>
 					{#if !staticPlacement}
 						<div class="flex items-center space-x-4">
 							<Button
 								icon="material-symbols:screenshot-monitor-outline"
 								href={fullViewUrl}
-								text="Full View"
+								text={m.asset_blade_full_view()}
 								variant="filled"
 							/>
 							<button
@@ -228,7 +230,7 @@
 											{#if product.icon_url}
 												<AuthenticatedImage
 													src={product.icon_url}
-													alt="{product.name} icon"
+													alt={m.products_icon_alt({ name: product.name })}
 													class="w-full h-full object-cover"
 												/>
 											{:else}
@@ -260,7 +262,7 @@
 											<h4
 												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 											>
-												Tags
+												{m.common_tags()}
 											</h4>
 										</div>
 										<div class="flex flex-wrap gap-1">
@@ -276,7 +278,9 @@
 													<span class="text-xs text-gray-500">+{product.tags.length - 5}</span>
 												{/if}
 											{:else}
-												<span class="text-xs text-gray-400 dark:text-gray-500 italic">No tags</span>
+												<span class="text-xs text-gray-400 dark:text-gray-500 italic"
+													>{m.products_no_tags()}</span
+												>
 											{/if}
 										</div>
 									</div>
@@ -289,7 +293,7 @@
 											<h4
 												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 											>
-												Owners
+												{m.common_owners()}
 											</h4>
 										</div>
 										<OwnerSelector
@@ -310,7 +314,7 @@
 								<div class="flex items-center justify-between mb-2">
 									<div class="flex items-center gap-2">
 										<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-											Description
+											{m.common_description()}
 										</h3>
 									</div>
 								</div>
@@ -328,9 +332,11 @@
 								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
 							>
 								<div class="flex items-center justify-between mb-3">
-									<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Assets</h3>
+									<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+										{m.products_assets()}
+									</h3>
 									<span class="text-xs text-gray-500 dark:text-gray-400">
-										{resolvedAssets.total} total
+										{m.products_total_count({ count: resolvedAssets.total })}
 									</span>
 								</div>
 
@@ -374,7 +380,7 @@
 											href={resolve(`${fullViewUrl}?tab=assets`)}
 											class="mt-3 inline-flex items-center gap-1 text-xs text-earthy-terracotta-600 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 										>
-											View all {resolvedAssets.total} assets
+											{m.products_view_all_assets({ count: resolvedAssets.total })}
 											<IconifyIcon icon="material-symbols:arrow-forward" class="w-3 h-3" />
 										</a>
 									{/if}
@@ -388,9 +394,11 @@
 								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
 							>
 								<div class="flex items-center justify-between mb-3">
-									<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Rules</h3>
+									<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+										{m.products_tab_rules()}
+									</h3>
 									<span class="text-xs text-gray-500 dark:text-gray-400">
-										{product.rules.length} rule{product.rules.length === 1 ? '' : 's'}
+										{m.products_rule_count({ count: product.rules.length })}
 									</span>
 								</div>
 								<div class="space-y-2">
@@ -409,7 +417,7 @@
 													? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
 													: 'bg-gray-100 dark:bg-gray-600 text-gray-500'}"
 											>
-												{rule.is_enabled ? 'Active' : 'Disabled'}
+												{rule.is_enabled ? m.common_active() : m.common_disabled()}
 											</span>
 										</div>
 									{/each}
@@ -419,7 +427,7 @@
 										href={resolve(`${fullViewUrl}?tab=rules`)}
 										class="mt-3 inline-flex items-center gap-1 text-xs text-earthy-terracotta-600 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 									>
-										View all {product.rules.length} rules
+										{m.products_view_all_rules({ count: product.rules.length })}
 										<IconifyIcon icon="material-symbols:arrow-forward" class="w-3 h-3" />
 									</a>
 								{/if}
@@ -430,36 +438,40 @@
 						<div
 							class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
 						>
-							<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Details</h4>
+							<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+								{m.common_details()}
+							</h4>
 							<dl class="space-y-3">
 								{#if product.created_by}
 									<div>
-										<dt class="text-xs text-gray-500 dark:text-gray-400">Created By</dt>
+										<dt class="text-xs text-gray-500 dark:text-gray-400">{m.asset_created_by()}</dt>
 										<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
 											{product.created_by}
 										</dd>
 									</div>
 								{/if}
 								<div>
-									<dt class="text-xs text-gray-500 dark:text-gray-400">Created At</dt>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">{m.asset_created_at()}</dt>
 									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-										{product.created_at ? formatDate(product.created_at) : 'Unknown'}
+										{product.created_at ? formatDateTime(product.created_at) : m.common_unknown()}
 									</dd>
 								</div>
 								<div>
-									<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">{m.asset_last_updated()}</dt>
 									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-										{product.updated_at ? formatDate(product.updated_at) : 'Unknown'}
+										{product.updated_at ? formatDateTime(product.updated_at) : m.common_unknown()}
 									</dd>
 								</div>
 								<div>
-									<dt class="text-xs text-gray-500 dark:text-gray-400">Assets</dt>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">{m.products_assets()}</dt>
 									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-										{product.asset_count || 0} total
+										{m.products_total_count({ count: product.asset_count || 0 })}
 										{#if product.manual_asset_count || product.rule_asset_count}
 											<span class="text-xs text-gray-500">
-												({product.manual_asset_count || 0} manual, {product.rule_asset_count || 0} from
-												rules)
+												{m.products_asset_breakdown({
+													manual: product.manual_asset_count || 0,
+													rules: product.rule_asset_count || 0
+												})}
 											</span>
 										{/if}
 									</dd>
@@ -479,7 +491,7 @@
 							class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
 						>
 							<IconifyIcon icon="material-symbols:delete-outline-rounded" class="w-4 h-4" />
-							Delete Product
+							{m.products_delete_product()}
 						</button>
 					</div>
 				{/if}
@@ -514,12 +526,10 @@
 					</div>
 					<div class="flex-1">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-							Delete Data Product
+							{m.products_delete_title()}
 						</h3>
 						<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-							Are you sure you want to delete <span
-								class="font-semibold text-gray-900 dark:text-gray-100">"{product.name}"</span
-							>? This action cannot be undone.
+							{m.products_delete_confirm_message({ name: product.name })}
 						</p>
 						{#if deleteError}
 							<div
@@ -534,7 +544,7 @@
 								disabled={isDeleting}
 								class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 							>
-								Cancel
+								{m.common_cancel()}
 							</button>
 							<button
 								onclick={handleDelete}
@@ -543,10 +553,10 @@
 							>
 								{#if isDeleting}
 									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-									Deleting...
+									{m.products_deleting()}
 								{:else}
 									<IconifyIcon icon="material-symbols:delete-outline" class="w-5 h-5" />
-									Delete Product
+									{m.products_delete_product()}
 								{/if}
 							</button>
 						</div>

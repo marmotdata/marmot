@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface MentionItem {
 		type: string;
@@ -58,7 +59,7 @@
 	class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
 >
 	{#if items.length === 0}
-		<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No results found</div>
+		<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{m.common_no_results()}</div>
 	{:else}
 		{#each items as item, index (item.id)}
 			<button
@@ -96,7 +97,9 @@
 					{#if item.type === 'user' && item.username}
 						<div class="text-xs text-gray-500 dark:text-gray-400 truncate">@{item.username}</div>
 					{:else if item.type === 'team'}
-						<div class="text-xs text-gray-500 dark:text-gray-400 truncate">Team</div>
+						<div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+							{m.editor_mention_team_label()}
+						</div>
 					{/if}
 				</div>
 			</button>

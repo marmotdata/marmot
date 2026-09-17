@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toasts } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import { deleteServiceAccount } from '$lib/serviceaccounts/api';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import { goto } from '$app/navigation';
@@ -21,10 +22,10 @@
 		if (!toDeleteAccount) return;
 		try {
 			await deleteServiceAccount(toDeleteAccount.id);
-			toasts.success(`Service account "${toDeleteAccount.name}" deleted`);
+			toasts.success(m.serviceaccounts_deleted_success({ name: toDeleteAccount.name }));
 			onDelete(toDeleteAccount.id);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete service account');
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete_account());
 		} finally {
 			showDeleteModal = false;
 			toDeleteAccount = null;
@@ -38,23 +39,23 @@
 			<tr>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Name</th
+					>{m.common_name()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Description</th
+					>{m.common_description()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Roles</th
+					>{m.serviceaccounts_step_roles()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Status</th
+					>{m.common_status()}</th
 				>
 				<th
 					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Actions</th
+					>{m.common_actions()}</th
 				>
 			</tr>
 		</thead>
@@ -97,7 +98,7 @@
 								? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
 								: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}"
 						>
-							{sa.active ? 'Active' : 'Inactive'}
+							{sa.active ? m.common_active() : m.common_inactive()}
 						</span>
 					</td>
 					<td
@@ -110,7 +111,7 @@
 							class="text-earthy-terracotta-700 hover:text-earthy-terracotta-800 dark:text-earthy-terracotta-500 dark:hover:text-earthy-terracotta-400 mr-3"
 							on:click={() => openDetail(sa.id)}
 						>
-							Open
+							{m.serviceaccounts_open_button()}
 						</button>
 						<button
 							type="button"
@@ -120,7 +121,7 @@
 								showDeleteModal = true;
 							}}
 						>
-							Delete
+							{m.common_delete()}
 						</button>
 					</td>
 				</tr>
@@ -131,9 +132,9 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete Service Account"
-	message="Are you sure you want to delete this service account? All associated API keys will be revoked."
-	confirmText="Delete"
+	title={m.serviceaccounts_delete_title()}
+	message={m.serviceaccounts_delete_confirm()}
+	confirmText={m.common_delete()}
 	resourceName={toDeleteAccount?.name || ''}
 	requireConfirmation={true}
 	onConfirm={handleDelete}

@@ -6,6 +6,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import StepperPage from '$components/ui/StepperPage.svelte';
 	import { getServiceAccount, createAPIKey } from '$lib/serviceaccounts/api';
+	import { m } from '$lib/paraglide/messages';
 	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
 	import { toasts } from '$lib/stores/toast';
 
@@ -20,10 +21,15 @@
 	let copied = $state(false);
 
 	const stepperSteps = [
-		{ title: 'Configure', icon: 'material-symbols:settings-outline' },
-		{ title: 'Review', icon: 'material-symbols:summarize' },
-		{ title: 'Save Key', icon: 'material-symbols:key-outline' }
+		{ title: m.serviceaccounts_key_step_configure(), icon: 'material-symbols:settings-outline' },
+		{ title: m.serviceaccounts_step_review(), icon: 'material-symbols:summarize' },
+		{ title: m.serviceaccounts_key_step_save(), icon: 'material-symbols:key-outline' }
 	];
+
+	// The sample request is a shell command, so it stays out of the message catalogue
+	let exampleRequest = $derived(
+		`curl -H "X-API-Key: ${plaintextKey?.key ?? ''}" \\\n     \${MARMOT_HOST}/api/v1/service-accounts`
+	);
 
 	let canProceedToStep2 = $derived(name.trim().length >= 2);
 	let expiryDays = $derived(
@@ -43,13 +49,13 @@
 	onMount(async () => {
 		const id = $page.params.id;
 		if (!id) {
-			error = 'Missing service account id';
+			error = m.serviceaccounts_error_missing_id();
 			return;
 		}
 		try {
 			sa = await getServiceAccount(id);
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load service account';
+			error = err instanceof Error ? err.message : m.serviceaccounts_error_load();
 		}
 	});
 
@@ -57,7 +63,7 @@
 		error = null;
 		if (currentStep === 1) {
 			if (!canProceedToStep2) {
-				error = 'Name must be at least 2 characters';
+				error = m.serviceaccounts_error_name_min();
 				return;
 			}
 			currentStep = 2;
@@ -67,7 +73,7 @@
 	async function handleCreate() {
 		if (!sa) return;
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.serviceaccounts_error_name_required();
 			return;
 		}
 		try {
@@ -79,9 +85,9 @@
 			});
 			plaintextKey = key;
 			currentStep = 3;
-			toasts.success('API key created');
+			toasts.success(m.serviceaccounts_key_created_banner());
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to create API key';
+			error = err instanceof Error ? err.message : m.apikeys_create_error();
 		} finally {
 			saving = false;
 		}
@@ -94,7 +100,7 @@
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		} catch {
-			toasts.error('Could not copy to clipboard');
+			toasts.error(m.serviceaccounts_copy_clipboard_error());
 		}
 	}
 
@@ -117,7 +123,7 @@
 </script>
 
 <StepperPage
-	title="Create API Key"
+	title={m.serviceaccounts_create_key_button()}
 	steps={stepperSteps}
 	{currentStep}
 	onBack={goBack}
@@ -131,8 +137,10 @@
 			: undefined}
 	canProceed={currentStep === 1 ? canProceedToStep2 : true}
 	{saving}
-	saveLabel={currentStep === 3 ? 'Done' : 'Create Key'}
-	savingLabel="Creating..."
+	saveLabel={currentStep === 3
+		? m.serviceaccounts_key_done_button()
+		: m.serviceaccounts_key_create_button()}
+	savingLabel={m.serviceaccounts_creating_label()}
 	saveIcon={currentStep === 3 ? 'material-symbols:check' : 'material-symbols:key'}
 	{error}
 	{canNavigateToStep}
@@ -150,7 +158,7 @@
 					icon="material-symbols:settings-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Configure Key
+				{m.serviceaccounts_key_configure_heading()}
 			</h3>
 
 			<div class="space-y-6">
@@ -159,13 +167,13 @@
 						for="key-name"
 						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 					>
-						Key name <span class="text-red-500">*</span>
+						{m.serviceaccounts_key_name_label()} <span class="text-red-500">*</span>
 					</label>
 					<input
 						id="key-name"
 						type="text"
 						bind:value={name}
-						placeholder="e.g., github-actions-ci"
+						placeholder={m.serviceaccounts_key_name_placeholder()}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && canProceedToStep2) {
 								e.preventDefault();
@@ -175,16 +183,16 @@
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600"
 					/>
 					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						A label so you can identify which system is using this key later.
+						{m.serviceaccounts_key_name_hint()}
 					</p>
 				</div>
 
 				<div>
 					<div class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Expiration
+						{m.apikeys_expiration_label()}
 					</div>
 					<div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-						{#each [{ id: 'never', label: 'Never' }, { id: '30', label: '30 days' }, { id: '90', label: '90 days' }, { id: '365', label: '1 year' }, { id: 'custom', label: 'Custom' }] as opt (opt.id)}
+						{#each [{ id: 'never', label: m.common_never() }, { id: '30', label: m.apikeys_expiration_days_option( { count: 30 } ) }, { id: '90', label: m.apikeys_expiration_days_option( { count: 90 } ) }, { id: '365', label: m.serviceaccounts_key_expires_one_year() }, { id: 'custom', label: m.apikeys_expiration_custom() }] as opt (opt.id)}
 							<button
 								type="button"
 								onclick={() => (expiresPreset = opt.id as typeof expiresPreset)}
@@ -203,7 +211,7 @@
 								for="custom-days"
 								class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
 							>
-								Days
+								{m.serviceaccounts_key_custom_days_label()}
 							</label>
 							<input
 								id="custom-days"
@@ -215,7 +223,7 @@
 						</div>
 					{/if}
 					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						Short-lived keys are safer. Long-lived keys are convenient but need rotation.
+						{m.serviceaccounts_key_expiration_hint()}
 					</p>
 				</div>
 			</div>
@@ -231,28 +239,34 @@
 					icon="material-symbols:summarize"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Review
+				{m.serviceaccounts_step_review()}
 			</h3>
 
 			<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Key name</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.serviceaccounts_key_name_label()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100 font-mono">{name}</dd>
 				</div>
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Expiration</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.apikeys_expiration_label()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100">
-						{expiryDays === 0 ? 'Never' : `${expiryDays} days`}
+						{expiryDays === 0
+							? m.common_never()
+							: m.apikeys_expiration_days_option({ count: expiryDays })}
 					</dd>
 				</div>
 				{#if sa}
 					<div class="sm:col-span-2">
-						<dt class="text-gray-500 dark:text-gray-400">Scoped to service account</dt>
+						<dt class="text-gray-500 dark:text-gray-400">
+							{m.serviceaccounts_key_scoped_to_label()}
+						</dt>
 						<dd class="font-medium text-gray-900 dark:text-gray-100">{sa.name}</dd>
 					</div>
 					{#if sa.roles.length > 0}
 						<div class="sm:col-span-2">
-							<dt class="text-gray-500 dark:text-gray-400">Inherits roles</dt>
+							<dt class="text-gray-500 dark:text-gray-400">
+								{m.serviceaccounts_key_inherits_roles_label()}
+							</dt>
 							<dd class="flex flex-wrap gap-1.5 mt-1">
 								{#each sa.roles as role (role.id)}
 									<span
@@ -275,10 +289,9 @@
 					class="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0"
 				/>
 				<div class="text-sm text-amber-800 dark:text-amber-200">
-					<p class="font-medium">The plaintext key will be shown only once.</p>
+					<p class="font-medium">{m.serviceaccounts_key_shown_once_warning()}</p>
 					<p class="mt-1">
-						On the next step, copy the key immediately and store it somewhere secure — Marmot cannot
-						show it again.
+						{m.serviceaccounts_key_copy_next_step_hint()}
 					</p>
 				</div>
 			</div>
@@ -294,7 +307,7 @@
 					icon="material-symbols:key-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Save Your API Key
+				{m.serviceaccounts_key_save_heading()}
 			</h3>
 
 			<div
@@ -307,10 +320,10 @@
 					/>
 					<div>
 						<p class="text-sm font-medium text-green-800 dark:text-green-200">
-							Key <code class="font-mono">{plaintextKey.name}</code> created.
+							{m.serviceaccounts_key_created_named({ name: plaintextKey.name })}
 						</p>
 						<p class="text-xs text-green-700 dark:text-green-300 mt-0.5">
-							Copy the value below now. It will not be shown again.
+							{m.serviceaccounts_key_copy_now_hint()}
 						</p>
 					</div>
 				</div>
@@ -328,24 +341,25 @@
 					>
 						{#if copied}
 							<IconifyIcon icon="material-symbols:check" class="h-4 w-4" />
-							Copied
+							{m.serviceaccounts_key_copied_label()}
 						{:else}
 							<IconifyIcon icon="material-symbols:content-copy" class="h-4 w-4" />
-							Copy
+							{m.common_copy()}
 						{/if}
 					</button>
 				</div>
 			</div>
 
 			<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-				<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Use the key</h4>
+				<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+					{m.serviceaccounts_key_use_heading()}
+				</h4>
 				<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-					Pass the key in the <code>X-API-Key</code> header on requests to the Marmot API.
+					{m.serviceaccounts_key_use_hint({ header: 'X-API-Key' })}
 				</p>
 				<pre
 					class="text-xs bg-gray-900 dark:bg-black text-gray-100 rounded-md p-3 overflow-x-auto"><code
-						>curl -H "X-API-Key: {plaintextKey.key}" \
-     {`\${MARMOT_HOST}`}/api/v1/service-accounts</code
+						>{exampleRequest}</code
 					></pre>
 			</div>
 		</div>

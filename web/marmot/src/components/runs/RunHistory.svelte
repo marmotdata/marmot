@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
@@ -69,9 +71,9 @@
 
 	function formatDateTime(dateString: string): string {
 		if (minimal) {
-			return new Date(dateString).toLocaleDateString();
+			return new Date(dateString).toLocaleDateString(getLocale());
 		}
-		return new Date(dateString).toLocaleString();
+		return new Date(dateString).toLocaleString(getLocale());
 	}
 
 	function formatDurationMs(ms: number): string {
@@ -96,7 +98,7 @@
 			);
 
 			if (!response.ok) {
-				throw new Error('Failed to fetch run history');
+				throw new Error(m.runs_history_fetch_error());
 			}
 
 			const data: RunHistoryResponse = await response.json();
@@ -104,7 +106,7 @@
 			total = data.total;
 		} catch (err) {
 			console.error('Error fetching run history:', err);
-			error = err instanceof Error ? err.message : 'Failed to load run history';
+			error = err instanceof Error ? err.message : m.runs_history_load_error();
 		} finally {
 			loading = false;
 		}
@@ -158,9 +160,11 @@
 				icon="material-symbols:history"
 				class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
 			/>
-			<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No run history</h3>
+			<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+				{m.runs_history_empty_heading()}
+			</h3>
 			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-				This asset has no recorded job executions.
+				{m.runs_history_empty_hint()}
 			</p>
 		</div>
 	{:else}
@@ -170,10 +174,16 @@
 			<div
 				class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
 			>
-				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">Recent runs</div>
+				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+					{m.runs_history_recent_heading()}
+				</div>
 				{#if !minimal}
 					<div class="text-xs text-gray-500 dark:text-gray-400">
-						{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, total)} of {total}
+						{m.runs_history_range({
+							from: (currentPage - 1) * pageSize + 1,
+							to: Math.min(currentPage * pageSize, total),
+							total
+						})}
 					</div>
 				{:else if asset}
 					<a
@@ -182,7 +192,7 @@
 						)}
 						class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800"
 					>
-						View all →
+						{m.runs_history_view_all()}
 					</a>
 				{/if}
 			</div>
@@ -254,7 +264,7 @@
 									</span>
 								{/if}
 								<div>
-									<span class="text-gray-400">duration </span>
+									<span class="text-gray-400">{m.runs_history_duration_label()} </span>
 									<span class="text-gray-900 dark:text-gray-100 font-mono">
 										{run.duration_ms ? formatDurationMs(run.duration_ms) : '—'}
 									</span>
@@ -274,14 +284,14 @@
 						disabled={currentPage === 1}
 						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
-						Previous
+						{m.common_previous()}
 					</button>
 					<button
 						onclick={() => goToPage(currentPage + 1)}
 						disabled={currentPage === totalPages}
 						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
-						Next
+						{m.common_next()}
 					</button>
 				</div>
 			{/if}

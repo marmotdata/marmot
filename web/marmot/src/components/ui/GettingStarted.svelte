@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		title?: string;
@@ -16,12 +17,12 @@
 	}
 
 	let {
-		title = 'Start Populating Your Catalog',
-		description = 'Connect to your data sources and discover assets. Pick the method that works best for your workflow.',
-		primaryButtonText = 'Populating Your Catalog',
+		title = m.ui_gettingstarted_title(),
+		description = m.ui_gettingstarted_description(),
+		primaryButtonText = m.ui_gettingstarted_primary_button(),
 		primaryButtonIcon = 'material-symbols:book',
 		primaryButtonUrl = 'https://marmotdata.io/docs/Populating/',
-		secondaryButtonText = 'Plugins',
+		secondaryButtonText = m.ui_gettingstarted_secondary_button(),
 		secondaryButtonIcon = 'material-symbols:extension',
 		secondaryButtonUrl = 'https://marmotdata.io/docs/Plugins/',
 		showSteps = true,
@@ -31,26 +32,26 @@
 	const methods = [
 		{
 			icon: 'material-symbols:web',
-			title: 'UI',
-			description: 'Run discovery jobs directly from the interface',
+			title: m.ui_gettingstarted_method_ui_title(),
+			description: m.ui_gettingstarted_method_ui_description(),
 			url: 'https://marmotdata.io/docs/Populating/UI'
 		},
 		{
 			icon: 'material-symbols:terminal',
-			title: 'CLI',
-			description: 'YAML config for CI/CD pipelines',
+			title: m.ui_gettingstarted_method_cli_title(),
+			description: m.ui_gettingstarted_method_cli_description(),
 			url: 'https://marmotdata.io/docs/Populating/CLI'
 		},
 		{
 			icon: 'material-symbols:code',
-			title: 'Terraform / Pulumi',
-			description: 'Infrastructure as code',
+			title: m.ui_gettingstarted_method_iac_title(),
+			description: m.ui_gettingstarted_method_iac_description(),
 			url: 'https://marmotdata.io/docs/Populating/Terraform'
 		},
 		{
 			icon: 'material-symbols:api',
-			title: 'REST API',
-			description: 'Custom integrations',
+			title: m.ui_gettingstarted_method_api_title(),
+			description: m.ui_gettingstarted_method_api_description(),
 			url: 'https://marmotdata.io/docs/Populating/API'
 		}
 	];

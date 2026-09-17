@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/notification"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
+
+// languagePattern accepts BCP 47 style tags such as en, es or pt-BR without coupling the backend to the list of locales built into the frontend
+var languagePattern = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$`)
 
 // swagger type alias
 var _ = user.User{}
@@ -72,6 +76,14 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 	if theme, ok := input.Preferences["theme"].(string); ok {
 		if theme != "light" && theme != "dark" && theme != "auto" {
 			common.RespondError(w, http.StatusBadRequest, "Invalid theme value")
+			return
+		}
+	}
+
+	if language, ok := input.Preferences["language"]; ok {
+		tag, isString := language.(string)
+		if !isString || !languagePattern.MatchString(tag) {
+			common.RespondError(w, http.StatusBadRequest, "Invalid language value")
 			return
 		}
 	}
