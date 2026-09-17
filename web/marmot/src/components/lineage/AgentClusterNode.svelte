@@ -53,7 +53,9 @@
 	}
 
 	let lastSeen = $derived(
-		data.recencyMs ? formatRelativeTime(new Date(data.recencyMs).toISOString()) : null
+		data.recencyMs != null
+			? formatRelativeTime(new Date(Date.now() - data.recencyMs).toISOString())
+			: null
 	);
 </script>
 
