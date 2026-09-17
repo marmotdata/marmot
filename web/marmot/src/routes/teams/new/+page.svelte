@@ -9,10 +9,12 @@
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
+	import { m } from '$lib/paraglide/messages';
+	import { formatList } from '$lib/utils';
 	import {
-		NOTIFICATION_TYPE_OPTIONS,
-		PROVIDER_OPTIONS,
-		PROVIDER_LABELS,
+		notificationTypeOptions,
+		providerOptions,
+		providerLabels,
 		type CreateWebhookInput
 	} from '$lib/teams/webhooks';
 
@@ -54,10 +56,10 @@
 	let memberDropdownRef = $state<HTMLDivElement>();
 
 	const stepperSteps = [
-		{ title: 'Basic Info', icon: 'material-symbols:info-outline' },
-		{ title: 'Members', icon: 'material-symbols:group-outline' },
-		{ title: 'Integrations', icon: 'material-symbols:webhook' },
-		{ title: 'Review', icon: 'material-symbols:summarize' }
+		{ title: m.teams_step_basic_info(), icon: 'material-symbols:info-outline' },
+		{ title: m.teams_step_members(), icon: 'material-symbols:group-outline' },
+		{ title: m.teams_step_integrations(), icon: 'material-symbols:webhook' },
+		{ title: m.teams_step_review(), icon: 'material-symbols:summarize' }
 	];
 
 	let canProceedToStep2 = $derived(name.trim().length >= 2);
@@ -197,7 +199,7 @@
 		error = null;
 		if (currentStep === 1) {
 			if (!canProceedToStep2) {
-				error = 'Team name must be at least 2 characters';
+				error = m.teams_error_name_too_short();
 				return;
 			}
 			currentStep = 2;
@@ -205,7 +207,7 @@
 		}
 		if (currentStep === 3) {
 			if (!webhooksValid) {
-				error = 'Each integration needs a name, URL and at least one notification type.';
+				error = m.teams_error_integration_incomplete();
 				return;
 			}
 		}
@@ -214,7 +216,7 @@
 
 	async function handleSave() {
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.teams_error_name_required();
 			return;
 		}
 
@@ -246,19 +248,19 @@
 					body: JSON.stringify(patch)
 				});
 				if (!patchResp.ok) {
-					warnings.push('tags/metadata');
+					warnings.push(m.teams_failed_item_tags_metadata());
 				}
 			}
 
 			// 3) Add members
-			for (const m of members) {
-				const role = memberRoles[m.id] ?? 'member';
+			for (const member of members) {
+				const role = memberRoles[member.id] ?? 'member';
 				const memResp = await fetchApi(`/teams/${team.id}/members`, {
 					method: 'POST',
-					body: JSON.stringify({ user_id: m.id, role })
+					body: JSON.stringify({ user_id: member.id, role })
 				});
 				if (!memResp.ok) {
-					warnings.push(`member "${m.name}"`);
+					warnings.push(m.teams_failed_item_member({ name: member.name }));
 				}
 			}
 
@@ -276,21 +278,19 @@
 					body: JSON.stringify(payload)
 				});
 				if (!hookResp.ok) {
-					warnings.push(`webhook "${w.name}"`);
+					warnings.push(m.teams_failed_item_webhook({ name: w.name }));
 				}
 			}
 
 			if (warnings.length > 0) {
-				toasts.warning(
-					`Team created, but the following failed: ${warnings.join(', ')}. You can add them from the team page.`
-				);
+				toasts.warning(m.teams_created_with_warnings({ items: formatList(warnings) }));
 			} else {
-				toasts.success(`Team "${team.name}" created`);
+				toasts.success(m.teams_created_toast({ name: team.name }));
 			}
 
 			goto(resolve(`/teams/${team.id}`));
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to create team';
+			error = err instanceof Error ? err.message : m.teams_error_create();
 		} finally {
 			saving = false;
 		}
@@ -302,7 +302,7 @@
 </script>
 
 <StepperPage
-	title="Create Team"
+	title={m.teams_create_team()}
 	steps={stepperSteps}
 	{currentStep}
 	onBack={goBack}
@@ -312,8 +312,8 @@
 	onSave={currentStep === stepperSteps.length ? handleSave : undefined}
 	canProceed={currentStep === 1 ? canProceedToStep2 : currentStep === 3 ? webhooksValid : true}
 	{saving}
-	saveLabel="Create Team"
-	savingLabel="Creating..."
+	saveLabel={m.teams_create_team()}
+	savingLabel={m.teams_creating()}
 	{error}
 	{canNavigateToStep}
 	onStepClick={(step) => (currentStep = step)}
@@ -329,7 +329,7 @@
 						icon="material-symbols:info-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Basic Information
+					{m.teams_basic_info_heading()}
 				</h3>
 
 				<div class="space-y-6">
@@ -338,13 +338,13 @@
 							for="team-name"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 						>
-							Team name <span class="text-red-500">*</span>
+							{m.teams_name_label()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							id="team-name"
 							type="text"
 							bind:value={name}
-							placeholder="e.g., Data Platform, Growth Analytics"
+							placeholder={m.teams_name_placeholder()}
 							onkeydown={(e) => {
 								if (e.key === 'Enter' && canProceedToStep2) {
 									e.preventDefault();
@@ -355,7 +355,7 @@
 							required
 						/>
 						<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-							A short, memorable name. This is how the team will appear across Marmot.
+							{m.teams_name_hint()}
 						</p>
 					</div>
 
@@ -364,17 +364,17 @@
 							for="team-description"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 						>
-							Description
+							{m.common_description()}
 						</label>
 						<textarea
 							id="team-description"
 							bind:value={description}
 							rows="3"
-							placeholder="What does this team own? Who's on the hook for it?"
+							placeholder={m.teams_description_placeholder()}
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
 						></textarea>
 						<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-							Optional but helpful — new members and cross-team users will read this first.
+							{m.teams_description_hint()}
 						</p>
 					</div>
 				</div>
@@ -388,13 +388,13 @@
 						icon="material-symbols:sell-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Tags
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+					{m.common_tags()}
+					<span class="ml-2 text-xs font-normal text-gray-500">{m.teams_optional_suffix()}</span>
 				</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Add tags for discovery and filtering. Type and press Enter to add.
+					{m.teams_tags_hint()}
 				</p>
-				<TagsInput bind:tags placeholder="Type a tag and press Enter..." />
+				<TagsInput bind:tags placeholder={m.teams_tags_placeholder()} />
 			</div>
 
 			<div
@@ -405,12 +405,11 @@
 						icon="material-symbols:data-object"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Metadata
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+					{m.teams_metadata_heading()}
+					<span class="ml-2 text-xs font-normal text-gray-500">{m.teams_optional_suffix()}</span>
 				</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Free-form key-value pairs. Use these for things like Slack channels, on-call rotations, or
-					external system IDs.
+					{m.teams_metadata_hint()}
 				</p>
 				<MetadataView bind:metadata />
 			</div>
@@ -428,16 +427,16 @@
 						icon="material-symbols:group-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Members
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+					{m.teams_members_heading()}
+					<span class="ml-2 text-xs font-normal text-gray-500">{m.teams_optional_suffix()}</span>
 				</h3>
 				<span class="text-xs text-gray-500 dark:text-gray-400">
-					{members.length} to add
+					{m.teams_members_to_add_count({ count: members.length })}
 				</span>
 			</div>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Add people to the team and set their role. Owners can edit team settings and add members.
+				{m.teams_members_hint()}
 			</p>
 
 			<!-- Search box -->
@@ -451,7 +450,7 @@
 					bind:value={memberQuery}
 					oninput={scheduleMemberSearch}
 					onkeydown={handleMemberKeydown}
-					placeholder="Search users by name or email... (↑/↓ to navigate, Enter to add)"
+					placeholder={m.teams_member_search_placeholder()}
 					class="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 				/>
 				{#if memberQuery}
@@ -462,7 +461,7 @@
 							memberResults = [];
 						}}
 						class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						aria-label="Clear search"
+						aria-label={m.teams_clear_search_aria()}
 					>
 						<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 					</button>
@@ -481,13 +480,11 @@
 								<div
 									class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-earthy-terracotta-600"
 								></div>
-								Searching...
+								{m.teams_searching()}
 							</div>
 						{:else if availableResults.length === 0}
 							<div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-								{memberResults.length === 0
-									? 'No users found.'
-									: 'All matching users are already added.'}
+								{memberResults.length === 0 ? m.teams_no_users_found() : m.teams_all_users_added()}
 							</div>
 						{:else}
 							{#each availableResults as owner, i (owner.id)}
@@ -530,9 +527,7 @@
 						class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 px-4 py-6 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-dashed border-gray-200 dark:border-gray-700"
 					>
 						<IconifyIcon icon="material-symbols:person-add-outline" class="h-5 w-5 text-gray-400" />
-						<span
-							>No members added yet. Search above to find people, or skip and add members later.</span
-						>
+						<span>{m.teams_no_members_yet()}</span>
 					</div>
 				{:else}
 					<ul
@@ -561,7 +556,7 @@
 										{role === 'owner'
 										? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-200'
 										: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-									title="Click to toggle role"
+									title={m.teams_toggle_role_title()}
 								>
 									<IconifyIcon
 										icon={role === 'owner'
@@ -569,13 +564,13 @@
 											: 'material-symbols:person-outline'}
 										class="h-3.5 w-3.5"
 									/>
-									{role === 'owner' ? 'Owner' : 'Member'}
+									{role === 'owner' ? m.common_owner() : m.teams_role_member()}
 								</button>
 								<button
 									type="button"
 									onclick={() => removeMember(owner.id)}
 									class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-1 -m-1"
-									aria-label="Remove"
+									aria-label={m.common_remove()}
 								>
 									<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 								</button>
@@ -598,17 +593,16 @@
 						icon="material-symbols:webhook"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Integrations
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+					{m.teams_integrations_heading()}
+					<span class="ml-2 text-xs font-normal text-gray-500">{m.teams_optional_suffix()}</span>
 				</h3>
 				<span class="text-xs text-gray-500 dark:text-gray-400">
-					{webhooks.length} configured
+					{m.teams_webhooks_configured_count({ count: webhooks.length })}
 				</span>
 			</div>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Route Marmot notifications to Slack, Discord, or a generic webhook. Each integration listens
-				for the notification types you pick below.
+				{m.teams_integrations_hint()}
 			</p>
 
 			{#if webhooks.length === 0}
@@ -616,9 +610,11 @@
 					class="flex flex-col items-center text-center gap-2 py-8 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 mb-4"
 				>
 					<IconifyIcon icon="material-symbols:webhook" class="h-8 w-8 text-gray-400" />
-					<p class="text-sm font-medium text-gray-700 dark:text-gray-300">No integrations yet</p>
+					<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						{m.teams_no_integrations_yet()}
+					</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
-						Add a Slack or Discord webhook to keep this team informed about relevant events.
+						{m.teams_no_integrations_hint()}
 					</p>
 				</div>
 			{:else}
@@ -634,17 +630,17 @@
 									class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
 								>
 									<IconifyIcon
-										icon={PROVIDER_OPTIONS.find((p) => p.value === w.provider)?.icon ??
+										icon={providerOptions().find((p) => p.value === w.provider)?.icon ??
 											'mdi:webhook'}
 										class="h-4 w-4"
 									/>
-									{w.name || `Integration ${i + 1}`}
+									{w.name || m.teams_integration_fallback_name({ number: i + 1 })}
 								</div>
 								<button
 									type="button"
 									onclick={() => removeWebhook(w.key)}
 									class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-1 -m-1"
-									aria-label="Remove integration"
+									aria-label={m.teams_remove_integration_aria()}
 								>
 									<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 								</button>
@@ -656,13 +652,13 @@
 											for="wh-name-{w.key}"
 											class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
 										>
-											Name <span class="text-red-500">*</span>
+											{m.common_name()} <span class="text-red-500">*</span>
 										</label>
 										<input
 											id="wh-name-{w.key}"
 											type="text"
 											bind:value={w.name}
-											placeholder="e.g., #team-alerts"
+											placeholder={m.teams_webhook_name_placeholder()}
 											class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600"
 										/>
 									</div>
@@ -671,14 +667,14 @@
 											for="wh-provider-{w.key}"
 											class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
 										>
-											Provider
+											{m.teams_webhook_provider_label()}
 										</label>
 										<select
 											id="wh-provider-{w.key}"
 											bind:value={w.provider}
 											class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600"
 										>
-											{#each PROVIDER_OPTIONS as opt (opt.value)}
+											{#each providerOptions() as opt (opt.value)}
 												<option value={opt.value}>{opt.label}</option>
 											{/each}
 										</select>
@@ -690,7 +686,7 @@
 										for="wh-url-{w.key}"
 										class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
 									>
-										Webhook URL <span class="text-red-500">*</span>
+										{m.teams_webhook_url_label()} <span class="text-red-500">*</span>
 									</label>
 									<input
 										id="wh-url-{w.key}"
@@ -703,10 +699,10 @@
 
 								<div>
 									<div class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-										Notification types <span class="text-red-500">*</span>
+										{m.teams_notification_types_label()} <span class="text-red-500">*</span>
 									</div>
 									<div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-										{#each NOTIFICATION_TYPE_OPTIONS as opt (opt.type)}
+										{#each notificationTypeOptions() as opt (opt.type)}
 											{@const selected = w.notification_types.includes(opt.type)}
 											<button
 												type="button"
@@ -731,7 +727,7 @@
 										bind:checked={w.enabled}
 										class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500"
 									/>
-									Enabled
+									{m.common_enabled()}
 								</label>
 							</div>
 						</div>
@@ -745,7 +741,7 @@
 				class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-dashed border-earthy-terracotta-300 dark:border-earthy-terracotta-800 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:border-earthy-terracotta-500 hover:bg-earthy-terracotta-50/60 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
 			>
 				<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-				<span class="text-sm font-medium">Add integration</span>
+				<span class="text-sm font-medium">{m.teams_add_integration()}</span>
 			</button>
 		</div>
 	{/if}
@@ -766,10 +762,10 @@
 				</div>
 				<div class="min-w-0">
 					<div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-0.5">
-						Ready to create
+						{m.teams_ready_to_create()}
 					</div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-						{name || 'unnamed team'}
+						{name || m.teams_unnamed_team()}
 					</h3>
 				</div>
 			</div>
@@ -781,14 +777,14 @@
 						class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide"
 					>
 						<IconifyIcon icon="material-symbols:description-outline" class="h-3.5 w-3.5" />
-						Description
+						{m.common_description()}
 					</div>
 					{#if description.trim()}
 						<p class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">
 							{description}
 						</p>
 					{:else}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">Not set</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.teams_not_set()}</p>
 					{/if}
 				</div>
 
@@ -799,14 +795,14 @@
 							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
 						>
 							<IconifyIcon icon="material-symbols:group-outline" class="h-3.5 w-3.5" />
-							Members
+							{m.teams_members_heading()}
 						</div>
 						<span class="text-xs text-gray-400 dark:text-gray-500">
-							{members.length} to add
+							{m.teams_members_to_add_count({ count: members.length })}
 						</span>
 					</div>
 					{#if members.length === 0}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">None</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.common_none()}</p>
 					{:else}
 						<ul class="space-y-1.5">
 							{#each members as owner (owner.id)}
@@ -837,7 +833,7 @@
 												: 'material-symbols:person-outline'}
 											class="h-2.5 w-2.5"
 										/>
-										{role}
+										{role === 'owner' ? m.common_owner() : m.teams_role_member()}
 									</span>
 								</li>
 							{/each}
@@ -852,12 +848,12 @@
 							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
 						>
 							<IconifyIcon icon="material-symbols:sell-outline" class="h-3.5 w-3.5" />
-							Tags
+							{m.common_tags()}
 						</div>
 						<span class="text-xs text-gray-400 dark:text-gray-500">{tags.length}</span>
 					</div>
 					{#if tags.length === 0}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">None</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.common_none()}</p>
 					{:else}
 						<div class="flex flex-wrap gap-1.5">
 							{#each tags as tag (tag)}
@@ -878,14 +874,14 @@
 							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
 						>
 							<IconifyIcon icon="material-symbols:data-object" class="h-3.5 w-3.5" />
-							Metadata
+							{m.teams_metadata_heading()}
 						</div>
 						<span class="text-xs text-gray-400 dark:text-gray-500">
-							{Object.keys(metadata ?? {}).length} entries
+							{m.teams_metadata_entries_count({ count: Object.keys(metadata ?? {}).length })}
 						</span>
 					</div>
 					{#if Object.keys(metadata ?? {}).length === 0}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">None</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.common_none()}</p>
 					{:else}
 						<div class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
 							<dl class="divide-y divide-gray-100 dark:divide-gray-700/60">
@@ -911,12 +907,12 @@
 							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
 						>
 							<IconifyIcon icon="material-symbols:webhook" class="h-3.5 w-3.5" />
-							Integrations
+							{m.teams_integrations_heading()}
 						</div>
 						<span class="text-xs text-gray-400 dark:text-gray-500">{webhooks.length}</span>
 					</div>
 					{#if webhooks.length === 0}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">None</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.common_none()}</p>
 					{:else}
 						<ul class="space-y-1.5">
 							{#each webhooks as w (w.key)}
@@ -924,17 +920,18 @@
 									class="flex items-center gap-3 px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/60"
 								>
 									<IconifyIcon
-										icon={PROVIDER_OPTIONS.find((p) => p.value === w.provider)?.icon ??
+										icon={providerOptions().find((p) => p.value === w.provider)?.icon ??
 											'mdi:webhook'}
 										class="h-4 w-4 text-gray-500 dark:text-gray-400 shrink-0"
 									/>
 									<div class="flex-1 min-w-0">
 										<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-											{w.name || 'unnamed'}
+											{w.name || m.teams_unnamed()}
 										</div>
 										<div class="text-xs text-gray-500 dark:text-gray-400">
-											{PROVIDER_LABELS[w.provider] ?? w.provider} · {w.notification_types.length}
-											types
+											{providerLabels()[w.provider] ?? w.provider} · {m.teams_webhook_types_count({
+												count: w.notification_types.length
+											})}
 										</div>
 									</div>
 									<span
@@ -943,7 +940,7 @@
 											? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
 											: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}"
 									>
-										{w.enabled ? 'Enabled' : 'Disabled'}
+										{w.enabled ? m.common_enabled() : m.common_disabled()}
 									</span>
 								</li>
 							{/each}
@@ -961,10 +958,9 @@
 					class="h-5 w-5 text-gray-500 dark:text-gray-400 mt-0.5 flex-shrink-0"
 				/>
 				<div class="text-sm text-gray-700 dark:text-gray-300">
-					<p class="font-medium text-gray-900 dark:text-gray-100">Next: team detail page</p>
+					<p class="font-medium text-gray-900 dark:text-gray-100">{m.teams_next_steps_heading()}</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-						You'll land on the team page where you can add assets, edit anything you skipped, and
-						manage members.
+						{m.teams_next_steps_hint()}
 					</p>
 				</div>
 			</div>

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Info } from 'lucide-svelte';
 	import { listSSOProviders } from '$lib/sso/api';
+	import { m } from '$lib/paraglide/messages';
 	import type { SSOProvider } from '$lib/sso/types';
 
 	let providers: SSOProvider[] = [];
@@ -14,7 +15,7 @@
 			error = null;
 			providers = await listSSOProviders();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load SSO providers';
+			error = err instanceof Error ? err.message : m.sso_load_error();
 		} finally {
 			loading = false;
 		}
@@ -34,16 +35,9 @@
 				class="h-5 w-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-500 shrink-0 mt-0.5"
 			/>
 			<div class="text-sm text-gray-700 dark:text-gray-300">
-				<p class="font-medium text-gray-900 dark:text-gray-100">Configured via server config</p>
+				<p class="font-medium text-gray-900 dark:text-gray-100">{m.sso_config_note_title()}</p>
 				<p class="mt-1">
-					SSO providers for human sign-in are defined in <code
-						class="px-1 py-0.5 rounded bg-earthy-brown-200 dark:bg-gray-700 text-xs"
-						>config.yaml</code
-					>
-					under
-					<code class="px-1 py-0.5 rounded bg-earthy-brown-200 dark:bg-gray-700 text-xs"
-						>auth.*</code
-					>. Restart Marmot after changes.
+					{m.sso_config_note_body({ file: 'config.yaml', section: 'auth.*' })}
 				</p>
 			</div>
 		</div>
@@ -60,7 +54,7 @@
 			</div>
 		{:else if providers.length === 0}
 			<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-				No SSO providers configured
+				{m.sso_none_configured()}
 			</p>
 		{:else}
 			<div class="overflow-x-auto">
@@ -69,15 +63,15 @@
 						<tr>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Name</th
+								>{m.common_name()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Type</th
+								>{m.common_type()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Issuer URL</th
+								>{m.sso_column_issuer_url()}</th
 							>
 						</tr>
 					</thead>

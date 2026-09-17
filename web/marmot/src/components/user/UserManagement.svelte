@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import UserTable from './UserTable.svelte';
 	import type { User } from '$lib/users/types';
 
@@ -34,7 +35,7 @@
 			users = data.users;
 			totalUsers = data.total;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			error = err instanceof Error ? err.message : m.users_error_generic();
 		} finally {
 			loading = false;
 		}
@@ -72,7 +73,7 @@
 			<div class="flex-1 max-w-md">
 				<input
 					type="text"
-					placeholder="Search users..."
+					placeholder={m.users_search_placeholder()}
 					bind:value={userQuery}
 					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
 				/>
@@ -81,7 +82,7 @@
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={goCreate}
 			>
-				Add User
+				{m.users_add_button()}
 			</button>
 		</div>
 
@@ -105,7 +106,11 @@
 			<div class="mt-4 flex items-center justify-between">
 				<div class="flex-1 flex justify-between items-center">
 					<p class="text-sm text-gray-700 dark:text-gray-300">
-						Showing {offset + 1} to {Math.min(offset + users.length, totalUsers)} of {totalUsers} users
+						{m.users_pagination_showing({
+							from: offset + 1,
+							to: Math.min(offset + users.length, totalUsers),
+							total: totalUsers
+						})}
 					</p>
 					<div class="flex space-x-2">
 						<button
@@ -113,14 +118,14 @@
 							disabled={offset === 0}
 							on:click={() => (offset = Math.max(0, offset - limit))}
 						>
-							Previous
+							{m.common_previous()}
 						</button>
 						<button
 							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
 							disabled={offset + users.length >= totalUsers}
 							on:click={() => (offset = offset + limit)}
 						>
-							Next
+							{m.common_next()}
 						</button>
 					</div>
 				</div>

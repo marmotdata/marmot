@@ -3,6 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role, Permission } from '$lib/roles/types';
+	import { m } from '$lib/paraglide/messages';
 
 	export let selectedIds: string[] = [];
 	export let onChange: (ids: string[]) => void = () => {};
@@ -56,7 +57,7 @@
 			loading = true;
 			allRoles = await listRoles();
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load roles';
+			error = e instanceof Error ? e.message : m.ui_roles_load_error();
 		} finally {
 			loading = false;
 		}
@@ -68,7 +69,7 @@
 		<input
 			type="text"
 			bind:value={search}
-			placeholder="Search roles..."
+			placeholder={m.ui_rolepicker_search_placeholder()}
 			class="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent"
 		/>
 	{/if}
@@ -107,7 +108,7 @@
 								<span
 									class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded"
 								>
-									system
+									{m.ui_role_system_badge()}
 								</span>
 							{/if}
 						</div>
@@ -116,18 +117,20 @@
 						{/if}
 					</label>
 					<span class="flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">
-						{(r.permissions ?? []).length} perms
+						{m.ui_rolepicker_perm_count({ count: (r.permissions ?? []).length })}
 					</span>
 				</div>
 			{:else}
-				<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No roles found</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+					{m.ui_rolepicker_no_roles()}
+				</p>
 			{/each}
 		</div>
 
 		{#if selectedIds.length > 0 && effectivePermissions.length > 0}
 			<div class="mt-3">
 				<p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-					Effective permissions ({effectivePermissions.length})
+					{m.ui_rolepicker_effective_permissions({ count: effectivePermissions.length })}
 				</p>
 				<div class="flex flex-wrap gap-1">
 					{#each effectivePermissions as perm (perm.id)}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
 	import Button from './Button.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		show: boolean;
@@ -19,8 +20,8 @@
 		show = $bindable(),
 		title,
 		message,
-		confirmText = 'Confirm',
-		cancelText = 'Cancel',
+		confirmText = m.common_confirm(),
+		cancelText = m.common_cancel(),
 		variant = 'danger',
 		checkboxLabel,
 		checkboxChecked = $bindable(false),

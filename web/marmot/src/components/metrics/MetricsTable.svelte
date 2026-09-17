@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { formatNumber } from '$lib/utils';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 
@@ -48,7 +50,7 @@
 			const response = await fetchApi(`${endpoint}?start=${start}&end=${end}&limit=${limit}`);
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch data`);
+				throw new Error(m.metrics_data_fetch_error());
 			}
 
 			const rawData = await response.json();
@@ -68,7 +70,7 @@
 			}
 		} catch (err) {
 			console.error(`Error fetching data:`, err);
-			error = err instanceof Error ? err.message : `Failed to load data`;
+			error = err instanceof Error ? err.message : m.metrics_data_load_error();
 			items = [];
 		} finally {
 			loading = false;
@@ -91,7 +93,7 @@
 			{title}
 		</h2>
 		<p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-			{title} in {timeRangeLabel.toLowerCase()}
+			{m.metrics_table_subtitle({ title, range: timeRangeLabel.toLowerCase() })}
 		</p>
 	</div>
 
@@ -168,7 +170,7 @@
 						</div>
 						<div class="text-right flex-shrink-0 ml-1.5">
 							<p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-								{item.count.toLocaleString()}
+								{formatNumber(item.count)}
 							</p>
 							<p class="text-xs text-gray-500 dark:text-gray-400">{countLabel}</p>
 						</div>

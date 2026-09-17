@@ -15,11 +15,13 @@
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import type { Team, TeamMember } from '$lib/teams/types';
 	import type { Asset } from '$lib/assets/types';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 	import {
-		NOTIFICATION_TYPE_LABELS,
-		NOTIFICATION_TYPE_OPTIONS,
-		PROVIDER_OPTIONS,
-		PROVIDER_LABELS,
+		notificationTypeLabels,
+		notificationTypeOptions,
+		providerOptions,
+		providerLabels,
 		type TeamWebhook,
 		type CreateWebhookInput
 	} from '$lib/teams/webhooks';
@@ -106,7 +108,7 @@
 			if (!team.tags) team.tags = [];
 			if (!team.metadata) team.metadata = {};
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			error = err instanceof Error ? err.message : m.teams_error_generic();
 		} finally {
 			loading = false;
 		}
@@ -118,7 +120,7 @@
 			const data = await response.json();
 			members = data.members;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			error = err instanceof Error ? err.message : m.teams_error_generic();
 		}
 	}
 
@@ -348,7 +350,7 @@
 				});
 				if (!response.ok) {
 					const errData = await response.json();
-					webhookError = errData.error || 'Failed to update webhook';
+					webhookError = errData.error || m.teams_webhook_error_update();
 					return;
 				}
 			} else {
@@ -358,7 +360,7 @@
 				});
 				if (!response.ok) {
 					const errData = await response.json();
-					webhookError = errData.error || 'Failed to create webhook';
+					webhookError = errData.error || m.teams_webhook_error_create();
 					return;
 				}
 			}
@@ -367,7 +369,7 @@
 			await fetchWebhooks();
 		} catch (err) {
 			console.error('Failed to save webhook:', err);
-			webhookError = 'An error occurred while saving the webhook';
+			webhookError = m.teams_webhook_error_save();
 		} finally {
 			savingWebhook = false;
 		}
@@ -390,7 +392,7 @@
 				await fetchWebhooks();
 			} else {
 				const errData = await response.json();
-				webhookError = errData.error || 'Failed to delete webhook';
+				webhookError = errData.error || m.teams_webhook_error_delete();
 			}
 		} catch (err) {
 			console.error('Failed to delete webhook:', err);
@@ -423,17 +425,17 @@
 				method: 'POST'
 			});
 			if (response.ok) {
-				webhookSuccess = 'Test notification sent successfully';
+				webhookSuccess = m.teams_webhook_test_success();
 				setTimeout(() => {
 					webhookSuccess = null;
 				}, 5000);
 			} else {
 				const errData = await response.json();
-				webhookError = errData.error || 'Failed to send test notification';
+				webhookError = errData.error || m.teams_webhook_test_error();
 			}
 		} catch (err) {
 			console.error('Failed to test webhook:', err);
-			webhookError = 'Failed to send test notification';
+			webhookError = m.teams_webhook_test_error();
 		} finally {
 			testingWebhookId = null;
 		}
@@ -455,7 +457,7 @@
 			class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500"
 		>
 			<ArrowLeft class="h-4 w-4 mr-1" />
-			Back
+			{m.common_back()}
 		</button>
 	</div>
 
@@ -486,7 +488,7 @@
 								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
 							>
 								<Lock class="h-3 w-3 mr-1" />
-								SSO Managed
+								{m.teams_sso_managed_badge()}
 							</span>
 						{/if}
 					</div>
@@ -497,7 +499,7 @@
 					{/if}
 					{#if team.sso_provider}
 						<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-							Provider: {team.sso_provider}
+							{m.teams_sso_provider({ provider: team.sso_provider })}
 						</p>
 					{/if}
 				</div>
@@ -506,14 +508,14 @@
 
 		<!-- Tab Bar -->
 		<div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-			<nav class="flex gap-6" aria-label="Team tabs">
+			<nav class="flex gap-6" aria-label={m.teams_tabs_aria()}>
 				<button
 					onclick={() => goto(resolve(`/teams/${teamId}?tab=overview`), { replaceState: true })}
 					class="pb-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview'
 						? 'border-earthy-terracotta-700 text-earthy-terracotta-700 dark:border-earthy-terracotta-500 dark:text-earthy-terracotta-500'
 						: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}"
 				>
-					Overview
+					{m.common_overview()}
 				</button>
 				{#if canEditTeam}
 					<button
@@ -526,7 +528,7 @@
 					>
 						<span class="inline-flex items-center gap-1.5">
 							<IconifyIcon icon="material-symbols:webhook" class="w-4 h-4" />
-							Integrations
+							{m.teams_integrations_heading()}
 							{#if webhooks.length > 0}
 								<span
 									class="inline-flex items-center justify-center w-5 h-5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -557,7 +559,7 @@
 							<h3
 								class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 							>
-								Tags
+								{m.common_tags()}
 							</h3>
 						</div>
 						<Tags
@@ -578,7 +580,7 @@
 							<h3
 								class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
 							>
-								Metadata
+								{m.teams_metadata_heading()}
 							</h3>
 						</div>
 						<MetadataView
@@ -604,7 +606,9 @@
 							icon="material-symbols:group"
 							class="w-5 h-5 text-gray-500 dark:text-gray-400"
 						/>
-						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Members</h2>
+						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+							{m.teams_members_heading()}
+						</h2>
 						<span class="text-sm text-gray-500 dark:text-gray-400">
 							({members.length})
 						</span>
@@ -615,11 +619,11 @@
 							class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 rounded-lg transition-colors"
 						>
 							<IconifyIcon icon="material-symbols:add" class="w-4 h-4" />
-							Add Member
+							{m.teams_add_member()}
 						</button>
 					{:else if team.created_via_sso}
 						<span class="text-sm text-gray-500 dark:text-gray-400">
-							Members are managed via SSO
+							{m.teams_members_sso_managed()}
 						</span>
 					{/if}
 				</div>
@@ -640,13 +644,13 @@
 						userOnly={true}
 						hideAddButton={true}
 						hideSelectedOwners={true}
-						placeholder="Search and add members..."
+						placeholder={m.teams_member_selector_placeholder()}
 					/>
 				</div>
 
 				{#if members.length === 0}
 					<div class="text-center py-8 text-gray-500 dark:text-gray-400">
-						No members in this team yet
+						{m.teams_no_members()}
 					</div>
 				{:else}
 					<div class="space-y-1">
@@ -680,8 +684,8 @@
 											onchange={(e) => updateMemberRole(member.user_id, e.currentTarget.value)}
 											class="text-xs border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-500"
 										>
-											<option value="member">Member</option>
-											<option value="owner">Owner</option>
+											<option value="member">{m.teams_role_member()}</option>
+											<option value="owner">{m.common_owner()}</option>
 										</select>
 									{:else}
 										<span
@@ -693,7 +697,7 @@
 											{#if member.role === 'owner'}
 												<Shield class="h-3 w-3 mr-1" />
 											{/if}
-											{member.role}
+											{member.role === 'owner' ? m.common_owner() : m.teams_role_member()}
 										</span>
 									{/if}
 
@@ -703,7 +707,7 @@
 											class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
 										>
 											<Lock class="h-3 w-3 mr-1" />
-											SSO
+											{m.teams_sso_badge()}
 										</span>
 									{/if}
 
@@ -716,9 +720,9 @@
 												<button
 													onclick={() => convertToManual(member.user_id)}
 													class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-													title="Convert to manual"
+													title={m.teams_convert_to_manual_title()}
 												>
-													Make Permanent
+													{m.teams_make_permanent()}
 												</button>
 											{/if}
 											{#if (member.source === 'manual' || !team.created_via_sso) && (currentUserId === member.user_id || canEditTeam)}
@@ -726,7 +730,9 @@
 													onclick={() => removeMemberDirect(member.user_id, member.source)}
 													disabled={removingMemberId === member.user_id}
 													class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
-													title={currentUserId === member.user_id ? 'Leave team' : 'Remove member'}
+													title={currentUserId === member.user_id
+														? m.teams_leave_team_title()
+														: m.teams_remove_member_title()}
 												>
 													<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
 												</button>
@@ -741,7 +747,7 @@
 												onclick={() => removeMemberDirect(member.user_id, member.source)}
 												disabled={removingMemberId === member.user_id}
 												class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
-												title="Leave team"
+												title={m.teams_leave_team_title()}
 											>
 												<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
 											</button>
@@ -761,7 +767,9 @@
 				<div class="flex items-center justify-between mb-4">
 					<div class="flex items-center gap-2">
 						<Database class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Assets Owned</h2>
+						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+							{m.teams_assets_owned_heading()}
+						</h2>
 						<span class="text-sm text-gray-500 dark:text-gray-400">
 							({assetsTotal})
 						</span>
@@ -772,18 +780,18 @@
 								onclick={previousPage}
 								disabled={assetsOffset === 0 || loadingAssets}
 								class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-								title="Previous page"
+								title={m.teams_previous_page_title()}
 							>
 								<IconifyIcon icon="material-symbols:chevron-left" class="w-5 h-5" />
 							</button>
 							<span class="min-w-[80px] text-center">
-								Page {currentPage} of {totalPages}
+								{m.teams_page_of({ current: currentPage, total: totalPages })}
 							</span>
 							<button
 								onclick={nextPage}
 								disabled={!hasMoreAssets || loadingAssets}
 								class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-								title="Next page"
+								title={m.teams_next_page_title()}
 							>
 								<IconifyIcon icon="material-symbols:chevron-right" class="w-5 h-5" />
 							</button>
@@ -800,7 +808,7 @@
 						</div>
 					{:else if assets.length === 0}
 						<div class="text-center py-8 text-gray-500 dark:text-gray-400">
-							No assets owned by this team yet
+							{m.teams_no_assets()}
 						</div>
 					{:else}
 						<div class="space-y-1">
@@ -851,12 +859,12 @@
 						<button
 							onclick={closeWebhookModal}
 							class="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-							title="Back to list"
+							title={m.teams_webhook_back_to_list_title()}
 						>
 							<IconifyIcon icon="material-symbols:arrow-back" class="w-5 h-5" />
 						</button>
 						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-							{editingWebhook ? 'Edit Webhook' : 'Add Webhook'}
+							{editingWebhook ? m.teams_webhook_edit_heading() : m.teams_webhook_add_heading()}
 						</h2>
 					</div>
 
@@ -867,13 +875,13 @@
 								for="webhook-name"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								Name
+								{m.common_name()}
 							</label>
 							<input
 								id="webhook-name"
 								type="text"
 								bind:value={webhookForm.name}
-								placeholder="e.g., Schema Changes to Slack"
+								placeholder={m.teams_webhook_name_example_placeholder()}
 								class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							/>
 						</div>
@@ -881,10 +889,10 @@
 						<!-- Provider -->
 						<div>
 							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-								Provider
+								{m.teams_webhook_provider_label()}
 							</label>
 							<div class="grid grid-cols-3 gap-2">
-								{#each PROVIDER_OPTIONS as provider (provider.value)}
+								{#each providerOptions() as provider (provider.value)}
 									<button
 										type="button"
 										onclick={() => (webhookForm.provider = provider.value)}
@@ -906,7 +914,7 @@
 								for="webhook-url"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								Webhook URL
+								{m.teams_webhook_url_label()}
 							</label>
 							<input
 								id="webhook-url"
@@ -920,10 +928,10 @@
 						<!-- Notification Types (full width) -->
 						<fieldset class="md:col-span-2">
 							<legend class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-								Notification Types
+								{m.teams_webhook_notification_types_label()}
 							</legend>
 							<div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-								{#each NOTIFICATION_TYPE_OPTIONS as { type, label, icon } (type)}
+								{#each notificationTypeOptions() as { type, label, icon } (type)}
 									<label
 										class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all {webhookForm.notification_types.includes(
 											type
@@ -954,9 +962,11 @@
 						<!-- Enabled Toggle (full width) -->
 						<div class="md:col-span-2 flex items-center justify-between py-1">
 							<div>
-								<span class="text-sm font-medium text-gray-700 dark:text-gray-300"> Enabled </span>
+								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+									{m.common_enabled()}
+								</span>
 								<p class="text-xs text-gray-500 dark:text-gray-400">
-									Webhook will receive notifications when enabled
+									{m.teams_webhook_enabled_hint()}
 								</p>
 							</div>
 							<button
@@ -1008,16 +1018,18 @@
 								class="px-5 py-2.5 text-sm font-medium text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{#if savingWebhook}
-									Saving...
+									{m.teams_webhook_saving()}
 								{:else}
-									{editingWebhook ? 'Update Webhook' : 'Create Webhook'}
+									{editingWebhook
+										? m.teams_webhook_update_button()
+										: m.teams_webhook_create_button()}
 								{/if}
 							</button>
 							<button
 								onclick={closeWebhookModal}
 								class="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 							>
-								Cancel
+								{m.common_cancel()}
 							</button>
 						</div>
 					</div>
@@ -1029,7 +1041,9 @@
 								icon="material-symbols:webhook"
 								class="w-5 h-5 text-gray-500 dark:text-gray-400"
 							/>
-							<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Webhooks</h2>
+							<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+								{m.teams_webhooks_heading()}
+							</h2>
 							<span class="text-sm text-gray-500 dark:text-gray-400">
 								({webhooks.length})
 							</span>
@@ -1039,13 +1053,12 @@
 							class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 rounded-lg transition-colors"
 						>
 							<IconifyIcon icon="material-symbols:add" class="w-4 h-4" />
-							Add Webhook
+							{m.teams_webhook_add_button()}
 						</button>
 					</div>
 
 					<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-						Configure webhooks to receive team notifications in external services like Slack or
-						Discord.
+						{m.teams_webhooks_description()}
 					</p>
 
 					{#if webhookSuccess}
@@ -1096,10 +1109,9 @@
 								icon="material-symbols:webhook"
 								class="w-10 h-10 mx-auto mb-3 opacity-40"
 							/>
-							<p class="text-sm font-medium">No webhooks configured</p>
+							<p class="text-sm font-medium">{m.teams_no_webhooks_heading()}</p>
 							<p class="text-xs mt-1 max-w-sm mx-auto">
-								Add a webhook to send notifications to Slack, Discord, or other services when events
-								happen for this team.
+								{m.teams_no_webhooks_hint()}
 							</p>
 						</div>
 					{:else}
@@ -1113,7 +1125,7 @@
 											class="flex-shrink-0 w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
 										>
 											<IconifyIcon
-												icon={PROVIDER_OPTIONS.find((p) => p.value === webhook.provider)?.icon ||
+												icon={providerOptions().find((p) => p.value === webhook.provider)?.icon ||
 													'mdi:webhook'}
 												class="w-5 h-5 text-gray-600 dark:text-gray-300"
 											/>
@@ -1128,10 +1140,10 @@
 														? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
 														: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
 												>
-													{webhook.enabled ? 'Active' : 'Disabled'}
+													{webhook.enabled ? m.common_active() : m.common_disabled()}
 												</span>
 												<span class="text-xs text-gray-400 dark:text-gray-500">
-													{PROVIDER_LABELS[webhook.provider] || webhook.provider}
+													{providerLabels()[webhook.provider] || webhook.provider}
 												</span>
 											</div>
 											<div class="flex items-center gap-1 mt-1.5 flex-wrap">
@@ -1139,7 +1151,7 @@
 													<span
 														class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
 													>
-														{NOTIFICATION_TYPE_LABELS[type] || type}
+														{notificationTypeLabels()[type] || type}
 													</span>
 												{/each}
 											</div>
@@ -1150,11 +1162,15 @@
 										<!-- Last triggered info -->
 										<div class="text-xs text-gray-400 dark:text-gray-500 mr-2 group-hover:hidden">
 											{#if webhook.last_error}
-												<span class="text-red-500" title={webhook.last_error}>Error</span>
+												<span class="text-red-500" title={webhook.last_error}
+													>{m.common_error()}</span
+												>
 											{:else if webhook.last_triggered_at}
-												Last: {new Date(webhook.last_triggered_at).toLocaleDateString()}
+												{m.teams_webhook_last_triggered({
+													date: formatDate(webhook.last_triggered_at)
+												})}
 											{:else}
-												Never triggered
+												{m.teams_webhook_never_triggered()}
 											{/if}
 										</div>
 
@@ -1164,7 +1180,7 @@
 												onclick={() => testWebhook(webhook)}
 												disabled={testingWebhookId === webhook.id || !webhook.enabled}
 												class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50"
-												title="Send test notification"
+												title={m.teams_webhook_test_title()}
 											>
 												{#if testingWebhookId === webhook.id}
 													<div
@@ -1177,7 +1193,9 @@
 											<button
 												onclick={() => toggleWebhookEnabled(webhook)}
 												class="p-1.5 text-gray-500 hover:text-yellow-600 dark:text-gray-400 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded transition-colors"
-												title={webhook.enabled ? 'Disable webhook' : 'Enable webhook'}
+												title={webhook.enabled
+													? m.teams_webhook_disable_title()
+													: m.teams_webhook_enable_title()}
 											>
 												<IconifyIcon
 													icon={webhook.enabled
@@ -1189,14 +1207,14 @@
 											<button
 												onclick={() => openEditWebhook(webhook)}
 												class="p-1.5 text-gray-500 hover:text-earthy-terracotta-700 dark:text-gray-400 dark:hover:text-earthy-terracotta-500 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 rounded transition-colors"
-												title="Edit webhook"
+												title={m.teams_webhook_edit_title()}
 											>
 												<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
 											</button>
 											<button
 												onclick={() => deleteWebhook(webhook)}
 												class="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-												title="Delete webhook"
+												title={m.teams_webhook_delete_title()}
 											>
 												<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
 											</button>
@@ -1218,9 +1236,9 @@
 
 <ConfirmModal
 	bind:show={showDeleteConfirm}
-	title="Delete Webhook"
-	message={`Are you sure you want to delete "${deletingWebhook?.name}"? This action cannot be undone.`}
-	confirmText="Delete"
+	title={m.teams_webhook_delete_modal_title()}
+	message={m.teams_webhook_delete_confirm_message({ name: deletingWebhook?.name ?? '' })}
+	confirmText={m.common_delete()}
 	variant="danger"
 	onConfirm={confirmDeleteWebhook}
 	onCancel={() => {
@@ -1231,9 +1249,9 @@
 
 <ConfirmModal
 	bind:show={showConvertConfirm}
-	title="Convert to Manual"
-	message="Convert this member to manual? They will no longer be managed by SSO."
-	confirmText="Convert"
+	title={m.teams_convert_modal_title()}
+	message={m.teams_convert_confirm_message()}
+	confirmText={m.teams_convert_confirm_button()}
 	variant="warning"
 	onConfirm={confirmConvertToManual}
 	onCancel={() => {
