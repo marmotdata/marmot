@@ -68,6 +68,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(CockroachDBDatabaseFields{}, "Database",
+				"The metadata fields the plugin emits for database assets."),
+			pluginsdk.AssetSchemaOf(CockroachDBTableFields{}, "Table",
+				"The metadata fields the plugin emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(CockroachDBColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

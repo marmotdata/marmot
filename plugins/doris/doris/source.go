@@ -31,6 +31,12 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DorisFields{}, "Apache Doris",
+				"The metadata fields the Doris plugin emits for database, table and view assets."),
+			pluginsdk.AssetSchemaOf(DorisColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

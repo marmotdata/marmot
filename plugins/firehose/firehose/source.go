@@ -38,6 +38,12 @@ func Meta() pluginsdk.Meta {
 		// declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(FirehoseFields{}, "AWS Firehose",
+				"The metadata fields the Firehose plugin emits for a delivery stream asset."),
+			pluginsdk.AssetSchemaOf(FirehoseDestinationFields{}, "Destination",
+				"The fields of the `destination` sub-map. Which of them are present depends on the destination type."),
+		},
 	}
 }
 
@@ -45,6 +51,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	DiscoverLineage          bool `json:"discover_lineage" description:"Link each stream to the systems it reads from and writes to" default:"true"`
 	IncludeDestinationConfig bool `json:"include_destination_config" description:"Record the destination settings in metadata" default:"true"`
@@ -80,6 +87,14 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	pluginsdk.ApplyDefaults(config, rawConfig)
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		if pluginsdk.Federated(rawConfig) {
+			return nil, fmt.Errorf("audience needs credentials.role_arn")
+		}
+	} else if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

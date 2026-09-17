@@ -97,6 +97,8 @@ github.com/marmotdata/plugin-sdk v0.0.0-20260828112447-5043b82394fb h1:ofwE85bP2
 github.com/marmotdata/plugin-sdk v0.0.0-20260828112447-5043b82394fb/go.mod h1:cD9Oen9Geumd7hqpza/P6Xdi4P+f1Z049CNhjB+YUpw=
 github.com/marmotdata/plugin-sdk v0.0.0-20260908205906-1dada43f5cdf h1:ocgDAXXPMpX1l2o/0YCwjouE6VhzO1qcZDR/ufgfD4Q=
 github.com/marmotdata/plugin-sdk v0.0.0-20260908205906-1dada43f5cdf/go.mod h1:pSFQAsmy76TkuGhYzFEAPs2y6lkaB89qW4JsUMPJeXE=
+github.com/marmotdata/plugin-sdk v0.0.0-20260909081240-b7392d965ec6 h1:fFb012SunMR9A+o2545fdZkniHdzgqbhAq8Z3loO0Bs=
+github.com/marmotdata/plugin-sdk v0.0.0-20260909081240-b7392d965ec6/go.mod h1:pSFQAsmy76TkuGhYzFEAPs2y6lkaB89qW4JsUMPJeXE=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

@@ -29,6 +29,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(PrestoCatalogFields{}, "Catalog",
+				"The metadata fields emitted for catalog assets."),
+			pluginsdk.AssetSchemaOf(PrestoTableFields{}, "Table",
+				"The metadata fields emitted for table and view assets."),
+			pluginsdk.AssetSchemaOf(PrestoColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

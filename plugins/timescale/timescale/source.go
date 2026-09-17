@@ -32,6 +32,16 @@ func Meta() pluginsdk.Meta {
 		// manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(TimescaleFields{}, "TimescaleDB",
+				"The metadata every discovered object carries."),
+			pluginsdk.AssetSchemaOf(TimescaleHypertableFields{}, "Hypertable",
+				"The metadata a table carries when TimescaleDB partitions it into chunks."),
+			pluginsdk.AssetSchemaOf(TimescaleAggregateFields{}, "Aggregate",
+				"The metadata a view carries when it is a continuous aggregate."),
+			pluginsdk.AssetSchemaOf(TimescaleColumnFields{}, "Column",
+				"The per-column metadata attached to an asset's schema."),
+		},
 	}
 }
 

@@ -72,6 +72,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(OracleDatabaseFields{}, "Database",
+				"The metadata fields the Oracle plugin emits for the Database asset created per schema. Oracle users treat a schema as the database, so the asset is named after the schema."),
+			pluginsdk.AssetSchemaOf(OracleTableFields{}, "Table",
+				"The metadata fields emitted for table, view and materialized view assets."),
+			pluginsdk.AssetSchemaOf(OracleColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(OracleFunctionFields{}, "Function",
+				"The metadata fields emitted for procedure, function and package assets."),
+		},
 	}
 }
 

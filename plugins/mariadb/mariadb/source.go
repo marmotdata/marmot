@@ -34,6 +34,18 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MariaDBDatabaseFields{}, "Database",
+				"The metadata fields the plugin emits for the database asset."),
+			pluginsdk.AssetSchemaOf(MariaDBFields{}, "MariaDB",
+				"The metadata fields the plugin emits for table, view and sequence assets."),
+			pluginsdk.AssetSchemaOf(MariaDBViewFields{}, "View",
+				"The extra metadata fields emitted for views."),
+			pluginsdk.AssetSchemaOf(MariaDBSequenceFields{}, "Sequence",
+				"The extra metadata fields emitted for sequences."),
+			pluginsdk.AssetSchemaOf(MariaDBColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

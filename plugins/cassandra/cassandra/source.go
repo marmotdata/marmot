@@ -70,6 +70,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(CassandraKeyspaceFields{}, "Keyspace",
+				"The metadata fields the Cassandra plugin emits for keyspace assets."),
+			pluginsdk.AssetSchemaOf(CassandraTableFields{}, "Table",
+				"The metadata fields emitted for table and materialized view assets."),
+			pluginsdk.AssetSchemaOf(CassandraColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

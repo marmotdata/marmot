@@ -75,6 +75,16 @@ func Meta() pluginsdk.Meta {
 		// converts job runs into run history, so all three are declared.
 		Features:   []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DagsterPipelineFields{}, "Pipeline",
+				"The metadata fields the Dagster plugin emits for Pipeline assets, one per job."),
+			pluginsdk.AssetSchemaOf(DagsterTaskFields{}, "Task",
+				"The metadata fields emitted for Task assets, one per op in a job."),
+			pluginsdk.AssetSchemaOf(DagsterDatasetFields{}, "Dataset",
+				"The metadata fields emitted for Dataset assets, one per software-defined asset. Any metadata a user attaches to the asset in Dagster is flattened alongside these, keyed by its label."),
+			pluginsdk.AssetSchemaOf(DagsterColumnFields{}, "Column",
+				"The per-column fields taken from an asset's TableSchema metadata entry and embedded in the asset's schema."),
+		},
 	}
 }
 

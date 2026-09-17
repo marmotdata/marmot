@@ -168,6 +168,15 @@ config:
       enabled: false
       role: "user"
 
+    # OAuth dynamic client registration accepts loopback redirect URIs
+    # only, unless a hosted client's callback host is allowlisted here.
+    # Hosts on this list can receive authorization codes, so only add
+    # hosts you trust.
+    #
+    # dcr:
+    #   allowed_redirect_hosts:
+    #     - claude.ai
+
     # OAuth providers — configured directly under auth to match the
     # Marmot config struct (no "providers" wrapper).
     #

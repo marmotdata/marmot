@@ -15,30 +15,44 @@ import (
 )
 
 // clientOptions builds the options the three REST clients share.
-func (s *Source) clientOptions() []option.ClientOption {
+func (s *Source) clientOptions(ctx context.Context) ([]option.ClientOption, error) {
 	var opts []option.ClientOption
 
 	if s.config.Endpoint != "" {
 		opts = append(opts, option.WithEndpoint(s.config.Endpoint))
 	}
 
-	return append(opts, s.credentialOptions()...)
+	creds, err := s.credentialOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return append(opts, creds...), nil
 }
 
-func (s *Source) credentialOptions() []option.ClientOption {
+func (s *Source) credentialOptions(ctx context.Context) ([]option.ClientOption, error) {
 	switch {
 	case s.config.DisableAuth:
-		return []option.ClientOption{option.WithoutAuthentication()}
+		return []option.ClientOption{option.WithoutAuthentication()}, nil
+	case s.config.WorkloadIdentityProvider != "":
+		ts, err := s.config.gcpCredentials().TokenSource(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
+		}
+		return []option.ClientOption{option.WithTokenSource(ts)}, nil
 	case s.config.CredentialsJSON != "":
-		return []option.ClientOption{option.WithCredentialsJSON([]byte(s.config.CredentialsJSON))}
+		return []option.ClientOption{option.WithCredentialsJSON([]byte(s.config.CredentialsJSON))}, nil
 	case s.config.CredentialsFile != "":
-		return []option.ClientOption{option.WithCredentialsFile(s.config.CredentialsFile)}
+		return []option.ClientOption{option.WithCredentialsFile(s.config.CredentialsFile)}, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (s *Source) firestoreAdminService(ctx context.Context) (*firestoreadmin.Service, error) {
-	service, err := firestoreadmin.NewService(ctx, s.clientOptions()...)
+	opts, err := s.clientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	service, err := firestoreadmin.NewService(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Firestore admin client: %w", err)
 	}
@@ -46,7 +60,11 @@ func (s *Source) firestoreAdminService(ctx context.Context) (*firestoreadmin.Ser
 }
 
 func (s *Source) realtimeDatabaseService(ctx context.Context) (*firebasedatabase.Service, error) {
-	service, err := firebasedatabase.NewService(ctx, s.clientOptions()...)
+	opts, err := s.clientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	service, err := firebasedatabase.NewService(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Realtime Database client: %w", err)
 	}
@@ -54,7 +72,11 @@ func (s *Source) realtimeDatabaseService(ctx context.Context) (*firebasedatabase
 }
 
 func (s *Source) firebaseService(ctx context.Context) (*firebaseapi.Service, error) {
-	service, err := firebaseapi.NewService(ctx, s.clientOptions()...)
+	opts, err := s.clientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	service, err := firebaseapi.NewService(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Firebase client: %w", err)
 	}
@@ -87,7 +109,11 @@ func (s *Source) firestoreClient(ctx context.Context, databaseID string) (*fires
 		if s.config.Endpoint != "" {
 			opts = append(opts, option.WithEndpoint(s.config.Endpoint))
 		}
-		opts = append(opts, s.credentialOptions()...)
+		credOpts, err := s.credentialOptions(ctx)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, credOpts...)
 	}
 
 	client, err := firestore.NewClientWithDatabase(ctx, s.config.ProjectID, databaseID, opts...)

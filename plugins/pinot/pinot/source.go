@@ -61,6 +61,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(PinotTableFields{}, "Table",
+				"The metadata fields the Pinot plugin emits for table assets."),
+			pluginsdk.AssetSchemaOf(PinotColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(PinotStreamFields{}, "Stream",
+				"The metadata fields emitted on the Kafka topic or Kinesis stream asset that feeds a realtime table."),
+		},
 	}
 }
 

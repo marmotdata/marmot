@@ -27,6 +27,16 @@ func Meta() pluginsdk.Meta {
 		// manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MSSQLDatabaseFields{}, "Database",
+				"The metadata fields the SQL Server plugin emits for database assets."),
+			pluginsdk.AssetSchemaOf(MSSQLTableFields{}, "Table",
+				"The metadata fields emitted for table and view assets."),
+			pluginsdk.AssetSchemaOf(MSSQLFunctionFields{}, "Function",
+				"The metadata fields emitted for stored procedure and function assets."),
+			pluginsdk.AssetSchemaOf(MSSQLColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

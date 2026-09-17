@@ -30,6 +30,18 @@ func Meta() pluginsdk.Meta {
 		// training jobs, so the manifest declares all three features.
 		Features:   []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SageMakerModelFields{}, "Model",
+				"The metadata a Model asset carries. Both a deployed model and a model registry group are filed as Models, told apart by the kind field."),
+			pluginsdk.AssetSchemaOf(SageMakerEndpointFields{}, "Endpoint",
+				"The metadata an Endpoint asset carries."),
+			pluginsdk.AssetSchemaOf(SageMakerFeatureGroupFields{}, "Feature Group",
+				"The metadata a feature group Dataset asset carries."),
+			pluginsdk.AssetSchemaOf(SageMakerFeatureFields{}, "Feature",
+				"The per-feature fields embedded in a feature group's schema."),
+			pluginsdk.AssetSchemaOf(SageMakerTrainingJobFields{}, "Training Job",
+				"The metadata a training Job asset carries."),
+		},
 	}
 }
 
@@ -37,6 +49,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	IncludeEndpoints     bool `json:"include_endpoints" description:"Whether to discover inference endpoints" default:"true"`
 	IncludeModelPackages bool `json:"include_model_packages" description:"Whether to discover model package groups from the model registry" default:"true"`
@@ -85,6 +98,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

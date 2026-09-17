@@ -28,6 +28,12 @@ func Meta() pluginsdk.Meta {
 		// Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(QuestDBFields{}, "QuestDB",
+				"The metadata fields the QuestDB plugin emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(QuestDBColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

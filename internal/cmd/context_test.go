@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -23,9 +25,60 @@ func TestSetAndGetContext(t *testing.T) {
 	err := setContext("example.com", ContextEntry{Host: "https://example.com"})
 	require.NoError(t, err)
 
-	contexts := getContexts()
+	contexts, err := loadContexts()
+	require.NoError(t, err)
 	assert.Contains(t, contexts, "example.com")
 	assert.Equal(t, "https://example.com", contexts["example.com"].Host)
+}
+
+// A context name is a hostname. Viper is dot-delimited, so a name kept in the
+// config would come back split; and any command that rewrites the config must
+// leave the contexts alone.
+func TestContextsSurviveAConfigWrite(t *testing.T) {
+	_, cleanup := setupTestConfigDir(t)
+	defer cleanup()
+	setupTestViper(t)
+
+	require.NoError(t, setContext("example.com", ContextEntry{Host: "https://example.com"}))
+	require.NoError(t, setContext("other.com", ContextEntry{Host: "https://other.com"}))
+
+	// A later process reads the config, then writes it for an unrelated key.
+	dir, err := configDir()
+	require.NoError(t, err)
+	viper.Reset()
+	viper.SetConfigFile(filepath.Join(dir, "config.yaml"))
+	require.NoError(t, viper.ReadInConfig())
+	viper.Set("output", "json")
+	require.NoError(t, writeConfig())
+
+	contexts, err := loadContexts()
+	require.NoError(t, err)
+	assert.Equal(t, map[string]ContextEntry{
+		"example.com": {Host: "https://example.com"},
+		"other.com":   {Host: "https://other.com"},
+	}, contexts)
+}
+
+func TestLoadContextsReportsABrokenFile(t *testing.T) {
+	_, cleanup := setupTestConfigDir(t)
+	defer cleanup()
+
+	p, err := contextsPath()
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Dir(p), 0o700))
+	require.NoError(t, os.WriteFile(p, []byte("{not json"), 0o600))
+
+	_, err = loadContexts()
+	assert.Error(t, err, "a broken file is not silently an empty one")
+}
+
+func TestLoadContextsWithoutAFile(t *testing.T) {
+	_, cleanup := setupTestConfigDir(t)
+	defer cleanup()
+
+	contexts, err := loadContexts()
+	require.NoError(t, err)
+	assert.Empty(t, contexts)
 }
 
 func TestCurrentContextName(t *testing.T) {

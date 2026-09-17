@@ -66,6 +66,20 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(UnityCatalogCatalogFields{}, "Catalog",
+				"The metadata fields emitted for catalog assets."),
+			pluginsdk.AssetSchemaOf(UnityCatalogTableFields{}, "Table",
+				"The metadata fields emitted for table and view assets."),
+			pluginsdk.AssetSchemaOf(UnityCatalogColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(UnityCatalogVolumeFields{}, "Volume",
+				"The metadata fields emitted for volume assets."),
+			pluginsdk.AssetSchemaOf(UnityCatalogFunctionFields{}, "Function",
+				"The metadata fields emitted for function assets."),
+			pluginsdk.AssetSchemaOf(UnityCatalogModelFields{}, "Model",
+				"The metadata fields emitted for registered model assets."),
+		},
 	}
 }
 

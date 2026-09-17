@@ -36,12 +36,21 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  spec,
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(IcebergNamespaceFields{}, "Namespace",
+				"Iceberg namespace metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergTableFields{}, "Table",
+				"Iceberg table metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergViewFields{}, "View",
+				"Iceberg view metadata fields"),
+		},
 	}
 }
 
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	CatalogType string `json:"catalog_type" description:"Catalog backend type" default:"rest" validate:"omitempty,oneof=rest glue"`
 
@@ -109,6 +118,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		if err != nil || u.Scheme == "" || u.Host == "" {
 			return nil, fmt.Errorf("uri must be a valid URL")
 		}
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
+		return nil, err
 	}
 
 	s.config = config

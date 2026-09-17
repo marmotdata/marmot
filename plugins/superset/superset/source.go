@@ -56,6 +56,18 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SupersetDashboardFields{}, "Dashboard",
+				"The metadata fields the plugin emits for Dashboard assets."),
+			pluginsdk.AssetSchemaOf(SupersetChartFields{}, "Chart",
+				"The metadata fields the plugin emits for Chart assets."),
+			pluginsdk.AssetSchemaOf(SupersetDatasetFields{}, "Dataset",
+				"The metadata fields the plugin emits for Data Model Object assets (Superset datasets)."),
+			pluginsdk.AssetSchemaOf(SupersetColumnFields{}, "Column",
+				"The per-column fields embedded in a dataset asset's schema."),
+			pluginsdk.AssetSchemaOf(SupersetDatabaseFields{}, "Database",
+				"The metadata fields the plugin emits for DataSource assets (Superset database connections)."),
+		},
 	}
 }
 

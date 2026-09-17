@@ -69,6 +69,12 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SplineFields{}, "Spline",
+				"The metadata fields the Spline plugin emits for Pipeline assets."),
+			pluginsdk.AssetSchemaOf(SplineRunFacetFields{}, "Run Facet",
+				"The facets attached to each run history event."),
+		},
 	}
 }
 

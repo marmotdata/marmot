@@ -65,6 +65,10 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(KafkaTopicFields{}, "Topic",
+				"The metadata fields Kafka emits for a topic asset."),
+		},
 	}
 }
 

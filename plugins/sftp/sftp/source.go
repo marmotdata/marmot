@@ -35,6 +35,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(FolderFields{}, "Folder",
+				"The metadata fields the SFTP plugin emits for a Folder asset.  The counts and the size cover a folder's immediate contents, not its whole subtree."),
+			pluginsdk.AssetSchemaOf(FileFields{}, "File",
+				"The metadata fields the SFTP plugin emits for a File asset."),
+			pluginsdk.AssetSchemaOf(DelimitedColumnFields{}, "Delimited Column",
+				"The per-column fields inferred for a csv or tsv file."),
+			pluginsdk.AssetSchemaOf(JSONColumnFields{}, "JSONColumn",
+				"The per-column fields inferred for a json or jsonl file. A nested key is written parent.child."),
+		},
 	}
 }
 

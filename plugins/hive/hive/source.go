@@ -30,6 +30,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(HiveDatabaseFields{}, "Database",
+				"The metadata fields the Hive plugin emits for database assets."),
+			pluginsdk.AssetSchemaOf(HiveTableFields{}, "Table",
+				"The metadata fields the Hive plugin emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(HiveColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+		},
 	}
 }
 

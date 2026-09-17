@@ -59,6 +59,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(PrefectPipelineFields{}, "Pipeline",
+				"The metadata fields the Prefect plugin emits for a flow (Pipeline) asset."),
+			pluginsdk.AssetSchemaOf(PrefectTaskFields{}, "Task",
+				"The metadata fields for a Task asset."),
+			pluginsdk.AssetSchemaOf(PrefectRunFacetFields{}, "Run Facet",
+				"The facets attached to each run-history event of a Pipeline asset."),
+		},
 	}
 }
 

@@ -58,6 +58,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(MLflowModelFields{}, "Model",
+				"The metadata fields the MLflow plugin emits for registered model assets."),
+			pluginsdk.AssetSchemaOf(MLflowExperimentFields{}, "Experiment",
+				"The metadata fields emitted for experiment assets."),
+			pluginsdk.AssetSchemaOf(MLflowDatasetFields{}, "Dataset",
+				"The metadata fields emitted for dataset assets, one per dataset logged to the run behind a model."),
+			pluginsdk.AssetSchemaOf(MLflowColumnFields{}, "Column",
+				"The per-feature fields embedded in a model or dataset asset's schema."),
+		},
 	}
 }
 

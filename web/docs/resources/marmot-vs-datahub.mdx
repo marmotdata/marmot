@@ -131,7 +131,7 @@ Both are open source data catalogs, both expose metadata to AI agents over the M
       { status: "partial", text: "Via MCP and API, with column-level lineage" },
     ]},
     { feature: "Connectors", cells: [
-      "~28 plugins, plus catalog-as-code",
+      "70+ plugins, plus catalog-as-code",
       "Broad pre-built ecosystem",
     ]},
     { feature: "Ingestion methods", cells: [
@@ -194,7 +194,7 @@ Marmot runs every MCP and API query with the permissions of the API key behind i
 
 **DataHub has the broader pre-built connector ecosystem today; Marmot covers the rest with catalog-as-code.** DataHub's integration library is extensive, covering a wide range of warehouses, orchestrators and BI tools.
 
-Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. DataHub leans on YAML ingestion recipes and its SDK instead. If raw pre-built connector count is your deciding factor, DataHub leads. If you provision with Terraform or Pulumi, the gap closes quickly.
+Marmot ships 70+ plugins spanning databases, warehouses, lakes, object storage, streaming, orchestration, compute, BI and search. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. DataHub leans on YAML ingestion recipes and its SDK instead. DataHub's pre-built library is still the larger of the two, but for a typical stack the question is now whether your sources are covered rather than how the totals compare, and at 70+ plugins plus catalog-as-code they usually are.
 
 ---
 
