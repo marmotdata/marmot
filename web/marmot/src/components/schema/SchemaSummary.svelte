@@ -8,6 +8,8 @@
 		prettyPrintSchema
 	} from '$lib/schema/utils';
 	import type { SchemaSection, Field } from '$lib/schema/types';
+	import { m } from '$lib/paraglide/messages';
+	import { capitalize } from '$lib/utils';
 
 	type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 	type SchemaValidationError = { message?: string } & Record<string, JsonValue>;
@@ -208,7 +210,7 @@
 						: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
 					onclick={() => setActiveTab(section.name)}
 				>
-					{section.name.charAt(0).toUpperCase() + section.name.slice(1)} Schema
+					{m.schema_tab_label({ name: capitalize(section.name) })}
 				</button>
 			{/each}
 		</div>
@@ -236,7 +238,7 @@
 					</div>
 					<div class="ml-3">
 						<h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-							Schema Validation Warnings
+							{m.schema_validation_warnings_heading()}
 						</h3>
 						<div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
 							<ul class="list-disc pl-5 space-y-1">
@@ -244,7 +246,7 @@
 									<li>{error.message || JSON.stringify(error)}</li>
 								{/each}
 								{#if activeErrors.length > 3}
-									<li>...and {activeErrors.length - 3} more issues</li>
+									<li>{m.schema_more_issues({ count: activeErrors.length - 3 })}</li>
 								{/if}
 							</ul>
 						</div>
@@ -344,13 +346,13 @@
 															<span
 																class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100"
 															>
-																Required
+																{m.common_required()}
 															</span>
 														{:else if field.required === false}
 															<span
 																class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
 															>
-																Optional
+																{m.common_optional()}
 															</span>
 														{/if}
 													</div>
@@ -366,7 +368,7 @@
 															<span
 																class="inline-flex items-center px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
 															>
-																Format: {field.format}
+																{m.schema_format_label({ format: field.format })}
 															</span>
 														{/if}
 														{#if field.pattern}
@@ -374,36 +376,44 @@
 																class="inline-flex items-center px-2 py-1 rounded bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
 																title={field.pattern}
 															>
-																Pattern
+																{m.schema_pattern_badge()}
 															</span>
 														{/if}
 														{#if field.minimum !== undefined || field.maximum !== undefined}
 															<span
 																class="inline-flex items-center px-2 py-1 rounded bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
 															>
-																{field.minimum !== undefined ? `min: ${field.minimum}` : ''}
+																{field.minimum !== undefined
+																	? m.schema_min_constraint({ value: field.minimum })
+																	: ''}
 																{field.minimum !== undefined && field.maximum !== undefined
 																	? ', '
 																	: ''}
-																{field.maximum !== undefined ? `max: ${field.maximum}` : ''}
+																{field.maximum !== undefined
+																	? m.schema_max_constraint({ value: field.maximum })
+																	: ''}
 															</span>
 														{/if}
 														{#if field.minLength !== undefined || field.maxLength !== undefined}
 															<span
 																class="inline-flex items-center px-2 py-1 rounded bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 															>
-																{field.minLength !== undefined ? `minLen: ${field.minLength}` : ''}
+																{field.minLength !== undefined
+																	? m.schema_minlen_constraint({ value: field.minLength })
+																	: ''}
 																{field.minLength !== undefined && field.maxLength !== undefined
 																	? ', '
 																	: ''}
-																{field.maxLength !== undefined ? `maxLen: ${field.maxLength}` : ''}
+																{field.maxLength !== undefined
+																	? m.schema_maxlen_constraint({ value: field.maxLength })
+																	: ''}
 															</span>
 														{/if}
 														{#if field.default !== undefined}
 															<span
 																class="inline-flex items-center px-2 py-1 rounded bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
 															>
-																Default: {JSON.stringify(field.default)}
+																{m.schema_default_label({ value: JSON.stringify(field.default) })}
 															</span>
 														{/if}
 													</div>
@@ -457,7 +467,7 @@
 				{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
 					<div class="space-y-4">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-							{schemaExamples.length > 1 ? 'Examples' : 'Example'}
+							{schemaExamples.length > 1 ? m.schema_examples_heading() : m.schema_example_heading()}
 						</h3>
 						<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
 					</div>
@@ -472,13 +482,13 @@
 				{/if}
 			{:else}
 				<div class="text-center py-12 text-gray-500 dark:text-gray-400">
-					<p>No fields available for {activeTab} schema</p>
+					<p>{m.schema_no_fields_for({ name: activeTab })}</p>
 				</div>
 			{/if}
 		{/key}
 	{:else}
 		<div class="text-center py-12 text-gray-500 dark:text-gray-400">
-			<p>No schema available</p>
+			<p>{m.schema_none_available()}</p>
 		</div>
 	{/if}
 </div>

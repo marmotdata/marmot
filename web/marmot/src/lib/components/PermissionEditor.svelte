@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { listPermissions } from '$lib/roles/api';
 	import type { Permission } from '$lib/roles/types';
+	import { m } from '$lib/paraglide/messages';
 
 	export let selectedIds: string[] = [];
 	export let onChange: (ids: string[]) => void = () => {};
@@ -58,7 +59,7 @@
 			loading = true;
 			allPermissions = await listPermissions();
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load permissions';
+			error = e instanceof Error ? e.message : m.ui_permissions_load_error();
 		} finally {
 			loading = false;
 		}
@@ -129,7 +130,7 @@
 
 		{#if allPermissions.length === 0}
 			<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-				No permissions defined
+				{m.ui_permissioneditor_empty()}
 			</p>
 		{/if}
 	</div>

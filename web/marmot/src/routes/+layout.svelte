@@ -7,6 +7,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
+	import { m } from '$lib/paraglide/messages';
+	import { locale } from '$lib/i18n';
 	import UserIcon from '~icons/heroicons/user-16-solid';
 	import Icon from '@iconify/svelte';
 	import { userProfile } from '$lib/stores/user';
@@ -200,14 +202,42 @@
 			.join(' ');
 	}
 
+	// Known routes map to translated titles, unknown slugs keep the capitalise-the-slug fallback
+	const pageTitles: Record<string, () => string> = {
+		discover: m.pagetitle_discover,
+		runs: m.pagetitle_runs,
+		metrics: m.pagetitle_metrics,
+		glossary: m.pagetitle_glossary,
+		products: m.pagetitle_products,
+		teams: m.pagetitle_teams,
+		pipelines: m.pagetitle_pipelines,
+		admin: m.pagetitle_admin,
+		profile: m.pagetitle_profile,
+		notifications: m.pagetitle_notifications,
+		'asset-rules': m.pagetitle_asset_rules,
+		'service-accounts': m.pagetitle_service_accounts,
+		users: m.pagetitle_users,
+		roles: m.pagetitle_roles,
+		assets: m.pagetitle_assets,
+		search: m.pagetitle_search,
+		login: m.pagetitle_login
+	};
+
 	$: pathSegments = $page.url.pathname.split('/').filter(Boolean);
 	$: decodedSegments = pathSegments.map((segment) => decodeURIComponent(segment));
 	$: processedSegments = decodedSegments.map((segment, index) =>
 		index < 2 ? capitalizeWord(segment) : segment
 	);
+	$: knownPageTitle = pageTitles[decodedSegments[0]];
 	$: reversedSegments = [...processedSegments].reverse();
 	$: pageTitle = reversedSegments.join(' - ');
-	$: dynamicTitle = $page.url.pathname === '/' ? 'Marmot' : `${pageTitle} - Marmot`;
+	// $locale is read so the title recomputes when the language changes
+	$: dynamicTitle =
+		$locale && $page.url.pathname === '/'
+			? 'Marmot'
+			: knownPageTitle
+				? [...processedSegments.slice(1)].reverse().concat(knownPageTitle()).join(' - ')
+				: `${pageTitle} - Marmot`;
 </script>
 
 <svelte:head>
@@ -216,261 +246,268 @@
 
 <svelte:window onclick={closeDropdown} onkeydown={handleGlobalKeydown} />
 
-<div class="h-screen flex flex-col">
-	{#if !$page.url.pathname.startsWith('/login') && bannerConfig}
-		<Banner
-			enabled={bannerConfig.enabled}
-			dismissible={bannerConfig.dismissible}
-			variant={bannerConfig.variant}
-			message={bannerConfig.message}
-			id={bannerConfig.id}
-		/>
-	{/if}
-	{#if !$page.url.pathname.startsWith('/login')}
-		<nav class="glass-navbar flex-none sticky top-0 z-40">
-			<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div class="flex items-center justify-between h-16 gap-6">
-					<!-- Logo -->
-					<div class="flex items-center flex-shrink-0">
-						<a href={resolve('/')} class="flex-shrink-0 hover:opacity-80 transition-opacity">
-							<img src="/images/marmot-text.svg" alt="Marmot" class="h-6 dark:invert" />
-						</a>
-					</div>
+<!-- Keyed on the locale so a language change re-renders the shell in place instead of reloading the document -->
+{#key $locale}
+	<div class="h-screen flex flex-col">
+		{#if !$page.url.pathname.startsWith('/login') && bannerConfig}
+			<Banner
+				enabled={bannerConfig.enabled}
+				dismissible={bannerConfig.dismissible}
+				variant={bannerConfig.variant}
+				message={bannerConfig.message}
+				id={bannerConfig.id}
+			/>
+		{/if}
+		{#if !$page.url.pathname.startsWith('/login')}
+			<nav class="glass-navbar flex-none sticky top-0 z-40">
+				<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="flex items-center justify-between h-16 gap-6">
+						<!-- Logo -->
+						<div class="flex items-center flex-shrink-0">
+							<a href={resolve('/')} class="flex-shrink-0 hover:opacity-80 transition-opacity">
+								<img src="/images/marmot-text.svg" alt="Marmot" class="h-6 dark:invert" />
+							</a>
+						</div>
 
-					<!-- Centered Search (desktop only) -->
-					<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
-						<button
-							onclick={openSearchModal}
-							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-full shadow-sm"
-						>
-							<Icon icon="material-symbols:search" class="w-4 h-4 text-gray-500 dark:text-white" />
-							<span class="flex-1 text-left truncate font-mono">
-								{#if currentSearchQuery}
-									{#each getHighlightedText(currentSearchQuery) as part, i (i)}
-										<span class={part.class}>{part.text}</span>
-									{/each}
-								{:else}
-									<span class="text-gray-600 dark:text-gray-400">Search everything...</span>
-								{/if}
-							</span>
-							<kbd
-								class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0"
-							>
-								{isMac ? '⌘' : 'Ctrl'}K
-							</kbd>
-						</button>
-					</div>
-
-					<!-- Right side: Menu Items -->
-					<div class="flex items-center space-x-4 flex-shrink-0">
-						<!-- Mobile Search Button -->
-						<button
-							onclick={openSearchModal}
-							class="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-							aria-label="Search"
-						>
-							<Icon icon="material-symbols:search" class="w-5 h-5" />
-						</button>
-
-						<a
-							href={resolve('/discover')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/discover'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:database" />
-							</span>
-							<span>Discover</span>
-						</a>
-
-						<a
-							href={resolve('/runs')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/runs'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:play-circle-outline" />
-							</span>
-							<span>Runs</span>
-						</a>
-
-						<a
-							href={resolve('/metrics')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/metrics'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:area-chart-rounded" />
-							</span>
-							<span>Metrics</span>
-						</a>
-
-						<div class="relative">
+						<!-- Centered Search (desktop only) -->
+						<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
 							<button
-								type="button"
-								onclick={(e) => {
-									e.stopPropagation();
-									toggleGovernance();
-								}}
+								onclick={openSearchModal}
+								class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-full shadow-sm"
+							>
+								<Icon
+									icon="material-symbols:search"
+									class="w-4 h-4 text-gray-500 dark:text-white"
+								/>
+								<span class="flex-1 text-left truncate font-mono">
+									{#if currentSearchQuery}
+										{#each getHighlightedText(currentSearchQuery) as part, i (i)}
+											<span class={part.class}>{part.text}</span>
+										{/each}
+									{:else}
+										<span class="text-gray-600 dark:text-gray-400">{m.nav_search_everything()}</span
+										>
+									{/if}
+								</span>
+								<kbd
+									class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0"
+								>
+									{isMac ? '⌘' : 'Ctrl'}K
+								</kbd>
+							</button>
+						</div>
+
+						<!-- Right side: Menu Items -->
+						<div class="flex items-center space-x-4 flex-shrink-0">
+							<!-- Mobile Search Button -->
+							<button
+								onclick={openSearchModal}
+								class="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+								aria-label={m.common_search()}
+							>
+								<Icon icon="material-symbols:search" class="w-5 h-5" />
+							</button>
+
+							<a
+								href={resolve('/discover')}
 								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-									'/glossary'
-								) ||
-								$page.url.pathname.startsWith('/products') ||
-								$page.url.pathname.startsWith('/asset-rules')
+									'/discover'
+								)
 									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 							>
 								<span class="w-4 h-4 mr-1.5">
-									<Icon icon="material-symbols:shield-outline" />
+									<Icon icon="material-symbols:database" />
 								</span>
-								<span>Governance</span>
-								<Icon
-									icon="material-symbols:keyboard-arrow-down"
-									class="w-4 h-4 ml-1 transition-transform {isGovernanceOpen ? 'rotate-180' : ''}"
-								/>
-							</button>
-							{#if isGovernanceOpen}
-								<div
-									class="origin-top-left absolute left-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-									role="menu"
-								>
-									<a
-										href={resolve('/glossary')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/glossary'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:book" class="w-4 h-4" />
-										Glossary
-									</a>
-									<a
-										href={resolve('/products')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/products'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:inventory-2" class="w-4 h-4" />
-										Data Products
-									</a>
-									<a
-										href={resolve('/asset-rules')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/asset-rules'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:rule-settings" class="w-4 h-4" />
-										Asset Rules
-									</a>
-								</div>
-							{/if}
-						</div>
+								<span>{m.nav_discover()}</span>
+							</a>
 
-						{#if $auth}
-							<NotificationBell />
-						{/if}
+							<a
+								href={resolve('/runs')}
+								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+									'/runs'
+								)
+									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+							>
+								<span class="w-4 h-4 mr-1.5">
+									<Icon icon="material-symbols:play-circle-outline" />
+								</span>
+								<span>{m.nav_runs()}</span>
+							</a>
 
-						<div class="relative">
-							<div>
+							<a
+								href={resolve('/metrics')}
+								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+									'/metrics'
+								)
+									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+							>
+								<span class="w-4 h-4 mr-1.5">
+									<Icon icon="material-symbols:area-chart-rounded" />
+								</span>
+								<span>{m.nav_metrics()}</span>
+							</a>
+
+							<div class="relative">
 								<button
-									class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500"
-									id="user-menu"
-									aria-haspopup="true"
+									type="button"
 									onclick={(e) => {
 										e.stopPropagation();
-										toggleDropdown();
+										toggleGovernance();
 									}}
+									class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+										'/glossary'
+									) ||
+									$page.url.pathname.startsWith('/products') ||
+									$page.url.pathname.startsWith('/asset-rules')
+										? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+										: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 								>
-									{#if $userProfile}
-										<Avatar
-											name={$userProfile.name || $userProfile.username}
-											profilePicture={$userProfile.profile_picture}
-											size="sm"
-										/>
-									{:else}
-										<div
-											class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-										>
-											<UserIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
-										</div>
-									{/if}
+									<span class="w-4 h-4 mr-1.5">
+										<Icon icon="material-symbols:shield-outline" />
+									</span>
+									<span>{m.nav_governance()}</span>
+									<Icon
+										icon="material-symbols:keyboard-arrow-down"
+										class="w-4 h-4 ml-1 transition-transform {isGovernanceOpen ? 'rotate-180' : ''}"
+									/>
 								</button>
-							</div>
-							{#if isDropdownOpen}
-								<div
-									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-									role="menu"
-									aria-orientation="vertical"
-									aria-labelledby="user-menu"
-								>
-									{#if $auth}
-										<!-- User is authenticated -->
+								{#if isGovernanceOpen}
+									<div
+										class="origin-top-left absolute left-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+										role="menu"
+									>
 										<a
-											href={resolve('/profile')}
-											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-											role="menuitem">Profile</a
-										>
-										{#if isAdmin}
-											<a
-												href={resolve('/admin')}
-												class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-												role="menuitem">Admin</a
-											>
-										{/if}
-										<button
-											type="button"
-											onclick={handleLogout}
-											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+											href={resolve('/glossary')}
+											class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+												'/glossary'
+											)
+												? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+												: ''}"
 											role="menuitem"
 										>
-											Logout
-										</button>
-									{:else}
-										<!-- User is in anonymous mode -->
-										<button
-											type="button"
-											onclick={handleLogin}
-											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+											<Icon icon="material-symbols:book" class="w-4 h-4" />
+											{m.nav_glossary()}
+										</a>
+										<a
+											href={resolve('/products')}
+											class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+												'/products'
+											)
+												? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+												: ''}"
 											role="menuitem"
 										>
-											Login
-										</button>
-									{/if}
-								</div>
+											<Icon icon="material-symbols:inventory-2" class="w-4 h-4" />
+											{m.nav_data_products()}
+										</a>
+										<a
+											href={resolve('/asset-rules')}
+											class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+												'/asset-rules'
+											)
+												? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+												: ''}"
+											role="menuitem"
+										>
+											<Icon icon="material-symbols:rule-settings" class="w-4 h-4" />
+											{m.nav_asset_rules()}
+										</a>
+									</div>
+								{/if}
+							</div>
+
+							{#if $auth}
+								<NotificationBell />
 							{/if}
+
+							<div class="relative">
+								<div>
+									<button
+										class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500"
+										id="user-menu"
+										aria-haspopup="true"
+										onclick={(e) => {
+											e.stopPropagation();
+											toggleDropdown();
+										}}
+									>
+										{#if $userProfile}
+											<Avatar
+												name={$userProfile.name || $userProfile.username}
+												profilePicture={$userProfile.profile_picture}
+												size="sm"
+											/>
+										{:else}
+											<div
+												class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+											>
+												<UserIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
+											</div>
+										{/if}
+									</button>
+								</div>
+								{#if isDropdownOpen}
+									<div
+										class="origin-top-right absolute right-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+										role="menu"
+										aria-orientation="vertical"
+										aria-labelledby="user-menu"
+									>
+										{#if $auth}
+											<!-- User is authenticated -->
+											<a
+												href={resolve('/profile')}
+												class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+												role="menuitem">{m.nav_profile()}</a
+											>
+											{#if isAdmin}
+												<a
+													href={resolve('/admin')}
+													class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+													role="menuitem">{m.nav_admin()}</a
+												>
+											{/if}
+											<button
+												type="button"
+												onclick={handleLogout}
+												class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+												role="menuitem"
+											>
+												{m.nav_logout()}
+											</button>
+										{:else}
+											<!-- User is in anonymous mode -->
+											<button
+												type="button"
+												onclick={handleLogin}
+												class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+												role="menuitem"
+											>
+												{m.nav_login()}
+											</button>
+										{/if}
+									</div>
+								{/if}
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-		</nav>
-	{/if}
-
-	<main class="flex-1 overflow-y-auto flex flex-col">
-		<div class="flex-1">
-			<slot />
-		</div>
-		{#if !$page.url.pathname.startsWith('/login')}
-			<Footer />
+			</nav>
 		{/if}
-	</main>
-</div>
+
+		<main class="flex-1 overflow-y-auto flex flex-col">
+			<div class="flex-1">
+				<slot />
+			</div>
+			{#if !$page.url.pathname.startsWith('/login')}
+				<Footer />
+			{/if}
+		</main>
+	</div>
+{/key}
 
 <!-- Search Modal -->
 {#if showSearchModal}

@@ -122,6 +122,8 @@ type Config struct {
 
 	UI struct {
 		Banner BannerConfig `mapstructure:"banner"`
+		// DefaultLanguage is the BCP 47 tag the web UI falls back to when a user has no language preference, empty means detect from the browser
+		DefaultLanguage string `mapstructure:"default_language"`
 	} `mapstructure:"ui"`
 
 	Search struct {

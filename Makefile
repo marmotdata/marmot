@@ -70,6 +70,9 @@ frontend-lint:
 frontend-typecheck:
 	cd web/marmot && pnpm install && pnpm run check
 
+frontend-i18n-check:
+	cd web/marmot && pnpm install && pnpm run i18n:check
+
 fix:
 	cd web/marmot && pnpm run format
 

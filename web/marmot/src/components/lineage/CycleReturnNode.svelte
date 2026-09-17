@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from '$components/ui/Icon.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { data } = $props<{
 		data: {
@@ -35,7 +36,7 @@
 		<div class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700 text-lg">↻</div>
 	</div>
 	<div class="text-xs text-gray-600 dark:text-gray-400 text-center leading-tight">
-		Returns to<br />
+		{m.lineage_returns_to()}<br />
 		<span class="font-medium text-gray-800 dark:text-gray-200">{data.targetName}</span>
 	</div>
 </div>

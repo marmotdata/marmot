@@ -12,9 +12,10 @@
 	import Icon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
 	import MentionList from './MentionList.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let value: string = '';
-	export let placeholder: string = 'Start typing...';
+	export let placeholder: string = m.editor_placeholder();
 	export let disabled: boolean = false;
 	export let enableMentions: boolean = false;
 
@@ -341,7 +342,7 @@
 	}
 
 	function setLink() {
-		const url = window.prompt('Enter URL:');
+		const url = window.prompt(m.docs_editor_enter_url_prompt());
 		if (url) {
 			editor?.chain().focus().setLink({ href: url }).run();
 		}
@@ -368,7 +369,7 @@
 			class="p-1.5 rounded {isActive('bold')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Bold (Ctrl+B)"
+			title={m.docs_editor_bold_title()}
 		>
 			<Icon icon="material-symbols:format-bold" class="h-4 w-4" />
 		</button>
@@ -380,7 +381,7 @@
 			class="p-1.5 rounded {isActive('italic')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Italic (Ctrl+I)"
+			title={m.docs_editor_italic_title()}
 		>
 			<Icon icon="material-symbols:format-italic" class="h-4 w-4" />
 		</button>
@@ -392,7 +393,7 @@
 			class="p-1.5 rounded {isActive('code')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Inline Code"
+			title={m.docs_editor_inline_code_title()}
 		>
 			<Icon icon="material-symbols:code" class="h-4 w-4" />
 		</button>
@@ -406,7 +407,7 @@
 			class="p-1.5 rounded {isActive('heading', { level: 1 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 1"
+			title={m.docs_editor_heading_title({ level: 1 })}
 		>
 			H1
 		</button>
@@ -418,7 +419,7 @@
 			class="p-1.5 rounded {isActive('heading', { level: 2 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 2"
+			title={m.docs_editor_heading_title({ level: 2 })}
 		>
 			H2
 		</button>
@@ -430,7 +431,7 @@
 			class="p-1.5 rounded {isActive('heading', { level: 3 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 3"
+			title={m.docs_editor_heading_title({ level: 3 })}
 		>
 			H3
 		</button>
@@ -444,7 +445,7 @@
 			class="p-1.5 rounded {isActive('bulletList')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Bullet List"
+			title={m.docs_editor_bullet_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-bulleted" class="h-4 w-4" />
 		</button>
@@ -456,7 +457,7 @@
 			class="p-1.5 rounded {isActive('orderedList')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Numbered List"
+			title={m.docs_editor_numbered_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-numbered" class="h-4 w-4" />
 		</button>
@@ -470,7 +471,7 @@
 			class="p-1.5 rounded {isActive('blockquote')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Quote"
+			title={m.docs_editor_quote_title()}
 		>
 			<Icon icon="material-symbols:format-quote" class="h-4 w-4" />
 		</button>
@@ -482,7 +483,7 @@
 			class="p-1.5 rounded {isActive('codeBlock')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Code Block"
+			title={m.docs_editor_code_block_title()}
 		>
 			<Icon icon="material-symbols:code-blocks" class="h-4 w-4" />
 		</button>
@@ -495,7 +496,7 @@
 				on:click={unsetLink}
 				{disabled}
 				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Remove Link"
+				title={m.docs_editor_remove_link_title()}
 			>
 				<Icon icon="material-symbols:link-off" class="h-4 w-4" />
 			</button>
@@ -505,7 +506,7 @@
 				on:click={setLink}
 				{disabled}
 				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Add Link"
+				title={m.docs_editor_add_link_title()}
 			>
 				<Icon icon="material-symbols:link" class="h-4 w-4" />
 			</button>
@@ -513,7 +514,9 @@
 
 		{#if enableMentions}
 			<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-			<span class="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Type @ to mention</span>
+			<span class="px-2 py-1 text-xs text-gray-500 dark:text-gray-400"
+				>{m.editor_mention_hint()}</span
+			>
 		{/if}
 	</div>
 

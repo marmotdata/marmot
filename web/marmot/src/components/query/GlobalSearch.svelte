@@ -6,6 +6,7 @@
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
+	import { m } from '$lib/paraglide/messages';
 
 	export let initialQuery = '';
 	export let autofocus = false;
@@ -141,9 +142,15 @@
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 	}
 
+	// Known result types map to translated badge labels, unknown types fall back to the raw string
 	function getTypeLabel(type: string): string {
-		if (type === 'data_product') return 'product';
-		return type;
+		const labelMap: Record<string, () => string> = {
+			asset: m.search_type_asset,
+			glossary: m.search_type_glossary,
+			team: m.search_type_team,
+			data_product: m.search_type_product
+		};
+		return labelMap[type] ? labelMap[type]() : type;
 	}
 
 	function getResultSubtitle(result: SearchResult): string {
@@ -169,8 +176,8 @@
 			on:keydown={handleKeydown}
 			on:focus={() => searchQuery && (showResults = true)}
 			type="text"
-			placeholder="Search assets, glossary, teams..."
-			aria-label="Search assets, glossary, and teams"
+			placeholder={m.search_input_placeholder()}
+			aria-label={m.search_input_aria_label()}
 			aria-autocomplete="list"
 			aria-expanded={showResults && searchResults.length > 0}
 			{autofocus}
@@ -208,7 +215,7 @@
 									{#if result.metadata?.icon_url}
 										<AuthenticatedImage
 											src={result.metadata.icon_url}
-											alt="{result.name} icon"
+											alt={m.search_product_icon_alt({ name: result.name })}
 											class="w-full h-full object-cover"
 										/>
 									{:else}
@@ -250,10 +257,7 @@
 					class="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700"
 				>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						Press <kbd
-							class="px-1 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded"
-							>Enter</kbd
-						> to see all results
+						{m.search_press_enter_hint()}
 					</p>
 				</div>
 			</div>

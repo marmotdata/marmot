@@ -10,8 +10,15 @@
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
-	import cronstrue from 'cronstrue';
+	import cronstrue from 'cronstrue/i18n';
 	import { Cron } from 'croner';
+	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
+	import { formatList } from '$lib/utils';
+
+	// Example filter patterns are regexes, so they are technical tokens rather than copy
+	const includePatternExample = '^public_.*';
+	const excludePatternExample = '^_tmp_.*';
 
 	const pipelineId = $page.params.id;
 
@@ -82,9 +89,13 @@
 	let cronDescription = $derived.by(() => {
 		if (!cronExpression.trim()) return null;
 		try {
-			return cronstrue.toString(cronExpression, { verbose: true });
+			return cronstrue.toString(cronExpression, { verbose: true, locale: getLocale() });
 		} catch (e) {
-			return null;
+			try {
+				return cronstrue.toString(cronExpression, { verbose: true });
+			} catch {
+				return null;
+			}
 		}
 	});
 
@@ -118,7 +129,7 @@
 			pluginsStillLoading = Boolean(data?.loading);
 		} catch (err) {
 			console.error('Error fetching plugins:', err);
-			error = 'Failed to load plugins';
+			error = m.pipelines_error_load_plugins();
 		} finally {
 			loadingPlugins = false;
 			if (pluginPollTimer) {
@@ -201,7 +212,7 @@
 			}
 		} catch (err) {
 			console.error('Error fetching pipeline:', err);
-			error = 'Failed to load pipeline';
+			error = m.pipelines_error_load_pipeline();
 		} finally {
 			loadingPipeline = false;
 		}
@@ -251,13 +262,13 @@
 
 			if (!response.ok) {
 				const data = await response.json();
-				throw new Error(data.error || 'Failed to update pipeline');
+				throw new Error(data.error || m.pipelines_error_update());
 			}
 
 			// Navigate back to runs page with pipelines tab
 			goto(resolve('/runs?tab=pipelines'));
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to update pipeline';
+			error = err instanceof Error ? err.message : m.pipelines_error_update();
 		} finally {
 			saving = false;
 		}
@@ -335,9 +346,7 @@
 
 	onMount(async () => {
 		if (!get(encryptionConfigured)) {
-			toasts.error(
-				'Encryption key not configured. Run "marmot generate-encryption-key" to get started.'
-			);
+			toasts.error(m.pipelines_error_encryption_not_configured());
 			goto(resolve('/runs'));
 			return;
 		}
@@ -374,9 +383,11 @@
 						/>
 					</button>
 					<div>
-						<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit Pipeline</h1>
+						<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+							{m.pipelines_edit_pipeline()}
+						</h1>
 						<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-							Update your data ingestion pipeline configuration
+							{m.pipelines_edit_subtitle()}
 						</p>
 					</div>
 				</div>
@@ -410,16 +421,16 @@
 						icon="material-symbols:info-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Basic Information
+					{m.pipelines_basic_info_heading()}
 				</h3>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Pipeline Name <span class="text-red-500">*</span>
+						{m.pipelines_name_label()} <span class="text-red-500">*</span>
 					</label>
 					<input
 						type="text"
 						bind:value={name}
-						placeholder="e.g., daily-postgres-sync"
+						placeholder={m.pipelines_name_placeholder()}
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 						required
 					/>
@@ -428,10 +439,10 @@
 				<!-- Tags -->
 				<div class="mt-6">
 					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-						Tags
+						{m.common_tags()}
 					</span>
 					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-						Tags to apply to discovered assets
+						{m.pipelines_tags_hint()}
 					</p>
 					{#if true}
 						{@const tagsValue = config.tags || []}
@@ -456,7 +467,7 @@
 											config.tags = [...tagsValue];
 										}}
 										class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-										aria-label="Remove tag"
+										aria-label={m.pipelines_remove_tag_aria()}
 									>
 										<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
 									</button>
@@ -465,7 +476,7 @@
 							<div class="flex items-center gap-2">
 								<input
 									type="text"
-									placeholder="Type to add tags..."
+									placeholder={m.pipelines_tags_typeahead_placeholder()}
 									onkeydown={(e) => {
 										if (e.key === 'Enter') {
 											e.preventDefault();
@@ -480,7 +491,9 @@
 									class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
 								/>
 							</div>
-							<p class="text-xs text-gray-500 dark:text-gray-400">Press Enter to add items</p>
+							<p class="text-xs text-gray-500 dark:text-gray-400">
+								{m.pipelines_press_enter_hint()}
+							</p>
 						</div>
 					{/if}
 				</div>
@@ -488,10 +501,10 @@
 				<!-- External Links -->
 				<div class="mt-6">
 					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-						External Links
+						{m.pipelines_external_links_label()}
 					</span>
 					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-						External links to show on all assets
+						{m.pipelines_external_links_hint()}
 					</p>
 					{#if true}
 						{@const linksValue = config.external_links || []}
@@ -519,7 +532,7 @@
 												<span
 													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
 												>
-													Name
+													{m.common_name()}
 												</span>
 												<input
 													type="text"
@@ -527,7 +540,7 @@
 													oninput={() => {
 														config.external_links = [...linksValue];
 													}}
-													placeholder="Link name"
+													placeholder={m.pipelines_link_name_placeholder()}
 													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 												/>
 											</label>
@@ -537,7 +550,7 @@
 												<span
 													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
 												>
-													URL
+													{m.pipelines_url_label()}
 												</span>
 												<input
 													type="url"
@@ -562,7 +575,7 @@
 								class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
 							>
 								<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-								Add External Link
+								{m.pipelines_add_external_link()}
 							</button>
 						</div>
 					{/if}
@@ -578,7 +591,7 @@
 						icon="material-symbols:extension"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Data Source
+					{m.pipelines_data_source_heading()}
 				</h3>
 
 				{#if pluginsStillLoading}
@@ -587,9 +600,7 @@
 						role="status"
 					>
 						<IconifyIcon icon="material-symbols:info-outline" class="h-5 w-5 flex-shrink-0" />
-						<span
-							>Plugins are still loading on the server. This view will refresh automatically.</span
-						>
+						<span>{m.pipelines_plugins_still_loading_view()}</span>
 					</div>
 				{/if}
 
@@ -598,7 +609,7 @@
 						<div
 							class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
 						></div>
-						<span class="ml-3 text-sm text-gray-500">Loading...</span>
+						<span class="ml-3 text-sm text-gray-500">{m.common_loading()}</span>
 					</div>
 				{:else if selectedPlugin}
 					<div
@@ -635,8 +646,7 @@
 						>
 							<IconifyIcon icon="material-symbols:lock" class="h-4 w-4 mt-0.5 flex-shrink-0" />
 							<p>
-								Plugin cannot be changed after creation. Create a new pipeline to use a different
-								data source.
+								{m.pipelines_plugin_locked_hint()}
 							</p>
 						</div>
 					</div>
@@ -655,7 +665,7 @@
 							icon="material-symbols:settings"
 							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 						/>
-						Connection Configuration
+						{m.pipelines_connection_config_heading()}
 					</h3>
 
 					<!-- AWS Credential Status Banner -->
@@ -671,15 +681,15 @@
 									/>
 									<div class="ml-3 flex-1">
 										<h4 class="text-sm font-semibold text-green-900 dark:text-green-100">
-											AWS Credentials Detected
+											{m.pipelines_aws_creds_detected_heading()}
 										</h4>
 										<p class="text-sm text-green-700 dark:text-green-300 mt-1">
-											Credentials found from: {awsCredentialStatus.sources.join(', ')}
+											{m.pipelines_aws_creds_sources({
+												sources: formatList(awsCredentialStatus.sources)
+											})}
 										</p>
 										<p class="text-xs text-green-600 dark:text-green-400 mt-2">
-											You don't need to enter credentials manually. The system will use your
-											existing AWS configuration. If you want to use different credentials, uncheck
-											"Use default credentials" below.
+											{m.pipelines_aws_creds_detected_hint()}
 										</p>
 									</div>
 								</div>
@@ -695,10 +705,10 @@
 									/>
 									<div class="ml-3 flex-1">
 										<h4 class="text-sm font-semibold text-amber-900 dark:text-amber-100">
-											AWS Credentials Not Detected
+											{m.pipelines_aws_creds_not_detected_heading()}
 										</h4>
 										<p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
-											Please provide AWS credentials below to connect to your AWS account.
+											{m.pipelines_aws_creds_not_detected_hint()}
 										</p>
 									</div>
 								</div>
@@ -713,7 +723,7 @@
 									class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
 								></div>
 								<span class="ml-3 text-sm text-gray-600 dark:text-gray-400"
-									>Checking for AWS credentials...</span
+									>{m.pipelines_aws_creds_checking()}</span
 								>
 							</div>
 						</div>
@@ -784,7 +794,7 @@
 																				!input.checkValidity()
 																			) {
 																				input.setCustomValidity(
-																					`${nestedField.label} must be a valid URL`
+																					m.pipelines_url_invalid({ label: nestedField.label })
 																				);
 																			} else {
 																				input.setCustomValidity('');
@@ -815,7 +825,7 @@
 												class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
 											>
 												<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-												Add {field.label}
+												{m.pipelines_add_field_item({ label: field.label })}
 											</button>
 										</div>
 									{/if}
@@ -934,7 +944,7 @@
 															configObj[field.name] = [...arrayValue];
 														}}
 														class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-														aria-label="Remove item"
+														aria-label={m.pipelines_remove_item_aria()}
 													>
 														<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
 													</button>
@@ -943,7 +953,7 @@
 											<div class="flex items-center gap-2">
 												<input
 													type="text"
-													placeholder={`Type to add ${field.label.toLowerCase()}...`}
+													placeholder={m.pipelines_typeahead_placeholder()}
 													onkeydown={(e) => {
 														if (e.key === 'Enter') {
 															e.preventDefault();
@@ -960,7 +970,7 @@
 												/>
 											</div>
 											<p class="text-xs text-gray-500 dark:text-gray-400">
-												Press Enter to add items
+												{m.pipelines_press_enter_hint()}
 											</p>
 										</div>
 									{/if}
@@ -989,7 +999,7 @@
 											class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all border-gray-300 dark:border-gray-600"
 											required={field.required}
 										>
-											<option value="">Select...</option>
+											<option value="">{m.pipelines_select_placeholder()}</option>
 											{#each field.options as option (option.value)}
 												<option value={option.value}>{option.label}</option>
 											{/each}
@@ -1039,13 +1049,15 @@
 						icon="material-symbols:schedule"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Schedule & Filtering
+					{m.pipelines_schedule_heading()}
 				</h3>
 				<div class="space-y-5">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Cron Expression
-							<span class="text-xs font-normal text-gray-500 ml-1">(Optional)</span>
+							{m.pipelines_cron_label()}
+							<span class="text-xs font-normal text-gray-500 ml-1"
+								>{m.pipelines_cron_optional()}</span
+							>
 						</label>
 						<input
 							type="text"
@@ -1059,7 +1071,7 @@
 								class="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0"
 							/>
 							<p class="ml-2 text-xs text-gray-500 dark:text-gray-400">
-								Leave empty for manual-only pipeline.
+								{m.pipelines_cron_hint()}
 							</p>
 						</div>
 
@@ -1079,12 +1091,12 @@
 										{#if cronNextRuns.length > 0}
 											<div class="mt-2">
 												<p class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">
-													Next 5 runs:
+													{m.pipelines_cron_next_runs_heading()}
 												</p>
 												<ul class="text-xs text-green-700 dark:text-green-400 space-y-0.5">
 													{#each cronNextRuns as run (run.getTime())}
 														<li class="font-mono">
-															{run.toLocaleString('en-US', {
+															{run.toLocaleString(getLocale(), {
 																weekday: 'short',
 																year: 'numeric',
 																month: 'short',
@@ -1111,7 +1123,9 @@
 										icon="material-symbols:error"
 										class="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
 									/>
-									<p class="ml-2 text-sm text-red-800 dark:text-red-300">Invalid cron expression</p>
+									<p class="ml-2 text-sm text-red-800 dark:text-red-300">
+										{m.pipelines_cron_invalid()}
+									</p>
 								</div>
 							</div>
 						{/if}
@@ -1129,11 +1143,10 @@
 								/>
 								<div class="ml-3">
 									<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-										Disable scheduled runs
+										{m.pipelines_disable_schedule_label()}
 									</span>
 									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-										Pipeline can still be triggered manually, but won't run automatically on the
-										schedule above
+										{m.pipelines_disable_schedule_hint()}
 									</p>
 								</div>
 							</label>
@@ -1156,8 +1169,12 @@
 									icon="material-symbols:filter-alt"
 									class="h-4 w-4 text-gray-500 dark:text-gray-400"
 								/>
-								<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Asset Filter</h4>
-								<span class="text-xs text-gray-400 dark:text-gray-500"> — optional </span>
+								<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+									{m.pipelines_asset_filter_heading()}
+								</h4>
+								<span class="text-xs text-gray-400 dark:text-gray-500"
+									>{m.pipelines_filter_optional_suffix()}</span
+								>
 							</div>
 							<IconifyIcon
 								icon={isExpanded('asset_filter')
@@ -1172,10 +1189,7 @@
 								class="px-4 py-4 rounded-b-lg border border-t-0 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
 							>
 								<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-									Filter which assets get ingested by name. Supports plain text or <span
-										class="font-mono bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-[11px]"
-										>regex</span
-									> patterns.
+									{m.pipelines_filter_description()}
 								</p>
 
 								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1189,11 +1203,11 @@
 												class="h-4 w-4 text-green-600 dark:text-green-400"
 											/>
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-												Include
+												{m.pipelines_filter_include_label()}
 											</span>
 										</div>
 										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-											Only matching assets will be ingested
+											{m.pipelines_filter_include_hint()}
 										</p>
 										{#if true}
 											{@const includeValue = config.filter?.include || []}
@@ -1226,7 +1240,7 @@
 																config.filter = { ...config.filter, include: [...includeValue] };
 															}}
 															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-															aria-label="Remove pattern"
+															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 														</button>
@@ -1239,7 +1253,7 @@
 													>
 													<input
 														type="text"
-														placeholder="^public_.*"
+														placeholder={includePatternExample}
 														onkeydown={(e) => {
 															if (e.key === 'Enter') {
 																e.preventDefault();
@@ -1264,7 +1278,7 @@
 													<div class="w-[30px]"></div>
 												</div>
 												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
-													Press Enter to add
+													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
 										{/if}
@@ -1280,11 +1294,11 @@
 												class="h-4 w-4 text-amber-600 dark:text-amber-400"
 											/>
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-												Exclude
+												{m.pipelines_filter_exclude_label()}
 											</span>
 										</div>
 										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-											Matching assets will be skipped
+											{m.pipelines_filter_exclude_hint()}
 										</p>
 										{#if true}
 											{@const excludeValue = config.filter?.exclude || []}
@@ -1317,7 +1331,7 @@
 																config.filter = { ...config.filter, exclude: [...excludeValue] };
 															}}
 															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-															aria-label="Remove pattern"
+															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
 														</button>
@@ -1330,7 +1344,7 @@
 													>
 													<input
 														type="text"
-														placeholder="^_tmp_.*"
+														placeholder={excludePatternExample}
 														onkeydown={(e) => {
 															if (e.key === 'Enter') {
 																e.preventDefault();
@@ -1355,7 +1369,7 @@
 													<div class="w-[30px]"></div>
 												</div>
 												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
-													Press Enter to add
+													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
 										{/if}
@@ -1373,23 +1387,23 @@
 			<div class="text-sm text-gray-500 dark:text-gray-400">
 				{#if hasSchedule}
 					<IconifyIcon icon="material-symbols:schedule" class="inline h-4 w-4 mr-1" />
-					Scheduled pipeline
+					{m.pipelines_scheduled_pipeline()}
 				{:else}
 					<IconifyIcon icon="material-symbols:play-circle-outline" class="inline h-4 w-4 mr-1" />
-					Manual-only pipeline
+					{m.pipelines_manual_only_pipeline()}
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">
 				<Button
 					variant="clear"
 					click={() => goto(resolve('/runs?tab=pipelines'))}
-					text="Cancel"
+					text={m.common_cancel()}
 					disabled={saving}
 				/>
 				<Button
 					variant="filled"
 					click={handleSave}
-					text={saving ? 'Saving...' : 'Save Changes'}
+					text={saving ? m.pipelines_saving() : m.pipelines_save_changes()}
 					disabled={saving || !name || !selectedPluginId}
 				/>
 			</div>
