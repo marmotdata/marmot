@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
@@ -18,6 +19,10 @@
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 
 	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
+
+	// Shell commands are technical tokens, so they live outside the message catalogue
+	const installCliCommand = 'curl -fsSL get.marmotdata.io | sh';
+	const generateKeyCommand = 'marmot generate-encryption-key';
 
 	let unsubscribe: (() => void) | null = null;
 	let fetchRunsTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -108,6 +113,25 @@
 
 	const availableStatuses = ['pending', 'claimed', 'running', 'succeeded', 'failed', 'cancelled'];
 
+	function statusLabel(status: string): string {
+		switch (status) {
+			case 'pending':
+				return m.runs_status_pending();
+			case 'claimed':
+				return m.runs_status_claimed();
+			case 'running':
+				return m.runs_status_running();
+			case 'succeeded':
+				return m.runs_status_succeeded();
+			case 'failed':
+				return m.runs_status_failed();
+			case 'cancelled':
+				return m.runs_status_cancelled();
+			default:
+				return status.charAt(0).toUpperCase() + status.slice(1);
+		}
+	}
+
 	$effect(() => {
 		if (browser) {
 			const urlParams = $page.url.searchParams;
@@ -197,7 +221,7 @@
 
 			const response = await fetchApi(`/ingestion/runs?${params}`);
 			if (!response.ok) {
-				throw new Error('Failed to fetch job runs');
+				throw new Error(m.runs_fetch_error());
 			}
 
 			const data: IngestionRunsResponse = await response.json();
@@ -205,7 +229,7 @@
 			total = data.total || 0;
 		} catch (err) {
 			console.error('Error fetching ingestion runs:', err);
-			error = err instanceof Error ? err.message : 'Failed to load ingestion runs';
+			error = err instanceof Error ? err.message : m.runs_load_error();
 		} finally {
 			if (showLoading) {
 				loading = false;
@@ -266,7 +290,7 @@
 
 			const response = await fetchApi(`/ingestion/schedules?${params}`);
 			if (!response.ok) {
-				throw new Error('Failed to fetch pipelines');
+				throw new Error(m.runs_pipelines_fetch_error());
 			}
 
 			const data: PipelinesResponse = await response.json();
@@ -274,7 +298,7 @@
 			pipelinesTotal = data.total || 0;
 		} catch (err) {
 			console.error('Error fetching pipelines:', err);
-			pipelinesError = err instanceof Error ? err.message : 'Failed to load pipelines';
+			pipelinesError = err instanceof Error ? err.message : m.runs_pipelines_load_error();
 		} finally {
 			pipelinesLoading = false;
 		}
@@ -300,13 +324,13 @@
 				const data = await response.json();
 				// Remove from running set on error
 				runningPipelines.delete(pipeline.id);
-				throw new Error(data.error || 'Failed to trigger pipeline');
+				throw new Error(data.error || m.runs_trigger_error());
 			}
 
 			// Poll for running status
 			pollPipelineStatus(pipeline.id);
 		} catch (err) {
-			const errorMsg = err instanceof Error ? err.message : 'Failed to trigger pipeline';
+			const errorMsg = err instanceof Error ? err.message : m.runs_trigger_error();
 			toasts.error(errorMsg);
 		}
 	}
@@ -340,9 +364,13 @@
 
 					// Show completion toast
 					if (latestRun.status === 'succeeded') {
-						toasts.success('Pipeline completed successfully!');
+						toasts.success(m.runs_pipeline_completed_success());
 					} else if (latestRun.status === 'failed') {
-						toasts.error(`Pipeline failed: ${latestRun.error_message || 'Unknown error'}`);
+						toasts.error(
+							m.runs_pipeline_failed_error({
+								error: latestRun.error_message || m.runs_unknown_error()
+							})
+						);
 					}
 
 					// Refresh pipelines list to update last_run_at
@@ -369,9 +397,9 @@
 	}
 
 	async function handleDeletePipeline(pipeline: Pipeline) {
-		confirmModalTitle = 'Delete Pipeline';
-		confirmModalMessage = `Are you sure you want to delete pipeline "${pipeline.name}"? This action cannot be undone.`;
-		confirmModalCheckboxLabel = 'Delete all resources created by this pipeline';
+		confirmModalTitle = m.runs_delete_pipeline_title();
+		confirmModalMessage = m.pipelines_delete_confirm({ name: pipeline.name });
+		confirmModalCheckboxLabel = m.runs_delete_teardown_checkbox_label();
 		confirmModalCheckboxChecked = false;
 		confirmModalAction = async (teardown?: boolean) => {
 			showConfirmModal = false;
@@ -386,18 +414,18 @@
 
 				if (!response.ok) {
 					const data = await response.json();
-					throw new Error(data.error || 'Failed to delete pipeline');
+					throw new Error(data.error || m.runs_delete_pipeline_error());
 				}
 
 				const successMsg = teardown
-					? `Pipeline "${pipeline.name}" and all its assets deleted successfully`
-					: `Pipeline "${pipeline.name}" deleted successfully`;
+					? m.runs_delete_teardown_success({ name: pipeline.name })
+					: m.runs_delete_success({ name: pipeline.name });
 				toasts.success(successMsg);
 
 				// Refresh the list
 				fetchPipelines();
 			} catch (err) {
-				const errorMsg = err instanceof Error ? err.message : 'Failed to delete pipeline';
+				const errorMsg = err instanceof Error ? err.message : m.runs_delete_pipeline_error();
 				toasts.error(errorMsg);
 			}
 		};
@@ -521,8 +549,8 @@
 
 <div class="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Runs</h1>
-		<p class="text-gray-600 dark:text-gray-400 mt-1">Monitor ingestion runs and manage pipelines</p>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.runs_heading()}</h1>
+		<p class="text-gray-600 dark:text-gray-400 mt-1">{m.runs_subheading()}</p>
 	</div>
 
 	<!-- Tab Navigation -->
@@ -539,7 +567,7 @@
 					icon="material-symbols:account-tree"
 					class="inline-block h-5 w-5 mr-2 -mt-0.5"
 				/>
-				Pipelines
+				{m.runs_tab_pipelines()}
 			</button>
 			<button
 				onclick={() => switchTab('history')}
@@ -549,7 +577,7 @@
 					: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
 			>
 				<IconifyIcon icon="material-symbols:history" class="inline-block h-5 w-5 mr-2 -mt-0.5" />
-				Run History
+				{m.runs_tab_history()}
 			</button>
 		</nav>
 	</div>
@@ -569,7 +597,7 @@
 				<div class="flex">
 					<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
 					<div class="ml-3">
-						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
+						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">{m.common_error()}</h3>
 						<p class="mt-1 text-sm text-red-700 dark:text-red-300">{pipelinesError}</p>
 					</div>
 				</div>
@@ -586,10 +614,11 @@
 							class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0"
 						/>
 						<div class="ml-3">
-							<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Unencrypted mode</h3>
+							<h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+								{m.runs_unencrypted_mode_heading()}
+							</h3>
 							<p class="mt-1 text-sm text-red-700 dark:text-red-300">
-								Pipeline credentials are stored in plaintext. This should only be used for
-								development.
+								{m.runs_unencrypted_mode_hint()}
 							</p>
 						</div>
 					</div>
@@ -606,33 +635,28 @@
 						/>
 						<div class="ml-3">
 							<h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">
-								Encryption key not configured
+								{m.runs_encryption_not_configured_heading()}
 							</h3>
 							<p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-								Pipeline creation, editing, and triggering are disabled until an encryption key is
-								set.
+								{m.runs_encryption_not_configured_hint()}
 							</p>
 							<div class="mt-3 text-sm text-amber-700 dark:text-amber-300 space-y-2">
-								<p>To get started, install the CLI and generate a key:</p>
+								<p>{m.runs_encryption_get_started_hint()}</p>
 								<div
 									class="bg-amber-100 dark:bg-amber-900/40 rounded-md px-3 py-2 font-mono text-xs space-y-1"
 								>
-									<p>curl -fsSL get.marmotdata.io | sh</p>
-									<p>marmot generate-encryption-key</p>
+									<p>{installCliCommand}</p>
+									<p>{generateKeyCommand}</p>
 								</div>
 								<p>
-									Then set <code
-										class="px-1 py-0.5 bg-amber-100 dark:bg-amber-900/40 rounded text-xs font-mono"
-										>MARMOT_SERVER_ENCRYPTION_KEY</code
-									>
-									and restart the server. See the
+									{m.runs_encryption_set_env_hint({ variable: 'MARMOT_SERVER_ENCRYPTION_KEY' })}
 									<a
 										href="https://marmotdata.io/docs/Deploy/"
 										target="_blank"
 										rel="noopener noreferrer"
 										class="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
-										>deploy docs</a
-									> for details.
+										>{m.runs_deploy_docs_link()}</a
+									>
 								</p>
 							</div>
 						</div>
@@ -647,7 +671,7 @@
 						variant="filled"
 						click={() => goto(resolve('/pipelines/new'))}
 						icon="material-symbols:add"
-						text="Create Pipeline"
+						text={m.pipelines_create_pipeline()}
 						disabled={!$encryptionConfigured}
 					/>
 				</div>
@@ -659,12 +683,14 @@
 						icon="material-symbols:account-tree"
 						class="mx-auto h-12 w-12 text-gray-400 mb-4"
 					/>
-					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Pipelines</h3>
+					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+						{m.runs_no_pipelines_heading()}
+					</h3>
 					<p class="text-gray-500 dark:text-gray-400 mb-6">
 						{#if canManageIngestion}
-							Create a pipeline to ingest data - run on a schedule or trigger manually
+							{m.runs_no_pipelines_hint_manage()}
 						{:else}
-							No pipelines have been configured yet
+							{m.runs_no_pipelines_hint_readonly()}
 						{/if}
 					</p>
 					{#if canManageIngestion}
@@ -672,7 +698,7 @@
 							variant="filled"
 							click={() => goto(resolve('/pipelines/new'))}
 							icon="material-symbols:add"
-							text="Create Pipeline"
+							text={m.pipelines_create_pipeline()}
 							disabled={!$encryptionConfigured}
 						/>
 					{/if}
@@ -680,7 +706,7 @@
 			{:else}
 				<div class="mb-4">
 					<p class="text-gray-600 dark:text-gray-400">
-						Showing {pipelines.length} of {pipelinesTotal} pipelines
+						{m.runs_showing_pipelines({ count: pipelines.length, total: pipelinesTotal })}
 					</p>
 				</div>
 
@@ -696,27 +722,27 @@
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Pipeline
+									{m.runs_table_pipeline()}
 								</th>
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Status
+									{m.common_status()}
 								</th>
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Schedule
+									{m.runs_table_schedule()}
 								</th>
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Last Run
+									{m.runs_table_last_run()}
 								</th>
 								<th
 									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
 								>
-									Next Run
+									{m.runs_table_next_run()}
 								</th>
 								<th
 									class="px-6 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
@@ -744,7 +770,7 @@
 				{#if pipelinesTotalPages > 1}
 					<div class="flex items-center justify-between">
 						<div class="text-sm text-gray-600 dark:text-gray-400">
-							Page {pipelinesPage} of {pipelinesTotalPages}
+							{m.runs_page_of({ current: pipelinesPage, total: pipelinesTotalPages })}
 						</div>
 
 						<div class="flex items-center gap-2">
@@ -753,13 +779,13 @@
 								click={() => goToPipelinesPage(pipelinesPage - 1)}
 								disabled={pipelinesPage === 1}
 								icon="material-symbols:chevron-left"
-								text="Previous"
+								text={m.common_previous()}
 							/>
 							<Button
 								variant="clear"
 								click={() => goToPipelinesPage(pipelinesPage + 1)}
 								disabled={pipelinesPage === pipelinesTotalPages}
-								text="Next"
+								text={m.common_next()}
 								icon="material-symbols:chevron-right"
 							/>
 						</div>
@@ -781,7 +807,7 @@
 				<div class="flex">
 					<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
 					<div class="ml-3">
-						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
+						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">{m.common_error()}</h3>
 						<p class="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
 					</div>
 				</div>
@@ -801,10 +827,10 @@
 							<span class="flex items-center">
 								<IconifyIcon icon="material-symbols:filter-list" class="h-4 w-4 mr-2" />
 								{selectedStatuses.length === 0
-									? 'All Statuses'
+									? m.runs_all_statuses()
 									: selectedStatuses.length === 1
-										? selectedStatuses[0].charAt(0).toUpperCase() + selectedStatuses[0].slice(1)
-										: `${selectedStatuses.length} Statuses`}
+										? statusLabel(selectedStatuses[0])
+										: m.runs_statuses_selected_count({ count: selectedStatuses.length })}
 							</span>
 							<IconifyIcon icon="material-symbols:expand-more" class="h-4 w-4" />
 						</button>
@@ -828,7 +854,9 @@
 												class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
 												readonly
 											/>
-											<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize">{status}</span>
+											<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize"
+												>{statusLabel(status)}</span
+											>
 										</div>
 									</div>
 								{/each}
@@ -837,7 +865,12 @@
 					</div>
 
 					<!-- Clear Filters -->
-					<Button variant="clear" click={resetFilters} text="Clear Filters" class="w-full" />
+					<Button
+						variant="clear"
+						click={resetFilters}
+						text={m.runs_clear_filters()}
+						class="w-full"
+					/>
 				</div>
 			</div>
 
@@ -845,7 +878,7 @@
 			{#if totalPages > 1}
 				<div class="flex items-center justify-between mb-6">
 					<div class="text-sm text-gray-600 dark:text-gray-400">
-						Page {currentPage} of {totalPages}
+						{m.runs_page_of({ current: currentPage, total: totalPages })}
 					</div>
 
 					<div class="flex items-center gap-2">
@@ -892,13 +925,13 @@
 							click={() => goToPage(currentPage - 1)}
 							disabled={currentPage === 1}
 							icon="material-symbols:chevron-left"
-							text="Previous"
+							text={m.common_previous()}
 						/>
 						<Button
 							variant="clear"
 							click={() => goToPage(currentPage + 1)}
 							disabled={currentPage === totalPages}
-							text="Next"
+							text={m.common_next()}
 							icon="material-symbols:chevron-right"
 						/>
 					</div>
@@ -909,19 +942,18 @@
 				<div class="text-center py-12">
 					<IconifyIcon icon="material-symbols:sync" class="mx-auto h-12 w-12 text-gray-400 mb-4" />
 					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-						No Ingestion Runs
+						{m.runs_no_runs_heading()}
 					</h3>
 					<p class="text-gray-500 dark:text-gray-400">
-						{selectedStatuses.length > 0
-							? 'No runs match your current filters'
-							: 'No ingestion runs have been executed yet'}
+						{selectedStatuses.length > 0 ? m.runs_no_runs_filtered_hint() : m.runs_no_runs_hint()}
 					</p>
 				</div>
 			{:else}
 				<div class="mb-4">
 					<p class="text-gray-600 dark:text-gray-400">
-						Showing {runs.length} of {total} runs
-						{selectedStatuses.length > 0 ? `with selected statuses` : ''}
+						{selectedStatuses.length > 0
+							? m.runs_showing_runs_filtered({ count: runs.length, total })
+							: m.runs_showing_runs({ count: runs.length, total })}
 					</p>
 				</div>
 
@@ -935,7 +967,7 @@
 				{#if totalPages > 1}
 					<div class="flex items-center justify-between">
 						<div class="text-sm text-gray-600 dark:text-gray-400">
-							Page {currentPage} of {totalPages}
+							{m.runs_page_of({ current: currentPage, total: totalPages })}
 						</div>
 
 						<div class="flex items-center gap-2">
@@ -982,13 +1014,13 @@
 								click={() => goToPage(currentPage - 1)}
 								disabled={currentPage === 1}
 								icon="material-symbols:chevron-left"
-								text="Previous"
+								text={m.common_previous()}
 							/>
 							<Button
 								variant="clear"
 								click={() => goToPage(currentPage + 1)}
 								disabled={currentPage === totalPages}
-								text="Next"
+								text={m.common_next()}
 								icon="material-symbols:chevron-right"
 							/>
 						</div>

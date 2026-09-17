@@ -3,6 +3,7 @@
 	import type { Asset } from '$lib/assets/types';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	// Containment is stored as CONTAINS lineage, so both directions come
 	// from the same edges: what this asset holds, and what holds it.
@@ -40,7 +41,9 @@
 </script>
 
 {#if loading}
-	<div class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Loading contents...</div>
+	<div class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+		{m.asset_contents_loading()}
+	</div>
 {:else}
 	{#if parents.length > 0}
 		<div class="mb-4 flex flex-wrap items-center gap-2 text-sm">
@@ -48,7 +51,7 @@
 				icon="material-symbols:subdirectory-arrow-left"
 				class="w-4 h-4 text-gray-400 dark:text-gray-500 rotate-180"
 			/>
-			<span class="text-gray-500 dark:text-gray-400">Inside</span>
+			<span class="text-gray-500 dark:text-gray-400">{m.asset_contents_inside_label()}</span>
 			{#each parents as parent (parent.mrn)}
 				<a
 					href={resolve(assetUrl(parent) as `/${string}`)}
@@ -63,7 +66,7 @@
 
 	{#if children.length === 0}
 		<div class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-			This asset holds nothing.
+			{m.asset_contents_empty()}
 		</div>
 	{:else}
 		<div
@@ -77,7 +80,7 @@
 								onclick={() => toggleSort('name')}
 								class="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
 							>
-								Name
+								{m.common_name()}
 								<IconifyIcon
 									icon={sortKey === 'name' && !sortAscending
 										? 'material-symbols:arrow-drop-up'
@@ -91,7 +94,7 @@
 								onclick={() => toggleSort('type')}
 								class="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
 							>
-								Type
+								{m.common_type()}
 								<IconifyIcon
 									icon={sortKey === 'type' && !sortAscending
 										? 'material-symbols:arrow-drop-up'
@@ -103,7 +106,7 @@
 						<th
 							class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300"
 						>
-							Description
+							{m.common_description()}
 						</th>
 					</tr>
 				</thead>

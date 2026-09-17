@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Asset } from '$lib/assets/types';
 	import Icon from '$components/ui/Icon.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let asset: Asset;
 	export let onClick: () => void = () => {};
@@ -21,7 +22,7 @@
     {!compact ? 'cursor-pointer' : ''}"
 	role="button"
 	tabindex="0"
-	aria-label="View asset {asset.name}"
+	aria-label={m.asset_card_view_aria({ name: asset.name || '' })}
 	onclick={onClick}
 	onkeydown={(e) => e.key === 'Enter' && onClick()}
 >

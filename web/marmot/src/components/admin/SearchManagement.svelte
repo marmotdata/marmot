@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { formatNumber } from '$lib/utils';
 	import { websocketService, type SearchReindexEvent } from '$lib/websocket';
 
 	let running = false;
@@ -45,7 +47,7 @@
 				indexed = p.indexed ?? indexed;
 				errors = p.errors ?? errors;
 				total = p.total ?? total;
-				error = p.error ?? 'Reindex failed';
+				error = p.error ?? m.admin_reindex_failed();
 				break;
 		}
 	}
@@ -72,7 +74,7 @@
 			const response = await fetchApi('/admin/search/reindex', { method: 'POST' });
 			if (!response.ok) {
 				const data = await response.json();
-				error = data.error || 'Failed to start reindex';
+				error = data.error || m.admin_reindex_start_error();
 				return;
 			}
 			status = 'running';
@@ -81,7 +83,7 @@
 			errors = 0;
 			total = 0;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to start reindex';
+			error = err instanceof Error ? err.message : m.admin_reindex_start_error();
 		}
 	}
 
@@ -101,7 +103,9 @@
 	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
 >
 	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Search Index</h3>
+		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+			{m.admin_search_index_heading()}
+		</h3>
 
 		{#if loading}
 			<div class="flex justify-center p-8">
@@ -111,12 +115,11 @@
 			<div
 				class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-yellow-700 dark:text-yellow-300"
 			>
-				Elasticsearch is not configured. Search reindexing is unavailable.
+				{m.admin_es_not_configured()}
 			</div>
 		{:else}
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Rebuild the search index from the database. This is useful if the search index has become
-				out of sync.
+				{m.admin_reindex_description()}
 			</p>
 
 			<button
@@ -124,16 +127,16 @@
 				disabled={running}
 				on:click={startReindex}
 			>
-				{running ? 'Reindexing...' : 'Start Reindex'}
+				{running ? m.admin_reindexing_label() : m.admin_start_reindex()}
 			</button>
 
 			{#if status === 'running'}
 				<div class="mt-4">
 					<div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-						<span>Indexing documents...</span>
+						<span>{m.admin_indexing_documents()}</span>
 						<span>
-							{indexed.toLocaleString()}{total > 0 ? ` / ${total.toLocaleString()}` : ''}
-							{errors > 0 ? ` (${errors} errors)` : ''}
+							{formatNumber(indexed)}{total > 0 ? ` / ${formatNumber(total)}` : ''}
+							{errors > 0 ? m.admin_reindex_errors_suffix({ count: errors }) : ''}
 						</span>
 					</div>
 					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
@@ -149,9 +152,9 @@
 				<div
 					class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-green-700 dark:text-green-300"
 				>
-					Reindex complete: {indexed.toLocaleString()} documents indexed{errors > 0
-						? `, ${errors} errors`
-						: ''}.
+					{errors > 0
+						? m.admin_reindex_complete_with_errors({ count: formatNumber(indexed), errors })
+						: m.admin_reindex_complete({ count: formatNumber(indexed) })}
 				</div>
 			{/if}
 
@@ -159,8 +162,9 @@
 				<div
 					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
 				>
-					Reindex failed: {error}
-					{indexed > 0 ? ` (${indexed.toLocaleString()} documents indexed before failure)` : ''}
+					{indexed > 0
+						? m.admin_reindex_failed_with_progress({ error, count: formatNumber(indexed) })
+						: m.admin_reindex_failed_message({ error })}
 				</div>
 			{/if}
 

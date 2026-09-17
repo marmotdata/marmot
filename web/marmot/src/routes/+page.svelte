@@ -9,6 +9,8 @@
 	import IconComponent from '$components/ui/Icon.svelte';
 	import type { Asset } from '$lib/assets/types';
 	import { userProfile } from '$lib/stores/user';
+	import { formatNumber } from '$lib/utils';
+	import { m } from '$lib/paraglide/messages';
 
 	interface QuickStat {
 		label: string;
@@ -71,19 +73,19 @@
 
 	let quickStats = $derived<QuickStat[]>([
 		{
-			label: 'Total Assets',
+			label: m.home_stat_total_assets(),
 			value: totalAssets,
 			icon: 'material-symbols:database',
 			href: '/discover'
 		},
 		{
-			label: 'Asset Types',
+			label: m.home_stat_asset_types(),
 			value: Object.keys(summary.types).length,
 			icon: 'material-symbols:category',
 			href: '/discover'
 		},
 		{
-			label: 'Source Types',
+			label: m.home_stat_source_types(),
 			value: Object.keys(summary.providers).length,
 			icon: 'material-symbols:cloud',
 			href: '/discover'
@@ -92,29 +94,29 @@
 
 	const quickActions: QuickAction[] = [
 		{
-			title: 'Explore Assets',
-			description: 'Browse and discover your data assets',
+			title: m.home_action_explore_assets_title(),
+			description: m.home_action_explore_assets_description(),
 			icon: 'material-symbols:database',
 			href: '/discover',
 			color: 'terracotta'
 		},
 		{
-			title: 'Check Metrics',
-			description: 'Platform usage and insights',
+			title: m.home_action_check_metrics_title(),
+			description: m.home_action_check_metrics_description(),
 			icon: 'material-symbols:area-chart-rounded',
 			href: '/metrics',
 			color: 'green'
 		},
 		{
-			title: 'Browse Glossary',
-			description: 'Business terminology and definitions',
+			title: m.home_action_browse_glossary_title(),
+			description: m.home_action_browse_glossary_description(),
 			icon: 'material-symbols:book',
 			href: '/glossary',
 			color: 'purple'
 		},
 		{
-			title: 'Data Products',
-			description: 'Browse and manage data products',
+			title: m.home_action_data_products_title(),
+			description: m.home_action_data_products_description(),
 			icon: 'material-symbols:inventory-2',
 			href: '/products',
 			color: 'blue'
@@ -307,14 +309,14 @@
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 				{#if displayName}
-					Hi {displayName} 👋
+					{m.home_greeting({ name: displayName })}
 				{:else}
 					<span
 						class="inline-block w-56 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded align-middle"
 					></span>
 				{/if}
 			</h1>
-			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
+			<p class="text-gray-600 dark:text-gray-400 mt-2">{m.home_subtitle()}</p>
 		</div>
 
 		<!-- Quick Stats -->
@@ -326,7 +328,7 @@
 					</div>
 					{#if !isLoading}
 						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-							{stat.value.toLocaleString()}
+							{formatNumber(stat.value)}
 						</div>
 					{:else}
 						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
@@ -373,12 +375,14 @@
 				{#if popularAssets.length > 0}
 					<div>
 						<div class="flex items-center justify-between mb-4">
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Most Viewed</h2>
+							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+								{m.home_most_viewed_heading()}
+							</h2>
 							<a
 								href={resolve('/metrics')}
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
 							>
-								See all →
+								{m.home_see_all_link()}
 							</a>
 						</div>
 						<div class="glass-card rounded-xl divide-y divide-gray-200 dark:divide-gray-700">
@@ -405,7 +409,7 @@
 									<div class="flex items-center gap-2 flex-shrink-0">
 										<Icon icon="material-symbols:visibility" class="w-4 h-4 text-gray-400" />
 										<span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-											{asset.count.toLocaleString()}
+											{formatNumber(asset.count)}
 										</span>
 									</div>
 								</button>
@@ -416,12 +420,14 @@
 					<!-- User Assets fallback -->
 					<div>
 						<div class="flex items-center justify-between mb-4">
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Your Assets</h2>
+							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+								{m.home_your_assets_heading()}
+							</h2>
 							<a
 								href={resolve('/discover')}
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
 							>
-								View all →
+								{m.home_view_all_link()}
 							</a>
 						</div>
 						<div class="glass-card rounded-xl">
@@ -469,10 +475,10 @@
 										/>
 									</div>
 									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-										No assets currently assigned to you
+										{m.home_no_assigned_assets()}
 									</p>
 									<p class="text-xs text-gray-600 dark:text-gray-400">
-										Check back later or browse all assets
+										{m.home_no_assigned_assets_hint()}
 									</p>
 								</div>
 							{/if}
@@ -482,12 +488,14 @@
 
 				<!-- Data Breakdown -->
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Overview</h2>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+						{m.common_overview()}
+					</h2>
 					<div class="glass-card rounded-xl p-6">
 						<!-- Asset Types -->
 						<div class="mb-6">
 							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-								Top Asset Types
+								{m.home_top_asset_types_heading()}
 							</h3>
 							<div class="space-y-3">
 								{#each topAssetTypes as item (item.type)}
@@ -523,7 +531,7 @@
 						<!-- Data Sources -->
 						<div>
 							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-								Top Data Sources
+								{m.home_top_data_sources_heading()}
 							</h3>
 							<div class="space-y-3">
 								{#each topProviders as item (item.provider)}
@@ -565,7 +573,9 @@
 			<!-- Popular Tags -->
 			{#if topTags.length > 0}
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Popular Tags</h2>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+						{m.home_popular_tags_heading()}
+					</h2>
 					<div class="glass-card rounded-xl p-6">
 						<div class="flex flex-wrap gap-2">
 							{#each topTags as item (item.tag)}
@@ -606,14 +616,14 @@
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 				{#if displayName}
-					Hi {displayName} 👋
+					{m.home_greeting({ name: displayName })}
 				{:else}
 					<span
 						class="inline-block w-56 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded align-middle"
 					></span>
 				{/if}
 			</h1>
-			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
+			<p class="text-gray-600 dark:text-gray-400 mt-2">{m.home_subtitle()}</p>
 		</div>
 
 		<!-- Quick Stats -->
@@ -625,7 +635,7 @@
 					</div>
 					{#if !isLoading}
 						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-							{stat.value.toLocaleString()}
+							{formatNumber(stat.value)}
 						</div>
 					{:else}
 						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>

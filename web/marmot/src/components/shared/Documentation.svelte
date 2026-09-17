@@ -6,6 +6,8 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 
 	marked.setOptions({
 		gfm: true,
@@ -75,7 +77,7 @@
 				documentationSources = data || [];
 			}
 		} catch (err) {
-			loadError = err instanceof Error ? err.message : 'Failed to load documentation';
+			loadError = err instanceof Error ? err.message : m.shared_docs_load_error();
 		} finally {
 			isLoading = false;
 		}
@@ -124,11 +126,11 @@
 	<div class="space-y-6">
 		{#if isLoading}
 			<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-				<p class="text-gray-500 dark:text-gray-400">Loading documentation...</p>
+				<p class="text-gray-500 dark:text-gray-400">{m.shared_docs_loading()}</p>
 			</div>
 		{:else if loadError}
 			<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-				<p class="text-red-500 dark:text-red-400">Failed to load documentation</p>
+				<p class="text-red-500 dark:text-red-400">{m.shared_docs_load_error()}</p>
 			</div>
 		{:else if documentationSources.length > 0}
 			{#each documentationSources as doc, i (i)}
@@ -136,9 +138,11 @@
 					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
 				>
 					<div class="mb-4 flex justify-between items-center">
-						<span class="text-sm text-gray-500 dark:text-gray-400">Source: {doc.source}</span>
+						<span class="text-sm text-gray-500 dark:text-gray-400"
+							>{m.shared_docs_source_label({ source: doc.source })}</span
+						>
 						<span class="text-sm text-gray-500 dark:text-gray-400">
-							Updated: {new Date(doc.updated_at).toLocaleDateString()}
+							{m.shared_docs_updated_label({ date: formatDate(doc.updated_at) })}
 						</span>
 					</div>
 					<div
@@ -155,7 +159,7 @@
 					icon="material-symbols:description-outline"
 					class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3"
 				/>
-				<p class="text-gray-500 dark:text-gray-400 italic">No documentation available</p>
+				<p class="text-gray-500 dark:text-gray-400 italic">{m.shared_docs_empty()}</p>
 			</div>
 		{/if}
 	</div>
@@ -164,22 +168,34 @@
 	<div>
 		{#if isEditing}
 			<div class="space-y-4">
-				<RichTextEditor bind:value={editedContent} placeholder="Add documentation..." />
+				<RichTextEditor bind:value={editedContent} placeholder={m.shared_docs_add_placeholder()} />
 				<div class="flex justify-end gap-2">
-					<Button variant="clear" click={cancelEditing} text="Cancel" disabled={isSaving} />
+					<Button
+						variant="clear"
+						click={cancelEditing}
+						text={m.common_cancel()}
+						disabled={isSaving}
+					/>
 					<Button
 						variant="filled"
 						click={saveDocumentation}
-						text={isSaving ? 'Saving...' : 'Save'}
+						text={isSaving ? m.shared_saving() : m.common_save()}
 						disabled={isSaving}
 					/>
 				</div>
 			</div>
 		{:else}
 			<div class="flex items-center justify-between mb-4">
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Documentation</h3>
+				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+					{m.common_documentation()}
+				</h3>
 				{#if canEdit}
-					<Button variant="clear" click={startEditing} icon="material-symbols:edit" text="Edit" />
+					<Button
+						variant="clear"
+						click={startEditing}
+						icon="material-symbols:edit"
+						text={m.common_edit()}
+					/>
 				{/if}
 			</div>
 			{#if content && content.trim()}
@@ -196,8 +212,8 @@
 						class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3"
 					/>
 					<p class="text-gray-500 dark:text-gray-400 italic">
-						No documentation yet.{#if canEdit}
-							Click Edit to add some.{/if}
+						{m.shared_docs_none_yet()}{#if canEdit}
+							{m.shared_docs_click_edit_hint()}{/if}
 					</p>
 				</div>
 			{/if}

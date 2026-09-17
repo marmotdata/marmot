@@ -45,7 +45,7 @@ jobs:
           version: 11.3.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "pnpm"
@@ -59,6 +59,9 @@ jobs:
 
       - name: Lint frontend
         run: make frontend-lint
+
+      - name: Check message catalogue
+        run: make frontend-i18n-check
 
       - name: Lint server (Go)
         run: make server-lint

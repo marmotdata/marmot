@@ -3,6 +3,8 @@
 	import type { Asset } from '$lib/assets/types';
 	import IconifyIcon from '@iconify/svelte';
 	import RunsActivityChart, { type Bucket } from './RunsActivityChart.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatRelativeTime } from '$lib/utils';
 
 	let { asset }: { asset: Asset } = $props();
 
@@ -54,7 +56,7 @@
 				fetchApi(`/agents/${asset.id}/runs?period=24h&limit=25`)
 			]);
 			if (!statsRes.ok || !activityRes.ok || !runsRes.ok) {
-				throw new Error('Failed to load agent run data');
+				throw new Error(m.asset_agent_runs_load_error());
 			}
 			stats = await statsRes.json();
 			const activity = await activityRes.json();
@@ -91,15 +93,6 @@
 		return `${(n / 1000).toFixed(1)}k`;
 	}
 
-	function relativeTime(iso: string): string {
-		const then = new Date(iso).getTime();
-		const diff = Date.now() - then;
-		if (diff < 60_000) return 'just now';
-		if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min ago`;
-		if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} hr ago`;
-		return `${Math.floor(diff / 86_400_000)} d ago`;
-	}
-
 	function fmtPercent(rate: number): string {
 		return `${Math.round(rate * 100)}%`;
 	}
@@ -125,22 +118,24 @@
 		>
 			<div class="flex items-center justify-between mb-2">
 				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					Activity · last 24h
+					{m.asset_agent_runs_activity_heading()}
 				</div>
 				<div class="flex items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400">
 					<span class="inline-flex items-center gap-1.5">
 						<span class="inline-block w-2.5 h-2.5 rounded-sm bg-earthy-green-700"></span>
-						success
+						{m.asset_agent_runs_legend_success()}
 					</span>
 					<span class="inline-flex items-center gap-1.5">
 						<span class="inline-block w-2.5 h-2.5 rounded-sm bg-red-600"></span>
-						error
+						{m.asset_agent_runs_legend_error()}
 					</span>
 				</div>
 			</div>
 			{#if totalActivity === 0}
 				<div class="flex items-center justify-center h-[120px]">
-					<p class="text-xs text-gray-400 dark:text-gray-500">No runs in this window</p>
+					<p class="text-xs text-gray-400 dark:text-gray-500">
+						{m.asset_agent_runs_none_in_window()}
+					</p>
 				</div>
 			{:else}
 				<RunsActivityChart {buckets} />
@@ -153,7 +148,7 @@
 				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
 			>
 				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					Runs · 24h
+					{m.asset_agent_runs_stat_runs_24h()}
 				</div>
 				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
 					{stats?.run_count ?? 0}
@@ -163,7 +158,7 @@
 				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
 			>
 				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					Median latency
+					{m.asset_agent_runs_stat_median_latency()}
 				</div>
 				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
 					{stats && stats.run_count > 0 ? formatDuration(stats.median_latency_ms) : '—'}
@@ -173,7 +168,7 @@
 				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
 			>
 				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					Tokens · 24h
+					{m.asset_agent_runs_stat_tokens_24h()}
 				</div>
 				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
 					{stats ? formatTokens(stats.tokens_in + stats.tokens_out) : '0'}
@@ -183,7 +178,7 @@
 				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
 			>
 				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					Success rate
+					{m.asset_agent_runs_stat_success_rate()}
 				</div>
 				<div
 					class="mt-1 text-2xl font-semibold {stats && stats.run_count > 0
@@ -200,7 +195,9 @@
 			class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
 		>
 			<div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">Recent invocations</div>
+				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+					{m.asset_agent_runs_recent_heading()}
+				</div>
 			</div>
 
 			{#if runs.length === 0}
@@ -210,8 +207,7 @@
 						class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
 					/>
 					<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-						No runs yet. Invoke this agent with a Marmot SDK integration attached and runs will land
-						here.
+						{m.asset_agent_runs_empty_hint()}
 					</p>
 				</div>
 			{:else}
@@ -244,7 +240,7 @@
 											{run.run_id.slice(0, 8)}
 										</div>
 										<div class="text-xs text-gray-500 dark:text-gray-400">
-											{relativeTime(run.started_at)}
+											{formatRelativeTime(run.started_at)}
 										</div>
 									</div>
 								</div>
@@ -252,14 +248,14 @@
 									class="flex items-center gap-6 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
 								>
 									<div>
-										<span class="text-gray-400">duration </span>
+										<span class="text-gray-400">{m.asset_agent_runs_duration_label()} </span>
 										<span class="text-gray-900 dark:text-gray-100 font-mono">
 											{formatDuration(run.duration_ms)}
 										</span>
 									</div>
 									{#if run.tokens_in || run.tokens_out}
 										<div>
-											<span class="text-gray-400">tokens </span>
+											<span class="text-gray-400">{m.asset_agent_runs_tokens_label()} </span>
 											<span class="text-gray-900 dark:text-gray-100 font-mono">
 												{run.tokens_in}↓ {run.tokens_out}↑
 											</span>

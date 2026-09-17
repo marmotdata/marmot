@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { formatNumber } from '$lib/utils';
 
 	export let title: string;
 	export let value: number | string = 0;
@@ -8,7 +9,7 @@
 	export let error: string | null = null;
 	export let subtitle: string = '';
 
-	$: displayValue = typeof value === 'number' ? value.toLocaleString() : value;
+	$: displayValue = typeof value === 'number' ? formatNumber(value) : value;
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

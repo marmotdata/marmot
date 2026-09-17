@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 	import ThemeToggle from '$components/ui/ThemeToggle.svelte';
+	import LanguageSelector from '$components/ui/LanguageSelector.svelte';
 	import NotificationPreferencesToggle from '$components/ui/NotificationPreferencesToggle.svelte';
 
 	interface Permission {
@@ -38,12 +41,12 @@
 			error = null;
 			const response = await fetchApi('/users/me');
 			if (!response.ok) {
-				throw new Error('Failed to load profile');
+				throw new Error(m.profile_load_error());
 			}
 			user = await response.json();
 		} catch (err) {
 			console.error('Profile fetch error:', err);
-			error = err instanceof Error ? err.message : 'Failed to load profile';
+			error = err instanceof Error ? err.message : m.profile_load_error();
 		} finally {
 			loading = false;
 		}
@@ -55,31 +58,39 @@
 >
 	<!-- Basic Information -->
 	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Profile Information</h3>
+		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+			{m.profile_information_heading()}
+		</h3>
 		{#if loading}
-			<div class="mt-4">Loading...</div>
+			<div class="mt-4">{m.common_loading()}</div>
 		{:else if error}
 			<div class="mt-4 text-red-600">{error}</div>
 		{:else}
 			<dl class="mt-4 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
 				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">Name</dt>
+					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">{m.common_name()}</dt>
 					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{user.name}</dd>
 				</div>
 				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">Username</dt>
+					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
+						{m.profile_username_label()}
+					</dt>
 					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{user.username}</dd>
 				</div>
 				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">Account Created</dt>
+					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
+						{m.profile_account_created_label()}
+					</dt>
 					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-						{new Date(user.created_at).toLocaleDateString()}
+						{formatDate(user.created_at)}
 					</dd>
 				</div>
 				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">Last Updated</dt>
+					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
+						{m.profile_last_updated_label()}
+					</dt>
 					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-						{new Date(user.updated_at).toLocaleDateString()}
+						{formatDate(user.updated_at)}
 					</dd>
 				</div>
 			</dl>
@@ -88,14 +99,26 @@
 
 	<!-- User Preferences -->
 	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">User Preferences</h3>
+		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+			{m.profile_preferences_heading()}
+		</h3>
 		<div class="space-y-4">
 			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Theme</h4>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
+					{m.profile_theme_label()}
+				</h4>
 				<ThemeToggle />
 			</div>
 			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Notifications</h4>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
+					{m.profile_language_label()}
+				</h4>
+				<LanguageSelector />
+			</div>
+			<div>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
+					{m.profile_notifications_label()}
+				</h4>
 				<NotificationPreferencesToggle />
 			</div>
 		</div>
@@ -103,11 +126,15 @@
 
 	<!-- Roles and Permissions -->
 	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Roles & Permissions</h3>
+		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+			{m.profile_roles_permissions_heading()}
+		</h3>
 		<div class="space-y-6">
 			<!-- Roles -->
 			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Assigned Roles</h4>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
+					{m.profile_assigned_roles_heading()}
+				</h4>
 				<div class="flex flex-wrap gap-2">
 					{#each user.roles as role (role.name)}
 						<span
@@ -121,7 +148,9 @@
 
 			<!-- Permissions -->
 			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Permissions</h4>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
+					{m.profile_permissions_heading()}
+				</h4>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{#each user.roles as role (role.name)}
 						{#each role.permissions as permission (permission.name)}
@@ -129,7 +158,10 @@
 								<div class="font-medium text-gray-900 dark:text-gray-100">{permission.name}</div>
 								<div class="text-sm text-gray-600 dark:text-gray-400">{permission.description}</div>
 								<div class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-									{permission.action} on {permission.resource_type}
+									{m.profile_permission_scope({
+										action: permission.action,
+										resource: permission.resource_type
+									})}
 								</div>
 							</div>
 						{/each}
@@ -141,12 +173,14 @@
 
 	<!-- Account Status -->
 	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Account Status</h3>
+		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+			{m.profile_account_status_heading()}
+		</h3>
 		<div class="flex items-center space-x-2">
 			<span
 				class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
 			>
-				{user.active ? 'Active' : 'Inactive'}
+				{user.active ? m.common_active() : m.common_inactive()}
 			</span>
 		</div>
 	</div>

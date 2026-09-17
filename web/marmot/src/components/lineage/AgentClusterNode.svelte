@@ -2,6 +2,8 @@
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatRelativeTime } from '$lib/utils';
 
 	let { data } = $props<{
 		data: {
@@ -21,10 +23,10 @@
 
 	let originLabel = $derived(
 		data.originKind === 'declared'
-			? 'DECLARED · sdk'
+			? m.lineage_origin_declared_detail()
 			: data.originKind === 'mixed'
-				? 'MIXED · declared + observed'
-				: 'OBSERVED · runtime'
+				? m.lineage_origin_mixed_detail()
+				: m.lineage_origin_observed_detail()
 	);
 
 	// Observed clusters count tool lookups; declared clusters count member
@@ -32,7 +34,11 @@
 	let footerCount = $derived(
 		data.originKind === 'declared' ? data.count : data.totalObservations || data.count
 	);
-	let footerNoun = $derived(data.originKind === 'declared' ? 'assets' : 'lookups');
+	let footerLabel = $derived(
+		data.originKind === 'declared'
+			? m.lineage_footer_asset_count({ count: formatCount(footerCount) })
+			: m.lineage_footer_lookup_count({ count: formatCount(footerCount) })
+	);
 
 	function handleExpand(e: MouseEvent) {
 		e.stopPropagation();
@@ -46,16 +52,9 @@
 		return `${(n / 1000).toFixed(1)}k`;
 	}
 
-	function relativeTime(ms?: number): string | null {
-		if (!ms) return null;
-		const diff = Date.now() - ms;
-		if (diff < 60_000) return 'just now';
-		if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-		if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-		return `${Math.floor(diff / 86_400_000)}d ago`;
-	}
-
-	let lastSeen = $derived(relativeTime(data.recencyMs));
+	let lastSeen = $derived(
+		data.recencyMs ? formatRelativeTime(new Date(data.recencyMs).toISOString()) : null
+	);
 </script>
 
 <Handle type="source" position={Position.Right} style="background: #607b60;" />
@@ -64,8 +63,11 @@
 	class="cluster"
 	class:clickable={!!data.onToggleExpand}
 	title={data.memberMRNs.slice(0, 6).join('\n') +
-		(data.memberMRNs.length > 6 ? `\n…+${data.memberMRNs.length - 6} more` : '') +
-		'\n\nClick to expand'}
+		(data.memberMRNs.length > 6
+			? '\n' + m.lineage_more_members({ count: data.memberMRNs.length - 6 })
+			: '') +
+		'\n\n' +
+		m.lineage_click_to_expand()}
 	onclick={handleExpand}
 	onkeydown={(e) =>
 		(e.key === 'Enter' || e.key === ' ') && handleExpand(e as unknown as MouseEvent)}
@@ -98,14 +100,14 @@
 		</div>
 
 		<div class="footer">
-			<span>{formatCount(footerCount)} {footerNoun}</span>
+			<span>{footerLabel}</span>
 			{#if lastSeen}
 				<span class="last-seen">· {lastSeen}</span>
 			{/if}
 			{#if data.onToggleExpand}
 				<span class="expand-hint">
 					<IconifyIcon icon="material-symbols:unfold-more-rounded" class="w-3 h-3" />
-					expand
+					{m.lineage_expand_label()}
 				</span>
 			{/if}
 		</div>

@@ -37,6 +37,12 @@ import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
     docId="Configure/elasticsearch"
     icon="mdi:magnify"
   />
+  <DocCard
+    title="Translations"
+    description="Set the interface language and contribute new translations"
+    docId="Develop/translations"
+    icon="mdi:translate"
+  />
 </DocCardGrid>
 
 ## Configuration File
@@ -204,6 +210,14 @@ The optional Elasticsearch backend is configured under `search.elasticsearch` â€
 | `ui.banner.id`          | Identifier used to remember dismissals    | `banner-1` |
 
 See [Customisable Banner](./banner.md) for examples.
+
+## UI Language
+
+| Key                   | Description                                                             | Default |
+| --------------------- | ----------------------------------------------------------------------- | ------- |
+| `ui.default_language` | Language tag for visitors with no preference, empty detects the browser | -       |
+
+See [Translations](../Develop/translations.md) for the available languages and how to contribute one.
 
 ## Telemetry
 
