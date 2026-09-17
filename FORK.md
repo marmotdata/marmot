@@ -10,14 +10,14 @@ The consuming distribution pins a **SHA**, never a floating tag. Corporate profi
 marmotdata/marmot          main     ← upstream
 dgu-development/marmot     main     ← fast-forward only copy of upstream
 dgu-development/marmot     dgu      ← product line (PRs land here)
-                           feature/*  ← branched from dgu (or from main if proposing upstream)
+                           feature/*  ← from dgu (fork-only) or from main (upstream-candidate)
 ```
 
 | Branch | Role |
 | --- | --- |
 | `main` | Mirror of `marmotdata/marmot` `main`. No unique commits. Not the product. |
 | `dgu` | Long-lived product line. Default branch for issues, PR templates, and CODEOWNERS. Consuming distributions pin a SHA of this branch. |
-| `feature/*` | Reviewable work. Open PRs against **`dgu`**, unless the change is meant for upstream. |
+| `feature/*` | Reviewable work. Fork-only: branch from `dgu`, PR to `dgu`. Upstream-candidate: branch from `main`, PR to marmotdata **and** land the same patch on `dgu`. |
 
 Do not use GitHub **Sync fork**. That updates the default branch; after `dgu` is default, it would merge upstream into the product line. Refresh `main` with `.github/workflows/sync-upstream-main.yml` (`workflow_dispatch` or the weekly schedule) or:
 
@@ -36,7 +36,7 @@ Integrate upstream into the product line with a PR **`main` → `dgu`**. Resolve
 | Fork GitHub forms, CODEOWNERS, this file | Overlay, `/dgu/*` modules, `kernel.lock.json` |
 | PRs labelled `fork-only` or `upstream-candidate` | Secrets, tenant data |
 
-Upstream contributions: branch from `main` (or `upstream/main`), PR to **marmotdata/marmot**. After it merges, wait for `main` to fast-forward, then merge `main` into `dgu`.
+Upstream-candidate: branch from `main` (or `upstream/main`). Open a PR to **marmotdata/marmot** and land the **same** patch on `dgu` (cherry-pick or a second PR). Do not rewrite the change twice. After upstream merges, fast-forward `origin/main`, then open PR **`main` → `dgu`** so the product line also picks up the rest of Marmot.
 
 ## Labels
 
