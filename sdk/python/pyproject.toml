@@ -39,6 +39,7 @@ Issues = "https://github.com/marmotdata/marmot/issues"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.4.2",
+    "pytest-asyncio>=0.23",
     "pytest-cov>= 2.8.1",
     "types-python-dateutil>= 2.8.19.14",
     "pytest-httpx>=0.30",
@@ -169,6 +170,10 @@ ignore_missing_imports = true
 module = "marmot.integrations.*"
 warn_unused_ignores = false
 
+[tool.uv]
+required-version = ">=0.12"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+asyncio_mode = "auto"

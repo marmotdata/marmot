@@ -6,6 +6,7 @@ Each tool is a thin wrapper over a :class:`CatalogReader` call, exposed as a
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -36,12 +37,11 @@ def catalog_tools(catalog: CatalogReader) -> list[BaseTool]:
             "Install via `pip install marmot-sdk[langchain]`."
         ) from e
 
-    def search_catalog(query: str, limit: int = 20) -> dict[str, Any]:
-        """Search the Marmot data catalog. Returns up to ``limit`` matches (max 100).
+    async def search_catalog(query: str, limit: int = 5) -> dict[str, Any]:
+        """Find assets by name, type, provider, or metadata. Use ``count_assets`` for totals.
 
         ``query`` accepts plain free text OR Marmot's structured query language.
-        Catalogs can hold millions of assets — prefer structured queries over
-        broad free-text when you know any of: name, type, provider, or metadata.
+        Prefer structured queries when you know any of: name, type, provider, or metadata.
 
         Field filters (combine with AND / OR / NOT, group with parentheses):
 
@@ -56,41 +56,29 @@ def catalog_tools(catalog: CatalogReader) -> list[BaseTool]:
 
         Examples — pick the most specific query you can:
 
-          Looking for an asset by name:
-            @name: "metrics-current"
+          @name: "metrics-current"
+          @name: "metrics-current" AND @provider: "OpenSearch"
+          @type: "Topic" AND @provider: "kafka"
+          (@type: "Table" OR @type: "View") AND @provider: "postgres" AND @name contains "customer"
 
-          Looking for a name on a specific platform:
-            @name: "metrics-current" AND @provider: "OpenSearch"
-
-          All Kafka topics:
-            @type: "Topic" AND @provider: "kafka"
-
-          Customer-related Postgres tables only:
-            (@type: "Table" OR @type: "View") AND @provider: "postgres" AND @name contains "customer"
-
-          Free text fallback when you don't know fields:
-            user orders
-
-        After this returns, use ``lookup_asset`` (when you know type+provider+name)
-        or ``get_asset`` (when you have an id from these results) for full details.
+        Returns matched assets. Once you have a candidate, use ``lookup_asset``
+        (type+provider+name) or ``get_asset`` (id) for full details.
         """
-        raw = catalog.search(query, limit=limit).to_dict()
-        hits = []
-        for r in raw.get("results") or []:
-            md = r.get("metadata") or {}
-            hits.append(
-                {
-                    "id": r.get("id"),
-                    "name": r.get("name"),
-                    "type": md.get("type"),
-                    "provider": md.get("primary_provider"),
-                    "mrn": md.get("mrn"),
-                    "description": r.get("description"),
-                }
-            )
-        return {"results": hits, "total": raw.get("total", len(hits))}
+        response = await catalog.asearch(query, limit=limit)
+        hits = [
+            {
+                "id": r.id,
+                "name": r.name,
+                "type": (r.metadata or {}).get("type"),
+                "provider": (r.metadata or {}).get("primary_provider"),
+                "mrn": (r.metadata or {}).get("mrn"),
+                "description": r.description,
+            }
+            for r in (response.results or [])
+        ]
+        return {"results": hits}
 
-    def get_asset(asset_id: str) -> dict[str, Any]:
+    async def get_asset(asset_id: str) -> dict[str, Any]:
         """Fetch the full details of a single asset by its Marmot ID.
 
         Returns the asset's name, MRN, type, provider, description, owner,
@@ -98,26 +86,63 @@ def catalog_tools(catalog: CatalogReader) -> list[BaseTool]:
         ``search_catalog`` finds a candidate, when you need column/schema
         details to write a query or understand structure.
         """
-        return catalog.get_asset(asset_id).to_dict()
+        return (await catalog.aget_asset(asset_id)).to_dict()
 
-    def lookup_asset(asset_type: str, service: str, name: str) -> dict[str, Any] | None:
+    async def lookup_asset(asset_type: str, service: str, name: str) -> dict[str, Any] | None:
         """Look up a single asset by its (type, service, name) triple.
 
         Use this when you already know the natural identifiers — for example
         ``asset_type="table"``, ``service="postgres"``, ``name="prod.orders"``.
         Returns ``None`` if no asset matches.
         """
-        found = catalog.lookup_asset(asset_type=asset_type, service=service, name=name)
+        found = await catalog.alookup_asset(asset_type=asset_type, service=service, name=name)
         return found.to_dict() if found else None
 
-    def get_upstream_lineage(asset_id: str, depth: int = 2) -> dict[str, Any]:
+    async def get_upstream_lineage(asset_id: str, depth: int = 2) -> dict[str, Any]:
         """Trace the upstream lineage of an asset — what feeds into it.
 
         Returns the graph of ancestors up to ``depth`` hops. Use this to
         understand where data comes from, who/what writes to a table, or to
         find a root source you can query directly.
         """
-        return catalog.upstream_lineage(asset_id, depth=depth).to_dict()
+        return (await catalog.aget_upstream_lineage(asset_id, depth=depth)).to_dict()
+
+    async def count_assets(query: str = "") -> dict[str, Any]:
+        """Return asset count and a per-type breakdown. Use for ANY "how many" question.
+
+        Call once — the breakdown is already included, do not call per type.
+        Pass no argument (or empty string) to count all assets.
+        Pass a field filter to count a subset — same syntax as ``search_catalog``.
+
+        Returns ``{"count": N, "by_type": {"Table": N, "Topic": N, ...}}``.
+
+        Examples:
+          All assets:              count_assets()
+          All tables:              count_assets('@type: "Table"')
+          Kafka topics only:       count_assets('@type: "Topic" AND @provider: "kafka"')
+          Names matching pattern:  count_assets('@name contains "customer"')
+        """
+        effective = '@name: "*"' if not query.strip() or query.strip() == "*" else query.strip()
+
+        sample = await catalog.asearch(effective, limit=20)
+        total = sample.total or 0
+        types_seen = sorted(
+            {((r.metadata or {}).get("type") or "Unknown") for r in (sample.results or [])}
+        )
+
+        if not types_seen:
+            return {"count": total}
+
+        per_type = await asyncio.gather(
+            *(catalog.asearch(f'@type: "{t}"', limit=1) for t in types_seen)
+        )
+        by_type = {
+            t: (r.total or 0)
+            for t, r in zip(types_seen, per_type, strict=True)
+            if (r.total or 0) > 0
+        }
+
+        return {"count": total, "by_type": by_type}
 
     # Tools whose return value uniquely identifies the asset the agent fetched
     # opt in to lineage emission. search_catalog deliberately does NOT — its
@@ -125,8 +150,9 @@ def catalog_tools(catalog: CatalogReader) -> list[BaseTool]:
     lookup_metadata = {"marmot_record_lookups": True}
 
     return [
-        StructuredTool.from_function(search_catalog),
-        StructuredTool.from_function(get_asset, metadata=lookup_metadata),
-        StructuredTool.from_function(lookup_asset, metadata=lookup_metadata),
-        StructuredTool.from_function(get_upstream_lineage, metadata=lookup_metadata),
+        StructuredTool.from_function(coroutine=count_assets),
+        StructuredTool.from_function(coroutine=search_catalog),
+        StructuredTool.from_function(coroutine=get_asset, metadata=lookup_metadata),
+        StructuredTool.from_function(coroutine=lookup_asset, metadata=lookup_metadata),
+        StructuredTool.from_function(coroutine=get_upstream_lineage, metadata=lookup_metadata),
     ]
