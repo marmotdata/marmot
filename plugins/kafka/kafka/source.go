@@ -58,13 +58,17 @@ type SchemaRegistryConfig struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "kafka",
-		Name:        "Kafka",
+		Name:        "Apache Kafka",
 		Description: "Discover Kafka topics from Kafka clusters",
 		Icon:        "kafka",
 		Category:    "streaming",
 		Status:      "experimental",
 		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(KafkaTopicFields{}, "Topic",
+				"The metadata fields Kafka emits for a topic asset."),
+		},
 	}
 }
 

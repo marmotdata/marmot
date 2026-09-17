@@ -91,7 +91,7 @@ func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} user.User
-// @Failure 400 {object} common.ErrorResponse
+// @Failure 400 {object} common.ValidationErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @ID postUsers
 // @Router /api/v1/users [post]
@@ -108,15 +108,11 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 			common.RespondLimitExceeded(w, limitErr)
 			return
 		}
-		switch err {
-		case user.ErrInvalidInput:
-			common.RespondError(w, http.StatusBadRequest, "Invalid input")
-		case user.ErrAlreadyExists:
-			common.RespondError(w, http.StatusConflict, "User already exists")
-		default:
-			log.Error().Err(err).Msg("Failed to create user")
-			common.RespondError(w, http.StatusInternalServerError, "Failed to create user")
+		if respondUserError(w, err) {
+			return
 		}
+		log.Error().Err(err).Msg("Failed to create user")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to create user")
 		return
 	}
 
@@ -145,13 +141,11 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.userService.Get(r.Context(), id)
 	if err != nil {
-		switch err {
-		case user.ErrUserNotFound:
-			http.NotFound(w, r)
-		default:
-			log.Error().Err(err).Str("id", id).Msg("Failed to get user")
-			common.RespondError(w, http.StatusInternalServerError, "Failed to get user")
+		if respondUserError(w, err) {
+			return
 		}
+		log.Error().Err(err).Str("id", id).Msg("Failed to get user")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to get user")
 		return
 	}
 
@@ -168,8 +162,9 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} user.User
-// @Failure 400 {object} common.ErrorResponse
+// @Failure 400 {object} common.ValidationErrorResponse
 // @Failure 404 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
 // @ID putUsersID
 // @Router /api/v1/users/{id} [put]
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
@@ -187,15 +182,11 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := h.userService.Update(r.Context(), id, input)
 	if err != nil {
-		switch err {
-		case user.ErrUserNotFound:
-			http.NotFound(w, r)
-		case user.ErrInvalidInput:
-			common.RespondError(w, http.StatusBadRequest, "Invalid input")
-		default:
-			log.Error().Err(err).Str("id", id).Msg("Failed to update user")
-			common.RespondError(w, http.StatusInternalServerError, "Failed to update user")
+		if respondUserError(w, err) {
+			return
 		}
+		log.Error().Err(err).Str("id", id).Msg("Failed to update user")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
 
@@ -212,6 +203,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
 // @ID deleteUsersID
 // @Router /api/v1/users/{id} [delete]
@@ -230,13 +222,11 @@ func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.userService.Delete(r.Context(), usr.ID, id)
 	if err != nil {
-		switch err {
-		case user.ErrUserNotFound:
-			http.NotFound(w, r)
-		default:
-			log.Error().Err(err).Str("id", id).Msg("Failed to delete user")
-			common.RespondError(w, http.StatusInternalServerError, "Failed to delete user")
+		if respondUserError(w, err) {
+			return
 		}
+		log.Error().Err(err).Str("id", id).Msg("Failed to delete user")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to delete user")
 		return
 	}
 

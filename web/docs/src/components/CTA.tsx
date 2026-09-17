@@ -15,7 +15,7 @@ export default function CTA(): JSX.Element {
           data-animate-delay="1"
           className="mt-4 text-lg text-gray-500 dark:text-gray-400"
         >
-          Try the live demo, or deploy it yourself in a few minutes.
+          Deploy it yourself in a few minutes, or talk to us about your setup.
         </p>
 
         <div
@@ -24,12 +24,10 @@ export default function CTA(): JSX.Element {
           className="mt-8 flex flex-row justify-center items-center gap-3"
         >
           <a
-            href="https://demo.marmotdata.io"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/docs/quick-start"
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Live demo
+            Get started
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"
@@ -46,7 +44,7 @@ export default function CTA(): JSX.Element {
           </a>
           <a
             href="mailto:support@marmotdata.io"
-            className="group demo-btn inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 transition-all duration-200 hover:-translate-y-0.5"
+            className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-earthy-brown-200/70 dark:border-gray-700/70 transition-all duration-200 hover:-translate-y-0.5"
           >
             Talk to us
           </a>

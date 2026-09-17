@@ -13,6 +13,22 @@ jobs:
   test:
     name: Server + Frontend
     runs-on: ubuntu-latest
+    # The OAuth repository tests run real SQL. Without a database they skip,
+    # which would leave the Postgres path uncovered.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: marmot
+          POSTGRES_PASSWORD: marmot
+          POSTGRES_DB: marmot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -52,3 +68,5 @@ jobs:
 
       - name: Run Go tests
         run: make test
+        env:
+          MARMOT_TEST_POSTGRES_DSN: postgres://marmot:marmot@localhost:5432/marmot_test?sslmode=disable

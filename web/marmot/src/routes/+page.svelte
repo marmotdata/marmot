@@ -8,6 +8,7 @@
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import IconComponent from '$components/ui/Icon.svelte';
 	import type { Asset } from '$lib/assets/types';
+	import { userProfile } from '$lib/stores/user';
 
 	interface QuickStat {
 		label: string;
@@ -53,14 +54,6 @@
 		tags: { [key: string]: number };
 	}
 
-	interface UserProfile {
-		id: string;
-		username: string;
-		name: string;
-		email: string;
-		display_name?: string;
-	}
-
 	let summary = $state<AssetSummaryResponse>({
 		types: {},
 		providers: {},
@@ -70,7 +63,6 @@
 	let userAssets = $state<RecentAsset[]>([]);
 	let isLoading = $state(true);
 	let hasLoadedOnce = $state(false);
-	let userProfile = $state<UserProfile | null>(null);
 	let selectedAsset = $state<RecentAsset | PopularAsset | null>(null);
 
 	let totalAssets = $derived(
@@ -184,12 +176,13 @@
 		return asset.type;
 	}
 
+	// Null until the profile is known, so the greeting never shows a stand-in name.
 	let displayName = $derived.by(() => {
-		if (userProfile?.name) {
-			const firstName = userProfile.name.split(' ')[0];
-			return capitalizeFirstLetter(firstName);
-		}
-		return capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || 'there');
+		const profile = $userProfile;
+		if (!profile) return null;
+
+		const name = profile.name?.split(' ')[0] || profile.display_name || profile.username;
+		return name ? capitalizeFirstLetter(name) : null;
 	});
 
 	async function fetchData() {
@@ -219,15 +212,6 @@
 				}
 			} catch {
 				// Metrics are optional
-			}
-
-			try {
-				const profileRes = await fetchApi('/users/me');
-				if (profileRes.ok) {
-					userProfile = await profileRes.json();
-				}
-			} catch {
-				// Profile fetch is optional
 			}
 		} catch (err) {
 			console.error('Error fetching data:', err);
@@ -311,7 +295,10 @@
 		return colors[color] || colors.terracotta;
 	}
 
-	onMount(fetchData);
+	onMount(() => {
+		userProfile.load();
+		fetchData();
+	});
 </script>
 
 <div class="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -319,7 +306,13 @@
 		<!-- Greeting -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				Hi {displayName} 👋
+				{#if displayName}
+					Hi {displayName} 👋
+				{:else}
+					<span
+						class="inline-block w-56 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded align-middle"
+					></span>
+				{/if}
 			</h1>
 			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
 		</div>
@@ -612,7 +605,13 @@
 		<!-- Greeting -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				Hi {displayName} 👋
+				{#if displayName}
+					Hi {displayName} 👋
+				{:else}
+					<span
+						class="inline-block w-56 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded align-middle"
+					></span>
+				{/if}
 			</h1>
 			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
 		</div>

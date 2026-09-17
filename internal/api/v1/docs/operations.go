@@ -86,10 +86,7 @@ func (h *Handler) createPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var createdBy *string
-	if usr, ok := r.Context().Value(common.UserContextKey).(*user.User); ok && usr != nil {
-		createdBy = &usr.ID
-	}
+	createdBy := common.CreatedBy(r.Context())
 
 	input := docs.CreatePageInput{
 		ParentID: req.ParentID,

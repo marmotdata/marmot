@@ -1,0 +1,34 @@
+name	string	
+total	decimal(26,4)	
+		
+# Detailed Table Information		
+Database:           	sales               	
+OwnerType:          	USER                	
+Owner:              	hive                	
+CreateTime:         	Tue Sep 08 02:21:26 UTC 2026	
+LastAccessTime:     	UNKNOWN             	
+Retention:          	0                   	
+Table Type:         	VIRTUAL_VIEW        	
+Table Parameters:		
+	bucketing_version   	2                   
+	comment             	Order totals per customer
+	transient_lastDdlTime	1788834086          
+		
+# Storage Information		
+SerDe Library:      	null                	
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	
+Compressed:         	No                  	
+Num Buckets:        	-1                  	
+Bucket Columns:     	[]                  	
+Sort Columns:       	[]                  	
+		
+# View Information		
+Original Query:     	SELECT c.name, SUM(o.amount) AS total	
+	                    	FROM sales.orders o 
+	                    	JOIN sales.customers c ON o.customer_id = c.id
+	                    	GROUP BY c.name     
+Expanded Query:     	SELECT `c`.`name`, SUM(`o`.`amount`) AS `total`	
+	                    	FROM `sales`.`orders` `o`
+	                    	JOIN `sales`.`customers` `c` ON `o`.`customer_id` = `c`.`id`
+	                    	GROUP BY `c`.`name` 

@@ -5,7 +5,7 @@
 
 Deploy Marmot to your Kubernetes cluster using the official Helm chart.
 
-[Documentation](https://marmotdata.io/docs/Deploy/Helm) | [Live Demo](https://demo.marmotdata.io) | [GitHub](https://github.com/marmotdata/marmot)
+[Documentation](https://marmotdata.io/docs/Deploy/Helm) | [GitHub](https://github.com/marmotdata/marmot)
 
 </div>
 

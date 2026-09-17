@@ -10,7 +10,6 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
@@ -72,10 +71,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var createdBy *string
-	if usr, ok := r.Context().Value(common.UserContextKey).(*user.User); ok {
-		createdBy = &usr.ID
-	}
+	createdBy := common.CreatedBy(r.Context())
 
 	input := assetrule.CreateInput{
 		Name:            req.Name,

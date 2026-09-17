@@ -2490,6 +2490,15 @@ definitions:
       message:
         type: string
     type: object
+  ValidationErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/ValidationErrorDetail'
+        type: array
+    type: object
   pluginsdk.ConfigField:
     properties:
       default: {}
@@ -7423,7 +7432,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ValidationErrorResponse'
         "409":
           description: Conflict
           schema:
@@ -7453,6 +7462,10 @@ paths:
           description: No Content
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
         "500":
@@ -7524,9 +7537,13 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ValidationErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -7608,6 +7625,10 @@ paths:
           description: No Content
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:

@@ -21,13 +21,27 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "dbt",
-		Name:        "DBT",
+		Name:        "dbt",
 		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
 		Icon:        "dbt",
 		Category:    "transformation",
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DBTModelFields{}, "Model",
+				"DBT model-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTSourceFields{}, "Source",
+				"DBT source-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTSeedFields{}, "Seed",
+				"DBT seed-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTColumnFields{}, "Column",
+				"DBT column-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTConfigFields{}, "Config",
+				"DBT config-specific metadata fields Fields with config_ prefix contain DBT model configuration"),
+			pluginsdk.AssetSchemaOf(DBTStatsFields{}, "Stats",
+				"DBT catalog statistics fields Fields with stat_ prefix contain statistics from database catalog"),
+		},
 	}
 }
 

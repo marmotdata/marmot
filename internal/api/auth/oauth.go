@@ -36,7 +36,7 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 
 	state := generateRandomState()
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
@@ -101,14 +101,7 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.authService.GenerateToken(r.Context(), user, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate token")
-		common.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
-		return
-	}
-
-	if err := h.issueLoginHandoff(w, r, token); err != nil {
+	if err := h.issueLoginHandoff(w, r, user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to issue login handoff")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to complete login")
 		return

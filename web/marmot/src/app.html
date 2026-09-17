@@ -4,6 +4,24 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.ico" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>
+			// Must stay in <head> and stay in sync with src/lib/stores/theme.ts. Running it
+			// before the page has any markup is what stops a light flash on every refresh.
+			(() => {
+				try {
+					const saved = localStorage.getItem('theme');
+					const isDark =
+						saved === 'dark' ||
+						((saved === 'auto' || saved === null) &&
+							window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+					document.documentElement.classList.toggle('dark', isDark);
+					document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				} catch {
+					// localStorage can be unavailable; fall back to the light theme.
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="bg-earthy-brown-50 dark:bg-gray-900">
@@ -14,16 +32,6 @@
 			if (typeof chrome === 'undefined') {
 				window.chrome = {};
 			}
-
-			(() => {
-				const savedTheme = localStorage.getItem('theme');
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				const theme = savedTheme ? savedTheme : prefersDark ? 'dark' : 'light';
-
-				if (theme === 'dark') {
-					document.documentElement.classList.add('dark');
-				}
-			})();
 		</script>
 	</body>
 </html>

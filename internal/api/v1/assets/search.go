@@ -156,7 +156,14 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 	if typesStr := query.Get("types"); typesStr != "" {
 		types = strings.Split(typesStr, ",")
 	}
-	if providersStr := query.Get("providers"); providersStr != "" {
+	// The documented name of this filter is services, which is what the
+	// generated clients send. The UI has always sent providers. Both name
+	// the same thing, so both are read.
+	providersStr := query.Get("services")
+	if providersStr == "" {
+		providersStr = query.Get("providers")
+	}
+	if providersStr != "" {
 		providers = strings.Split(providersStr, ",")
 	}
 	if tagsStr := query.Get("tags"); tagsStr != "" {

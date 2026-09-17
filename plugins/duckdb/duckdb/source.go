@@ -42,6 +42,14 @@ func Meta() pluginsdk.Meta {
 		// for foreign keys, so the manifest declares Lineage.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DuckDBFields{}, "DuckDB",
+				"The metadata fields DuckDB emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(DuckDBColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(DuckDBForeignKeyFields{}, "Foreign Key",
+				"The fields of a discovered foreign key relationship."),
+		},
 	}
 }
 

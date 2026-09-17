@@ -45,7 +45,7 @@ The plugin discovers namespaces, services, deployments, stateful sets and cron j
 
 Cron jobs come with run history built from their recent job runs, so the catalog shows whether last night's job actually succeeded. Pods are off by default; they are short-lived and would churn the catalog constantly, so you opt into `discover_pods` when pod-level visibility is worth it. The same reasoning keeps one-off jobs out: only jobs owned by a cron job are kept, and only as run history.
 
-Each asset carries the metadata you would otherwise go digging for: images, replica counts, ports, schedules, service accounts, and so on. The [Kubernetes plugin docs](/docs/Plugins/Kubernetes) list every resource, option and field.
+Each asset carries the metadata you would otherwise go digging for: images, replica counts, ports, schedules, service accounts, and so on. The [Kubernetes plugin docs](https://plugins.marmotdata.io/marmotdata/kubernetes) list every resource, option and field.
 
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
   <ThemedImg
@@ -61,9 +61,9 @@ Each asset carries the metadata you would otherwise go digging for: images, repl
 
 There are three separate plugins, one per environment. Kubernetes is Kubernetes once you are talking to the API server, so they share a single discovery engine and produce identical assets, lineage and run history. What differs is how each one gets a token to talk to the cluster.
 
-- The [Kubernetes plugin](/docs/Plugins/Kubernetes) is for self-managed and on-prem clusters. It uses an in-cluster service account, your kubeconfig, or a host, token and CA you hand it directly.
-- The [Amazon Elastic Kubernetes Service plugin](/docs/Plugins/EKS) wraps that engine with AWS IAM. You give it a cluster name and region; it looks up the endpoint from the Amazon Elastic Kubernetes Service API and mints a short-lived token from whatever AWS credentials Marmot is running with.
-- The [Google Kubernetes Engine plugin](/docs/Plugins/GKE) does the same with Google Cloud IAM and an OAuth token.
+- The [Kubernetes plugin](https://plugins.marmotdata.io/marmotdata/kubernetes) is for self-managed and on-prem clusters. It uses an in-cluster service account, your kubeconfig, or a host, token and CA you hand it directly.
+- The [Amazon Elastic Kubernetes Service plugin](https://plugins.marmotdata.io/marmotdata/eks) wraps that engine with AWS IAM. You give it a cluster name and region; it looks up the endpoint from the Amazon Elastic Kubernetes Service API and mints a short-lived token from whatever AWS credentials Marmot is running with.
+- The [Google Kubernetes Engine plugin](https://plugins.marmotdata.io/marmotdata/gke) does the same with Google Cloud IAM and an OAuth token.
 
 The property worth pointing out: on Amazon Elastic Kubernetes Service and Google Kubernetes Engine there is no static credential to store or rotate. Run Marmot on an instance in the same account or project and it authenticates as the identity it already has, on every run.
 

@@ -46,6 +46,22 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SharedFields{}, "Shared",
+				"Common metadata fields across all AsyncAPI resources"),
+			pluginsdk.AssetSchemaOf(ServiceFields{}, "Service",
+				"AsyncAPI service-specific metadata"),
+			pluginsdk.AssetSchemaOf(KafkaFields{}, "Kafka",
+				"Kafka-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(SNSFields{}, "SNS",
+				"SNS-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(SQSFields{}, "SQS",
+				"SQS-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(AMQPFields{}, "AMQP",
+				"AMQP-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(GooglePubSubFields{}, "Google Pub Sub",
+				"Google Pub/Sub-specific metadata fields"),
+		},
 	}
 }
 

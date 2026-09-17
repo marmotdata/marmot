@@ -9,8 +9,8 @@ The LangChain integration ships in the Python and TypeScript SDKs. It has two ha
 import { CalloutCard } from '@site/src/components/DocCard';
 import { Tabs, TabPanel } from '@site/src/components/Steps';
 
-1. **`catalog_tools(client)`** returns a list of LangChain tools (`search_catalog`, `get_asset`, `lookup_asset`, `get_upstream_lineage`) bound to your Marmot client. Drop them into any agent.
-2. **`MarmotCallbackHandler`** registers the agent on first run as an asset of type `Agent`, captures every tool call and writes one batched lineage edge per upstream when the run ends.
+1. **`catalog_tools(client)`** returns a list of LangChain tools (`search_catalog`, `get_asset`, `lookup_asset`, `get_upstream_lineage`, `count_assets`) bound to your Marmot client. Drop them into any agent.
+2. **`MarmotCallbackHandler`** registers the agent on first run as an asset of type `Agent`, captures every tool call and writes one batched lineage edge per upstream when the run ends. Use it with `agent.ainvoke()`.
 
 ## Install
 
@@ -53,12 +53,13 @@ A minimal agent that searches the catalog, registers itself and writes lineage:
 <TabPanel value="py">
 
 ```python
+import asyncio
+
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from marmot import AuthenticatedApiClient
-from marmot.auth import resolve_credential, resolve_host
 from marmot.integrations import MarmotCatalog
 from marmot.integrations.langchain import MarmotCallbackHandler, catalog_tools
 
@@ -70,37 +71,40 @@ SYSTEM_PROMPT = (
     "Always consult the marmot tools; never guess from memory."
 )
 
-catalog = MarmotCatalog(AuthenticatedApiClient.connect())
 
-tools = catalog_tools(catalog)
-handler = MarmotCallbackHandler(
-    catalog,
-    name=AGENT_NAME,
-    model=MODEL,
-    owner="data-eng",
-    tools=tools,
-)
+async def main() -> None:
+    catalog = MarmotCatalog(AuthenticatedApiClient.connect())
 
-llm = ChatOpenAI(model=MODEL, temperature=0).bind_tools(tools)
-
-
-# The handler tracks a *chain* run: it registers the agent when the root chain
-# starts and flushes on its end, attributing every nested tool and model call to
-# it. `config` must be forwarded so those nested runs inherit the root.
-def pipeline(question: str, config: RunnableConfig) -> str:
-    answer = llm.invoke(
-        [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config
+    tools = catalog_tools(catalog)
+    handler = MarmotCallbackHandler(
+        catalog,
+        name=AGENT_NAME,
+        model=MODEL,
+        owner="data-eng",
+        tools=tools,
     )
-    return str(answer.content)
+
+    llm = ChatOpenAI(model=MODEL, temperature=0).bind_tools(tools)
+
+    # The handler tracks a *chain* run: it registers the agent when the root chain
+    # starts and flushes on its end, attributing every nested tool and model call to
+    # it. `config` must be forwarded so those nested runs inherit the root.
+    async def pipeline(question: str, config: RunnableConfig) -> str:
+        answer = await llm.ainvoke(
+            [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config
+        )
+        return str(answer.content)
+
+    reply = await RunnableLambda(pipeline).ainvoke(
+        "Find a postgres table about orders and summarise it.",
+        config=RunnableConfig(callbacks=[handler]),
+    )
+
+    print(reply)
+    print("agent registered as:", handler.agent_mrn)
 
 
-reply = RunnableLambda(pipeline).invoke(
-    "Find a postgres table about orders and summarise it.",
-    config=RunnableConfig(callbacks=[handler]),
-)
-
-print(reply)
-print("agent registered as:", handler.agent_mrn)
+asyncio.run(main())
 ```
 
 </TabPanel>

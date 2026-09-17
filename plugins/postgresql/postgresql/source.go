@@ -28,6 +28,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(PostgresFields{}, "Postgres",
+				"PostgreSQL-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(PostgresColumnFields{}, "Postgres Column",
+				"PostgreSQL column-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(PostgresForeignKeyFields{}, "Postgres Foreign Key",
+				"PostgreSQL foreign key relationship fields"),
+		},
 	}
 }
 

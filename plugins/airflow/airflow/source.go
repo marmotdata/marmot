@@ -36,11 +36,21 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "airflow",
-		Name:        "Airflow",
+		Name:        "Apache Airflow",
 		Description: "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
 		Icon:        "airflow",
 		Category:    "orchestration",
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(AirflowDAGFields{}, "DAG",
+				"The metadata fields Airflow emits for a DAG (Pipeline) asset."),
+			pluginsdk.AssetSchemaOf(AirflowTaskFields{}, "Task",
+				"The metadata fields for a Task asset."),
+			pluginsdk.AssetSchemaOf(AirflowDatasetFields{}, "Dataset",
+				"The metadata fields for a Dataset asset."),
+			pluginsdk.AssetSchemaOf(AirflowDAGRunFields{}, "DAGRun",
+				"The run facet fields emitted for DAG run history events."),
+		},
 	}
 }
 

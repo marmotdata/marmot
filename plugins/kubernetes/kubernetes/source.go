@@ -525,6 +525,22 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage", "Run History"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(ClusterFields{}, "Cluster",
+				"Kubernetes cluster metadata fields"),
+			pluginsdk.AssetSchemaOf(NamespaceFields{}, "Namespace",
+				"Kubernetes namespace metadata fields"),
+			pluginsdk.AssetSchemaOf(ServiceFields{}, "Service",
+				"Kubernetes service metadata fields"),
+			pluginsdk.AssetSchemaOf(DeploymentFields{}, "Deployment",
+				"Kubernetes deployment metadata fields"),
+			pluginsdk.AssetSchemaOf(StatefulSetFields{}, "Stateful Set",
+				"Kubernetes stateful set metadata fields"),
+			pluginsdk.AssetSchemaOf(CronJobFields{}, "Cron Job",
+				"Kubernetes cron job metadata fields"),
+			pluginsdk.AssetSchemaOf(PodFields{}, "Pod",
+				"Kubernetes pod metadata fields"),
+		},
 	}
 }
 

@@ -129,7 +129,7 @@ type ServiceOption func(*service)
 func NewService(repo Repository, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
-		validator: validator.New(),
+		validator: newValidator(),
 		guard:     limits.NoopGuard{},
 	}
 
@@ -165,12 +165,12 @@ func (s *service) UpdatePreferences(ctx context.Context, userID string, preferen
 func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, error) {
 	if input.OAuthProvider == "" {
 		if err := s.validator.Struct(input); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+			return nil, invalidInput(err)
 		}
 	} else {
-		validate := validator.New()
-		if err := validate.StructExcept(input, "Password"); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		// s.validator, not a fresh one, so the json field names survive here.
+		if err := s.validator.StructExcept(input, "Password"); err != nil {
+			return nil, invalidInput(err)
 		}
 	}
 
@@ -243,7 +243,7 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 
 func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) (*User, error) {
 	if err := s.validator.Struct(input); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return nil, invalidInput(err)
 	}
 
 	updates := make(map[string]interface{})
@@ -407,8 +407,13 @@ func (s *service) HasPermission(ctx context.Context, userID string, resourceType
 }
 
 func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error) {
+	// Var validation has no struct field, so the name comes from the request
+	// body rather than being left blank.
 	if err := s.validator.Var(newPassword, "required,min=8"); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return nil, &InvalidInputError{Fields: []FieldError{{
+			Field:   "new_password",
+			Message: "is required and must be at least 8 characters",
+		}}}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

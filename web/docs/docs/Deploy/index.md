@@ -5,10 +5,10 @@ There are multiple ways to deploy Marmot - choose whichever method works best wi
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 
 <CalloutCard
-  title="Try Before You Deploy"
-  description="Explore Marmot's features with our live demo - no installation required."
-  href="https://demo.marmotdata.io"
-  buttonText="View Live Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 

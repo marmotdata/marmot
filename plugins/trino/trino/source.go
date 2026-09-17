@@ -27,6 +27,16 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(TrinoCatalogFields{}, "Catalog",
+				"Trino catalog metadata fields"),
+			pluginsdk.AssetSchemaOf(TrinoSchemaFields{}, "Schema",
+				"Trino schema metadata fields"),
+			pluginsdk.AssetSchemaOf(TrinoTableFields{}, "Table",
+				"Trino table/view metadata fields"),
+			pluginsdk.AssetSchemaOf(TrinoColumnFields{}, "Column",
+				"Trino column metadata fields"),
+		},
 	}
 }
 

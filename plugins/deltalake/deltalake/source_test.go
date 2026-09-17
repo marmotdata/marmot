@@ -298,7 +298,7 @@ func TestCreateTableAsset(t *testing.T) {
 	a := createTableAsset(snapshot, "/data/delta/events", config)
 
 	assert.Equal(t, "events", *a.Name)
-	assert.Equal(t, "mrn://table/deltalake/events", *a.MRN)
+	assert.Equal(t, "mrn://table/delta-lake/events", *a.MRN)
 	assert.Equal(t, "Table", a.Type)
 	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 	assert.Equal(t, "Test table description", *a.Description)

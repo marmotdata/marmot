@@ -66,12 +66,10 @@ func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config)
 		}
 	}
 
-	// Providers[0] below is "Delta Lake" with the space, and mrn.New
-	// sanitizes the name but not the service, so the identity built from
-	// it keeps the space while this slug does not. Reconciling the two
-	// renames every existing Delta Lake asset, so it waits for a
-	// migration.
-	mrnValue := mrn.New("Table", "DeltaLake", tableName)
+	// The server rebuilds identity from (Type, Providers[0], Name), so the
+	// service here has to be the same "Delta Lake" the asset carries below
+	// rather than a slug of it. mrn.New dashes the space for both.
+	mrnValue := mrn.New("Table", "Delta Lake", tableName)
 	processedTags := pluginsdk.InterpolateTags(config.Tags, metadata)
 
 	return pluginsdk.Asset{

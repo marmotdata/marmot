@@ -43,7 +43,7 @@ export default function LayoutWrapper(props: Props): JSX.Element {
       url: siteConfig.url,
       logo: {
         "@type": "ImageObject",
-        url: `${siteConfig.url}/img/social-card.png`,
+        url: `${siteConfig.url}/img/social-card-light.png`,
       },
     },
   };

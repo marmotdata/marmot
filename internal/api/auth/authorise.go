@@ -3,13 +3,14 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
+	"github.com/ory/fosite"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,15 +29,19 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionID := generateSessionID()
-	h.authorizeSessionStore.Put(sessionID, ar)
+	if err := h.oauthProvider.Store.PutPendingAuthorize(ctx, sessionID, ar); err != nil {
+		log.Error().Err(err).Msg("Failed to store pending OAuth authorize request")
+		h.oauthProvider.WriteAuthorizeError(ctx, w, ar, fosite.ErrServerError)
+		return
+	}
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_session",
 		Value:    sessionID,
 		Path:     "/",
-		MaxAge:   int((10 * time.Minute).Seconds()),
+		MaxAge:   int(marmotOAuth2.PendingAuthorizeTTL.Seconds()),
 		Secure:   isSecure,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -50,8 +55,13 @@ func (h *Handler) HasPendingAuthorize(r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	_, ok := h.authorizeSessionStore.Get(cookie.Value)
-	return ok
+	if _, err := h.oauthProvider.Store.GetPendingAuthorize(r.Context(), cookie.Value); err != nil {
+		if !errors.Is(err, marmotOAuth2.ErrNoRecord) {
+			log.Error().Err(err).Msg("Failed to read pending OAuth authorize request")
+		}
+		return false
+	}
+	return true
 }
 
 func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string) (string, error) {
@@ -60,20 +70,23 @@ func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, user
 		return "", err
 	}
 
-	pending, ok := h.authorizeSessionStore.Get(cookie.Value)
-	if !ok {
+	pending, err := h.oauthProvider.Store.GetPendingAuthorize(r.Context(), cookie.Value)
+	if errors.Is(err, marmotOAuth2.ErrNoRecord) {
 		return "", errSessionNotFound
+	}
+	if err != nil {
+		return "", err
 	}
 
 	session := marmotOAuth2.NewMarmotSession(userID, username)
 
-	resp, err := h.oauthProvider.NewAuthorizeResponse(r.Context(), pending.Request, session)
+	resp, err := h.oauthProvider.NewAuthorizeResponse(r.Context(), pending, session)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create authorize response")
 		return "", err
 	}
 
-	redirectURI := pending.Request.GetRedirectURI()
+	redirectURI := pending.GetRedirectURI()
 	q := redirectURI.Query()
 	for k, vs := range resp.GetParameters() {
 		for _, v := range vs {
@@ -82,9 +95,17 @@ func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, user
 	}
 	redirectURI.RawQuery = q.Encode()
 
-	h.authorizeSessionStore.Delete(cookie.Value)
+	if err := h.oauthProvider.Store.DeletePendingAuthorize(r.Context(), cookie.Value); err != nil {
+		log.Error().Err(err).Msg("Failed to clear pending OAuth authorize request")
+	}
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	// A sign-in completed with this client, so it is worth keeping around for
+	// an MCP client to reuse. Registration alone does not earn that.
+	if err := h.oauthProvider.Store.KeepClientAlive(r.Context(), pending.GetClient().GetID()); err != nil {
+		log.Error().Err(err).Msg("Failed to extend OAuth client lease")
+	}
+
+	isSecure := h.cookiesAreSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_session",
 		Value:    "",
@@ -154,25 +175,30 @@ func (h *Handler) handleAuthorizePending(w http.ResponseWriter, r *http.Request)
 		common.RespondError(w, http.StatusNotFound, "No pending authorization")
 		return
 	}
-	pending, ok := h.authorizeSessionStore.Get(cookie.Value)
-	if !ok {
+	pending, err := h.oauthProvider.Store.GetPendingAuthorize(r.Context(), cookie.Value)
+	if err != nil {
+		if !errors.Is(err, marmotOAuth2.ErrNoRecord) {
+			log.Error().Err(err).Msg("Failed to read pending OAuth authorize request")
+		}
 		common.RespondError(w, http.StatusNotFound, "No pending authorization")
 		return
 	}
 
-	redirectURI := pending.Request.GetRedirectURI()
+	redirectURI := pending.GetRedirectURI()
 	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"client_id":    pending.Request.GetClient().GetID(),
+		"client_id":    pending.GetClient().GetID(),
 		"redirect_uri": redirectURI.String(),
-		"scopes":       []string(pending.Request.GetRequestedScopes()),
+		"scopes":       []string(pending.GetRequestedScopes()),
 	})
 }
 
 func (h *Handler) handleAuthorizeCancel(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie("oauth_session"); err == nil {
-		h.authorizeSessionStore.Delete(cookie.Value)
+		if err := h.oauthProvider.Store.DeletePendingAuthorize(r.Context(), cookie.Value); err != nil {
+			log.Error().Err(err).Msg("Failed to clear pending OAuth authorize request")
+		}
 	}
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_session",
 		Value:    "",

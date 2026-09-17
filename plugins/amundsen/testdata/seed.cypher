@@ -1,0 +1,108 @@
+// An Amundsen-shaped metadata graph: Database -> Cluster -> Schema -> Table.
+CREATE (pg:Database {key: 'database://postgres', name: 'postgres'})
+CREATE (hv:Database {key: 'database://hive', name: 'hive'})
+
+CREATE (pgc:Cluster {key: 'postgres://prod', name: 'prod'})
+CREATE (hvc:Cluster {key: 'hive://gold', name: 'gold'})
+CREATE (dbc:Cluster {key: 'superset_dashboard://prod', name: 'prod'})
+CREATE (pgc)-[:CLUSTER_OF]->(pg)
+CREATE (hvc)-[:CLUSTER_OF]->(hv)
+
+CREATE (pgs:Schema {key: 'postgres://prod.public', name: 'public'})
+CREATE (hvs:Schema {key: 'hive://gold.sales', name: 'sales'})
+CREATE (pgs)-[:SCHEMA_OF]->(pgc)
+CREATE (hvs)-[:SCHEMA_OF]->(hvc)
+
+CREATE (pgsd:Description {key: 'postgres://prod.public/_description', description: 'Customer facing tables'})
+CREATE (pgs)-[:DESCRIPTION]->(pgsd)
+
+// postgres://prod.public/orders
+CREATE (orders:Table {key: 'postgres://prod.public/orders', name: 'orders', is_view: false})
+CREATE (orders)-[:TABLE_OF]->(pgs)
+CREATE (ordersd:Description {key: 'postgres://prod.public/orders/_description', description: 'One row per placed order'})
+CREATE (orders)-[:DESCRIPTION]->(ordersd)
+CREATE (ordersp:Programmatic_Description {key: 'postgres://prod.public/orders/_dbt_description', description: 'Built nightly by dbt model orders'})
+CREATE (orders)-[:DESCRIPTION]->(ordersp)
+CREATE (oc1:Column {key: 'postgres://prod.public/orders/id', name: 'id', col_type: 'integer', sort_order: 0})
+CREATE (oc2:Column {key: 'postgres://prod.public/orders/customer_id', name: 'customer_id', col_type: 'integer', sort_order: 1})
+CREATE (oc3:Column {key: 'postgres://prod.public/orders/total', name: 'total', col_type: 'numeric', sort_order: 2})
+CREATE (orders)-[:COLUMN]->(oc1)
+CREATE (orders)-[:COLUMN]->(oc2)
+CREATE (orders)-[:COLUMN]->(oc3)
+CREATE (oc1d:Description {key: 'postgres://prod.public/orders/id/_description', description: 'Surrogate order key'})
+CREATE (oc1)-[:DESCRIPTION]->(oc1d)
+CREATE (oc2d:Description {key: 'postgres://prod.public/orders/customer_id/_description', description: 'References customers.id'})
+CREATE (oc2)-[:DESCRIPTION]->(oc2d)
+CREATE (ots:Timestamp {key: 'postgres://prod.public/orders/timestamp', last_updated_timestamp: 1757000000})
+CREATE (orders)-[:LAST_UPDATED_AT]->(ots)
+
+// postgres://prod.public/customers
+CREATE (customers:Table {key: 'postgres://prod.public/customers', name: 'customers', is_view: false})
+CREATE (customers)-[:TABLE_OF]->(pgs)
+CREATE (custd:Description {key: 'postgres://prod.public/customers/_description', description: 'One row per customer'})
+CREATE (customers)-[:DESCRIPTION]->(custd)
+CREATE (cc1:Column {key: 'postgres://prod.public/customers/id', name: 'id', col_type: 'integer', sort_order: 0})
+CREATE (cc2:Column {key: 'postgres://prod.public/customers/email', name: 'email', col_type: 'varchar', sort_order: 1})
+CREATE (customers)-[:COLUMN]->(cc1)
+CREATE (customers)-[:COLUMN]->(cc2)
+
+// hive://gold.sales/orders
+CREATE (hvorders:Table {key: 'hive://gold.sales/orders', name: 'orders', is_view: false})
+CREATE (hvorders)-[:TABLE_OF]->(hvs)
+CREATE (hc1:Column {key: 'hive://gold.sales/orders/order_id', name: 'order_id', col_type: 'bigint', sort_order: 0})
+CREATE (hvorders)-[:COLUMN]->(hc1)
+
+// hive://gold.sales/orders_view, a view
+CREATE (hvview:Table {key: 'hive://gold.sales/orders_view', name: 'orders_view', is_view: true})
+CREATE (hvview)-[:TABLE_OF]->(hvs)
+CREATE (vc1:Column {key: 'hive://gold.sales/orders_view/order_id', name: 'order_id', col_type: 'bigint', sort_order: 0})
+CREATE (hvview)-[:COLUMN]->(vc1)
+
+// Tags and badges
+CREATE (t1:Tag {key: 'pii', tag_type: 'default'})
+CREATE (t2:Tag {key: 'finance', tag_type: 'default'})
+CREATE (t3:Tag {key: 'not_a_default_tag', tag_type: 'badge'})
+CREATE (orders)-[:TAGGED_BY]->(t1)
+CREATE (orders)-[:TAGGED_BY]->(t2)
+CREATE (orders)-[:TAGGED_BY]->(t3)
+CREATE (b1:Badge {key: 'certified', category: 'table_status'})
+CREATE (orders)-[:HAS_BADGE]->(b1)
+
+// Users, ownership and usage
+CREATE (u1:User {key: 'ann@marmot.test', email: 'ann@marmot.test', full_name: 'Ann Ops', team_name: 'Data Platform', is_active: true})
+CREATE (u2:User {key: 'bo@marmot.test', email: 'bo@marmot.test', full_name: 'Bo Analyst', team_name: 'Finance', is_active: true})
+CREATE (u1)-[:OWNER_OF]->(orders)
+CREATE (u2)-[:OWNER_OF]->(orders)
+CREATE (u1)-[:OWNER_OF]->(customers)
+CREATE (orders)-[:READ_BY {read_count: 30}]->(u1)
+CREATE (orders)-[:READ_BY {read_count: 12}]->(u2)
+CREATE (customers)-[:READ_BY {read_count: 5}]->(u1)
+
+// Table to table lineage: customers feeds orders.
+CREATE (orders)-[:HAS_UPSTREAM]->(customers)
+CREATE (customers)-[:HAS_DOWNSTREAM]->(orders)
+
+// A Superset dashboard with one query and two charts.
+CREATE (dbg:Dashboardgroup {key: 'superset_dashboard://prod.finance', name: 'finance', url: 'https://superset.marmot.test/dashboard/group/finance'})
+CREATE (dbg)-[:DASHBOARD_GROUP_OF]->(dbc)
+CREATE (dbgd:Description {key: 'superset_dashboard://prod.finance/_description', description: 'Finance reporting'})
+CREATE (dbg)-[:DESCRIPTION]->(dbgd)
+CREATE (dash:Dashboard {key: 'superset_dashboard://prod.finance/revenue', name: 'revenue', dashboard_url: 'https://superset.marmot.test/dashboard/revenue'})
+CREATE (dash)-[:DASHBOARD_OF]->(dbg)
+CREATE (dashd:Description {key: 'superset_dashboard://prod.finance/revenue/_description', description: 'Monthly revenue by region'})
+CREATE (dash)-[:DESCRIPTION]->(dashd)
+CREATE (q1:Query {key: 'superset_dashboard://prod.finance/revenue/query/q1', name: 'revenue_by_region', url: 'https://superset.marmot.test/query/q1'})
+CREATE (dash)-[:HAS_QUERY]->(q1)
+CREATE (ch1:Chart {key: 'superset_dashboard://prod.finance/revenue/query/q1/chart/c1', id: 'c1', name: 'Revenue by region', url: 'https://superset.marmot.test/chart/c1', type: 'bar'})
+CREATE (ch2:Chart {key: 'superset_dashboard://prod.finance/revenue/query/q1/chart/c2', id: 'c2', name: 'Revenue trend', url: 'https://superset.marmot.test/chart/c2', type: 'line'})
+CREATE (q1)-[:HAS_CHART]->(ch1)
+CREATE (q1)-[:HAS_CHART]->(ch2)
+CREATE (ex:Execution {key: 'superset_dashboard://prod.finance/revenue/_last_successful_execution', timestamp: 1757001234, state: 'succeeded'})
+CREATE (dash)-[:EXECUTED]->(ex)
+CREATE (dt1:Tag {key: 'finance', tag_type: 'default'})
+CREATE (dash)-[:TAGGED_BY]->(dt1)
+CREATE (db1:Badge {key: 'verified', category: 'dashboard_status'})
+CREATE (dash)-[:HAS_BADGE]->(db1)
+CREATE (dash)-[:READ_BY {read_count: 7}]->(u2)
+CREATE (dash)-[:DASHBOARD_WITH_TABLE]->(orders)
+CREATE (orders)-[:TABLE_OF_DASHBOARD]->(dash)

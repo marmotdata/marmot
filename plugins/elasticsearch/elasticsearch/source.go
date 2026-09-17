@@ -30,6 +30,14 @@ func Meta() pluginsdk.Meta {
 		Status:      "experimental",
 		Features:    []string{"Assets", "Lineage"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(IndexFields{}, "Index",
+				"Elasticsearch index metadata fields."),
+			pluginsdk.AssetSchemaOf(DataStreamFields{}, "Data Stream",
+				"Elasticsearch data stream metadata fields."),
+			pluginsdk.AssetSchemaOf(AliasFields{}, "Alias",
+				"Elasticsearch alias metadata fields."),
+		},
 	}
 }
 

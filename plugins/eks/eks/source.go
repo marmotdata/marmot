@@ -32,6 +32,7 @@ const eksTokenPrefix = "k8s-aws-v1."
 // discovery produces Kubernetes assets, not tagged AWS resources.
 type Config struct {
 	kubernetes.DiscoveryConfig `json:",inline"`
+	pluginsdk.Federation       `json:",inline"`
 
 	Credentials pluginsdk.AWSCredentials `json:"credentials" description:"AWS credentials configuration"`
 
@@ -52,7 +53,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "eks",
-		Name:        "Elastic Kubernetes Service",
+		Name:        "AWS EKS",
 		Description: "Discover namespaces, services, workloads, and cron jobs from Amazon EKS clusters",
 		Icon:        "eks",
 		Category:    "compute",
@@ -81,6 +82,10 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := config.DiscoveryConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := config.Credentials.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

@@ -17,13 +17,16 @@ import (
 // Config for the Google Cloud Storage plugin
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	// Connection options
-	ProjectID       string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
-	CredentialsJSON string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	Endpoint        string `json:"endpoint,omitempty" description:"Custom endpoint URL (for fake-gcs-server or other emulators)"`
-	DisableAuth     bool   `json:"disable_auth,omitempty" description:"Disable authentication (for local emulators)"`
+	ProjectID                string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
+	CredentialsFile          string `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
+	CredentialsJSON          string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
+	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string `json:"endpoint,omitempty" description:"Custom endpoint URL (for fake-gcs-server or other emulators)"`
+	DisableAuth              bool   `json:"disable_auth,omitempty" description:"Disable authentication (for local emulators)"`
 
 	// Discovery options
 	IncludeMetadata    bool `json:"include_metadata" description:"Include bucket metadata like labels" default:"true"`
@@ -39,6 +42,10 @@ func Meta() pluginsdk.Meta {
 		Icon:        "gcs",
 		Category:    "storage",
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(GCSBucketFields{}, "Bucket",
+				"GCSBucketFields defines metadata fields for GCS buckets"),
+		},
 	}
 }
 
@@ -59,6 +66,15 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
+	}
+
+	creds := config.gcpCredentials()
+	if err := creds.Federate(rawConfig); err != nil {
+		return nil, err
+	}
+	config.WorkloadIdentityProvider = creds.WorkloadIdentityProvider
+	if config.WorkloadIdentityProvider != "" && config.DisableAuth {
+		return nil, fmt.Errorf("workload_identity_provider excludes disable_auth")
 	}
 
 	s.config = config
@@ -109,6 +125,12 @@ func (s *Source) createClient(ctx context.Context) (*storage.Client, error) {
 	switch {
 	case s.config.DisableAuth:
 		opts = append(opts, option.WithoutAuthentication())
+	case s.config.WorkloadIdentityProvider != "":
+		ts, err := s.config.gcpCredentials().TokenSource(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
+		}
+		opts = append(opts, option.WithTokenSource(ts))
 	case s.config.CredentialsJSON != "":
 		opts = append(opts, option.WithCredentialsJSON([]byte(s.config.CredentialsJSON)))
 	case s.config.CredentialsFile != "":
@@ -229,4 +251,15 @@ func (s *Source) countObjects(ctx context.Context, bucketName string) (int64, er
 	}
 
 	return count, nil
+}
+
+// gcpCredentials is the plugin's flat credential fields in the SDK's
+// shape, which knows how to federate.
+func (c *Config) gcpCredentials() *pluginsdk.GCPCredentials {
+	return &pluginsdk.GCPCredentials{
+		CredentialsJSON:          c.CredentialsJSON,
+		CredentialsFile:          c.CredentialsFile,
+		WorkloadIdentityProvider: c.WorkloadIdentityProvider,
+		ServiceAccount:           c.ServiceAccount,
+	}
 }

@@ -10,10 +10,10 @@ import { ThemedImg } from '@site/src/components/ThemedImg';
 Data Products let you group related assets into logical collections. A "Customer Analytics" product might bundle together a PostgreSQL table storing profiles, a Kafka topic with real-time events, an API endpoint and a dashboard. Instead of navigating hundreds of individual assets, teams can discover and understand related data as a cohesive unit.
 
 <CalloutCard
-  title="Try It Out"
-  description="See Data Products in action with the interactive demo."
-  href="https://demo.marmotdata.io/products"
-  buttonText="View Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 
