@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
@@ -102,6 +103,9 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 			common.RespondLimitExceeded(w, limitErr)
 			return
 		}
+		if respondAssetWriteError(w, err) {
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
@@ -176,6 +180,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
+	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 
@@ -220,9 +225,15 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		Environments:    req.Environments,
 		ExternalLinks:   req.ExternalLinks,
 	}
-	
+	if version, ok := parseIfMatch(r.Header.Get("If-Match")); ok {
+		input.ExpectedVersion = &version
+	}
+
 	updated, err := h.assetService.Update(r.Context(), id, input)
 	if err != nil {
+		if respondAssetWriteError(w, err) {
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
@@ -235,6 +246,7 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("ETag", strconv.FormatInt(updated.Version, 10))
 	common.RespondJSON(w, http.StatusOK, updated)
 }
 
@@ -315,6 +327,7 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
+	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 

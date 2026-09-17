@@ -83,6 +83,15 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/assets/{id}/fields",
+			Method:  http.MethodPatch,
+			Handler: h.patchAssetFields,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
 			Path:    "/api/v1/assets/{id}",
 			Method:  http.MethodGet,
 			Handler: h.getAsset,
