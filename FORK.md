@@ -16,7 +16,7 @@ dgu-development/marmot     dgu      ← product line (PRs land here)
 | Branch | Role |
 | --- | --- |
 | `main` | Mirror of `marmotdata/marmot` `main`. No unique commits. Not the product. |
-| `dgu` | Long-lived product line. Default branch for issues, PR templates, and CODEOWNERS. Feeds `tef-plataforma-gobierno-dato` via `kernel:sync <sha>`. |
+| `dgu` | Long-lived product line. Default branch for issues, PR templates, and CODEOWNERS. Consuming distributions pin a SHA of this branch. |
 | `feature/*` | Reviewable work. Open PRs against **`dgu`**, unless the change is meant for upstream. |
 
 Do not use GitHub **Sync fork**. That updates the default branch; after `dgu` is default, it would merge upstream into the product line. Refresh `main` with `.github/workflows/sync-upstream-main.yml` (`workflow_dispatch` or the weekly schedule) or:
