@@ -47,6 +47,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
@@ -129,7 +130,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	searchRepo := searchService.NewPostgresRepository(db, recorder)
 	dataProductRepo := dataproductService.NewPostgresRepository(db, recorder)
 
-	assetSvc := asset.NewService(assetRepo)
+	registry, err := metamodel.LoadFile(config.Metamodel.Profile)
+	if err != nil {
+		log.Fatal().Err(err).Str("path", config.Metamodel.Profile).Msg("Failed to load metamodel profile")
+	}
+	assetSvc := asset.NewService(assetRepo, asset.WithMetamodel(registry))
 	userSvc := userService.NewService(userRepo)
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)

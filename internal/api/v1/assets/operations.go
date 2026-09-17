@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
@@ -101,6 +103,9 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 			common.RespondLimitExceeded(w, limitErr)
 			return
 		}
+		if respondAssetWriteError(w, err) {
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
@@ -175,6 +180,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
+	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 
@@ -219,9 +225,15 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		Environments:    req.Environments,
 		ExternalLinks:   req.ExternalLinks,
 	}
+	if version, ok := parseIfMatch(r.Header.Get("If-Match")); ok {
+		input.ExpectedVersion = &version
+	}
 
 	updated, err := h.assetService.Update(r.Context(), id, input)
 	if err != nil {
+		if respondAssetWriteError(w, err) {
+			return
+		}
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
@@ -234,6 +246,7 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("ETag", strconv.FormatInt(updated.Version, 10))
 	common.RespondJSON(w, http.StatusOK, updated)
 }
 
@@ -314,5 +327,112 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
+	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
+}
+
+// @Summary Get the effective metamodel schema
+// @Description Returns the composed native and corporate field schema. Clients must not reinterpret source YAML.
+// @Tags metamodel
+// @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} metamodel.Schema
+// @ID getMetamodel
+// @Router /api/v1/metamodel [get]
+func (h *Handler) getMetamodel(w http.ResponseWriter, r *http.Request) {
+	common.RespondJSON(w, http.StatusOK, h.assetService.Metamodel())
+}
+
+type patchFieldsRequest struct {
+	Fields map[string]any `json:"fields"`
+}
+
+// @Summary Patch governed asset fields
+// @Description Partial update of governed fields. Absence preserves; null deletes only when the field is nullable. Requires If-Match.
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Param id path string true "Asset ID"
+// @Param If-Match header string true "Expected asset version"
+// @Param request body patchFieldsRequest true "Fields to apply"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} asset.Asset
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 412 {object} common.ErrorResponse
+// @Failure 428 {object} common.ErrorResponse
+// @ID patchAssetsIDFields
+// @Router /api/v1/assets/{id}/fields [patch]
+func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID required")
+		return
+	}
+
+	version, ok := parseIfMatch(r.Header.Get("If-Match"))
+	if !ok {
+		common.RespondError(w, http.StatusPreconditionRequired, "If-Match required")
+		return
+	}
+
+	var req patchFieldsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.Fields == nil {
+		common.RespondError(w, http.StatusBadRequest, "fields required")
+		return
+	}
+
+	updated, err := h.assetService.PatchFields(r.Context(), id, version, req.Fields)
+	if err != nil {
+		if respondAssetWriteError(w, err) {
+			return
+		}
+		switch {
+		case errors.Is(err, asset.ErrAssetNotFound):
+			common.RespondError(w, http.StatusNotFound, "Asset not found")
+		case errors.Is(err, asset.ErrInvalidInput):
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+		default:
+			log.Error().Err(err).Str("id", id).Msg("Failed to patch asset fields")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	w.Header().Set("ETag", strconv.FormatInt(updated.Version, 10))
+	common.RespondJSON(w, http.StatusOK, updated)
+}
+
+func parseIfMatch(header string) (int64, bool) {
+	header = strings.TrimSpace(strings.Trim(header, `"`))
+	if header == "" || header == "*" {
+		return 0, false
+	}
+	version, err := strconv.ParseInt(header, 10, 64)
+	if err != nil || version < 1 {
+		return 0, false
+	}
+	return version, true
+}
+
+func respondAssetWriteError(w http.ResponseWriter, err error) bool {
+	var validation *metamodel.ValidationError
+	switch {
+	case errors.As(err, &validation):
+		common.RespondJSON(w, http.StatusBadRequest, validation)
+		return true
+	case errors.Is(err, asset.ErrVersionConflict):
+		common.RespondError(w, http.StatusPreconditionFailed, "Asset version conflict")
+		return true
+	case errors.Is(err, asset.ErrVersionRequired):
+		common.RespondError(w, http.StatusPreconditionRequired, "If-Match required to change governed fields")
+		return true
+	}
+	return false
 }

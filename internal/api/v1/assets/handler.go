@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
@@ -15,6 +14,7 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -65,9 +65,27 @@ func NewHandler(
 func (h *Handler) Routes() []common.Route {
 	routes := []common.Route{
 		{
+			Path:    "/api/v1/metamodel",
+			Method:  http.MethodGet,
+			Handler: h.getMetamodel,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
 			Path:    "/api/v1/assets/",
 			Method:  http.MethodPost,
 			Handler: h.createAsset,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/{id}/fields",
+			Method:  http.MethodPatch,
+			Handler: h.patchAssetFields,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
