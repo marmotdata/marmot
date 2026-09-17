@@ -1,3 +1,14 @@
+## Target
+
+- [ ] Base branch is **`dgu`** (product PRs). Do not target `main`.
+- [ ] `fork-only` — not for marmotdata/marmot
+- [ ] `upstream-candidate` — branched from `main` / `upstream/main` for an upstream PR
+
+<!--
+ES: Un PR de producto va a `dgu`. Un PR a upstream se abre en marmotdata/marmot, no aquí contra `main`.
+EN: Product PRs target `dgu`. Upstream PRs are opened on marmotdata/marmot, not against `main` here.
+-->
+
 ## Summary
 
 <!--
