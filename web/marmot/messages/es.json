@@ -37,13 +37,8 @@
 	"apikeys_expiration_custom": "Personalizado",
 	"apikeys_expiration_days_option": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} día",
 				"countPlural=other": "{count} días"
@@ -54,13 +49,8 @@
 	"apikeys_expiration_never": "Sin caducidad",
 	"apikeys_expires_in_days": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "caduca en {count} día",
 				"countPlural=other": "caduca en {count} días"
@@ -97,13 +87,8 @@
 	"asset_agent_spec_system_prompt": "Instrucciones del sistema",
 	"asset_agent_spec_tool_unit": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} herramienta",
 				"countPlural=other": "{count} herramientas"
@@ -116,13 +101,8 @@
 	"asset_blade_full_view": "Vista completa",
 	"asset_card_grid_asset_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} activo",
 				"countPlural=other": "{count} activos"
@@ -148,13 +128,8 @@
 	"asset_environments_empty": "No hay entornos disponibles",
 	"asset_environments_field_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} campo",
 				"countPlural=other": "{count} campos"
@@ -178,13 +153,8 @@
 	"asset_preview_null_value": "null",
 	"asset_preview_row_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Mostrando {count} fila",
 				"countPlural=other": "Mostrando {count} filas"
@@ -271,13 +241,8 @@
 	"assetrules_heading": "Reglas de activos",
 	"assetrules_link_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} enlace",
 				"countPlural=other": "{count} enlaces"
@@ -289,13 +254,8 @@
 	"assetrules_load_one_error": "No se ha podido cargar regla de activos",
 	"assetrules_matched_asset_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} activo coincidente",
 				"countPlural=other": "{count} activos coincidentes"
@@ -318,13 +278,8 @@
 	"assetrules_preview_error": "No se ha podido previsualizar regla",
 	"assetrules_preview_matches_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Selecciona {count} activo",
 				"countPlural=other": "Selecciona {count} activos"
@@ -338,13 +293,8 @@
 	"assetrules_remove_term_aria": "Eliminar término {name}",
 	"assetrules_rule_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} regla",
 				"countPlural=other": "{count} reglas"
@@ -353,13 +303,8 @@
 	],
 	"assetrules_rule_matches_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Esta regla selecciona {count} activo",
 				"countPlural=other": "Esta regla selecciona {count} activos"
@@ -381,13 +326,8 @@
 	"assetrules_tab_matched_assets": "Activos coincidentes",
 	"assetrules_term_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} término",
 				"countPlural=other": "{count} términos"
@@ -481,13 +421,8 @@
 	"discover_remove_filter_aria": "Quitar filtro {value}",
 	"discover_result_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} resultado",
 				"countPlural=other": "{count} resultados"
@@ -592,13 +527,8 @@
 	"glossary_search_placeholder": "Buscar términos...",
 	"glossary_term_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} término",
 				"countPlural=other": "{count} términos"
@@ -668,14 +598,8 @@
 	"lineage_click_to_expand": "Haz clic para expandir",
 	"lineage_cluster_asset_count": [
 		{
-			"declarations": [
-				"input count",
-				"input type",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "input type", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} de tipo {type}",
 				"countPlural=other": "{count} de tipo {type}"
@@ -806,13 +730,8 @@
 	"notif_batch_asset_change_title": "Actualizaciones de activos",
 	"notif_batch_asset_deleted_message": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Se ha eliminado {count} activo.",
 				"countPlural=other": "Se han eliminado {count} activos."
@@ -822,13 +741,8 @@
 	"notif_batch_asset_deleted_title": "Activos eliminados",
 	"notif_batch_lineage_change_message": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} activo tiene cambios de linaje.",
 				"countPlural=other": "{count} activos tienen cambios de linaje."
@@ -951,13 +865,8 @@
 	"pipelines_edit_subtitle": "Actualiza la configuración de tu canalización de ingesta",
 	"pipelines_error_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} error",
 				"countPlural=other": "{count} errores"
@@ -1028,13 +937,8 @@
 	"products_asset_count": "{count} activos",
 	"products_asset_matched_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} activo coincidente",
 				"countPlural=other": "{count} activos coincidentes"
@@ -1104,13 +1008,8 @@
 	"products_load_failed_title": "No se ha podido cargar",
 	"products_manual_asset_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} activo manual",
 				"countPlural=other": "{count} activos manuales"
@@ -1145,13 +1044,8 @@
 	"products_preview_hint": "Pulsa «Vista previa» para ver qué activos coinciden con esta regla",
 	"products_product_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} producto",
 				"countPlural=other": "{count} productos"
@@ -1165,13 +1059,8 @@
 	"products_rule_badge": "Regla",
 	"products_rule_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} regla",
 				"countPlural=other": "{count} reglas"
@@ -1281,13 +1170,8 @@
 	"roles_creating_label": "Creando...",
 	"roles_delete_assigned_warning": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Este rol está asignado a {count} usuario. Debes reasignarle un rol antes de eliminarlo.",
 				"countPlural=other": "Este rol está asignado a {count} usuarios. Debes reasignarles un rol antes de eliminarlo."
@@ -1322,13 +1206,8 @@
 	"roles_optional_badge": "(Opcional)",
 	"roles_permissions_granted_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} permiso concedido",
 				"countPlural=other": "{count} permisos concedidos"
@@ -1345,13 +1224,8 @@
 	"roles_update_success": "Rol «{name}» actualizado",
 	"roles_users_assigned_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} usuario asignado",
 				"countPlural=other": "{count} usuarios asignados"
@@ -1753,13 +1627,8 @@
 	"teams_webhook_test_title": "Enviar notificación de prueba",
 	"teams_webhook_types_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} tipo",
 				"countPlural=other": "{count} tipos"
@@ -1830,9 +1699,7 @@
 				"input count",
 				"local countPlural = count: plural"
 			],
-			"selectors": [
-				"countPlural"
-			],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{from}–{to} de {count} rol",
 				"countPlural=other": "{from}–{to} de {count} roles"
@@ -1847,9 +1714,7 @@
 				"input count",
 				"local countPlural = count: plural"
 			],
-			"selectors": [
-				"countPlural"
-			],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{from}–{to} de {count} rol coincidente",
 				"countPlural=other": "{from}–{to} de {count} roles coincidentes"
