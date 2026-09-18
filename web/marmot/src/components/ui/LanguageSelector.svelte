@@ -7,7 +7,17 @@
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 
-	let saving = false;
+	type Props = { variant?: 'menu' | 'dropdown' };
+	let { variant = 'dropdown' }: Props = $props();
+	let saving = $state(false);
+	let open = $state(false);
+	let root = $state<HTMLDivElement>();
+	let inMenu = $derived(variant === 'menu');
+	let currentLocale = $derived($locale);
+	let languageLabel = $derived.by(() => {
+		void currentLocale;
+		return m.profile_language_label();
+	});
 
 	function displayName(value: string): string {
 		try {
@@ -19,12 +29,15 @@
 		}
 	}
 
-	async function handleChange(event: Event) {
-		const select = event.currentTarget as HTMLSelectElement;
-		const next = select.value as Locale;
-		if (next === $locale) return;
+	function optionClass(value: Locale): string {
+		return value === currentLocale
+			? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 font-medium'
+			: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+	}
 
-		// Switch first so the UI responds immediately, then persist in the background
+	async function selectLocale(next: Locale) {
+		open = false;
+		if (next === currentLocale || saving) return;
 		changeLocale(next);
 
 		if (!auth.isAuthenticated()) return;
@@ -41,6 +54,19 @@
 		} finally {
 			saving = false;
 		}
+	}
+
+	function toggleList(event: MouseEvent) {
+		event.stopPropagation();
+		open = !open;
+	}
+
+	function handleWindowClick(event: MouseEvent) {
+		if (!root?.contains(event.target as Node)) open = false;
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') open = false;
 	}
 </script>
 
