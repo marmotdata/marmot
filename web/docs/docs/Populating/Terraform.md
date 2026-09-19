@@ -160,7 +160,7 @@ resource "marmot_asset" "orders" {
 }
 ```
 
-See the [`marmot_asset` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/asset) for all available configuration options.
+See the [`marmot_asset` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/asset) for all available configuration options.
 
 ### Lineage
 
@@ -179,7 +179,7 @@ resource "marmot_lineage" "orders_to_processor" {
 }
 ```
 
-See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/lineage) for all available configuration options.
+See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/lineage) for all available configuration options.
 
 ### Glossary Terms
 
@@ -195,7 +195,7 @@ resource "marmot_glossary_term" "active_customer" {
 }
 ```
 
-See the [`marmot_glossary_term` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/glossary_term) for all available configuration options.
+See the [`marmot_glossary_term` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/glossary_term) for all available configuration options.
 
 ### Teams
 
@@ -208,7 +208,7 @@ resource "marmot_team" "analytics" {
 }
 ```
 
-See the [`marmot_team` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/team) for all available configuration options.
+See the [`marmot_team` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/team) for all available configuration options.
 
 ### Users
 
@@ -230,7 +230,7 @@ resource "marmot_user" "alice" {
 
 Change `password_wo_version` to push a new password on a later apply.
 
-See the [`marmot_user` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/user) for all available configuration options.
+See the [`marmot_user` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/user) for all available configuration options.
 
 ### Data Products
 
@@ -267,7 +267,7 @@ resource "marmot_data_product_rule" "order_datasets" {
 }
 ```
 
-See the [`marmot_data_product`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product), [`marmot_data_product_asset`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_asset), and [`marmot_data_product_rule`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_rule) documentation for all available configuration options.
+See the [`marmot_data_product`](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/data_product), [`marmot_data_product_asset`](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/data_product_asset), and [`marmot_data_product_rule`](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/data_product_rule) documentation for all available configuration options.
 
 ### Pipelines
 
@@ -312,5 +312,13 @@ The `*_iam_member`, `*_iam_binding` and `*_iam_policy` resources exist on Marmot
 
 ## Learn More
 
-- Full documentation for [the Marmot provider on the Terraform Registry](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs)
+Every resource is documented on the Terraform Registry, along with guides for the paths worth following:
+
+- [Getting started](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/getting-started): provider setup, first resources, and what belongs in Terraform rather than in a pipeline
+- [Access control](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/access-control): the IAM model, and when to use a member, a binding or a policy
+- [Keyless pipelines](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/keyless-pipelines): pipelines that authenticate to Google Cloud, AWS or Azure as themselves
+- [Secret stores](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/secret-stores): sources that need a password, read from your vault at run time
+- [Service accounts and CI](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/service-accounts): running this configuration from CI without leaking a key
+
+- Full documentation for [the Marmot provider on the Terraform Registry](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs)
 - A [full example](https://github.com/marmotdata/terraform-provider-marmot/tree/main/examples/full) in the provider repository
