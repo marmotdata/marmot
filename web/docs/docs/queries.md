@@ -2,6 +2,7 @@
 sidebar_position: 5
 ---
 
+import { ThemedImg } from '@site/src/components/ThemedImg';
 import { CalloutCard, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 # Query Language
@@ -41,7 +42,11 @@ The query language powers several features across Marmot:
 
 The search bar includes a visual query builder that helps you construct queries without memorising the syntax. Click the filter icon to open it, select your field and operator, then enter your value. The builder generates the query syntax automatically.
 
-<img src="/img/query-builder-light.png" alt="Query builder in Marmot" />
+<ThemedImg
+  lightSrc="/img/query-builder-light.png"
+  darkSrc="/img/query-builder-dark.png"
+  alt="The advanced search builder on Discover, with a field filter and the query it generates in the search bar"
+/>
 
 ## Syntax Reference
 
