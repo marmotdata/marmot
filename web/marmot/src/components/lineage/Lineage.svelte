@@ -906,8 +906,8 @@
 				<button
 					onclick={toggleFullscreen}
 					class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-					title={m.lineage_enter_fullscreen()}
-					aria-label={m.lineage_enter_fullscreen()}
+					title={m.lineage_enter_fullscreen_title()}
+					aria-label={m.lineage_enter_fullscreen_title()}
 				>
 					<IconifyIcon icon="material-symbols:fullscreen-rounded" class="w-4 h-4" />
 				</button>
