@@ -5,6 +5,7 @@ description: An IAM layer for the catalog. Roles bound on the organization, a da
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Access control
 
@@ -19,6 +20,14 @@ This is what makes it safe to give an AI agent a credential. The agent gets a se
 Grants inherit downward. A binding on the organization covers everything. A binding on a data product covers the assets in it, including assets that match its [rule](/docs/data-products) later. A binding on a glossary term covers the terms nested under it.
 
 Grants add up, and nothing subtracts. There are no deny rules, so you cannot remove at a lower level what something above has granted. Keep the organization-level bindings narrow, usually read-only, and grant everything else on the resource that needs it.
+
+Every resource shows the sum on its **Access** tab: what was granted here, and what reaches it from above.
+
+<ThemedImg
+  lightSrc="/img/cloud-access-panel-light.png"
+  darkSrc="/img/cloud-access-panel-dark.png"
+  alt="The Access tab of a data product, showing nothing granted directly and two grants inherited from the organization"
+/>
 
 ## The resource hierarchy
 
@@ -79,6 +88,12 @@ The coarse roles from open source Marmot set a baseline at the organization. Eve
 | `user.*`, `team.*`, `serviceAccount.*` | View or manage users, teams, service accounts and keys. | organization |
 | `metrics.viewer`, `sso.admin`, `role.admin` | Metrics; SSO team mappings; roles and permissions. | organization |
 
+<ThemedImg
+  lightSrc="/img/cloud-admin-roles-light.png"
+  darkSrc="/img/cloud-admin-roles-dark.png"
+  alt="The Roles tab in a Marmot Cloud instance, listing the granular roles with the permissions each one carries"
+/>
+
 Two distinctions matter more than the rest. The asset viewer sees that a table exists and what its columns mean; the data viewer also reads sample rows, so grant the first broadly and the second narrowly. The secret store user can point a pipeline at a secret; the reader can see the value, and almost nobody who writes pipelines needs that.
 
 ## Grant a role
@@ -99,7 +114,7 @@ resource "marmot_asset_iam_member" "copilot_reads_orders" {
 }
 ```
 
-A member grant adds to whatever is already on the resource and touches nothing else, so it is safe alongside grants made in the UI or by another configuration. When you need Terraform to own the full list of members for a role, or the whole policy on a resource, the provider also has binding and policy resources; see the [provider docs](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs).
+A member grant adds to whatever is already on the resource and touches nothing else, so it is safe alongside grants made in the UI or by another configuration. When you need Terraform to own the full list of members for a role, or the whole policy on a resource, the provider also has binding and policy resources; the [access control guide](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/guides/access-control) on the registry covers when to reach for each.
 
 ## Recommended setup
 
@@ -134,6 +149,12 @@ If the catalog holds something not everyone should read, replace the floor rathe
 ## Service accounts
 
 A service account is a principal with no person behind it. It authenticates to Marmot with an API key and holds its own grants.
+
+<ThemedImg
+  lightSrc="/img/cloud-service-accounts-light.png"
+  darkSrc="/img/cloud-service-accounts-dark.png"
+  alt="The Service Accounts tab listing each account with the organization-level role it holds"
+/>
 
 ```hcl
 resource "marmot_service_account" "copilot" {
@@ -254,10 +275,73 @@ provider "marmot" {
   icon="mdi:robot"
 />
 
-## Verify access
+## Check who has access
 
-The asset, data product and glossary term pages each carry an Access panel showing the bindings on that resource and what any principal can effectively do there.
+Grants add up and inherit downward, so the question worth asking is not what you wrote in Terraform but what it adds up to for one principal.
+
+---
+
+### On the resource
+
+Every asset, data product and glossary term has an **Access** tab. It shows what is granted on the resource itself, what reaches it from a broader scope, and who that adds up to.
+
+**Check access** answers the question directly: name a user, a team or a service account, and Marmot says whether they can see this resource and which grant is responsible.
+
+<ThemedImg
+  lightSrc="/img/cloud-check-access-light.png"
+  darkSrc="/img/cloud-check-access-dark.png"
+  alt="The check access control answering yes for a named user and listing the grants that give them the access"
+/>
+
+The last line is the useful part. "Through a grant to everyone signed in" usually means the floor is too high, not that this resource was granted too widely.
+
+---
+
+### On the principal
+
+A user, team or service account page carries an **Effective access** panel: everything that reaches that principal, whether directly, through a team, or through a grant to everyone signed in.
+
+<ThemedImg
+  lightSrc="/img/cloud-effective-access-light.png"
+  darkSrc="/img/cloud-effective-access-dark.png"
+  alt="The effective access panel on a service account, listing catalog-wide roles and the permissions each carries"
+/>
+
+Open this before handing out a credential. It is also the panel to capture for an access review.
+
+---
+
+### From Terraform
 
 A plan against a policy resource is a drift report. An empty plan means nothing was granted outside your configuration since the last apply.
 
-Test a restriction by holding the credential. Create the service account, take a key, and make the request you expect to be refused.
+Policy writes carry an etag, so two `terraform apply` runs against the same resource cannot silently overwrite each other. The second is rejected and retries against the current policy.
+
+---
+
+### From the API
+
+The same two answers are API calls, which is what makes an access review scriptable. Reading another principal's access needs `iam:view`; testing your own needs nothing.
+
+```bash
+# Everything that grants a principal access, and why.
+curl -s "$MARMOT_HOST/api/v1/iam/effective-access?member=serviceAccount:$ID" \
+  -H "Authorization: Bearer $MARMOT_API_KEY"
+
+# Which of these permissions does this member hold on this data product?
+curl -s -X POST "$MARMOT_HOST/api/v1/iam/dataProduct/$PRODUCT_ID/test-permissions" \
+  -H "Authorization: Bearer $MARMOT_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"permissions":["dataProduct:view","asset:view"],"member":"user:'"$USER_ID"'"}'
+```
+
+`test-permissions` returns the subset of what you asked about that the member actually holds, so an empty list is a clean no. Leave `member` out and it tests the caller.
+
+The resource types in these paths are `root` (the organization, with `-` as its id), `asset`, `dataProduct`, `glossaryTerm` and `secretStore`.
+
+---
+
+### By holding the credential
+
+The check that cannot be wrong: create the service account, take a key, and make the request you expect to be refused.
+
