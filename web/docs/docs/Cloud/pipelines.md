@@ -5,12 +5,19 @@ description: On Marmot Cloud a pipeline authenticates to your cloud as itself, o
 ---
 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Pipelines
 
 [Pipelines](../Populating/Pipelines.md) are part of open source Marmot: a plugin pointed at a source, run by the server on a schedule. This page covers what changes on Marmot Cloud, which is how a pipeline authenticates.
 
 A pipeline on Marmot Cloud never holds a credential. For a source in Google Cloud, AWS or Azure it authenticates as itself. For anything else it reads a password from your secret manager just before each run.
+
+<ThemedImg
+  lightSrc="/img/cloud-pipelines-light.png"
+  darkSrc="/img/cloud-pipelines-dark.png"
+  alt="The Runs page listing pipelines with their plugin, schedule, last run and next run"
+/>
 
 ## How keyless pipelines work
 

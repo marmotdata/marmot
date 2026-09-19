@@ -7,6 +7,7 @@ description: Sign up for Marmot Cloud, launch an instance, sign in from the CLI 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { CliInstall } from '@site/src/components/CliInstall';
 import { Steps, Step, TipBox } from '@site/src/components/Steps';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Getting started
 
@@ -42,6 +43,14 @@ marmot assets list
 ```
 
 Your browser opens, you sign in, and the CLI stores a 24-hour token. An empty asset list is correct on a fresh instance.
+
+Once a pipeline has run, the same catalog is on Discover: assets, data products, glossary terms and teams behind one search.
+
+<ThemedImg
+  lightSrc="/img/cloud-discover-light.png"
+  darkSrc="/img/cloud-discover-dark.png"
+  alt="The Discover page with filters for kind, type and provider beside a list of catalogued assets"
+/>
 
 </Step>
 <Step title="Start a Terraform configuration">
