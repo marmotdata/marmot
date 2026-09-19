@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 toc_max_heading_level: 4
 ---
 
@@ -268,6 +268,47 @@ resource "marmot_data_product_rule" "order_datasets" {
 ```
 
 See the [`marmot_data_product`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product), [`marmot_data_product_asset`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_asset), and [`marmot_data_product_rule`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_rule) documentation for all available configuration options.
+
+### Pipelines
+
+A pipeline is a plugin pointed at a source on a schedule. Declaring it in Terraform keeps it next to the infrastructure it catalogs:
+
+```hcl
+resource "marmot_pipeline" "orders" {
+  name      = "orders"
+  plugin_id = "postgresql"
+
+  config = jsonencode({
+    host     = "orders-db.acme.internal"
+    database = "orders"
+    user     = "marmot"
+    password = var.orders_db_password
+  })
+
+  cron_expression = "0 * * * *"
+}
+```
+
+[Pipelines](Pipelines.md) covers schedules, runs and credentials. On Marmot Cloud a pipeline authenticates to Google Cloud, AWS or Azure as itself, or reads the credential from your secret manager at run time; see [pipelines on Marmot Cloud](../Cloud/pipelines.md).
+
+### Service accounts and access
+
+Machine principals, their API keys and per-resource access grants are all resources too, so an agent's reach into the catalog is a diff in a pull request rather than a setting somebody clicked:
+
+```hcl
+resource "marmot_service_account" "copilot" {
+  name        = "catalog-copilot"
+  description = "Answers questions in #data-help. Owned by the platform team."
+}
+
+resource "marmot_asset_iam_member" "copilot_reads_orders" {
+  asset_id = marmot_asset.orders.id
+  role     = "asset.viewer"
+  member   = "serviceAccount:${marmot_service_account.copilot.id}"
+}
+```
+
+The `*_iam_member`, `*_iam_binding` and `*_iam_policy` resources exist on Marmot Cloud and Marmot Enterprise. [Access control](../Cloud/access-control.md) explains the model and when to use each.
 
 ## Learn More
 

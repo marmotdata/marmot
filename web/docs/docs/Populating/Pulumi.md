@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 Using Pulumi with the Marmot Terraform provider provides a powerful "Data Catalog as Code" approach, allowing you to define, version control, and automate your data catalog infrastructure, or integrate with your existing infrastructure pipelines, all with the added benefits of your preferred programming language.
