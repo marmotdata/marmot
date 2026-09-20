@@ -1,12 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # UI
 
-Create and manage ingestion pipelines directly from the Marmot web interface.
+The Runs page creates and manages [pipelines](Pipelines.md) from a form. It is the quickest way to try a plugin. A pipeline people rely on belongs in Terraform, so its definition has one owner.
 
 ## Managing Pipelines
 
