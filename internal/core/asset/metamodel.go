@@ -42,6 +42,9 @@ func (s *service) PatchFields(ctx context.Context, id string, version int64, fie
 }
 
 func (s *service) validateAsset(a *Asset) error {
+	if !s.registry().Enabled() {
+		return nil
+	}
 	return s.registry().Validate(MetamodelValues(s.registry(), a), !a.IsStub)
 }
 
@@ -58,7 +61,7 @@ func applyFields(registry *metamodel.Registry, asset *Asset, fields map[string]a
 			return &metamodel.ValidationError{Fields: []metamodel.Violation{{Field: id, Code: "not_nullable"}}}
 		}
 		switch field.Storage {
-		case "marmot.name", "marmot.description", "marmot.user_description", "marmot.business_area_id":
+		case "marmot.name", "marmot.description", "marmot.user_description":
 			var ptr *string
 			if value != nil {
 				text, ok := value.(string)
@@ -73,28 +76,25 @@ func applyFields(registry *metamodel.Registry, asset *Asset, fields map[string]a
 			case "marmot.description":
 				asset.Description = ptr
 			case "marmot.user_description":
+				if ptr != nil && *ptr == "" {
+					ptr = nil
+				}
 				asset.UserDescription = ptr
-			case "marmot.business_area_id":
-				asset.BusinessAreaID = ptr
 			}
-		case "marmot.tags", "marmot.owners":
+		case "marmot.tags":
 			list, ok := stringList(value)
 			if !ok {
 				return fieldTypeError(id)
 			}
-			if field.Storage == "marmot.tags" {
-				asset.Tags = list
-			} else {
-				asset.OwnerRefs = list
-			}
+			asset.Tags = list
 		default:
 			parts := strings.Split(strings.TrimPrefix(field.Storage, "metadata."), ".")
 			if err := setMetadataValue(asset.Metadata, parts, value); err != nil {
-				return fmt.Errorf("field %s: %w", id, err)
+				return fmt.Errorf("%w: field %s: %v", ErrInvalidInput, id, err)
 			}
 		}
 	}
-	return nil
+	return registry.Validate(MetamodelValues(registry, asset), !asset.IsStub)
 }
 
 func fieldTypeError(id string) error {
@@ -183,14 +183,6 @@ func MetamodelValues(registry *metamodel.Registry, asset *Asset) map[string]any 
 			}
 		case "marmot.tags":
 			value = asset.Tags
-		case "marmot.owners":
-			value = asset.OwnerRefs
-		case "marmot.business_area_id":
-			if asset.BusinessAreaID != nil {
-				value = *asset.BusinessAreaID
-			} else {
-				present = false
-			}
 		default:
 			value, present = metadataValue(asset.Metadata, f.Storage)
 		}
