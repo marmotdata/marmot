@@ -42,7 +42,6 @@ type Field struct {
 	ID           string       `json:"id"`
 	Type         string       `json:"type"`
 	ItemType     string       `json:"itemType,omitempty"`
-	Target       string       `json:"target,omitempty"`
 	Core         bool         `json:"core"`
 	Required     bool         `json:"required"`
 	Nullable     bool         `json:"nullable,omitempty"`
@@ -97,15 +96,13 @@ func Native() *Registry {
 
 func nativeFields() []Field {
 	fields := []Field{
-		{ID: "name", Type: "string", Required: true, Storage: "marmot.name"},
-		{ID: "description", Type: "string", Nullable: true, Storage: "marmot.description"},
-		{ID: "user_description", Type: "string", Nullable: true, Storage: "marmot.user_description"},
-		{ID: "tags", Type: "list", ItemType: "string", Storage: "marmot.tags"},
-		{ID: "owners", Type: "list", ItemType: "reference", Target: "owner", Storage: "marmot.owners"},
+		{ID: "name", Type: "string", Required: true, Storage: "marmot.name", Presentation: Presentation{LabelKey: "common_name"}},
+		{ID: "description", Type: "string", Nullable: true, Storage: "marmot.description", Presentation: Presentation{LabelKey: "asset_technical_description"}},
+		{ID: "user_description", Type: "string", Nullable: true, Storage: "marmot.user_description", Presentation: Presentation{LabelKey: "common_description"}},
+		{ID: "tags", Type: "list", ItemType: "string", Storage: "marmot.tags", Presentation: Presentation{LabelKey: "common_tags"}},
 	}
 	for i := range fields {
 		fields[i].Core = true
-		fields[i].Presentation.LabelKey = "metamodel.native." + fields[i].ID + ".label"
 		fields[i].Presentation.Section = "general"
 		fields[i].Presentation.Order = i
 	}
@@ -168,7 +165,7 @@ func New(profile *Profile) (*Registry, error) {
 			index := slices.IndexFunc(schema.Fields, func(f Field) bool { return f.ID == field.ID })
 			if index >= 0 {
 				base := schema.Fields[index]
-				if field.Storage != base.Storage || field.Type != base.Type || field.ItemType != base.ItemType || field.Target != base.Target || !field.Core || (base.Required && !field.Required) || (base.Required && field.AppliesTo != "") {
+				if field.Storage != base.Storage || field.Type != base.Type || field.ItemType != base.ItemType || !field.Core || (field.Nullable && !base.Nullable) || (base.Required && !field.Required) || (base.Required && field.AppliesTo != "") {
 					return nil, fmt.Errorf("field %q changes a native contract", field.ID)
 				}
 				if field.Presentation.LabelKey == "" {
@@ -176,7 +173,10 @@ func New(profile *Profile) (*Registry, error) {
 				}
 				schema.Fields[index] = field
 			} else {
-				if strings.HasPrefix(field.Storage, "marmot.") && !(field.ID == "business_area" && field.Storage == "marmot.business_area_id" && field.Type == "reference" && field.Target == "business_area") {
+				if slices.Contains([]string{"id", "mrn", "type", "providers", "owners", "schema", "sources", "environments", "parent_mrn", "version", "created_at", "updated_at", "created_by", "last_sync_at", "is_stub", "external_links", "query", "query_language", "terms", "has_run_history"}, field.ID) {
+					return nil, fmt.Errorf("field %q is reserved by the native asset model", field.ID)
+				}
+				if strings.HasPrefix(field.Storage, "marmot.") {
 					return nil, fmt.Errorf("unregistered native binding %q", field.Storage)
 				}
 				if field.Presentation.LabelKey == "" {
@@ -218,22 +218,15 @@ func validateDefinition(f Field) error {
 	if f.AppliesTo != "" && f.AppliesTo != "governed_assets" {
 		return errors.New("unknown appliesTo profile")
 	}
-	if !slices.Contains([]string{"string", "integer", "number", "boolean", "date", "enum", "list", "reference"}, f.Type) {
+	if !slices.Contains([]string{"string", "integer", "number", "boolean", "date", "enum", "list"}, f.Type) {
 		return errors.New("unsupported type")
 	}
 	if f.Type == "list" {
-		if !slices.Contains([]string{"string", "integer", "number", "boolean", "date", "enum", "reference"}, f.ItemType) {
+		if !slices.Contains([]string{"string", "integer", "number", "boolean", "date", "enum"}, f.ItemType) {
 			return errors.New("list requires a supported itemType")
 		}
 	} else if f.ItemType != "" {
 		return errors.New("itemType requires list")
-	}
-	if f.Type == "reference" || f.ItemType == "reference" {
-		if f.Target != "business_area" && !(f.Storage == "marmot.owners" && f.Target == "owner") {
-			return errors.New("unregistered reference target")
-		}
-	} else if f.Target != "" {
-		return errors.New("target requires reference")
 	}
 	if f.Type == "enum" || f.ItemType == "enum" {
 		if len(f.Values) == 0 || len(f.Values) > 256 {
@@ -268,6 +261,19 @@ func validateDefinition(f Field) error {
 		}
 	}
 	v := f.Validation
+	valueType := f.Type
+	if valueType == "list" {
+		valueType = f.ItemType
+	}
+	if (v.Minimum != nil || v.Maximum != nil) && valueType != "number" && valueType != "integer" {
+		return errors.New("numeric bounds require a numeric type")
+	}
+	if (v.MinLength != nil || v.MaxLength != nil) && !slices.Contains([]string{"string", "enum", "date"}, valueType) {
+		return errors.New("length bounds require a string type")
+	}
+	if (v.MinItems != nil || v.MaxItems != nil) && f.Type != "list" {
+		return errors.New("item bounds require a list")
+	}
 	for _, bounds := range [][2]*int{{v.MinLength, v.MaxLength}, {v.MinItems, v.MaxItems}} {
 		if (bounds[0] != nil && *bounds[0] < 0) || (bounds[1] != nil && *bounds[1] < 0) || (bounds[0] != nil && bounds[1] != nil && *bounds[0] > *bounds[1]) {
 			return errors.New("invalid length bounds")
@@ -317,7 +323,7 @@ func (r *Registry) Validate(values map[string]any, governed bool) error {
 func validateValue(f Field, value any) string {
 	v := f.Validation
 	switch f.Type {
-	case "string", "enum", "date", "reference":
+	case "string", "enum", "date":
 		s, ok := value.(string)
 		if !ok {
 			return "type"
@@ -336,9 +342,6 @@ func validateValue(f Field, value any) string {
 			if _, err := time.Parse("2006-01-02", s); err != nil {
 				return "date"
 			}
-		}
-		if f.Type == "reference" && strings.TrimSpace(s) == "" {
-			return "reference"
 		}
 	case "integer", "number":
 		n, ok := number(value)
