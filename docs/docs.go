@@ -2224,6 +2224,85 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partial update of governed fields. Absence preserves; null deletes only when the field is nullable. Requires If-Match.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Patch governed asset fields",
+                "operationId": "patchAssetsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Expected asset version",
+                        "name": "If-Match",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to apply",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.patchFieldsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Asset"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Precondition Failed",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "428": {
+                        "description": "Precondition Required",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/glossary/": {
@@ -3737,6 +3816,35 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metamodel": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the composed native and configured field schema. Clients must not reinterpret source YAML.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metamodel"
+                ],
+                "summary": "Get the effective metamodel schema",
+                "operationId": "getMetamodel",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metamodel.Schema"
                         }
                     }
                 }
@@ -8694,6 +8802,9 @@ const docTemplate = `{
                 },
                 "user_description": {
                     "type": "string"
+                },
+                "version": {
+                    "type": "integer"
                 }
             }
         },
@@ -12194,6 +12305,119 @@ const docTemplate = `{
                 }
             }
         },
+        "metamodel.Constraints": {
+            "type": "object",
+            "properties": {
+                "maxItems": {
+                    "type": "integer"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "maximum": {
+                    "type": "number"
+                },
+                "minItems": {
+                    "type": "integer"
+                },
+                "minLength": {
+                    "type": "integer"
+                },
+                "minimum": {
+                    "type": "number"
+                }
+            }
+        },
+        "metamodel.Field": {
+            "type": "object",
+            "properties": {
+                "appliesTo": {
+                    "type": "string"
+                },
+                "core": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "itemType": {
+                    "type": "string"
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "presentation": {
+                    "$ref": "#/definitions/metamodel.Presentation"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "storage": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "validation": {
+                    "$ref": "#/definitions/metamodel.Constraints"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "metamodel.Presentation": {
+            "type": "object",
+            "properties": {
+                "descriptionKey": {
+                    "type": "string"
+                },
+                "helpTextKey": {
+                    "type": "string"
+                },
+                "labelKey": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "section": {
+                    "type": "string"
+                }
+            }
+        },
+        "metamodel.Schema": {
+            "type": "object",
+            "properties": {
+                "defaultLocale": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/metamodel.Field"
+                    }
+                },
+                "formatVersion": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "pluginsdk.ConfigField": {
             "type": "object",
             "properties": {
@@ -12346,6 +12570,15 @@ const docTemplate = `{
                 },
                 "pattern": {
                     "type": "string"
+                }
+            }
+        },
+        "v1_assets.patchFieldsRequest": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {}
                 }
             }
         },

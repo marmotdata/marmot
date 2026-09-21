@@ -16,6 +16,7 @@
 	import { tablePreviewEnabled } from '$lib/stores/features';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import LanguageSelector from '$components/ui/LanguageSelector.svelte';
 	import GlobalSearch from '$components/query/GlobalSearch.svelte';
 	import Avatar from '$components/user/Avatar.svelte';
 	import ToastContainer from '$components/ui/ToastContainer.svelte';
@@ -451,10 +452,11 @@
 								</div>
 								{#if isDropdownOpen}
 									<div
-										class="origin-top-right absolute right-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+										class="origin-top-right absolute right-0 mt-2 w-56 overflow-visible rounded-md glass-dropdown py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50"
 										role="menu"
 										aria-orientation="vertical"
 										aria-labelledby="user-menu"
+										onclick={(event) => event.stopPropagation()}
 									>
 										{#if $auth}
 											<!-- User is authenticated -->
@@ -489,6 +491,7 @@
 												{m.nav_login()}
 											</button>
 										{/if}
+										<LanguageSelector variant="menu" />
 									</div>
 								{/if}
 							</div>
