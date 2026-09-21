@@ -14,10 +14,7 @@ func TestParseIfMatch(t *testing.T) {
 	if v, ok := parseIfMatch(`"3"`); !ok || v != 3 {
 		t.Fatalf("quoted: %d %v", v, ok)
 	}
-	if v, ok := parseIfMatch("2"); !ok || v != 2 {
-		t.Fatalf("bare: %d %v", v, ok)
-	}
-	for _, header := range []string{"", "*", "0", "-1", "abc"} {
+	for _, header := range []string{"", "*", "0", "-1", "abc", "2", `W/"3"`, `"3`} {
 		if _, ok := parseIfMatch(header); ok {
 			t.Fatalf("accepted %q", header)
 		}
