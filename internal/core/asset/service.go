@@ -14,7 +14,6 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/limits"
-	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,7 +31,6 @@ type ExternalLink struct {
 } // @name AssetExternalLink
 
 type Asset struct {
-	Version         int64                  `json:"version"`
 	ID              string                 `json:"id,omitempty"`
 	ParentMRN       *string                `json:"parent_mrn,omitempty"`
 	Name            *string                `json:"name,omitempty"`
@@ -86,8 +84,6 @@ type CreateInput struct {
 }
 
 type UpdateInput struct {
-	ExpectedVersion  *int64                 `json:"-"`
-	GovernedFields   map[string]any         `json:"-"`
 	Name             *string                `json:"name"`
 	Description      *string                `json:"description"`
 	UserDescription  *string                `json:"user_description"`
@@ -198,8 +194,6 @@ type Service interface {
 	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
-	PatchFields(ctx context.Context, id string, version int64, fields map[string]any) (*Asset, error)
-	Metamodel() metamodel.Schema
 	Delete(ctx context.Context, id string) error
 	DeleteByMRN(ctx context.Context, mrn string) error
 	AddTag(ctx context.Context, id string, tag string) (*Asset, error)
@@ -257,7 +251,6 @@ const summaryCacheTTL = 5 * time.Second
 const metadataFieldsCacheTTL = 30 * time.Second
 
 type service struct {
-	metamodel            *metamodel.Registry
 	repo                 Repository
 	validator            *validator.Validate
 	metrics              MetricsClient
@@ -457,7 +450,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 	now := time.Now()
 	asset := &Asset{
 		ID:            uuid.New().String(),
-		Version:       1,
 		Name:          input.Name,
 		MRN:           input.MRN,
 		Type:          input.Type,
@@ -481,9 +473,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		asset.Tags = []string{}
 	}
 
-	if err := s.validateAsset(asset); err != nil {
-		return nil, err
-	}
 	if err := s.repo.Create(ctx, asset); err != nil {
 		if errors.Is(err, ErrConflict) {
 			return nil, ErrAlreadyExists
@@ -580,10 +569,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
 
-	if err := s.preserveGoverned(asset, &input); err != nil {
-		return nil, err
-	}
-
+	// Detect which fields are being changed before updating
 	oldAsset := *asset
 	changedFields := detectChangedFields(&oldAsset, &input)
 
@@ -644,47 +630,14 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		asset.QueryLanguage = input.QueryLanguage
 		updated = true
 	}
-	if len(input.GovernedFields) > 0 {
-		metadata, err := cloneMetadata(asset.Metadata)
-		if err != nil {
-			return nil, err
-		}
-		asset.Metadata = metadata
-		if err := applyFields(s.registry(), asset, input.GovernedFields); err != nil {
-			return nil, err
-		}
-		before := MetamodelValues(s.registry(), &oldAsset)
-		after := MetamodelValues(s.registry(), asset)
-		for id := range input.GovernedFields {
-			if reflect.DeepEqual(before[id], after[id]) {
-				continue
-			}
-			field, _ := s.registry().Field(id)
-			name := strings.TrimPrefix(field.Storage, "marmot.")
-			if strings.HasPrefix(field.Storage, "metadata.") {
-				name = FieldMetadata
-			}
-			if !slices.Contains(changedFields, name) {
-				changedFields = append(changedFields, name)
-			}
-		}
-		updated = true
-	}
 
 	if !updated {
 		return asset, nil
 	}
 
-	if err := s.validateAsset(asset); err != nil {
-		return nil, err
-	}
-
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {
-		if errors.Is(err, ErrVersionConflict) {
-			return nil, err
-		}
 		return nil, fmt.Errorf("failed to update asset: %w", err)
 	}
 
@@ -892,9 +845,6 @@ func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, er
 	}
 
 	asset.Tags = append(asset.Tags, tag)
-	if err := s.validateAsset(asset); err != nil {
-		return nil, err
-	}
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {
@@ -937,9 +887,6 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 	}
 
 	asset.Tags = newTags
-	if err := s.validateAsset(asset); err != nil {
-		return nil, err
-	}
 	asset.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, asset); err != nil {

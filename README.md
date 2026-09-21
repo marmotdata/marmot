@@ -11,8 +11,6 @@ _The open-source context layer for your AI. Catalog your tables, topics, queues 
 
 </div>
 
-> **This repository** is the [dgu-development](https://github.com/dgu-development) fork of Marmot. Product work lands on branch [`dgu`](https://github.com/dgu-development/marmot/tree/dgu). `main` tracks [marmotdata/marmot](https://github.com/marmotdata/marmot) with fast-forward only. See [FORK.md](FORK.md).
-
 ## What is Marmot?
 
 Marmot is an **open-source data catalog** for teams who want powerful data discovery without enterprise complexity. Catalog every data asset, enrich it with the context that matters and make it accessible to your team and your AI tools.

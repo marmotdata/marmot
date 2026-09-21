@@ -178,8 +178,6 @@ definitions:
         type: string
       user_description:
         type: string
-      version:
-        type: integer
     type: object
   AssetCount:
     properties:
@@ -2503,79 +2501,27 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
-  metamodel.Constraints:
+  pluginsdk.AssetField:
     properties:
-      maxItems:
-        type: integer
-      maxLength:
-        type: integer
-      maximum:
-        type: number
-      minItems:
-        type: integer
-      minLength:
-        type: integer
-      minimum:
-        type: number
-    type: object
-  metamodel.Field:
-    properties:
-      appliesTo:
+      description:
         type: string
-      core:
-        type: boolean
-      id:
-        type: string
-      itemType:
-        type: string
-      nullable:
-        type: boolean
-      presentation:
-        $ref: '#/definitions/metamodel.Presentation'
-      required:
-        type: boolean
-      storage:
+      name:
         type: string
       type:
         type: string
-      validation:
-        $ref: '#/definitions/metamodel.Constraints'
-      values:
-        items:
-          type: string
-        type: array
     type: object
-  metamodel.Presentation:
+  pluginsdk.AssetSchema:
     properties:
-      descriptionKey:
+      description:
         type: string
-      helpTextKey:
+      display_name:
         type: string
-      labelKey:
-        type: string
-      order:
-        type: integer
-      section:
-        type: string
-    type: object
-  metamodel.Schema:
-    properties:
-      defaultLocale:
-        type: string
-      enabled:
-        type: boolean
       fields:
         items:
-          $ref: '#/definitions/metamodel.Field'
+          $ref: '#/definitions/pluginsdk.AssetField'
         type: array
-      formatVersion:
-        type: integer
-      hash:
+      struct_name:
         type: string
-      id:
-        type: string
-      version:
-        type: integer
     type: object
   pluginsdk.ConfigField:
     properties:
@@ -2638,6 +2584,10 @@ definitions:
     - FieldTypeObject
   pluginsdk.Meta:
     properties:
+      asset_schemas:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetSchema'
+        type: array
       category:
         type: string
       config_spec:
@@ -2660,8 +2610,6 @@ definitions:
         type: string
       supports_data_preview:
         type: boolean
-      supports_query:
-        type: boolean
     type: object
   pluginsdk.ShowWhen:
     properties:
@@ -2682,12 +2630,6 @@ definitions:
         type: integer
       pattern:
         type: string
-    type: object
-  v1_assets.patchFieldsRequest:
-    properties:
-      fields:
-        additionalProperties: {}
-        type: object
     type: object
   v1_roles.createRoleRequest:
     properties:
@@ -3277,58 +3219,6 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get an asset by ID
-      tags:
-      - assets
-    patch:
-      consumes:
-      - application/json
-      description: Partial update of governed fields. Absence preserves; null deletes
-        only when the field is nullable. Requires If-Match.
-      operationId: patchAssetsID
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Expected asset version
-        in: header
-        name: If-Match
-        required: true
-        type: string
-      - description: Fields to apply
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/v1_assets.patchFieldsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Asset'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "412":
-          description: Precondition Failed
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "428":
-          description: Precondition Required
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Patch governed asset fields
       tags:
       - assets
     put:
@@ -5120,24 +5010,6 @@ paths:
       summary: MCP endpoint
       tags:
       - mcp
-  /api/v1/metamodel:
-    get:
-      description: Returns the composed native and configured field schema. Clients
-        must not reinterpret source YAML.
-      operationId: getMetamodel
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/metamodel.Schema'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get the effective metamodel schema
-      tags:
-      - metamodel
   /api/v1/metrics:
     get:
       consumes:

@@ -32,7 +32,7 @@ const (
    		id, name, mrn, type, providers, environments, external_links,
    		description, user_description, metadata, schema, sources, tags,
    		created_at, created_by, updated_at, last_sync_at,
-		query, query_language, is_stub, version
+   		query, query_language, is_stub
    	FROM assets`
 )
 
@@ -130,15 +130,15 @@ func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
    		id, name, mrn, type, providers, environments, description, user_description,
    		metadata, schema, sources, tags, external_links,
    		created_by, created_at, updated_at, last_sync_at,
-		query, query_language, is_stub, version
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`
+   		query, query_language, is_stub
+   	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`
 
 	_, err = r.db.Exec(ctx, query,
 		asset.ID, asset.Name, asset.MRN, asset.Type, asset.Providers,
 		environmentsJSON, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
 		sourcesJSON, asset.Tags, externalLinksJSON,
 		asset.CreatedBy, asset.CreatedAt, asset.UpdatedAt, asset.LastSyncAt,
-		asset.Query, asset.QueryLanguage, asset.IsStub, asset.Version)
+		asset.Query, asset.QueryLanguage, asset.IsStub)
 
 	duration := time.Since(start)
 	success := err == nil
@@ -203,26 +203,23 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
    	SET name = $1, description = $2, user_description = $3, metadata = $4, schema = $5,
    		tags = $6, updated_at = $7, sources = $8, environments = $9,
    		external_links = $10, providers = $11, mrn = $12,
-		type = $13, query = $14, query_language = $15, is_stub = $16,
-		version = version + 1
-	WHERE id = $17 AND version = $18`
+   		type = $13, query = $14, query_language = $15, is_stub = $16
+   	WHERE id = $17`
 
 	commandTag, err := r.db.Exec(ctx, query,
 		asset.Name, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
 		asset.Tags, asset.UpdatedAt, sourcesJSON, environmentsJSON,
 		externalLinksJSON, asset.Providers, asset.MRN,
-		asset.Type, asset.Query, asset.QueryLanguage, asset.IsStub,
-		asset.ID, asset.Version)
+		asset.Type, asset.Query, asset.QueryLanguage, asset.IsStub, asset.ID)
 
 	if err != nil {
 		return fmt.Errorf("updating asset: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
-		return ErrVersionConflict
+		return ErrNotFound
 	}
 
-	asset.Version++
 	return nil
 }
 
@@ -307,7 +304,7 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 		&environmentsJSON, &externalLinksJSON, &asset.Description, &asset.UserDescription,
 		&metadataJSON, &schemaJSON, &sourcesJSON,
 		&asset.Tags, &asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
-		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub, &asset.Version,
+		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub,
 	)
 
 	if err != nil {
@@ -1013,7 +1010,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
           id, name, mrn, type, providers, environments, external_links,
           description, user_description, metadata, schema, sources, tags,
           created_at, created_by, updated_at, last_sync_at,
-          query, query_language, is_stub, version
+          query, query_language, is_stub
       FROM search_results
       ORDER BY
           CASE WHEN name_similarity > 0.8 THEN name_similarity * 2
@@ -1504,7 +1501,7 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 			a.id, a.name, a.mrn, a.type, a.providers, a.environments, a.external_links,
 			a.description, a.user_description, a.metadata, a.schema, a.sources, a.tags,
 			a.created_at, a.created_by, a.updated_at, a.last_sync_at,
-			a.query, a.query_language, a.is_stub, a.version
+			a.query, a.query_language, a.is_stub
 		FROM assets a
 		JOIN asset_owners ao ON a.id = ao.asset_id
 		WHERE (ao.user_id = $1 OR ao.team_id = ANY($2))

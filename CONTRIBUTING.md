@@ -1,7 +1,5 @@
 # Contributing to Marmot
 
-This tree is the [dgu-development/marmot](https://github.com/dgu-development/marmot) fork. Product PRs target **`dgu`**. Branch layout, labels, and how `main` tracks upstream: [FORK.md](FORK.md). Upstream Marmot remains [marmotdata/marmot](https://github.com/marmotdata/marmot).
-
 Thanks for your interest in contributing to Marmot! We welcome contributions of all kinds - from bug fixes and documentation improvements to new features and plugins.
 
 ## Getting Started

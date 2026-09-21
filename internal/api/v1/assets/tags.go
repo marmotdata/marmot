@@ -48,9 +48,6 @@ func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 
 	updated, err := h.assetService.AddTag(r.Context(), id, input.Tag)
 	if err != nil {
-		if respondAssetWriteError(w, err) {
-			return
-		}
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
@@ -100,9 +97,6 @@ func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
 
 	updated, err := h.assetService.RemoveTag(r.Context(), id, input.Tag)
 	if err != nil {
-		if respondAssetWriteError(w, err) {
-			return
-		}
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
