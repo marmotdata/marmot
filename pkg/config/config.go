@@ -154,6 +154,10 @@ type Config struct {
 		TablePreview bool `mapstructure:"table_preview"`
 	} `mapstructure:"experimental"`
 
+	Metamodel struct {
+		Profile string `mapstructure:"profile"`
+	} `mapstructure:"metamodel"`
+
 	Plugins struct {
 		// Registry overrides the OCI registry namespace core plugins
 		// are installed from, e.g. an internal mirror.
@@ -346,6 +350,7 @@ func loadConfig(configPath string) error {
 	v.BindEnv("server.tls.key_path")
 	v.BindEnv("server.tls.ca_cert_path")
 	v.BindEnv("server.tls.insecure_skip_verify")
+	v.BindEnv("metamodel.profile")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
