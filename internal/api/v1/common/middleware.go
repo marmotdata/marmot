@@ -94,18 +94,8 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					return
 				}
 
-				if errors.Is(err, user.ErrInvalidAPIKey) && globalServiceAccountService != nil {
-					sa, saErr := globalServiceAccountService.ValidateAPIKey(r.Context(), apiKey)
-					if saErr == nil {
-						roleNames := make([]string, 0, len(sa.Roles))
-						permKeys := make([]string, 0)
-						for _, r := range sa.Roles {
-							roleNames = append(roleNames, r.Name)
-							for _, p := range r.Permissions {
-								permKeys = append(permKeys, p.ResourceType+":"+p.Action)
-							}
-						}
-						principal := auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys)
+				if errors.Is(err, user.ErrInvalidAPIKey) {
+					if principal, ok := serviceAccountPrincipal(r.Context(), apiKey); ok {
 						ctx := setPrincipalContext(r.Context(), principal)
 						next(w, r.WithContext(ctx))
 						return
@@ -176,19 +166,28 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					}
 				}
 
-				// Fall back to API key in Bearer header
+				// Fall back to API key in Bearer header, then to a service-account key
 				u, err := userService.ValidateAPIKey(r.Context(), tokenString)
-				if err != nil {
-					log.Error().Err(err).
-						Str("endpoint", r.URL.Path).
-						Str("method", r.Method).
-						Msg("Failed to validate bearer token as JWT or API key")
-					setWWWAuthenticate(w, cfg)
-					RespondError(w, http.StatusUnauthorized, "Invalid token")
+				if err == nil {
+					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					next(w, r.WithContext(ctx))
 					return
 				}
-				ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
-				next(w, r.WithContext(ctx))
+
+				if errors.Is(err, user.ErrInvalidAPIKey) {
+					if principal, ok := serviceAccountPrincipal(r.Context(), tokenString); ok {
+						ctx := setPrincipalContext(r.Context(), principal)
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+
+				log.Error().Err(err).
+					Str("endpoint", r.URL.Path).
+					Str("method", r.Method).
+					Msg("Failed to validate bearer token as JWT or API key")
+				setWWWAuthenticate(w, cfg)
+				RespondError(w, http.StatusUnauthorized, "Invalid token")
 				return
 			}
 
@@ -210,6 +209,27 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 			RespondError(w, http.StatusUnauthorized, "Authentication required")
 		}
 	}
+}
+
+// serviceAccountPrincipal validates apiKey as a service-account key and returns the
+// matching principal. The bool reports whether the key was a valid service-account key.
+func serviceAccountPrincipal(ctx context.Context, apiKey string) (auth.Principal, bool) {
+	if globalServiceAccountService == nil {
+		return nil, false
+	}
+	sa, err := globalServiceAccountService.ValidateAPIKey(ctx, apiKey)
+	if err != nil {
+		return nil, false
+	}
+	roleNames := make([]string, 0, len(sa.Roles))
+	permKeys := make([]string, 0)
+	for _, r := range sa.Roles {
+		roleNames = append(roleNames, r.Name)
+		for _, p := range r.Permissions {
+			permKeys = append(permKeys, p.ResourceType+":"+p.Action)
+		}
+	}
+	return auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys), true
 }
 
 func setPrincipalContext(ctx context.Context, p auth.Principal) context.Context {
