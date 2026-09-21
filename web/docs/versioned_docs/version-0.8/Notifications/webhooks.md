@@ -50,10 +50,10 @@ alt="Team webhooks section"
 
 Click **Add Webhook** and fill in the details:
 
-- **Name** — a descriptive label (e.g. "Schema alerts to #data-eng")
-- **Provider** — choose Slack, Discord, or Generic
-- **Webhook URL** — the incoming webhook URL from your provider
-- **Notification Types** — select which types to forward
+- **Name**: a descriptive label (e.g. "Schema alerts to #data-eng")
+- **Provider**: choose Slack, Discord, or Generic
+- **Webhook URL**: the incoming webhook URL from your provider
+- **Notification Types**: select which types to forward
 
 <ThemedImg
 lightSrc="/img/new-webhook.png"
