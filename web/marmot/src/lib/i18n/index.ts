@@ -63,9 +63,14 @@ export async function initI18n(): Promise<void> {
 
 // Switches without reloading, which keeps the app shell on screen instead of flashing a blank document
 export function changeLocale(next: Locale): void {
-	if (!browser || next === current) return;
-	setLocale(next, { reload: false });
+	if (!browser || !isLocale(next)) return;
+	applyStoredLanguage(next);
+	if (next === current) {
+		apply(next);
+		return;
+	}
 	apply(next);
+	setLocale(next, { reload: false });
 }
 
 // Takes effect on the next document load, which is why login navigates with a full page load

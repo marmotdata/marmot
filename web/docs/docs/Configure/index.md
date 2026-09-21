@@ -8,6 +8,12 @@ import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
 
 <DocCardGrid>
   <DocCard
+    title="Users, roles and access"
+    description="Roles, permissions, teams, service accounts and API keys"
+    docId="Configure/access-control"
+    icon="mdi:shield-key"
+  />
+  <DocCard
     title="Authentication"
     description="Set up SSO with Google, GitHub, GitLab, Okta, Slack or Auth0"
     docId="Configure/Authentication/index"
@@ -150,7 +156,7 @@ Single Sign-On providers are configured under `auth.<provider>`, where `<provide
 | `auth.<provider>.team_sync`      | Synchronise team membership from provider groups   | disabled           |
 | `auth.<provider>.group_mapping`  | Map provider groups to Marmot roles                | -                  |
 
-Each provider has its own options and setup steps — see [Authentication](./Authentication/index.md) for the per-provider guides.
+Each provider has its own options and setup steps. See [Authentication](./Authentication/index.md) for the per-provider guides.
 
 ## Search
 
@@ -158,7 +164,7 @@ Each provider has its own options and setup steps — see [Authentication](./Aut
 | ---------------- | ------------------------------- | ------- |
 | `search.timeout` | Search query timeout in seconds | `10`    |
 
-The optional Elasticsearch backend is configured under `search.elasticsearch` — see [Elasticsearch](./elasticsearch.md) for the full list of options.
+The optional Elasticsearch backend is configured under `search.elasticsearch`. See [Elasticsearch](./elasticsearch.md) for the full list of options.
 
 ## Metrics
 

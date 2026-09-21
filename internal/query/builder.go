@@ -316,7 +316,11 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		// Note: nested BooleanQuery is handled before the increment above
 		switch {
 		case filter.FieldType == FieldProvider:
-			condition = fmt.Sprintf("%s && ARRAY[$%d]::text[]", columnRef, paramCount)
+			// Match case-insensitively, as @type and @name do. An array overlap
+			// against ARRAY[$n] is index-friendly but exact, so `@provider:
+			// "kafka"` missed assets catalogued as "Kafka" and the documented
+			// examples returned nothing.
+			condition = fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE lower(elem) = lower($%d))", columnRef, paramCount)
 			params = append(params, filter.Value)
 		case filter.FieldType == FieldAssetType:
 			// Use lower() for case-insensitive match with functional index
@@ -354,8 +358,9 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 	case OpNotEquals:
 		switch {
 		case filter.FieldType == FieldProvider:
-			// Use negated array overlap for GIN index compatibility
-			condition = fmt.Sprintf("NOT (%s && ARRAY[$%d]::text[])", columnRef, paramCount)
+			// Negation of the case-insensitive match above, so `@provider !=
+			// "kafka"` excludes "Kafka" too.
+			condition = fmt.Sprintf("NOT EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE lower(elem) = lower($%d))", columnRef, paramCount)
 			params = append(params, filter.Value)
 		case filter.FieldType == FieldAssetType:
 			// Use lower() for case-insensitive not-equal with null handling

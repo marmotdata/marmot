@@ -30,8 +30,8 @@ Give your rule a unique name and an optional description.
 
 Choose what to apply to matching assets. A rule must include at least one of:
 
-- **External links** — runbooks, dashboards, wiki pages or monitoring URLs. Each link has a name, URL and optional icon.
-- **Glossary terms** — select one or more terms from your existing glossary to associate with matching assets.
+- **External links**: runbooks, dashboards, wiki pages or monitoring URLs. Each link has a name, URL and optional icon.
+- **Glossary terms**: select one or more terms from your existing glossary to associate with matching assets.
 
 <img src="/img/asset-rules-enrichments.png" alt="Enrichments" />
 
@@ -39,9 +39,9 @@ Choose what to apply to matching assets. A rule must include at least one of:
 
 Define which assets the rule should match using Marmot's query language (the same syntax used in search). For example:
 
-- `@type: "table" AND @provider: "postgres"` — all PostgreSQL tables
-- `@tag: "pii"` — any asset tagged as PII
-- `@metadata.owner = "platform-team"` — assets owned by a specific team
+- `@type: "table" AND @provider: "postgres"` matches all PostgreSQL tables
+- `@tag: "pii"` matches any asset tagged as PII
+- `@metadata.owner = "platform-team"` matches assets owned by a specific team
 
 Use the **Preview** button to see which assets currently match before saving.
 

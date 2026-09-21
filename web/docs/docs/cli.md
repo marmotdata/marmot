@@ -205,7 +205,7 @@ Manage named contexts for switching between Marmot instances. Contexts are creat
 marmot assets <list | get | search | delete | summary | tags | owners> [flags]
 ```
 
-Browse, search and manage assets in your catalog. Use `list` and `search` with `--types`, `--providers` and `--tags` to filter results.
+Browse, search and manage assets in your catalog. Use `list` and `search` with `--types`, `--providers` and `--tags` to filter results. `tags add` and `tags remove` take an asset ID and a tag.
 
 ### marmot search
 
@@ -278,6 +278,71 @@ marmot admin <reindex | reindex-status>
 ```
 
 Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress.
+
+### marmot service-accounts
+
+```
+marmot service-accounts <list | get | create | delete> [flags]
+marmot service-accounts apikeys <list | create | delete> [flags]
+```
+
+Manage service accounts and their API keys. A service account is a principal with no person behind it: CI, an ingestion job, an agent. Create one with `--name` and an optional `--roles` list of role IDs, then issue it a key. An account holds up to five keys and the key itself is printed once, at creation.
+
+```bash
+marmot service-accounts create --name catalog-copilot \
+  --description "Answers questions in #data-help. Owned by the platform team."
+
+marmot service-accounts apikeys create \
+  --service-account <id> --name production --expires-in-days 90
+```
+
+| Flag | On | Description |
+| --- | --- | --- |
+| `--name` | `create` | Account or key name. Required. |
+| `--description` | `create` | What the account is for and who owns it. |
+| `--roles` | `create` | Comma-separated role IDs to assign. |
+| `--service-account` | `apikeys *` | The account to act on. Required. |
+| `--expires-in-days` | `apikeys create` | Key expiry. `0` never expires. |
+
+See [users, roles and access](Configure/access-control.md) for what to grant.
+
+### marmot ingest
+
+```
+marmot ingest --config <file> [flags]
+```
+
+Run plugins on this machine and push what they find to Marmot, rather than having the server run them. Use it in CI, or when the source is not reachable from the Marmot server. The configuration file lists the plugins to run and their settings; see [populating with the CLI](Populating/CLI.md).
+
+| Flag | Description |
+| --- | --- |
+| `--config`, `-c` | Path to the ingestion config file. Required. |
+| `--quiet`, `-q` | Hide info logs and show errors only. On by default. |
+| `--destroy`, `-d` | Delete every asset this pipeline created. Prompts for confirmation. |
+
+### marmot generate-encryption-key
+
+```
+marmot generate-encryption-key
+```
+
+Print a new 32-byte key for `server.encryption_key`, which Marmot uses to encrypt pipeline credentials at rest. Losing the key means losing the credentials encrypted with it, so store it wherever you keep your other secrets before starting the server.
+
+### marmot credential-helper
+
+```
+marmot credential-helper <get | store | erase | list>
+```
+
+The Docker credential helper protocol, so `docker`, `crane` and `oras` can push to a registry served by your Marmot host using your `marmot login` session. You do not call this yourself: Docker does, through the `docker-credential-marmot` symlink the install script creates. See [authentication](#authentication) above.
+
+### marmot run
+
+```
+marmot run [--config <file>]
+```
+
+Start a Marmot server from the same binary as the CLI. This is what the container image runs. See [deployment](Deploy/index.md) for running it in production.
 
 ### marmot config
 

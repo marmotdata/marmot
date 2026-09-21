@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 6
 ---
 
 Marmot provides a comprehensive RESTful API to programmatically interact with your data catalog. This API allows you to create, read, update, and delete assets, establish lineage relationships, and manage metadata through simple HTTP requests.
