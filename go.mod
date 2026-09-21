@@ -16,7 +16,7 @@ require (
 	github.com/marmotdata/marmot/sdk/go v0.0.0-00010101000000-000000000000
 	github.com/marmotdata/plugin-sdk v0.0.0-20260913214252-a0eb271320a7
 	github.com/modelcontextprotocol/go-sdk v1.7.0
-	github.com/olekukonko/tablewriter v1.1.4
+	github.com/olekukonko/tablewriter v1.1.5
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/opensearch-project/opensearch-go/v4 v4.7.3
