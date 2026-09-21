@@ -80,11 +80,22 @@ func (s *service) ValidateAPIKey(ctx context.Context, apiKey string) (*User, err
 		return nil, fmt.Errorf("getting API key: %w", err)
 	}
 
-	// Update last used timestamp
+	// Fetch the user associated with the valid API key
+	user, err := s.Get(ctx, apiKeyObj.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// A deactivated user keeps their keys, so without this the key would outlive
+	// the account: the JWT path refuses an inactive user and this has to agree.
+	if !user.Active {
+		return nil, ErrUserInactive
+	}
+
+	// Only a key that actually authenticated counts as used.
 	if err := s.repo.UpdateAPIKeyLastUsed(ctx, apiKeyObj.ID); err != nil {
 		return nil, fmt.Errorf("updating API key last used timestamp: %w", err)
 	}
 
-	// Fetch the user associated with the valid API key
-	return s.Get(ctx, apiKeyObj.UserID)
+	return user, nil
 }
