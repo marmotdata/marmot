@@ -3,6 +3,7 @@ package assets
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -180,7 +181,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
-	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
+	w.Header().Set("ETag", assetETag(result.Version))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 
@@ -225,7 +226,12 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		Environments:    req.Environments,
 		ExternalLinks:   req.ExternalLinks,
 	}
-	if version, ok := parseIfMatch(r.Header.Get("If-Match")); ok {
+	if header := r.Header.Get("If-Match"); header != "" {
+		version, ok := parseIfMatch(header)
+		if !ok {
+			common.RespondError(w, http.StatusBadRequest, "If-Match must contain one quoted asset version")
+			return
+		}
 		input.ExpectedVersion = &version
 	}
 
@@ -246,7 +252,7 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("ETag", strconv.FormatInt(updated.Version, 10))
+	w.Header().Set("ETag", assetETag(updated.Version))
 	common.RespondJSON(w, http.StatusOK, updated)
 }
 
@@ -327,12 +333,12 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
-	w.Header().Set("ETag", strconv.FormatInt(result.Version, 10))
+	w.Header().Set("ETag", assetETag(result.Version))
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 
 // @Summary Get the effective metamodel schema
-// @Description Returns the composed native and corporate field schema. Clients must not reinterpret source YAML.
+// @Description Returns the composed native and configured field schema. Clients must not reinterpret source YAML.
 // @Tags metamodel
 // @Produce json
 // @Security ApiKeyAuth
@@ -363,8 +369,8 @@ type patchFieldsRequest struct {
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 412 {object} common.ErrorResponse
 // @Failure 428 {object} common.ErrorResponse
-// @ID patchAssetsIDFields
-// @Router /api/v1/assets/{id}/fields [patch]
+// @ID patchAssetsID
+// @Router /api/v1/assets/{id} [patch]
 func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -372,15 +378,26 @@ func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	version, ok := parseIfMatch(r.Header.Get("If-Match"))
-	if !ok {
+	header := r.Header.Get("If-Match")
+	if header == "" {
 		common.RespondError(w, http.StatusPreconditionRequired, "If-Match required")
 		return
 	}
 
+	version, ok := parseIfMatch(header)
+	if !ok {
+		common.RespondError(w, http.StatusBadRequest, "If-Match must contain one quoted asset version")
+		return
+	}
 	var req patchFieldsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if err := decoder.Decode(new(any)); err != io.EOF {
+		common.RespondError(w, http.StatusBadRequest, "Expected one JSON object")
 		return
 	}
 	if req.Fields == nil {
@@ -405,20 +422,19 @@ func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("ETag", strconv.FormatInt(updated.Version, 10))
+	w.Header().Set("ETag", assetETag(updated.Version))
 	common.RespondJSON(w, http.StatusOK, updated)
 }
 
+func assetETag(version int64) string { return `"` + strconv.FormatInt(version, 10) + `"` }
+
 func parseIfMatch(header string) (int64, bool) {
-	header = strings.TrimSpace(strings.Trim(header, `"`))
-	if header == "" || header == "*" {
+	header = strings.TrimSpace(header)
+	if len(header) < 3 || header[0] != '"' || header[len(header)-1] != '"' {
 		return 0, false
 	}
-	version, err := strconv.ParseInt(header, 10, 64)
-	if err != nil || version < 1 {
-		return 0, false
-	}
-	return version, true
+	version, err := strconv.ParseInt(header[1:len(header)-1], 10, 64)
+	return version, err == nil && version > 0 && header == assetETag(version)
 }
 
 func respondAssetWriteError(w http.ResponseWriter, err error) bool {

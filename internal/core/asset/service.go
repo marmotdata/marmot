@@ -33,8 +33,6 @@ type ExternalLink struct {
 
 type Asset struct {
 	Version         int64                  `json:"version"`
-	BusinessAreaID  *string                `json:"business_area_id,omitempty"`
-	OwnerRefs       []string               `json:"-"`
 	ID              string                 `json:"id,omitempty"`
 	ParentMRN       *string                `json:"parent_mrn,omitempty"`
 	Name            *string                `json:"name,omitempty"`
@@ -70,27 +68,24 @@ type Environment struct {
 } // @name Environment
 
 type CreateInput struct {
-	BusinessAreaID *string                `json:"business_area_id,omitempty"`
-	Fields         map[string]any         `json:"fields,omitempty"`
-	Name           *string                `json:"name" validate:"required"`
-	MRN            *string                `json:"mrn" validate:"required"`
-	Type           string                 `json:"type" validate:"required"`
-	Providers      []string               `json:"providers" validate:"required"`
-	Description    *string                `json:"description"`
-	Metadata       map[string]interface{} `json:"metadata"`
-	Schema         map[string]string      `json:"schema"`
-	Tags           []string               `json:"tags"`
-	CreatedBy      string                 `json:"created_by" validate:"required"`
-	Sources        []AssetSource          `json:"sources"`
-	Environments   map[string]Environment `json:"environments"`
-	ExternalLinks  []ExternalLink         `json:"external_links"`
-	Query          *string                `json:"query,omitempty"`
-	QueryLanguage  *string                `json:"query_language,omitempty"`
-	IsStub         bool                   `json:"is_stub"`
+	Name          *string                `json:"name" validate:"required"`
+	MRN           *string                `json:"mrn" validate:"required"`
+	Type          string                 `json:"type" validate:"required"`
+	Providers     []string               `json:"providers" validate:"required"`
+	Description   *string                `json:"description"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	Schema        map[string]string      `json:"schema"`
+	Tags          []string               `json:"tags"`
+	CreatedBy     string                 `json:"created_by" validate:"required"`
+	Sources       []AssetSource          `json:"sources"`
+	Environments  map[string]Environment `json:"environments"`
+	ExternalLinks []ExternalLink         `json:"external_links"`
+	Query         *string                `json:"query,omitempty"`
+	QueryLanguage *string                `json:"query_language,omitempty"`
+	IsStub        bool                   `json:"is_stub"`
 }
 
 type UpdateInput struct {
-	BusinessAreaID   *string                `json:"business_area_id,omitempty"`
 	ExpectedVersion  *int64                 `json:"-"`
 	GovernedFields   map[string]any         `json:"-"`
 	Name             *string                `json:"name"`
@@ -461,37 +456,31 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 
 	now := time.Now()
 	asset := &Asset{
-		ID:             uuid.New().String(),
-		Version:        1,
-		BusinessAreaID: input.BusinessAreaID,
-		Name:           input.Name,
-		MRN:            input.MRN,
-		Type:           input.Type,
-		Providers:      input.Providers,
-		Description:    input.Description,
-		Metadata:       input.Metadata,
-		Schema:         input.Schema,
-		Sources:        input.Sources,
-		Environments:   input.Environments,
-		Tags:           input.Tags,
-		ExternalLinks:  input.ExternalLinks,
-		CreatedBy:      input.CreatedBy,
-		CreatedAt:      now,
-		UpdatedAt:      now,
-		LastSyncAt:     now,
-		Query:          input.Query,
-		QueryLanguage:  input.QueryLanguage,
-		IsStub:         input.IsStub,
+		ID:            uuid.New().String(),
+		Version:       1,
+		Name:          input.Name,
+		MRN:           input.MRN,
+		Type:          input.Type,
+		Providers:     input.Providers,
+		Description:   input.Description,
+		Metadata:      input.Metadata,
+		Schema:        input.Schema,
+		Sources:       input.Sources,
+		Environments:  input.Environments,
+		Tags:          input.Tags,
+		ExternalLinks: input.ExternalLinks,
+		CreatedBy:     input.CreatedBy,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+		LastSyncAt:    now,
+		Query:         input.Query,
+		QueryLanguage: input.QueryLanguage,
+		IsStub:        input.IsStub,
 	}
 	if asset.Tags == nil {
 		asset.Tags = []string{}
 	}
 
-	if len(input.Fields) > 0 {
-		if err := applyFields(s.registry(), asset, input.Fields); err != nil {
-			return nil, err
-		}
-	}
 	if err := s.validateAsset(asset); err != nil {
 		return nil, err
 	}
@@ -600,10 +589,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 
 	updated := false
 	schemaUpdated := false
-	if input.BusinessAreaID != nil {
-		asset.BusinessAreaID = input.BusinessAreaID
-		updated = true
-	}
 
 	if input.Name != nil {
 		asset.Name = input.Name
@@ -660,8 +645,28 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if len(input.GovernedFields) > 0 {
+		metadata, err := cloneMetadata(asset.Metadata)
+		if err != nil {
+			return nil, err
+		}
+		asset.Metadata = metadata
 		if err := applyFields(s.registry(), asset, input.GovernedFields); err != nil {
 			return nil, err
+		}
+		before := MetamodelValues(s.registry(), &oldAsset)
+		after := MetamodelValues(s.registry(), asset)
+		for id := range input.GovernedFields {
+			if reflect.DeepEqual(before[id], after[id]) {
+				continue
+			}
+			field, _ := s.registry().Field(id)
+			name := strings.TrimPrefix(field.Storage, "marmot.")
+			if strings.HasPrefix(field.Storage, "metadata.") {
+				name = FieldMetadata
+			}
+			if !slices.Contains(changedFields, name) {
+				changedFields = append(changedFields, name)
+			}
 		}
 		updated = true
 	}

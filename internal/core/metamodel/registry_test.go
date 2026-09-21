@@ -27,8 +27,8 @@ func TestProfileExtendsNativeWithoutChangingIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := r.Field("owners"); !ok {
-		t.Fatal("native owners missing")
+	if _, ok := r.Field("tags"); !ok {
+		t.Fatal("native tags missing")
 	}
 	if f, ok := r.Field("name"); !ok || f.Storage != "marmot.name" || !f.Required {
 		t.Fatal("native name contract changed")
@@ -58,15 +58,20 @@ func TestProfileExtendsNativeWithoutChangingIdentity(t *testing.T) {
 
 func TestRejectInvalidDefinitions(t *testing.T) {
 	for name, document := range map[string]string{
-		"unknown property":   exampleProfile + "unexpected: true\n",
-		"duplicate YAML key": exampleProfile + "id: replacement\n",
-		"unknown type":       strings.Replace(exampleProfile, "type: integer", "type: executable", 1),
-		"invalid binding":    strings.Replace(exampleProfile, "metadata.example.retention", "marmot.mrn", 1),
-		"prototype binding":  strings.Replace(exampleProfile, "metadata.example.retention", "metadata.constructor.retention", 1),
-		"required nullable":  strings.Replace(exampleProfile, "required: true", "required: true\n    nullable: true", 1),
-		"format version":     strings.Replace(exampleProfile, "formatVersion: 1", "formatVersion: 2", 1),
-		"native override":    strings.ReplaceAll(strings.ReplaceAll(exampleProfile, "retention", "name"), "metadata.example.name", "marmot.name"),
-		"duplicate id":       exampleProfile + "  - id: retention\n    type: string\n    storage: metadata.example.other\n    core: true\n",
+		"unknown property":        exampleProfile + "unexpected: true\n",
+		"shadow native ownership": strings.ReplaceAll(exampleProfile, "retention", "owners"),
+		"shadow native identity":  strings.ReplaceAll(exampleProfile, "retention", "mrn"),
+		"duplicate YAML key":      exampleProfile + "id: replacement\n",
+		"unknown type":            strings.Replace(exampleProfile, "type: integer", "type: executable", 1),
+		"invalid binding":         strings.Replace(exampleProfile, "metadata.example.retention", "marmot.mrn", 1),
+		"prototype binding":       strings.Replace(exampleProfile, "metadata.example.retention", "metadata.constructor.retention", 1),
+		"required nullable":       strings.Replace(exampleProfile, "required: true", "required: true\n    nullable: true", 1),
+		"format version":          strings.Replace(exampleProfile, "formatVersion: 1", "formatVersion: 2", 1),
+		"native override":         strings.ReplaceAll(strings.ReplaceAll(exampleProfile, "retention", "name"), "metadata.example.name", "marmot.name"),
+		"duplicate id":            exampleProfile + "  - id: retention\n    type: string\n    storage: metadata.example.other\n    core: true\n",
+		"irrelevant constraint":   strings.Replace(exampleProfile, "minimum: 1", "minLength: 1", 1),
+		"unsupported reference":   strings.Replace(exampleProfile, "type: integer", "type: reference", 1),
+		"nullable native tags":    "formatVersion: 1\nid: example\nversion: 1\ndefaultLocale: en\nfields:\n  - id: tags\n    type: list\n    itemType: string\n    core: true\n    nullable: true\n    storage: marmot.tags\n",
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Load(strings.NewReader(document)); err == nil {
@@ -111,7 +116,6 @@ func TestSupportedValues(t *testing.T) {
 		{Field{Type: "date"}, "2026-09-17", "2026-02-30"},
 		{Field{Type: "enum", Values: []string{"internal", "public"}}, "internal", "translated value"},
 		{Field{Type: "list", ItemType: "integer"}, []any{1.0, 2.0}, []any{1.0, "2"}},
-		{Field{Type: "reference"}, "area-id", ""},
 	} {
 		t.Run(tc.field.Type, func(t *testing.T) {
 			if code := validateValue(tc.field, tc.good); code != "" {

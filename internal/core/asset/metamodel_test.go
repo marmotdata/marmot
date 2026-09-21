@@ -169,6 +169,39 @@ func newGovernedService(t *testing.T) Service {
 	return NewService(newMemoryRepo(), WithMetamodel(mustLoadProfile(t)))
 }
 
+type patchObserver struct{ fields []string }
+
+func (o *patchObserver) OnAssetUpdated(_ context.Context, _ *Asset, _ string, fields []string) {
+	o.fields = fields
+}
+func (*patchObserver) OnAssetDeleted(context.Context, *Asset) {}
+
+func TestPatchNotifiesAndRejectsUnimplementedRelations(t *testing.T) {
+	svc := newGovernedService(t)
+	created := mustCreateGoverned(t, svc, 30)
+	observer := &patchObserver{}
+	svc.SetNotificationObserver(observer)
+	updated, err := svc.PatchFields(context.Background(), created.ID, created.Version, map[string]any{"retention": 90.0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(observer.fields) != 1 || observer.fields[0] != FieldMetadata {
+		t.Fatalf("notification fields: %v", observer.fields)
+	}
+	for _, fields := range []map[string]any{{"owners": []any{"owner"}}, {"business_area": "area"}, {"retention": nil}, {"retention": "invalid"}} {
+		if _, err := svc.PatchFields(context.Background(), created.ID, updated.Version, fields); err == nil {
+			t.Fatalf("accepted unsupported/invalid fields: %v", fields)
+		}
+	}
+	persisted, err := svc.Get(context.Background(), created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if persisted.Version != updated.Version || *persisted.MRN != *created.MRN {
+		t.Fatal("failed patch modified persisted identity or version")
+	}
+}
+
 func mustLoadProfile(t *testing.T) *metamodel.Registry {
 	t.Helper()
 	r, err := metamodel.Load(strings.NewReader(governedProfile))
@@ -193,7 +226,7 @@ func validCreate(name string) CreateInput {
 func mustCreateGoverned(t *testing.T, svc Service, retention float64) *Asset {
 	t.Helper()
 	input := validCreate("table")
-	input.Fields = map[string]any{"retention": retention}
+	input.Metadata["example"] = map[string]any{"retention": retention}
 	created, err := svc.Create(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
