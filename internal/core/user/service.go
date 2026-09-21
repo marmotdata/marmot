@@ -20,6 +20,7 @@ var (
 	ErrInvalidPassword   = errors.New("invalid password")
 	ErrUnauthorized      = errors.New("unauthorized")
 	ErrInvalidAPIKey     = errors.New("invalid API key")
+	ErrUserInactive      = errors.New("user account is inactive")
 	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
 	ErrCannotDeleteSelf  = errors.New("user can't delete self")
 	ErrCannotDeleteAdmin = errors.New("can't delete admin user")

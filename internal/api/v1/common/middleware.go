@@ -94,6 +94,12 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					return
 				}
 
+				if errors.Is(err, user.ErrUserInactive) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "User account is inactive")
+					return
+				}
+
 				if errors.Is(err, user.ErrInvalidAPIKey) {
 					if principal, ok := serviceAccountPrincipal(r.Context(), apiKey); ok {
 						ctx := setPrincipalContext(r.Context(), principal)
@@ -171,6 +177,12 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				if err == nil {
 					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
 					next(w, r.WithContext(ctx))
+					return
+				}
+
+				if errors.Is(err, user.ErrUserInactive) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "User account is inactive")
 					return
 				}
 
