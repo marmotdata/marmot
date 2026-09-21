@@ -308,8 +308,14 @@ func (h *Handler) createTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A service account authenticates with no user behind it, so GetAuthenticatedUser
+	// returns nil here and the team is recorded with no creator rather than panicking.
 	user, _ := common.GetAuthenticatedUser(r.Context())
-	createdTeam, err := h.teamService.CreateTeam(r.Context(), req.Name, req.Description, user.ID)
+	var createdBy *string
+	if user != nil {
+		createdBy = &user.ID
+	}
+	createdTeam, err := h.teamService.CreateTeam(r.Context(), req.Name, req.Description, createdBy)
 	if err != nil {
 		if err == team.ErrTeamNameExists {
 			common.RespondError(w, http.StatusConflict, "Team name already exists")

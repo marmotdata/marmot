@@ -53,10 +53,10 @@ type SSOTeamMapping struct {
 } // @name SSOTeamMapping
 
 type AssetOwner struct {
-	AssetID   string     `json:"asset_id"`
-	UserID    *string    `json:"user_id,omitempty"`
-	TeamID    *string    `json:"team_id,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
+	AssetID   string    `json:"asset_id"`
+	UserID    *string   `json:"user_id,omitempty"`
+	TeamID    *string   `json:"team_id,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Owner struct {
@@ -110,12 +110,12 @@ func (s *Service) SetSearchObserver(observer SearchObserver) {
 	s.searchObserver = observer
 }
 
-func (s *Service) CreateTeam(ctx context.Context, name, description, createdBy string) (*Team, error) {
+func (s *Service) CreateTeam(ctx context.Context, name, description string, createdBy *string) (*Team, error) {
 	team := &Team{
 		Name:          name,
 		Description:   description,
 		CreatedViaSSO: false,
-		CreatedBy:     &createdBy,
+		CreatedBy:     createdBy,
 	}
 
 	if err := s.repo.CreateTeam(ctx, team); err != nil {
