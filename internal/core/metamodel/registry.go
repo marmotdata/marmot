@@ -343,6 +343,18 @@ func (r *Registry) Schema() Schema {
 func (r *Registry) Field(id string) (Field, bool) { f, ok := r.byID[id]; return f, ok }
 func (r *Registry) Enabled() bool                 { return r != nil && r.schema.Enabled }
 
+// isGoverned reports whether a field lives under a custom metadata.* binding rather than a
+// native marmot.* one. Only governed fields get the relaxed, non-blocking required behaviour;
+// native structural fields such as name keep their current, hard-blocking contract.
+func isGoverned(f Field) bool {
+	return strings.HasPrefix(f.Storage, "metadata.")
+}
+
+// Validate checks the state a write would persist. It never rejects a governed field for being
+// merely absent — that is completeness, reported separately by Missing — but still rejects a
+// present value of the wrong type, out of range, too long, not a declared enum member, or an
+// explicit null on a field that isn't nullable. Native structural fields (name) keep blocking on
+// absence, since they are part of the asset's identity, not governance completeness.
 func (r *Registry) Validate(values map[string]any, governed bool) error {
 	var violations []Violation
 	for _, f := range r.schema.Fields {
@@ -351,7 +363,7 @@ func (r *Registry) Validate(values map[string]any, governed bool) error {
 		}
 		value, present := values[f.ID]
 		if !present || value == nil {
-			if f.Required {
+			if f.Required && !isGoverned(f) {
 				violations = append(violations, Violation{f.ID, "required"})
 			} else if present && !f.Nullable {
 				violations = append(violations, Violation{f.ID, "not_nullable"})
@@ -368,6 +380,21 @@ func (r *Registry) Validate(values map[string]any, governed bool) error {
 	return nil
 }
 
+// Missing reports required fields with no value, for audit — it never blocks a write. A native
+// structural field never appears here in practice: Validate already refuses to persist it absent.
+func (r *Registry) Missing(values map[string]any, governed bool) []Violation {
+	var violations []Violation
+	for _, f := range r.schema.Fields {
+		if !f.Required || (f.AppliesTo == "governed_assets" && !governed) {
+			continue
+		}
+		if value, present := values[f.ID]; !present || value == nil {
+			violations = append(violations, Violation{f.ID, "required"})
+		}
+	}
+	return violations
+}
+
 func validateValue(f Field, value any) string {
 	v := f.Validation
 	switch f.Type {
@@ -376,7 +403,7 @@ func validateValue(f Field, value any) string {
 		if !ok {
 			return "type"
 		}
-		if f.Required && strings.TrimSpace(s) == "" {
+		if f.Required && !isGoverned(f) && strings.TrimSpace(s) == "" {
 			return "required"
 		}
 		length := utf8.RuneCountInString(s)
@@ -415,7 +442,7 @@ func validateValue(f Field, value any) string {
 		default:
 			return "type"
 		}
-		if f.Required && len(items) == 0 {
+		if f.Required && !isGoverned(f) && len(items) == 0 {
 			return "required"
 		}
 		if (v.MinItems != nil && len(items) < *v.MinItems) || (v.MaxItems != nil && len(items) > *v.MaxItems) {
