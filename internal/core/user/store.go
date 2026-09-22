@@ -67,6 +67,7 @@ func scanUser(row pgx.Row) (*User, error) {
 		&profilePicture,
 		&user.Active,
 		&user.MustChangePassword,
+		&user.SessionsInvalidatedAt,
 		&preferencesJSON,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -112,6 +113,7 @@ func scanUsers(rows pgx.Rows) ([]*User, error) {
 			&profilePicture,
 			&user.Active,
 			&user.MustChangePassword,
+			&user.SessionsInvalidatedAt,
 			&preferencesJSON,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -223,7 +225,7 @@ func (r *PostgresRepository) GetUser(ctx context.Context, id string) (*User, err
 			WHERE ur.user_id = $1
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -278,7 +280,7 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 			JOIN roles r ON r.id = ur.role_id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -517,7 +519,7 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -559,7 +561,7 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -629,7 +631,7 @@ func (r *PostgresRepository) GetUserByProviderID(ctx context.Context, provider s
 			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		JOIN user_identities ui ON ui.user_id = u.id
