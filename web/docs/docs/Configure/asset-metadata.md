@@ -1,16 +1,37 @@
----
-title: Asset metadata profiles
-description: Declare validated metadata fields without replacing native assets.
----
+# Asset metadata profiles
 
 An optional YAML profile describes editable asset fields. Native fields keep
-their existing storage; additional fields live in the asset's `metadata` JSON.
-The profile never changes MRNs, creates another asset store, or executes code.
+their existing storage; additional fields live in the asset's `metadata`
+JSON. The profile never changes MRNs, creates another asset store, or
+executes code.
 
-Set `metamodel.profile` in server configuration, or set
-`MARMOT_METAMODEL_PROFILE` to the profile's local path. The server loads the file
-once at startup and refuses invalid configuration. Without a profile, existing
-native writes keep their validation behavior.
+## Configuration
+
+### YAML
+
+```yaml
+metamodel:
+  profile: /etc/marmot/metamodel.yaml
+```
+
+### Environment Variables
+
+```
+MARMOT_METAMODEL_PROFILE=/etc/marmot/metamodel.yaml
+```
+
+## Options
+
+| Option | Description | Default | Environment Variable |
+| --- | --- | --- | --- |
+| `metamodel.profile` | Path to the YAML profile file | - (native schema only) | `MARMOT_METAMODEL_PROFILE` |
+
+The server loads the file once at startup and refuses invalid
+configuration; without a profile, existing native writes keep their usual
+validation. Not yet available via the Helm chart: mounting a profile file
+would need a volume the chart doesn't declare yet.
+
+## The profile format
 
 ```yaml
 formatVersion: 1
@@ -53,6 +74,11 @@ are not part of this profile format.
 Other native property IDs are reserved: a profile cannot introduce a second
 `mrn`, `owners`, or `version` inside metadata. Discovery plugins' `AssetSchemas`
 continue describing source fields; they do not activate a governance profile.
+
+A field's `presentation.control` can request an alternate editor for its
+value without changing its stored type — for example `control: user` on a
+`string` field asks the UI for an inline user search instead of a text box;
+the field still validates and stores as a plain string.
 
 Presentation keys are identifiers, not translated strings. Native labels use
 existing Marmot message keys. Applications supplying custom profiles also
