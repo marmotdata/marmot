@@ -343,18 +343,11 @@ func (r *Registry) Schema() Schema {
 func (r *Registry) Field(id string) (Field, bool) { f, ok := r.byID[id]; return f, ok }
 func (r *Registry) Enabled() bool                 { return r != nil && r.schema.Enabled }
 
-// isGoverned reports whether a field lives under a custom metadata.* binding rather than a
-// native marmot.* one. Only governed fields get the relaxed, non-blocking required behaviour;
-// native structural fields such as name keep their current, hard-blocking contract.
+// isGoverned reports whether a field lives under a custom metadata.* binding rather than a native marmot.* one. Only governed fields get the relaxed, non-blocking required behaviour; native structural fields such as name keep their current, hard-blocking contract.
 func isGoverned(f Field) bool {
 	return strings.HasPrefix(f.Storage, "metadata.")
 }
 
-// Validate checks the state a write would persist. It never rejects a governed field for being
-// merely absent — that is completeness, reported separately by Missing — but still rejects a
-// present value of the wrong type, out of range, too long, not a declared enum member, or an
-// explicit null on a field that isn't nullable. Native structural fields (name) keep blocking on
-// absence, since they are part of the asset's identity, not governance completeness.
 func (r *Registry) Validate(values map[string]any, governed bool) error {
 	var violations []Violation
 	for _, f := range r.schema.Fields {
@@ -380,8 +373,7 @@ func (r *Registry) Validate(values map[string]any, governed bool) error {
 	return nil
 }
 
-// Missing reports required fields with no value, for audit — it never blocks a write. A native
-// structural field never appears here in practice: Validate already refuses to persist it absent.
+// Missing reports required fields with no value, for audit — it never blocks a write.
 func (r *Registry) Missing(values map[string]any, governed bool) []Violation {
 	var violations []Violation
 	for _, f := range r.schema.Fields {
