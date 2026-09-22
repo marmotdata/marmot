@@ -107,6 +107,7 @@
 				{@const value = readMetadataValue(asset.metadata, field.storage)}
 				{@const section = field.presentation?.section ?? ''}
 				{@const previousSection = i > 0 ? (fields[i - 1].presentation?.section ?? '') : undefined}
+				{@const helpText = resolveMessage(field.presentation?.helpTextKey, context)}
 				{#if hasMultipleSections && section !== previousSection}
 					<p
 						class="bg-gray-50/60 px-5 pt-3 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
@@ -119,14 +120,16 @@
 						? 'border-l-2 border-l-earthy-terracotta-600 bg-earthy-terracotta-50/70 dark:bg-earthy-terracotta-900/10'
 						: ''}"
 				>
-					<dt
-						class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
-						title={resolveMessage(field.presentation?.helpTextKey, context)}
-					>
+					<dt class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
 						<IconifyIcon icon={typeIcon(field)} class="h-3.5 w-3.5 flex-shrink-0" />
 						<span>{label(field)}</span>
 						{#if field.required}
 							<span class="text-red-500" aria-hidden="true">*</span>
+						{/if}
+						{#if helpText}
+							<span class="text-gray-400 dark:text-gray-500" title={helpText} aria-hidden="true">
+								<IconifyIcon icon="mdi:information-outline" class="h-3.5 w-3.5" />
+							</span>
 						{/if}
 					</dt>
 					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
