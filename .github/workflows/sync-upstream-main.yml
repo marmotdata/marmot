@@ -1,32 +1,49 @@
-name: Sync upstream into main
+name: Sync upstream main
 
-# Runs from the default branch (dgu). Pushes fast-forwards to origin/main only.
-# Do not use GitHub "Sync fork": that would merge upstream into dgu.
+# Keeps the fork's `main` a bit-for-bit mirror of marmotdata/marmot's `main`.
+# Resets rather than merges, so it self-heals even if a Sync-fork click,
+# a stray PR, or a manual push ever put something else on `main`.
 
 on:
   schedule:
-    - cron: "17 6 * * 1"
-  workflow_dispatch:
+    - cron: "0 6 * * 1" # every Monday
+  workflow_dispatch: {}
 
 permissions:
   contents: write
 
 jobs:
-  fast-forward-main:
+  mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Fast-forward origin/main to marmotdata/marmot main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # If branch protection restricts pushes to main to a specific
+          # actor/App, the default GITHUB_TOKEN won't be enough — use a
+          # bot PAT stored as a secret and listed in that push restriction.
+          # token: ${{ secrets.MIRROR_PUSH_TOKEN }}
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/marmotdata/marmot.git
+
+      - name: Fetch upstream
+        run: git fetch upstream main --quiet
+
+      - name: Check whether main already matches upstream/main
+        id: diff
         run: |
-          set -euo pipefail
-          git init
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git remote add upstream https://github.com/marmotdata/marmot.git
-          git fetch origin main
-          git fetch upstream main
-          git checkout -B main origin/main
-          git merge --ff-only upstream/main
-          git push origin main
+          if git diff --quiet upstream/main HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Reset main to upstream/main exactly
+        if: steps.diff.outputs.changed == 'true'
+        run: git reset --hard upstream/main
+
+      - name: Push mirror (force-with-lease)
+        if: steps.diff.outputs.changed == 'true'
+        run: git push origin main --force-with-lease
