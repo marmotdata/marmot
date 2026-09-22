@@ -4,19 +4,21 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
-	searchService  search.Service
-	userService    user.Service
-	authService    auth.Service
-	metricsService *metrics.Service
-	config         *config.Config
+	searchService     search.Service
+	userService       user.Service
+	authService       auth.Service
+	metricsService    *metrics.Service
+	config            *config.Config
+	metamodelRegistry *metamodel.Registry
 }
 
 func NewHandler(
@@ -25,13 +27,15 @@ func NewHandler(
 	authService auth.Service,
 	metricsService *metrics.Service,
 	config *config.Config,
+	metamodelRegistry *metamodel.Registry,
 ) *Handler {
 	return &Handler{
-		searchService:  searchService,
-		userService:    userService,
-		authService:    authService,
-		metricsService: metricsService,
-		config:         config,
+		searchService:     searchService,
+		userService:       userService,
+		authService:       authService,
+		metricsService:    metricsService,
+		config:            config,
+		metamodelRegistry: metamodelRegistry,
 	}
 }
 

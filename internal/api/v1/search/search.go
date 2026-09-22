@@ -85,13 +85,15 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := search.Filter{
-		Query:      query,
-		Types:      types,
-		AssetTypes: assetTypes,
-		Providers:  providers,
-		Tags:       tags,
-		Limit:      limit,
-		Offset:     offset,
+		Query:           query,
+		Types:           types,
+		AssetTypes:      assetTypes,
+		Providers:       providers,
+		Tags:            tags,
+		Limit:           limit,
+		Offset:          offset,
+		MetadataFilters: h.parseGovernedFilters(queryValues),
+		MetadataFacets:  h.metadataFacetSpecs(),
 	}
 
 	response, err := h.searchService.Search(r.Context(), filter)
@@ -104,7 +106,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	if query != "" && response.Total > 0 {
 		recorder := h.metricsService.GetRecorder()
 		queryType := "full_text"
-		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
+		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 || len(filter.MetadataFilters) > 0 {
 			queryType = "filtered"
 		}
 		recorder.RecordSearchQuery(r.Context(), queryType, query)
