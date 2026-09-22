@@ -2547,6 +2547,12 @@ definitions:
     type: object
   metamodel.Presentation:
     properties:
+      control:
+        description: |-
+          Control names an alternate editor for a string field's value; the stored
+          value and its validation are unaffected. Only "user" is defined so far,
+          for a string field that holds a native Marmot user ID.
+        type: string
       descriptionKey:
         type: string
       helpTextKey:
