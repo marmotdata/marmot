@@ -43,7 +43,6 @@ fields:
     type: integer
     core: true
     required: true
-    appliesTo: governed_assets
     storage: metadata.example.retention
     validation:
       minimum: 1
@@ -75,13 +74,34 @@ rejected at startup.
 | `core` | yes | Membership in the governed contract. This format only declares core fields |
 | `required` | yes | Whether a value is mandatory. Optional core fields are allowed |
 | `nullable` | no | Allows explicit `null` on PATCH for optional fields |
-| `appliesTo` | no | `governed_assets` = non-stub assets only. Omit to include stubs too |
+| `appliesTo` | no | Entity kind and, for `asset`, asset type scoping (see below) |
 | `itemType` | for `list` | Scalar item type |
 | `values` | for `enum` | Allowed enum members |
 | `validation` | no | Constraints object (see below) |
 | `presentation` | no | UI/message hints (see below) |
 
-Stub creation is an internal ingestion operation, not an HTTP exemption.
+Stub creation is an internal ingestion operation, not an HTTP exemption; a
+stub's incomplete governed fields are never reported missing (see Validity and
+completeness, below), regardless of `appliesTo`.
+
+### appliesTo
+
+```yaml
+appliesTo:
+  kinds: [asset, data_product]
+  assetTypes: [Table, View]
+```
+
+| Key | Description |
+| --- | --- |
+| `kinds` | Entity kinds this field applies to. Defaults to `[asset]` when omitted |
+| `assetTypes` | Optional, only meaningful with `asset` in `kinds`: restricts to those asset types |
+
+`data_product` is supported; `glossary_term` is reserved in the schema but
+rejected at startup, pending glossary term preservation and versioning. A
+field's storage binding only needs to be unique within a kind: an `asset`
+field and a `data_product` field may share a binding, since they never share
+a row.
 
 ### Types
 
@@ -113,6 +133,7 @@ Stub creation is an internal ingestion operation, not an HTTP exemption.
 | `section` | Optional UI section id |
 | `order` | Optional sort order within the section |
 | `control` | Alternate editor without changing storage. Only `user` is defined so far (string holding a Marmot user ID) |
+| `facet` | Offer this field as a Discover segmented filter. Requires type `enum` or `boolean` |
 
 Native labels reuse existing Marmot message keys. A profile with custom fields
 should also ship a `messages` catalogue (below) so clients can resolve their
@@ -158,10 +179,12 @@ profile.
 
 ## Read the effective schema
 
-`GET /api/v1/metamodel` requires `assets/view` and returns the composed fields,
-profile version, `enabled`, and a deterministic schema hash. Clients consume
-this response instead of parsing the YAML themselves. The schema describes
-editable fields, not every property or relationship in an asset.
+`GET /api/v1/metamodel?kind=asset` requires `assets/view` and returns the
+composed fields for that kind, profile version, `enabled`, and a deterministic
+schema hash. `kind` defaults to `asset` and also accepts `data_product`.
+Clients consume this response instead of parsing the YAML themselves. The
+schema describes editable fields, not every property or relationship in an
+asset.
 
 ## Write through the asset API
 
@@ -200,19 +223,32 @@ quoted ETag. Native change notifications include the affected fields.
 | 428 | PATCH has no `If-Match`, or PUT changes configured metadata without it |
 
 This contract accepts a single strong quoted numeric version, not wildcard,
-weak, or multiple entity tags. Validation errors contain
-`{"fields":[{"field":"retention","code":"required"}]}`.
+weak, or multiple entity tags. Validation errors contain, for example,
+`{"fields":[{"field":"retention","code":"type"}]}`.
 
 PUT keeps its existing metadata replacement semantics, except that configured
 metadata fields omitted from the replacement are preserved. Changing one
 requires `If-Match`. PUT is not a general deep merge: other omitted metadata
 may be removed. Ingestion and OpenLineage use the same asset service and are
-subject to these rules. Configure producers to supply required values before
-enabling a profile; changing a protected value requires a version-aware writer.
+subject to these rules.
 
 Validation covers the final state in Create, Update, PATCH, AddTag, and
 RemoveTag. Unrelated ownership/term mutations continue using their native APIs;
 the profile cannot declare constraints on those relationships.
+
+### Validity and completeness
+
+A write is rejected only for validity: wrong type, out of range, too long, an
+undeclared enum member, an unknown field, or an explicit `null` on a
+non-nullable field. A required governed (`metadata.*`) field that is simply
+absent is never rejected — discovery and OpenLineage create and update assets
+without values they have no way to know. Native structural fields (`name`)
+keep blocking on absence; that is identity, not governance completeness.
+
+Missing required values are not yet surfaced in the API response — enabling a
+profile with new required fields produces silent gaps today, not failures.
+Treat `required` as a signal to build reporting around, not a gate that stops
+incomplete data from being written.
 
 ## Compatibility and rollout
 
@@ -222,10 +258,10 @@ writers must re-read on conflict; the service does not silently retry a stale
 document. Version checks cover asset row writes, not independent relationship
 tables. The resource version is separate from the profile version and hash.
 
-Before enabling a required field, backfill existing assets and update all
-producers. Existing noncompliant assets remain readable, but subsequent row
-mutations fail validation. Disabling a profile disables its validation and
-preservation; profiles do not provide access isolation.
+Enabling a required field needs no backfill: existing and newly-discovered
+assets without a value simply don't satisfy completeness, and keep writing
+normally (see Validity and completeness, above). Disabling a profile disables
+its validation and preservation; profiles do not provide access isolation.
 
 This is an upstream backend proposal. Profile-driven UI and SDK convenience
 methods are follow-up work; HTTP and the generated OpenAPI describe the initial
