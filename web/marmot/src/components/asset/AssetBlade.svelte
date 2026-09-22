@@ -12,6 +12,7 @@
 	import Tags from '$components/shared/Tags.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
+	import AssetGovernedFields from './AssetGovernedFields.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
@@ -324,6 +325,9 @@
 								</div>
 							</a>
 						{/if}
+
+						<!-- Governed metadata fields from the configured metamodel profile, if any -->
+						<AssetGovernedFields {asset} />
 
 						<!-- Descriptions and Glossary Terms - hide user description editing in static mode (now in page header) -->
 						{#if !staticPlacement && hasDescriptionsOrTerms}

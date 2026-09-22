@@ -9,7 +9,14 @@
 	import { nativeMessage } from '$lib/metamodel/i18n';
 	import { resolveMessage } from '$lib/metamodel/labels';
 	import { lookupOwnerById, type OwnerResult } from '$lib/metamodel/owners';
-	import { governedFields, isUnset, readMetadataValue, sectionLabel } from '$lib/metamodel/values';
+	import {
+		governedFields,
+		isUnset,
+		readMetadataValue,
+		sectionLabel,
+		typeIcon,
+		valueClass
+	} from '$lib/metamodel/values';
 
 	let { asset }: { asset: Asset } = $props();
 
@@ -80,34 +87,50 @@
 	function text(value: unknown): string {
 		return typeof value === 'object' ? JSON.stringify(value) : String(value);
 	}
+
+	function isEmptyValue(value: unknown): boolean {
+		return isUnset(value) || (Array.isArray(value) && value.length === 0);
+	}
 </script>
 
 {#if fields.length > 0}
-	<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-		<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+	<div
+		class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+	>
+		<h4
+			class="border-b border-gray-200 px-5 py-3 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100"
+		>
 			{m.discover_tab_metadata()}
 		</h4>
-		<dl class="space-y-3">
+		<dl>
 			{#each fields as field, i (field.id)}
 				{@const value = readMetadataValue(asset.metadata, field.storage)}
 				{@const section = field.presentation?.section ?? ''}
 				{@const previousSection = i > 0 ? (fields[i - 1].presentation?.section ?? '') : undefined}
 				{#if hasMultipleSections && section !== previousSection}
 					<p
-						class="pt-1 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:text-gray-500 first:pt-0"
+						class="bg-gray-50/60 px-5 pt-3 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
 					>
 						{section ? sectionLabel(section) : m.metamodel_other_section()}
 					</p>
 				{/if}
-				<div>
-					<dt class="flex items-baseline gap-1 text-xs text-gray-500 dark:text-gray-400">
+				<div
+					class="border-b border-gray-100 px-5 py-2.5 last:border-0 dark:border-gray-700/60 {field.required
+						? 'border-l-2 border-l-earthy-terracotta-600 bg-earthy-terracotta-50/70 dark:bg-earthy-terracotta-900/10'
+						: ''}"
+				>
+					<dt
+						class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
+						title={resolveMessage(field.presentation?.helpTextKey, context)}
+					>
+						<IconifyIcon icon={typeIcon(field)} class="h-3.5 w-3.5 flex-shrink-0" />
 						<span>{label(field)}</span>
 						{#if field.required}
 							<span class="text-red-500" aria-hidden="true">*</span>
 						{/if}
 					</dt>
-					<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-						{#if isUnset(value) || (Array.isArray(value) && value.length === 0)}
+					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+						{#if isEmptyValue(value)}
 							<span
 								class="italic {field.required
 									? 'text-red-600 dark:text-red-400'
@@ -141,16 +164,20 @@
 							<div class="flex flex-wrap gap-1">
 								{#each value as item, itemIndex (itemIndex)}
 									<span
-										class="rounded-full bg-earthy-terracotta-100 px-2 py-0.5 text-xs text-earthy-terracotta-700 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-100"
+										class="rounded-full bg-earthy-terracotta-100 px-2 py-0.5 text-xs break-all whitespace-pre-wrap text-earthy-terracotta-700 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-100"
 									>
 										{text(item)}
 									</span>
 								{/each}
 							</div>
 						{:else if typeof value === 'boolean'}
-							{value ? m.metamodel_yes() : m.metamodel_no()}
+							<span class="rounded-full px-2 py-0.5 text-xs {valueClass(value)}">
+								{value ? m.metamodel_yes() : m.metamodel_no()}
+							</span>
 						{:else}
-							{text(value)}
+							<span class="rounded-full px-2 py-0.5 text-xs {valueClass(value)}">
+								{text(value)}
+							</span>
 						{/if}
 					</dd>
 				</div>

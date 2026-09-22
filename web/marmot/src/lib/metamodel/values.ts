@@ -92,6 +92,39 @@ export function typeLabel(field: MetamodelField): string {
 	return field.type === 'list' ? `list<${field.itemType ?? '?'}>` : field.type;
 }
 
+/** An Iconify name for a field's type, shared by the governed table and the blade summary. */
+export function typeIcon(field: MetamodelField): string {
+	if (field.presentation?.control === 'user') return 'material-symbols:person-outline-rounded';
+	switch (field.type) {
+		case 'integer':
+		case 'number':
+			return 'material-symbols:tag-rounded';
+		case 'boolean':
+			return 'material-symbols:toggle-on-outline-rounded';
+		case 'date':
+			return 'material-symbols:calendar-today-outline-rounded';
+		case 'enum':
+			return 'material-symbols:list-alt-outline-rounded';
+		case 'list':
+			return 'material-symbols:format-list-bulleted-rounded';
+		default:
+			return 'material-symbols:text-fields-rounded';
+	}
+}
+
+/** Badge colour for a scalar value, matching the same convention as free-form metadata. */
+export function valueClass(value: unknown): string {
+	if (typeof value === 'boolean') {
+		return value
+			? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+			: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+	}
+	if (typeof value === 'number') {
+		return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
+	}
+	return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+}
+
 /**
  * A profile section id as a heading: "data_quality" -> "Data quality". Sections are not
  * translated (the profile format has no sectionKey), so this only reformats the raw id; an
