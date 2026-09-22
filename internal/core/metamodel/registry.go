@@ -343,8 +343,8 @@ func validateDefinition(f Field) error {
 	}
 	if strings.HasPrefix(f.Storage, "metadata.") {
 		parts := strings.Split(f.Storage, ".")
-		if len(parts) < 3 || len(parts) > 8 {
-			return errors.New("metadata binding requires a namespace and field")
+		if len(parts) < 2 || len(parts) > 8 {
+			return errors.New("metadata binding requires at least one field name")
 		}
 		for _, part := range parts[1:] {
 			if !identifier.MatchString(part) || slices.Contains([]string{"constructor", "prototype", "__proto__"}, part) {
