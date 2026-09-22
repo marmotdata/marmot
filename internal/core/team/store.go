@@ -900,12 +900,14 @@ func (r *PostgresRepository) ListAssetsByOwner(ctx context.Context, ownerType, o
 func (r *PostgresRepository) SearchOwners(ctx context.Context, query string, limit int) ([]*Owner, error) {
 	owners := []*Owner{}
 
-	// Search users
+	// Search users. The exact-ID branch lets a caller that only holds an id
+	// (a stored reference field's value, not free text a person typed) resolve
+	// it back to a name; a random query string will not collide with a UUID.
 	usersQuery := `
 		SELECT 'user' as type, u.id, u.name, u.username, ui.provider_email, u.profile_picture
 		FROM users u
 		LEFT JOIN user_identities ui ON u.id = ui.user_id
-		WHERE u.name ILIKE '%' || $1 || '%' OR u.username ILIKE '%' || $1 || '%'
+		WHERE u.name ILIKE '%' || $1 || '%' OR u.username ILIKE '%' || $1 || '%' OR u.id::text = $1
 		ORDER BY u.name
 		LIMIT $2`
 

@@ -27,7 +27,13 @@ type Presentation struct {
 	DescriptionKey string `json:"descriptionKey,omitempty"`
 	Section        string `json:"section,omitempty"`
 	Order          int    `json:"order,omitempty"`
+	// Control names an alternate editor for a string field's value; the stored
+	// value and its validation are unaffected. Only "user" is defined so far,
+	// for a string field that holds a native Marmot user ID.
+	Control string `json:"control,omitempty"`
 }
+
+var supportedControls = []string{"", "user"}
 
 type Constraints struct {
 	Minimum   *float64 `json:"minimum,omitempty"`
@@ -259,6 +265,12 @@ func validateDefinition(f Field) error {
 		if key != "" && !messageKey.MatchString(key) {
 			return errors.New("invalid message key")
 		}
+	}
+	if !slices.Contains(supportedControls, f.Presentation.Control) {
+		return errors.New("unsupported presentation control")
+	}
+	if f.Presentation.Control == "user" && f.Type != "string" {
+		return errors.New("the user control requires type string")
 	}
 	v := f.Validation
 	valueType := f.Type

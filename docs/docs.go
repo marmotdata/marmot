@@ -12417,6 +12417,10 @@ const docTemplate = `{
         "metamodel.Presentation": {
             "type": "object",
             "properties": {
+                "control": {
+                    "description": "Control names an alternate editor for a string field's value; the stored\nvalue and its validation are unaffected. Only \"user\" is defined so far,\nfor a string field that holds a native Marmot user ID.",
+                    "type": "string"
+                },
                 "descriptionKey": {
                     "type": "string"
                 },
