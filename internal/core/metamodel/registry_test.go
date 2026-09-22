@@ -173,6 +173,29 @@ fields:
 	}
 }
 
+func TestMetadataBindingWithoutNamespace(t *testing.T) {
+	profile := `formatVersion: 1
+id: example
+version: 1
+defaultLocale: en
+fields:
+  - id: asset_type
+    type: string
+    core: true
+    nullable: true
+    storage: metadata.asset_type
+    presentation:
+      labelKey: example.asset_type.label
+`
+	r, err := Load(strings.NewReader(profile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Validate(map[string]any{"name": "Demo", "asset_type": "dashboard"}, "asset", true); err != nil {
+		t.Fatalf("a namespace-less binding must validate a value ingestion already wrote there: %v", err)
+	}
+}
+
 func fieldIDs(fields []Field) []string {
 	ids := make([]string, len(fields))
 	for i, f := range fields {

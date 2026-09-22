@@ -71,7 +71,7 @@ rejected at startup.
 | --- | --- | --- |
 | `id` | yes | Field identifier |
 | `type` | yes | Value type (see below) |
-| `storage` | yes | Binding: native `marmot.*` or `metadata.<namespace>.<field>` |
+| `storage` | yes | Binding: native `marmot.*` or `metadata.<field>` (namespace optional) |
 | `core` | yes | Membership in the governed contract. This format only declares core fields |
 | `required` | yes | Whether a value is mandatory. Optional core fields are allowed |
 | `nullable` | no | Allows explicit `null` on PATCH for optional fields |
@@ -148,10 +148,13 @@ rebuild.
 | `marmot.tags` | `tags` |
 
 A native override must keep its id, binding, type, and structural requirements.
-Additional fields use `metadata.<namespace>.<field>`. Other native property ids
-(`mrn`, `owners`, `version`, …) are reserved: a profile cannot reintroduce them
-inside metadata. Discovery plugins' `AssetSchemas` still describe source fields;
-they do not activate a governance profile.
+Additional fields use `metadata.<field>`, optionally namespaced as
+`metadata.<namespace>.<field>` — a governed field binds to whatever path already
+holds the value, including one a discovery plugin already writes unnamespaced.
+Other native property ids (`mrn`, `owners`, `version`, …) are reserved: a
+profile cannot reintroduce them inside metadata. Discovery plugins'
+`AssetSchemas` still describe source fields; they do not activate a governance
+profile.
 
 ## Read the effective schema
 
