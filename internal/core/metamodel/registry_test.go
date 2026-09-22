@@ -72,6 +72,7 @@ func TestRejectInvalidDefinitions(t *testing.T) {
 		"irrelevant constraint":   strings.Replace(exampleProfile, "minimum: 1", "minLength: 1", 1),
 		"unsupported reference":   strings.Replace(exampleProfile, "type: integer", "type: reference", 1),
 		"nullable native tags":    "formatVersion: 1\nid: example\nversion: 1\ndefaultLocale: en\nfields:\n  - id: tags\n    type: list\n    itemType: string\n    core: true\n    nullable: true\n    storage: marmot.tags\n",
+		"facet on integer field":  strings.Replace(exampleProfile, "labelKey: example.retention.label", "labelKey: example.retention.label\n      facet: true", 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Load(strings.NewReader(document)); err == nil {
@@ -125,6 +126,31 @@ func TestSupportedValues(t *testing.T) {
 				t.Fatal("invalid value accepted")
 			}
 		})
+	}
+}
+
+func TestFacetPresentation(t *testing.T) {
+	profile := `formatVersion: 1
+id: example
+version: 1
+defaultLocale: en
+fields:
+  - id: classification
+    type: enum
+    core: true
+    storage: metadata.example.classification
+    values: [public, confidential]
+    presentation:
+      labelKey: example.classification.label
+      facet: true
+`
+	r, err := Load(strings.NewReader(profile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, ok := r.Field("classification")
+	if !ok || !f.Presentation.Facet {
+		t.Fatal("facet flag not carried into the registered field")
 	}
 }
 
