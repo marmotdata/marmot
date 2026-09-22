@@ -45,6 +45,7 @@ export interface Asset {
 	query?: string;
 	query_language?: string;
 	external_links?: ExternalLink[];
+	version?: number;
 }
 
 export interface GlossaryTerm {
