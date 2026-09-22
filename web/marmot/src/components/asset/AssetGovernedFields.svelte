@@ -112,7 +112,7 @@
 					<p
 						class="bg-gray-50/60 px-5 pt-3 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
 					>
-						{section ? sectionLabel(section) : m.metamodel_other_section()}
+						{section ? sectionLabel(section, context) : m.metamodel_other_section()}
 					</p>
 				{/if}
 				<div
