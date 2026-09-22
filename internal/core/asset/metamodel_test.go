@@ -51,12 +51,18 @@ func TestNativeProfileLeavesContractsUnchanged(t *testing.T) {
 	}
 }
 
-func TestCreateRejectsMissingRequiredGovernedField(t *testing.T) {
+func TestCreateAllowsMissingRequiredGovernedField(t *testing.T) {
+	// A required governed field is completeness, not validity: discovery must be able to
+	// create an asset before anyone can fill in a value it has no way to know.
 	svc := newGovernedService(t)
-	_, err := svc.Create(context.Background(), validCreate("table"))
-	var invalid *metamodel.ValidationError
-	if !errors.As(err, &invalid) || invalid.Fields[0].Field != "retention" {
-		t.Fatalf("expected retention required, got %v", err)
+	created, err := svc.Create(context.Background(), validCreate("table"))
+	if err != nil {
+		t.Fatalf("a missing governed required field must not block Create: %v", err)
+	}
+	registry := mustLoadProfile(t)
+	missing := registry.Missing(MetamodelValues(registry, created), !created.IsStub)
+	if len(missing) != 1 || missing[0].Field != "retention" {
+		t.Fatalf("expected retention reported missing: %v", missing)
 	}
 }
 
@@ -147,7 +153,9 @@ func TestNullablePatchRemovesOptionalField(t *testing.T) {
 	}
 }
 
-func TestAddTagRejectsAssetMissingRequiredField(t *testing.T) {
+func TestAddTagOnLegacyAssetMissingRequiredFieldStillSyncs(t *testing.T) {
+	// An asset created before the profile added `retention` has no way to have a value for
+	// it. Re-validating on every write must not stop it from syncing forever.
 	repo := newMemoryRepo()
 	svc := NewService(repo, WithMetamodel(mustLoadProfile(t)))
 	name, mrn := "legacy", "mrn:asset:legacy"
@@ -157,10 +165,8 @@ func TestAddTagRejectsAssetMissingRequiredField(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	_, err := svc.AddTag(context.Background(), "legacy-id", "x")
-	var invalid *metamodel.ValidationError
-	if !errors.As(err, &invalid) {
-		t.Fatalf("expected validation error, got %v", err)
+	if _, err := svc.AddTag(context.Background(), "legacy-id", "x"); err != nil {
+		t.Fatalf("a legacy asset missing a governed required field must keep syncing: %v", err)
 	}
 }
 

@@ -39,11 +39,27 @@ func TestProfileExtendsNativeWithoutChangingIdentity(t *testing.T) {
 	if err := r.Validate(map[string]any{"name": "table", "retention": 30.0}, true); err != nil {
 		t.Fatal(err)
 	}
-	for _, values := range []map[string]any{{"name": "table"}, {"name": "table", "retention": 0.0}, {"name": "table", "retention": "30"}} {
+	// A governed required field only absent is completeness, not validity: Validate lets it
+	// through, Missing reports it.
+	if err := r.Validate(map[string]any{"name": "table"}, true); err != nil {
+		t.Fatalf("absent governed required field must not block Validate: %v", err)
+	}
+	if missing := r.Missing(map[string]any{"name": "table"}, true); len(missing) != 1 || missing[0] != (Violation{"retention", "required"}) {
+		t.Fatalf("expected retention reported missing: %v", missing)
+	}
+	if missing := r.Missing(map[string]any{"name": "table", "retention": 30.0}, true); len(missing) != 0 {
+		t.Fatalf("satisfied field must not be reported missing: %v", missing)
+	}
+	for _, values := range []map[string]any{{"name": "table", "retention": 0.0}, {"name": "table", "retention": "30"}} {
 		var invalid *ValidationError
 		if err := r.Validate(values, true); !errors.As(err, &invalid) || len(invalid.Fields) != 1 || invalid.Fields[0].Field != "retention" {
 			t.Fatalf("expected retention violation: %v", err)
 		}
+	}
+	// Native structural fields keep blocking on absence: it's identity, not governance completeness.
+	var invalid *ValidationError
+	if err := r.Validate(map[string]any{"retention": 30.0}, true); !errors.As(err, &invalid) || len(invalid.Fields) != 1 || invalid.Fields[0] != (Violation{"name", "required"}) {
+		t.Fatalf("expected name violation: %v", err)
 	}
 	snapshot := r.Schema()
 	snapshot.Fields[0].Required = false
@@ -102,8 +118,15 @@ func TestOptionalCoreAndGovernedApplicability(t *testing.T) {
 	if err := r.Validate(map[string]any{"name": "stub"}, false); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.Validate(map[string]any{"name": "table"}, true); err == nil {
-		t.Fatal("required field skipped for governed asset")
+	// Absent + governed never blocks Validate, but Missing still respects the governed_assets scope.
+	if err := r.Validate(map[string]any{"name": "table"}, true); err != nil {
+		t.Fatalf("a governed field's absence must not block Validate: %v", err)
+	}
+	if missing := r.Missing(map[string]any{"name": "stub"}, false); len(missing) != 0 {
+		t.Fatalf("a governed_assets field must not be missing for a stub: %v", missing)
+	}
+	if missing := r.Missing(map[string]any{"name": "table"}, true); len(missing) != 1 || missing[0].Field != "retention" {
+		t.Fatalf("expected retention reported missing for a governed asset: %v", missing)
 	}
 }
 
@@ -182,4 +205,73 @@ func TestRejectInvalidMessages(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGovernedRequiredNeverBlocksAbsenceOrEmpty(t *testing.T) {
+	profile := `formatVersion: 1
+id: example
+version: 1
+defaultLocale: en
+fields:
+  - id: owner_note
+    type: string
+    core: true
+    required: true
+    storage: metadata.example.owner_note
+    presentation:
+      labelKey: example.owner_note.label
+  - id: classification
+    type: enum
+    core: true
+    required: true
+    storage: metadata.example.classification
+    values: [public, internal]
+    presentation:
+      labelKey: example.classification.label
+  - id: tags_custom
+    type: list
+    itemType: string
+    core: true
+    required: true
+    storage: metadata.example.tags_custom
+    presentation:
+      labelKey: example.tags_custom.label
+`
+	r, err := Load(strings.NewReader(profile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := map[string]any{"name": "table"}
+	if err := r.Validate(base, true); err != nil {
+		t.Fatalf("absent governed required fields must not block: %v", err)
+	}
+	if err := r.Validate(mergeValues(base, map[string]any{"owner_note": "", "tags_custom": []any{}}), true); err != nil {
+		t.Fatalf("empty-but-present governed required fields must not block: %v", err)
+	}
+	if missing := r.Missing(base, true); len(missing) != 3 {
+		t.Fatalf("expected all three fields reported missing: %v", missing)
+	}
+
+	// An explicit null still fails: required implies not nullable, and that stays a validity rule.
+	var invalid *ValidationError
+	if err := r.Validate(mergeValues(base, map[string]any{"owner_note": nil}), true); !errors.As(err, &invalid) || invalid.Fields[0] != (Violation{"owner_note", "not_nullable"}) {
+		t.Fatalf("expected not_nullable violation for explicit null: %v", err)
+	}
+
+	// A present value is still checked for validity: an undeclared enum member still fails,
+	// even though the field is exempt from the required check.
+	if err := r.Validate(mergeValues(base, map[string]any{"classification": "secret"}), true); !errors.As(err, &invalid) || invalid.Fields[0] != (Violation{"classification", "enum"}) {
+		t.Fatalf("expected enum violation: %v", err)
+	}
+}
+
+func mergeValues(base map[string]any, extra map[string]any) map[string]any {
+	out := make(map[string]any, len(base)+len(extra))
+	for k, v := range base {
+		out[k] = v
+	}
+	for k, v := range extra {
+		out[k] = v
+	}
+	return out
 }
