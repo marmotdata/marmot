@@ -31,6 +31,8 @@ type Presentation struct {
 	// value and its validation are unaffected. Only "user" is defined so far,
 	// for a string field that holds a native Marmot user ID.
 	Control string `json:"control,omitempty"`
+	// Facet asks Discover to offer this field as a segmented filter. Only enum and boolean fields qualify
+	Facet bool `json:"facet,omitempty"`
 }
 
 var supportedControls = []string{"", "user"}
@@ -302,6 +304,9 @@ func validateDefinition(f Field) error {
 	}
 	if f.Presentation.Control == "user" && f.Type != "string" {
 		return errors.New("the user control requires type string")
+	}
+	if f.Presentation.Facet && f.Type != "enum" && f.Type != "boolean" {
+		return errors.New("facet requires type enum or boolean")
 	}
 	v := f.Validation
 	valueType := f.Type
