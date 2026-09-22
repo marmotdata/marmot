@@ -51,39 +51,87 @@ fields:
       labelKey: example.retention.label
 ```
 
-`core` marks membership in the governed contract; `required` determines whether
-a value is mandatory. Optional core fields are supported. This initial format
-only declares core fields. `governed_assets` means non-stub assets; omit it to
-apply a field to stubs too. Stub creation is an internal ingestion operation,
-not a selectable exemption on the asset HTTP API.
+### Profile keys
 
-Supported types are `string`, `integer`, `number`, `boolean`, `date` (YYYY-MM-DD),
-`enum`, and `list` with a scalar `itemType`. Enums declare `values`. Constraints
-include `minimum`/`maximum`, `minLength`/`maxLength`, and `minItems`/`maxItems`.
-For lists, numeric/string constraints apply to each item. Configuration is
-limited to 1 MiB and 256 declared fields; duplicate keys, IDs, overlapping
-bindings, and unsupported types are rejected.
+| Key | Required | Description |
+| --- | --- | --- |
+| `formatVersion` | yes | Must be `1` |
+| `id` | yes | Profile identifier (`a-z`, digits, `_`, `-`) |
+| `version` | yes | Profile revision (≥ 1). Independent of `assets.version` |
+| `defaultLocale` | yes | Default locale for presentation message keys |
+| `fields` | yes | Field definitions (max `256`; file max `1 MiB`) |
 
-Native bindings are `marmot.name`, `marmot.description`,
-`marmot.user_description`, and `marmot.tags`. A native override must keep its
-ID, binding, type, and structural requirements. Additional fields use
-`metadata.<namespace>.<field>`. Ownership stays on the native relationship API;
-ownership constraints, arbitrary references, business areas, and scoped roles
-are not part of this profile format.
+Duplicate field IDs, overlapping storage bindings, and unsupported types are
+rejected at startup.
 
-Other native property IDs are reserved: a profile cannot introduce a second
-`mrn`, `owners`, or `version` inside metadata. Discovery plugins' `AssetSchemas`
-continue describing source fields; they do not activate a governance profile.
+### Field keys
 
-A field's `presentation.control` can request an alternate editor for its
-value without changing its stored type — for example `control: user` on a
-`string` field asks the UI for an inline user search instead of a text box;
-the field still validates and stores as a plain string.
+| Key | Required | Description |
+| --- | --- | --- |
+| `id` | yes | Field identifier |
+| `type` | yes | Value type (see below) |
+| `storage` | yes | Binding: native `marmot.*` or `metadata.<namespace>.<field>` |
+| `core` | yes | Membership in the governed contract. This format only declares core fields |
+| `required` | yes | Whether a value is mandatory. Optional core fields are allowed |
+| `nullable` | no | Allows explicit `null` on PATCH for optional fields |
+| `appliesTo` | no | `governed_assets` = non-stub assets only. Omit to include stubs too |
+| `itemType` | for `list` | Scalar item type |
+| `values` | for `enum` | Allowed enum members |
+| `validation` | no | Constraints object (see below) |
+| `presentation` | no | UI/message hints (see below) |
 
-Presentation keys are identifiers, not translated strings. Native labels use
-existing Marmot message keys. Applications supplying custom profiles also
-supply their translations. This backend contribution exposes the keys but does
-not yet render profile-driven forms or check custom translation catalogues.
+Stub creation is an internal ingestion operation, not an HTTP exemption.
+
+### Types
+
+| `type` | Notes |
+| --- | --- |
+| `string` | `"text"` |
+| `integer` | `12` |
+| `number` | `12.34` |
+| `boolean` | `true` |
+| `date` | `YYYY-MM-DD`, example: `2026-01-01` |
+| `enum` | Requires `values`, example: `["red", "green", "blue"]` |
+| `list` | Requires scalar `itemType`, example: `["integer"]`; list constraints apply to the list, item constraints to each item |
+
+### Validation keys
+
+| Key | Applies to |
+| --- | --- |
+| `minimum` / `maximum` | `integer`, `number`, and list items of those types |
+| `minLength` / `maxLength` | `string`, and list items of type `string` |
+| `minItems` / `maxItems` | `list` |
+
+### Presentation keys
+
+| Key | Description |
+| --- | --- |
+| `labelKey` | Message key for the field label (identifier, not a translated string) |
+| `helpTextKey` | Optional help-text message key |
+| `descriptionKey` | Optional description message key |
+| `section` | Optional UI section id |
+| `order` | Optional sort order within the section |
+| `control` | Alternate editor without changing storage. Only `user` is defined so far (string holding a Marmot user ID) |
+
+Native labels reuse existing Marmot message keys. Applications that ship custom
+profiles also ship their translations. This backend contribution exposes the
+keys; it does not yet render profile-driven forms or check custom translation
+catalogues.
+
+### Native storage bindings
+
+| Binding | Field id |
+| --- | --- |
+| `marmot.name` | `name` |
+| `marmot.description` | `description` |
+| `marmot.user_description` | `user_description` |
+| `marmot.tags` | `tags` |
+
+A native override must keep its id, binding, type, and structural requirements.
+Additional fields use `metadata.<namespace>.<field>`. Other native property ids
+(`mrn`, `owners`, `version`, …) are reserved: a profile cannot reintroduce them
+inside metadata. Discovery plugins' `AssetSchemas` still describe source fields;
+they do not activate a governance profile.
 
 ## Read the effective schema
 
