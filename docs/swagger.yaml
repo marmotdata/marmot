@@ -1097,6 +1097,15 @@ definitions:
         items:
           $ref: '#/definitions/FacetValue'
         type: array
+      metadata:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/FacetValue'
+          type: array
+        description: |-
+          Governed field storage path -> counts, only present for facetable metamodel
+          fields.
+        type: object
       providers:
         items:
           $ref: '#/definitions/FacetValue'

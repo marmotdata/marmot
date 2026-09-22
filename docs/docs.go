@@ -10231,6 +10231,16 @@ const docTemplate = `{
                         "$ref": "#/definitions/FacetValue"
                     }
                 },
+                "metadata": {
+                    "description": "Governed field storage path -> counts, only present for facetable metamodel fields.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/FacetValue"
+                        }
+                    }
+                },
                 "providers": {
                     "type": "array",
                     "items": {
