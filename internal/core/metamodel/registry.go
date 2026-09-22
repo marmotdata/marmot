@@ -416,6 +416,23 @@ func (r *Registry) SchemaForKind(kind string) Schema {
 func (r *Registry) Field(id string) (Field, bool) { f, ok := r.byID[id]; return f, ok }
 func (r *Registry) Enabled() bool                 { return r != nil && r.schema.Enabled }
 
+// ValueAt reads the value a metadata.* storage binding points to, shared by every entity kind that stores governed fields under its own metadata JSON.
+func ValueAt(metadata map[string]any, storage string) (any, bool) {
+	parts := strings.Split(strings.TrimPrefix(storage, "metadata."), ".")
+	var value any = metadata
+	for _, part := range parts {
+		child, ok := value.(map[string]any)
+		if !ok {
+			return nil, false
+		}
+		value, ok = child[part]
+		if !ok {
+			return nil, false
+		}
+	}
+	return value, true
+}
+
 // Fields returns the fields that apply to kind ("asset", "data_product"; more may be added).
 func (r *Registry) Fields(kind string) []Field {
 	var out []Field
