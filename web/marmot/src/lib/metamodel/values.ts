@@ -1,3 +1,4 @@
+import type { MessageContext } from './labels';
 import type { MetamodelField } from './types';
 
 export type Draft = string | string[] | null | undefined;
@@ -50,6 +51,11 @@ export function governedFields(fields: MetamodelField[]): MetamodelField[] {
 				(a.presentation?.order ?? 0) - (b.presentation?.order ?? 0) ||
 				a.id.localeCompare(b.id)
 		);
+}
+
+/** Governed fields the profile offers as segmented Discover filters, in the same order as governedFields. */
+export function facetableFields(fields: MetamodelField[]): MetamodelField[] {
+	return governedFields(fields).filter((field) => field.presentation?.facet);
 }
 
 export function governedPaths(fields: MetamodelField[]): string[][] {
@@ -125,17 +131,22 @@ export function valueClass(value: unknown): string {
 	return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
 }
 
-/**
- * A profile section id as a heading: "data_quality" -> "Data quality". Sections are not
- * translated (the profile format has no sectionKey), so this only reformats the raw id; an
- * empty section is the caller's business, typically an i18n fallback like "Other".
- */
-export function sectionLabel(section: string): string {
-	return section
-		.split(/[_-]+/)
-		.filter(Boolean)
-		.map((word, i) => (i === 0 ? word[0].toUpperCase() + word.slice(1) : word))
-		.join(' ');
+/** Resolves a section id through the same profile/native message chain as field labels. */
+export function sectionLabel(section: string, context: MessageContext): string {
+	// Inlines resolveMessage's fallback chain: a plain '.ts'-suffixed import works when a
+	// script runs directly under Node, but the app's tsconfig rejects it in bundled code.
+	const resolved =
+		context.messages?.[context.locale]?.[section] ??
+		context.messages?.[context.defaultLocale]?.[section] ??
+		context.native?.(section);
+	return (
+		resolved ??
+		section
+			.split(/[_-]+/)
+			.filter(Boolean)
+			.map((word, i) => (i === 0 ? word[0].toUpperCase() + word.slice(1) : word))
+			.join(' ')
+	);
 }
 
 export function isUnset(value: unknown): boolean {
