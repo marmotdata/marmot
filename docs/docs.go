@@ -12462,6 +12462,16 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "messages": {
+                    "description": "Messages resolves labelKey/helpTextKey/descriptionKey to text, keyed by\nlocale then by key. A key missing from the current locale falls back to\ndefaultLocale, then to the raw key. Clients own this fallback chain.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "version": {
                     "type": "integer"
                 }

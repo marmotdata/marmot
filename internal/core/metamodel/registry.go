@@ -64,6 +64,10 @@ type Profile struct {
 	Version       int     `json:"version"`
 	DefaultLocale string  `json:"defaultLocale"`
 	Fields        []Field `json:"fields"`
+	// Messages resolves labelKey/helpTextKey/descriptionKey to text, keyed by
+	// locale then by key. A key missing from the current locale falls back to
+	// defaultLocale, then to the raw key. Clients own this fallback chain.
+	Messages map[string]map[string]string `json:"messages,omitempty"`
 }
 
 type Schema struct {
@@ -157,7 +161,11 @@ func New(profile *Profile) (*Registry, error) {
 		if len(profile.Fields) > 256 {
 			return nil, errors.New("metamodel exceeds 256 fields")
 		}
+		if err := validateMessages(profile.Messages); err != nil {
+			return nil, err
+		}
 		schema.FormatVersion, schema.ID, schema.Version, schema.DefaultLocale = profile.FormatVersion, profile.ID, profile.Version, profile.DefaultLocale
+		schema.Messages = profile.Messages
 		schema.Enabled = true
 		seen := make(map[string]bool)
 		for _, field := range profile.Fields {
@@ -215,6 +223,29 @@ func New(profile *Profile) (*Registry, error) {
 		r.byID[f.ID] = f
 	}
 	return r, nil
+}
+
+func validateMessages(messages map[string]map[string]string) error {
+	if len(messages) > 64 {
+		return errors.New("metamodel exceeds 64 message locales")
+	}
+	for locale, catalog := range messages {
+		if !messageKey.MatchString(locale) {
+			return fmt.Errorf("invalid message locale %q", locale)
+		}
+		if len(catalog) > 2048 {
+			return fmt.Errorf("locale %q exceeds 2048 messages", locale)
+		}
+		for key, value := range catalog {
+			if !messageKey.MatchString(key) {
+				return fmt.Errorf("invalid message key %q", key)
+			}
+			if value == "" {
+				return fmt.Errorf("empty message for key %q", key)
+			}
+		}
+	}
+	return nil
 }
 
 func validateDefinition(f Field) error {
