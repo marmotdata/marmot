@@ -46,6 +46,20 @@ type Constraints struct {
 	MaxItems  *int     `json:"maxItems,omitempty"`
 }
 
+// AppliesTo scopes a field to entity kinds and, within asset, to specific asset types. Kinds
+// defaults to ["asset"] when empty. Stub exemption is not part of this; see Registry.Missing.
+type AppliesTo struct {
+	Kinds      []string `json:"kinds,omitempty"`
+	AssetTypes []string `json:"assetTypes,omitempty"`
+}
+
+func (a AppliesTo) EffectiveKinds() []string {
+	if len(a.Kinds) == 0 {
+		return []string{"asset"}
+	}
+	return a.Kinds
+}
+
 type Field struct {
 	ID           string       `json:"id"`
 	Type         string       `json:"type"`
@@ -54,7 +68,7 @@ type Field struct {
 	Required     bool         `json:"required"`
 	Nullable     bool         `json:"nullable,omitempty"`
 	Storage      string       `json:"storage"`
-	AppliesTo    string       `json:"appliesTo,omitempty"`
+	AppliesTo    AppliesTo    `json:"appliesTo,omitempty"`
 	Values       []string     `json:"values,omitempty"`
 	Validation   Constraints  `json:"validation,omitempty"`
 	Presentation Presentation `json:"presentation,omitempty"`
@@ -181,7 +195,8 @@ func New(profile *Profile) (*Registry, error) {
 			index := slices.IndexFunc(schema.Fields, func(f Field) bool { return f.ID == field.ID })
 			if index >= 0 {
 				base := schema.Fields[index]
-				if field.Storage != base.Storage || field.Type != base.Type || field.ItemType != base.ItemType || !field.Core || (field.Nullable && !base.Nullable) || (base.Required && !field.Required) || (base.Required && field.AppliesTo != "") {
+				overridesScope := len(field.AppliesTo.Kinds) > 0 || len(field.AppliesTo.AssetTypes) > 0
+				if field.Storage != base.Storage || field.Type != base.Type || field.ItemType != base.ItemType || !field.Core || (field.Nullable && !base.Nullable) || (base.Required && !field.Required) || (base.Required && overridesScope) {
 					return nil, fmt.Errorf("field %q changes a native contract", field.ID)
 				}
 				if field.Presentation.LabelKey == "" {
@@ -202,17 +217,25 @@ func New(profile *Profile) (*Registry, error) {
 			}
 		}
 	}
-	storage := make(map[string]bool)
+	// Unique per kind, not globally: different kinds never share a row.
+	storageByKind := make(map[string]map[string]bool)
 	for _, f := range schema.Fields {
-		if storage[f.Storage] {
-			return nil, fmt.Errorf("duplicate binding %q", f.Storage)
-		}
-		for previous := range storage {
-			if strings.HasPrefix(f.Storage, previous+".") || strings.HasPrefix(previous, f.Storage+".") {
-				return nil, fmt.Errorf("overlapping bindings %q and %q", previous, f.Storage)
+		for _, kind := range f.AppliesTo.EffectiveKinds() {
+			seen := storageByKind[kind]
+			if seen == nil {
+				seen = make(map[string]bool)
+				storageByKind[kind] = seen
 			}
+			if seen[f.Storage] {
+				return nil, fmt.Errorf("duplicate binding %q for kind %q", f.Storage, kind)
+			}
+			for previous := range seen {
+				if strings.HasPrefix(f.Storage, previous+".") || strings.HasPrefix(previous, f.Storage+".") {
+					return nil, fmt.Errorf("overlapping bindings %q and %q for kind %q", previous, f.Storage, kind)
+				}
+			}
+			seen[f.Storage] = true
 		}
-		storage[f.Storage] = true
 	}
 	data, err := json.Marshal(schema.Profile)
 	if err != nil {
@@ -250,12 +273,49 @@ func validateMessages(messages map[string]map[string]string) error {
 	return nil
 }
 
+var supportedKinds = []string{"asset", "data_product"}
+
+func validateAppliesTo(a AppliesTo) error {
+	if len(a.Kinds) > 8 {
+		return errors.New("appliesTo exceeds 8 kinds")
+	}
+	seen := make(map[string]bool, len(a.Kinds))
+	for _, kind := range a.Kinds {
+		if seen[kind] {
+			return fmt.Errorf("duplicate appliesTo kind %q", kind)
+		}
+		seen[kind] = true
+		if kind == "glossary_term" {
+			return errors.New("appliesTo kind \"glossary_term\" is reserved, not yet supported")
+		}
+		if !slices.Contains(supportedKinds, kind) {
+			return fmt.Errorf("unknown appliesTo kind %q", kind)
+		}
+	}
+	if len(a.AssetTypes) > 0 {
+		if len(a.Kinds) > 0 && !slices.Contains(a.Kinds, "asset") {
+			return errors.New("appliesTo assetTypes requires kind asset")
+		}
+		if len(a.AssetTypes) > 64 {
+			return errors.New("appliesTo exceeds 64 assetTypes")
+		}
+		seenTypes := make(map[string]bool, len(a.AssetTypes))
+		for _, t := range a.AssetTypes {
+			if t == "" || seenTypes[t] {
+				return errors.New("empty or duplicate appliesTo assetType")
+			}
+			seenTypes[t] = true
+		}
+	}
+	return nil
+}
+
 func validateDefinition(f Field) error {
 	if !identifier.MatchString(f.ID) || len(f.ID) > 80 || !f.Core || (f.Required && f.Nullable) {
 		return errors.New("invalid id, core or nullable/required combination")
 	}
-	if f.AppliesTo != "" && f.AppliesTo != "governed_assets" {
-		return errors.New("unknown appliesTo profile")
+	if err := validateAppliesTo(f.AppliesTo); err != nil {
+		return err
 	}
 	if !slices.Contains([]string{"string", "integer", "number", "boolean", "date", "enum", "list"}, f.Type) {
 		return errors.New("unsupported type")
@@ -340,18 +400,41 @@ func (r *Registry) Schema() Schema {
 	return schema
 }
 
+// SchemaForKind is Schema with Fields narrowed to those that apply to kind.
+func (r *Registry) SchemaForKind(kind string) Schema {
+	schema := r.Schema()
+	filtered := []Field{}
+	for _, f := range schema.Fields {
+		if slices.Contains(f.AppliesTo.EffectiveKinds(), kind) {
+			filtered = append(filtered, f)
+		}
+	}
+	schema.Fields = filtered
+	return schema
+}
+
 func (r *Registry) Field(id string) (Field, bool) { f, ok := r.byID[id]; return f, ok }
 func (r *Registry) Enabled() bool                 { return r != nil && r.schema.Enabled }
 
-// isGoverned reports whether a field lives under a custom metadata.* binding rather than a native marmot.* one. Only governed fields get the relaxed, non-blocking required behaviour; native structural fields such as name keep their current, hard-blocking contract.
+// Fields returns the fields that apply to kind ("asset", "data_product"; more may be added).
+func (r *Registry) Fields(kind string) []Field {
+	var out []Field
+	for _, f := range r.schema.Fields {
+		if slices.Contains(f.AppliesTo.EffectiveKinds(), kind) {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
 func isGoverned(f Field) bool {
 	return strings.HasPrefix(f.Storage, "metadata.")
 }
 
-func (r *Registry) Validate(values map[string]any, governed bool) error {
+func (r *Registry) Validate(values map[string]any, kind string, governed bool) error {
 	var violations []Violation
-	for _, f := range r.schema.Fields {
-		if f.AppliesTo == "governed_assets" && !governed {
+	for _, f := range r.Fields(kind) {
+		if isGoverned(f) && !governed {
 			continue
 		}
 		value, present := values[f.ID]
@@ -373,11 +456,15 @@ func (r *Registry) Validate(values map[string]any, governed bool) error {
 	return nil
 }
 
-// Missing reports required fields with no value, for audit — it never blocks a write.
-func (r *Registry) Missing(values map[string]any, governed bool) []Violation {
+// Missing reports required fields with no value, for audit — it never blocks a write. Stubs
+// (governed=false) are unconditionally exempt.
+func (r *Registry) Missing(values map[string]any, kind string, governed bool) []Violation {
+	if !governed {
+		return nil
+	}
 	var violations []Violation
-	for _, f := range r.schema.Fields {
-		if !f.Required || (f.AppliesTo == "governed_assets" && !governed) {
+	for _, f := range r.Fields(kind) {
+		if !f.Required {
 			continue
 		}
 		if value, present := values[f.ID]; !present || value == nil {

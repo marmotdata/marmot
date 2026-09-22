@@ -2516,6 +2516,17 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  metamodel.AppliesTo:
+    properties:
+      assetTypes:
+        items:
+          type: string
+        type: array
+      kinds:
+        items:
+          type: string
+        type: array
+    type: object
   metamodel.Constraints:
     properties:
       maxItems:
@@ -2534,7 +2545,7 @@ definitions:
   metamodel.Field:
     properties:
       appliesTo:
-        type: string
+        $ref: '#/definitions/metamodel.AppliesTo'
       core:
         type: boolean
       id:
@@ -5151,9 +5162,15 @@ paths:
       - mcp
   /api/v1/metamodel:
     get:
-      description: Returns the composed native and configured field schema. Clients
-        must not reinterpret source YAML.
+      description: Returns the composed native and configured field schema for
+        an entity kind. Clients must not reinterpret source YAML.
       operationId: getMetamodel
+      parameters:
+      - default: asset
+        description: Entity kind (asset, data_product)
+        in: query
+        name: kind
+        type: string
       produces:
       - application/json
       responses:

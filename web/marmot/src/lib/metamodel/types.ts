@@ -19,6 +19,11 @@ export interface MetamodelConstraints {
 	maxItems?: number;
 }
 
+export interface MetamodelAppliesTo {
+	kinds?: string[];
+	assetTypes?: string[];
+}
+
 export interface MetamodelField {
 	id: string;
 	type: string;
@@ -27,7 +32,7 @@ export interface MetamodelField {
 	required: boolean;
 	nullable?: boolean;
 	storage: string;
-	appliesTo?: string;
+	appliesTo: MetamodelAppliesTo;
 	values?: string[];
 	validation?: MetamodelConstraints;
 	presentation?: MetamodelPresentation;
