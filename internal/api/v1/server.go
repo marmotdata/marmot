@@ -560,7 +560,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config, encryptionConfigured),
-		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config),
+		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config, metamodelRegistry),
 		schedulesHandler,
 		websocket.NewHandler(wsHub, config),
 		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
