@@ -24,7 +24,7 @@ func (h *Handler) parseGovernedFilters(queryValues map[string][]string) map[stri
 			continue
 		}
 		field, ok := h.metamodelRegistry.Field(id)
-		if !ok || !field.Presentation.Facet {
+		if !ok || !field.Presentation.Facet || !slices.Contains(field.AppliesTo.EffectiveKinds(), "asset") {
 			continue
 		}
 		var literals []string
@@ -50,7 +50,7 @@ func (h *Handler) parseGovernedFilters(queryValues map[string][]string) map[stri
 // listing queries always report counts for the values Discover can filter by.
 func (h *Handler) metadataFacetSpecs() []search.MetadataFacetSpec {
 	var specs []search.MetadataFacetSpec
-	for _, field := range h.metamodelRegistry.Schema().Fields {
+	for _, field := range h.metamodelRegistry.Fields("asset") {
 		if !field.Presentation.Facet {
 			continue
 		}

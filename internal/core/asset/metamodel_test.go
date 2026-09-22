@@ -20,7 +20,6 @@ fields:
     type: integer
     core: true
     required: true
-    appliesTo: governed_assets
     storage: metadata.example.retention
     validation:
       minimum: 1
@@ -38,7 +37,7 @@ fields:
 
 func TestNativeProfileLeavesContractsUnchanged(t *testing.T) {
 	svc := NewService(newMemoryRepo())
-	schema := svc.Metamodel()
+	schema := svc.Metamodel("asset")
 	if schema.Enabled {
 		t.Fatal("native schema should not be marked enabled")
 	}
@@ -60,7 +59,7 @@ func TestCreateAllowsMissingRequiredGovernedField(t *testing.T) {
 		t.Fatalf("a missing governed required field must not block Create: %v", err)
 	}
 	registry := mustLoadProfile(t)
-	missing := registry.Missing(MetamodelValues(registry, created), !created.IsStub)
+	missing := registry.Missing(MetamodelValues(registry, created), "asset", !created.IsStub)
 	if len(missing) != 1 || missing[0].Field != "retention" {
 		t.Fatalf("expected retention reported missing: %v", missing)
 	}

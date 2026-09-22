@@ -3831,7 +3831,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the composed native and configured field schema. Clients must not reinterpret source YAML.",
+                "description": "Returns the composed native and configured field schema for an entity kind. Clients must not reinterpret source YAML.",
                 "produces": [
                     "application/json"
                 ],
@@ -3840,6 +3840,15 @@ const docTemplate = `{
                 ],
                 "summary": "Get the effective metamodel schema",
                 "operationId": "getMetamodel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "asset",
+                        "description": "Entity kind (asset, data_product)",
+                        "name": "kind",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -12360,6 +12369,23 @@ const docTemplate = `{
                 }
             }
         },
+        "metamodel.AppliesTo": {
+            "type": "object",
+            "properties": {
+                "assetTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kinds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "metamodel.Constraints": {
             "type": "object",
             "properties": {
@@ -12387,7 +12413,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "appliesTo": {
-                    "type": "string"
+                    "$ref": "#/definitions/metamodel.AppliesTo"
                 },
                 "core": {
                     "type": "boolean"
