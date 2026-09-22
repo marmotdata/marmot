@@ -5,6 +5,7 @@ import "testing"
 // Load runs once per process, so this must stay the only test calling it.
 func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
 	t.Setenv("MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS", "claude.ai,example.com:8443")
+	t.Setenv("MARMOT_METAMODEL_PROFILE", "/etc/marmot/metamodel.yaml")
 
 	cfg, err := Load("")
 	if err != nil {
@@ -14,6 +15,9 @@ func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
 	got := cfg.Auth.DCR.AllowedRedirectHosts
 	if len(got) != 2 || got[0] != "claude.ai" || got[1] != "example.com:8443" {
 		t.Fatalf("unexpected allowlist from env: %v", got)
+	}
+	if cfg.Metamodel.Profile != "/etc/marmot/metamodel.yaml" {
+		t.Fatalf("unexpected metamodel profile from env: %q", cfg.Metamodel.Profile)
 	}
 }
 
