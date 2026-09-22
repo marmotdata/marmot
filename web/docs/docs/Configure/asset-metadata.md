@@ -60,6 +60,7 @@ fields:
 | `version` | yes | Profile revision (≥ 1). Independent of `assets.version` |
 | `defaultLocale` | yes | Default locale for presentation message keys |
 | `fields` | yes | Field definitions (max `256`; file max `1 MiB`) |
+| `messages` | no | Message catalogue resolving presentation keys to text, by locale (see below) |
 
 Duplicate field IDs, overlapping storage bindings, and unsupported types are
 rejected at startup.
@@ -113,10 +114,29 @@ Stub creation is an internal ingestion operation, not an HTTP exemption.
 | `order` | Optional sort order within the section |
 | `control` | Alternate editor without changing storage. Only `user` is defined so far (string holding a Marmot user ID) |
 
-Native labels reuse existing Marmot message keys. Applications that ship custom
-profiles also ship their translations. This backend contribution exposes the
-keys; it does not yet render profile-driven forms or check custom translation
-catalogues.
+Native labels reuse existing Marmot message keys. A profile with custom fields
+should also ship a `messages` catalogue (below) so clients can resolve their
+keys without a Marmot rebuild; this backend contribution exposes the keys and
+serves the catalogue, it does not yet render profile-driven forms itself.
+
+### Message catalogues
+
+```yaml
+messages:
+  en:
+    example.retention.label: Retention (days)
+  es:
+    example.retention.label: Retención (días)
+```
+
+`messages` maps locale to a flat key → text catalogue. `GET /api/v1/metamodel`
+returns it verbatim as `messages`. A client resolves a presentation key against
+the current locale's catalogue, then `defaultLocale`'s, then its own native
+messages, then falls back to the raw key — the server does no translation or
+fallback itself. Locales and keys are validated as identifiers; values must be
+non-empty. Keeping labels in this catalogue, not in Marmot's own message
+files, means editing a profile's text never requires a kernel change or
+rebuild.
 
 ### Native storage bindings
 

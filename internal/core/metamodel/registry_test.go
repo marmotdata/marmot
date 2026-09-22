@@ -127,3 +127,33 @@ func TestSupportedValues(t *testing.T) {
 		})
 	}
 }
+
+func TestMessagesCatalog(t *testing.T) {
+	profile := exampleProfile + "messages:\n  en:\n    example.retention.label: Retention (days)\n  es:\n    example.retention.label: Retención (días)\n"
+	r, err := Load(strings.NewReader(profile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	messages := r.Schema().Messages
+	if messages["en"]["example.retention.label"] != "Retention (days)" || messages["es"]["example.retention.label"] != "Retención (días)" {
+		t.Fatalf("messages not carried into schema: %v", messages)
+	}
+	r2, _ := Load(strings.NewReader(exampleProfile))
+	if r.Schema().Hash == r2.Schema().Hash {
+		t.Fatal("messages did not change the schema hash")
+	}
+}
+
+func TestRejectInvalidMessages(t *testing.T) {
+	for name, document := range map[string]string{
+		"invalid locale": exampleProfile + "messages:\n  \"en us\":\n    k: v\n",
+		"invalid key":    exampleProfile + "messages:\n  en:\n    \"bad key\": v\n",
+		"empty value":    exampleProfile + "messages:\n  en:\n    k: \"\"\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Load(strings.NewReader(document)); err == nil {
+				t.Fatal("accepted invalid messages")
+			}
+		})
+	}
+}
