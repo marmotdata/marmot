@@ -35,6 +35,14 @@ func (s *service) Metamodel(kind string) metamodel.Schema {
 	return s.registry().SchemaForKind(kind)
 }
 
+func (s *service) Missing(a *Asset) []metamodel.Violation {
+	registry := s.registry()
+	if !registry.Enabled() {
+		return nil
+	}
+	return registry.Missing(MetamodelValues(registry, a), "asset", !a.IsStub)
+}
+
 func (s *service) PatchFields(ctx context.Context, id string, version int64, fields map[string]any) (*Asset, error) {
 	if version < 1 {
 		return nil, ErrVersionRequired
@@ -145,22 +153,6 @@ func setMetadataValue(object map[string]any, parts []string, value any) error {
 	return nil
 }
 
-func metadataValue(object map[string]any, binding string) (any, bool) {
-	parts := strings.Split(strings.TrimPrefix(binding, "metadata."), ".")
-	var value any = object
-	for _, part := range parts {
-		child, ok := value.(map[string]any)
-		if !ok {
-			return nil, false
-		}
-		value, ok = child[part]
-		if !ok {
-			return nil, false
-		}
-	}
-	return value, true
-}
-
 func MetamodelValues(registry *metamodel.Registry, asset *Asset) map[string]any {
 	values := make(map[string]any)
 	for _, f := range registry.Fields("asset") {
@@ -188,7 +180,7 @@ func MetamodelValues(registry *metamodel.Registry, asset *Asset) map[string]any 
 		case "marmot.tags":
 			value = asset.Tags
 		default:
-			value, present = metadataValue(asset.Metadata, f.Storage)
+			value, present = metamodel.ValueAt(asset.Metadata, f.Storage)
 		}
 		if present {
 			values[f.ID] = value
@@ -226,8 +218,8 @@ func (s *service) preserveGoverned(current *Asset, input *UpdateInput) error {
 		if !strings.HasPrefix(field.Storage, "metadata.") {
 			continue
 		}
-		previous, existed := metadataValue(current.Metadata, field.Storage)
-		next, supplied := metadataValue(metadata, field.Storage)
+		previous, existed := metamodel.ValueAt(current.Metadata, field.Storage)
+		next, supplied := metamodel.ValueAt(metadata, field.Storage)
 		if supplied && (!existed || !reflect.DeepEqual(previous, next)) && input.ExpectedVersion == nil {
 			if _, patched := input.GovernedFields[field.ID]; !patched {
 				return ErrVersionRequired
