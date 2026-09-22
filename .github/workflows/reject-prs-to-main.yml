@@ -1,0 +1,39 @@
+name: Reject PRs into main
+
+# `main` is a read-only mirror of upstream (see FORK.md). It never takes
+# PRs, from Sync fork or anywhere else — close them and point the author
+# at the right base branch instead.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  pull-requests: write
+
+jobs:
+  block:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain and close
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body:
+                "`main` es un espejo de solo lectura de `marmotdata/marmot` " +
+                "(ver FORK.md) y no admite PRs. Si es una contribución a " +
+                "Marmot, ábrela contra `marmotdata/marmot` desde una rama " +
+                "`upstream/*`; si es para esta plataforma, ábrela contra `dgu`.",
+            });
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: "closed",
+            });

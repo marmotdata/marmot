@@ -1,0 +1,62 @@
+name: Guard upstream-candidate branches
+
+# Safety net for the upstream-candidate flow described in FORK.md.
+# 1) Any push to upstream/** must be a clean rebase on upstream/main:
+#    no merge commits, and no fork-only paths (those never get proposed
+#    to marmotdata/marmot).
+# 2) A PR from an upstream/** branch straight into dgu is rejected —
+#    that patch belongs on a backport/* branch via cherry-pick -x.
+
+on:
+  push:
+    branches:
+      - "upstream/**"
+  pull_request:
+    branches:
+      - dgu
+
+permissions:
+  contents: read
+
+jobs:
+  no-fork-only-leakage:
+    if: startsWith(github.ref_name, 'upstream/') || startsWith(github.head_ref, 'upstream/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/marmotdata/marmot.git
+          git fetch upstream main --quiet
+
+      - name: Reject merge commits ahead of upstream/main
+        run: |
+          merges="$(git log --merges --oneline upstream/main..HEAD)"
+          if [ -n "$merges" ]; then
+            echo "::error::Esta rama upstream/* trae merge commits. Rebasa sobre upstream/main; nunca hagas merge de dgu o main aquí."
+            echo "$merges"
+            exit 1
+          fi
+
+      - name: Reject fork-only paths
+        run: |
+          forbidden='^(FORK\.md|CODEOWNERS|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE(\.md)?|\.vscode/)'
+          hits="$(git diff --name-only upstream/main..HEAD | grep -E "$forbidden" || true)"
+          if [ -n "$hits" ]; then
+            echo "::error::Esta rama toca rutas fork-only que no deben llegar a marmotdata/marmot:"
+            echo "$hits"
+            exit 1
+          fi
+
+  block-upstream-branch-into-dgu:
+    if: github.event_name == 'pull_request' && github.base_ref == 'dgu' && startsWith(github.head_ref, 'upstream/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail fast — backport, don't PR the upstream/* branch itself
+        run: |
+          echo "::error::No abras 'upstream/*' directamente contra dgu."
+          echo "::error::Crea 'backport/<slug>' desde origin/dgu y aplica 'git cherry-pick -x upstream/main..upstream/<slug>'."
+          exit 1
