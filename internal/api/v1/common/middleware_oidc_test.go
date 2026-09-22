@@ -37,6 +37,8 @@ type mockUserService struct {
 	getFn            func(ctx context.Context, id string) (*user.User, error)
 }
 
+func (m *mockUserService) InvalidateSessions(_ context.Context, _ string) error { return nil }
+
 func (m *mockUserService) ValidateAPIKey(ctx context.Context, key string) (*user.User, error) {
 	if m.validateAPIKeyFn != nil {
 		return m.validateAPIKeyFn(ctx, key)

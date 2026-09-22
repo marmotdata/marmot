@@ -27,17 +27,18 @@ var (
 )
 
 type User struct {
-	ID                 string                 `json:"id"`
-	Username           string                 `json:"username"`
-	Name               string                 `json:"name"`
-	ProfilePicture     string                 `json:"profile_picture,omitempty"`
-	Active             bool                   `json:"active"`
-	MustChangePassword bool                   `json:"must_change_password"`
-	Preferences        map[string]interface{} `json:"preferences"`
-	Roles              []Role                 `json:"roles"`
-	Identities         []UserIdentity         `json:"identities,omitempty"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
+	ID                    string                 `json:"id"`
+	Username              string                 `json:"username"`
+	Name                  string                 `json:"name"`
+	ProfilePicture        string                 `json:"profile_picture,omitempty"`
+	Active                bool                   `json:"active"`
+	MustChangePassword    bool                   `json:"must_change_password"`
+	SessionsInvalidatedAt *time.Time             `json:"sessions_invalidated_at,omitempty"`
+	Preferences           map[string]interface{} `json:"preferences"`
+	Roles                 []Role                 `json:"roles"`
+	Identities            []UserIdentity         `json:"identities,omitempty"`
+	CreatedAt             time.Time              `json:"created_at"`
+	UpdatedAt             time.Time              `json:"updated_at"`
 } // @name User
 
 type Role struct {
@@ -117,6 +118,7 @@ type Service interface {
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
 	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
+	InvalidateSessions(ctx context.Context, userID string) error
 }
 
 type service struct {
@@ -423,9 +425,10 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	updates := map[string]interface{}{
-		"password_hash":        string(hash),
-		"must_change_password": false,
-		"updated_at":           time.Now(),
+		"password_hash":           string(hash),
+		"must_change_password":    false,
+		"sessions_invalidated_at": time.Now(),
+		"updated_at":              time.Now(),
 	}
 
 	if err := s.repo.UpdateUser(ctx, userID, updates); err != nil {
@@ -433,4 +436,11 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	return s.Get(ctx, userID)
+}
+
+// InvalidateSessions signs the user out everywhere by rejecting every token
+func (s *service) InvalidateSessions(ctx context.Context, userID string) error {
+	return s.repo.UpdateUser(ctx, userID, map[string]interface{}{
+		"sessions_invalidated_at": time.Now(),
+	})
 }

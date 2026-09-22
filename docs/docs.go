@@ -8011,6 +8011,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/sign-out-all/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Sign a user out of all sessions",
+                "operationId": "postUsersIDSignOutAll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/update-password": {
             "post": {
                 "security": [
@@ -12084,6 +12125,10 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/UserRole"
                     }
+                },
+                "sessions_invalidated_at": {
+                    "description": "Tokens issued before this moment are rejected at validation, so setting it\nto now signs the user out of every session at once.",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

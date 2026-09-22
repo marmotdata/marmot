@@ -492,6 +492,8 @@ func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, 
 func (m *mockUserService) Authenticate(_ context.Context, _, _ string) (*user.User, error) {
 	return nil, nil
 }
+func (m *mockUserService) InvalidateSessions(_ context.Context, _ string) error { return nil }
+
 func (m *mockUserService) ValidateAPIKey(_ context.Context, _ string) (*user.User, error) {
 	return nil, nil
 }

@@ -19,13 +19,15 @@ type APIKey struct {
 	CreatedAt  time.Time  `json:"created_at"`
 } // @name APIKey
 
+const UserAPIKeyPrefix = "mrmt_u_"
+
 func (s *service) CreateAPIKey(ctx context.Context, userID string, name string, expiresIn *time.Duration) (*APIKey, error) {
 	keyBytes := make([]byte, 32)
 	if _, err := rand.Read(keyBytes); err != nil {
 		return nil, fmt.Errorf("generating API key: %w", err)
 	}
 
-	key := base64.URLEncoding.EncodeToString(keyBytes)
+	key := UserAPIKeyPrefix + base64.URLEncoding.EncodeToString(keyBytes)
 	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("hashing API key: %w", err)
