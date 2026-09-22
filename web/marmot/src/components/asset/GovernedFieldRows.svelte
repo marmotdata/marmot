@@ -1,16 +1,5 @@
-<script module lang="ts">
-	interface OwnerResult {
-		id: string;
-		name: string;
-		username?: string;
-		profile_picture?: string;
-		type: 'user' | 'team';
-	}
-</script>
-
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
-	import { fetchApi } from '$lib/api';
 	import { toasts } from '$lib/stores/toast';
 	import { locale } from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
@@ -22,13 +11,20 @@
 	import { nativeMessage, violationMessage } from '$lib/metamodel/i18n';
 	import { resolveMessage } from '$lib/metamodel/labels';
 	import {
+		lookupOwnerById,
+		searchUsers as searchUserOwners,
+		type OwnerResult
+	} from '$lib/metamodel/owners';
+	import {
 		draftFromValue,
 		isUnset,
 		readMetadataValue,
 		sameValue,
 		sectionLabel,
 		toPayload,
+		typeIcon,
 		typeLabel,
+		valueClass,
 		type Draft
 	} from '$lib/metamodel/values';
 
@@ -104,14 +100,7 @@
 
 	async function lookupOwner(id: string) {
 		try {
-			const response = await fetchApi(`/owners/search?q=${encodeURIComponent(id)}&limit=1`);
-			const data = response.ok ? await response.json() : null;
-			const hit: OwnerResult | undefined = data?.owners?.find(
-				(o: OwnerResult) => o.id === id && o.type === 'user'
-			);
-			resolvedOwners = { ...resolvedOwners, [id]: hit ?? null };
-		} catch {
-			resolvedOwners = { ...resolvedOwners, [id]: null };
+			resolvedOwners = { ...resolvedOwners, [id]: await lookupOwnerById(id) };
 		} finally {
 			delete pendingLookups[id];
 		}
@@ -123,37 +112,6 @@
 
 	function help(field: MetamodelField): string | undefined {
 		return resolveMessage(field.presentation?.helpTextKey, context);
-	}
-
-	function typeIcon(field: MetamodelField): string {
-		if (field.presentation?.control === 'user') return 'material-symbols:person-outline-rounded';
-		switch (field.type) {
-			case 'integer':
-			case 'number':
-				return 'material-symbols:tag-rounded';
-			case 'boolean':
-				return 'material-symbols:toggle-on-outline-rounded';
-			case 'date':
-				return 'material-symbols:calendar-today-outline-rounded';
-			case 'enum':
-				return 'material-symbols:list-alt-outline-rounded';
-			case 'list':
-				return 'material-symbols:format-list-bulleted-rounded';
-			default:
-				return 'material-symbols:text-fields-rounded';
-		}
-	}
-
-	function valueClass(value: unknown): string {
-		if (typeof value === 'boolean') {
-			return value
-				? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-				: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
-		}
-		if (typeof value === 'number') {
-			return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
-		}
-		return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
 	}
 
 	function text(value: unknown): string {
@@ -264,9 +222,7 @@
 		userSearchTimeout = setTimeout(async () => {
 			userSearching = true;
 			try {
-				const response = await fetchApi(`/owners/search?q=${encodeURIComponent(query)}&limit=20`);
-				const data = response.ok ? await response.json() : null;
-				userResults = ((data?.owners ?? []) as OwnerResult[]).filter((o) => o.type === 'user');
+				userResults = await searchUserOwners(query);
 			} catch {
 				userResults = [];
 			} finally {
