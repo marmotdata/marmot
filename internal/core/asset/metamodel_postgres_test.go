@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/store/postgres/pgtest"
 )
@@ -39,7 +40,7 @@ func TestMetamodelPostgresWrites(t *testing.T) {
 	if stored.Version != 2 || updated.Version != 2 || *stored.MRN != *created.MRN {
 		t.Fatalf("persisted version/identity: %+v", stored)
 	}
-	if value, _ := metadataValue(stored.Metadata, "metadata.example.unknown"); value != "keep" {
+	if value, _ := metamodel.ValueAt(stored.Metadata, "metadata.example.unknown"); value != "keep" {
 		t.Fatal("unknown metadata lost")
 	}
 	if _, err := svc.PatchFields(ctx, created.ID, 2, map[string]any{"retention": -1}); err == nil {

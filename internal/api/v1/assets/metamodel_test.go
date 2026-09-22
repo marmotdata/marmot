@@ -27,6 +27,8 @@ func (s *fieldService) PatchFields(_ context.Context, id string, version int64, 
 	return &asset.Asset{ID: id, Version: 4}, s.err
 }
 
+func (s *fieldService) Missing(*asset.Asset) []metamodel.Violation { return nil }
+
 func TestPatchNativeAssetHTTP(t *testing.T) {
 	for _, tc := range []struct {
 		name, header, body string

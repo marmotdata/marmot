@@ -84,11 +84,11 @@ func TestPatchFieldsDoesNotRequireFullDocument(t *testing.T) {
 	if updated.Version != created.Version+1 {
 		t.Fatalf("version not incremented: %d", updated.Version)
 	}
-	got, _ := metadataValue(updated.Metadata, "metadata.example.retention")
+	got, _ := metamodel.ValueAt(updated.Metadata, "metadata.example.retention")
 	if got != 90.0 {
 		t.Fatalf("retention not patched: %v", got)
 	}
-	if _, ok := metadataValue(updated.Metadata, "metadata.plugin.extra"); !ok {
+	if _, ok := metamodel.ValueAt(updated.Metadata, "metadata.plugin.extra"); !ok {
 		t.Fatal("unknown metadata was dropped")
 	}
 }
@@ -104,11 +104,11 @@ func TestLegacyUpdatePreservesGovernedMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, ok := metadataValue(updated.Metadata, "metadata.example.retention")
+	got, ok := metamodel.ValueAt(updated.Metadata, "metadata.example.retention")
 	if !ok || got != 30.0 {
 		t.Fatalf("governed field was wiped: %v %v", got, ok)
 	}
-	if extra, ok := metadataValue(updated.Metadata, "metadata.plugin.extra"); !ok || extra != "yes" {
+	if extra, ok := metamodel.ValueAt(updated.Metadata, "metadata.plugin.extra"); !ok || extra != "yes" {
 		t.Fatal("unrelated metadata was dropped")
 	}
 }
@@ -147,7 +147,7 @@ func TestNullablePatchRemovesOptionalField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := metadataValue(updated.Metadata, "metadata.example.note"); ok {
+	if _, ok := metamodel.ValueAt(updated.Metadata, "metadata.example.note"); ok {
 		t.Fatal("nullable field was not removed")
 	}
 }
