@@ -641,7 +641,7 @@
 				colspan={editable ? 3 : 2}
 				class="bg-gray-50/60 px-4 pt-4 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
 			>
-				{section ? sectionLabel(section) : m.metamodel_other_section()}
+				{section ? sectionLabel(section, context) : m.metamodel_other_section()}
 			</td>
 		</tr>
 	{/if}
@@ -665,37 +665,37 @@
 					<span class="text-red-500" aria-hidden="true">*</span>
 					<span class="sr-only">({m.metamodel_required()})</span>
 				{/if}
+				{#if helpText}
+					<span class="text-gray-400 dark:text-gray-500" title={helpText} aria-hidden="true">
+						<IconifyIcon icon="mdi:information-outline" class="h-3.5 w-3.5" />
+					</span>
+				{/if}
 			</div>
 			<div class="mt-0.5 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
 				<IconifyIcon icon={typeIcon(field)} class="h-3.5 w-3.5" />
 				{typeLabel(field)}
 			</div>
-			{#if helpText}
-				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{helpText}</p>
-			{/if}
 		</td>
 		<td class="px-4 py-3 text-sm align-top">
 			{#if editingId === field.id}
 				{@render editor(field)}
 			{:else}
-				{@render display(field, value)}
+				<div class="inline-flex items-center gap-1.5">
+					{@render display(field, value)}
+					{#if editable}
+						<button
+							type="button"
+							onclick={() => startEdit(field, value)}
+							disabled={saving}
+							class="flex-shrink-0 rounded p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-earthy-terracotta-700 focus-visible:opacity-100 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-500"
+							title={m.common_edit()}
+							aria-label={`${m.common_edit()}: ${label(field)}`}
+						>
+							<IconifyIcon icon="material-symbols:edit-outline-rounded" class="h-4 w-4" />
+						</button>
+					{/if}
+				</div>
 			{/if}
 		</td>
-		{#if editable}
-			<td class="px-4 py-3 align-top">
-				{#if editingId !== field.id}
-					<button
-						type="button"
-						onclick={() => startEdit(field, value)}
-						disabled={saving}
-						class="rounded p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-earthy-terracotta-700 focus-visible:opacity-100 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-500"
-						title={m.common_edit()}
-						aria-label={`${m.common_edit()}: ${label(field)}`}
-					>
-						<IconifyIcon icon="material-symbols:edit-outline-rounded" class="h-4 w-4" />
-					</button>
-				{/if}
-			</td>
-		{/if}
 	</tr>
 {/each}
