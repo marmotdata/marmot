@@ -12,6 +12,7 @@
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import ProductGovernedFieldsSummary from './ProductGovernedFieldsSummary.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
 	import { formatDateTime } from '$lib/utils';
@@ -304,6 +305,12 @@
 									</div>
 								</div>
 							</a>
+						{/if}
+
+						<!-- Governed metadata fields: only in the popup from Discover. In static mode the
+						     full product page already has its own Metadatos tab for this. -->
+						{#if !staticPlacement}
+							<ProductGovernedFieldsSummary {product} />
 						{/if}
 
 						<!-- Description Section - only show in non-static mode -->
