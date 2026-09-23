@@ -372,6 +372,7 @@
 	"common_overview": "Overview",
 	"common_owner": "Owner",
 	"common_owners": "Owners",
+	"common_pagination_showing": "Showing {from}-{to} of {total}",
 	"common_previous": "Previous",
 	"common_remove": "Remove",
 	"common_required": "Required",

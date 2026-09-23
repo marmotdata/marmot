@@ -372,6 +372,7 @@
 	"common_overview": "Resumen",
 	"common_owner": "Propietario",
 	"common_owners": "Propietarios",
+	"common_pagination_showing": "Mostrando {from}-{to} de {total}",
 	"common_previous": "Anterior",
 	"common_remove": "Quitar",
 	"common_required": "Obligatorio",
