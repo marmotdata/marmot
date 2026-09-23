@@ -1,6 +1,7 @@
 import React from "react";
 import ContextDiagram from "./ContextDiagram";
 import ProofRow from "./ProofRow";
+import SupportedBy from "./SupportedBy";
 
 export default function Hero(): JSX.Element {
   return (
@@ -59,6 +60,7 @@ export default function Hero(): JSX.Element {
           </a>
         </div>
 
+        <SupportedBy />
         <ProofRow />
       </div>
 

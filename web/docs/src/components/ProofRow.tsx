@@ -1,5 +1,4 @@
 import React from "react";
-import GoogleForStartups from "./GoogleForStartups";
 
 const INTEGRATIONS = "70+";
 
@@ -20,9 +19,7 @@ function Fact({
 
 export default function ProofRow(): JSX.Element {
   return (
-    <div data-animate data-animate-delay="4" className="proof-row">
-      <GoogleForStartups />
-      <span className="proof-sep" aria-hidden="true" />
+    <div data-animate data-animate-delay="5" className="proof-row">
       <a
         className="proof-fact-link"
         href="https://plugins.marmotdata.io"
