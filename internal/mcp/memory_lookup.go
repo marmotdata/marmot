@@ -41,6 +41,7 @@ func (tc *ToolContext) memorySection(ctx context.Context, e memory.Entity, ref s
 	var b strings.Builder
 	b.WriteString("## Memory\n")
 	if recent.Total == 0 {
+		memoryLookups.WithLabelValues(string(e.Type), "empty").Inc()
 		b.WriteString("\nNothing remembered yet.")
 		return b.String()
 	}
@@ -49,6 +50,7 @@ func (tc *ToolContext) memorySection(ctx context.Context, e memory.Entity, ref s
 		b.WriteString(formatMemory(m))
 	}
 	left := recent.Total - len(recent.Memories)
+	memoryLookups.WithLabelValues(string(e.Type), lookupResult(left)).Inc()
 	if left > 0 {
 		fmt.Fprintf(&b, "\n\n%d less used %s not shown. Use recall with %s and a query to search them.",
 			left, plural(left, "memory", "memories"), ref)
@@ -78,6 +80,7 @@ func (tc *ToolContext) recallEverywhere(ctx context.Context, args RecallInput, f
 	if err != nil {
 		return tc.memoryError(err), nil, nil
 	}
+	memoryRecalls.WithLabelValues("all", "search", recallResult(len(result.Memories))).Inc()
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Memory matching %q\n", args.Query)

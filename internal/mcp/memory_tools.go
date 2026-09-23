@@ -332,6 +332,7 @@ func (tc *ToolContext) recall(ctx context.Context, _ *mcpsdk.CallToolRequest, ar
 		if err != nil {
 			return tc.memoryError(err), nil, nil
 		}
+		memoryRecalls.WithLabelValues("entity", "search", recallResult(len(result.Memories))).Inc()
 		header := fmt.Sprintf("# Memory on %s matching %q", target.label, args.Query)
 		return textResult(formatMemories(header, result.Memories)), nil, nil
 	}
@@ -340,6 +341,7 @@ func (tc *ToolContext) recall(ctx context.Context, _ *mcpsdk.CallToolRequest, ar
 	if err != nil {
 		return tc.memoryError(err), nil, nil
 	}
+	memoryRecalls.WithLabelValues("entity", "list", recallResult(len(result.Memories))).Inc()
 	header := fmt.Sprintf("# Memory on %s (%d of %d, most used first)", target.label, len(result.Memories), result.Total)
 	return textResult(formatMemories(header, result.Memories)), nil, nil
 }
