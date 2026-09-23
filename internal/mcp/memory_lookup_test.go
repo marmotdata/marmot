@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/memory"
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // listOnlyMemory serves List from fixed entries, newest first.
@@ -58,5 +60,27 @@ func TestMemorySectionCarriesTheNewestMemories(t *testing.T) {
 	tc.memoryService = listOnlyMemory{}
 	if got := tc.memorySection(context.Background(), e, ""); !strings.Contains(got, "Nothing remembered yet.") {
 		t.Errorf("empty: %q", got)
+	}
+}
+
+func TestClientsReceiveMemoryInstructions(t *testing.T) {
+	ctx := context.Background()
+	s := &Server{}
+	s.SetMemory(listOnlyMemory{}, readableMemory{})
+	server := s.CreateMCPServer(ctx, auth.NewServiceAccountPrincipal("sa-1", "agent", nil, nil))
+
+	serverTransport, clientTransport := mcpsdk.NewInMemoryTransports()
+	if _, err := server.Connect(ctx, serverTransport, nil); err != nil {
+		t.Fatal(err)
+	}
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1"}, nil)
+	session, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = session.Close() }()
+
+	if got := session.InitializeResult().Instructions; !strings.Contains(got, "change it with update_memory") {
+		t.Errorf("instructions: %q", got)
 	}
 }

@@ -112,12 +112,16 @@ func NewServer(
 // CreateMCPServer builds a server scoped to one caller. Any principal the
 // API accepts can use MCP: users, and service accounts an agent runs as.
 func (s *Server) CreateMCPServer(ctx context.Context, principal auth.Principal) *mcpsdk.Server {
+	var opts *mcpsdk.ServerOptions
+	if s.memoryService != nil {
+		opts = &mcpsdk.ServerOptions{Instructions: memoryInstructions}
+	}
 	server := mcpsdk.NewServer(
 		&mcpsdk.Implementation{
 			Name:    "marmot-catalog",
 			Version: "1.0.0",
 		},
-		nil,
+		opts,
 	)
 
 	s.registerTools(server, principal)
