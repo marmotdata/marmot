@@ -17,6 +17,10 @@
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
+	import ProductGovernedFields from '$components/product/ProductGovernedFields.svelte';
+	import { fetchMetamodel } from '$lib/metamodel/api';
+	import type { MetamodelSchema } from '$lib/metamodel/types';
+	import { governedFields, governedPaths } from '$lib/metamodel/values';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
@@ -34,6 +38,9 @@
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
 
 	let product = $state<DataProduct | null>(null);
+	let metamodel = $state<MetamodelSchema | null>(null);
+	let governed = $derived(metamodel?.enabled ? governedFields(metamodel.fields) : []);
+	let governedHidePaths = $derived(governedPaths(governed));
 	let resolvedAssets = $state<ResolvedAssetsResponse | null>(null);
 	let assetDetails: SvelteMap<string, Asset> = new SvelteMap();
 
@@ -144,6 +151,7 @@
 			data.tags = data.tags || [];
 			data.owners = data.owners || [];
 			data.rules = data.rules || [];
+			data.metadata = data.metadata || {};
 			product = data;
 
 			// Load resolved assets
@@ -593,8 +601,17 @@
 		}
 	}
 
+	async function loadMetamodel() {
+		try {
+			metamodel = await fetchMetamodel('data_product');
+		} catch {
+			metamodel = null;
+		}
+	}
+
 	onMount(() => {
 		loadDataProduct();
+		loadMetamodel();
 	});
 </script>
 
@@ -782,13 +799,27 @@
 						{#if activeTab === 'metadata'}
 							<div class="mt-6">
 								<MetadataView
-									metadata={product.metadata || {}}
+									bind:metadata={product.metadata}
 									endpoint="/products"
 									id={productId}
 									readOnly={!canManage}
 									permissionResource="assets"
 									permissionAction="manage"
-								/>
+									hidePaths={governedHidePaths}
+									hasLeadingRows={governed.length > 0}
+								>
+									{#snippet leadingRows(editable)}
+										{#if metamodel}
+											<ProductGovernedFields
+												bind:metadata={product.metadata}
+												{productId}
+												schema={metamodel}
+												fields={governed}
+												{editable}
+											/>
+										{/if}
+									{/snippet}
+								</MetadataView>
 							</div>
 						{/if}
 
