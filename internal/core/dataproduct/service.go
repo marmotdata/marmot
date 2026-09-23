@@ -9,6 +9,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/imageproc"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/query"
 	"github.com/rs/zerolog/log"
 )
@@ -68,6 +69,7 @@ type Service interface {
 
 	SetRuleObserver(observer RuleObserver)
 	SetSearchObserver(observer SearchObserver)
+	SetMetamodel(registry *metamodel.Registry)
 }
 
 // RuleObserver is notified when rules are created, updated, or deleted.
@@ -88,6 +90,7 @@ type service struct {
 	validator      *validator.Validate
 	ruleObserver   RuleObserver
 	searchObserver SearchObserver
+	metamodel      *metamodel.Registry
 }
 
 func NewService(repo Repository) Service {
@@ -105,9 +108,16 @@ func (s *service) SetSearchObserver(observer SearchObserver) {
 	s.searchObserver = observer
 }
 
+func (s *service) SetMetamodel(registry *metamodel.Registry) {
+	s.metamodel = registry
+}
+
 func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	if err := validateMetamodel(s.metamodel, input.Metadata); err != nil {
+		return nil, err
 	}
 
 	for _, rule := range input.Rules {
@@ -178,6 +188,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Da
 	}
 	if input.Tags != nil {
 		existing.Tags = input.Tags
+	}
+
+	if err := validateMetamodel(s.metamodel, existing.Metadata); err != nil {
+		return nil, err
 	}
 
 	existing.UpdatedAt = time.Now().UTC()
