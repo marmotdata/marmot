@@ -28,6 +28,29 @@ export function readMetadataValue(
 	return value;
 }
 
+/** Immutable write at a governed field's storage path, creating intermediate objects as needed. */
+export function writeMetadataValue(
+	metadata: Record<string, unknown>,
+	storage: string,
+	value: unknown
+): Record<string, unknown> {
+	const path = metadataPath(storage);
+	const root: Record<string, unknown> = { ...metadata };
+	let cursor = root;
+	for (const part of path.slice(0, -1)) {
+		const next = cursor[part];
+		cursor[part] = isPlainObject(next) ? { ...next } : {};
+		cursor = cursor[part] as Record<string, unknown>;
+	}
+	const leaf = path[path.length - 1];
+	if (value === null || value === undefined) {
+		delete cursor[leaf];
+	} else {
+		cursor[leaf] = value;
+	}
+	return root;
+}
+
 /**
  * Profile fields stored in asset metadata: required first, then by section, order and id.
  * Sections follow the order the profile first mentions them; fields without one come last.
