@@ -32,6 +32,7 @@ func buildTypeMappings() map[string]any {
 			"created_at":       map[string]any{"type": "date"},
 			"updated_at":       map[string]any{"type": "date"},
 			"documentation":    map[string]any{"type": "text"},
+			"memory":           map[string]any{"type": "text"},
 			"metadata": map[string]any{
 				"type":    "object",
 				"dynamic": true,

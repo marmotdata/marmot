@@ -502,6 +502,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 				teamSvc.SetSearchObserver(syncSvc)
 				dataProductSvc.SetSearchObserver(syncSvc)
 				docsSvc.SetSearchObserver(&docsSearchSyncAdapter{syncSvc: syncSvc, assetSvc: assetSvc})
+				memorySvc = memoryService.NotifySearch(memorySvc, syncSvc)
 
 				reindexer = searchService.NewReindexer(esClient, searchRepo, esConfig.BulkSize)
 				reindexBroadcaster := websocket.NewSearchReindexBroadcaster(wsHub)
