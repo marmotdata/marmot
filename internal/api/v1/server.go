@@ -152,6 +152,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	teamSvc := teamService.NewService(teamRepo)
 	searchSvc := searchService.NewService(searchRepo)
 	dataProductSvc := dataproductService.NewService(dataProductRepo)
+	dataProductSvc.SetMetamodel(metamodelRegistry)
 	docsRepo := docsService.NewPostgresRepository(db)
 	docsSvc := docsService.NewService(docsRepo)
 	notificationRepo := notificationService.NewPostgresRepository(db)
