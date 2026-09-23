@@ -120,3 +120,11 @@ tests:
       - matchRegex:
           path: data["config.yaml"]
           pattern: "scheduler_interval: 60"
+
+  - it: should include metamodel profile path when set
+    set:
+      config.metamodel.profile: /etc/marmot-metamodel/profile.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "profile: /etc/marmot-metamodel/profile.yaml"

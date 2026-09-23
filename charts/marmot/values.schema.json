@@ -399,6 +399,13 @@
             "enabled": { "type": "boolean" }
           }
         },
+        "metamodel": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "profile": { "type": "string" }
+          }
+        },
         "operator": {
           "type": "object",
           "additionalProperties": false,
