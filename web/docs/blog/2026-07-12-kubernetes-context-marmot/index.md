@@ -86,7 +86,7 @@ resource "marmot_pipeline" "prod_gke" {
 }
 ```
 
-The [Terraform walkthrough](/blog/configure-marmot-with-terraform) goes deeper on managing pipelines declaratively, and the [Populating docs](/docs/Populating/) cover the CLI, Pulumi and the REST API.
+The [Terraform docs](/docs/Populating/Terraform) go deeper on managing pipelines declaratively, and the [Populating docs](/docs/Populating/) cover the CLI, Pulumi and the REST API.
 
 ---
 
