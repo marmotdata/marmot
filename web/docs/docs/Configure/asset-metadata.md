@@ -1,9 +1,9 @@
 # Asset metadata profiles
 
-An optional YAML profile describes editable asset fields. Native fields keep
-their existing storage; additional fields live in the asset's `metadata`
-JSON. The profile never changes MRNs, creates another asset store, or
-executes code.
+An optional YAML profile describes governed fields for assets and data
+products. Native fields keep their existing storage; additional fields live
+in the entity's `metadata` JSON. The profile never changes MRNs, creates
+another store, or executes code.
 
 ## Configuration
 
@@ -26,9 +26,8 @@ MARMOT_METAMODEL_PROFILE=/etc/marmot/metamodel.yaml
 | --- | --- | --- | --- |
 | `metamodel.profile` | Path to the YAML profile file | - (native schema only) | `MARMOT_METAMODEL_PROFILE` |
 
-The server loads the file once at startup and refuses invalid
-configuration; without a profile, existing native writes keep their usual
-validation.
+The server loads the file once at startup and refuses invalid configuration;
+without a profile, existing native writes keep their usual validation.
 
 ### Helm
 
@@ -99,9 +98,8 @@ rejected at startup.
 | `validation` | no | Constraints object (see below) |
 | `presentation` | no | UI/message hints (see below) |
 
-Stub creation is an internal ingestion operation, not an HTTP exemption; a
-stub's incomplete governed fields are never reported missing (see Validity and
-completeness, below), regardless of `appliesTo`.
+Stub creation is an internal ingestion step, not an HTTP exemption — see
+[Write metadata](#write-metadata) for how stubs affect completeness.
 
 ### appliesTo
 
@@ -205,7 +203,21 @@ Clients consume this response instead of parsing the YAML themselves. The
 schema describes editable fields, not every property or relationship in an
 asset.
 
-## Write through the asset API
+## Write metadata
+
+A write is rejected only for validity: wrong type, out of range, too long, an
+undeclared enum member, an unknown field, or an explicit `null` on a
+non-nullable field. A required governed (`metadata.*`) field that is simply
+absent is never rejected — discovery and OpenLineage create and update assets
+without values they have no way to know. Native structural fields (`name`)
+keep blocking on absence; that is identity, not governance completeness.
+
+Validation covers the final persisted state: Create, Update, PATCH, AddTag,
+and RemoveTag for assets; Create and Update for data products. Unrelated
+ownership/term mutations continue using their native APIs; the profile cannot
+declare constraints on those relationships.
+
+### Assets
 
 Create assets through `POST /api/v1/assets/` with native properties and metadata:
 
@@ -228,11 +240,15 @@ If-Match: "1"
 {"fields":{"retention":90}}
 ```
 
-PATCH requires `assets/manage`. Its body is an explicit field-ID map, not JSON
-Merge Patch. An absent field stays unchanged. Lists are replaced. `null`
-removes only an optional nullable field. Unknown fields are rejected. Unrelated
-metadata and the MRN are preserved. PATCH returns the native asset and its new
-quoted ETag. Native change notifications include the affected fields.
+PATCH requires `assets/manage` and a strong quoted numeric version in
+`If-Match` — no wildcard, weak, or multiple tags. Its body is an explicit
+field-ID map, not JSON Merge Patch:
+
+- An absent field stays unchanged; lists are replaced wholesale.
+- `null` removes only an optional nullable field; unknown fields are rejected.
+- Unrelated metadata and the MRN are preserved.
+- The response is the native asset with its new quoted ETag; change
+  notifications include the affected fields.
 
 | Response | Meaning |
 | --- | --- |
@@ -241,33 +257,39 @@ quoted ETag. Native change notifications include the affected fields.
 | 412 | The asset changed since the supplied version |
 | 428 | PATCH has no `If-Match`, or PUT changes configured metadata without it |
 
-This contract accepts a single strong quoted numeric version, not wildcard,
-weak, or multiple entity tags. Validation errors contain, for example,
-`{"fields":[{"field":"retention","code":"type"}]}`.
+Validation errors look like `{"fields":[{"field":"retention","code":"type"}]}`.
 
-PUT keeps its existing metadata replacement semantics, except that configured
-metadata fields omitted from the replacement are preserved. Changing one
-requires `If-Match`. PUT is not a general deep merge: other omitted metadata
-may be removed. Ingestion and OpenLineage use the same asset service and are
-subject to these rules.
+PUT keeps its existing full-replacement semantics, except configured metadata
+fields it omits are preserved (changing one still requires `If-Match`) — it is
+not a general deep merge, so other omitted metadata may still be lost.
+Ingestion and OpenLineage use the same service and are subject to these rules.
 
-Validation covers the final state in Create, Update, PATCH, AddTag, and
-RemoveTag. Unrelated ownership/term mutations continue using their native APIs;
-the profile cannot declare constraints on those relationships.
+**Completeness.** `GET` and `PATCH` responses add a `metamodel` object naming
+the still-missing required fields:
 
-### Validity and completeness
+```json
+{
+  "id": "...",
+  "metadata": {},
+  "metamodel": {"missing": ["retention"]}
+}
+```
 
-A write is rejected only for validity: wrong type, out of range, too long, an
-undeclared enum member, an unknown field, or an explicit `null` on a
-non-nullable field. A required governed (`metadata.*`) field that is simply
-absent is never rejected — discovery and OpenLineage create and update assets
-without values they have no way to know. Native structural fields (`name`)
-keep blocking on absence; that is identity, not governance completeness.
+`metamodel` is omitted once nothing is missing. It is computed on read, not
+persisted or indexed, and only appears on `GET` and `PATCH` — `POST` (Create)
+and `PUT` responses do not include it. A stub's incomplete governed fields are
+never reported missing, regardless of `appliesTo`. There is no search filter
+or aggregate completeness view yet; `metamodel.missing` is per-asset audit
+signal, not a gate.
 
-Missing required values are not yet surfaced in the API response — enabling a
-profile with new required fields produces silent gaps today, not failures.
-Treat `required` as a signal to build reporting around, not a gate that stops
-incomplete data from being written.
+### Data products
+
+`data_product`-scoped fields validate the same way, on `POST /api/v1/products/`
+(create) and `PUT /api/v1/products/{id}` (update). There is no data product
+PATCH or `If-Match` yet — every write replaces the full resource, so two
+concurrent editors can overwrite each other's metadata, same as any other data
+product field today. `metamodel.missing` is not yet included in data product
+responses; only asset `GET`/`PATCH` report it.
 
 ## Compatibility and rollout
 
@@ -279,8 +301,9 @@ tables. The resource version is separate from the profile version and hash.
 
 Enabling a required field needs no backfill: existing and newly-discovered
 assets without a value simply don't satisfy completeness, and keep writing
-normally (see Validity and completeness, above). Disabling a profile disables
-its validation and preservation; profiles do not provide access isolation.
+normally (see [Write metadata](#write-metadata), above). Disabling a profile
+disables its validation and preservation; profiles do not provide access
+isolation.
 
 This is an upstream backend proposal. Profile-driven UI and SDK convenience
 methods are follow-up work; HTTP and the generated OpenAPI describe the initial
