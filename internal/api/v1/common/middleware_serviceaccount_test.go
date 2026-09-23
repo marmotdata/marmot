@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/role"
@@ -20,36 +19,9 @@ const (
 	validUserKey           = "user-valid-key"
 )
 
-type mockServiceAccountService struct{}
-
-func (m *mockServiceAccountService) Create(_ context.Context, _ serviceaccount.CreateInput, _ *string) (*serviceaccount.ServiceAccount, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) Get(_ context.Context, _ string) (*serviceaccount.ServiceAccount, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) List(_ context.Context) ([]*serviceaccount.ServiceAccount, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) Update(_ context.Context, _ string, _ serviceaccount.UpdateInput) (*serviceaccount.ServiceAccount, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) Delete(_ context.Context, _ string) error { return nil }
-
-func (m *mockServiceAccountService) CreateAPIKey(_ context.Context, _ string, _ string, _ *time.Duration) (*serviceaccount.APIKey, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) ListAPIKeys(_ context.Context, _ string) ([]*serviceaccount.APIKey, error) {
-	return nil, nil
-}
-
-func (m *mockServiceAccountService) DeleteAPIKey(_ context.Context, _, _ string) error {
-	return nil
+// mockServiceAccountService embeds the interface so only ValidateAPIKey, the one method WithAuth calls, needs implementing.
+type mockServiceAccountService struct {
+	serviceaccount.Service
 }
 
 // Two roles with permissions, so the role and permission projection WithAuth

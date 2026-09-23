@@ -223,8 +223,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 	}
 }
 
-// serviceAccountPrincipal validates apiKey as a service-account key and returns the
-// matching principal. The bool reports whether the key was a valid service-account key.
+// serviceAccountPrincipal validates apiKey as a service account key, returning false when no service account service is registered or the key is not one.
 func serviceAccountPrincipal(ctx context.Context, apiKey string) (auth.Principal, bool) {
 	if globalServiceAccountService == nil {
 		return nil, false
