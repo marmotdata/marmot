@@ -28,8 +28,27 @@ MARMOT_METAMODEL_PROFILE=/etc/marmot/metamodel.yaml
 
 The server loads the file once at startup and refuses invalid
 configuration; without a profile, existing native writes keep their usual
-validation. Not yet available via the Helm chart: mounting a profile file
-would need a volume the chart doesn't declare yet.
+validation.
+
+### Helm
+
+The chart doesn't ship the profile file itself. Mount it from a ConfigMap
+you manage using the chart's generic `volumes`/`volumeMounts` values, then
+point `config.metamodel.profile` at the mounted path:
+
+```yaml
+volumes:
+  - name: metamodel-profile
+    configMap:
+      name: my-metamodel-profile
+volumeMounts:
+  - name: metamodel-profile
+    mountPath: /etc/marmot-metamodel
+    readOnly: true
+config:
+  metamodel:
+    profile: /etc/marmot-metamodel/profile.yaml
+```
 
 ## The profile format
 
