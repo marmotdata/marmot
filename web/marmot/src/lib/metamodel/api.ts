@@ -14,19 +14,23 @@ export class MetamodelHttpError extends Error {
 	}
 }
 
-let cached: Promise<MetamodelSchema> | null = null;
+const cached = new Map<string, Promise<MetamodelSchema>>();
 
-// The server reads its profile once at startup, so one request serves the whole session.
-export function fetchMetamodel(): Promise<MetamodelSchema> {
-	cached ??= loadMetamodel().catch((err) => {
-		cached = null;
-		throw err;
-	});
-	return cached;
+// The server reads its profile once at startup, so one request per kind serves the whole session.
+export function fetchMetamodel(kind: string = 'asset'): Promise<MetamodelSchema> {
+	let promise = cached.get(kind);
+	if (!promise) {
+		promise = loadMetamodel(kind).catch((err) => {
+			cached.delete(kind);
+			throw err;
+		});
+		cached.set(kind, promise);
+	}
+	return promise;
 }
 
-async function loadMetamodel(): Promise<MetamodelSchema> {
-	const response = await fetchApi('/metamodel');
+async function loadMetamodel(kind: string): Promise<MetamodelSchema> {
+	const response = await fetchApi(`/metamodel?kind=${encodeURIComponent(kind)}`);
 	if (!response.ok) {
 		throw new MetamodelHttpError(
 			response.status,
