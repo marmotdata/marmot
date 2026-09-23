@@ -27,12 +27,13 @@ var (
 )
 
 type User struct {
-	ID                    string                 `json:"id"`
-	Username              string                 `json:"username"`
-	Name                  string                 `json:"name"`
-	ProfilePicture        string                 `json:"profile_picture,omitempty"`
-	Active                bool                   `json:"active"`
-	MustChangePassword    bool                   `json:"must_change_password"`
+	ID                 string `json:"id"`
+	Username           string `json:"username"`
+	Name               string `json:"name"`
+	ProfilePicture     string `json:"profile_picture,omitempty"`
+	Active             bool   `json:"active"`
+	MustChangePassword bool   `json:"must_change_password"`
+	// Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.
 	SessionsInvalidatedAt *time.Time             `json:"sessions_invalidated_at,omitempty"`
 	Preferences           map[string]interface{} `json:"preferences"`
 	Roles                 []Role                 `json:"roles"`

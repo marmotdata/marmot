@@ -2431,9 +2431,8 @@ definitions:
           $ref: '#/definitions/UserRole'
         type: array
       sessions_invalidated_at:
-        description: |-
-          Tokens issued before this moment are rejected at validation, so setting it
-          to now signs the user out of every session at once.
+        description: Tokens issued before this moment are rejected at validation,
+          so setting it to now signs the user out of every session at once.
         type: string
       updated_at:
         type: string
