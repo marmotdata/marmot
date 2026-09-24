@@ -20,7 +20,6 @@
 	import DomainChip from '$components/domain/DomainChip.svelte';
 	import DomainSelect from '$components/domain/DomainSelect.svelte';
 	import { entityWritable } from '$lib/domains/writable';
-	import { assignToDomain, errorMessage as domainErrorMessage } from '$lib/domains/api';
 	import Button from '$components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
 	import Tags from '$components/shared/Tags.svelte';
@@ -203,7 +202,8 @@
 					? newTermOwners.map((o) => ({ id: o.id, type: o.type }))
 					: undefined;
 
-			const response = await fetchApi('/glossary/', {
+			const target = newTermDomain ? `?domain_id=${encodeURIComponent(newTermDomain)}` : '';
+			const response = await fetchApi(`/glossary/${target}`, {
 				method: 'POST',
 				body: JSON.stringify({
 					name: newTermName,
@@ -217,14 +217,6 @@
 				const info = await parseApiError(response);
 				if (isLimitExceeded(info)) toasts.warning(info.message);
 				throw new Error(info.message);
-			}
-
-			const created: GlossaryTerm = await response.json();
-			// The term exists either way; a failed assignment leaves it in Unassigned.
-			if (newTermDomain) {
-				await assignToDomain(newTermDomain, 'glossary_term', [created.id]).catch((error) =>
-					toasts.error(domainErrorMessage(error))
-				);
 			}
 
 			showCreateModal = false;

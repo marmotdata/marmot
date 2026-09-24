@@ -7,6 +7,7 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import StepperPage from '$components/ui/StepperPage.svelte';
 	import TagsInput from '$components/shared/TagsInput.svelte';
+	import DomainSelect from '$components/domain/DomainSelect.svelte';
 	import { providerIconMap, typeIconMap } from '$lib/iconloader';
 	import { m } from '$lib/paraglide/messages';
 
@@ -15,6 +16,7 @@
 	let providers = $state<string[]>([]);
 	let userDescription = $state('');
 	let tags = $state<string[]>([]);
+	let domainId = $state('');
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let currentStep = $state(1);
@@ -234,7 +236,8 @@
 				payload.tags = tags;
 			}
 
-			const response = await fetchApi('/assets/', {
+			const target = domainId ? `?domain_id=${encodeURIComponent(domainId)}` : '';
+			const response = await fetchApi(`/assets/${target}`, {
 				method: 'POST',
 				body: JSON.stringify(payload)
 			});
@@ -607,6 +610,8 @@
 						{m.assetnew_tags_hint()}
 					</p>
 				</div>
+
+				<DomainSelect id="asset-domain" bind:value={domainId} />
 			</div>
 		</div>
 
