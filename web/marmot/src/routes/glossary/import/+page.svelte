@@ -313,9 +313,21 @@
 				type="file"
 				accept=".xlsx,.csv"
 				class="sr-only"
-				onchange={(e) => choose((e.currentTarget as HTMLInputElement).files)}
+				onchange={(e) => {
+					const input = e.currentTarget as HTMLInputElement;
+					choose(input.files);
+					// Cleared so picking the same file again, after editing it, fires change.
+					input.value = '';
+				}}
 			/>
 		</label>
+
+		<div class="mt-5 max-w-md">
+			<DomainSelect id="import-default-domain" bind:value={defaultDomain} />
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+				{m.glossary_import_default_domain_hint()}
+			</p>
+		</div>
 
 		<fieldset class="mt-5">
 			<legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -344,13 +356,6 @@
 				{/each}
 			</div>
 		</fieldset>
-
-		<div class="mt-5 max-w-md">
-			<DomainSelect id="import-default-domain" bind:value={defaultDomain} />
-			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-				{m.glossary_import_default_domain_hint()}
-			</p>
-		</div>
 
 		<div class="mt-5">
 			<Button
