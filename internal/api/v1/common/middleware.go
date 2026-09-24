@@ -260,55 +260,43 @@ func setPrincipalContext(ctx context.Context, p auth.Principal) context.Context 
 func RequirePermission(userService user.Service, resourceType, action string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			usr, userOk := r.Context().Value(UserContextKey).(*user.User)
-
-			if userOk {
-				// handle anonymous users
-				if usr.Username == "anonymous" {
-					anonymousCtx, ok := GetAnonymousContext(r.Context())
-					if ok {
-						hasRolePermission, err := checkAnonymousPermission(userService, anonymousCtx.RoleName, resourceType, action)
-						if err != nil {
-							RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
-							return
-						}
-						if !hasRolePermission {
-							RespondError(w, http.StatusForbidden, "Permission denied")
-							return
-						}
-						next(w, r)
-						return
-					}
-				}
-
-				hasPermission, err := userService.HasPermission(r.Context(), usr.ID, resourceType, action)
-				if err != nil {
-					RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
+			if _, userOk := r.Context().Value(UserContextKey).(*user.User); !userOk {
+				if _, principalOk := PrincipalFromContext(r.Context()); !principalOk {
+					RespondError(w, http.StatusUnauthorized, "Authentication required")
 					return
 				}
-				if !hasPermission {
-					RespondError(w, http.StatusForbidden, "Permission denied")
-					return
-				}
-				next(w, r)
-				return
 			}
 
-			// Non-user principal (e.g. service account) — use the Principal interface directly.
-			p, principalOk := PrincipalFromContext(r.Context())
-			if !principalOk {
-				RespondError(w, http.StatusUnauthorized, "Authentication required")
+			allowed, err := HasPermission(r.Context(), userService, resourceType, action)
+			if err != nil {
+				RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
 				return
 			}
-
-			if !p.HasPermission(resourceType, action) {
+			if !allowed {
 				RespondError(w, http.StatusForbidden, "Permission denied")
 				return
 			}
-
 			next(w, r)
 		}
 	}
+}
+
+// HasPermission reports whether the caller holds a permission, by the same
+// rules as RequirePermission, for checks made inside a handler.
+func HasPermission(ctx context.Context, userService user.Service, resourceType, action string) (bool, error) {
+	if usr, ok := ctx.Value(UserContextKey).(*user.User); ok {
+		if usr.Username == "anonymous" {
+			if anonymousCtx, ok := GetAnonymousContext(ctx); ok {
+				return checkAnonymousPermission(userService, anonymousCtx.RoleName, resourceType, action)
+			}
+		}
+		return userService.HasPermission(ctx, usr.ID, resourceType, action)
+	}
+	p, ok := PrincipalFromContext(ctx)
+	if !ok {
+		return false, nil
+	}
+	return p.HasPermission(resourceType, action), nil
 }
 
 // checkAnonymousPermission verifies if the anonymous role has the required permission
