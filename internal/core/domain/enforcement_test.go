@@ -268,6 +268,16 @@ func TestWriteEnforcement(t *testing.T) {
 		_, err = guardedAssets.Update(c, inFinance, asset.UpdateInput{})
 		denied(t, err)
 	})
+	t.Run("creating an existing MRN reports it exists instead of refusing", func(t *testing.T) {
+		mrn := mrnOf(inFinance)
+		_, err := guardedAssets.Create(as(ctx, lawyer), asset.CreateInput{MRN: &mrn})
+		if !errors.Is(err, asset.ErrAlreadyExists) {
+			t.Fatalf("err = %v, want ErrAlreadyExists so callers fall back to Update", err)
+		}
+		fresh := "mrn://table/nowhere/new"
+		_, err = guardedAssets.Create(as(ctx, lawyer), asset.CreateInput{MRN: &fresh})
+		denied(t, err)
+	})
 	t.Run("ingestion: a scheduled run writes in its schedule's domain", func(t *testing.T) {
 		_, err := guardedAssets.Create(scheduled, asset.CreateInput{})
 		allowed(t, err)

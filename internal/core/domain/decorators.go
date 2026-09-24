@@ -37,6 +37,14 @@ func GuardAssets(inner asset.Service, g *Guard) asset.Service {
 
 func (s *guardedAssets) Create(ctx context.Context, in asset.CreateInput) (*asset.Asset, error) {
 	if err := s.g.AuthorizeCreate(ctx); err != nil {
+		// Creating an MRN that exists writes nothing. Callers such as OpenLineage
+		// rely on ErrAlreadyExists to fall back to Update, which is checked
+		// against the asset's own domain.
+		if errors.Is(err, ErrForbidden) && in.MRN != nil {
+			if _, getErr := s.GetByMRN(ctx, *in.MRN); getErr == nil {
+				return nil, asset.ErrAlreadyExists
+			}
+		}
 		return nil, err
 	}
 	a, err := s.Service.Create(ctx, in)
