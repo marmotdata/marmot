@@ -6,6 +6,7 @@
 	import type { Asset, EnrichedExternalLink } from '$lib/assets/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
+	import MemoryPanel from '$components/memory/MemoryPanel.svelte';
 	import AssetSources from '$components/asset/AssetSources.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import Lineage from '$components/lineage/Lineage.svelte';
@@ -249,6 +250,7 @@
 	let isAgent = $derived(checkIsAgent(asset));
 
 	const allTabs: Tab[] = [
+		{ id: 'memory', label: m.memory_tab(), icon: 'material-symbols:neurology-outline' },
 		{ id: 'documentation', label: m.common_documentation(), icon: 'material-symbols:description' },
 		{ id: 'metadata', label: m.discover_tab_metadata(), icon: 'material-symbols:data-object' },
 		{ id: 'runs', label: m.discover_tab_runs(), icon: 'material-symbols:bolt-outline' },
@@ -599,6 +601,10 @@
 						{:else if activeTab === 'schema'}
 							<div class="mt-6">
 								<SchemaEditor {asset} />
+							</div>
+						{:else if activeTab === 'memory'}
+							<div class="mt-6 max-w-5xl">
+								<MemoryPanel entityType="asset" entityId={asset.id} />
 							</div>
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6" style="height: calc(100vh - 320px); min-height: 400px;">

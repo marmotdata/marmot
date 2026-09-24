@@ -683,6 +683,34 @@
 	"login_signin_heading": "Iniciar sesión",
 	"login_username_label": "Usuario",
 	"login_username_placeholder": "Introduce tu usuario",
+	"memory_add": "Añadir memoria",
+	"memory_add_placeholder": "¿Qué deben saber los agentes y las personas?",
+	"memory_delete_message": "¿Eliminar esta memoria? No se puede deshacer.",
+	"memory_delete_title": "Eliminar memoria",
+	"memory_description": "Lo que agentes y personas han registrado sobre esta entidad.",
+	"memory_edited_by": "editado por {name}",
+	"memory_empty": "Todavía no hay nada en la memoria.",
+	"memory_error_delete": "No se pudo eliminar la memoria",
+	"memory_error_load": "No se pudo cargar la memoria",
+	"memory_error_save": "No se pudo guardar la memoria",
+	"memory_error_search": "La búsqueda en la memoria falló",
+	"memory_no_match": "No hay coincidencias.",
+	"memory_search_placeholder": "Buscar en la memoria",
+	"memory_search_results": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} coincidencia",
+				"countPlural=other": "{count} coincidencias"
+			}
+		}
+	],
+	"memory_session": "sesión {id}",
+	"memory_sort_changed": "Actualizadas recientemente",
+	"memory_sort_created": "Más recientes",
+	"memory_sort_label": "Ordenar la memoria",
+	"memory_tab": "Memoria",
 	"metrics_asset_types_title": "Tipos de activos",
 	"metrics_count_searches": "búsquedas",
 	"metrics_count_views": "visitas",
