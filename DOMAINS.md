@@ -10,8 +10,9 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | --- | --- | --- |
 | `internal/store/postgres/setup.go` | `Setup.Initialize`, last statement | Runs the fork migration track (`dgumigrations`, table `public.dgu_schema_version`) after the core one, so fork tables never take an upstream migration number |
 | `internal/api/v1/server.go` | `New`, the `config.Domains.Enabled` block after the `server.handlers` list; two imports | Only with `domains.enabled`: registers `/api/v1/domains`, adds the ingestion observer to `asset.Service`, sets the search domain resolver, and refuses to start with the Elasticsearch search backend |
-| `internal/api/v1/server.go` | `New`: the block after `asset.NewService` that builds the domain service and guard, and one `if domainGuard != nil` after each of `glossaryService.NewService`, `dataProductSvc.SetMetamodel` and `assetruleService.NewService` | Wraps each service in its write decorator before any consumer receives it, so REST, OpenLineage, ingestion and MCP all go through the guard |
-| `internal/api/v1/assets/operations.go`, `assets/terms.go`, `dataproducts/operations.go`, `glossary/operations.go`, `assetrules/operations.go` | the error `switch` after each decorated write, and `respondAssetWriteError`; one import each | `domain.ErrForbidden` → 403 instead of 500 |
+| `internal/api/v1/server.go` | `New`: the block after `asset.NewService` that builds the domain service and guard, and one `if domainGuard != nil` after each of `lineageService.NewService`, `assetdocs.NewService`, `glossaryService.NewService`, `dataProductSvc.SetMetamodel` and `assetruleService.NewService` | Wraps each service in its write decorator before any consumer receives it, so REST, OpenLineage, ingestion, agents and MCP all go through the guard |
+| `internal/api/v1/server.go` | the `config.Domains.Enabled` block: replaces the `*docsAPI.Handler` in `server.handlers` | Documentation pages are scoped by route middleware (`domainsAPI.GuardDocs`); the handler list itself is untouched |
+| `internal/api/v1/assets/operations.go`, `assets/terms.go`, `assets/documentation.go`, `dataproducts/operations.go`, `glossary/operations.go`, `assetrules/operations.go`, `lineage/operations.go` | the error `switch` after each decorated write, and `respondAssetWriteError`; one import each | `domain.ErrForbidden` → 403 instead of 500 |
 | `internal/core/runs/service.go` | `ProcessEntities`, first statement; one import | Puts the pipeline name in the context so new assets inherit the domain of the schedule with that name |
 | `internal/core/search/store.go` | `PostgresRepository.domainResolver`; `Search` resolves `@domain` first; `buildFilterClauses` and `buildListingFacetWhereClause` call `appendDomainClauses`; `buildFacetsParallel` skips cached facets when `filter.Domain` is set | `@domain:<id>` filter over a subtree. Cached facets are global counts and would ignore it |
 | `internal/core/search/service.go` | `Filter.Domain` | Carries the resolved domain filter; never read from JSON |
@@ -56,15 +57,16 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 | REST | `internal/api/v1/glossary/operations.go` | Create, Update, Delete | decorator |
 | Ingestion | `internal/core/runs/service.go` | SyncTerms | decorator; all or nothing: every existing term in the batch must be writable, and new terms land in the pipeline's domain |
 
-### Gaps (not behind a decorated service yet)
+### Lineage and documentation
 
-| Channel | Call site | Permission today | Decision |
+| Channel | Call site | Methods | Coverage |
 | --- | --- | --- | --- |
-| Asset rules | `internal/api/v1/assetrules` | `assets:manage` | decorator (`GuardAssetRules`): Create, Update and Delete need global scope while enforcement is on. Their evaluation writes derived links and is not scoped |
-| Documentation pages | `internal/api/v1/docs` (`/docs/entity/{entityType}/{entityId}/pages`, `/docs/pages/{pageId}`…) | `assets:manage` | open: scope by the owning entity's domain (needs a decorator or seam on the docs service) |
-| Manual lineage edges | `internal/api/v1/lineage` (`/lineage/direct`, `/lineage/batch`) | `assets:manage` | open: which endpoint's domain governs a cross-domain edge |
-| Observed lineage from agents | `internal/core/agent/service.go` → `lineage.Service.BatchObservedLineage` | `agents:emit` | open: same rule as manual edges |
-| Asset docs | `assetdocs.Service` (wired in `server.go`) | to verify | verify what it writes before delivery 2 |
+| REST, ingestion | `internal/api/v1/lineage` (`/lineage/direct`, `/lineage/batch`), `internal/core/runs/service.go` | `lineage.Service` CreateDirectLineage, DeleteDirectLineage | decorator (`GuardLineage`): the **target** asset's domain decides; the downstream side declares what it reads. An MRN with no asset yet counts as Unassigned |
+| Agents | `internal/core/agent/service.go` | `lineage.Service` BatchObservedLineage | decorator; all edges or none. The run record is kept and the agent gets the error text, as for any lineage failure |
+| OpenLineage | `internal/core/lineage/openlineage.go` | edges written inside `ProcessOpenLineageEvent` | not checked per edge; the assets the event creates or updates go through the asset decorator, so an emitter without a role on the output's domain fails there |
+| REST | `internal/api/v1/assets/documentation.go` | `assetdocs.Service` Create, CreateGlobal | decorator (`GuardAssetDocs`): the asset's domain; global documentation needs global scope |
+| REST | `internal/api/v1/docs` (pages and images) | `docs.Service`, a concrete type | `domainsAPI.GuardDocs` adds a check as the innermost middleware of every write route: the page's owner (asset by MRN, or data product) decides |
+| Asset rules | `internal/api/v1/assetrules` | `assetrule.Service` Create, Update, Delete | decorator (`GuardAssetRules`): global scope while enforcement is on. Their evaluation writes derived links and is not scoped |
 
 Out of scope: subscriptions and notifications (per-user), users, roles, teams, SSO and service accounts (global administration).
 

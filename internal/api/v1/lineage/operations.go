@@ -10,6 +10,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
@@ -97,6 +98,10 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 	}
 	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN)
 	if err != nil {
+		if errors.Is(err, domain.ErrForbidden) {
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
+			return
+		}
 		log.Error().Err(err).
 			Str("source", edge.Source).
 			Str("target", edge.Target).
@@ -140,6 +145,10 @@ func (h *Handler) deleteDirectLineage(w http.ResponseWriter, r *http.Request) {
 		Msg("Deleting direct lineage connection")
 
 	if err := h.lineageService.DeleteDirectLineage(r.Context(), edgeID); err != nil {
+		if errors.Is(err, domain.ErrForbidden) {
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
+			return
+		}
 		log.Error().Err(err).
 			Str("edge_id", edgeID).
 			Msg("Failed to delete direct lineage")

@@ -38,6 +38,8 @@ type Repository interface {
 	TermPlacements(ctx context.Context, names []string) (map[string]Placement, error)
 	Audit(ctx context.Context, entries []AuditEntry) error
 	AuditLog(ctx context.Context, entityKind, entityID string) ([]AuditEntry, error)
+	AssetIDsByMRN(ctx context.Context, mrns []string) (map[string]string, error)
+	DocOwner(ctx context.Context, pageID, imageID string) (entityType, entityID string, found bool, err error)
 }
 
 type membership struct {

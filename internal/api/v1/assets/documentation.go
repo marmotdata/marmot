@@ -2,6 +2,7 @@ package assets
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/rs/zerolog/log"
 )
 
@@ -61,6 +63,10 @@ func (h *Handler) createAssetDocumentation(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := h.assetDocsService.Create(r.Context(), doc); err != nil {
+		if errors.Is(err, domain.ErrForbidden) {
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
+			return
+		}
 		log.Error().Err(err).Str("mrn", req.MRN).Msg("Failed to create documentation")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to create documentation")
 		return

@@ -5,9 +5,11 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 )
 
 // The decorators check every write against the entity's domain before
@@ -250,4 +252,70 @@ func (s *guardedAssetRules) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return s.Service.Delete(ctx, id)
+}
+
+type guardedLineage struct {
+	lineage.Service
+	g *Guard
+}
+
+// GuardLineage scopes lineage edges by their target: the downstream asset
+// declares what it reads, so its domain decides, wherever the source lives.
+func GuardLineage(inner lineage.Service, g *Guard) lineage.Service {
+	return &guardedLineage{Service: inner, g: g}
+}
+
+func (s *guardedLineage) CreateDirectLineage(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string) (string, error) {
+	if err := s.g.AuthorizeAssetMRNs(ctx, targetMRN); err != nil {
+		return "", err
+	}
+	return s.Service.CreateDirectLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN)
+}
+
+func (s *guardedLineage) DeleteDirectLineage(ctx context.Context, edgeID string) error {
+	if on, err := s.g.Enforced(ctx); err != nil {
+		return err
+	} else if on {
+		// An unknown edge falls through so the inner service reports it as usual.
+		if edge, err := s.GetDirectLineage(ctx, edgeID); err == nil {
+			if err := s.g.AuthorizeAssetMRNs(ctx, edge.Target); err != nil {
+				return err
+			}
+		}
+	}
+	return s.Service.DeleteDirectLineage(ctx, edgeID)
+}
+
+func (s *guardedLineage) BatchObservedLineage(ctx context.Context, edges []lineage.ObservedEdge) error {
+	targets := make([]string, 0, len(edges))
+	for _, e := range edges {
+		targets = append(targets, e.Target)
+	}
+	if err := s.g.AuthorizeAssetMRNs(ctx, targets...); err != nil {
+		return err
+	}
+	return s.Service.BatchObservedLineage(ctx, edges)
+}
+
+type guardedAssetDocs struct {
+	assetdocs.Service
+	g *Guard
+}
+
+func GuardAssetDocs(inner assetdocs.Service, g *Guard) assetdocs.Service {
+	return &guardedAssetDocs{Service: inner, g: g}
+}
+
+func (s *guardedAssetDocs) Create(ctx context.Context, doc assetdocs.Documentation) error {
+	if err := s.g.AuthorizeAssetMRNs(ctx, doc.MRN); err != nil {
+		return err
+	}
+	return s.Service.Create(ctx, doc)
+}
+
+func (s *guardedAssetDocs) CreateGlobal(ctx context.Context, doc assetdocs.GlobalDocumentation) error {
+	if err := s.g.AuthorizeGlobal(ctx); err != nil {
+		return err
+	}
+	return s.Service.CreateGlobal(ctx, doc)
 }

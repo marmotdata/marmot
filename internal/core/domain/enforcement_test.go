@@ -7,11 +7,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/store/postgres/pgtest"
 )
@@ -94,6 +96,46 @@ type innerRules struct {
 }
 
 func (s *innerRules) Delete(context.Context, string) error {
+	s.writes++
+	return nil
+}
+
+type innerLineage struct {
+	lineage.Service
+	target string
+	writes int
+}
+
+func (s *innerLineage) CreateDirectLineage(context.Context, string, string, string, string) (string, error) {
+	s.writes++
+	return "edge", nil
+}
+
+func (s *innerLineage) GetDirectLineage(context.Context, string) (*lineage.LineageEdge, error) {
+	return &lineage.LineageEdge{Target: s.target}, nil
+}
+
+func (s *innerLineage) DeleteDirectLineage(context.Context, string) error {
+	s.writes++
+	return nil
+}
+
+func (s *innerLineage) BatchObservedLineage(context.Context, []lineage.ObservedEdge) error {
+	s.writes++
+	return nil
+}
+
+type innerAssetDocs struct {
+	assetdocs.Service
+	writes int
+}
+
+func (s *innerAssetDocs) Create(context.Context, assetdocs.Documentation) error {
+	s.writes++
+	return nil
+}
+
+func (s *innerAssetDocs) CreateGlobal(context.Context, assetdocs.GlobalDocumentation) error {
 	s.writes++
 	return nil
 }
@@ -277,6 +319,42 @@ func TestWriteEnforcement(t *testing.T) {
 		if in, _ := svc.DomainOf(ctx, domain.KindAsset, moving); in != legal.ID {
 			t.Fatalf("asset ended in %s", in)
 		}
+	})
+	t.Run("lineage: the target's domain decides", func(t *testing.T) {
+		edges := &innerLineage{}
+		guarded := domain.GuardLineage(edges, guard)
+		c := as(ctx, steward)
+		_, err := guarded.CreateDirectLineage(c, mrnOf(inLegal), mrnOf(inFinance), "", "")
+		allowed(t, err)
+		_, err = guarded.CreateDirectLineage(c, mrnOf(inFinance), mrnOf(inLegal), "", "")
+		denied(t, err)
+		_, err = guarded.CreateDirectLineage(c, mrnOf(inFinance), "mrn://table/nowhere/stub", "", "")
+		denied(t, err)
+		edges.target = mrnOf(inLegal)
+		denied(t, guarded.DeleteDirectLineage(c, "edge"))
+		denied(t, guarded.BatchObservedLineage(c, []lineage.ObservedEdge{
+			{Source: mrnOf(inLegal), Target: mrnOf(inFinance)},
+			{Source: mrnOf(inFinance), Target: mrnOf(inLegal)},
+		}))
+		allowed(t, guarded.BatchObservedLineage(c, []lineage.ObservedEdge{{Source: mrnOf(inLegal), Target: mrnOf(inFinance)}}))
+		if edges.writes != 2 {
+			t.Fatalf("inner writes = %d, want 2", edges.writes)
+		}
+	})
+	t.Run("documentation follows the owning entity", func(t *testing.T) {
+		docs := domain.GuardAssetDocs(&innerAssetDocs{}, guard)
+		c := as(ctx, steward)
+		allowed(t, docs.Create(c, assetdocs.Documentation{MRN: mrnOf(inFinance)}))
+		denied(t, docs.Create(c, assetdocs.Documentation{MRN: mrnOf(inLegal)}))
+		denied(t, docs.CreateGlobal(c, assetdocs.GlobalDocumentation{}))
+
+		page := seed(t, pool, "INSERT INTO doc_pages (entity_type, entity_id) VALUES ('asset', $1) RETURNING id", mrnOf(inLegal))
+		image := seed(t, pool, "INSERT INTO doc_images (page_id, filename, content_type, size_bytes, data) VALUES ($1, 'a.png', 'image/png', 1, 'x') RETURNING id", page)
+		denied(t, guard.AuthorizeDoc(c, "", "", page, ""))
+		denied(t, guard.AuthorizeDoc(c, "", "", "", image))
+		allowed(t, guard.AuthorizeDoc(as(ctx, lawyer), "", "", "", image))
+		allowed(t, guard.AuthorizeDoc(c, "asset", mrnOf(inFinance), "", ""))
+		allowed(t, guard.AuthorizeDoc(c, "", "", "00000000-0000-4000-8000-00000000ffff", ""))
 	})
 	t.Run("a pipeline moves only with write on both domains", func(t *testing.T) {
 		_, err := guard.AssignPipeline(as(ctx, steward), schedule, legal.ID, true)

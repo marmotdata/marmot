@@ -166,6 +166,55 @@ func (g *Guard) AuthorizeEntities(ctx context.Context, kind Kind, ids ...string)
 	})
 }
 
+// AuthorizeAssetMRNs checks assets named by MRN. An MRN with no asset yet
+// is a stub that would be created in Unassigned.
+func (g *Guard) AuthorizeAssetMRNs(ctx context.Context, mrns ...string) error {
+	return g.authorize(ctx, func(*writer) ([]string, error) {
+		ids, err := g.repo.AssetIDsByMRN(ctx, mrns)
+		if err != nil {
+			return nil, err
+		}
+		var known []string
+		var paths []string
+		for _, m := range mrns {
+			if id, ok := ids[m]; ok {
+				known = append(known, id)
+			} else {
+				paths = append(paths, unassignedPath)
+			}
+		}
+		placed, err := g.repo.Placements(ctx, KindAsset, known)
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range placed {
+			paths = append(paths, p.Path)
+		}
+		return paths, nil
+	})
+}
+
+// AuthorizeDoc checks a documentation write against the entity that owns the
+// page: the entity named in the path, or the owner of pageID or imageID. A page
+// or image that does not exist is left for the handler to report.
+func (g *Guard) AuthorizeDoc(ctx context.Context, entityType, entityID, pageID, imageID string) error {
+	if entityType == "" {
+		var found bool
+		var err error
+		entityType, entityID, found, err = g.repo.DocOwner(ctx, pageID, imageID)
+		if err != nil || !found {
+			return err
+		}
+	}
+	switch entityType {
+	case "asset":
+		return g.AuthorizeAssetMRNs(ctx, entityID)
+	case "data_product":
+		return g.AuthorizeEntities(ctx, KindDataProduct, entityID)
+	}
+	return nil
+}
+
 // AuthorizeTerms checks a glossary sync: every existing term it rewrites, and
 // the destination of the terms it creates.
 func (g *Guard) AuthorizeTerms(ctx context.Context, names []string) error {

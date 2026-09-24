@@ -153,9 +153,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
 	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
+	if domainGuard != nil {
+		lineageSvc = domainService.GuardLineage(lineageSvc, domainGuard)
+	}
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
+	if domainGuard != nil {
+		assetDocsSvc = domainService.GuardAssetDocs(assetDocsSvc, domainGuard)
+	}
 	authSvc := authService.NewService(authRepo, userSvc)
 	glossarySvc := glossaryService.NewService(glossaryRepo)
 	if domainGuard != nil {
@@ -600,6 +606,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		}
 		assetSvc.AddMembershipObserver(domainService.NewIngestionObserver(domainRepo))
 		searchRepo.SetDomainResolver(domainService.SearchResolver(domainSvc))
+		for i, h := range server.handlers {
+			if _, ok := h.(*docsAPI.Handler); ok {
+				server.handlers[i] = domainsAPI.GuardDocs(h, domainGuard)
+			}
+		}
 		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, domainGuard, userSvc, authSvc, config))
 	}
 

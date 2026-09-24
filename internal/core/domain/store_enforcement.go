@@ -113,3 +113,36 @@ func (r *PostgresRepository) AuditLog(ctx context.Context, entityKind, entityID 
 	}
 	return out, rows.Err()
 }
+
+func (r *PostgresRepository) AssetIDsByMRN(ctx context.Context, mrns []string) (map[string]string, error) {
+	rows, err := r.db.Query(ctx, "SELECT mrn, id FROM assets WHERE mrn = ANY($1::text[])", mrns)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]string{}
+	for rows.Next() {
+		var mrn, id string
+		if err := rows.Scan(&mrn, &id); err != nil {
+			return nil, err
+		}
+		out[mrn] = id
+	}
+	return out, rows.Err()
+}
+
+// DocOwner returns the entity a documentation page, or the page an image is
+// on, belongs to.
+func (r *PostgresRepository) DocOwner(ctx context.Context, pageID, imageID string) (entityType, entityID string, found bool, err error) {
+	q := "SELECT entity_type, entity_id FROM doc_pages WHERE id::text = $1"
+	arg := pageID
+	if imageID != "" {
+		q = "SELECT p.entity_type, p.entity_id FROM doc_images i JOIN doc_pages p ON p.id = i.page_id WHERE i.id::text = $1"
+		arg = imageID
+	}
+	err = r.db.QueryRow(ctx, q, arg).Scan(&entityType, &entityID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", false, nil
+	}
+	return entityType, entityID, err == nil, err
+}
