@@ -118,12 +118,12 @@ func TestDeleteRequiresAnEmptyLeaf(t *testing.T) {
 	wantErr(t, svc.Delete(ctx, parent.ID), domain.ErrHasChildren)
 
 	asset := seedAsset()
-	if err := svc.Assign(ctx, domain.KindAsset, asset, leaf.ID); err != nil {
+	if err := svc.Assign(ctx, domain.KindAsset, []string{asset}, leaf.ID); err != nil {
 		t.Fatal(err)
 	}
 	wantErr(t, svc.Delete(ctx, leaf.ID), domain.ErrNotEmpty)
 
-	if err := svc.Assign(ctx, domain.KindAsset, asset, domain.UnassignedID); err != nil {
+	if err := svc.Assign(ctx, domain.KindAsset, []string{asset}, domain.UnassignedID); err != nil {
 		t.Fatal(err)
 	}
 	if err := svc.Delete(ctx, leaf.ID); err != nil {
@@ -143,23 +143,42 @@ func TestMembership(t *testing.T) {
 	if err != nil || got != domain.UnassignedID {
 		t.Fatalf("without a row: %q, %v; want unassigned", got, err)
 	}
-	if err := svc.Assign(ctx, domain.KindAsset, asset, finance.ID); err != nil {
+	if err := svc.Assign(ctx, domain.KindAsset, []string{asset}, finance.ID); err != nil {
 		t.Fatal(err)
 	}
 	if got, _ := svc.DomainOf(ctx, domain.KindAsset, asset); got != finance.ID {
 		t.Fatalf("after assign: %q", got)
 	}
-	if err := svc.Assign(ctx, domain.KindAsset, asset, domain.UnassignedID); err != nil {
+	if err := svc.Assign(ctx, domain.KindAsset, []string{asset}, domain.UnassignedID); err != nil {
 		t.Fatal(err)
 	}
 	if got, _ := svc.DomainOf(ctx, domain.KindAsset, asset); got != domain.UnassignedID {
 		t.Fatalf("after unassign: %q", got)
 	}
 
-	wantErr(t, svc.Assign(ctx, domain.KindAsset, "missing", finance.ID), domain.ErrEntityNotFound)
-	wantErr(t, svc.Assign(ctx, domain.KindGlossaryTerm, "not-a-uuid", finance.ID), domain.ErrEntityNotFound)
-	wantErr(t, svc.Assign(ctx, domain.KindAsset, asset, "00000000-0000-4000-8000-00000000ffff"), domain.ErrNotFound)
-	wantErr(t, svc.Assign(ctx, "folder", asset, finance.ID), domain.ErrInvalidInput)
+	wantErr(t, svc.Assign(ctx, domain.KindAsset, []string{"missing"}, finance.ID), domain.ErrEntityNotFound)
+	wantErr(t, svc.Assign(ctx, domain.KindGlossaryTerm, []string{"not-a-uuid"}, finance.ID), domain.ErrEntityNotFound)
+	wantErr(t, svc.Assign(ctx, domain.KindAsset, []string{asset}, "00000000-0000-4000-8000-00000000ffff"), domain.ErrNotFound)
+	wantErr(t, svc.Assign(ctx, "folder", []string{asset}, finance.ID), domain.ErrInvalidInput)
+
+	t.Run("a batch with a missing entity assigns none", func(t *testing.T) {
+		wantErr(t, svc.Assign(ctx, domain.KindAsset, []string{asset, "missing"}, finance.ID), domain.ErrEntityNotFound)
+		if got, _ := svc.DomainOf(ctx, domain.KindAsset, asset); got != domain.UnassignedID {
+			t.Fatalf("partial assignment: %q", got)
+		}
+	})
+
+	t.Run("a batch assigns every entity, duplicates included", func(t *testing.T) {
+		other := seedAsset()
+		if err := svc.Assign(ctx, domain.KindAsset, []string{asset, other, asset}, finance.ID); err != nil {
+			t.Fatal(err)
+		}
+		for _, id := range []string{asset, other} {
+			if got, _ := svc.DomainOf(ctx, domain.KindAsset, id); got != finance.ID {
+				t.Fatalf("%s in %q", id, got)
+			}
+		}
+	})
 }
 
 func TestUnassignedIsProtected(t *testing.T) {

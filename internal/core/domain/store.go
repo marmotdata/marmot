@@ -18,19 +18,19 @@ type Repository interface {
 	Update(ctx context.Context, id string, in UpdateInput) (*Domain, error)
 	Delete(ctx context.Context, id string) error
 	Move(ctx context.Context, id string, parentID *string) (*Domain, error)
-	Assign(ctx context.Context, kind Kind, entityID, domainID string) error
+	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
 }
 
 type membership struct {
-	table, column, entityTable string
+	table, column, columnType, entityTable string
 }
 
 var memberships = map[Kind]membership{
-	KindAsset:             {"asset_domains", "asset_id", "assets"},
-	KindDataProduct:       {"data_product_domains", "data_product_id", "data_products"},
-	KindGlossaryTerm:      {"glossary_term_domains", "glossary_term_id", "glossary_terms"},
-	KindIngestionSchedule: {"ingestion_schedule_domains", "schedule_id", "ingestion_schedules"},
+	KindAsset:             {"asset_domains", "asset_id", "varchar", "assets"},
+	KindDataProduct:       {"data_product_domains", "data_product_id", "uuid", "data_products"},
+	KindGlossaryTerm:      {"glossary_term_domains", "glossary_term_id", "uuid", "glossary_terms"},
+	KindIngestionSchedule: {"ingestion_schedule_domains", "schedule_id", "uuid", "ingestion_schedules"},
 }
 
 // treeLock serializes structural changes. A move rewrites the paths of a
@@ -301,36 +301,60 @@ func (r *PostgresRepository) Move(ctx context.Context, id string, parentID *stri
 	return d, tx.Commit(ctx)
 }
 
-// Assign sets an entity's owning domain. Assigning Unassigned removes the
-// membership row, since a missing row already means Unassigned.
-func (r *PostgresRepository) Assign(ctx context.Context, kind Kind, entityID, domainID string) error {
+// Assign sets the owning domain of every listed entity, all or none.
+// Assigning Unassigned removes membership rows, since a missing row already
+// means Unassigned.
+func (r *PostgresRepository) Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error {
 	m, ok := memberships[kind]
 	if !ok {
 		return ErrInvalidInput
 	}
+	ids := unique(entityIDs)
 
-	var exists bool
-	err := r.db.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM "+m.entityTable+" WHERE id = $1)", entityID).Scan(&exists)
-	if pgCode(err) == "22P02" || (err == nil && !exists) {
-		return ErrEntityNotFound
-	}
+	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
+	defer func() { _ = tx.Rollback(ctx) }()
 
-	if domainID == UnassignedID {
-		_, err := r.db.Exec(ctx, "DELETE FROM "+m.table+" WHERE "+m.column+" = $1", entityID)
+	// Comparing as text keeps a malformed UUID a plain miss, not a cast error.
+	var found int
+	if err := tx.QueryRow(ctx, "SELECT count(*) FROM "+m.entityTable+" WHERE id::text = ANY($1::text[])", ids).Scan(&found); err != nil {
 		return err
 	}
-	_, err = r.db.Exec(ctx, `
-		INSERT INTO `+m.table+` (`+m.column+`, domain_id) VALUES ($1, $2)
-		ON CONFLICT (`+m.column+`) DO UPDATE SET domain_id = EXCLUDED.domain_id, assigned_at = now()`,
-		entityID, domainID)
+	if found != len(ids) {
+		return ErrEntityNotFound
+	}
+
+	if domainID == UnassignedID {
+		_, err = tx.Exec(ctx, "DELETE FROM "+m.table+" WHERE "+m.column+"::text = ANY($1::text[])", ids)
+	} else {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO `+m.table+` (`+m.column+`, domain_id)
+			SELECT unnest($1::text[])::`+m.columnType+`, $2::uuid
+			ON CONFLICT (`+m.column+`) DO UPDATE SET domain_id = EXCLUDED.domain_id, assigned_at = now()`,
+			ids, domainID)
+	}
 	switch pgCode(err) {
 	case "23503", "22P02":
 		return ErrNotFound
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("assigning %s to domain: %w", kind, err)
+	}
+	return tx.Commit(ctx)
+}
+
+func unique(values []string) []string {
+	seen := make(map[string]bool, len(values))
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		if !seen[v] {
+			seen[v] = true
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 func (r *PostgresRepository) DomainOf(ctx context.Context, kind Kind, entityID string) (string, error) {

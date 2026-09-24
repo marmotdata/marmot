@@ -15,6 +15,8 @@ const MaxDepth = 8
 
 const maxNameLength = 255
 
+const maxAssignBatch = 500
+
 type Kind string
 
 const (

@@ -15,7 +15,7 @@ type Service interface {
 	Update(ctx context.Context, id string, in UpdateInput) (*Domain, error)
 	Delete(ctx context.Context, id string) error
 	Move(ctx context.Context, id string, parentID *string) (*Domain, error)
-	Assign(ctx context.Context, kind Kind, entityID, domainID string) error
+	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
 }
 
@@ -101,19 +101,27 @@ func (s *service) Move(ctx context.Context, id string, parentID *string) (*Domai
 	return s.repo.Move(ctx, id, parentID)
 }
 
-func (s *service) Assign(ctx context.Context, kind Kind, entityID, domainID string) error {
+func (s *service) Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error {
 	if !kind.valid() {
 		return fmt.Errorf("%w: unknown kind %q", ErrInvalidInput, kind)
 	}
-	if strings.TrimSpace(entityID) == "" {
-		return fmt.Errorf("%w: entity id is required", ErrInvalidInput)
+	if len(entityIDs) == 0 {
+		return fmt.Errorf("%w: at least one entity id is required", ErrInvalidInput)
+	}
+	if len(entityIDs) > maxAssignBatch {
+		return fmt.Errorf("%w: at most %d entities per assignment", ErrInvalidInput, maxAssignBatch)
+	}
+	for _, id := range entityIDs {
+		if strings.TrimSpace(id) == "" {
+			return fmt.Errorf("%w: entity ids cannot be empty", ErrInvalidInput)
+		}
 	}
 	if domainID != UnassignedID {
 		if _, err := s.repo.Get(ctx, domainID); err != nil {
 			return err
 		}
 	}
-	return s.repo.Assign(ctx, kind, entityID, domainID)
+	return s.repo.Assign(ctx, kind, entityIDs, domainID)
 }
 
 func (s *service) DomainOf(ctx context.Context, kind Kind, entityID string) (string, error) {
