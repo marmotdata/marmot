@@ -20,6 +20,7 @@ type Repository interface {
 	Move(ctx context.Context, id string, parentID *string) (*Domain, error)
 	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
+	PipelineDomain(ctx context.Context, pipelineName string) (string, bool, error)
 }
 
 type membership struct {
@@ -368,4 +369,23 @@ func (r *PostgresRepository) DomainOf(ctx context.Context, kind Kind, entityID s
 		return UnassignedID, nil
 	}
 	return id, err
+}
+
+// PipelineDomain returns the domain assigned to the ingestion schedule named
+// pipelineName. Runs started by the scheduler use the schedule name as their
+// pipeline name; other pipelines have no schedule and report found=false.
+func (r *PostgresRepository) PipelineDomain(ctx context.Context, pipelineName string) (string, bool, error) {
+	var id string
+	err := r.db.QueryRow(ctx, `
+		SELECT sd.domain_id
+		  FROM ingestion_schedule_domains sd
+		  JOIN ingestion_schedules s ON s.id = sd.schedule_id
+		 WHERE s.name = $1`, pipelineName).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	return id, true, nil
 }

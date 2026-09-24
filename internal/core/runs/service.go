@@ -12,6 +12,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/metrics"
@@ -274,6 +275,7 @@ func (s *service) CompleteRun(ctx context.Context, runID string, status plugin.R
 }
 
 func (s *service) ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, terms []GlossaryTermInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
+	ctx = domain.WithPipeline(ctx, pipelineName)
 	run, err := s.repo.GetByRunID(ctx, runID)
 	if err != nil {
 		return nil, fmt.Errorf("getting run: %w", err)
