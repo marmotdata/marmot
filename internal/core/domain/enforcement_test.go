@@ -67,7 +67,18 @@ func (s *innerAssets) GetByMRN(ctx context.Context, mrn string) (*asset.Asset, e
 
 type innerProducts struct {
 	dataproduct.Service
-	writes int
+	pool    *pgxpool.Pool
+	creator string
+	writes  int
+}
+
+func (s *innerProducts) Create(ctx context.Context, in dataproduct.CreateInput) (*dataproduct.DataProduct, error) {
+	s.writes++
+	var id string
+	if err := s.pool.QueryRow(ctx, "INSERT INTO data_products (name, created_by) VALUES ($1, $2) RETURNING id", in.Name, s.creator).Scan(&id); err != nil {
+		return nil, err
+	}
+	return &dataproduct.DataProduct{ID: id}, nil
 }
 
 func (s *innerProducts) AddAssets(context.Context, string, []string, string) error {
@@ -190,7 +201,7 @@ func TestWriteEnforcement(t *testing.T) {
 
 	assets := &innerAssets{pool: pool}
 	guardedAssets := domain.GuardAssets(assets, guard)
-	products := &innerProducts{}
+	products := &innerProducts{pool: pool, creator: steward.ID()}
 	guardedProducts := domain.GuardDataProducts(products, guard)
 	terms := &innerGlossary{}
 	guardedTerms := domain.GuardGlossary(terms, guard)
@@ -355,6 +366,34 @@ func TestWriteEnforcement(t *testing.T) {
 		allowed(t, guard.AuthorizeDoc(as(ctx, lawyer), "", "", "", image))
 		allowed(t, guard.AuthorizeDoc(c, "asset", mrnOf(inFinance), "", ""))
 		allowed(t, guard.AuthorizeDoc(c, "", "", "00000000-0000-4000-8000-00000000ffff", ""))
+	})
+	t.Run("a create can target a domain the actor writes in", func(t *testing.T) {
+		c := as(ctx, steward)
+		before := products.writes
+		_, err := guardedProducts.Create(domain.WithTarget(c, legal.ID), dataproduct.CreateInput{Name: "Elsewhere"})
+		denied(t, err)
+		if products.writes != before {
+			t.Fatal("a refused create reached the inner service")
+		}
+		dp, err := guardedProducts.Create(domain.WithTarget(c, payments.ID), dataproduct.CreateInput{Name: "Settlements"})
+		allowed(t, err)
+		if in, _ := svc.DomainOf(ctx, domain.KindDataProduct, dp.ID); in != payments.ID {
+			t.Fatalf("created in %s, want Payments", in)
+		}
+		log, err := guard.AuditLog(ctx, string(domain.KindDataProduct), dp.ID)
+		if err != nil || len(log) != 1 || log[0].Action != domain.AuditCreate || log[0].FromDomain != nil {
+			t.Fatalf("audit = %+v, %v", log, err)
+		}
+
+		if err := repo.SetWriteEnforced(ctx, false, ""); err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = repo.SetWriteEnforced(ctx, true, "") }()
+		dp, err = guardedProducts.Create(domain.WithTarget(ctx, legal.ID), dataproduct.CreateInput{Name: "Unenforced"})
+		allowed(t, err)
+		if in, _ := svc.DomainOf(ctx, domain.KindDataProduct, dp.ID); in != legal.ID {
+			t.Fatalf("with enforcement off the target still applies; got %s", in)
+		}
 	})
 	t.Run("a pipeline moves only with write on both domains", func(t *testing.T) {
 		_, err := guard.AssignPipeline(as(ctx, steward), schedule, legal.ID, true)

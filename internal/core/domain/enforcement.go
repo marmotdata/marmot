@@ -26,7 +26,21 @@ type AuditEntry struct {
 	At         time.Time `json:"at"`
 }
 
+type targetKey struct{}
+
+// WithTarget records the domain a create should land in. Unassigned, or no
+// target at all, keeps the default destination.
+func WithTarget(ctx context.Context, domainID string) context.Context {
+	return context.WithValue(ctx, targetKey{}, domainID)
+}
+
+func targetFrom(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(targetKey{}).(string)
+	return id, ok && id != "" && id != UnassignedID
+}
+
 const (
+	AuditCreate         = "create"
 	AuditAssign         = "assign"
 	AuditAssignPipeline = "assign_pipeline"
 	AuditMove           = "move"
@@ -104,6 +118,13 @@ func (g *Guard) writerFor(ctx context.Context) (*writer, error) {
 			w.actor = "pipeline:" + name
 		}
 	}
+	if id, ok := targetFrom(ctx); ok {
+		path, err := g.destination(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		w.target = path
+	}
 	return w, nil
 }
 
@@ -145,8 +166,8 @@ func (g *Guard) authorize(ctx context.Context, paths func(w *writer) ([]string, 
 	return nil
 }
 
-// AuthorizeCreate checks a new entity's destination: the pipeline's domain
-// during ingestion, Unassigned otherwise.
+// AuthorizeCreate checks a new entity's destination: the target in the
+// context, else the pipeline's domain during ingestion, else Unassigned.
 func (g *Guard) AuthorizeCreate(ctx context.Context) error {
 	return g.authorize(ctx, func(w *writer) ([]string, error) { return []string{w.target}, nil })
 }
@@ -250,6 +271,23 @@ func (g *Guard) AuthorizeGlobal(ctx context.Context) error {
 		return ErrForbidden
 	}
 	return nil
+}
+
+// PlaceCreated puts a just-created entity in the target domain of the context,
+// if any, and audits it. The decorators call it after the inner create.
+func (g *Guard) PlaceCreated(ctx context.Context, kind Kind, id string) error {
+	target, ok := targetFrom(ctx)
+	if !ok {
+		return nil
+	}
+	if err := g.svc.Assign(ctx, kind, []string{id}, target); err != nil {
+		return err
+	}
+	actor, err := g.actor(ctx)
+	if err != nil {
+		return err
+	}
+	return g.repo.Audit(ctx, []AuditEntry{auditEntry(actor, AuditCreate, string(kind), id, nil, &target)})
 }
 
 func (g *Guard) destination(ctx context.Context, domainID string) (string, error) {

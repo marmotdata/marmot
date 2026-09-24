@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -14,6 +16,15 @@ import (
 
 // The decorators check every write against the entity's domain before
 // delegating; reads pass through the embedded service untouched.
+
+// undoCreate reports a create that could not be placed in its target domain.
+// The entity is removed so it never lingers in Unassigned by accident.
+func undoCreate(placeErr, deleteErr error) error {
+	if deleteErr != nil {
+		return errors.Join(placeErr, fmt.Errorf("removing the unplaced entity: %w", deleteErr))
+	}
+	return placeErr
+}
 
 type guardedAssets struct {
 	asset.Service
@@ -28,7 +39,14 @@ func (s *guardedAssets) Create(ctx context.Context, in asset.CreateInput) (*asse
 	if err := s.g.AuthorizeCreate(ctx); err != nil {
 		return nil, err
 	}
-	return s.Service.Create(ctx, in)
+	a, err := s.Service.Create(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.g.PlaceCreated(ctx, KindAsset, a.ID); err != nil {
+		return nil, undoCreate(err, s.Service.Delete(ctx, a.ID))
+	}
+	return a, nil
 }
 
 func (s *guardedAssets) Update(ctx context.Context, id string, in asset.UpdateInput) (*asset.Asset, error) {
@@ -109,7 +127,14 @@ func (s *guardedProducts) Create(ctx context.Context, in dataproduct.CreateInput
 	if err := s.g.AuthorizeCreate(ctx); err != nil {
 		return nil, err
 	}
-	return s.Service.Create(ctx, in)
+	dp, err := s.Service.Create(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.g.PlaceCreated(ctx, KindDataProduct, dp.ID); err != nil {
+		return nil, undoCreate(err, s.Service.Delete(ctx, dp.ID))
+	}
+	return dp, nil
 }
 
 func (s *guardedProducts) Update(ctx context.Context, id string, in dataproduct.UpdateInput) (*dataproduct.DataProduct, error) {
@@ -190,7 +215,14 @@ func (s *guardedGlossary) Create(ctx context.Context, in glossary.CreateTermInpu
 	if err := s.g.AuthorizeCreate(ctx); err != nil {
 		return nil, err
 	}
-	return s.Service.Create(ctx, in)
+	term, err := s.Service.Create(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.g.PlaceCreated(ctx, KindGlossaryTerm, term.ID); err != nil {
+		return nil, undoCreate(err, s.Service.Delete(ctx, term.ID))
+	}
+	return term, nil
 }
 
 func (s *guardedGlossary) Update(ctx context.Context, id string, in glossary.UpdateTermInput) (*glossary.GlossaryTerm, error) {

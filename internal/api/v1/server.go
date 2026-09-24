@@ -607,8 +607,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		assetSvc.AddMembershipObserver(domainService.NewIngestionObserver(domainRepo))
 		searchRepo.SetDomainResolver(domainService.SearchResolver(domainSvc))
 		for i, h := range server.handlers {
-			if _, ok := h.(*docsAPI.Handler); ok {
+			switch h.(type) {
+			case *docsAPI.Handler:
 				server.handlers[i] = domainsAPI.GuardDocs(h, domainGuard)
+			case *assets.Handler:
+				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/assets/")
+			case *dataproducts.Handler:
+				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/products/")
+			case *glossary.Handler:
+				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/glossary/")
 			}
 		}
 		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, domainGuard, userSvc, authSvc, config))
