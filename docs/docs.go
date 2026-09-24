@@ -10241,7 +10241,6 @@ const docTemplate = `{
                     }
                 },
                 "metadata": {
-                    "description": "Governed field storage path -> counts, only present for facetable metamodel fields.",
                     "type": "object",
                     "additionalProperties": {
                         "type": "array",
@@ -12460,6 +12459,10 @@ const docTemplate = `{
                 "descriptionKey": {
                     "type": "string"
                 },
+                "facet": {
+                    "description": "Facet asks Discover to offer this field as a segmented filter. Only enum and boolean fields qualify",
+                    "type": "boolean"
+                },
                 "helpTextKey": {
                     "type": "string"
                 },
@@ -12510,6 +12513,40 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "integer"
+                }
+            }
+        },
+        "pluginsdk.AssetField": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.AssetSchema": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetField"
+                    }
+                },
+                "struct_name": {
+                    "type": "string"
                 }
             }
         },
@@ -12599,6 +12636,12 @@ const docTemplate = `{
         "pluginsdk.Meta": {
             "type": "object",
             "properties": {
+                "asset_schemas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetSchema"
+                    }
+                },
                 "category": {
                     "type": "string"
                 },
@@ -12630,9 +12673,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "supports_data_preview": {
-                    "type": "boolean"
-                },
-                "supports_query": {
                     "type": "boolean"
                 }
             }

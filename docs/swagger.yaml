@@ -1102,9 +1102,6 @@ definitions:
           items:
             $ref: '#/definitions/FacetValue'
           type: array
-        description: |-
-          Governed field storage path -> counts, only present for facetable metamodel
-          fields.
         type: object
       providers:
         items:
@@ -2579,6 +2576,10 @@ definitions:
         type: string
       descriptionKey:
         type: string
+      facet:
+        description: Facet asks Discover to offer this field as a segmented filter.
+          Only enum and boolean fields qualify
+        type: boolean
       helpTextKey:
         type: string
       labelKey:
@@ -2616,6 +2617,28 @@ definitions:
         type: object
       version:
         type: integer
+    type: object
+  pluginsdk.AssetField:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  pluginsdk.AssetSchema:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetField'
+        type: array
+      struct_name:
+        type: string
     type: object
   pluginsdk.ConfigField:
     properties:
@@ -2678,6 +2701,10 @@ definitions:
     - FieldTypeObject
   pluginsdk.Meta:
     properties:
+      asset_schemas:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetSchema'
+        type: array
       category:
         type: string
       config_spec:
@@ -2699,8 +2726,6 @@ definitions:
       status:
         type: string
       supports_data_preview:
-        type: boolean
-      supports_query:
         type: boolean
     type: object
   pluginsdk.ShowWhen:
@@ -5162,8 +5187,8 @@ paths:
       - mcp
   /api/v1/metamodel:
     get:
-      description: Returns the composed native and configured field schema for
-        an entity kind. Clients must not reinterpret source YAML.
+      description: Returns the composed native and configured field schema for an
+        entity kind. Clients must not reinterpret source YAML.
       operationId: getMetamodel
       parameters:
       - default: asset
