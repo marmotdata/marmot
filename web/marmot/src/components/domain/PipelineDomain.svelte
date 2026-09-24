@@ -29,7 +29,7 @@
 	let pending = $state<string | null>(null);
 	let busy = $state(false);
 
-	const canChange = auth.hasPermission('domains', 'manage');
+	const canChange = auth.hasPermission('ingestion', 'manage');
 	const canMoveAssets = auth.hasPermission('assets', 'manage');
 	const pathOf = (id: string) => options?.find((o) => o.id === id)?.path ?? '';
 

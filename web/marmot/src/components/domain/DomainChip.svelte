@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { resolve } from '$app/paths';
-	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import type { Domain, DomainKind } from '$lib/domains/types';
@@ -25,7 +24,7 @@
 	}: {
 		kind: DomainKind;
 		entityId: string;
-		/** Whether the user may edit the entity itself; assigning also needs domains:manage. */
+		/** Whether the user may edit the entity; the server also checks both domains under write enforcement. */
 		canEdit?: boolean;
 		variant?: 'compact' | 'section';
 		/** False inside another link (the Discover side panel header): plain, read-only chip. */
@@ -36,7 +35,7 @@
 	let options = $state<DomainOption[] | null>(null);
 	let busy = $state(false);
 
-	const mayChange = $derived(link && canEdit && auth.hasPermission('domains', 'manage'));
+	const mayChange = $derived(link && canEdit);
 
 	$effect(() => {
 		const id = entityId;

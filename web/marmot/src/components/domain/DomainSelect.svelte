@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
 	import { domainsEnabled, loadTree } from '$lib/domains/api';
 	import { domainOptions, type DomainOption } from '$lib/domains/options';
@@ -18,7 +17,6 @@
 
 	$effect(() => {
 		let cancelled = false;
-		if (!auth.hasPermission('domains', 'manage')) return;
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
