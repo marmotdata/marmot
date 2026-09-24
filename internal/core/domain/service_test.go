@@ -209,3 +209,31 @@ func TestGetWithInvalidID(t *testing.T) {
 	_, err := svc.Get(context.Background(), "not-a-uuid")
 	wantErr(t, err, domain.ErrNotFound)
 }
+
+func TestDeleteIgnoresSoftDeletedMembers(t *testing.T) {
+	pool := pgtest.TempDB(t)
+	ctx := context.Background()
+	svc := domain.NewService(domain.NewPostgresRepository(pool))
+	legal := mustCreate(t, svc, "Legal", nil)
+
+	var live, deleted string
+	for _, dest := range []*string{&live, &deleted} {
+		if err := pool.QueryRow(ctx, "INSERT INTO glossary_terms (name, definition) VALUES (gen_random_uuid()::text, 'd') RETURNING id").Scan(dest); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.Assign(ctx, domain.KindGlossaryTerm, []string{live, deleted}, legal.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, "UPDATE glossary_terms SET deleted_at = now() WHERE id = $1", deleted); err != nil {
+		t.Fatal(err)
+	}
+	wantErr(t, svc.Delete(ctx, legal.ID), domain.ErrNotEmpty)
+
+	if _, err := pool.Exec(ctx, "UPDATE glossary_terms SET deleted_at = now() WHERE id = $1", live); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Delete(ctx, legal.ID); err != nil {
+		t.Fatalf("a domain whose only members are soft-deleted must be deletable: %v", err)
+	}
+}

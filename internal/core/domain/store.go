@@ -233,6 +233,11 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 		return ErrHasChildren
 	}
 	for _, m := range memberships {
+		// A soft-deleted entity keeps its membership row but is invisible;
+		// it must not pin the domain forever.
+		if _, err := tx.Exec(ctx, "DELETE FROM "+m.table+" mm USING "+m.entityTable+" e WHERE e.id = mm."+m.column+" AND mm.domain_id = $1 AND NOT ("+m.live+")", id); err != nil {
+			return fmt.Errorf("dropping memberships of deleted %s: %w", m.entityTable, err)
+		}
 		var hasMembers bool
 		if err := tx.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM "+m.table+" WHERE domain_id = $1)", id).Scan(&hasMembers); err != nil {
 			return err
