@@ -63,7 +63,7 @@
 
 	async function refresh() {
 		try {
-			forest = await loadTree();
+			forest = await loadTree({ fresh: true });
 			loadFailed = false;
 		} catch {
 			loadFailed = true;

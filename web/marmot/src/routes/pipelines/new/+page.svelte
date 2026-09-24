@@ -7,6 +7,8 @@
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
 	import Button from '$components/ui/Button.svelte';
+	import PipelineDomain from '$components/domain/PipelineDomain.svelte';
+	import { assignPipeline, errorMessage as domainErrorMessage } from '$lib/domains/api';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import Stepper from '$components/ui/Stepper.svelte';
@@ -57,6 +59,7 @@
 	let pluginPollTimer: ReturnType<typeof setTimeout> | null = null;
 	let selectedPluginId = $state('');
 	let name = $state('');
+	let pipelineDomain = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
 	type ConfigValue =
@@ -217,6 +220,14 @@
 			if (!response.ok) {
 				const data = await response.json();
 				throw new Error(data.error || m.pipelines_error_create());
+			}
+
+			// The pipeline exists either way; a failed assignment leaves it in Unassigned.
+			if (pipelineDomain) {
+				const created = await response.json();
+				await assignPipeline(created.id, pipelineDomain, false).catch((error) =>
+					toasts.error(domainErrorMessage(error))
+				);
 			}
 
 			goto(resolve('/runs?tab=pipelines'));
@@ -636,6 +647,8 @@
 						required
 					/>
 				</div>
+
+				<PipelineDomain bind:value={pipelineDomain} />
 
 				<!-- Tags -->
 				<div class="mt-6">

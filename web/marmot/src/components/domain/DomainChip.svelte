@@ -40,19 +40,15 @@
 
 	$effect(() => {
 		const id = entityId;
-		const loadOptions = mayChange;
 		let cancelled = false;
 		current = null;
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const [domain, forest] = await Promise.all([
-					domainOf(kind, id),
-					loadOptions ? loadTree() : Promise.resolve(null)
-				]);
+				const [domain, forest] = await Promise.all([domainOf(kind, id), loadTree()]);
 				if (cancelled) return;
 				current = domain;
-				options = forest ? domainOptions(forest, { includeUnassigned: true }) : null;
+				options = domainOptions(forest, { includeUnassigned: true });
 			} catch {
 				// Without a readable domain the section stays hidden.
 			}
@@ -61,6 +57,11 @@
 			cancelled = true;
 		};
 	});
+
+	// The full path, as the picker shows it, so every chip reads the same.
+	const label = $derived(
+		current ? (options?.find((o) => o.id === current?.id)?.path ?? domainName(current)) : ''
+	);
 
 	async function choose(domainId: string) {
 		if (!current || domainId === current.id) return;
@@ -126,7 +127,7 @@
 					current
 				)
 					? 'italic'
-					: ''}">{domainName(current)}</span
+					: ''}">{label}</span
 			>
 		{:else}
 			<a
@@ -135,7 +136,7 @@
 					current
 				)
 					? 'italic'
-					: ''}">{domainName(current)}</a
+					: ''}">{label}</a
 			>
 		{/if}
 	</div>

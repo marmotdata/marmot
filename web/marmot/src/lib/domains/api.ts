@@ -64,6 +64,7 @@ export function createDomain(input: {
 	description?: string;
 	parent_id?: string;
 }): Promise<Domain> {
+	treeCache = undefined;
 	return send<Domain>('/domains', 'POST', input);
 }
 
@@ -71,14 +72,17 @@ export function updateDomain(
 	id: string,
 	input: { name?: string; description?: string }
 ): Promise<Domain> {
+	treeCache = undefined;
 	return send<Domain>(`/domains/${encodeURIComponent(id)}`, 'PUT', input);
 }
 
 export function deleteDomain(id: string): Promise<unknown> {
+	treeCache = undefined;
 	return request(`/domains/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export function moveDomain(id: string, parentId: string | null): Promise<Domain> {
+	treeCache = undefined;
 	return send<Domain>(`/domains/${encodeURIComponent(id)}/move`, 'POST', { parent_id: parentId });
 }
 
@@ -90,8 +94,44 @@ export function assignToDomain(
 	return send(`/domains/${encodeURIComponent(domainId)}/members`, 'PUT', { kind, ids });
 }
 
-/** Every domain, as a forest ordered by name. */
-export async function loadTree(): Promise<DomainNode[]> {
+export interface PipelineAssignment {
+	schedule_id: string;
+	domain_id: string;
+	assets_in_domain: number;
+}
+
+export function pipelineAssignment(scheduleId: string): Promise<PipelineAssignment> {
+	return request<PipelineAssignment>(
+		`/domains/pipelines/${encodeURIComponent(scheduleId)}/assignment`
+	);
+}
+
+export function assignPipeline(
+	scheduleId: string,
+	domainId: string,
+	moveAssets: boolean
+): Promise<{ domain_id: string; moved_assets: number }> {
+	return send(`/domains/pipelines/${encodeURIComponent(scheduleId)}/assignment`, 'PUT', {
+		domain_id: domainId,
+		move_assets: moveAssets
+	});
+}
+
+let treeCache: Promise<DomainNode[]> | undefined;
+
+/**
+ * Every domain, as a forest ordered by name. Cached for the session and dropped
+ * on any structural change made here; fresh bypasses it.
+ */
+export function loadTree({ fresh = false }: { fresh?: boolean } = {}): Promise<DomainNode[]> {
+	if (fresh || !treeCache) {
+		treeCache = fetchTree();
+		treeCache.catch(() => (treeCache = undefined));
+	}
+	return treeCache;
+}
+
+async function fetchTree(): Promise<DomainNode[]> {
 	const roots = await listChildren();
 	const subtrees = await Promise.all(
 		roots.map((root) => request<Domain[]>(`/domains/${encodeURIComponent(root.id)}/tree`))

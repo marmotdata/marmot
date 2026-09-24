@@ -8,6 +8,7 @@
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
 	import Button from '$components/ui/Button.svelte';
+	import PipelineDomain from '$components/domain/PipelineDomain.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import cronstrue from 'cronstrue/i18n';
@@ -435,6 +436,8 @@
 						required
 					/>
 				</div>
+
+				<PipelineDomain scheduleId={pipelineId} />
 
 				<!-- Tags -->
 				<div class="mt-6">
