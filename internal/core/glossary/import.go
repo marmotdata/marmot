@@ -14,6 +14,9 @@ type ImportTerm struct {
 	// the same batch refer to.
 	Name       string
 	ExistingID string
+	// Extra holds the row's cells in columns a distribution adds, keyed by
+	// column; the base service ignores them.
+	Extra      map[string]string
 	Create     CreateTermInput
 	Update     UpdateTermInput
 	ParentName string

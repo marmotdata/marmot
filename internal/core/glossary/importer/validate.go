@@ -82,16 +82,24 @@ type Owners interface {
 var ErrOwnerNotFound = errors.New("owner not found")
 
 type Importer struct {
-	registry *metamodel.Registry
-	terms    Terms
-	owners   Owners
+	registry  *metamodel.Registry
+	terms     Terms
+	owners    Owners
+	providers []ColumnProvider
 }
 
-func New(registry *metamodel.Registry, terms Terms, owners Owners) *Importer {
-	return &Importer{registry: registry, terms: terms, owners: owners}
+func New(registry *metamodel.Registry, terms Terms, owners Owners, providers ...ColumnProvider) *Importer {
+	return &Importer{registry: registry, terms: terms, owners: owners, providers: providers}
 }
 
-func (im *Importer) Columns() []Column { return Columns(im.registry) }
+// Columns are the term's own columns, the profile's and the providers'.
+func (im *Importer) Columns() []Column {
+	cols := Columns(im.registry)
+	for _, p := range im.providers {
+		cols = append(cols, p.Columns()...)
+	}
+	return cols
+}
 
 // Describe lists the template's columns for a client's guide, in locale.
 func (im *Importer) Describe(locale string) []ColumnInfo {
@@ -292,12 +300,34 @@ func (im *Importer) validateRow(ctx context.Context, r *Row, row []string, cell 
 		}
 	}
 
+	var extra map[string]string
+	for _, p := range im.providers {
+		cells := map[string]string{}
+		for _, c := range p.Columns() {
+			if i, ok := index[c.ID]; ok {
+				cells[c.ID] = row[i]
+			}
+		}
+		errs, warnings := p.Check(ctx, RowContext{Name: r.Name, Current: current, Cells: cells})
+		r.Errors = append(r.Errors, errs...)
+		r.Warnings = append(r.Warnings, warnings...)
+		for id, v := range cells {
+			if v == "" {
+				continue
+			}
+			if extra == nil {
+				extra = map[string]string{}
+			}
+			extra[id] = v
+		}
+	}
+
 	if current == nil {
 		in := glossary.CreateTermInput{Name: r.Name, Definition: definition, Owners: owners, Tags: tags, Metadata: metadata}
 		if description != "" {
 			in.Description = &description
 		}
-		r.term = glossary.ImportTerm{Name: n.canonical(r.Name), Create: in, ParentName: parent}
+		r.term = glossary.ImportTerm{Name: n.canonical(r.Name), Create: in, ParentName: parent, Extra: extra}
 		return
 	}
 	// On update, an empty cell keeps the current value.
@@ -314,7 +344,7 @@ func (im *Importer) validateRow(ctx context.Context, r *Row, row []string, cell 
 	if len(tags) > 0 {
 		in.Tags = tags
 	}
-	r.term = glossary.ImportTerm{Name: current.Name, ExistingID: current.ID, Update: in, ParentName: parent}
+	r.term = glossary.ImportTerm{Name: current.Name, ExistingID: current.ID, Update: in, ParentName: parent, Extra: extra}
 }
 
 func (im *Importer) readOwners(ctx context.Context, value string, fail func(column, code, message string)) []glossary.OwnerInput {

@@ -3,6 +3,7 @@ package importer
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -63,6 +64,15 @@ func (im *Importer) Export(ctx context.Context, svc glossary.Service) ([][]strin
 		row := make([]string, len(cols))
 		for i, c := range cols {
 			row[i] = exportCell(c, t, names)
+		}
+		for _, p := range im.providers {
+			for _, c := range p.Columns() {
+				v, err := p.Value(ctx, t, c.ID)
+				if err != nil {
+					return nil, err
+				}
+				row[slices.IndexFunc(cols, func(col Column) bool { return col.ID == c.ID })] = v
+			}
 		}
 		rows = append(rows, row)
 	}
