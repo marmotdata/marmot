@@ -525,6 +525,7 @@
 	"domains_select_hint": "Selecciona un dominio para ver su detalle.",
 	"domains_subtitle": "Organiza el catálogo en dominios y subdominios.",
 	"domains_title": "Dominios",
+	"domains_toggle_children": "Mostrar u ocultar los subdominios de {name}",
 	"domains_unassigned": "Sin asignar",
 	"domains_unassigned_hint": "Entidades sin dominio explícito. No se puede renombrar, mover ni eliminar.",
 	"domains_updated": "Dominio actualizado",

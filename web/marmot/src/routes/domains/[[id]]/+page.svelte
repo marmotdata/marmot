@@ -176,7 +176,7 @@
 				<button
 					type="button"
 					class="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-					aria-label={domainName(domain)}
+					aria-label={m.domains_toggle_children({ name: domainName(domain) })}
 					aria-expanded={!!expanded[domain.id]}
 					onclick={() => (expanded[domain.id] = !expanded[domain.id])}
 				>
