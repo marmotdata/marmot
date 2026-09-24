@@ -108,7 +108,7 @@ func (s *service) SyncTerms(ctx context.Context, source string, inputs []TermInp
 			updated := *existing
 			updated.Definition = definitionOf(in)
 			updated.Description = descriptionOf(in)
-			updated.Metadata = metadataOf(in)
+			updated.Metadata = keepGoverned(s.metamodel, existing.Metadata, metadataOf(in))
 			updated.Tags = in.Tags
 
 			if sameTerm(existing, &updated) {

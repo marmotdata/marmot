@@ -114,11 +114,9 @@ appliesTo:
 | `kinds` | Entity kinds this field applies to. Defaults to `[asset]` when omitted |
 | `assetTypes` | Optional, only meaningful with `asset` in `kinds`: restricts to those asset types |
 
-`data_product` is supported; `glossary_term` is reserved in the schema but
-rejected at startup, pending glossary term preservation and versioning. A
-field's storage binding only needs to be unique within a kind: an `asset`
-field and a `data_product` field may share a binding, since they never share
-a row.
+`data_product` and `glossary_term` are supported. A field's storage binding
+only needs to be unique within a kind: an `asset` field and a `data_product`
+field may share a binding, since they never share a row.
 
 ### Types
 
@@ -198,7 +196,8 @@ profile.
 
 `GET /api/v1/metamodel?kind=asset` requires `assets/view` and returns the
 composed fields for that kind, profile version, `enabled`, and a deterministic
-schema hash. `kind` defaults to `asset` and also accepts `data_product`.
+schema hash. `kind` defaults to `asset` and also accepts `data_product` and
+`glossary_term`.
 Clients consume this response instead of parsing the YAML themselves. The
 schema describes editable fields, not every property or relationship in an
 asset.
@@ -290,6 +289,15 @@ PATCH or `If-Match` yet — every write replaces the full resource, so two
 concurrent editors can overwrite each other's metadata, same as any other data
 product field today. `metamodel.missing` is not yet included in data product
 responses; only asset `GET`/`PATCH` report it.
+
+### Glossary terms
+
+`glossary_term`-scoped fields validate the same way, on `POST /api/v1/glossary/`
+and `PUT /api/v1/glossary/{id}`, and a violation returns `400` with the same
+`fields` body. Like data products, terms have no `If-Match`: the last write
+wins. Ingestion runs that sync a source's glossary own the term's other
+metadata but never overwrite the governed fields: a run keeps whatever people
+set in them.
 
 ## Compatibility and rollout
 

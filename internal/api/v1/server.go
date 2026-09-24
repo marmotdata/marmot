@@ -167,7 +167,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		assetDocsSvc = domainService.GuardAssetDocs(assetDocsSvc, domainGuard)
 	}
 	authSvc := authService.NewService(authRepo, userSvc)
-	glossarySvc := glossaryService.NewService(glossaryRepo)
+	glossarySvc := glossaryService.NewService(glossaryRepo, glossaryService.WithMetamodel(metamodelRegistry))
 	if domainGuard != nil {
 		glossarySvc = domainService.GuardGlossary(glossarySvc, domainGuard)
 	}

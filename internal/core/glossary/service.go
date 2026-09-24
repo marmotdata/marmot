@@ -9,6 +9,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 )
 
 type Owner struct {
@@ -110,6 +111,7 @@ type service struct {
 	metrics        MetricsClient
 	guard          limits.Guard
 	searchObserver SearchObserver
+	metamodel      *metamodel.Registry
 }
 
 type MetricsClient interface {
@@ -160,6 +162,9 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 	}
 
 	if err := s.guard.CheckCreate(ctx, limits.ResourceGlossaryTerms); err != nil {
+		return nil, err
+	}
+	if err := validateMetamodel(s.metamodel, input.Metadata); err != nil {
 		return nil, err
 	}
 
@@ -275,6 +280,9 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 	}
 	if input.Tags != nil {
 		existing.Tags = input.Tags
+	}
+	if err := validateMetamodel(s.metamodel, existing.Metadata); err != nil {
+		return nil, err
 	}
 
 	if input.ParentTermID != nil {

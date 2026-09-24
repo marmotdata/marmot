@@ -273,7 +273,7 @@ func validateMessages(messages map[string]map[string]string) error {
 	return nil
 }
 
-var supportedKinds = []string{"asset", "data_product"}
+var supportedKinds = []string{"asset", "data_product", "glossary_term"}
 
 func validateAppliesTo(a AppliesTo) error {
 	if len(a.Kinds) > 8 {
@@ -285,9 +285,6 @@ func validateAppliesTo(a AppliesTo) error {
 			return fmt.Errorf("duplicate appliesTo kind %q", kind)
 		}
 		seen[kind] = true
-		if kind == "glossary_term" {
-			return errors.New("appliesTo kind \"glossary_term\" is reserved, not yet supported")
-		}
 		if !slices.Contains(supportedKinds, kind) {
 			return fmt.Errorf("unknown appliesTo kind %q", kind)
 		}
@@ -433,7 +430,7 @@ func ValueAt(metadata map[string]any, storage string) (any, bool) {
 	return value, true
 }
 
-// Fields returns the fields that apply to kind ("asset", "data_product"; more may be added).
+// Fields returns the fields that apply to kind ("asset", "data_product", "glossary_term").
 func (r *Registry) Fields(kind string) []Field {
 	var out []Field
 	for _, f := range r.schema.Fields {
