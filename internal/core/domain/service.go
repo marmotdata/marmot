@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/marmotdata/marmot/internal/core/auth"
 )
 
 type Service interface {
@@ -20,6 +22,10 @@ type Service interface {
 	Import(ctx context.Context, in ImportInput) (*ImportReport, error)
 	PipelineAssignment(ctx context.Context, scheduleID string) (*PipelineAssignment, error)
 	AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (*PipelineMoveResult, error)
+	Scope(ctx context.Context, p auth.Principal) (*Scope, error)
+	Roles(ctx context.Context, domainID string) ([]RoleAssignment, error)
+	GrantRole(ctx context.Context, p auth.Principal, domainID string, in GrantInput) (*RoleAssignment, error)
+	RevokeRole(ctx context.Context, p auth.Principal, domainID, assignmentID string) error
 }
 
 type service struct {

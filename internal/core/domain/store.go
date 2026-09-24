@@ -23,6 +23,11 @@ type Repository interface {
 	PipelineDomain(ctx context.Context, pipelineName string) (string, bool, error)
 	PipelineAssetsIn(ctx context.Context, scheduleID, domainID string) ([]string, error)
 	EntityExists(ctx context.Context, kind Kind, id string) (bool, error)
+	Grants(ctx context.Context, subject SubjectType, subjectID string) ([]Grant, error)
+	Roles(ctx context.Context, d *Domain) ([]RoleAssignment, error)
+	SubjectExists(ctx context.Context, subject SubjectType, id string) (bool, error)
+	GrantRole(ctx context.Context, d *Domain, in GrantInput, createdBy string) (*RoleAssignment, error)
+	RevokeRole(ctx context.Context, domainID, assignmentID string) error
 	AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (int, error)
 	ImportCandidates(ctx context.Context, kind Kind, path []string) ([]ImportCandidate, error)
 	ApplyImport(ctx context.Context, plan map[Kind]map[string][]string) error
