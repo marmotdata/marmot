@@ -125,6 +125,7 @@
 					type="button"
 					role="option"
 					aria-selected={item.id === value}
+					title={item.path}
 					onclick={(event) => {
 						event.stopPropagation();
 						choose(item.id);
