@@ -10,10 +10,11 @@
 		domainOf,
 		domainsEnabled,
 		errorMessage,
-		flatten,
 		loadTree
 	} from '$lib/domains/api';
 	import { domainName, isUnassigned } from '$lib/domains/labels';
+	import { domainOptions, type DomainOption } from '$lib/domains/options';
+	import DomainPicker from './DomainPicker.svelte';
 
 	let {
 		kind,
@@ -29,22 +30,26 @@
 	} = $props();
 
 	let current = $state<Domain | null>(null);
-	let editing = $state(false);
+	let options = $state<DomainOption[] | null>(null);
 	let busy = $state(false);
-	let options = $state<{ id: string; label: string }[]>([]);
 
 	const mayChange = $derived(canEdit && auth.hasPermission('domains', 'manage'));
 
 	$effect(() => {
 		const id = entityId;
+		const loadOptions = mayChange;
 		let cancelled = false;
 		current = null;
-		editing = false;
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const domain = await domainOf(kind, id);
-				if (!cancelled) current = domain;
+				const [domain, forest] = await Promise.all([
+					domainOf(kind, id),
+					loadOptions ? loadTree() : Promise.resolve(null)
+				]);
+				if (cancelled) return;
+				current = domain;
+				options = forest ? domainOptions(forest, { includeUnassigned: true }) : null;
 			} catch {
 				// Without a readable domain the section stays hidden.
 			}
@@ -54,29 +59,13 @@
 		};
 	});
 
-	async function openEditor() {
-		try {
-			options = flatten(await loadTree()).map((e) => ({
-				id: e.domain.id,
-				label: e.domain.parent_id ? e.label : domainName(e.domain)
-			}));
-			editing = true;
-		} catch (error) {
-			toasts.error(errorMessage(error));
-		}
-	}
-
 	async function choose(domainId: string) {
-		if (!current || domainId === current.id) {
-			editing = false;
-			return;
-		}
+		if (!current || domainId === current.id) return;
 		busy = true;
 		try {
 			await assignToDomain(domainId, kind, [entityId]);
 			current = await domainOf(kind, entityId);
 			toasts.success(m.domains_assigned());
-			editing = false;
 		} catch (error) {
 			toasts.error(errorMessage(error));
 		} finally {
@@ -109,41 +98,34 @@
 			</div>
 		{/if}
 
-		{#if editing}
-			<select
-				class="rounded-md border-gray-300 py-1 text-sm dark:border-gray-600 dark:bg-gray-900"
-				aria-label={m.domains_change()}
-				disabled={busy}
-				value={current.id}
-				onchange={(e) => choose(e.currentTarget.value)}
-				onkeydown={(e) => e.key === 'Escape' && (editing = false)}
-			>
-				{#each options as option (option.id)}
-					<option value={option.id}>{option.label}</option>
-				{/each}
-			</select>
-		{:else}
+		{#if mayChange && options}
 			<div class="flex items-center gap-1">
+				<DomainPicker
+					variant="chip"
+					value={current.id}
+					{options}
+					label={m.domains_change()}
+					disabled={busy}
+					onSelect={choose}
+				/>
 				<a
 					href={resolve('/domains/[[id]]', { id: current.id })}
-					class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 {isUnassigned(
-						current
-					)
-						? 'italic'
-						: ''}">{domainName(current)}</a
+					class="rounded p-1 text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500"
+					aria-label={m.domains_open({ name: domainName(current) })}
+					title={m.domains_open({ name: domainName(current) })}
 				>
-				{#if mayChange}
-					<button
-						type="button"
-						class="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-						aria-label={m.domains_change()}
-						title={m.domains_change()}
-						onclick={openEditor}
-					>
-						<Icon icon="material-symbols:edit-outline" class="h-3.5 w-3.5" />
-					</button>
-				{/if}
+					<Icon icon="material-symbols:open-in-new-rounded" class="h-3.5 w-3.5" />
+				</a>
 			</div>
+		{:else}
+			<a
+				href={resolve('/domains/[[id]]', { id: current.id })}
+				class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 {isUnassigned(
+					current
+				)
+					? 'italic'
+					: ''}">{domainName(current)}</a
+			>
 		{/if}
 	</div>
 {/if}

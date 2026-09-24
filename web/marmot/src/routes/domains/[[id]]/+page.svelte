@@ -5,6 +5,8 @@
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
+	import DomainPicker from '$components/domain/DomainPicker.svelte';
+	import { domainOptions, type DomainOption } from '$lib/domains/options';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
@@ -21,6 +23,9 @@
 	import { discoverQuery, domainName, isUnassigned } from '$lib/domains/labels';
 
 	type Mode = 'none' | 'create' | 'edit' | 'move' | 'delete';
+
+	const inputClass =
+		'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100';
 
 	const canManage = auth.hasPermission('domains', 'manage');
 
@@ -52,11 +57,9 @@
 
 	// A domain cannot move under itself, its subtree or Unassigned.
 	const moveTargets = $derived(
-		entries.filter(
-			(e) => !isUnassigned(e.domain) && (!selected || !e.domain.path.startsWith(selected.path))
-		)
+		domainOptions(forest, { exclude: (d) => !!selected && d.path.startsWith(selected.path) })
 	);
-	const createParents = $derived(entries.filter((e) => !isUnassigned(e.domain)));
+	const createParents = $derived(domainOptions(forest));
 
 	async function refresh() {
 		try {
@@ -271,18 +274,7 @@
 							{formParent ? m.domains_new_child() : m.domains_new_root()}
 						</h2>
 						{@render fields()}
-						<label class="block text-sm">
-							<span class="text-gray-700 dark:text-gray-300">{m.domains_parent()}</span>
-							<select
-								bind:value={formParent}
-								class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900"
-							>
-								<option value="">{m.domains_root_option()}</option>
-								{#each createParents as entry (entry.domain.id)}
-									<option value={entry.domain.id}>{entry.label}</option>
-								{/each}
-							</select>
-						</label>
+						{@render parentPicker(createParents)}
 						{@render actions(m.domains_create())}
 					</form>
 				{:else if !selected}
@@ -312,18 +304,7 @@
 						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 							{m.domains_move()} · {domainName(selected)}
 						</h2>
-						<label class="block text-sm">
-							<span class="text-gray-700 dark:text-gray-300">{m.domains_parent()}</span>
-							<select
-								bind:value={formParent}
-								class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900"
-							>
-								<option value="">{m.domains_root_option()}</option>
-								{#each moveTargets as entry (entry.domain.id)}
-									<option value={entry.domain.id}>{entry.label}</option>
-								{/each}
-							</select>
-						</label>
+						{@render parentPicker(moveTargets)}
 						{@render actions(m.domains_move())}
 					</form>
 				{:else}
@@ -357,13 +338,12 @@
 									</p>
 								{/if}
 							</div>
-							<a
+							<Button
+								variant="clear"
+								icon="material-symbols:manage-search-rounded"
+								text={m.domains_view_contents()}
 								href={resolve(`/discover?q=${encodeURIComponent(discoverQuery(selected.id))}`)}
-								class="inline-flex items-center gap-1 text-sm text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-							>
-								<Icon icon="material-symbols:search-rounded" class="h-4 w-4" />
-								{m.domains_view_contents()}
-							</a>
+							/>
 						</div>
 
 						{#if canManage && !isUnassigned(selected)}
@@ -415,23 +395,35 @@
 </div>
 
 {#snippet fields()}
-	<label class="block text-sm">
-		<span class="text-gray-700 dark:text-gray-300">{m.domains_name()}</span>
-		<input
-			bind:value={formName}
-			required
-			maxlength="255"
-			class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900"
-		/>
-	</label>
-	<label class="block text-sm">
-		<span class="text-gray-700 dark:text-gray-300">{m.domains_description()}</span>
-		<textarea
-			bind:value={formDescription}
-			rows="3"
-			class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900"
+	<div>
+		<label for="domain-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>{m.domains_name()}</label
+		>
+		<input id="domain-name" bind:value={formName} required maxlength="255" class={inputClass} />
+	</div>
+	<div>
+		<label
+			for="domain-description"
+			class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>{m.domains_description()}</label
+		>
+		<textarea id="domain-description" bind:value={formDescription} rows="3" class={inputClass}
 		></textarea>
-	</label>
+	</div>
+{/snippet}
+
+{#snippet parentPicker(options: DomainOption[])}
+	<div>
+		<span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>{m.domains_parent()}</span
+		>
+		<DomainPicker
+			bind:value={formParent}
+			{options}
+			label={m.domains_parent()}
+			noneLabel={m.domains_root_option()}
+		/>
+	</div>
 {/snippet}
 
 {#snippet actions(submitLabel: string)}

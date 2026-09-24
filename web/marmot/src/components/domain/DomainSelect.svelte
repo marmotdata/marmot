@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
-	import { domainsEnabled, flatten, loadTree } from '$lib/domains/api';
-	import { isUnassigned } from '$lib/domains/labels';
+	import { domainsEnabled, loadTree } from '$lib/domains/api';
+	import { domainOptions, type DomainOption } from '$lib/domains/options';
+	import DomainPicker from './DomainPicker.svelte';
 
 	let {
 		value = $bindable(''),
@@ -13,7 +14,7 @@
 		id?: string;
 	} = $props();
 
-	let options = $state<{ id: string; label: string }[] | null>(null);
+	let options = $state<DomainOption[] | null>(null);
 
 	$effect(() => {
 		let cancelled = false;
@@ -21,8 +22,8 @@
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const entries = flatten(await loadTree()).filter((e) => !isUnassigned(e.domain));
-				if (!cancelled) options = entries.map((e) => ({ id: e.domain.id, label: e.label }));
+				const forest = await loadTree();
+				if (!cancelled) options = domainOptions(forest);
 			} catch {
 				// Without the tree the entity is created in Unassigned.
 			}
@@ -38,15 +39,12 @@
 		<label for={id} class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 			{m.domains_chip_label()}
 		</label>
-		<select
+		<DomainPicker
 			{id}
 			bind:value
-			class="w-full rounded-md border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-		>
-			<option value="">{m.domains_unassigned()}</option>
-			{#each options as option (option.id)}
-				<option value={option.id}>{option.label}</option>
-			{/each}
-		</select>
+			{options}
+			label={m.domains_chip_label()}
+			noneLabel={m.domains_unassigned()}
+		/>
 	</div>
 {/if}

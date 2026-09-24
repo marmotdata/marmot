@@ -519,6 +519,7 @@
 	"domains_name": "Name",
 	"domains_new_child": "New subdomain",
 	"domains_new_root": "New domain",
+	"domains_open": "Open {name}",
 	"domains_parent": "Parent domain",
 	"domains_root_option": "None (top level)",
 	"domains_save": "Save",
