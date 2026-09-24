@@ -168,6 +168,11 @@ type Config struct {
 		// Empty keeps the native-only schema.
 		Profile string `mapstructure:"profile"`
 	} `mapstructure:"metamodel"`
+
+	// Domains is fork-only; see DOMAINS.md.
+	Domains struct {
+		Enabled bool `mapstructure:"enabled"`
+	} `mapstructure:"domains"`
 }
 
 type BannerConfig struct {
@@ -398,6 +403,7 @@ func loadConfig(configPath string) error {
 	v.BindEnv("search.elasticsearch.tls.key_path")
 
 	v.BindEnv("metamodel.profile")
+	v.BindEnv("domains.enabled")
 
 	// Set defaults
 	setDefaults(v)
@@ -534,6 +540,8 @@ func setDefaults(v *viper.Viper) {
 
 	// Metamodel defaults
 	v.SetDefault("metamodel.profile", "")
+
+	v.SetDefault("domains.enabled", false)
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

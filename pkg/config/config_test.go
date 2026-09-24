@@ -6,6 +6,7 @@ import "testing"
 func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
 	t.Setenv("MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS", "claude.ai,example.com:8443")
 	t.Setenv("MARMOT_METAMODEL_PROFILE", "/etc/marmot/metamodel.yaml")
+	t.Setenv("MARMOT_DOMAINS_ENABLED", "true")
 
 	cfg, err := Load("")
 	if err != nil {
@@ -18,6 +19,9 @@ func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
 	}
 	if cfg.Metamodel.Profile != "/etc/marmot/metamodel.yaml" {
 		t.Fatalf("unexpected metamodel profile from env: %q", cfg.Metamodel.Profile)
+	}
+	if !cfg.Domains.Enabled {
+		t.Fatal("domains.enabled not read from env")
 	}
 }
 

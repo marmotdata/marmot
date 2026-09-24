@@ -21,6 +21,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
+	domainsAPI "github.com/marmotdata/marmot/internal/api/v1/domains"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
@@ -44,6 +45,7 @@ import (
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
+	domainService "github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
@@ -570,6 +572,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+	}
+
+	if config.Domains.Enabled {
+		domainSvc := domainService.NewService(domainService.NewPostgresRepository(db))
+		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, userSvc, authSvc, config))
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled
