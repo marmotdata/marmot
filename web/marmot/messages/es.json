@@ -694,6 +694,16 @@
 	"memory_error_load": "No se pudo cargar la memoria",
 	"memory_error_save": "No se pudo guardar la memoria",
 	"memory_error_search": "La búsqueda en la memoria falló",
+	"memory_found_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "encontrada {count} vez",
+				"countPlural=other": "encontrada {count} veces"
+			}
+		}
+	],
 	"memory_no_match": "No hay coincidencias.",
 	"memory_search_placeholder": "Buscar en la memoria",
 	"memory_search_results": [
@@ -710,6 +720,7 @@
 	"memory_sort_changed": "Actualizadas recientemente",
 	"memory_sort_created": "Más recientes",
 	"memory_sort_label": "Ordenar la memoria",
+	"memory_sort_used": "Populares",
 	"memory_tab": "Memoria",
 	"metrics_asset_types_title": "Tipos de activos",
 	"metrics_count_searches": "búsquedas",

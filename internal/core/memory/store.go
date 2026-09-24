@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 )
 
 // Repository scopes every call to one entity. An id belonging to a different
@@ -50,16 +51,16 @@ const memoryColumns = `id,
 	COALESCE(asset_id, data_product_id::text), content,
 	created_by_type, created_by_id, created_by_name, COALESCE(session_id, ''),
 	updated_by_type, updated_by_id, updated_by_name, COALESCE(updated_session_id, ''),
-	created_at, updated_at`
+	created_at, updated_at, found_count, last_found_at`
 
 func scanMemory(row pgx.Row, extra ...any) (*Memory, error) {
 	var m Memory
-	dest := make([]any, 0, 14+len(extra))
+	dest := make([]any, 0, 16+len(extra))
 	dest = append(dest,
 		&m.ID, &m.EntityType, &m.EntityID, &m.Content,
 		&m.CreatedBy.Type, &m.CreatedBy.ID, &m.CreatedBy.Name, &m.SessionID,
 		&m.UpdatedBy.Type, &m.UpdatedBy.ID, &m.UpdatedBy.Name, &m.UpdatedSessionID,
-		&m.CreatedAt, &m.UpdatedAt,
+		&m.CreatedAt, &m.UpdatedAt, &m.FoundCount, &m.LastFoundAt,
 	)
 	if err := row.Scan(append(dest, extra...)...); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -106,6 +107,7 @@ func (r *PostgresRepository) Update(ctx context.Context, e Entity, id string, in
 			content = $3,
 			updated_by_type = $4, updated_by_id = $5, updated_by_name = $6,
 			updated_session_id = NULLIF($7, ''),
+			use_score = `+useRank+` + 1, used_at = NOW(),
 			updated_at = NOW()
 		WHERE `+entityColumn(e.Type)+` = $1 AND id = $2
 		RETURNING `+memoryColumns,
@@ -152,9 +154,17 @@ func where(sc scope, f Filter, args []any) (string, []any) {
 	return strings.Join(conds, " AND "), args
 }
 
+// useHalfLife is how long it takes a use to count for half as much.
+const useHalfLife = "1209600" // 14 days, in seconds
+
+// useRank is a memory's uses, decayed to now.
+const useRank = `(use_score * power(0.5, extract(epoch FROM (NOW() - used_at)) / ` + useHalfLife + `))`
+
 // orderBy is the ORDER BY clause for a sort.
 func orderBy(s Sort) string {
 	switch s {
+	case SortUsed:
+		return useRank + " DESC, updated_at DESC"
 	case SortCreated:
 		return "created_at DESC"
 	}
@@ -230,5 +240,30 @@ func (r *PostgresRepository) search(ctx context.Context, sc scope, q SearchQuery
 		m.Score = &score
 		out = append(out, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if q.CountUse {
+		r.markFound(ctx, out)
+	}
 	return out, rows.Err()
+}
+
+// markFound records that a search returned these memories. A failure is
+// logged and does not fail the search.
+func (r *PostgresRepository) markFound(ctx context.Context, found []*Memory) {
+	if len(found) == 0 {
+		return
+	}
+	ids := make([]string, len(found))
+	for i, m := range found {
+		ids[i] = m.ID
+	}
+	if _, err := r.db.Exec(ctx, `
+		UPDATE memories SET
+			found_count = found_count + 1, last_found_at = NOW(),
+			use_score = `+useRank+` + 1, used_at = NOW()
+		WHERE id = ANY($1::uuid[])`, ids); err != nil {
+		log.Warn().Err(err).Msg("Failed to record memory use")
+	}
 }

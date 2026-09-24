@@ -3752,7 +3752,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List an entity's memory. By default the most recently changed comes first; sort=created lists the newest first.",
+                "description": "List an entity's memory. By default the most recently changed comes first; sort=used ranks by use, sort=found by how often searches returned it, sort=created lists the newest first.",
                 "produces": [
                     "application/json"
                 ],
@@ -3788,6 +3788,7 @@ const docTemplate = `{
                     {
                         "enum": [
                             "changed",
+                            "used",
                             "created"
                         ],
                         "type": "string",
@@ -11102,7 +11103,14 @@ const docTemplate = `{
                 "entity_type": {
                     "$ref": "#/definitions/memory.EntityType"
                 },
+                "found_count": {
+                    "description": "FoundCount is how often a search has returned the memory.",
+                    "type": "integer"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "last_found_at": {
                     "type": "string"
                 },
                 "score": {

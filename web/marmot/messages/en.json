@@ -694,6 +694,16 @@
 	"memory_error_load": "Failed to load memory",
 	"memory_error_save": "Failed to save memory",
 	"memory_error_search": "Memory search failed",
+	"memory_found_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "found {count} time",
+				"countPlural=other": "found {count} times"
+			}
+		}
+	],
 	"memory_no_match": "Nothing matches.",
 	"memory_search_placeholder": "Search memory",
 	"memory_search_results": [
@@ -710,6 +720,7 @@
 	"memory_sort_changed": "Recently updated",
 	"memory_sort_created": "Newest",
 	"memory_sort_label": "Sort memory",
+	"memory_sort_used": "Popular",
 	"memory_tab": "Memory",
 	"metrics_asset_types_title": "Asset Types",
 	"metrics_count_searches": "searches",

@@ -42,13 +42,13 @@ func filterFrom(q url.Values) (memory.Filter, int) {
 }
 
 // @Summary List memory
-// @Description List an entity's memory. By default the most recently changed comes first; sort=created lists the newest first.
+// @Description List an entity's memory. By default the most recently changed comes first; sort=used ranks by use, sort=found by how often searches returned it, sort=created lists the newest first.
 // @Tags memory
 // @Produce json
 // @Param entityType path string true "Entity type" Enums(asset, data_product)
 // @Param entityId path string true "Entity ID"
 // @Param session_id query string false "Session ID"
-// @Param sort query string false "Sort order" Enums(changed, created) default(changed)
+// @Param sort query string false "Sort order" Enums(changed, used, created) default(changed)
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
 // @Security ApiKeyAuth

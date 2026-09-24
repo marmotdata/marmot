@@ -1452,7 +1452,12 @@ definitions:
         type: string
       entity_type:
         $ref: '#/definitions/memory.EntityType'
+      found_count:
+        description: FoundCount is how often a search has returned the memory.
+        type: integer
       id:
+        type: string
+      last_found_at:
         type: string
       score:
         description: |-
@@ -5093,7 +5098,8 @@ paths:
   /api/v1/memory/{entityType}/{entityId}:
     get:
       description: List an entity's memory. By default the most recently changed comes
-        first; sort=created lists the newest first.
+        first; sort=used ranks by use, sort=found by how often searches returned it,
+        sort=created lists the newest first.
       parameters:
       - description: Entity type
         enum:
@@ -5116,6 +5122,7 @@ paths:
         description: Sort order
         enum:
         - changed
+        - used
         - created
         in: query
         name: sort

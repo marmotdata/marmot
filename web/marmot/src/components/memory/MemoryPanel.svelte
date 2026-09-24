@@ -28,7 +28,7 @@
 	let total = $state(0);
 	let loading = $state(true);
 	let page = $state(1);
-	let sort = $state<MemorySort>('changed');
+	let sort = $state<MemorySort>('used');
 
 	let query = $state('');
 	let searchResults = $state<Memory[] | null>(null);
@@ -288,6 +288,7 @@
 				bind:value={sort}
 				onchange={() => goToPage(1)}
 			>
+				<option value="used">{m.memory_sort_used()}</option>
 				<option value="changed">{m.memory_sort_changed()}</option>
 				<option value="created">{m.memory_sort_created()}</option>
 			</select>
@@ -338,6 +339,9 @@
 								<span>· {formatTime(mem.updated_at)}</span>
 								{#if mem.session_id}
 									<span class="font-mono">· {m.memory_session({ id: mem.session_id })}</span>
+								{/if}
+								{#if mem.found_count > 0}
+									<span>· {m.memory_found_count({ count: mem.found_count })}</span>
 								{/if}
 							</div>
 						{/if}

@@ -208,3 +208,78 @@ func TestSearchAllReadsEveryEntity(t *testing.T) {
 		t.Errorf("want the match on the asset and on the product, got %+v", result.Memories)
 	}
 }
+
+func TestRankingByUse(t *testing.T) {
+	pool := pgtest.TempDB(t)
+	ctx := t.Context()
+	svc := NewService(NewPostgresRepository(pool))
+	product := seedProduct(t, pool, "orders")
+
+	remember := func(content string) *Memory {
+		t.Helper()
+		m, err := svc.Remember(ctx, product, RememberInput{Content: content, Author: agent})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return m
+	}
+	stale := remember("stale note nobody reads")
+	popular := remember("grain is one row per order line")
+	fresh := remember("fresh note written today")
+	// Both older ones were written 60 days ago, four half-lives back.
+	if _, err := pool.Exec(ctx, `UPDATE memories SET used_at = NOW() - interval '60 days' WHERE id = ANY($1::uuid[])`,
+		[]string{stale.ID, popular.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	// A search that does not count use leaves the count alone.
+	if _, err := svc.Search(ctx, product, SearchQuery{Query: "grain"}); err != nil {
+		t.Fatal(err)
+	}
+	for range 2 {
+		result, err := svc.Search(ctx, product, SearchQuery{Query: "grain", CountUse: true})
+		if err != nil || len(result.Memories) != 1 {
+			t.Fatalf("search: %+v, %v", result, err)
+		}
+	}
+	got, err := svc.Get(ctx, product, popular.ID)
+	if err != nil || got.FoundCount != 2 || got.LastFoundAt == nil {
+		t.Errorf("searches should be counted: %+v, %v", got, err)
+	}
+
+	order := func(sort Sort) []string {
+		t.Helper()
+		list, err := svc.List(ctx, product, ListFilter{Sort: sort})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids := make([]string, len(list.Memories))
+		for i, m := range list.Memories {
+			ids[i] = m.ID
+		}
+		return ids
+	}
+	if got, want := order(SortUsed), []string{popular.ID, fresh.ID, stale.ID}; !equal(got, want) {
+		t.Errorf("most used: got %v, want recently found, then new, then stale", got)
+	}
+
+	// Editing counts as a use.
+	if _, err := svc.Update(ctx, product, stale.ID, UpdateInput{Content: "stale note, now corrected", Author: person}); err != nil {
+		t.Fatal(err)
+	}
+	if got := order(SortUsed); got[len(got)-1] == stale.ID {
+		t.Errorf("an edited memory should no longer rank last: %v", got)
+	}
+}
+
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

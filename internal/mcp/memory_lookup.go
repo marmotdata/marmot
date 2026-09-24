@@ -32,7 +32,7 @@ func (tc *ToolContext) memorySection(ctx context.Context, e memory.Entity, ref s
 		return ""
 	}
 
-	recent, err := tc.memoryService.List(ctx, e, memory.ListFilter{Limit: tc.lookupLimit()})
+	recent, err := tc.memoryService.List(ctx, e, memory.ListFilter{Sort: memory.SortUsed, Limit: tc.lookupLimit()})
 	if err != nil {
 		log.Warn().Err(err).Str("entity_type", string(e.Type)).Str("entity_id", e.ID).Msg("Failed to list memory for a lookup")
 		return ""
@@ -50,7 +50,7 @@ func (tc *ToolContext) memorySection(ctx context.Context, e memory.Entity, ref s
 	}
 	left := recent.Total - len(recent.Memories)
 	if left > 0 {
-		fmt.Fprintf(&b, "\n\n%d older %s not shown. Use recall with %s and a query to search them.",
+		fmt.Fprintf(&b, "\n\n%d less used %s not shown. Use recall with %s and a query to search them.",
 			left, plural(left, "memory", "memories"), ref)
 	}
 	return b.String()
@@ -73,7 +73,7 @@ func (tc *ToolContext) recallEverywhere(ctx context.Context, args RecallInput, f
 		return tc.errorWithGuidance("Not allowed to read memory", "Reading memory needs assets:view.", nil), nil, nil
 	}
 	result, err := tc.memoryService.SearchAll(ctx, memory.SearchQuery{
-		Filter: filter, Query: args.Query, Limit: args.Limit,
+		Filter: filter, Query: args.Query, Limit: args.Limit, CountUse: true,
 	})
 	if err != nil {
 		return tc.memoryError(err), nil, nil

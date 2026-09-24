@@ -45,7 +45,7 @@ func TestMemorySectionCarriesTheNewestMemories(t *testing.T) {
 	if n := strings.Count(got, "\n- "); n != defaultLookupLimit {
 		t.Errorf("%d shown, want %d:\n%s", n, defaultLookupLimit, got)
 	}
-	if !strings.Contains(got, `3 older memories not shown. Use recall with {"asset_id": "a1"}`) {
+	if !strings.Contains(got, `3 less used memories not shown. Use recall with {"asset_id": "a1"}`) {
 		t.Errorf("should say how many were left out:\n%s", got)
 	}
 

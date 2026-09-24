@@ -99,10 +99,11 @@ pick up what earlier runs and people recorded.
 
 <instructions>
 - With a query: the entity's most relevant memories, closest first.
-- Without a query: the entity's most recently changed memories.
+- Without a query: the entity's most used memories. Use counts writes and searches that found a
+  memory, with recent use counting more.
 - With a query and no entity: the most relevant memories on every asset and data product,
   each labelled with its entity. Use it for "have we seen this before?".
-- Looking up one asset or data product already returns its newest memories; use recall for
+- Looking up one asset or data product already returns its most used memories; use recall for
   anything that did not fit there.
 - session_id limits the result to one run.
 </instructions>`,
@@ -313,7 +314,7 @@ func (tc *ToolContext) recall(ctx context.Context, _ *mcpsdk.CallToolRequest, ar
 
 	if strings.TrimSpace(args.Query) != "" {
 		result, err := tc.memoryService.Search(ctx, target.entity, memory.SearchQuery{
-			Filter: filter, Query: args.Query, Limit: args.Limit,
+			Filter: filter, Query: args.Query, Limit: args.Limit, CountUse: true,
 		})
 		if err != nil {
 			return tc.memoryError(err), nil, nil
@@ -322,11 +323,11 @@ func (tc *ToolContext) recall(ctx context.Context, _ *mcpsdk.CallToolRequest, ar
 		return textResult(formatMemories(header, result.Memories)), nil, nil
 	}
 
-	result, err := tc.memoryService.List(ctx, target.entity, memory.ListFilter{Filter: filter, Limit: args.Limit})
+	result, err := tc.memoryService.List(ctx, target.entity, memory.ListFilter{Filter: filter, Sort: memory.SortUsed, Limit: args.Limit})
 	if err != nil {
 		return tc.memoryError(err), nil, nil
 	}
-	header := fmt.Sprintf("# Memory on %s (%d of %d, most recent first)", target.label, len(result.Memories), result.Total)
+	header := fmt.Sprintf("# Memory on %s (%d of %d, most used first)", target.label, len(result.Memories), result.Total)
 	return textResult(formatMemories(header, result.Memories)), nil, nil
 }
 

@@ -67,6 +67,11 @@ type Memory struct {
 	UpdatedSessionID string    `json:"updated_session_id,omitempty"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+
+	// FoundCount is how often a search has returned the memory.
+	FoundCount  int        `json:"found_count"`
+	LastFoundAt *time.Time `json:"last_found_at,omitempty"`
+
 	// Score is the search relevance; higher is more relevant. Set on search
 	// results only.
 	Score *float64 `json:"score,omitempty"`
@@ -98,11 +103,16 @@ const (
 	SortChanged Sort = "changed"
 	// SortCreated lists the newest memory first.
 	SortCreated Sort = "created"
+	// SortUsed lists the most used memory first: uses counted with a
+	// half-life, so frequent and recent use both count.
+	SortUsed Sort = "used"
 )
 
 func (s Sort) Valid() bool {
 	switch s {
 	case "", SortChanged, SortCreated:
+		return true
+	case SortUsed:
 		return true
 	}
 	return false
@@ -124,6 +134,8 @@ type SearchQuery struct {
 	Filter
 	Query string
 	Limit int
+	// CountUse records the returned memories as found. Set for agent searches.
+	CountUse bool
 }
 
 type SearchResult struct {

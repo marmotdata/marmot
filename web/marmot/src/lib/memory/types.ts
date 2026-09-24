@@ -1,6 +1,6 @@
 export type MemoryEntityType = 'asset' | 'data_product';
 
-export type MemorySort = 'changed' | 'created';
+export type MemorySort = 'used' | 'changed' | 'created';
 
 export interface MemoryAuthor {
 	type: string;
@@ -17,6 +17,8 @@ export interface Memory {
 	session_id?: string;
 	updated_by: MemoryAuthor;
 	updated_session_id?: string;
+	found_count: number;
+	last_found_at?: string;
 	created_at: string;
 	updated_at: string;
 	score?: number;
