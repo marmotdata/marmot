@@ -8,6 +8,10 @@
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import AssetSources from '$components/asset/AssetSources.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
+	import GovernedFieldRows from '$components/asset/GovernedFieldRows.svelte';
+	import { fetchMetamodel } from '$lib/metamodel/api';
+	import type { MetamodelSchema } from '$lib/metamodel/types';
+	import { governedFields, governedPaths } from '$lib/metamodel/values';
 	import Lineage from '$components/lineage/Lineage.svelte';
 	import AssetContents from '$components/asset/AssetContents.svelte';
 	import SchemaEditor from '$components/schema/SchemaEditor.svelte';
@@ -58,11 +62,22 @@
 	let previewError: string | null = $state(null);
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
+	let metamodel = $state<MetamodelSchema | null>(null);
+	let governed = $derived(metamodel?.enabled ? governedFields(metamodel.fields) : []);
+	let governedHidePaths = $derived(governedPaths(governed));
 
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'metadata');
 	let assetType = $derived($page.params.type);
 	let assetService = $derived($page.params.service);
 	let assetName = $derived($page.params.name);
+
+	async function loadMetamodel() {
+		try {
+			metamodel = await fetchMetamodel();
+		} catch {
+			metamodel = null;
+		}
+	}
 
 	async function fetchAsset() {
 		try {
@@ -297,6 +312,7 @@
 	$effect(() => {
 		if (assetType && assetService && assetName) {
 			fetchAsset();
+			void loadMetamodel();
 		}
 	});
 
@@ -547,7 +563,23 @@
 								{#if isAgent}
 									<AgentSpecCard {asset} />
 								{:else}
-									<MetadataView {asset} />
+									<MetadataView
+										{asset}
+										hidePaths={governedHidePaths}
+										hasLeadingRows={governed.length > 0}
+									>
+										{#snippet leadingRows(editable)}
+											{#if metamodel}
+												<GovernedFieldRows
+													bind:asset
+													schema={metamodel}
+													fields={governed}
+													{editable}
+													onConflict={fetchAsset}
+												/>
+											{/if}
+										{/snippet}
+									</MetadataView>
 								{/if}
 								{#if asset.sources && Array.isArray(asset.sources) && asset.sources.length > 0}
 									<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">

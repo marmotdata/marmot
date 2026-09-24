@@ -6,6 +6,8 @@
 	import Arrow from '$components/ui/Arrow.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import type { Snippet } from 'svelte';
+	import { omitPaths } from '$lib/metamodel/values';
 
 	let {
 		asset = undefined,
@@ -16,7 +18,10 @@
 		endpoint = undefined,
 		id = undefined,
 		permissionResource = undefined,
-		permissionAction = undefined
+		permissionAction = undefined,
+		hidePaths = [],
+		leadingRows = undefined,
+		hasLeadingRows = false
 	}: {
 		asset?: Asset;
 		metadata?: Record<string, unknown>;
@@ -28,6 +33,11 @@
 		id?: string;
 		permissionResource?: string;
 		permissionAction?: string;
+		/** Metadata paths owned by another editor; they are neither listed nor sent on save. */
+		hidePaths?: string[][];
+		/** Table rows rendered before the free-form ones. Receives whether editing is allowed. */
+		leadingRows?: Snippet<[boolean]>;
+		hasLeadingRows?: boolean;
 	} = $props();
 
 	// Determine if we're in read-only mode
@@ -129,10 +139,15 @@
 			});
 
 			if (response.ok) {
-				metadata = updatedMetadata;
-				metadataProp = updatedMetadata;
+				// Hidden paths are left out of the payload and restored by the server, so the
+				// stored metadata comes back in the response rather than from what was sent.
+				const saved = await response.json().catch(() => null);
+				const next = hidePaths.length > 0 ? (saved?.metadata ?? updatedMetadata) : updatedMetadata;
+				metadata = next;
+				metadataProp = next;
 				if (asset) {
-					asset.metadata = updatedMetadata;
+					asset.metadata = next;
+					if (typeof saved?.version === 'number') asset.version = saved.version;
 				}
 			} else {
 				const errorData = await response.json();
@@ -148,7 +163,10 @@
 	async function addMetadata() {
 		if (!newKey.trim()) return;
 
-		const updatedMetadata = { ...metadata, [newKey.trim()]: parseValue(newValue.trim() || '""') };
+		const updatedMetadata = {
+			...visibleMetadata,
+			[newKey.trim()]: parseValue(newValue.trim() || '""')
+		};
 		await saveMetadata(updatedMetadata);
 
 		newKey = '';
@@ -157,7 +175,7 @@
 	}
 
 	async function updateMetadata(key: string) {
-		const updatedMetadata = { ...metadata, [key]: parseValue(editingValue.trim()) };
+		const updatedMetadata = { ...visibleMetadata, [key]: parseValue(editingValue.trim()) };
 		await saveMetadata(updatedMetadata);
 
 		editingKey = null;
@@ -172,7 +190,7 @@
 	async function confirmDeleteMetadata() {
 		if (!keyToDelete) return;
 
-		const updatedMetadata = { ...metadata };
+		const updatedMetadata = { ...visibleMetadata };
 		delete updatedMetadata[keyToDelete];
 		await saveMetadata(updatedMetadata);
 
@@ -259,7 +277,8 @@
 		newValue = '';
 	}
 
-	const metadataEntries = $derived(Object.entries(metadata));
+	const visibleMetadata = $derived(omitPaths(metadata, hidePaths));
+	const metadataEntries = $derived(Object.entries(visibleMetadata));
 </script>
 
 {#snippet metadataDisclosure(
@@ -366,7 +385,7 @@
 	<div class="space-y-4">
 		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
 			<div class="overflow-x-auto">
-				{#if metadataEntries.length === 0 && !showAddRow}
+				{#if metadataEntries.length === 0 && !showAddRow && !hasLeadingRows}
 					<div class="px-6 py-12 text-center">
 						<div class="flex flex-col items-center gap-3">
 							<IconifyIcon
@@ -381,12 +400,12 @@
 						<thead>
 							<tr class="border-b border-gray-200 dark:border-gray-700">
 								<th
-									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+									class="px-4 py-2 text-left text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400"
 								>
 									{m.shared_metadata_key_header()}
 								</th>
 								<th
-									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+									class="px-4 py-2 text-left text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400"
 								>
 									{m.shared_metadata_value_header()}
 								</th>
@@ -396,6 +415,17 @@
 							</tr>
 						</thead>
 						<tbody>
+							{#if leadingRows}
+								{@render leadingRows(canEdit())}
+								<tr>
+									<td
+										colspan={canEdit() ? 3 : 2}
+										class="bg-gray-50/60 px-4 pt-4 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
+									>
+										{m.metamodel_additional_metadata()}
+									</td>
+								</tr>
+							{/if}
 							{#each metadataEntries as [key, value] (key)}
 								<tr
 									class="group border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"

@@ -20,6 +20,12 @@
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { formatDate } from '$lib/utils';
+	import { locale } from '$lib/i18n';
+	import { fetchMetamodel } from '$lib/metamodel/api';
+	import { nativeMessage } from '$lib/metamodel/i18n';
+	import { resolveMessage } from '$lib/metamodel/labels';
+	import { facetableFields } from '$lib/metamodel/values';
+	import type { MetamodelField } from '$lib/metamodel/types';
 
 	interface SearchResultMetadata {
 		type?: string;
@@ -55,6 +61,8 @@
 		asset_types: FacetValue[];
 		providers: FacetValue[];
 		tags: FacetValue[];
+		/** Governed metamodel field storage path -> counts, only for facetable fields. */
+		metadata: Record<string, FacetValue[]>;
 	}
 
 	interface SearchResponse {
@@ -71,7 +79,8 @@
 		types: {},
 		asset_types: [],
 		providers: [],
-		tags: []
+		tags: [],
+		metadata: {}
 	});
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
@@ -86,11 +95,40 @@
 	let selectedTypes = $state<string[]>([]);
 	let selectedProviders = $state<string[]>([]);
 	let selectedTags = $state<string[]>([]);
+	let selectedGoverned = $state<Record<string, string[]>>({});
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
 	let previousUrl = $state<string | null>(null);
 	let skipNextUrlEffect = false;
+
+	// GET /api/v1/metamodel is cached by fetchMetamodel; this only fetches once per page.
+	let metamodelFields = $state<MetamodelField[]>([]);
+	let schemaMessages = $state<Record<string, Record<string, string>> | undefined>();
+	let schemaDefaultLocale = $state('en');
+	let facetFields = $derived(facetableFields(metamodelFields));
+	let messageContext = $derived({
+		locale: $locale,
+		defaultLocale: schemaDefaultLocale,
+		messages: schemaMessages,
+		native: nativeMessage
+	});
+
+	function governedFieldLabel(field: MetamodelField): string {
+		return resolveMessage(field.presentation?.labelKey, messageContext) ?? field.id;
+	}
+
+	$effect(() => {
+		fetchMetamodel()
+			.then((schema) => {
+				metamodelFields = schema.enabled ? schema.fields : [];
+				schemaMessages = schema.messages;
+				schemaDefaultLocale = schema.defaultLocale;
+			})
+			.catch(() => {
+				metamodelFields = [];
+			});
+	});
 
 	// Initialize filters from URL
 	$effect(() => {
@@ -119,6 +157,13 @@
 		selectedTypes = searchParams.get('types')?.split(',').filter(Boolean) || [];
 		selectedProviders = searchParams.get('providers')?.split(',').filter(Boolean) || [];
 		selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
+		const governed: Record<string, string[]> = {};
+		for (const [key, value] of searchParams.entries()) {
+			if (!key.startsWith('governed.')) continue;
+			const values = value.split(',').filter(Boolean);
+			if (values.length) governed[key.slice('governed.'.length)] = values;
+		}
+		selectedGoverned = governed;
 		currentPage = parseInt(searchParams.get('page') || '1', 10);
 
 		if (browser) {
@@ -158,6 +203,9 @@
 				if (selectedTypes.length) queryParams.append('asset_types', selectedTypes.join(','));
 				if (selectedProviders.length) queryParams.append('providers', selectedProviders.join(','));
 				if (selectedTags.length) queryParams.append('tags', selectedTags.join(','));
+				for (const [id, values] of Object.entries(selectedGoverned)) {
+					if (values.length) queryParams.append(`governed.${id}`, values.join(','));
+				}
 			}
 
 			const response = await fetchApi(`/search?${queryParams}`);
@@ -178,7 +226,8 @@
 				types: data.facets?.types || {},
 				asset_types: data.facets?.asset_types || [],
 				providers: data.facets?.providers || [],
-				tags: data.facets?.tags || []
+				tags: data.facets?.tags || [],
+				metadata: data.facets?.metadata || {}
 			};
 		} catch (e: unknown) {
 			const err = e as { status?: number; message?: string };
@@ -223,6 +272,9 @@
 		if (selectedTypes.length) params.append('types', selectedTypes.join(','));
 		if (selectedProviders.length) params.append('providers', selectedProviders.join(','));
 		if (selectedTags.length) params.append('tags', selectedTags.join(','));
+		for (const [id, values] of Object.entries(selectedGoverned)) {
+			if (values.length) params.append(`governed.${id}`, values.join(','));
+		}
 		if (currentPage > 1) params.append('page', currentPage.toString());
 
 		skipNextUrlEffect = true;
@@ -284,11 +336,18 @@
 		handleFilterChange();
 	}
 
+	function removeGovernedFilter(id: string, value: string) {
+		const values = (selectedGoverned[id] || []).filter((v) => v !== value);
+		selectedGoverned = { ...selectedGoverned, [id]: values };
+		handleFilterChange();
+	}
+
 	function clearAllFilters() {
 		selectedKinds = ['asset', 'glossary', 'team', 'data_product'];
 		selectedTypes = [];
 		selectedProviders = [];
 		selectedTags = [];
+		selectedGoverned = {};
 		searchQuery = '';
 		handleFilterChange();
 	}
@@ -393,7 +452,8 @@
 		) ||
 			selectedTypes.length > 0 ||
 			selectedProviders.length > 0 ||
-			selectedTags.length > 0
+			selectedTags.length > 0 ||
+			Object.values(selectedGoverned).some((values) => values.length > 0)
 	);
 
 	let showAssetFilters = $derived(selectedKinds.includes('asset'));
@@ -585,6 +645,49 @@
 										{/each}
 									</div>
 								{/if}
+								{#each facetFields as field (field.id)}
+									{@const values = $facets.metadata[field.storage] || []}
+									{#if values.length > 0}
+										<div class="mt-4">
+											<h3
+												class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+											>
+												{governedFieldLabel(field)}
+											</h3>
+											{#each values as { value, count } (value)}
+												<label class="flex items-center justify-between mb-2">
+													<div class="flex items-center">
+														<input
+															type="checkbox"
+															checked={(selectedGoverned[field.id] || []).includes(value)}
+															onchange={(e) => {
+																const current = selectedGoverned[field.id] || [];
+																if (e.target.checked) {
+																	selectedGoverned = {
+																		...selectedGoverned,
+																		[field.id]: [...current, value]
+																	};
+																	selectedKinds = ['asset'];
+																} else {
+																	selectedGoverned = {
+																		...selectedGoverned,
+																		[field.id]: current.filter((v) => v !== value)
+																	};
+																}
+																handleFilterChange();
+															}}
+															class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
+														/>
+														<span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+															>{value}</span
+														>
+													</div>
+													<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+												</label>
+											{/each}
+										</div>
+									{/if}
+								{/each}
 							{/if}
 						</div>
 					{/if}
@@ -730,6 +833,38 @@
 											</svg>
 										</button>
 									</span>
+								{/each}
+								{#each Object.entries(selectedGoverned) as [id, values] (id)}
+									{#each values as value (value)}
+										{@const field = metamodelFields.find((f) => f.id === id)}
+										<span
+											class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
+										>
+											<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+												>{field ? governedFieldLabel(field) : id}:</span
+											>
+											{value}
+											<button
+												onclick={() => removeGovernedFilter(id, value)}
+												class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
+												aria-label={m.discover_remove_filter_aria({ value })}
+											>
+												<svg
+													class="w-3.5 h-3.5"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M6 18L18 6M6 6l12 12"
+													/>
+												</svg>
+											</button>
+										</span>
+									{/each}
 								{/each}
 							</div>
 						</div>

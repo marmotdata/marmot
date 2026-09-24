@@ -12,6 +12,7 @@
 	import Tags from '$components/shared/Tags.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
+	import AssetGovernedFields from './AssetGovernedFields.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
@@ -323,6 +324,12 @@
 									</div>
 								</div>
 							</a>
+						{/if}
+
+						<!-- Governed metadata fields: only in the popup from Discover. In static mode the
+						     full asset page already has its own Metadata tab for this. -->
+						{#if !staticPlacement}
+							<AssetGovernedFields {asset} />
 						{/if}
 
 						<!-- Descriptions and Glossary Terms - hide user description editing in static mode (now in page header) -->
