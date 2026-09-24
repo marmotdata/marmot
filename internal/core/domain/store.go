@@ -32,6 +32,12 @@ type Repository interface {
 	AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (int, error)
 	ImportCandidates(ctx context.Context, kind Kind, path []string) ([]ImportCandidate, error)
 	ApplyImport(ctx context.Context, plan map[Kind]map[string][]string) error
+	WriteEnforced(ctx context.Context) (bool, error)
+	SetWriteEnforced(ctx context.Context, on bool, by string) error
+	Placements(ctx context.Context, kind Kind, ids []string) (map[string]Placement, error)
+	TermPlacements(ctx context.Context, names []string) (map[string]Placement, error)
+	Audit(ctx context.Context, entries []AuditEntry) error
+	AuditLog(ctx context.Context, entityKind, entityID string) ([]AuditEntry, error)
 }
 
 type membership struct {

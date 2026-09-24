@@ -10,8 +10,10 @@ import (
 type pipelineKey struct{}
 
 // WithPipeline records which ingestion pipeline is writing, so assets it
-// creates can inherit the domain of the schedule with that name. The name only
-// picks the destination; it never grants permission to write there.
+// creates can inherit the domain of the schedule with that name. Under write
+// enforcement that domain also bounds what the run may write; a caller that
+// names the pipeline must be allowed to write there too, so the name alone
+// never grants anything.
 func WithPipeline(ctx context.Context, pipelineName string) context.Context {
 	return context.WithValue(ctx, pipelineKey{}, pipelineName)
 }

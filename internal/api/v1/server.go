@@ -138,6 +138,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	}
 
 	assetSvc := asset.NewService(assetRepo, asset.WithMetamodel(metamodelRegistry))
+	var domainRepo *domainService.PostgresRepository
+	var domainSvc domainService.Service
+	var domainGuard *domainService.Guard
+	if config.Domains.Enabled {
+		domainRepo = domainService.NewPostgresRepository(db)
+		domainSvc = domainService.NewService(domainRepo)
+		domainGuard = domainService.NewGuard(domainSvc, domainRepo, common.PrincipalFromContext)
+		assetSvc = domainService.GuardAssets(assetSvc, domainGuard)
+	}
 	userSvc := userService.NewService(userRepo)
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
@@ -149,12 +158,18 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
 	glossarySvc := glossaryService.NewService(glossaryRepo)
+	if domainGuard != nil {
+		glossarySvc = domainService.GuardGlossary(glossarySvc, domainGuard)
+	}
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, glossarySvc, recorder)
 	teamRepo := teamService.NewPostgresRepository(db)
 	teamSvc := teamService.NewService(teamRepo)
 	searchSvc := searchService.NewService(searchRepo)
 	dataProductSvc := dataproductService.NewService(dataProductRepo)
 	dataProductSvc.SetMetamodel(metamodelRegistry)
+	if domainGuard != nil {
+		dataProductSvc = domainService.GuardDataProducts(dataProductSvc, domainGuard)
+	}
 	docsRepo := docsService.NewPostgresRepository(db)
 	docsSvc := docsService.NewService(docsRepo)
 	notificationRepo := notificationService.NewPostgresRepository(db)
@@ -202,6 +217,9 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		DB:       db,
 	})
 	assetRuleSvc := assetruleService.NewService(assetRuleRepo, assetRuleMemberRepo, enrichmentEvaluator, assetRuleMemberSvc)
+	if domainGuard != nil {
+		assetRuleSvc = domainService.GuardAssetRules(assetRuleSvc, domainGuard)
+	}
 
 	// Start membership evaluation services
 	membershipSvc.Start(context.Background())
@@ -580,11 +598,9 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		if config.Search.Elasticsearch != nil && config.Search.Elasticsearch.Enabled {
 			log.Fatal().Msg("domains.enabled is not supported with the Elasticsearch search backend yet")
 		}
-		domainRepo := domainService.NewPostgresRepository(db)
-		domainSvc := domainService.NewService(domainRepo)
 		assetSvc.AddMembershipObserver(domainService.NewIngestionObserver(domainRepo))
 		searchRepo.SetDomainResolver(domainService.SearchResolver(domainSvc))
-		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, userSvc, authSvc, config))
+		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, domainGuard, userSvc, authSvc, config))
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled

@@ -9,6 +9,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	"github.com/rs/zerolog/log"
 )
@@ -90,6 +91,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	rule, err := h.assetRuleService.Create(r.Context(), input, createdBy)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Asset rules are global while domain write enforcement is on")
 		case errors.Is(err, assetrule.ErrInvalidInput):
 			common.RespondError(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, assetrule.ErrConflict):
@@ -186,6 +189,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	rule, err := h.assetRuleService.Update(r.Context(), id, input)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Asset rules are global while domain write enforcement is on")
 		case errors.Is(err, assetrule.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset rule not found")
 		case errors.Is(err, assetrule.ErrInvalidInput):
@@ -222,7 +227,9 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 
 	err := h.assetRuleService.Delete(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, assetrule.ErrNotFound) {
+		if errors.Is(err, domain.ErrForbidden) {
+			common.RespondError(w, http.StatusForbidden, "Asset rules are global while domain write enforcement is on")
+		} else if errors.Is(err, assetrule.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Asset rule not found")
 		} else {
 			log.Error().Err(err).Str("id", id).Msg("Failed to delete asset rule")

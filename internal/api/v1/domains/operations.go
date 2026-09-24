@@ -309,16 +309,24 @@ func (h *Handler) move(w http.ResponseWriter, r *http.Request) {
 	if !h.requireAdminOfParent(w, r, r.PathValue("id")) || !h.requireAdmin(w, r, target) {
 		return
 	}
+	before, err := h.service.Get(r.Context(), r.PathValue("id"))
+	if err != nil {
+		respondError(w, err, "move domain")
+		return
+	}
 	d, err := h.service.Move(r.Context(), r.PathValue("id"), req.ParentID)
 	if err != nil {
 		respondError(w, err, "move domain")
 		return
 	}
+	if err := h.guard.AuditMove(r.Context(), d.ID, before.ParentID, d.ParentID); err != nil {
+		log.Error().Err(err).Str("domain", d.ID).Msg("Failed to audit domain move")
+	}
 	common.RespondJSON(w, http.StatusOK, d)
 }
 
 // @Summary Assign entities to a domain
-// @Description Sets the owning domain of every listed entity, all or none. Requires the entity kind's manage permission as well.
+// @Description Sets the owning domain of every listed entity, all or none. Requires the entity kind's manage permission and, under write enforcement, write access to both the current and the target domain. Every change is audited.
 // @Tags domains
 // @Accept json
 // @Produce json
@@ -347,7 +355,7 @@ func (h *Handler) assign(w http.ResponseWriter, r *http.Request) {
 		respondCode(w, http.StatusForbidden, "forbidden", "Insufficient permissions to change these entities")
 		return
 	}
-	if err := h.service.Assign(r.Context(), req.Kind, req.IDs, r.PathValue("id")); err != nil {
+	if err := h.guard.Transfer(r.Context(), req.Kind, req.IDs, r.PathValue("id")); err != nil {
 		respondError(w, err, "assign domain members")
 		return
 	}
@@ -448,7 +456,7 @@ func (h *Handler) pipelineAssignment(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary Change a pipeline's domain
-// @Description Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage.
+// @Description Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage. Under write enforcement the caller must be able to write in both domains; the change is audited.
 // @Tags domains
 // @Accept json
 // @Produce json
@@ -477,7 +485,7 @@ func (h *Handler) assignPipeline(w http.ResponseWriter, r *http.Request) {
 	if req.DomainID == "" {
 		req.DomainID = domain.UnassignedID
 	}
-	result, err := h.service.AssignPipeline(r.Context(), r.PathValue("scheduleId"), req.DomainID, req.MoveAssets)
+	result, err := h.guard.AssignPipeline(r.Context(), r.PathValue("scheduleId"), req.DomainID, req.MoveAssets)
 	if err != nil {
 		respondError(w, err, "change pipeline domain")
 		return
@@ -662,4 +670,27 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.RespondJSON(w, http.StatusOK, Capabilities{DomainID: d.ID, Write: scope.Can(domain.ActionWrite, d.Path), Admin: admin})
+}
+
+// @Summary Get an entity's domain history
+// @Description Every change of domain recorded for an entity, oldest first. Kind is asset, data_product, glossary_term, ingestion_schedule or domain.
+// @Tags domains
+// @Produce json
+// @Param kind path string true "Entity kind"
+// @Param id path string true "Entity ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {array} domain.AuditEntry
+// @ID getDomainAuditLog
+// @Router /api/v1/domains/audit/{kind}/{id} [get]
+func (h *Handler) auditLog(w http.ResponseWriter, r *http.Request) {
+	entries, err := h.guard.AuditLog(r.Context(), r.PathValue("kind"), r.PathValue("id"))
+	if err != nil {
+		respondError(w, err, "get domain audit log")
+		return
+	}
+	if entries == nil {
+		entries = []domain.AuditEntry{}
+	}
+	common.RespondJSON(w, http.StatusOK, entries)
 }

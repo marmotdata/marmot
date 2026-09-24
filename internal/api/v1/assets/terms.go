@@ -8,6 +8,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/rs/zerolog/log"
 )
 
@@ -70,6 +71,8 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, source, author); err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
 		default:
@@ -124,6 +127,8 @@ func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.assetService.RemoveTerm(r.Context(), id, input.TermID); err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset or term association not found")
 		default:

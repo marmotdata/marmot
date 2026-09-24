@@ -59,6 +59,27 @@ func (f *fakeService) Assign(_ context.Context, kind domain.Kind, ids []string, 
 	return f.err
 }
 
+// passthroughGuard stands in for domain.Guard with enforcement off.
+type passthroughGuard struct{ svc *fakeService }
+
+func (g passthroughGuard) Transfer(ctx context.Context, kind domain.Kind, ids []string, domainID string) error {
+	return g.svc.Assign(ctx, kind, ids, domainID)
+}
+
+func (g passthroughGuard) AssignPipeline(ctx context.Context, scheduleID, domainID string, move bool) (*domain.PipelineMoveResult, error) {
+	return g.svc.AssignPipeline(ctx, scheduleID, domainID, move)
+}
+
+func (passthroughGuard) AuditMove(context.Context, string, *string, *string) error { return nil }
+
+func (passthroughGuard) AuditLog(context.Context, string, string) ([]domain.AuditEntry, error) {
+	return nil, nil
+}
+
+func handlerFor(svc *fakeService) *Handler {
+	return &Handler{service: svc, guard: passthroughGuard{svc}}
+}
+
 func (f *fakeService) DomainOf(context.Context, domain.Kind, string) (string, error) {
 	return domain.UnassignedID, f.err
 }
@@ -116,7 +137,7 @@ func TestCreate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := &fakeService{err: tc.err}
-			rec := call((&Handler{service: svc}).create, http.MethodPost, "/api/v1/domains", tc.body, manager, nil)
+			rec := call(handlerFor(svc).create, http.MethodPost, "/api/v1/domains", tc.body, manager, nil)
 			if rec.Code != tc.want || svc.calls != tc.calls {
 				t.Fatalf("status %d (want %d), calls %d (want %d): %s", rec.Code, tc.want, svc.calls, tc.calls, rec.Body)
 			}
@@ -129,7 +150,7 @@ func TestCreate(t *testing.T) {
 
 func TestUpdateRefusesRestricted(t *testing.T) {
 	svc := &fakeService{}
-	rec := call((&Handler{service: svc}).update, http.MethodPut, "/api/v1/domains/d", `{"restricted":true}`, manager, map[string]string{"id": "d"})
+	rec := call(handlerFor(svc).update, http.MethodPut, "/api/v1/domains/d", `{"restricted":true}`, manager, map[string]string{"id": "d"})
 	if rec.Code != http.StatusBadRequest || svc.calls != 0 {
 		t.Fatalf("status %d, calls %d", rec.Code, svc.calls)
 	}
@@ -147,13 +168,13 @@ func TestStructuralErrors(t *testing.T) {
 		{"not found", domain.ErrNotFound, http.StatusNotFound},
 	} {
 		t.Run("delete "+tc.name, func(t *testing.T) {
-			rec := call((&Handler{service: &fakeService{err: tc.err}}).remove, http.MethodDelete, "/api/v1/domains/d", "", manager, map[string]string{"id": "d"})
+			rec := call(handlerFor(&fakeService{err: tc.err}).remove, http.MethodDelete, "/api/v1/domains/d", "", manager, map[string]string{"id": "d"})
 			if rec.Code != tc.want {
 				t.Fatalf("status %d, want %d", rec.Code, tc.want)
 			}
 		})
 	}
-	rec := call((&Handler{service: &fakeService{err: domain.ErrCycle}}).move, http.MethodPost, "/api/v1/domains/d/move", `{"parent_id":"c"}`, manager, map[string]string{"id": "d"})
+	rec := call(handlerFor(&fakeService{err: domain.ErrCycle}).move, http.MethodPost, "/api/v1/domains/d/move", `{"parent_id":"c"}`, manager, map[string]string{"id": "d"})
 	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"code":"cycle"`) {
 		t.Fatalf("move cycle: status %d: %s", rec.Code, rec.Body)
 	}
@@ -164,30 +185,30 @@ func TestAssignNeedsTheEntityPermission(t *testing.T) {
 	body := `{"kind":"glossary_term","ids":["t1","t2"]}`
 
 	svc := &fakeService{}
-	rec := call((&Handler{service: svc}).assign, http.MethodPut, "/api/v1/domains/finance/members", body, []string{"assets:manage"}, path)
+	rec := call(handlerFor(svc).assign, http.MethodPut, "/api/v1/domains/finance/members", body, []string{"assets:manage"}, path)
 	if rec.Code != http.StatusForbidden || svc.calls != 0 {
 		t.Fatalf("without glossary:manage: status %d, calls %d", rec.Code, svc.calls)
 	}
 
 	svc = &fakeService{}
-	rec = call((&Handler{service: svc}).assign, http.MethodPut, "/api/v1/domains/finance/members", body, []string{"glossary:manage"}, path)
+	rec = call(handlerFor(svc).assign, http.MethodPut, "/api/v1/domains/finance/members", body, []string{"glossary:manage"}, path)
 	if rec.Code != http.StatusOK || svc.assigned.kind != domain.KindGlossaryTerm || len(svc.assigned.ids) != 2 || svc.assigned.domain != "finance" {
 		t.Fatalf("status %d, assigned %+v", rec.Code, svc.assigned)
 	}
 
-	rec = call((&Handler{service: &fakeService{}}).assign, http.MethodPut, "/api/v1/domains/finance/members", `{"kind":"folder","ids":["x"]}`, []string{"assets:manage"}, path)
+	rec = call(handlerFor(&fakeService{}).assign, http.MethodPut, "/api/v1/domains/finance/members", `{"kind":"folder","ids":["x"]}`, []string{"assets:manage"}, path)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("unknown kind status %d", rec.Code)
 	}
 
-	rec = call((&Handler{service: &fakeService{err: domain.ErrEntityNotFound}}).assign, http.MethodPut, "/api/v1/domains/finance/members", `{"kind":"asset","ids":["x"]}`, []string{"assets:manage"}, path)
+	rec = call(handlerFor(&fakeService{err: domain.ErrEntityNotFound}).assign, http.MethodPut, "/api/v1/domains/finance/members", `{"kind":"asset","ids":["x"]}`, []string{"assets:manage"}, path)
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("missing entity status %d", rec.Code)
 	}
 }
 
 func TestDomainOfFallsBackToUnassigned(t *testing.T) {
-	rec := call((&Handler{service: &fakeService{}}).domainOf, http.MethodGet, "/api/v1/domains/of/asset/a1", "", nil, map[string]string{"kind": "asset", "id": "a1"})
+	rec := call(handlerFor(&fakeService{}).domainOf, http.MethodGet, "/api/v1/domains/of/asset/a1", "", nil, map[string]string{"kind": "asset", "id": "a1"})
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), domain.UnassignedID) {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
@@ -195,7 +216,7 @@ func TestDomainOfFallsBackToUnassigned(t *testing.T) {
 
 // Mirrors Server.RegisterRoutes: overlapping patterns would panic at startup.
 func TestRoutesRegisterWithoutConflicts(t *testing.T) {
-	h := NewHandler(&fakeService{}, nil, nil, &config.Config{})
+	h := NewHandler(&fakeService{}, nil, nil, nil, &config.Config{})
 	mux := http.NewServeMux()
 	seen := map[string]bool{}
 	for _, route := range h.Routes() {
@@ -212,7 +233,7 @@ func TestRoutesRegisterWithoutConflicts(t *testing.T) {
 func TestImportRequiresAGlobalAdministrator(t *testing.T) {
 	body := `{"source":"metadata.dgu.domain","mapping":{"Finanzas":"d"},"apply":true}`
 	svc := &fakeService{}
-	rec := call((&Handler{service: svc}).importMemberships, http.MethodPost, "/api/v1/domains/import", body, []string{"domains:manage", "assets:manage"}, nil)
+	rec := call(handlerFor(svc).importMemberships, http.MethodPost, "/api/v1/domains/import", body, []string{"domains:manage", "assets:manage"}, nil)
 	if rec.Code != http.StatusForbidden || svc.calls != 0 {
 		t.Fatalf("non-admin: status %d, calls %d", rec.Code, svc.calls)
 	}
@@ -221,7 +242,7 @@ func TestImportRequiresAGlobalAdministrator(t *testing.T) {
 	admin := auth.NewServiceAccountPrincipal("sa-admin", "admin robot", []string{auth.AdminRoleName}, nil)
 	req = req.WithContext(context.WithValue(req.Context(), common.PrincipalContextKey, admin))
 	rec = httptest.NewRecorder()
-	(&Handler{service: svc}).importMemberships(rec, req)
+	handlerFor(svc).importMemberships(rec, req)
 	if rec.Code != http.StatusOK || svc.calls != 1 || !strings.Contains(rec.Body.String(), `"applied":true`) {
 		t.Fatalf("admin: status %d, calls %d: %s", rec.Code, svc.calls, rec.Body)
 	}
@@ -242,7 +263,7 @@ func TestAssignPipelinePermissions(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := &fakeService{}
-			rec := call((&Handler{service: svc}).assignPipeline, http.MethodPut, "/api/v1/domains/pipelines/sched/assignment", tc.body, tc.perms, path)
+			rec := call(handlerFor(svc).assignPipeline, http.MethodPut, "/api/v1/domains/pipelines/sched/assignment", tc.body, tc.perms, path)
 			if rec.Code != tc.want {
 				t.Fatalf("status %d, want %d: %s", rec.Code, tc.want, rec.Body)
 			}
@@ -253,7 +274,7 @@ func TestAssignPipelinePermissions(t *testing.T) {
 	}
 
 	svc := &fakeService{}
-	call((&Handler{service: svc}).assignPipeline, http.MethodPut, "/x", `{"domain_id":""}`, []string{"ingestion:manage"}, path)
+	call(handlerFor(svc).assignPipeline, http.MethodPut, "/x", `{"domain_id":""}`, []string{"ingestion:manage"}, path)
 	if svc.assigned.domain != domain.UnassignedID {
 		t.Fatalf("empty domain_id must mean Unassigned, got %q", svc.assigned.domain)
 	}
@@ -282,7 +303,7 @@ func TestDomainAdminsManageTheirSubtree(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := &fakeService{scope: tc.scope}
-			rec := call(tc.handler(&Handler{service: svc}), tc.method, "/api/v1/domains", tc.body, nil, map[string]string{"id": tc.id})
+			rec := call(tc.handler(handlerFor(svc)), tc.method, "/api/v1/domains", tc.body, nil, map[string]string{"id": tc.id})
 			if rec.Code != tc.want {
 				t.Fatalf("status %d, want %d: %s", rec.Code, tc.want, rec.Body)
 			}
@@ -292,11 +313,11 @@ func TestDomainAdminsManageTheirSubtree(t *testing.T) {
 
 func TestCapabilities(t *testing.T) {
 	svc := &fakeService{scope: domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleSteward}}}}
-	rec := call((&Handler{service: svc}).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
+	rec := call(handlerFor(svc).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"write":true`) || !strings.Contains(rec.Body.String(), `"admin":false`) {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	rec = call((&Handler{service: svc}).capabilities, http.MethodGet, "/api/v1/domains/capabilities", "", nil, nil)
+	rec = call(handlerFor(svc).capabilities, http.MethodGet, "/api/v1/domains/capabilities", "", nil, nil)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("without a target: status %d", rec.Code)
 	}

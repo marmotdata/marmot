@@ -11,6 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -298,6 +299,8 @@ func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 	err := h.assetService.Delete(r.Context(), id)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
 		case errors.Is(err, asset.ErrInvalidInput):
@@ -467,6 +470,9 @@ func respondAssetWriteError(w http.ResponseWriter, err error) bool {
 		return true
 	case errors.Is(err, asset.ErrVersionRequired):
 		common.RespondError(w, http.StatusPreconditionRequired, "If-Match required to change governed fields")
+		return true
+	case errors.Is(err, domain.ErrForbidden):
+		common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		return true
 	}
 	return false

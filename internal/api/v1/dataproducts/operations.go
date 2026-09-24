@@ -11,6 +11,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
@@ -132,6 +133,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var validation *metamodel.ValidationError
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.As(err, &validation):
 			common.RespondJSON(w, http.StatusBadRequest, validation)
 		case errors.Is(err, dataproduct.ErrInvalidInput):
@@ -239,6 +242,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var validation *metamodel.ValidationError
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.As(err, &validation):
 			common.RespondJSON(w, http.StatusBadRequest, validation)
 		case errors.Is(err, dataproduct.ErrInvalidInput):
@@ -281,6 +286,8 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	err := h.dataProductService.Delete(r.Context(), id)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Data product not found")
 		default:
@@ -444,6 +451,8 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 	err := h.dataProductService.AddAssets(r.Context(), id, req.AssetIDs, principal.ID())
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Data product not found")
 		case errors.Is(err, dataproduct.ErrInvalidInput):
@@ -487,6 +496,8 @@ func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 	err := h.dataProductService.RemoveAsset(r.Context(), dataProductID, assetID)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found in data product")
 		default:
@@ -580,6 +591,8 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 	rule, err := h.dataProductService.CreateRule(r.Context(), id, input)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Data product not found")
 		case errors.Is(err, dataproduct.ErrInvalidInput):
@@ -640,6 +653,8 @@ func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 	rule, err := h.dataProductService.UpdateRule(r.Context(), ruleID, input)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrRuleNotFound):
 			common.RespondError(w, http.StatusNotFound, "Rule not found")
 		case errors.Is(err, dataproduct.ErrInvalidInput):
@@ -680,6 +695,8 @@ func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	err := h.dataProductService.DeleteRule(r.Context(), ruleID)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrRuleNotFound):
 			common.RespondError(w, http.StatusNotFound, "Rule not found")
 		default:
@@ -857,6 +874,8 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	meta, err := h.dataProductService.UploadImage(r.Context(), productID, purpose, input, createdBy)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Data product not found")
 		case errors.Is(err, dataproduct.ErrInvalidImageType):
@@ -957,6 +976,8 @@ func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
 	err := h.dataProductService.DeleteImage(r.Context(), productID, purpose)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, dataproduct.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Data product not found")
 		case errors.Is(err, dataproduct.ErrImageNotFound):

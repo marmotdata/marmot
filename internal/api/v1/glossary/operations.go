@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -96,6 +97,8 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, glossary.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
 			common.RespondError(w, http.StatusBadRequest, err.Error())
@@ -202,6 +205,8 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 	term, err := h.glossaryService.Update(r.Context(), id, input)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, glossary.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
 			common.RespondError(w, http.StatusBadRequest, err.Error())
@@ -244,6 +249,8 @@ func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 	err := h.glossaryService.Delete(r.Context(), id)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrForbidden):
+			common.RespondError(w, http.StatusForbidden, "Not allowed in this domain")
 		case errors.Is(err, glossary.ErrTermNotFound):
 			common.RespondError(w, http.StatusNotFound, "Glossary term not found")
 		default:

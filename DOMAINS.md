@@ -10,6 +10,8 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | --- | --- | --- |
 | `internal/store/postgres/setup.go` | `Setup.Initialize`, last statement | Runs the fork migration track (`dgumigrations`, table `public.dgu_schema_version`) after the core one, so fork tables never take an upstream migration number |
 | `internal/api/v1/server.go` | `New`, the `config.Domains.Enabled` block after the `server.handlers` list; two imports | Only with `domains.enabled`: registers `/api/v1/domains`, adds the ingestion observer to `asset.Service`, sets the search domain resolver, and refuses to start with the Elasticsearch search backend |
+| `internal/api/v1/server.go` | `New`: the block after `asset.NewService` that builds the domain service and guard, and one `if domainGuard != nil` after each of `glossaryService.NewService`, `dataProductSvc.SetMetamodel` and `assetruleService.NewService` | Wraps each service in its write decorator before any consumer receives it, so REST, OpenLineage, ingestion and MCP all go through the guard |
+| `internal/api/v1/assets/operations.go`, `assets/terms.go`, `dataproducts/operations.go`, `glossary/operations.go`, `assetrules/operations.go` | the error `switch` after each decorated write, and `respondAssetWriteError`; one import each | `domain.ErrForbidden` → 403 instead of 500 |
 | `internal/core/runs/service.go` | `ProcessEntities`, first statement; one import | Puts the pipeline name in the context so new assets inherit the domain of the schedule with that name |
 | `internal/core/search/store.go` | `PostgresRepository.domainResolver`; `Search` resolves `@domain` first; `buildFilterClauses` and `buildListingFacetWhereClause` call `appendDomainClauses`; `buildFacetsParallel` skips cached facets when `filter.Domain` is set | `@domain:<id>` filter over a subtree. Cached facets are global counts and would ignore it |
 | `internal/core/search/service.go` | `Filter.Domain` | Carries the resolved domain filter; never read from JSON |
@@ -20,13 +22,21 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 
 ## Write inventory
 
-Every operation that creates, changes, moves or deletes catalog content, and how domain-scoped write enforcement (delivery 2) covers it. `decorator` means the call goes through a service interface that `internal/core/domain` wraps in `server.go`.
+Every operation that creates, changes, moves or deletes catalog content, and how domain-scoped write enforcement (delivery 2) covers it. `decorator` means the call goes through a service interface that `internal/core/domain` wraps in `server.go` (`decorators.go`).
+
+### How enforcement decides
+
+- The switch is the `write_enforcement` row in `domain_settings`, read on every write. Off, the decorators delegate without checking. The flag `domains.enabled` only turns the feature on; it never enforces anything by itself.
+- On, a write needs `write` (steward or domain admin) on the entity's current domain; a new entity needs it on its destination: the pipeline's domain during ingestion, Unassigned otherwise.
+- The actor is the principal in the context. A scheduled run has none and writes with the scope of its schedule's domain (Unassigned if the schedule has none). A caller that names a pipeline over HTTP needs both its own scope and the pipeline's, so a pipeline name never grants anything.
+- No principal and no pipeline: denied.
+- Moving entities between domains (`PUT /domains/{id}/members`, pipeline reassignment) needs `write` on both ends. Every change of domain goes to `domain_audit_log`, enforced or not, and so do domain moves.
 
 ### Assets (`asset.Service`)
 
 | Channel | Call site | Methods | Coverage |
 | --- | --- | --- | --- |
-| REST | `internal/api/v1/assets/operations.go`, `tags.go`, `terms.go` | Create, Update, PatchFields, Delete, AddTag, RemoveTag, AddTerms, RemoveTerm | decorator |
+| REST | `internal/api/v1/assets/operations.go`, `tags.go`, `terms.go` | Create, Update, PatchFields, Delete, AddTag, RemoveTag, AddTerms, RemoveTerm | decorator; linking a term changes the asset, so only the asset's domain counts |
 | OpenLineage | `internal/core/lineage/openlineage.go` | Create, Update | decorator; the service account needs a role on the target domain (`unassigned` for new stubs) |
 | Ingestion | `internal/core/runs/service.go` | Create, Update, DeleteByMRN, AddTerms | decorator with an explicit principal scoped to the run's schedule domain |
 | MCP | `internal/mcp/write_tools.go` | Update (user description), AddTag, RemoveTag | decorator; MCP requests carry the caller's principal |
@@ -44,13 +54,13 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 | Channel | Call site | Methods | Coverage |
 | --- | --- | --- | --- |
 | REST | `internal/api/v1/glossary/operations.go` | Create, Update, Delete | decorator |
-| Ingestion | `internal/core/runs/service.go` | SyncTerms | decorator; requires global scope while any affected term sits outside `unassigned` |
+| Ingestion | `internal/core/runs/service.go` | SyncTerms | decorator; all or nothing: every existing term in the batch must be writable, and new terms land in the pipeline's domain |
 
 ### Gaps (not behind a decorated service yet)
 
 | Channel | Call site | Permission today | Decision |
 | --- | --- | --- | --- |
-| Asset rules | `internal/api/v1/assetrules` and their evaluation | `assets:manage` | global scope only while enforcement is on |
+| Asset rules | `internal/api/v1/assetrules` | `assets:manage` | decorator (`GuardAssetRules`): Create, Update and Delete need global scope while enforcement is on. Their evaluation writes derived links and is not scoped |
 | Documentation pages | `internal/api/v1/docs` (`/docs/entity/{entityType}/{entityId}/pages`, `/docs/pages/{pageId}`…) | `assets:manage` | open: scope by the owning entity's domain (needs a decorator or seam on the docs service) |
 | Manual lineage edges | `internal/api/v1/lineage` (`/lineage/direct`, `/lineage/batch`) | `assets:manage` | open: which endpoint's domain governs a cross-domain edge |
 | Observed lineage from agents | `internal/core/agent/service.go` → `lineage.Service.BatchObservedLineage` | `agents:emit` | open: same rule as manual edges |
