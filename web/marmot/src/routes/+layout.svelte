@@ -14,6 +14,7 @@
 	import { userProfile } from '$lib/stores/user';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
 	import { tablePreviewEnabled } from '$lib/stores/features';
+	import { domainsEnabled } from '$lib/domains/api';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import LanguageSelector from '$components/ui/LanguageSelector.svelte';
@@ -33,6 +34,7 @@
 	let bannerConfig: BannerConfig | null = null;
 	let isDropdownOpen = false;
 	let isGovernanceOpen = false;
+	let showDomains = false;
 	let isAdmin = false;
 	let checkingAnonymousMode = true;
 	let manualNavigation = false;
@@ -128,6 +130,7 @@
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
 			userProfile.load();
+			domainsEnabled().then((enabled) => (showDomains = enabled));
 		}
 
 		if (browser) {
@@ -208,6 +211,7 @@
 		discover: m.pagetitle_discover,
 		runs: m.pagetitle_runs,
 		metrics: m.pagetitle_metrics,
+		domains: m.pagetitle_domains,
 		glossary: m.pagetitle_glossary,
 		products: m.pagetitle_products,
 		teams: m.pagetitle_teams,
@@ -361,6 +365,7 @@
 									class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
 										'/glossary'
 									) ||
+									$page.url.pathname.startsWith('/domains') ||
 									$page.url.pathname.startsWith('/products') ||
 									$page.url.pathname.startsWith('/asset-rules')
 										? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
@@ -380,6 +385,23 @@
 										class="origin-top-left absolute left-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
 										role="menu"
 									>
+										{#if showDomains}
+											<a
+												href={resolve('/domains/[[id]]', {})}
+												class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+													'/domains'
+												)
+													? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+													: ''}"
+												role="menuitem"
+											>
+												<Icon
+													icon="material-symbols:account-tree-outline-rounded"
+													class="w-4 h-4"
+												/>
+												{m.nav_domains()}
+											</a>
+										{/if}
 										<a
 											href={resolve('/glossary')}
 											class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
