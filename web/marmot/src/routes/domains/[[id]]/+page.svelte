@@ -249,11 +249,19 @@
 			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{m.domains_subtitle()}</p>
 		</div>
 		{#if canManage}
-			<Button
-				icon="material-symbols:add"
-				text={m.domains_new_root()}
-				click={() => startCreate('')}
-			/>
+			<div class="flex flex-wrap gap-2">
+				<Button
+					variant="clear"
+					icon="material-symbols:lock-outline"
+					text={m.domains_enforcement_link()}
+					href={resolve('/domains/enforcement')}
+				/>
+				<Button
+					icon="material-symbols:add"
+					text={m.domains_new_root()}
+					click={() => startCreate('')}
+				/>
+			</div>
 		{/if}
 	</div>
 

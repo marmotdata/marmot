@@ -9,7 +9,8 @@
 		domainOf,
 		domainsEnabled,
 		errorMessage,
-		loadTree
+		loadTree,
+		writableDomains
 	} from '$lib/domains/api';
 	import { domainName, isUnassigned } from '$lib/domains/labels';
 	import { domainOptions, type DomainOption } from '$lib/domains/options';
@@ -44,10 +45,14 @@
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const [domain, forest] = await Promise.all([domainOf(kind, id), loadTree()]);
+				const [domain, forest, writable] = await Promise.all([
+					domainOf(kind, id),
+					loadTree(),
+					writableDomains()
+				]);
 				if (cancelled) return;
 				current = domain;
-				options = domainOptions(forest, { includeUnassigned: true });
+				options = domainOptions(forest, { includeUnassigned: true, writable });
 			} catch {
 				// Without a readable domain the section stays hidden.
 			}

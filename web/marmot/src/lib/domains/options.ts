@@ -1,4 +1,4 @@
-import type { DomainNode } from './types';
+import type { DomainNode, WritableDomains } from './types';
 import { flatten } from './api';
 import { domainName, isUnassigned } from './labels';
 
@@ -17,11 +17,21 @@ export function domainOptions(
 	forest: DomainNode[],
 	{
 		includeUnassigned = false,
-		exclude
-	}: { includeUnassigned?: boolean; exclude?: (d: DomainNode) => boolean } = {}
+		exclude,
+		writable
+	}: {
+		includeUnassigned?: boolean;
+		exclude?: (d: DomainNode) => boolean;
+		/** Under write enforcement, only the domains the caller may write in. */
+		writable?: WritableDomains;
+	} = {}
 ): DomainOption[] {
+	const allowed = writable && !writable.all ? new Set(writable.domain_ids) : undefined;
 	const entries = flatten(forest).filter(
-		(e) => (includeUnassigned || !isUnassigned(e.domain)) && !exclude?.(e.domain)
+		(e) =>
+			(includeUnassigned || !isUnassigned(e.domain)) &&
+			!exclude?.(e.domain) &&
+			(!allowed || allowed.has(e.domain.id))
 	);
 	const toOption = (e: (typeof entries)[number]): DomainOption => ({
 		id: e.domain.id,

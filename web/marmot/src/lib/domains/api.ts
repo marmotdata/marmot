@@ -7,8 +7,11 @@ import type {
 	DomainKind,
 	DomainNode,
 	DomainRole,
+	EnforcementPlan,
+	EnforcementState,
 	RoleAssignment,
-	SubjectType
+	SubjectType,
+	WritableDomains
 } from './types';
 
 export class DomainError extends Error {
@@ -107,6 +110,47 @@ export function capabilities(domainId: string): Promise<DomainCapabilities> {
 	return request<DomainCapabilities>(
 		`/domains/capabilities?domain_id=${encodeURIComponent(domainId)}`
 	);
+}
+
+/**
+ * Whether domains let the caller edit an entity. True when domains are off,
+ * enforcement is off, or the check fails: the server decides every write anyway.
+ */
+export async function canWriteIn(kind: DomainKind, id: string): Promise<boolean> {
+	if (!(await domainsEnabled())) return true;
+	try {
+		const caps = await request<DomainCapabilities>(
+			`/domains/capabilities?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`
+		);
+		return caps.write;
+	} catch {
+		return true;
+	}
+}
+
+let writableCache: Promise<WritableDomains> | undefined;
+
+/** The domains the caller may place entities in, for narrowing pickers. Cached for the session. */
+export function writableDomains(): Promise<WritableDomains> {
+	writableCache ??= request<WritableDomains>('/domains/writable').catch(() => {
+		writableCache = undefined;
+		return { enforced: false, all: true, domain_ids: [] };
+	});
+	return writableCache;
+}
+
+export function enforcementState(): Promise<EnforcementState> {
+	return request<EnforcementState>('/domains/enforcement');
+}
+
+export function enforcementPlan(): Promise<EnforcementPlan> {
+	return request<EnforcementPlan>('/domains/enforcement/plan');
+}
+
+export async function setEnforcement(write: boolean, confirm = ''): Promise<EnforcementState> {
+	const state = await send<EnforcementState>('/domains/enforcement', 'POST', { write, confirm });
+	writableCache = undefined;
+	return state;
 }
 
 export function listRoles(domainId: string): Promise<RoleAssignment[]> {
@@ -222,6 +266,8 @@ export function errorMessage(error: unknown): string {
 			return m.domains_error_invalid_input();
 		case 'duplicate':
 			return m.domains_error_duplicate();
+		case 'plan_changed':
+			return m.domains_error_plan_changed();
 		default:
 			return error.message || m.domains_error_generic();
 	}

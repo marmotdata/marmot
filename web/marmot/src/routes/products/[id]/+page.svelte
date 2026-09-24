@@ -32,6 +32,7 @@
 	import Tags from '$components/shared/Tags.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import DomainChip from '$components/domain/DomainChip.svelte';
+	import { entityWritable } from '$lib/domains/writable';
 	import { m } from '$lib/paraglide/messages';
 	import { formatList } from '$lib/utils';
 
@@ -97,7 +98,8 @@
 	const ASSETS_PER_PAGE = 12;
 	let currentAssetPage = $state(1);
 
-	let canManage = $derived(auth.hasPermission('assets', 'manage'));
+	const domainWrite = $derived(entityWritable('data_product', product?.id));
+	let canManage = $derived(auth.hasPermission('assets', 'manage') && $domainWrite);
 
 	// Description editing state
 	let editedDescription = $state('');

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
-	import { domainsEnabled, loadTree } from '$lib/domains/api';
+	import { domainsEnabled, loadTree, writableDomains } from '$lib/domains/api';
 	import { domainOptions, type DomainOption } from '$lib/domains/options';
 	import DomainPicker from './DomainPicker.svelte';
 
@@ -20,8 +20,8 @@
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const forest = await loadTree();
-				if (!cancelled) options = domainOptions(forest);
+				const [forest, writable] = await Promise.all([loadTree(), writableDomains()]);
+				if (!cancelled) options = domainOptions(forest, { writable });
 			} catch {
 				// Without the tree the entity is created in Unassigned.
 			}

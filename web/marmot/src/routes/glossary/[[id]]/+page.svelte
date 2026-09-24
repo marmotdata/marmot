@@ -19,6 +19,7 @@
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import DomainChip from '$components/domain/DomainChip.svelte';
 	import DomainSelect from '$components/domain/DomainSelect.svelte';
+	import { entityWritable } from '$lib/domains/writable';
 	import { assignToDomain, errorMessage as domainErrorMessage } from '$lib/domains/api';
 	import Button from '$components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
@@ -52,6 +53,9 @@
 	let editedTerm: GlossaryTerm | null = null;
 
 	const canManageGlossary = auth.hasPermission('glossary', 'manage');
+	// Creating stays on canManageGlossary; editing also needs the selected term's domain.
+	$: termWritable = entityWritable('glossary_term', selectedTerm?.id);
+	$: canEditTerm = canManageGlossary && $termWritable;
 	let didAutoSelect = false;
 
 	$: {
@@ -509,7 +513,7 @@
 								<DomainChip
 									kind="glossary_term"
 									entityId={selectedTerm.id}
-									canEdit={canManageGlossary}
+									canEdit={canEditTerm}
 									variant="section"
 								/>
 
@@ -530,7 +534,7 @@
 										tags={selectedTerm.tags ?? []}
 										endpoint="/glossary"
 										id={selectedTerm.id}
-										canEdit={canManageGlossary && isEditing}
+										canEdit={canEditTerm && isEditing}
 									/>
 								</div>
 
@@ -628,7 +632,7 @@
 								</div>
 
 								<!-- Actions -->
-								{#if canManageGlossary}
+								{#if canEditTerm}
 									<div
 										class="pt-5 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
 									>

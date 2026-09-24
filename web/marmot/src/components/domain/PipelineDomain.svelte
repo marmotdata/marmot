@@ -7,6 +7,7 @@
 		domainsEnabled,
 		errorMessage,
 		loadTree,
+		writableDomains,
 		pipelineAssignment,
 		type PipelineAssignment
 	} from '$lib/domains/api';
@@ -39,12 +40,13 @@
 		domainsEnabled().then(async (enabled) => {
 			if (!enabled || cancelled) return;
 			try {
-				const [forest, current] = await Promise.all([
+				const [forest, current, writable] = await Promise.all([
 					loadTree(),
-					id ? pipelineAssignment(id) : Promise.resolve(null)
+					id ? pipelineAssignment(id) : Promise.resolve(null),
+					writableDomains()
 				]);
 				if (cancelled) return;
-				options = domainOptions(forest, { includeUnassigned: !!id });
+				options = domainOptions(forest, { includeUnassigned: !!id, writable });
 				assignment = current;
 			} catch {
 				// Without the tree the pipeline keeps its current domain.

@@ -33,7 +33,8 @@ export type DomainErrorCode =
 	| 'protected'
 	| 'restricted_unsupported'
 	| 'forbidden'
-	| 'duplicate';
+	| 'duplicate'
+	| 'plan_changed';
 
 export type DomainRole = 'domain_admin' | 'steward' | 'reader';
 export type SubjectType = 'user' | 'team' | 'service_account';
@@ -54,6 +55,45 @@ export interface RoleAssignment {
 
 export interface DomainCapabilities {
 	domain_id: string;
+	/** Whether writes are scoped by domain at all; while false, write is always true. */
+	enforced: boolean;
 	write: boolean;
 	admin: boolean;
+}
+
+export interface WritableDomains {
+	enforced: boolean;
+	all: boolean;
+	domain_ids: string[];
+}
+
+export interface EnforcementState {
+	write: boolean;
+	updated_by?: string;
+	updated_at?: string;
+}
+
+export interface DomainRef {
+	id: string;
+	path: string;
+}
+
+export interface EnforcementPlan {
+	state: EnforcementState;
+	principals: {
+		subject_type: SubjectType;
+		subject_id: string;
+		name: string;
+		permissions: string[];
+		keeps: DomainRef[];
+		loses: DomainRef[];
+	}[];
+	pipelines: {
+		schedule_id: string;
+		name: string;
+		domain: DomainRef;
+		assets_outside: number;
+	}[];
+	hash: string;
+	generated_at: string;
 }
