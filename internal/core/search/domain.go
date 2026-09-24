@@ -18,14 +18,19 @@ type DomainFilter struct {
 	Unassigned bool
 }
 
-// DomainResolver turns the domain ids of an @domain filter into a
-// DomainFilter. It returns ErrUnknownDomain when an id does not exist.
-type DomainResolver func(ctx context.Context, ids []string) (*DomainFilter, error)
+// DomainResolver turns the references of @domain filters (ids, names or
+// name paths) into a DomainFilter. It returns ErrUnknownDomain when none of
+// them names a domain.
+type DomainResolver func(ctx context.Context, refs []string) (*DomainFilter, error)
 
 var ErrUnknownDomain = errors.New("unknown domain")
 
+const domainTokenPattern = `@domain\s*[:=]\s*(?:"([^"]+)"|([^\s"()]+))`
+
 var (
-	domainFilterRegex = regexp.MustCompile(`(?i)@domain\s*[:=]\s*"?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"?`)
+	domainFilterRegex = regexp.MustCompile(`(?i)` + domainTokenPattern)
+	domainTokenRegex  = regexp.MustCompile(`(?i)(?:\b(?:AND|OR)\s+)?` + domainTokenPattern)
+	danglingRegex     = regexp.MustCompile(`(?i)^\s*(?:AND|OR)\b|\b(?:AND|OR|NOT)\s*$|\(\s*\)`)
 	spacesRegex       = regexp.MustCompile(`\s+`)
 )
 
@@ -35,16 +40,28 @@ func (r *PostgresRepository) SetDomainResolver(resolver DomainResolver) {
 	r.domainResolver = resolver
 }
 
-func extractDomainIDs(query string) []string {
-	var ids []string
+func extractDomainRefs(query string) []string {
+	var refs []string
 	for _, m := range domainFilterRegex.FindAllStringSubmatch(query, -1) {
-		ids = append(ids, strings.ToLower(m[1]))
+		ref := strings.TrimSpace(m[1] + m[2])
+		if ref != "" {
+			refs = append(refs, ref)
+		}
 	}
-	return ids
+	return refs
 }
 
+// stripDomainFilter removes the tokens with the boolean operator that joined
+// them, since the domain filter always narrows the whole query.
 func stripDomainFilter(query string) string {
-	stripped := domainFilterRegex.ReplaceAllString(query, "")
+	stripped := domainTokenRegex.ReplaceAllString(query, "")
+	for {
+		next := strings.TrimSpace(danglingRegex.ReplaceAllString(stripped, ""))
+		if next == stripped {
+			break
+		}
+		stripped = next
+	}
 	return strings.TrimSpace(spacesRegex.ReplaceAllString(stripped, " "))
 }
 
@@ -54,11 +71,11 @@ func (r *PostgresRepository) resolveDomainFilter(ctx context.Context, filter *Fi
 	if r.domainResolver == nil {
 		return false, nil
 	}
-	ids := extractDomainIDs(filter.Query)
-	if len(ids) == 0 {
+	refs := extractDomainRefs(filter.Query)
+	if len(refs) == 0 {
 		return false, nil
 	}
-	resolved, err := r.domainResolver(ctx, ids)
+	resolved, err := r.domainResolver(ctx, refs)
 	if errors.Is(err, ErrUnknownDomain) {
 		return true, nil
 	}

@@ -3,6 +3,8 @@
 	import { fetchApi } from '$lib/api';
 	import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '$lib/assets/types';
 	import { m } from '$lib/paraglide/messages';
+	import { domainsEnabled } from '$lib/domains/api';
+	import { domainQueryValues } from '$lib/domains/query';
 
 	const operators = [
 		{ value: ':', display: m.query_op_suggest_equals(), type: 'operator' },
@@ -33,6 +35,7 @@
 	let selectedIndex = -1;
 	let suggestionStartPos = 0;
 	let lastFetchedValues: { [key: string]: MetadataValueSuggestion[] } = {};
+	let domainsOn = false;
 
 	const tokenColors: { [key: string]: string } = {
 		field: 'text-blue-500',
@@ -170,7 +173,7 @@
 		}
 
 		// Check for simple fields (@kind, @type, @provider, @name)
-		const simpleFieldMatches = Array.from(value.matchAll(/@(kind|type|provider|name)\b/g));
+		const simpleFieldMatches = Array.from(value.matchAll(/@(kind|type|provider|name|domain)\b/g));
 		let currentSimpleMatch = null;
 		for (const match of simpleFieldMatches) {
 			if (match.index !== undefined && match.index < position) {
@@ -343,6 +346,7 @@
 				{ type: 'field', value: 'type', display: '@type' },
 				{ type: 'field', value: 'provider', display: '@provider' },
 				{ type: 'field', value: 'name', display: '@name' },
+				...(domainsOn ? [{ type: 'field', value: 'domain', display: '@domain' }] : []),
 				{ type: 'field', value: 'metadata', display: '@metadata.' }
 			];
 			showDropdown = true;
@@ -359,7 +363,7 @@
 		suggestions = [];
 
 		if (fieldInfo.needsOperator) {
-			suggestions = operators;
+			suggestions = fieldInfo.field === 'domain' ? operators.slice(0, 1) : operators;
 			showDropdown = true;
 			return;
 		}
@@ -403,6 +407,16 @@
 		} else if (fieldInfo.hasOperator) {
 			const prefix = fieldInfo.valuePrefix || '';
 			const fieldKey = fieldInfo.field!;
+
+			if (fieldKey === 'domain') {
+				const filterTerm = prefix.replace(/"/g, '').toLowerCase();
+				suggestions = (await domainQueryValues())
+					.filter((path) => path.toLowerCase().includes(filterTerm))
+					.slice(0, 20)
+					.map((path) => ({ type: 'value', value: path, display: path }));
+				showDropdown = suggestions.length > 0;
+				return;
+			}
 
 			// For simple fields, fetch metadata values using the field name
 			// (backend should recognize kind, type, provider as special fields)
@@ -638,6 +652,7 @@
 
 	onMount(() => {
 		fetchMetadataFields();
+		domainsEnabled().then((on) => (domainsOn = on));
 
 		// Adjust initial height if there's content
 		if (input && value) {

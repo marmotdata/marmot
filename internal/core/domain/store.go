@@ -14,6 +14,7 @@ type Repository interface {
 	Create(ctx context.Context, in CreateInput) (*Domain, error)
 	Get(ctx context.Context, id string) (*Domain, error)
 	Children(ctx context.Context, parentID *string) ([]*Domain, error)
+	Named(ctx context.Context, name string) ([]*Domain, error)
 	Subtree(ctx context.Context, id string) ([]*Domain, error)
 	Update(ctx context.Context, id string, in UpdateInput) (*Domain, error)
 	Delete(ctx context.Context, id string) error
@@ -167,6 +168,14 @@ func (r *PostgresRepository) Children(ctx context.Context, parentID *string) ([]
 	}
 	if err != nil {
 		return nil, notFound(err, ErrNotFound)
+	}
+	return scanDomains(rows)
+}
+
+func (r *PostgresRepository) Named(ctx context.Context, name string) ([]*Domain, error) {
+	rows, err := r.db.Query(ctx, "SELECT "+columns+" FROM domains WHERE lower(name) = lower($1) ORDER BY depth, lower(name)", name)
+	if err != nil {
+		return nil, err
 	}
 	return scanDomains(rows)
 }

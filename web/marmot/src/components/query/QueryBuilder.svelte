@@ -4,6 +4,8 @@
 	import QueryInput from './QueryInput.svelte';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { domainsEnabled } from '$lib/domains/api';
+	import { domainQueryValues } from '$lib/domains/query';
 
 	let {
 		query = '',
@@ -110,7 +112,7 @@
 	});
 
 	// Field structure - separate simple fields from nested metadata
-	const simpleFields = [
+	const simpleFields = $state([
 		{
 			value: 'kind',
 			label: '@kind',
@@ -129,7 +131,7 @@
 			description: m.query_field_provider_description(),
 			category: 'Simple Field'
 		}
-	];
+	]);
 
 	// Metadata fields fetched from API
 	interface MetadataFieldEntry {
@@ -153,6 +155,13 @@
 		{ value: '<=', label: m.query_op_less_equal() },
 		{ value: 'range', label: m.query_op_range() }
 	];
+
+	const domainOperators = operators.filter((op) => op.value === '=');
+	let activeOperators = $derived(
+		activeOperatorIndex !== null && filters[activeOperatorIndex]?.field === 'domain'
+			? domainOperators
+			: operators
+	);
 
 	const booleanOperators: BooleanOperator[] = ['AND', 'OR', 'NOT'];
 
@@ -338,6 +347,7 @@
 
 	function selectField(index: number, fieldValue: string) {
 		filters[index].field = fieldValue;
+		if (fieldValue === 'domain') filters[index].operator = '=';
 		showFieldSuggestions = false;
 		selectedSuggestionIndex = -1;
 
@@ -400,6 +410,9 @@
 
 	async function fetchValueSuggestions(field: string, prefix: string) {
 		try {
+			if (field === 'domain') {
+				return (await domainQueryValues()).map((value) => ({ value }));
+			}
 			const cacheKey = `${field}-${prefix}`;
 			if (valueFetchCache[cacheKey]) {
 				return valueFetchCache[cacheKey];
@@ -563,14 +576,14 @@
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
-			selectedOperatorIndex = Math.min(selectedOperatorIndex + 1, operators.length - 1);
+			selectedOperatorIndex = Math.min(selectedOperatorIndex + 1, activeOperators.length - 1);
 		} else if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			selectedOperatorIndex = Math.max(selectedOperatorIndex - 1, -1);
 		} else if (event.key === 'Enter') {
 			event.preventDefault();
-			if (selectedOperatorIndex >= 0 && operators[selectedOperatorIndex]) {
-				selectOperator(index, operators[selectedOperatorIndex].value);
+			if (selectedOperatorIndex >= 0 && activeOperators[selectedOperatorIndex]) {
+				selectOperator(index, activeOperators[selectedOperatorIndex].value);
 			}
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
@@ -603,6 +616,16 @@
 	onMount(() => {
 		// Fetch metadata fields from API
 		fetchMetadataFields();
+		domainsEnabled().then((on) => {
+			if (on) {
+				simpleFields.push({
+					value: 'domain',
+					label: '@domain',
+					description: m.domains_query_field_description(),
+					category: 'Simple Field'
+				});
+			}
+		});
 
 		if (query) {
 			rawQuery = query;
@@ -937,7 +960,7 @@
 									class="fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl max-h-60 overflow-auto"
 									style="left: {operatorDropdownPosition.left}px; top: {operatorDropdownPosition.top}px; width: {operatorDropdownPosition.width}px;"
 								>
-									{#each operators as op, idx (op.value)}
+									{#each activeOperators as op, idx (op.value)}
 										<button
 											onclick={() => selectOperator(activeOperatorIndex, op.value)}
 											class="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-gray-100 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 {selectedOperatorIndex ===

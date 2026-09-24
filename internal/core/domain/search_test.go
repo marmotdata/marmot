@@ -88,5 +88,32 @@ func TestSearchByDomainSubtree(t *testing.T) {
 	})
 	t.Run("an unknown domain matches nothing", func(t *testing.T) {
 		equal(t, ids("@domain:00000000-0000-4000-8000-00000000ffff"), nil)
+		equal(t, ids("@domain:Nowhere"), nil)
+	})
+	t.Run("a name matches its subtree, ignoring case", func(t *testing.T) {
+		equal(t, ids("@domain:finance"), want(inPayments, term))
+		equal(t, ids(`@kind:asset AND @domain = "Finance"`), want(inPayments))
+	})
+	t.Run("a name path is followed from a root", func(t *testing.T) {
+		equal(t, ids(`@domain:"Finance/Payments"`), want(inPayments))
+		equal(t, ids(`@domain:"Legal/Payments"`), nil)
+	})
+	t.Run("unknown references are ignored next to known ones", func(t *testing.T) {
+		equal(t, ids("@domain:Legal @domain:Nowhere"), want(inLegal))
+	})
+	t.Run("a repeated name matches every domain that has it", func(t *testing.T) {
+		archive := mustCreate(t, svc, "Archive", finance)
+		legalArchive := mustCreate(t, svc, "Archive", legal)
+		a, b := pgtest.SeedAsset(t, pool), pgtest.SeedAsset(t, pool)
+		for id, d := range map[string]string{a: archive.ID, b: legalArchive.ID} {
+			if err := svc.Assign(ctx, domain.KindAsset, []string{id}, d); err != nil {
+				t.Fatal(err)
+			}
+		}
+		equal(t, ids("@domain:archive"), want(a, b))
+		equal(t, ids(`@domain:"Legal/Archive"`), want(b))
+	})
+	t.Run("Unassigned resolves by name", func(t *testing.T) {
+		equal(t, ids("@domain:Unassigned @kind:asset"), want(unassigned))
 	})
 }

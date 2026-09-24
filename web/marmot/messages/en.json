@@ -529,6 +529,7 @@
 	"domains_pipeline_move_only": "Move only the pipeline",
 	"domains_pipeline_move_question": "Assets this pipeline already ingested that are still in {from}: {count}. Move them to {to} as well?",
 	"domains_pipeline_moved": "Pipeline domain changed; assets moved: {count}",
+	"domains_query_field_description": "Domain, by name or path (Finanzas/Pagos); includes its subdomains",
 	"domains_role_domain_admin": "Domain admin",
 	"domains_role_domain_admin_hint": "Manages subdomains and roles, and edits the content.",
 	"domains_role_reader": "Reader",

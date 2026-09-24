@@ -529,6 +529,7 @@
 	"domains_pipeline_move_only": "Mover solo el pipeline",
 	"domains_pipeline_move_question": "Activos ya ingeridos por este pipeline que siguen en {from}: {count}. ¿Moverlos también a {to}?",
 	"domains_pipeline_moved": "Dominio del pipeline cambiado; activos movidos: {count}",
+	"domains_query_field_description": "Dominio, por nombre o ruta (Finanzas/Pagos); incluye sus subdominios",
 	"domains_role_domain_admin": "Administrador del dominio",
 	"domains_role_domain_admin_hint": "Gestiona subdominios y roles, y edita el contenido.",
 	"domains_role_reader": "Lector",

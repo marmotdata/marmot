@@ -14,6 +14,7 @@ type Service interface {
 	Get(ctx context.Context, id string) (*Domain, error)
 	Children(ctx context.Context, parentID *string) ([]*Domain, error)
 	Subtree(ctx context.Context, id string) ([]*Domain, error)
+	Resolve(ctx context.Context, ref string) ([]*Domain, error)
 	Update(ctx context.Context, id string, in UpdateInput) (*Domain, error)
 	Delete(ctx context.Context, id string) error
 	Move(ctx context.Context, id string, parentID *string) (*Domain, error)
