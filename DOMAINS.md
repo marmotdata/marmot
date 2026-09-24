@@ -8,6 +8,7 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 
 | File | Function / location | Why |
 | --- | --- | --- |
+| `internal/store/postgres/setup.go` | `Setup.Initialize`, last statement | Runs the fork migration track (`dgumigrations`, table `public.dgu_schema_version`) after the core one, so fork tables never take an upstream migration number |
 
 ## Write inventory
 
