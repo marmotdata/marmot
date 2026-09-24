@@ -34,6 +34,13 @@ type MoveRequest struct {
 	ParentID *string `json:"parent_id"`
 }
 
+type PipelineAssignmentRequest struct {
+	DomainID string `json:"domain_id"`
+	// MoveAssets also moves the assets this pipeline ingested that are still
+	// in its previous domain. Never implied: the client must ask for it.
+	MoveAssets bool `json:"move_assets"`
+}
+
 type MembersRequest struct {
 	Kind domain.Kind `json:"kind" enums:"asset,data_product,glossary_term,ingestion_schedule"`
 	IDs  []string    `json:"ids"`
@@ -381,4 +388,77 @@ func (h *Handler) importMemberships(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.RespondJSON(w, http.StatusOK, report)
+}
+
+func requirePermissions(w http.ResponseWriter, r *http.Request, perms ...[2]string) bool {
+	principal, ok := common.PrincipalFromContext(r.Context())
+	for _, p := range perms {
+		if !ok || !principal.HasPermission(p[0], p[1]) {
+			respondCode(w, http.StatusForbidden, "forbidden", "Insufficient permissions")
+			return false
+		}
+	}
+	return true
+}
+
+// @Summary Get a pipeline's domain
+// @Description The domain new assets from this pipeline go to, and how many assets it ingested are still in that domain.
+// @Tags domains
+// @Produce json
+// @Param scheduleId path string true "Ingestion schedule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} domain.PipelineAssignment
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @ID getPipelineDomain
+// @Router /api/v1/domains/pipelines/{scheduleId}/assignment [get]
+func (h *Handler) pipelineAssignment(w http.ResponseWriter, r *http.Request) {
+	if !requirePermissions(w, r, [2]string{"ingestion", "view"}) {
+		return
+	}
+	assignment, err := h.service.PipelineAssignment(r.Context(), r.PathValue("scheduleId"))
+	if err != nil {
+		respondError(w, err, "get pipeline domain")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, assignment)
+}
+
+// @Summary Change a pipeline's domain
+// @Description Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage.
+// @Tags domains
+// @Accept json
+// @Produce json
+// @Param scheduleId path string true "Ingestion schedule ID"
+// @Param assignment body PipelineAssignmentRequest true "Target domain and whether to move the ingested assets"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} domain.PipelineMoveResult
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @ID setPipelineDomain
+// @Router /api/v1/domains/pipelines/{scheduleId}/assignment [put]
+func (h *Handler) assignPipeline(w http.ResponseWriter, r *http.Request) {
+	var req PipelineAssignmentRequest
+	if !decode(w, r, &req) {
+		return
+	}
+	perms := [][2]string{{"ingestion", "manage"}}
+	if req.MoveAssets {
+		perms = append(perms, [2]string{"assets", "manage"})
+	}
+	if !requirePermissions(w, r, perms...) {
+		return
+	}
+	if req.DomainID == "" {
+		req.DomainID = domain.UnassignedID
+	}
+	result, err := h.service.AssignPipeline(r.Context(), r.PathValue("scheduleId"), req.DomainID, req.MoveAssets)
+	if err != nil {
+		respondError(w, err, "change pipeline domain")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, result)
 }

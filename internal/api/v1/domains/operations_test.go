@@ -22,7 +22,8 @@ type fakeService struct {
 		ids    []string
 		domain string
 	}
-	calls int
+	calls       int
+	movedAssets bool
 }
 
 func (f *fakeService) Create(_ context.Context, in domain.CreateInput) (*domain.Domain, error) {
@@ -59,6 +60,13 @@ func (f *fakeService) DomainOf(context.Context, domain.Kind, string) (string, er
 func (f *fakeService) Import(_ context.Context, in domain.ImportInput) (*domain.ImportReport, error) {
 	f.calls++
 	return &domain.ImportReport{Applied: in.Apply}, f.err
+}
+
+func (f *fakeService) AssignPipeline(_ context.Context, scheduleID, domainID string, move bool) (*domain.PipelineMoveResult, error) {
+	f.calls++
+	f.assigned.ids, f.assigned.domain = []string{scheduleID}, domainID
+	f.movedAssets = move
+	return &domain.PipelineMoveResult{DomainID: domainID}, f.err
 }
 
 func (f *fakeService) Get(_ context.Context, id string) (*domain.Domain, error) {
@@ -204,5 +212,37 @@ func TestImportRequiresAGlobalAdministrator(t *testing.T) {
 	(&Handler{service: svc}).importMemberships(rec, req)
 	if rec.Code != http.StatusOK || svc.calls != 1 || !strings.Contains(rec.Body.String(), `"applied":true`) {
 		t.Fatalf("admin: status %d, calls %d: %s", rec.Code, svc.calls, rec.Body)
+	}
+}
+
+func TestAssignPipelinePermissions(t *testing.T) {
+	path := map[string]string{"scheduleId": "sched"}
+	for _, tc := range []struct {
+		name  string
+		body  string
+		perms []string
+		want  int
+	}{
+		{"pipeline only needs ingestion:manage", `{"domain_id":"d"}`, []string{"ingestion:manage"}, http.StatusOK},
+		{"moving assets also needs assets:manage", `{"domain_id":"d","move_assets":true}`, []string{"ingestion:manage"}, http.StatusForbidden},
+		{"moving assets with both", `{"domain_id":"d","move_assets":true}`, []string{"ingestion:manage", "assets:manage"}, http.StatusOK},
+		{"no ingestion:manage", `{"domain_id":"d"}`, []string{"assets:manage"}, http.StatusForbidden},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := &fakeService{}
+			rec := call((&Handler{service: svc}).assignPipeline, http.MethodPut, "/api/v1/domains/pipelines/sched/assignment", tc.body, tc.perms, path)
+			if rec.Code != tc.want {
+				t.Fatalf("status %d, want %d: %s", rec.Code, tc.want, rec.Body)
+			}
+			if tc.want == http.StatusOK && svc.movedAssets != strings.Contains(tc.body, "move_assets") {
+				t.Fatalf("move_assets not passed through: %v", svc.movedAssets)
+			}
+		})
+	}
+
+	svc := &fakeService{}
+	call((&Handler{service: svc}).assignPipeline, http.MethodPut, "/x", `{"domain_id":""}`, []string{"ingestion:manage"}, path)
+	if svc.assigned.domain != domain.UnassignedID {
+		t.Fatalf("empty domain_id must mean Unassigned, got %q", svc.assigned.domain)
 	}
 }

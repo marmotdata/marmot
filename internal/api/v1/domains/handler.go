@@ -43,5 +43,7 @@ func (h *Handler) Routes() []common.Route {
 		{Path: "/api/v1/domains/{id}/members", Method: http.MethodPut, Handler: h.assign, Middleware: manage},
 		{Path: "/api/v1/domains/of/{kind}/{id}", Method: http.MethodGet, Handler: h.domainOf, Middleware: view},
 		{Path: "/api/v1/domains/import", Method: http.MethodPost, Handler: h.importMemberships, Middleware: manage},
+		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodGet, Handler: h.pipelineAssignment, Middleware: view},
+		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodPut, Handler: h.assignPipeline, Middleware: manage},
 	}
 }

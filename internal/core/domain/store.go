@@ -21,6 +21,9 @@ type Repository interface {
 	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
 	PipelineDomain(ctx context.Context, pipelineName string) (string, bool, error)
+	PipelineAssetsIn(ctx context.Context, scheduleID, domainID string) ([]string, error)
+	EntityExists(ctx context.Context, kind Kind, id string) (bool, error)
+	AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (int, error)
 	ImportCandidates(ctx context.Context, kind Kind, path []string) ([]ImportCandidate, error)
 	ApplyImport(ctx context.Context, plan map[Kind]map[string][]string) error
 }
@@ -447,4 +450,117 @@ func (r *PostgresRepository) ApplyImport(ctx context.Context, plan map[Kind]map[
 		}
 	}
 	return tx.Commit(ctx)
+}
+
+type querier interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+}
+
+// pipelineAssetsIn lists the assets a schedule has ingested that are in
+// domainID now. Runs are found through the job that started them, which
+// survives a rename, and by the schedule's current name, which covers runs
+// reported from outside the scheduler.
+func pipelineAssetsIn(ctx context.Context, q querier, scheduleID, domainID string) ([]string, error) {
+	rows, err := q.Query(ctx, `
+		WITH pipeline_runs AS (
+			SELECT jr.plugin_run_id AS run_id
+			  FROM ingestion_job_runs jr
+			 WHERE jr.schedule_id::text = $1 AND jr.plugin_run_id IS NOT NULL
+			UNION
+			SELECT r.id
+			  FROM runs r
+			  JOIN ingestion_schedules s ON s.name = r.pipeline_name
+			 WHERE s.id::text = $1
+		)
+		SELECT DISTINCT a.id
+		  FROM run_checkpoints c
+		  JOIN pipeline_runs pr ON pr.run_id = c.run_id
+		  JOIN assets a ON a.mrn = c.entity_mrn
+		  LEFT JOIN asset_domains ad ON ad.asset_id = a.id
+		 WHERE c.entity_type = 'asset'
+		   AND COALESCE(ad.domain_id, $2::uuid) = $3::uuid`,
+		scheduleID, UnassignedID, domainID)
+	if err != nil {
+		return nil, fmt.Errorf("listing pipeline assets: %w", err)
+	}
+	defer rows.Close()
+	ids := []string{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+func (r *PostgresRepository) PipelineAssetsIn(ctx context.Context, scheduleID, domainID string) ([]string, error) {
+	return pipelineAssetsIn(ctx, r.db, scheduleID, domainID)
+}
+
+func (r *PostgresRepository) AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (int, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var exists bool
+	if err := tx.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM ingestion_schedules WHERE id::text = $1)", scheduleID).Scan(&exists); err != nil {
+		return 0, err
+	}
+	if !exists {
+		return 0, ErrEntityNotFound
+	}
+
+	current := UnassignedID
+	err = tx.QueryRow(ctx, "SELECT domain_id FROM ingestion_schedule_domains WHERE schedule_id::text = $1 FOR UPDATE", scheduleID).Scan(&current)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return 0, err
+	}
+	if current == domainID {
+		return 0, nil
+	}
+
+	var assets []string
+	if moveAssets {
+		if assets, err = pipelineAssetsIn(ctx, tx, scheduleID, current); err != nil {
+			return 0, err
+		}
+	}
+
+	set := func(m membership, ids []string) error {
+		if len(ids) == 0 {
+			return nil
+		}
+		var err error
+		if domainID == UnassignedID {
+			_, err = tx.Exec(ctx, "DELETE FROM "+m.table+" WHERE "+m.column+"::text = ANY($1::text[])", ids)
+		} else {
+			_, err = tx.Exec(ctx, `
+				INSERT INTO `+m.table+` (`+m.column+`, domain_id)
+				SELECT unnest($1::text[])::`+m.columnType+`, $2::uuid
+				ON CONFLICT (`+m.column+`) DO UPDATE SET domain_id = EXCLUDED.domain_id, assigned_at = now()`,
+				ids, domainID)
+		}
+		return err
+	}
+	if err := set(memberships[KindIngestionSchedule], []string{scheduleID}); err != nil {
+		return 0, fmt.Errorf("assigning schedule: %w", err)
+	}
+	if err := set(memberships[KindAsset], assets); err != nil {
+		return 0, fmt.Errorf("moving pipeline assets: %w", err)
+	}
+	return len(assets), tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) EntityExists(ctx context.Context, kind Kind, id string) (bool, error) {
+	m, ok := memberships[kind]
+	if !ok {
+		return false, ErrInvalidInput
+	}
+	var exists bool
+	err := r.db.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM "+m.entityTable+" WHERE id::text = $1)", id).Scan(&exists)
+	return exists, err
 }

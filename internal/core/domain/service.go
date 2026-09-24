@@ -18,6 +18,8 @@ type Service interface {
 	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
 	Import(ctx context.Context, in ImportInput) (*ImportReport, error)
+	PipelineAssignment(ctx context.Context, scheduleID string) (*PipelineAssignment, error)
+	AssignPipeline(ctx context.Context, scheduleID, domainID string, moveAssets bool) (*PipelineMoveResult, error)
 }
 
 type service struct {

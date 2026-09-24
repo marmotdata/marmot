@@ -2527,6 +2527,122 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/domains/pipelines/{scheduleId}/assignment": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The domain new assets from this pipeline go to, and how many assets it ingested are still in that domain.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Get a pipeline's domain",
+                "operationId": "getPipelineDomain",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ingestion schedule ID",
+                        "name": "scheduleId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.PipelineAssignment"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Change a pipeline's domain",
+                "operationId": "setPipelineDomain",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ingestion schedule ID",
+                        "name": "scheduleId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target domain and whether to move the ingested assets",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_domains.PipelineAssignmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.PipelineMoveResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/domains/{id}": {
             "get": {
                 "security": [
@@ -13064,6 +13180,31 @@ const docTemplate = `{
                 "KindIngestionSchedule"
             ]
         },
+        "domain.PipelineAssignment": {
+            "type": "object",
+            "properties": {
+                "assets_in_domain": {
+                    "type": "integer"
+                },
+                "domain_id": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.PipelineMoveResult": {
+            "type": "object",
+            "properties": {
+                "domain_id": {
+                    "type": "string"
+                },
+                "moved_assets": {
+                    "type": "integer"
+                }
+            }
+        },
         "metamodel.AppliesTo": {
             "type": "object",
             "properties": {
@@ -13470,6 +13611,18 @@ const docTemplate = `{
                 "parent_id": {
                     "description": "ParentID is the new parent; null moves the domain to the root.",
                     "type": "string"
+                }
+            }
+        },
+        "v1_domains.PipelineAssignmentRequest": {
+            "type": "object",
+            "properties": {
+                "domain_id": {
+                    "type": "string"
+                },
+                "move_assets": {
+                    "description": "MoveAssets also moves the assets this pipeline ingested that are still\nin its previous domain. Never implied: the client must ask for it.",
+                    "type": "boolean"
                 }
             }
         },
