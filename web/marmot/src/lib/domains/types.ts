@@ -32,4 +32,28 @@ export type DomainErrorCode =
 	| 'not_empty'
 	| 'protected'
 	| 'restricted_unsupported'
-	| 'forbidden';
+	| 'forbidden'
+	| 'duplicate';
+
+export type DomainRole = 'domain_admin' | 'steward' | 'reader';
+export type SubjectType = 'user' | 'team' | 'service_account';
+
+export interface RoleAssignment {
+	id: string;
+	domain_id: string;
+	domain_name: string;
+	subject_type: SubjectType;
+	subject_id: string;
+	subject_name?: string;
+	subject_missing: boolean;
+	role: DomainRole;
+	inherited: boolean;
+	created_by?: string;
+	created_at: string;
+}
+
+export interface DomainCapabilities {
+	domain_id: string;
+	write: boolean;
+	admin: boolean;
+}

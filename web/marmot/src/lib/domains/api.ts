@@ -1,6 +1,15 @@
 import { fetchApi } from '$lib/api';
 import { m } from '$lib/paraglide/messages';
-import type { Domain, DomainErrorCode, DomainKind, DomainNode } from './types';
+import type {
+	Domain,
+	DomainCapabilities,
+	DomainErrorCode,
+	DomainKind,
+	DomainNode,
+	DomainRole,
+	RoleAssignment,
+	SubjectType
+} from './types';
 
 export class DomainError extends Error {
 	constructor(
@@ -92,6 +101,30 @@ export function assignToDomain(
 	ids: string[]
 ): Promise<unknown> {
 	return send(`/domains/${encodeURIComponent(domainId)}/members`, 'PUT', { kind, ids });
+}
+
+export function capabilities(domainId: string): Promise<DomainCapabilities> {
+	return request<DomainCapabilities>(
+		`/domains/capabilities?domain_id=${encodeURIComponent(domainId)}`
+	);
+}
+
+export function listRoles(domainId: string): Promise<RoleAssignment[]> {
+	return request<RoleAssignment[]>(`/domains/${encodeURIComponent(domainId)}/roles`);
+}
+
+export function grantRole(
+	domainId: string,
+	input: { subject_type: SubjectType; subject_id: string; role: DomainRole }
+): Promise<RoleAssignment> {
+	return send<RoleAssignment>(`/domains/${encodeURIComponent(domainId)}/roles`, 'POST', input);
+}
+
+export function revokeRole(domainId: string, assignmentId: string): Promise<unknown> {
+	return request(
+		`/domains/${encodeURIComponent(domainId)}/roles?assignment_id=${encodeURIComponent(assignmentId)}`,
+		{ method: 'DELETE' }
+	);
 }
 
 export interface PipelineAssignment {
@@ -187,6 +220,8 @@ export function errorMessage(error: unknown): string {
 			return m.domains_error_forbidden();
 		case 'invalid_input':
 			return m.domains_error_invalid_input();
+		case 'duplicate':
+			return m.domains_error_duplicate();
 		default:
 			return error.message || m.domains_error_generic();
 	}

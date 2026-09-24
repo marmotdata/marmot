@@ -6,12 +6,14 @@
 	import Icon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import DomainPicker from '$components/domain/DomainPicker.svelte';
+	import DomainRoles from '$components/domain/DomainRoles.svelte';
 	import { domainOptions, type DomainOption } from '$lib/domains/options';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import type { DomainNode } from '$lib/domains/types';
 	import {
+		capabilities,
 		createDomain,
 		deleteDomain,
 		errorMessage,
@@ -27,6 +29,8 @@
 	const inputClass =
 		'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100';
 
+	// Only a global manager creates top-level domains; everything else is
+	// decided per domain by the server (capabilities).
 	const canManage = auth.hasPermission('domains', 'manage');
 
 	let forest = $state<DomainNode[]>([]);
@@ -60,6 +64,29 @@
 		domainOptions(forest, { exclude: (d) => !!selected && d.path.startsWith(selected.path) })
 	);
 	const createParents = $derived(domainOptions(forest));
+
+	// admin: edit it and create subdomains. parentAdmin: move or delete it.
+	let caps = $state<{ admin: boolean; parentAdmin: boolean } | null>(null);
+
+	$effect(() => {
+		const d = selected;
+		caps = null;
+		if (!d) return;
+		let cancelled = false;
+		Promise.all([
+			capabilities(d.id),
+			d.parent_id ? capabilities(d.parent_id) : Promise.resolve({ admin: canManage })
+		])
+			.then(([own, parent]) => {
+				if (!cancelled) caps = { admin: own.admin, parentAdmin: parent.admin };
+			})
+			.catch(() => {
+				if (!cancelled) caps = { admin: false, parentAdmin: false };
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	async function refresh() {
 		try {
@@ -346,32 +373,36 @@
 							/>
 						</div>
 
-						{#if canManage && !isUnassigned(selected)}
+						{#if caps && (caps.admin || caps.parentAdmin) && !isUnassigned(selected)}
 							<div class="flex flex-wrap gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
-								<Button
-									variant="clear"
-									icon="material-symbols:add"
-									text={m.domains_new_child()}
-									click={() => selected && startCreate(selected.id)}
-								/>
-								<Button
-									variant="clear"
-									icon="material-symbols:edit-outline"
-									text={m.domains_edit()}
-									click={startEdit}
-								/>
-								<Button
-									variant="clear"
-									icon="material-symbols:drive-file-move-outline"
-									text={m.domains_move()}
-									click={startMove}
-								/>
-								<Button
-									variant="clear"
-									icon="material-symbols:delete-outline"
-									text={m.domains_delete()}
-									click={() => (mode = 'delete')}
-								/>
+								{#if caps.admin}
+									<Button
+										variant="clear"
+										icon="material-symbols:add"
+										text={m.domains_new_child()}
+										click={() => selected && startCreate(selected.id)}
+									/>
+									<Button
+										variant="clear"
+										icon="material-symbols:edit-outline"
+										text={m.domains_edit()}
+										click={startEdit}
+									/>
+								{/if}
+								{#if caps.parentAdmin}
+									<Button
+										variant="clear"
+										icon="material-symbols:drive-file-move-outline"
+										text={m.domains_move()}
+										click={startMove}
+									/>
+									<Button
+										variant="clear"
+										icon="material-symbols:delete-outline"
+										text={m.domains_delete()}
+										click={() => (mode = 'delete')}
+									/>
+								{/if}
 							</div>
 						{/if}
 
@@ -387,6 +418,8 @@
 								</div>
 							</div>
 						{/if}
+
+						<DomainRoles domainId={selected.id} canAdmin={caps?.admin ?? false} />
 					</div>
 				{/if}
 			</section>
