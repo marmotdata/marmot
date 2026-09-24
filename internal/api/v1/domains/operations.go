@@ -329,3 +329,35 @@ func (h *Handler) domainOf(w http.ResponseWriter, r *http.Request) {
 	}
 	common.RespondJSON(w, http.StatusOK, d)
 }
+
+// @Summary Import domain memberships from metadata
+// @Description Maps the values at a metadata path (such as metadata.dgu.domain) to domains. Only entities still in Unassigned are assigned. A dry run unless apply is true. Global administrators only.
+// @Tags domains
+// @Accept json
+// @Produce json
+// @Param import body domain.ImportInput true "Source path, value-to-domain mapping and apply flag"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} domain.ImportReport
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 403 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @ID importDomainMemberships
+// @Router /api/v1/domains/import [post]
+func (h *Handler) importMemberships(w http.ResponseWriter, r *http.Request) {
+	principal, ok := common.PrincipalFromContext(r.Context())
+	if !ok || !principal.IsAdmin() {
+		common.RespondError(w, http.StatusForbidden, "Importing domain memberships requires a global administrator")
+		return
+	}
+	var in domain.ImportInput
+	if !decode(w, r, &in) {
+		return
+	}
+	report, err := h.service.Import(r.Context(), in)
+	if err != nil {
+		respondError(w, err, "import domain memberships")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, report)
+}

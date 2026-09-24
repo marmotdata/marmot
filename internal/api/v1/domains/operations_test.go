@@ -56,6 +56,11 @@ func (f *fakeService) DomainOf(context.Context, domain.Kind, string) (string, er
 	return domain.UnassignedID, f.err
 }
 
+func (f *fakeService) Import(_ context.Context, in domain.ImportInput) (*domain.ImportReport, error) {
+	f.calls++
+	return &domain.ImportReport{Applied: in.Apply}, f.err
+}
+
 func (f *fakeService) Get(_ context.Context, id string) (*domain.Domain, error) {
 	return &domain.Domain{ID: id}, f.err
 }
@@ -181,5 +186,23 @@ func TestRoutesRegisterWithoutConflicts(t *testing.T) {
 				mux.HandleFunc(pattern, func(http.ResponseWriter, *http.Request) {})
 			}
 		}
+	}
+}
+
+func TestImportRequiresAGlobalAdministrator(t *testing.T) {
+	body := `{"source":"metadata.dgu.domain","mapping":{"Finanzas":"d"},"apply":true}`
+	svc := &fakeService{}
+	rec := call((&Handler{service: svc}).importMemberships, http.MethodPost, "/api/v1/domains/import", body, []string{"domains:manage", "assets:manage"}, nil)
+	if rec.Code != http.StatusForbidden || svc.calls != 0 {
+		t.Fatalf("non-admin: status %d, calls %d", rec.Code, svc.calls)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/domains/import", strings.NewReader(body))
+	admin := auth.NewServiceAccountPrincipal("sa-admin", "admin robot", []string{auth.AdminRoleName}, nil)
+	req = req.WithContext(context.WithValue(req.Context(), common.PrincipalContextKey, admin))
+	rec = httptest.NewRecorder()
+	(&Handler{service: svc}).importMemberships(rec, req)
+	if rec.Code != http.StatusOK || svc.calls != 1 || !strings.Contains(rec.Body.String(), `"applied":true`) {
+		t.Fatalf("admin: status %d, calls %d: %s", rec.Code, svc.calls, rec.Body)
 	}
 }

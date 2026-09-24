@@ -17,6 +17,7 @@ type Service interface {
 	Move(ctx context.Context, id string, parentID *string) (*Domain, error)
 	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
+	Import(ctx context.Context, in ImportInput) (*ImportReport, error)
 }
 
 type service struct {

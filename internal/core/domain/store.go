@@ -21,17 +21,21 @@ type Repository interface {
 	Assign(ctx context.Context, kind Kind, entityIDs []string, domainID string) error
 	DomainOf(ctx context.Context, kind Kind, entityID string) (string, error)
 	PipelineDomain(ctx context.Context, pipelineName string) (string, bool, error)
+	ImportCandidates(ctx context.Context, kind Kind, path []string) ([]ImportCandidate, error)
+	ApplyImport(ctx context.Context, plan map[Kind]map[string][]string) error
 }
 
 type membership struct {
 	table, column, columnType, entityTable string
+	// live excludes soft-deleted entities, where the kind has them.
+	live string
 }
 
 var memberships = map[Kind]membership{
-	KindAsset:             {"asset_domains", "asset_id", "varchar", "assets"},
-	KindDataProduct:       {"data_product_domains", "data_product_id", "uuid", "data_products"},
-	KindGlossaryTerm:      {"glossary_term_domains", "glossary_term_id", "uuid", "glossary_terms"},
-	KindIngestionSchedule: {"ingestion_schedule_domains", "schedule_id", "uuid", "ingestion_schedules"},
+	KindAsset:             {"asset_domains", "asset_id", "varchar", "assets", "true"},
+	KindDataProduct:       {"data_product_domains", "data_product_id", "uuid", "data_products", "true"},
+	KindGlossaryTerm:      {"glossary_term_domains", "glossary_term_id", "uuid", "glossary_terms", "e.deleted_at IS NULL"},
+	KindIngestionSchedule: {"ingestion_schedule_domains", "schedule_id", "uuid", "ingestion_schedules", "true"},
 }
 
 // treeLock serializes structural changes. A move rewrites the paths of a
@@ -388,4 +392,54 @@ func (r *PostgresRepository) PipelineDomain(ctx context.Context, pipelineName st
 		return "", false, err
 	}
 	return id, true, nil
+}
+
+func (r *PostgresRepository) ImportCandidates(ctx context.Context, kind Kind, path []string) ([]ImportCandidate, error) {
+	m, ok := memberships[kind]
+	if !ok {
+		return nil, ErrInvalidInput
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT e.id::text, e.metadata #>> $1::text[], mm.`+m.column+` IS NOT NULL
+		  FROM `+m.entityTable+` e
+		  LEFT JOIN `+m.table+` mm ON mm.`+m.column+` = e.id
+		 WHERE COALESCE(e.metadata #>> $1::text[], '') <> '' AND `+m.live, path)
+	if err != nil {
+		return nil, fmt.Errorf("reading import candidates for %s: %w", kind, err)
+	}
+	defer rows.Close()
+	var out []ImportCandidate
+	for rows.Next() {
+		var c ImportCandidate
+		if err := rows.Scan(&c.ID, &c.Value, &c.Assigned); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// ApplyImport assigns every planned entity in one transaction. An entity
+// assigned since the plan was read keeps that assignment.
+func (r *PostgresRepository) ApplyImport(ctx context.Context, plan map[Kind]map[string][]string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	for kind, byDomain := range plan {
+		m, ok := memberships[kind]
+		if !ok {
+			return ErrInvalidInput
+		}
+		for domainID, ids := range byDomain {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO `+m.table+` (`+m.column+`, domain_id)
+				SELECT unnest($1::text[])::`+m.columnType+`, $2::uuid
+				ON CONFLICT (`+m.column+`) DO NOTHING`, ids, domainID); err != nil {
+				return fmt.Errorf("importing %s memberships: %w", kind, err)
+			}
+		}
+	}
+	return tx.Commit(ctx)
 }

@@ -2401,6 +2401,67 @@
                 }
             }
         },
+        "/api/v1/domains/import": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Maps the values at a metadata path (such as metadata.dgu.domain) to domains. Only entities still in Unassigned are assigned. A dry run unless apply is true. Global administrators only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Import domain memberships from metadata",
+                "operationId": "importDomainMemberships",
+                "parameters": [
+                    {
+                        "description": "Source path, value-to-domain mapping and apply flag",
+                        "name": "import",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ImportInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ImportReport"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/domains/of/{kind}/{id}": {
             "get": {
                 "security": [
@@ -12908,6 +12969,63 @@
                     }
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ImportInput": {
+            "type": "object",
+            "properties": {
+                "apply": {
+                    "type": "boolean"
+                },
+                "mapping": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ImportReport": {
+            "type": "object",
+            "properties": {
+                "already_assigned": {
+                    "type": "integer"
+                },
+                "applied": {
+                    "type": "boolean"
+                },
+                "mapped": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ImportValue"
+                    }
+                },
+                "unmapped": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ImportValue"
+                    }
+                }
+            }
+        },
+        "domain.ImportValue": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "domain_id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "$ref": "#/definitions/domain.Kind"
+                },
+                "value": {
                     "type": "string"
                 }
             }

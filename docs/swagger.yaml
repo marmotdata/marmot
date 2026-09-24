@@ -2543,6 +2543,43 @@ definitions:
       updated_at:
         type: string
     type: object
+  domain.ImportInput:
+    properties:
+      apply:
+        type: boolean
+      mapping:
+        additionalProperties:
+          type: string
+        type: object
+      source:
+        type: string
+    type: object
+  domain.ImportReport:
+    properties:
+      already_assigned:
+        type: integer
+      applied:
+        type: boolean
+      mapped:
+        items:
+          $ref: '#/definitions/domain.ImportValue'
+        type: array
+      unmapped:
+        items:
+          $ref: '#/definitions/domain.ImportValue'
+        type: array
+    type: object
+  domain.ImportValue:
+    properties:
+      count:
+        type: integer
+      domain_id:
+        type: string
+      kind:
+        $ref: '#/definitions/domain.Kind'
+      value:
+        type: string
+    type: object
   domain.Kind:
     enum:
     - asset
@@ -4608,6 +4645,46 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get a domain subtree
+      tags:
+      - domains
+  /api/v1/domains/import:
+    post:
+      consumes:
+      - application/json
+      description: Maps the values at a metadata path (such as metadata.dgu.domain)
+        to domains. Only entities still in Unassigned are assigned. A dry run unless
+        apply is true. Global administrators only.
+      operationId: importDomainMemberships
+      parameters:
+      - description: Source path, value-to-domain mapping and apply flag
+        in: body
+        name: import
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ImportInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ImportReport'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Import domain memberships from metadata
       tags:
       - domains
   /api/v1/domains/of/{kind}/{id}:
