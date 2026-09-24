@@ -9,6 +9,7 @@
 	import type { Asset } from '$lib/assets/types';
 	import Button from '$components/ui/Button.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainChip from '$components/domain/DomainChip.svelte';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
@@ -303,6 +304,12 @@
 											disabled={true}
 										/>
 									</div>
+									<DomainChip
+										kind="data_product"
+										entityId={product.id}
+										variant="section"
+										link={false}
+									/>
 								</div>
 							</a>
 						{/if}

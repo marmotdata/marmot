@@ -20,20 +20,23 @@
 		kind,
 		entityId,
 		canEdit = false,
-		variant = 'compact'
+		variant = 'compact',
+		link = true
 	}: {
 		kind: DomainKind;
 		entityId: string;
 		/** Whether the user may edit the entity itself; assigning also needs domains:manage. */
 		canEdit?: boolean;
 		variant?: 'compact' | 'section';
+		/** False inside another link (the Discover side panel header): plain, read-only chip. */
+		link?: boolean;
 	} = $props();
 
 	let current = $state<Domain | null>(null);
 	let options = $state<DomainOption[] | null>(null);
 	let busy = $state(false);
 
-	const mayChange = $derived(canEdit && auth.hasPermission('domains', 'manage'));
+	const mayChange = $derived(link && canEdit && auth.hasPermission('domains', 'manage'));
 
 	$effect(() => {
 		const id = entityId;
@@ -117,6 +120,14 @@
 					<Icon icon="material-symbols:open-in-new-rounded" class="h-3.5 w-3.5" />
 				</a>
 			</div>
+		{:else if !link}
+			<span
+				class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200 {isUnassigned(
+					current
+				)
+					? 'italic'
+					: ''}">{domainName(current)}</span
+			>
 		{:else}
 			<a
 				href={resolve('/domains/[[id]]', { id: current.id })}

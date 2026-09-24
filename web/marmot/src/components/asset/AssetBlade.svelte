@@ -14,6 +14,7 @@
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import AssetGovernedFields from './AssetGovernedFields.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainChip from '$components/domain/DomainChip.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
@@ -322,6 +323,7 @@
 											<OwnerSelector selectedOwners={owners} onChange={() => {}} disabled={true} />
 										{/if}
 									</div>
+									<DomainChip kind="asset" entityId={asset.id} variant="section" link={false} />
 								</div>
 							</a>
 						{/if}
