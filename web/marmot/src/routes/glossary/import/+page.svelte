@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
+	import DomainSelect from '$components/domain/DomainSelect.svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { locale } from '$lib/i18n';
@@ -21,9 +22,13 @@
 	let columns = $state<ImportColumn[]>([]);
 	let file = $state<File | null>(null);
 	let onExisting = $state<OnExisting>('skip');
+	// Where new rows without a domain column land; empty is Unassigned.
+	let defaultDomain = $state('');
 	let result = $state<ImportResult | null>(null);
 	// The result belongs to this file and option; changing either asks for a new validation.
-	let validatedFor = $state<{ file: File; onExisting: OnExisting } | null>(null);
+	let validatedFor = $state<{ file: File; onExisting: OnExisting; defaultDomain: string } | null>(
+		null
+	);
 	let busy = $state<'validate' | 'apply' | 'download' | null>(null);
 	let filter = $state<ImportAction | 'all'>('all');
 	let dragging = $state(false);
@@ -42,7 +47,8 @@
 		description: m.glossary_import_col_description,
 		parent: m.glossary_import_col_parent,
 		owners: m.glossary_import_col_owners,
-		tags: m.glossary_import_col_tags
+		tags: m.glossary_import_col_tags,
+		domain: m.glossary_import_col_domain
 	};
 
 	function columnLabel(c: ImportColumn): string {
@@ -72,6 +78,8 @@
 				return m.glossary_import_format_owners({ sep });
 			case 'tags':
 				return m.glossary_import_format_tags({ sep });
+			case 'domain':
+				return m.glossary_import_format_domain();
 		}
 		const v = c.validation ?? {};
 		const kind = c.type === 'list' ? (c.item_type ?? 'string') : c.type;
@@ -96,7 +104,10 @@
 	}
 
 	const stale = $derived(
-		!!result && (validatedFor?.file !== file || validatedFor?.onExisting !== onExisting)
+		!!result &&
+			(validatedFor?.file !== file ||
+				validatedFor?.onExisting !== onExisting ||
+				validatedFor?.defaultDomain !== defaultDomain)
 	);
 	const canApply = $derived(
 		!!result &&
@@ -133,8 +144,8 @@
 		if (!file) return;
 		busy = mode;
 		try {
-			const sent = { file, onExisting };
-			result = await importTerms(file, mode, onExisting);
+			const sent = { file, onExisting, defaultDomain };
+			result = await importTerms(file, mode, onExisting, defaultDomain);
 			validatedFor = sent;
 			filter = result.summary.errors > 0 ? 'error' : 'all';
 			if (mode === 'apply' && result.applied) {
@@ -163,6 +174,9 @@
 		owner_not_found: m.glossary_import_code_owner_not_found,
 		missing: m.glossary_import_code_missing,
 		matched_ignoring_case: m.glossary_import_code_matched_ignoring_case,
+		domain_not_found: m.glossary_import_code_domain_not_found,
+		ambiguous_domain: m.glossary_import_code_ambiguous_domain,
+		domain_forbidden: m.glossary_import_code_domain_forbidden,
 		unknown_column: m.glossary_import_code_unknown_column,
 		missing_column: m.glossary_import_code_missing_column,
 		duplicate_column: m.glossary_import_code_duplicate_column
@@ -330,6 +344,13 @@
 				{/each}
 			</div>
 		</fieldset>
+
+		<div class="mt-5 max-w-md">
+			<DomainSelect id="import-default-domain" bind:value={defaultDomain} />
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+				{m.glossary_import_default_domain_hint()}
+			</p>
+		</div>
 
 		<div class="mt-5">
 			<Button

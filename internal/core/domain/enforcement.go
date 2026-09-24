@@ -286,6 +286,12 @@ func (g *Guard) PlaceCreated(ctx context.Context, kind Kind, id string) error {
 	if !ok {
 		return nil
 	}
+	return g.PlaceCreatedIn(ctx, kind, id, target)
+}
+
+// PlaceCreatedIn puts a just-created entity in domainID and audits it.
+func (g *Guard) PlaceCreatedIn(ctx context.Context, kind Kind, id, domainID string) error {
+	target := domainID
 	if err := g.svc.Assign(ctx, kind, []string{id}, target); err != nil {
 		return err
 	}
@@ -294,6 +300,34 @@ func (g *Guard) PlaceCreated(ctx context.Context, kind Kind, id string) error {
 		return err
 	}
 	return g.repo.Audit(ctx, []AuditEntry{auditEntry(actor, AuditCreate, string(kind), id, nil, &target)})
+}
+
+// AuthorizeImportRow checks one row of a bulk import. A new entity needs
+// write access where it lands: targetID, else the context's default target.
+// An existing one needs it where it is, and in targetID too when the row
+// moves it there.
+func (g *Guard) AuthorizeImportRow(ctx context.Context, kind Kind, existingID, targetID string) error {
+	return g.authorize(ctx, func(w *writer) ([]string, error) {
+		var paths []string
+		if existingID != "" {
+			placed, err := g.repo.Placements(ctx, kind, []string{existingID})
+			if err != nil {
+				return nil, err
+			}
+			current := placed[existingID]
+			paths = append(paths, current.Path)
+			if targetID == "" || targetID == current.DomainID {
+				return paths, nil
+			}
+		} else if targetID == "" {
+			return []string{w.target}, nil
+		}
+		to, err := g.destination(ctx, targetID)
+		if err != nil {
+			return nil, err
+		}
+		return append(paths, to), nil
+	})
 }
 
 func (g *Guard) destination(ctx context.Context, domainID string) (string, error) {

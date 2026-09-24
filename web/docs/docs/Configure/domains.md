@@ -51,6 +51,8 @@ An ingestion pipeline has a domain too; set it when you create or edit the pipel
 
 `POST /api/v1/domains/import` assigns existing entities from a metadata field that already names their area, as a dry run unless you pass `apply: true`.
 
+Glossary terms imported from a spreadsheet (**Glossary → Import**) take a `domain` column with a domain name or path, ignoring case, and the page's default domain for rows that leave it empty. With write enforcement on, the preview flags rows you cannot write before anything is imported.
+
 ## Searching by domain
 
 Discover has a domain filter, and the query language accepts `@domain`, which always includes the subdomains:

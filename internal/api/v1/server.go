@@ -575,6 +575,10 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider)
 	common.SetOAuthAuthorizeCompleter(authHandler)
 
+	var glossaryColumns []glossaryImporter.ColumnProvider
+	if domainGuard != nil {
+		glossaryColumns = append(glossaryColumns, domainService.GlossaryImportColumns(domainSvc, domainGuard))
+	}
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
@@ -584,7 +588,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
-		glossary.NewHandler(glossarySvc, glossaryImporter.New(metamodelRegistry, glossarySvc, glossaryImporter.ServiceOwners{Users: userSvc, Teams: teamSvc}), userSvc, authSvc, config, lookupsRecorder),
+		glossary.NewHandler(glossarySvc, glossaryImporter.New(metamodelRegistry, glossarySvc, glossaryImporter.ServiceOwners{Users: userSvc, Teams: teamSvc}, glossaryColumns...), userSvc, authSvc, config, lookupsRecorder),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config, lookupsRecorder),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
@@ -620,7 +624,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 			case *dataproducts.Handler:
 				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/products/")
 			case *glossary.Handler:
-				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/glossary/")
+				server.handlers[i] = domainsAPI.WithCreateTargets(h, domainSvc, "/api/v1/glossary/", "/api/v1/glossary/import")
 			}
 		}
 		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, domainGuard, userSvc, authSvc, config))

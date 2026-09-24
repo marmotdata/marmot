@@ -12,6 +12,7 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | `internal/api/v1/server.go` | `New`, the `config.Domains.Enabled` block after the `server.handlers` list; two imports | Only with `domains.enabled`: registers `/api/v1/domains`, adds the ingestion observer to `asset.Service`, sets the search domain resolver, and refuses to start with the Elasticsearch search backend |
 | `internal/api/v1/server.go` | `New`: the block after `asset.NewService` that builds the domain service and guard, and one `if domainGuard != nil` after each of `lineageService.NewService`, `assetdocs.NewService`, `glossaryService.NewService`, `dataProductSvc.SetMetamodel` and `assetruleService.NewService` | Wraps each service in its write decorator before any consumer receives it, so REST, OpenLineage, ingestion, agents and MCP all go through the guard |
 | `internal/api/v1/server.go` | the `config.Domains.Enabled` block: replaces the docs, assets, data products and glossary handlers in `server.handlers` | Route middleware: `domainsAPI.GuardDocs` scopes documentation pages and `domainsAPI.WithCreateTargets` reads `?domain_id=` on the create routes. The handler list itself is untouched |
+| `internal/api/v1/server.go` | `glossaryColumns` before `server.handlers`, passed to `glossaryImporter.New` | Adds the glossary import `domain` column when domains are enabled; `WithCreateTargets` also covers `/api/v1/glossary/import` |
 | `internal/api/v1/assets/operations.go`, `assets/terms.go`, `assets/documentation.go`, `dataproducts/operations.go`, `glossary/operations.go`, `assetrules/operations.go`, `lineage/operations.go` | the error `switch` after each decorated write, and `respondAssetWriteError`; one import each | `domain.ErrForbidden` → 403 instead of 500 |
 | `internal/core/runs/service.go` | `ProcessEntities`, first statement; one import | Puts the pipeline name in the context so new assets inherit the domain of the schedule with that name |
 | `internal/core/lineage/service.go` | `service.edgeGuard` and the check at the top of `CreateDirectLineage`; the option lives in the new file `edge_guard.go` | Vets every edge, including those an OpenLineage event writes internally, which never go through a decorator |
@@ -35,6 +36,7 @@ Fork-only UI lives in `web/marmot/src/lib/domains/`, `components/domain/` and `r
 | `routes/discover/[type]/[service]/[name]/+page.svelte` | `DomainChip`; `domainWrite` joins `canManageAssets` | Shows the domain; hides edits the asset's domain does not allow |
 | `routes/products/[id]/+page.svelte` | `DomainChip`; `domainWrite` joins `canManage` | Same for products |
 | `routes/glossary/[[id]]/+page.svelte` | `DomainChip`, `DomainSelect` in the create modal with `?domain_id=` on the create request; `canEditTerm` for the selected term's edits | Same for terms; creating stays on `glossary:manage` |
+| `routes/glossary/import/+page.svelte` | `DomainSelect` as the default domain, sent as `?domain_id=`; the `domain` column's label, format and error codes | Bulk import into domains |
 | `components/asset/AssetBlade.svelte`, `components/product/ProductBlade.svelte` | read-only `DomainChip` | Domain in the Discover side panels |
 | `components/product/DataProductForm.svelte`, `routes/assets/new/+page.svelte` | `DomainSelect`; `?domain_id=` on the create request | Domain on creation |
 | `routes/pipelines/new/+page.svelte`, `routes/pipelines/[id]/edit/+page.svelte` | `PipelineDomain` | Pipeline domain, with the explicit asset move |
@@ -82,6 +84,7 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 | Channel | Call site | Methods | Coverage |
 | --- | --- | --- | --- |
 | REST | `internal/api/v1/glossary/operations.go` | Create, Update, Delete | decorator |
+| REST (bulk import) | `internal/api/v1/glossary/import.go` | Import | decorator (`guardedGlossary.Import`): every row is authorized before the batch is written (new term where it lands: its `domain` cell, else `?domain_id=`, else Unassigned; existing term where it is, and at its `domain` cell when that moves it); after the batch commits each term is placed and audited. The `domain` column itself comes from `GlossaryImportColumns`, which checks it in the preview |
 | Ingestion | `internal/core/runs/service.go` | SyncTerms | decorator; all or nothing: every existing term in the batch must be writable, and new terms land in the pipeline's domain |
 
 ### Lineage and documentation

@@ -96,7 +96,8 @@ export async function downloadSheet(
 export async function importTerms(
 	file: File,
 	mode: ImportMode,
-	onExisting: OnExisting
+	onExisting: OnExisting,
+	defaultDomain = ''
 ): Promise<ImportResult> {
 	const form = new FormData();
 	form.append('file', file, file.name);
@@ -104,11 +105,15 @@ export async function importTerms(
 	const headers: Record<string, string> = { 'X-Marmot-Client': 'web' };
 	const token = auth.getToken();
 	if (token) headers['Authorization'] = `Bearer ${token}`;
-	const response = await fetch(`/api/v1/glossary/import?mode=${mode}&on_existing=${onExisting}`, {
-		method: 'POST',
-		body: form,
-		headers
-	});
+	const domain = defaultDomain ? `&domain_id=${encodeURIComponent(defaultDomain)}` : '';
+	const response = await fetch(
+		`/api/v1/glossary/import?mode=${mode}&on_existing=${onExisting}${domain}`,
+		{
+			method: 'POST',
+			body: form,
+			headers
+		}
+	);
 	const body = await response.json().catch(() => ({}));
 	if (response.ok || response.status === 422) return body as ImportResult;
 	throw new ImportError(response.status, body.error ?? response.statusText);
