@@ -101,6 +101,14 @@ func TestSearchByDomainSubtree(t *testing.T) {
 	t.Run("unknown references are ignored next to known ones", func(t *testing.T) {
 		equal(t, ids("@domain:Legal @domain:Nowhere"), want(inLegal))
 	})
+	t.Run("NOT excludes a subtree", func(t *testing.T) {
+		equal(t, ids("@kind:asset NOT @domain:Legal"), want(inPayments, unassigned))
+		equal(t, ids(`@domain:Finance NOT @domain:"Finance/Payments"`), want(term))
+		equal(t, ids("NOT @domain:Unassigned @kind:asset"), want(inPayments, inLegal))
+	})
+	t.Run("excluding an unknown domain excludes nothing", func(t *testing.T) {
+		equal(t, ids("@kind:asset NOT @domain:Nowhere"), want(inPayments, inLegal, unassigned))
+	})
 	t.Run("a repeated name matches every domain that has it", func(t *testing.T) {
 		archive := mustCreate(t, svc, "Archive", finance)
 		legalArchive := mustCreate(t, svc, "Archive", legal)
@@ -113,7 +121,16 @@ func TestSearchByDomainSubtree(t *testing.T) {
 		equal(t, ids("@domain:archive"), want(a, b))
 		equal(t, ids(`@domain:"Legal/Archive"`), want(b))
 	})
-	t.Run("Unassigned resolves by name", func(t *testing.T) {
+	t.Run("Unassigned resolves by name and by its translated name", func(t *testing.T) {
 		equal(t, ids("@domain:Unassigned @kind:asset"), want(unassigned))
+		equal(t, ids(`@domain:"sin asignar" @kind:asset`), want(unassigned))
+	})
+	t.Run("a real domain named like an alias wins", func(t *testing.T) {
+		real := mustCreate(t, svc, "Sin asignar", nil)
+		asset := pgtest.SeedAsset(t, pool)
+		if err := svc.Assign(ctx, domain.KindAsset, []string{asset}, real.ID); err != nil {
+			t.Fatal(err)
+		}
+		equal(t, ids(`@domain:"Sin asignar" @kind:asset`), want(asset))
 	})
 }

@@ -411,9 +411,9 @@
 			if (fieldKey === 'domain') {
 				const filterTerm = prefix.replace(/"/g, '').toLowerCase();
 				suggestions = (await domainQueryValues())
-					.filter((path) => path.toLowerCase().includes(filterTerm))
+					.filter((d) => `${d.value} ${d.label}`.toLowerCase().includes(filterTerm))
 					.slice(0, 20)
-					.map((path) => ({ type: 'value', value: path, display: path }));
+					.map((d) => ({ type: 'value', value: d.value, display: d.label }));
 				showDropdown = suggestions.length > 0;
 				return;
 			}

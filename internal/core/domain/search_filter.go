@@ -9,6 +9,20 @@ import (
 	"github.com/marmotdata/marmot/internal/core/search"
 )
 
+// UnassignedAliases are the names the UI shows for Unassigned in each of its
+// locales (domains_unassigned in web/marmot/messages), so a query typed from
+// what the user sees resolves. A real domain with the same name wins.
+var UnassignedAliases = []string{"Unassigned", "Sin asignar"}
+
+func isUnassignedAlias(ref string) bool {
+	for _, alias := range UnassignedAliases {
+		if strings.EqualFold(ref, alias) {
+			return true
+		}
+	}
+	return false
+}
+
 var uuidPattern = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // Resolve finds the domains a reference names: an id, a name at any depth, or
@@ -29,6 +43,13 @@ func (s *service) Resolve(ctx context.Context, ref string) ([]*Domain, error) {
 	found, err := s.repo.Named(ctx, ref)
 	if err != nil {
 		return nil, err
+	}
+	if len(found) == 0 && isUnassignedAlias(ref) {
+		d, err := s.repo.Get(ctx, UnassignedID)
+		if err != nil {
+			return nil, err
+		}
+		return []*Domain{d}, nil
 	}
 	if !strings.Contains(ref, "/") {
 		return found, nil

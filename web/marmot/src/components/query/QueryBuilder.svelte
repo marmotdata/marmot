@@ -60,8 +60,8 @@
 	// Value suggestions state
 	let showValueSuggestions = $state(false);
 	let activeValueIndex: number | null = $state(null);
-	let valueSuggestions: { value: string }[] = $state([]);
-	let allValueSuggestions: { value: string }[] = $state([]); // Store all fetched values
+	let valueSuggestions: { value: string; label?: string }[] = $state([]);
+	let allValueSuggestions: { value: string; label?: string }[] = $state([]); // Store all fetched values
 	let selectedValueIndex = $state(-1);
 	let valueDropdownPosition = $state({ top: 0, left: 0, width: 0 });
 	let valueFetchCache: { [key: string]: { value: string }[] } = {};
@@ -411,7 +411,7 @@
 	async function fetchValueSuggestions(field: string, prefix: string) {
 		try {
 			if (field === 'domain') {
-				return (await domainQueryValues()).map((value) => ({ value }));
+				return domainQueryValues();
 			}
 			const cacheKey = `${field}-${prefix}`;
 			if (valueFetchCache[cacheKey]) {
@@ -515,7 +515,7 @@
 		} else {
 			const lowerSearch = searchText.toLowerCase();
 			valueSuggestions = allValueSuggestions.filter((s) =>
-				s.value.toLowerCase().includes(lowerSearch)
+				`${s.value} ${s.label ?? ''}`.toLowerCase().includes(lowerSearch)
 			);
 		}
 		showValueSuggestions = valueSuggestions.length > 0;
@@ -948,7 +948,8 @@
 													? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/40'
 													: 'hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20'}"
 											>
-												<span class="font-mono text-sm">{suggestion.value}</span>
+												<span class="font-mono text-sm">{suggestion.label ?? suggestion.value}</span
+												>
 											</button>
 										{/each}
 									{/if}
