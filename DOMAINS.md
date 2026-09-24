@@ -9,7 +9,10 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | File | Function / location | Why |
 | --- | --- | --- |
 | `internal/store/postgres/setup.go` | `Setup.Initialize`, last statement | Runs the fork migration track (`dgumigrations`, table `public.dgu_schema_version`) after the core one, so fork tables never take an upstream migration number |
-| `internal/api/v1/server.go` | `NewServer`, after the `server.handlers` list; two imports | Registers `/api/v1/domains` only when `domains.enabled` is set |
+| `internal/api/v1/server.go` | `New`, the `config.Domains.Enabled` block after the `server.handlers` list; two imports | Only with `domains.enabled`: registers `/api/v1/domains`, adds the ingestion observer to `asset.Service`, sets the search domain resolver, and refuses to start with the Elasticsearch search backend |
+| `internal/core/runs/service.go` | `ProcessEntities`, first statement; one import | Puts the pipeline name in the context so new assets inherit the domain of the schedule with that name |
+| `internal/core/search/store.go` | `PostgresRepository.domainResolver`; `Search` resolves `@domain` first; `buildFilterClauses` and `buildListingFacetWhereClause` call `appendDomainClauses`; `buildFacetsParallel` skips cached facets when `filter.Domain` is set | `@domain:<id>` filter over a subtree. Cached facets are global counts and would ignore it |
+| `internal/core/search/service.go` | `Filter.Domain` | Carries the resolved domain filter; never read from JSON |
 | `pkg/config/config.go` | `Config.Domains`; `BindEnv("domains.enabled")`; `SetDefault("domains.enabled", false)` | The feature flag (`MARMOT_DOMAINS_ENABLED`) |
 | `pkg/config/config_test.go` | `TestLoad_DCRAllowedRedirectHostsFromEnv` | Asserts the flag is read from the environment; `Load` runs once per process, so it cannot live in its own test |
 | `permissions`, `role_permissions` (data, fork migration `002`) | rows `dgu_view_domains`, `dgu_manage_domains` | `domains:view` for `admin` and `user`, `domains:manage` for `admin`. Names are `dgu_`-prefixed so an upstream permission with the same name cannot collide |
@@ -57,4 +60,5 @@ Out of scope: subscriptions and notifications (per-user), users, roles, teams, S
 
 ## Known gaps
 
+- Elasticsearch: `@domain` is only applied by the Postgres search backend, so the server refuses to start with `domains.enabled` and Elasticsearch together.
 - Helm: `charts/marmot/values.schema.json` rejects unknown `config` keys, so `config.domains.enabled` cannot be set through the chart yet. Set `MARMOT_DOMAINS_ENABLED` through the chart's `env` value instead.

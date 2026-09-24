@@ -45,6 +45,8 @@ type Filter struct {
 	MetadataFilters map[string][]string
 	// MetadataFacets: facetable storage paths + candidate values (listing queries only).
 	MetadataFacets []MetadataFacetSpec
+	// Domain is resolved server-side from @domain tokens (fork-only).
+	Domain *DomainFilter `json:"-"`
 }
 
 // MetadataFacetValue pairs a display value with its JSONB @> literal.

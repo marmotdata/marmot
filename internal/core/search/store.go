@@ -30,8 +30,9 @@ type Repository interface {
 }
 
 type PostgresRepository struct {
-	db       *pgxpool.Pool
-	recorder metrics.Recorder
+	db             *pgxpool.Pool
+	recorder       metrics.Recorder
+	domainResolver DomainResolver
 }
 
 func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *PostgresRepository {
@@ -48,6 +49,12 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 
 	ctx, cancel := context.WithTimeout(ctx, DefaultSearchTimeout)
 	defer cancel()
+
+	if empty, err := r.resolveDomainFilter(ctx, &filter); err != nil {
+		return nil, 0, nil, err
+	} else if empty {
+		return []*Result{}, 0, emptyFacets(), nil
+	}
 
 	kindFilters := extractKindFilters(filter.Query)
 	if len(kindFilters) > 0 {
@@ -392,6 +399,7 @@ func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *quer
 		params = append(params, filter.Tags)
 	}
 
+	whereClauses, params = appendDomainClauses(filter.Domain, whereClauses, params)
 	whereClauses, params = appendMetadataFilterClauses(filter.MetadataFilters, whereClauses, params)
 	paramCount = len(params)
 
@@ -526,7 +534,7 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 	// Note: selecting all 4 entity types is functionally equivalent to no type filter
 	allTypesSelected := len(filter.Types) == 4
 	noTypeFilter := len(filter.Types) == 0 || allTypesSelected
-	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 && len(filter.MetadataFilters) == 0 {
+	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 && len(filter.MetadataFilters) == 0 && filter.Domain == nil {
 		return r.buildCachedFacets(ctx, filter)
 	}
 
@@ -674,6 +682,7 @@ func (r *PostgresRepository) buildListingFacetWhereClause(filter Filter) (string
 		params = append(params, filter.Tags)
 	}
 
+	whereClauses, params = appendDomainClauses(filter.Domain, whereClauses, params)
 	whereClauses, params = appendMetadataFilterClauses(filter.MetadataFilters, whereClauses, params)
 
 	whereSQL := "WHERE true"

@@ -575,7 +575,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	}
 
 	if config.Domains.Enabled {
-		domainSvc := domainService.NewService(domainService.NewPostgresRepository(db))
+		// Elasticsearch search does not apply @domain yet; serving it would
+		// return results outside the requested domains.
+		if config.Search.Elasticsearch != nil && config.Search.Elasticsearch.Enabled {
+			log.Fatal().Msg("domains.enabled is not supported with the Elasticsearch search backend yet")
+		}
+		domainRepo := domainService.NewPostgresRepository(db)
+		domainSvc := domainService.NewService(domainRepo)
+		assetSvc.AddMembershipObserver(domainService.NewIngestionObserver(domainRepo))
+		searchRepo.SetDomainResolver(domainService.SearchResolver(domainSvc))
 		server.handlers = append(server.handlers, domainsAPI.NewHandler(domainSvc, userSvc, authSvc, config))
 	}
 
