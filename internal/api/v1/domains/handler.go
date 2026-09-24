@@ -34,15 +34,19 @@ func (h *Handler) Routes() []common.Route {
 	}
 	return []common.Route{
 		{Path: "/api/v1/domains", Method: http.MethodGet, Handler: h.list, Middleware: view},
-		{Path: "/api/v1/domains", Method: http.MethodPost, Handler: h.create, Middleware: manage},
+		{Path: "/api/v1/domains", Method: http.MethodPost, Handler: h.create, Middleware: view},
 		{Path: "/api/v1/domains/{id}", Method: http.MethodGet, Handler: h.get, Middleware: view},
-		{Path: "/api/v1/domains/{id}", Method: http.MethodPut, Handler: h.update, Middleware: manage},
-		{Path: "/api/v1/domains/{id}", Method: http.MethodDelete, Handler: h.remove, Middleware: manage},
+		{Path: "/api/v1/domains/{id}", Method: http.MethodPut, Handler: h.update, Middleware: view},
+		{Path: "/api/v1/domains/{id}", Method: http.MethodDelete, Handler: h.remove, Middleware: view},
 		{Path: "/api/v1/domains/{id}/tree", Method: http.MethodGet, Handler: h.tree, Middleware: view},
-		{Path: "/api/v1/domains/{id}/move", Method: http.MethodPost, Handler: h.move, Middleware: manage},
+		{Path: "/api/v1/domains/{id}/move", Method: http.MethodPost, Handler: h.move, Middleware: view},
 		{Path: "/api/v1/domains/{id}/members", Method: http.MethodPut, Handler: h.assign, Middleware: manage},
 		{Path: "/api/v1/domains/of/{kind}/{id}", Method: http.MethodGet, Handler: h.domainOf, Middleware: view},
 		{Path: "/api/v1/domains/import", Method: http.MethodPost, Handler: h.importMemberships, Middleware: manage},
+		{Path: "/api/v1/domains/capabilities", Method: http.MethodGet, Handler: h.capabilities, Middleware: view},
+		{Path: "/api/v1/domains/{id}/roles", Method: http.MethodGet, Handler: h.listRoles, Middleware: view},
+		{Path: "/api/v1/domains/{id}/roles", Method: http.MethodPost, Handler: h.grantRole, Middleware: view},
+		{Path: "/api/v1/domains/{id}/roles", Method: http.MethodDelete, Handler: h.revokeRole, Middleware: view},
 		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodGet, Handler: h.pipelineAssignment, Middleware: view},
 		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodPut, Handler: h.assignPipeline, Middleware: manage},
 	}

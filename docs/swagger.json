@@ -2401,6 +2401,73 @@
                 }
             }
         },
+        "/api/v1/domains/capabilities": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Informative, for hiding actions in a UI; the server checks every operation again. Pass domain_id, or kind and id of an entity to use its domain.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "What the caller may do in a domain",
+                "operationId": "getDomainCapabilities",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain ID",
+                        "name": "domain_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product",
+                            "glossary_term",
+                            "ingestion_schedule"
+                        ],
+                        "type": "string",
+                        "description": "Entity kind",
+                        "name": "kind",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_domains.Capabilities"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/domains/import": {
             "post": {
                 "security": [
@@ -2927,6 +2994,182 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/domains/{id}/roles": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Includes the assignments inherited from its ancestors, marked inherited.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "List a domain's role assignments",
+                "operationId": "listDomainRoles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.RoleAssignment"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Needs domain_admin on the domain or an ancestor, or global scope. The role applies to the whole subtree.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Grant a role on a domain",
+                "operationId": "grantDomainRole",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subject and role",
+                        "name": "grant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GrantInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.RoleAssignment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Revoke a role on a domain",
+                "operationId": "revokeDomainRole",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role assignment ID",
+                        "name": "assignment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/DomainErrorResponse"
                         }
@@ -13100,6 +13343,20 @@
                 }
             }
         },
+        "domain.GrantInput": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "$ref": "#/definitions/domain.Role"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_type": {
+                    "$ref": "#/definitions/domain.SubjectType"
+                }
+            }
+        },
         "domain.ImportInput": {
             "type": "object",
             "properties": {
@@ -13196,6 +13453,71 @@
                     "type": "integer"
                 }
             }
+        },
+        "domain.Role": {
+            "type": "string",
+            "enum": [
+                "domain_admin",
+                "steward",
+                "reader"
+            ],
+            "x-enum-varnames": [
+                "RoleDomainAdmin",
+                "RoleSteward",
+                "RoleReader"
+            ]
+        },
+        "domain.RoleAssignment": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "domain_id": {
+                    "type": "string"
+                },
+                "domain_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inherited": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.Role"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_missing": {
+                    "description": "SubjectMissing marks a row whose user, team or service account was deleted.",
+                    "type": "boolean"
+                },
+                "subject_name": {
+                    "type": "string"
+                },
+                "subject_type": {
+                    "$ref": "#/definitions/domain.SubjectType"
+                }
+            }
+        },
+        "domain.SubjectType": {
+            "type": "string",
+            "enum": [
+                "user",
+                "team",
+                "service_account"
+            ],
+            "x-enum-varnames": [
+                "SubjectUser",
+                "SubjectTeam",
+                "SubjectServiceAccount"
+            ]
         },
         "metamodel.AppliesTo": {
             "type": "object",
@@ -13543,6 +13865,22 @@
                 "fields": {
                     "type": "object",
                     "additionalProperties": {}
+                }
+            }
+        },
+        "v1_domains.Capabilities": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "description": "Admin: manage its subdomains and role assignments.",
+                    "type": "boolean"
+                },
+                "domain_id": {
+                    "type": "string"
+                },
+                "write": {
+                    "description": "Write: edit entities in the domain (enforced from delivery 2 on).",
+                    "type": "boolean"
                 }
             }
         },

@@ -98,6 +98,8 @@ var errorCodes = []struct {
 	{domain.ErrHasChildren, http.StatusConflict, "has_children"},
 	{domain.ErrNotEmpty, http.StatusConflict, "not_empty"},
 	{domain.ErrProtected, http.StatusConflict, "protected"},
+	{domain.ErrDuplicate, http.StatusConflict, "duplicate"},
+	{domain.ErrForbidden, http.StatusForbidden, "forbidden"},
 }
 
 func respondError(w http.ResponseWriter, err error, action string) {
@@ -157,6 +159,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &req) || rejectRestricted(w, req.Restricted) {
 		return
 	}
+	parent := ""
+	if req.ParentID != nil {
+		parent = *req.ParentID
+	}
+	if !h.requireAdmin(w, r, parent) {
+		return
+	}
 	in := domain.CreateInput{
 		ParentID:    req.ParentID,
 		Name:        req.Name,
@@ -214,6 +223,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &req) || rejectRestricted(w, req.Restricted) {
 		return
 	}
+	if !h.requireAdmin(w, r, r.PathValue("id")) {
+		return
+	}
 	d, err := h.service.Update(r.Context(), r.PathValue("id"), domain.UpdateInput{
 		Name:        req.Name,
 		Description: req.Description,
@@ -240,6 +252,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @ID deleteDomain
 // @Router /api/v1/domains/{id} [delete]
 func (h *Handler) remove(w http.ResponseWriter, r *http.Request) {
+	if !h.requireAdminOfParent(w, r, r.PathValue("id")) {
+		return
+	}
 	if err := h.service.Delete(r.Context(), r.PathValue("id")); err != nil {
 		respondError(w, err, "delete domain")
 		return
@@ -285,6 +300,13 @@ func (h *Handler) tree(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) move(w http.ResponseWriter, r *http.Request) {
 	var req MoveRequest
 	if !decode(w, r, &req) {
+		return
+	}
+	target := ""
+	if req.ParentID != nil {
+		target = *req.ParentID
+	}
+	if !h.requireAdminOfParent(w, r, r.PathValue("id")) || !h.requireAdmin(w, r, target) {
 		return
 	}
 	d, err := h.service.Move(r.Context(), r.PathValue("id"), req.ParentID)
@@ -461,4 +483,183 @@ func (h *Handler) assignPipeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.RespondJSON(w, http.StatusOK, result)
+}
+
+// mayAdminister reports whether the caller administers domainID: through the
+// global domains:manage permission, or as domain_admin of it or an ancestor.
+// The root ("") is only administered globally.
+func (h *Handler) mayAdminister(r *http.Request, domainID string) (bool, error) {
+	principal, ok := common.PrincipalFromContext(r.Context())
+	if !ok {
+		return false, nil
+	}
+	if principal.HasPermission("domains", "manage") {
+		return true, nil
+	}
+	if domainID == "" {
+		return false, nil
+	}
+	d, err := h.service.Get(r.Context(), domainID)
+	if err != nil {
+		return false, err
+	}
+	scope, err := h.service.Scope(r.Context(), principal)
+	if err != nil {
+		return false, err
+	}
+	return scope.Can(domain.ActionAdmin, d.Path), nil
+}
+
+func (h *Handler) requireAdmin(w http.ResponseWriter, r *http.Request, domainID string) bool {
+	allowed, err := h.mayAdminister(r, domainID)
+	if err != nil {
+		respondError(w, err, "check domain permissions")
+		return false
+	}
+	if !allowed {
+		respondCode(w, http.StatusForbidden, "forbidden", "Administering this domain is not allowed")
+		return false
+	}
+	return true
+}
+
+// Deleting or moving a domain changes its parent's contents, so it is decided
+// at the parent: a domain admin cannot remove or relocate its own root.
+func (h *Handler) requireAdminOfParent(w http.ResponseWriter, r *http.Request, domainID string) bool {
+	d, err := h.service.Get(r.Context(), domainID)
+	if err != nil {
+		respondError(w, err, "check domain permissions")
+		return false
+	}
+	parent := ""
+	if d.ParentID != nil {
+		parent = *d.ParentID
+	}
+	return h.requireAdmin(w, r, parent)
+}
+
+// @Summary List a domain's role assignments
+// @Description Includes the assignments inherited from its ancestors, marked inherited.
+// @Tags domains
+// @Produce json
+// @Param id path string true "Domain ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {array} domain.RoleAssignment
+// @Failure 404 {object} ErrorResponse
+// @ID listDomainRoles
+// @Router /api/v1/domains/{id}/roles [get]
+func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
+	roles, err := h.service.Roles(r.Context(), r.PathValue("id"))
+	if err != nil {
+		respondError(w, err, "list domain roles")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, roles)
+}
+
+// @Summary Grant a role on a domain
+// @Description Needs domain_admin on the domain or an ancestor, or global scope. The role applies to the whole subtree.
+// @Tags domains
+// @Accept json
+// @Produce json
+// @Param id path string true "Domain ID"
+// @Param grant body domain.GrantInput true "Subject and role"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 201 {object} domain.RoleAssignment
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @ID grantDomainRole
+// @Router /api/v1/domains/{id}/roles [post]
+func (h *Handler) grantRole(w http.ResponseWriter, r *http.Request) {
+	var in domain.GrantInput
+	if !decode(w, r, &in) {
+		return
+	}
+	principal, _ := common.PrincipalFromContext(r.Context())
+	ra, err := h.service.GrantRole(r.Context(), principal, r.PathValue("id"), in)
+	if err != nil {
+		respondError(w, err, "grant domain role")
+		return
+	}
+	common.RespondJSON(w, http.StatusCreated, ra)
+}
+
+// @Summary Revoke a role on a domain
+// @Tags domains
+// @Produce json
+// @Param id path string true "Domain ID"
+// @Param assignment_id query string true "Role assignment ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} map[string]string
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @ID revokeDomainRole
+// @Router /api/v1/domains/{id}/roles [delete]
+func (h *Handler) revokeRole(w http.ResponseWriter, r *http.Request) {
+	principal, _ := common.PrincipalFromContext(r.Context())
+	if err := h.service.RevokeRole(r.Context(), principal, r.PathValue("id"), r.URL.Query().Get("assignment_id")); err != nil {
+		respondError(w, err, "revoke domain role")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Role revoked"})
+}
+
+type Capabilities struct {
+	DomainID string `json:"domain_id"`
+	// Write: edit entities in the domain (enforced from delivery 2 on).
+	Write bool `json:"write"`
+	// Admin: manage its subdomains and role assignments.
+	Admin bool `json:"admin"`
+}
+
+// @Summary What the caller may do in a domain
+// @Description Informative, for hiding actions in a UI; the server checks every operation again. Pass domain_id, or kind and id of an entity to use its domain.
+// @Tags domains
+// @Produce json
+// @Param domain_id query string false "Domain ID"
+// @Param kind query string false "Entity kind" Enums(asset, data_product, glossary_term, ingestion_schedule)
+// @Param id query string false "Entity ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} Capabilities
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @ID getDomainCapabilities
+// @Router /api/v1/domains/capabilities [get]
+func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	domainID := q.Get("domain_id")
+	if domainID == "" {
+		if q.Get("kind") == "" || q.Get("id") == "" {
+			respondCode(w, http.StatusBadRequest, "invalid_input", "Pass domain_id, or kind and id")
+			return
+		}
+		var err error
+		if domainID, err = h.service.DomainOf(r.Context(), domain.Kind(q.Get("kind")), q.Get("id")); err != nil {
+			respondError(w, err, "resolve entity domain")
+			return
+		}
+	}
+	d, err := h.service.Get(r.Context(), domainID)
+	if err != nil {
+		respondError(w, err, "get domain capabilities")
+		return
+	}
+	principal, _ := common.PrincipalFromContext(r.Context())
+	scope, err := h.service.Scope(r.Context(), principal)
+	if err != nil {
+		respondError(w, err, "get domain capabilities")
+		return
+	}
+	admin, err := h.mayAdminister(r, d.ID)
+	if err != nil {
+		respondError(w, err, "get domain capabilities")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, Capabilities{DomainID: d.ID, Write: scope.Can(domain.ActionWrite, d.Path), Admin: admin})
 }

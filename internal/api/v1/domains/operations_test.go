@@ -24,6 +24,12 @@ type fakeService struct {
 	}
 	calls       int
 	movedAssets bool
+	getErr      error
+	scope       domain.Scope
+}
+
+func (f *fakeService) Scope(context.Context, auth.Principal) (*domain.Scope, error) {
+	return &f.scope, nil
 }
 
 func (f *fakeService) Create(_ context.Context, in domain.CreateInput) (*domain.Domain, error) {
@@ -70,7 +76,11 @@ func (f *fakeService) AssignPipeline(_ context.Context, scheduleID, domainID str
 }
 
 func (f *fakeService) Get(_ context.Context, id string) (*domain.Domain, error) {
-	return &domain.Domain{ID: id}, f.err
+	if id == "child" {
+		parent := "parent"
+		return &domain.Domain{ID: id, ParentID: &parent, Path: "/parent/child/"}, f.getErr
+	}
+	return &domain.Domain{ID: id, Path: "/" + id + "/"}, f.getErr
 }
 
 func call(h http.HandlerFunc, method, target, body string, perms []string, pathValues map[string]string) *httptest.ResponseRecorder {
@@ -84,6 +94,8 @@ func call(h http.HandlerFunc, method, target, body string, perms []string, pathV
 	h(rec, req)
 	return rec
 }
+
+var manager = []string{"domains:manage"}
 
 func TestCreate(t *testing.T) {
 	for _, tc := range []struct {
@@ -104,7 +116,7 @@ func TestCreate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := &fakeService{err: tc.err}
-			rec := call((&Handler{service: svc}).create, http.MethodPost, "/api/v1/domains", tc.body, nil, nil)
+			rec := call((&Handler{service: svc}).create, http.MethodPost, "/api/v1/domains", tc.body, manager, nil)
 			if rec.Code != tc.want || svc.calls != tc.calls {
 				t.Fatalf("status %d (want %d), calls %d (want %d): %s", rec.Code, tc.want, svc.calls, tc.calls, rec.Body)
 			}
@@ -117,7 +129,7 @@ func TestCreate(t *testing.T) {
 
 func TestUpdateRefusesRestricted(t *testing.T) {
 	svc := &fakeService{}
-	rec := call((&Handler{service: svc}).update, http.MethodPut, "/api/v1/domains/d", `{"restricted":true}`, nil, map[string]string{"id": "d"})
+	rec := call((&Handler{service: svc}).update, http.MethodPut, "/api/v1/domains/d", `{"restricted":true}`, manager, map[string]string{"id": "d"})
 	if rec.Code != http.StatusBadRequest || svc.calls != 0 {
 		t.Fatalf("status %d, calls %d", rec.Code, svc.calls)
 	}
@@ -135,13 +147,13 @@ func TestStructuralErrors(t *testing.T) {
 		{"not found", domain.ErrNotFound, http.StatusNotFound},
 	} {
 		t.Run("delete "+tc.name, func(t *testing.T) {
-			rec := call((&Handler{service: &fakeService{err: tc.err}}).remove, http.MethodDelete, "/api/v1/domains/d", "", nil, map[string]string{"id": "d"})
+			rec := call((&Handler{service: &fakeService{err: tc.err}}).remove, http.MethodDelete, "/api/v1/domains/d", "", manager, map[string]string{"id": "d"})
 			if rec.Code != tc.want {
 				t.Fatalf("status %d, want %d", rec.Code, tc.want)
 			}
 		})
 	}
-	rec := call((&Handler{service: &fakeService{err: domain.ErrCycle}}).move, http.MethodPost, "/api/v1/domains/d/move", `{"parent_id":"c"}`, nil, map[string]string{"id": "d"})
+	rec := call((&Handler{service: &fakeService{err: domain.ErrCycle}}).move, http.MethodPost, "/api/v1/domains/d/move", `{"parent_id":"c"}`, manager, map[string]string{"id": "d"})
 	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"code":"cycle"`) {
 		t.Fatalf("move cycle: status %d: %s", rec.Code, rec.Body)
 	}
@@ -244,5 +256,48 @@ func TestAssignPipelinePermissions(t *testing.T) {
 	call((&Handler{service: svc}).assignPipeline, http.MethodPut, "/x", `{"domain_id":""}`, []string{"ingestion:manage"}, path)
 	if svc.assigned.domain != domain.UnassignedID {
 		t.Fatalf("empty domain_id must mean Unassigned, got %q", svc.assigned.domain)
+	}
+}
+
+func TestDomainAdminsManageTheirSubtree(t *testing.T) {
+	adminOfParent := domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleDomainAdmin}}}
+	adminOfChild := domain.Scope{Grants: []domain.Grant{{Path: "/parent/child/", Role: domain.RoleDomainAdmin}}}
+	steward := domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleSteward}}}
+	for _, tc := range []struct {
+		name    string
+		scope   domain.Scope
+		handler func(*Handler) http.HandlerFunc
+		method  string
+		body    string
+		id      string
+		want    int
+	}{
+		{"domain admin creates a subdomain", adminOfParent, func(h *Handler) http.HandlerFunc { return h.create }, http.MethodPost, `{"name":"x","parent_id":"parent"}`, "", http.StatusCreated},
+		{"domain admin cannot create a root", adminOfParent, func(h *Handler) http.HandlerFunc { return h.create }, http.MethodPost, `{"name":"x"}`, "", http.StatusForbidden},
+		{"steward cannot create subdomains", steward, func(h *Handler) http.HandlerFunc { return h.create }, http.MethodPost, `{"name":"x","parent_id":"parent"}`, "", http.StatusForbidden},
+		{"domain admin renames its domain", adminOfChild, func(h *Handler) http.HandlerFunc { return h.update }, http.MethodPut, `{"name":"y"}`, "child", http.StatusOK},
+		{"domain admin cannot delete its own root", adminOfChild, func(h *Handler) http.HandlerFunc { return h.remove }, http.MethodDelete, "", "child", http.StatusForbidden},
+		{"admin of the parent deletes it", adminOfParent, func(h *Handler) http.HandlerFunc { return h.remove }, http.MethodDelete, "", "child", http.StatusOK},
+		{"moving out of the subtree is refused", adminOfParent, func(h *Handler) http.HandlerFunc { return h.move }, http.MethodPost, `{"parent_id":"elsewhere"}`, "child", http.StatusForbidden},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := &fakeService{scope: tc.scope}
+			rec := call(tc.handler(&Handler{service: svc}), tc.method, "/api/v1/domains", tc.body, nil, map[string]string{"id": tc.id})
+			if rec.Code != tc.want {
+				t.Fatalf("status %d, want %d: %s", rec.Code, tc.want, rec.Body)
+			}
+		})
+	}
+}
+
+func TestCapabilities(t *testing.T) {
+	svc := &fakeService{scope: domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleSteward}}}}
+	rec := call((&Handler{service: svc}).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"write":true`) || !strings.Contains(rec.Body.String(), `"admin":false`) {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body)
+	}
+	rec = call((&Handler{service: svc}).capabilities, http.MethodGet, "/api/v1/domains/capabilities", "", nil, nil)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("without a target: status %d", rec.Code)
 	}
 }

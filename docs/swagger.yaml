@@ -2550,6 +2550,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  domain.GrantInput:
+    properties:
+      role:
+        $ref: '#/definitions/domain.Role'
+      subject_id:
+        type: string
+      subject_type:
+        $ref: '#/definitions/domain.SubjectType'
+    type: object
   domain.ImportInput:
     properties:
       apply:
@@ -2615,6 +2624,53 @@ definitions:
       moved_assets:
         type: integer
     type: object
+  domain.Role:
+    enum:
+    - domain_admin
+    - steward
+    - reader
+    type: string
+    x-enum-varnames:
+    - RoleDomainAdmin
+    - RoleSteward
+    - RoleReader
+  domain.RoleAssignment:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      domain_id:
+        type: string
+      domain_name:
+        type: string
+      id:
+        type: string
+      inherited:
+        type: boolean
+      role:
+        $ref: '#/definitions/domain.Role'
+      subject_id:
+        type: string
+      subject_missing:
+        description: SubjectMissing marks a row whose user, team or service account
+          was deleted.
+        type: boolean
+      subject_name:
+        type: string
+      subject_type:
+        $ref: '#/definitions/domain.SubjectType'
+    type: object
+  domain.SubjectType:
+    enum:
+    - user
+    - team
+    - service_account
+    type: string
+    x-enum-varnames:
+    - SubjectUser
+    - SubjectTeam
+    - SubjectServiceAccount
   metamodel.AppliesTo:
     properties:
       assetTypes:
@@ -2855,6 +2911,18 @@ definitions:
       fields:
         additionalProperties: {}
         type: object
+    type: object
+  v1_domains.Capabilities:
+    properties:
+      admin:
+        description: 'Admin: manage its subdomains and role assignments.'
+        type: boolean
+      domain_id:
+        type: string
+      write:
+        description: 'Write: edit entities in the domain (enforced from delivery 2
+          on).'
+        type: boolean
     type: object
   v1_domains.CreateRequest:
     properties:
@@ -4651,6 +4719,118 @@ paths:
       summary: Move a domain
       tags:
       - domains
+  /api/v1/domains/{id}/roles:
+    delete:
+      operationId: revokeDomainRole
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role assignment ID
+        in: query
+        name: assignment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Revoke a role on a domain
+      tags:
+      - domains
+    get:
+      description: Includes the assignments inherited from its ancestors, marked inherited.
+      operationId: listDomainRoles
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.RoleAssignment'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List a domain's role assignments
+      tags:
+      - domains
+    post:
+      consumes:
+      - application/json
+      description: Needs domain_admin on the domain or an ancestor, or global scope.
+        The role applies to the whole subtree.
+      operationId: grantDomainRole
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subject and role
+        in: body
+        name: grant
+        required: true
+        schema:
+          $ref: '#/definitions/domain.GrantInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.RoleAssignment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Grant a role on a domain
+      tags:
+      - domains
   /api/v1/domains/{id}/tree:
     get:
       description: Returns the domain and all its descendants, shallowest first.
@@ -4678,6 +4858,50 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get a domain subtree
+      tags:
+      - domains
+  /api/v1/domains/capabilities:
+    get:
+      description: Informative, for hiding actions in a UI; the server checks every
+        operation again. Pass domain_id, or kind and id of an entity to use its domain.
+      operationId: getDomainCapabilities
+      parameters:
+      - description: Domain ID
+        in: query
+        name: domain_id
+        type: string
+      - description: Entity kind
+        enum:
+        - asset
+        - data_product
+        - glossary_term
+        - ingestion_schedule
+        in: query
+        name: kind
+        type: string
+      - description: Entity ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_domains.Capabilities'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: What the caller may do in a domain
       tags:
       - domains
   /api/v1/domains/import:
