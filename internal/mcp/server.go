@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/memory"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -74,6 +75,14 @@ type Server struct {
 	searchService      search.Service
 	config             *config.Config
 	lookups            lookups.Recorder
+	memoryService      memory.Service
+	memoryAccess       MemoryAccess
+}
+
+// SetMemory enables the memory tools.
+func (s *Server) SetMemory(svc memory.Service, access MemoryAccess) {
+	s.memoryService = svc
+	s.memoryAccess = access
 }
 
 func NewServer(
@@ -128,7 +137,10 @@ func (s *Server) registerTools(server *mcpsdk.Server, principal auth.Principal) 
 		principal:          principal,
 		config:             s.config,
 		lookups:            s.lookups,
+		memoryService:      s.memoryService,
+		memoryAccess:       s.memoryAccess,
 	}
+	s.registerMemoryTools(server, tc)
 
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name: "discover_data",

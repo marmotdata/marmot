@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/memory"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -33,6 +34,8 @@ type ToolContext struct {
 	principal          auth.Principal
 	config             *config.Config
 	lookups            lookups.Recorder
+	memoryService      memory.Service
+	memoryAccess       MemoryAccess
 }
 
 // recordLookup increments the lookup counter with source=mcp. Safe to call
