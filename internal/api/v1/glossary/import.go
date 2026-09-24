@@ -75,6 +75,19 @@ func (h *Handler) importTemplate(w http.ResponseWriter, r *http.Request) {
 	h.sendSheet(w, r, "glossary-template", nil)
 }
 
+// @Summary Describe the glossary import columns
+// @Description The template's columns with label and help in ?locale= (or Accept-Language), type, format, constraints, allowed values and list separator, for building a guide.
+// @Tags glossary
+// @Produce json
+// @Param locale query string false "Language for labels and help"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {array} importer.ColumnInfo
+// @Router /glossary/import/columns [get]
+func (h *Handler) importColumns(w http.ResponseWriter, r *http.Request) {
+	common.RespondJSON(w, http.StatusOK, h.importer.Describe(localeParam(r)))
+}
+
 // @Summary Export the glossary
 // @Description Every term in the import template's columns, so the file can be edited and imported back with on_existing=update. Cells that a spreadsheet would run as formulas are escaped in CSV.
 // @Tags glossary

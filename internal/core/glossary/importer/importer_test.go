@@ -332,3 +332,22 @@ func TestExportImportsBackUnchanged(t *testing.T) {
 		t.Fatalf("the escape must be undone on import: %q", *result.Terms()[0].Update.Definition)
 	}
 }
+
+func TestDescribeColumns(t *testing.T) {
+	two, five := 2, 5
+	codes := Column{ID: "codes", Type: "list", ItemType: "string", Validation: metamodel.Constraints{MaxLength: &five, MaxItems: &two}}
+	if got := Describe(codes); got != "Several values separated by |, each: text, at most 5 characters; at most 2." {
+		t.Fatalf("list: %q", got)
+	}
+	cols := New(registry(t), fakeTerms{}, fakeOwners{}).Describe("es")
+	byID := map[string]ColumnInfo{}
+	for _, c := range cols {
+		byID[c.ID] = c
+	}
+	if a := byID["area"]; a.Label != "Área de negocio" || strings.Join(a.Values, ",") != "finance,legal" || !a.Profile || Describe(Column{Type: "enum"}) != "One of the allowed values." {
+		t.Fatalf("area = %+v", a)
+	}
+	if o := byID["owners"]; o.Separator != ListSeparator || o.Format != "owners" || o.Profile {
+		t.Fatalf("owners = %+v", o)
+	}
+}

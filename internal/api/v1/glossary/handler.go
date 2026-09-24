@@ -71,6 +71,15 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/glossary/import/columns",
+			Method:  http.MethodGet,
+			Handler: h.importColumns,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+			},
+		},
+		{
 			Path:    "/api/v1/glossary/export",
 			Method:  http.MethodGet,
 			Handler: h.exportGlossary,

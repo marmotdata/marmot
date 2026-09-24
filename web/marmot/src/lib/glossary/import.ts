@@ -28,6 +28,35 @@ export interface ImportResult {
 	applied: boolean;
 }
 
+export interface ImportColumn {
+	id: string;
+	label: string;
+	help?: string;
+	type: string;
+	item_type?: string;
+	required: boolean;
+	values?: string[];
+	validation?: {
+		minimum?: number;
+		maximum?: number;
+		minLength?: number;
+		maxLength?: number;
+		minItems?: number;
+		maxItems?: number;
+	};
+	/** How a term's own column is written: text, term, owners or tags. */
+	format?: string;
+	separator?: string;
+	/** True for metamodel profile fields; their label comes localized from the server. */
+	profile: boolean;
+}
+
+export async function importColumns(locale: string): Promise<ImportColumn[]> {
+	const response = await fetchApi(`/glossary/import/columns?locale=${encodeURIComponent(locale)}`);
+	if (!response.ok) throw new ImportError(response.status, response.statusText);
+	return response.json();
+}
+
 export class ImportError extends Error {
 	constructor(
 		readonly status: number,

@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { locale } from '$lib/i18n';
-	import { fetchMetamodel } from '$lib/metamodel/api';
-	import { resolveMessage } from '$lib/metamodel/labels';
-	import { nativeMessage, violationMessage } from '$lib/metamodel/i18n';
-	import type { MetamodelSchema } from '$lib/metamodel/types';
+	import { violationMessage } from '$lib/metamodel/i18n';
 	import {
 		downloadSheet,
+		importColumns,
 		importTerms,
+		type ImportColumn,
 		type ImportAction,
 		type ImportProblem,
 		type ImportResult,
@@ -20,7 +18,7 @@
 		type SheetFormat
 	} from '$lib/glossary/import';
 
-	let schema = $state<MetamodelSchema | null>(null);
+	let columns = $state<ImportColumn[]>([]);
 	let file = $state<File | null>(null);
 	let onExisting = $state<OnExisting>('skip');
 	let result = $state<ImportResult | null>(null);
@@ -30,49 +28,70 @@
 	let filter = $state<ImportAction | 'all'>('all');
 	let dragging = $state(false);
 
-	onMount(() => {
-		fetchMetamodel('glossary_term')
-			.then((s) => (schema = s))
-			.catch(() => (schema = null));
+	// Reloads when the language changes: profile labels come localized from the server.
+	$effect(() => {
+		const current = $locale;
+		importColumns(current)
+			.then((cols) => (columns = cols))
+			.catch(() => (columns = []));
 	});
 
-	const context = $derived({
-		locale: $locale,
-		defaultLocale: schema?.defaultLocale ?? 'en',
-		messages: schema?.messages,
-		native: nativeMessage
-	});
+	const nativeLabels: Record<string, () => string> = {
+		name: m.glossary_import_col_name,
+		definition: m.glossary_import_col_definition,
+		description: m.glossary_import_col_description,
+		parent: m.glossary_import_col_parent,
+		owners: m.glossary_import_col_owners,
+		tags: m.glossary_import_col_tags
+	};
 
-	interface GuideRow {
-		id: string;
-		label: string;
-		required: boolean;
-		values: string;
+	function columnLabel(c: ImportColumn): string {
+		return !c.profile && nativeLabels[c.id] ? nativeLabels[c.id]() : c.label;
 	}
 
-	const nativeColumns = $derived<GuideRow[]>([
-		{ id: 'name', label: m.glossary_import_col_name(), required: true, values: '' },
-		{ id: 'definition', label: m.glossary_import_col_definition(), required: true, values: '' },
-		{ id: 'description', label: m.glossary_import_col_description(), required: false, values: '' },
-		{ id: 'parent', label: m.glossary_import_col_parent(), required: false, values: '' },
-		{ id: 'owners', label: m.glossary_import_col_owners(), required: true, values: '' },
-		{ id: 'tags', label: m.glossary_import_col_tags(), required: false, values: '' }
-	]);
+	const kindText: Record<string, () => string> = {
+		string: m.glossary_import_format_string,
+		integer: m.glossary_import_format_integer,
+		number: m.glossary_import_format_number,
+		boolean: m.glossary_import_format_boolean,
+		date: m.glossary_import_format_date,
+		enum: m.glossary_import_format_enum
+	};
 
-	const guide = $derived<GuideRow[]>([
-		...nativeColumns,
-		...(schema?.enabled ? schema.fields : [])
-			.filter((f) => f.storage.startsWith('metadata.'))
-			.map((f) => ({
-				id: f.id,
-				label: resolveMessage(f.presentation?.labelKey, context) ?? f.id,
-				required: f.required,
-				values:
-					f.type === 'boolean' || f.itemType === 'boolean'
-						? 'true, false'
-						: (f.values ?? []).join(', ')
-			}))
-	]);
+	/** How to write a cell, from the column's type, constraints and separator. */
+	function columnFormat(c: ImportColumn): string {
+		const sep = c.separator ?? '|';
+		switch (c.format) {
+			case 'text':
+				return m.glossary_import_format_string();
+			case 'term':
+				return m.glossary_import_format_term();
+			case 'owners':
+				return m.glossary_import_format_owners({ sep });
+			case 'tags':
+				return m.glossary_import_format_tags({ sep });
+		}
+		const v = c.validation ?? {};
+		const kind = c.type === 'list' ? (c.item_type ?? 'string') : c.type;
+		const parts = [kindText[kind]?.() ?? kind];
+		if (v.minimum !== undefined && v.maximum !== undefined) {
+			parts.push(m.glossary_import_format_range({ min: v.minimum, max: v.maximum }));
+		} else if (v.minimum !== undefined) {
+			parts.push(m.glossary_import_format_min({ min: v.minimum }));
+		} else if (v.maximum !== undefined) {
+			parts.push(m.glossary_import_format_max({ max: v.maximum }));
+		}
+		if (v.minLength !== undefined)
+			parts.push(m.glossary_import_format_min_length({ n: v.minLength }));
+		if (v.maxLength !== undefined)
+			parts.push(m.glossary_import_format_max_length({ n: v.maxLength }));
+		const item = parts.join(', ');
+		if (c.type !== 'list') return item;
+		const list = [m.glossary_import_format_list({ sep, item })];
+		if (v.minItems !== undefined) list.push(m.glossary_import_format_min_items({ n: v.minItems }));
+		if (v.maxItems !== undefined) list.push(m.glossary_import_format_max_items({ n: v.maxItems }));
+		return list.join('; ');
+	}
 
 	const stale = $derived(
 		!!result && (validatedFor?.file !== file || validatedFor?.onExisting !== onExisting)
@@ -224,16 +243,23 @@
 							<th class={head}>{m.glossary_import_guide_column()}</th>
 							<th class={head}>{m.glossary_import_guide_label()}</th>
 							<th class={head}>{m.glossary_import_guide_required()}</th>
+							<th class={head}>{m.glossary_import_guide_format()}</th>
 							<th class={head}>{m.glossary_import_guide_values()}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-						{#each guide as row (row.id)}
+						{#each columns as col (col.id)}
 							<tr>
-								<td class="{cell} font-mono text-xs">{row.id}</td>
-								<td class={cell}>{row.label}</td>
-								<td class={cell}>{row.required ? m.glossary_import_yes() : ''}</td>
-								<td class="{cell} text-xs">{row.values}</td>
+								<td class="{cell} font-mono text-xs">{col.id}</td>
+								<td class={cell}>
+									{columnLabel(col)}
+									{#if col.profile && col.help}
+										<span class="block text-xs text-gray-500 dark:text-gray-400">{col.help}</span>
+									{/if}
+								</td>
+								<td class={cell}>{col.required ? m.glossary_import_yes() : ''}</td>
+								<td class="{cell} text-xs">{columnFormat(col)}</td>
+								<td class="{cell} font-mono text-xs">{(col.values ?? []).join(', ')}</td>
 							</tr>
 						{/each}
 					</tbody>

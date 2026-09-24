@@ -9754,6 +9754,45 @@
                 }
             }
         },
+        "/glossary/import/columns": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The template's columns with label and help in ?locale= (or Accept-Language), type, format, constraints, allowed values and list separator, for building a guide.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Describe the glossary import columns",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language for labels and help",
+                        "name": "locale",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/importer.ColumnInfo"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/glossary/import/template": {
             "get": {
                 "security": [
@@ -14039,6 +14078,47 @@
                 "ActionSkip",
                 "ActionError"
             ]
+        },
+        "importer.ColumnInfo": {
+            "type": "object",
+            "properties": {
+                "format": {
+                    "type": "string"
+                },
+                "help": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "boolean"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "separator": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "validation": {
+                    "$ref": "#/definitions/metamodel.Constraints"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "importer.Problem": {
             "type": "object",

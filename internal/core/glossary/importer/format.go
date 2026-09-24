@@ -213,17 +213,13 @@ func writeGuide(f *excelize.File, cols []Column, texts Texts, header int) error 
 	if _, err := f.NewSheet(guideSheet); err != nil {
 		return err
 	}
-	rows := [][]string{{"column", "label", "type", "required", "values", "help"}}
+	rows := [][]string{{"column", "label", "format", "required", "values", "help"}}
 	for _, c := range cols {
-		kind := c.Type
-		if c.list() {
-			kind = "list of " + c.ItemType + ", separated by " + ListSeparator
-		}
 		required := ""
 		if c.Required {
 			required = "yes"
 		}
-		rows = append(rows, []string{c.ID, texts.Label(c), kind, required, strings.Join(choices(c), ", "), texts.Help(c)})
+		rows = append(rows, []string{c.ID, texts.Label(c), Describe(c), required, strings.Join(choices(c), ", "), texts.Help(c)})
 	}
 	for r, row := range rows {
 		for c, v := range row {

@@ -73,6 +73,14 @@ func TestImportEndpoints(t *testing.T) {
 		t.Fatalf("template: %d %s %q", rec.Code, rec.Header().Get("Content-Type"), rec.Body.String())
 	}
 
+	rec = httptest.NewRecorder()
+	h.importColumns(rec, httptest.NewRequest(http.MethodGet, "/api/v1/glossary/import/columns?locale=es", nil))
+	var cols []importer.ColumnInfo
+	_ = json.Unmarshal(rec.Body.Bytes(), &cols)
+	if rec.Code != http.StatusOK || len(cols) != 6 || cols[4].ID != "owners" || cols[4].Separator != "|" || cols[4].Format != "owners" {
+		t.Fatalf("columns: %d %s", rec.Code, rec.Body)
+	}
+
 	valid := "name,definition,owners\nInvoice,A bill,ana\n"
 	rec = upload(t, h.importTerms, "", "terms.csv", valid)
 	var result importer.Result

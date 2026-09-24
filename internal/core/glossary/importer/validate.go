@@ -93,6 +93,17 @@ func New(registry *metamodel.Registry, terms Terms, owners Owners) *Importer {
 
 func (im *Importer) Columns() []Column { return Columns(im.registry) }
 
+// Describe lists the template's columns for a client's guide, in locale.
+func (im *Importer) Describe(locale string) []ColumnInfo {
+	texts := im.Texts(locale)
+	cols := im.Columns()
+	out := make([]ColumnInfo, 0, len(cols))
+	for _, c := range cols {
+		out = append(out, c.info(texts))
+	}
+	return out
+}
+
 // Texts resolves labels in locale from the profile's messages.
 func (im *Importer) Texts(locale string) Texts {
 	if im.registry == nil {
