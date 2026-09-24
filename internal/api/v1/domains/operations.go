@@ -50,7 +50,7 @@ var memberPermission = map[domain.Kind]struct{ resource, action string }{
 
 func decode(w http.ResponseWriter, r *http.Request, v any) bool {
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes)).Decode(v); err != nil {
-		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		respondCode(w, http.StatusBadRequest, "invalid_input", "Invalid request body")
 		return false
 	}
 	return true
@@ -60,27 +60,48 @@ func decode(w http.ResponseWriter, r *http.Request, v any) bool {
 // accepting the flag earlier would promise protection that does not exist.
 func rejectRestricted(w http.ResponseWriter, restricted *bool) bool {
 	if restricted != nil && *restricted {
-		common.RespondError(w, http.StatusBadRequest, "Restricted domains are not supported yet")
+		respondCode(w, http.StatusBadRequest, "restricted_unsupported", "Restricted domains are not supported yet")
 		return true
 	}
 	return false
 }
 
+// ErrorResponse carries a stable code next to the English message, so clients
+// can translate it.
+type ErrorResponse struct {
+	Error string `json:"error"`
+	Code  string `json:"code"`
+} // @name DomainErrorResponse
+
+func respondCode(w http.ResponseWriter, status int, code, message string) {
+	common.RespondJSON(w, status, ErrorResponse{Error: message, Code: code})
+}
+
+var errorCodes = []struct {
+	err    error
+	status int
+	code   string
+}{
+	{domain.ErrNotFound, http.StatusNotFound, "not_found"},
+	{domain.ErrEntityNotFound, http.StatusNotFound, "entity_not_found"},
+	{domain.ErrInvalidInput, http.StatusBadRequest, "invalid_input"},
+	{domain.ErrCycle, http.StatusBadRequest, "cycle"},
+	{domain.ErrTooDeep, http.StatusBadRequest, "too_deep"},
+	{domain.ErrNameConflict, http.StatusConflict, "name_conflict"},
+	{domain.ErrHasChildren, http.StatusConflict, "has_children"},
+	{domain.ErrNotEmpty, http.StatusConflict, "not_empty"},
+	{domain.ErrProtected, http.StatusConflict, "protected"},
+}
+
 func respondError(w http.ResponseWriter, err error, action string) {
-	switch {
-	case errors.Is(err, domain.ErrNotFound):
-		common.RespondError(w, http.StatusNotFound, "Domain not found")
-	case errors.Is(err, domain.ErrEntityNotFound):
-		common.RespondError(w, http.StatusNotFound, err.Error())
-	case errors.Is(err, domain.ErrInvalidInput), errors.Is(err, domain.ErrCycle), errors.Is(err, domain.ErrTooDeep):
-		common.RespondError(w, http.StatusBadRequest, err.Error())
-	case errors.Is(err, domain.ErrNameConflict), errors.Is(err, domain.ErrHasChildren),
-		errors.Is(err, domain.ErrNotEmpty), errors.Is(err, domain.ErrProtected):
-		common.RespondError(w, http.StatusConflict, err.Error())
-	default:
-		log.Error().Err(err).Msg("Failed to " + action)
-		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+	for _, e := range errorCodes {
+		if errors.Is(err, e.err) {
+			respondCode(w, e.status, e.code, err.Error())
+			return
+		}
 	}
+	log.Error().Err(err).Msg("Failed to " + action)
+	common.RespondError(w, http.StatusInternalServerError, "Internal server error")
 }
 
 // @Summary List domains
@@ -91,7 +112,7 @@ func respondError(w http.ResponseWriter, err error, action string) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {array} domain.Domain
-// @Failure 404 {object} common.ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @ID listDomains
 // @Router /api/v1/domains [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +140,9 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 201 {object} domain.Domain
-// @Failure 400 {object} common.ErrorResponse
-// @Failure 404 {object} common.ErrorResponse
-// @Failure 409 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @ID createDomain
 // @Router /api/v1/domains [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +175,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} domain.Domain
-// @Failure 404 {object} common.ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @ID getDomain
 // @Router /api/v1/domains/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
@@ -176,9 +197,9 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} domain.Domain
-// @Failure 400 {object} common.ErrorResponse
-// @Failure 404 {object} common.ErrorResponse
-// @Failure 409 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @ID updateDomain
 // @Router /api/v1/domains/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
@@ -207,8 +228,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} map[string]string
-// @Failure 404 {object} common.ErrorResponse
-// @Failure 409 {object} common.ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @ID deleteDomain
 // @Router /api/v1/domains/{id} [delete]
 func (h *Handler) remove(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +248,7 @@ func (h *Handler) remove(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {array} domain.Domain
-// @Failure 404 {object} common.ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @ID getDomainTree
 // @Router /api/v1/domains/{id}/tree [get]
 func (h *Handler) tree(w http.ResponseWriter, r *http.Request) {
@@ -249,9 +270,9 @@ func (h *Handler) tree(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} domain.Domain
-// @Failure 400 {object} common.ErrorResponse
-// @Failure 404 {object} common.ErrorResponse
-// @Failure 409 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @ID moveDomain
 // @Router /api/v1/domains/{id}/move [post]
 func (h *Handler) move(w http.ResponseWriter, r *http.Request) {
@@ -277,9 +298,9 @@ func (h *Handler) move(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} map[string]string
-// @Failure 400 {object} common.ErrorResponse
-// @Failure 403 {object} common.ErrorResponse
-// @Failure 404 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @ID assignDomainMembers
 // @Router /api/v1/domains/{id}/members [put]
 func (h *Handler) assign(w http.ResponseWriter, r *http.Request) {
@@ -289,12 +310,12 @@ func (h *Handler) assign(w http.ResponseWriter, r *http.Request) {
 	}
 	perm, ok := memberPermission[req.Kind]
 	if !ok {
-		common.RespondError(w, http.StatusBadRequest, "Unknown entity kind")
+		respondCode(w, http.StatusBadRequest, "invalid_input", "Unknown entity kind")
 		return
 	}
 	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok || !principal.HasPermission(perm.resource, perm.action) {
-		common.RespondError(w, http.StatusForbidden, "Insufficient permissions to change these entities")
+		respondCode(w, http.StatusForbidden, "forbidden", "Insufficient permissions to change these entities")
 		return
 	}
 	if err := h.service.Assign(r.Context(), req.Kind, req.IDs, r.PathValue("id")); err != nil {
@@ -313,7 +334,7 @@ func (h *Handler) assign(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} domain.Domain
-// @Failure 400 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
 // @ID getEntityDomain
 // @Router /api/v1/domains/of/{kind}/{id} [get]
 func (h *Handler) domainOf(w http.ResponseWriter, r *http.Request) {
@@ -339,15 +360,15 @@ func (h *Handler) domainOf(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} domain.ImportReport
-// @Failure 400 {object} common.ErrorResponse
-// @Failure 403 {object} common.ErrorResponse
-// @Failure 404 {object} common.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @ID importDomainMemberships
 // @Router /api/v1/domains/import [post]
 func (h *Handler) importMemberships(w http.ResponseWriter, r *http.Request) {
 	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok || !principal.IsAdmin() {
-		common.RespondError(w, http.StatusForbidden, "Importing domain memberships requires a global administrator")
+		respondCode(w, http.StatusForbidden, "forbidden", "Importing domain memberships requires a global administrator")
 		return
 	}
 	var in domain.ImportInput

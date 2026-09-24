@@ -2345,7 +2345,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2391,19 +2391,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2452,19 +2452,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2521,7 +2521,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2564,7 +2564,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2618,19 +2618,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2675,13 +2675,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2740,19 +2740,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2808,19 +2808,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -2867,7 +2867,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/DomainErrorResponse"
                         }
                     }
                 }
@@ -10761,6 +10761,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "DomainErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
                     "type": "string"
                 }
             }

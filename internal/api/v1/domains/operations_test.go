@@ -134,8 +134,8 @@ func TestStructuralErrors(t *testing.T) {
 		})
 	}
 	rec := call((&Handler{service: &fakeService{err: domain.ErrCycle}}).move, http.MethodPost, "/api/v1/domains/d/move", `{"parent_id":"c"}`, nil, map[string]string{"id": "d"})
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("move cycle status %d", rec.Code)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"code":"cycle"`) {
+		t.Fatalf("move cycle: status %d: %s", rec.Code, rec.Body)
 	}
 }
 
