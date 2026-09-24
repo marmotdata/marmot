@@ -362,12 +362,22 @@
 							{m.glossary_heading()}
 						</h1>
 						{#if canManageGlossary}
-							<Button
-								click={handleNewTerm}
-								icon="material-symbols:add"
-								variant="filled"
-								class="!p-2"
-							/>
+							<div class="flex items-center gap-1">
+								<a
+									href={resolve('/glossary/import')}
+									class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+									aria-label={m.glossary_import_link()}
+									title={m.glossary_import_link()}
+								>
+									<Icon icon="material-symbols:upload-file-outline" class="h-5 w-5" />
+								</a>
+								<Button
+									click={handleNewTerm}
+									icon="material-symbols:add"
+									variant="filled"
+									class="!p-2"
+								/>
+							</div>
 						{/if}
 					</div>
 
