@@ -26,6 +26,11 @@ type fakeService struct {
 	movedAssets bool
 	getErr      error
 	scope       domain.Scope
+	enforced    bool
+}
+
+func (f *fakeService) Enforcement(context.Context) (*domain.EnforcementState, error) {
+	return &domain.EnforcementState{Write: f.enforced}, nil
 }
 
 func (f *fakeService) Scope(context.Context, auth.Principal) (*domain.Scope, error) {
@@ -312,10 +317,20 @@ func TestDomainAdminsManageTheirSubtree(t *testing.T) {
 }
 
 func TestCapabilities(t *testing.T) {
-	svc := &fakeService{scope: domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleSteward}}}}
+	svc := &fakeService{scope: domain.Scope{Grants: []domain.Grant{{Path: "/parent/", Role: domain.RoleSteward}}}, enforced: true}
 	rec := call(handlerFor(svc).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"write":true`) || !strings.Contains(rec.Body.String(), `"admin":false`) {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
+	}
+	outside := &fakeService{scope: domain.Scope{Grants: []domain.Grant{{Path: "/elsewhere/", Role: domain.RoleSteward}}}, enforced: true}
+	rec = call(handlerFor(outside).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
+	if !strings.Contains(rec.Body.String(), `"write":false`) {
+		t.Fatalf("enforced, outside the grant: %s", rec.Body)
+	}
+	outside.enforced = false
+	rec = call(handlerFor(outside).capabilities, http.MethodGet, "/api/v1/domains/capabilities?domain_id=child", "", nil, nil)
+	if !strings.Contains(rec.Body.String(), `"write":true`) || !strings.Contains(rec.Body.String(), `"enforced":false`) {
+		t.Fatalf("not enforced, native RBAC decides: %s", rec.Body)
 	}
 	rec = call(handlerFor(svc).capabilities, http.MethodGet, "/api/v1/domains/capabilities", "", nil, nil)
 	if rec.Code != http.StatusBadRequest {

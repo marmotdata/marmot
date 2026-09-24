@@ -69,6 +69,37 @@ type EnforcementPlan struct {
 	GeneratedAt time.Time        `json:"generated_at"`
 }
 
+type WritableDomains struct {
+	Enforced  bool     `json:"enforced"`
+	All       bool     `json:"all"`
+	DomainIDs []string `json:"domain_ids"`
+}
+
+func (s *service) WritableDomains(ctx context.Context, p auth.Principal) (*WritableDomains, error) {
+	state, err := s.repo.EnforcementState(ctx)
+	if err != nil {
+		return nil, err
+	}
+	scope, err := s.Scope(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	out := &WritableDomains{Enforced: state.Write, All: !state.Write || scope.Global, DomainIDs: []string{}}
+	if out.All {
+		return out, nil
+	}
+	domains, err := s.repo.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range domains {
+		if scope.Can(ActionWrite, d.Path) {
+			out.DomainIDs = append(out.DomainIDs, d.ID)
+		}
+	}
+	return out, nil
+}
+
 func (s *service) Enforcement(ctx context.Context) (*EnforcementState, error) {
 	return s.repo.EnforcementState(ctx)
 }

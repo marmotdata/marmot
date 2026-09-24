@@ -620,7 +620,10 @@ func (h *Handler) revokeRole(w http.ResponseWriter, r *http.Request) {
 
 type Capabilities struct {
 	DomainID string `json:"domain_id"`
-	// Write: edit entities in the domain (enforced from delivery 2 on).
+	// Enforced reports whether writes are scoped by domain at all.
+	Enforced bool `json:"enforced"`
+	// Write: edit entities in the domain, as far as domains decide. Always true
+	// while enforcement is off, when native RBAC alone applies.
 	Write bool `json:"write"`
 	// Admin: manage its subdomains and role assignments.
 	Admin bool `json:"admin"`
@@ -670,7 +673,17 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 		respondError(w, err, "get domain capabilities")
 		return
 	}
-	common.RespondJSON(w, http.StatusOK, Capabilities{DomainID: d.ID, Write: scope.Can(domain.ActionWrite, d.Path), Admin: admin})
+	state, err := h.service.Enforcement(r.Context())
+	if err != nil {
+		respondError(w, err, "get domain capabilities")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, Capabilities{
+		DomainID: d.ID,
+		Enforced: state.Write,
+		Write:    !state.Write || scope.Can(domain.ActionWrite, d.Path),
+		Admin:    admin,
+	})
 }
 
 // @Summary Get an entity's domain history
@@ -694,4 +707,23 @@ func (h *Handler) auditLog(w http.ResponseWriter, r *http.Request) {
 		entries = []domain.AuditEntry{}
 	}
 	common.RespondJSON(w, http.StatusOK, entries)
+}
+
+// @Summary Domains the caller may write in
+// @Description For narrowing domain pickers. all is true while enforcement is off or for global scope; otherwise domain_ids lists every writable domain.
+// @Tags domains
+// @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} domain.WritableDomains
+// @ID getWritableDomains
+// @Router /api/v1/domains/writable [get]
+func (h *Handler) writable(w http.ResponseWriter, r *http.Request) {
+	principal, _ := common.PrincipalFromContext(r.Context())
+	out, err := h.service.WritableDomains(r.Context(), principal)
+	if err != nil {
+		respondError(w, err, "list writable domains")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, out)
 }

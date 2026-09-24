@@ -60,6 +60,7 @@ func (h *Handler) Routes() []common.Route {
 		{Path: "/api/v1/domains/{id}/roles", Method: http.MethodDelete, Handler: h.revokeRole, Middleware: view},
 		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodGet, Handler: h.pipelineAssignment, Middleware: view},
 		{Path: "/api/v1/domains/pipelines/{scheduleId}/assignment", Method: http.MethodPut, Handler: h.assignPipeline, Middleware: view},
+		{Path: "/api/v1/domains/writable", Method: http.MethodGet, Handler: h.writable, Middleware: view},
 		{Path: "/api/v1/domains/enforcement", Method: http.MethodGet, Handler: h.enforcement, Middleware: view},
 		{Path: "/api/v1/domains/enforcement", Method: http.MethodPost, Handler: h.setEnforcement, Middleware: view},
 		{Path: "/api/v1/domains/enforcement/plan", Method: http.MethodGet, Handler: h.enforcementPlan, Middleware: view},

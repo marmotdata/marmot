@@ -2,6 +2,7 @@ package domain_test
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
@@ -105,6 +106,13 @@ func TestEnforcementPlanAndActivation(t *testing.T) {
 		}
 		if !state.Write || state.UpdatedBy == nil || *state.UpdatedBy != "user:"+admin.ID() {
 			t.Fatalf("state = %+v", state)
+		}
+		w, err := svc.WritableDomains(ctx, editor)
+		if err != nil || w.All || !w.Enforced || !slices.Contains(w.DomainIDs, payments.ID) || !slices.Contains(w.DomainIDs, legal.ID) || slices.Contains(w.DomainIDs, finance.ID) {
+			t.Fatalf("writable for the editor = %+v, %v", w, err)
+		}
+		if w, err := svc.WritableDomains(ctx, admin); err != nil || !w.All {
+			t.Fatalf("writable for an admin = %+v, %v", w, err)
 		}
 		if state, err = svc.SetWriteEnforcement(ctx, operator, false, ""); err != nil || state.Write {
 			t.Fatalf("turning off: %+v, %v", state, err)

@@ -21,6 +21,23 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | `permissions`, `role_permissions` (data, fork migration `002`) | rows `dgu_view_domains`, `dgu_manage_domains` | `domains:view` for `admin` and `user`, `domains:manage` for `admin`. Names are `dgu_`-prefixed so an upstream permission with the same name cannot collide |
 | `docs/docs.go`, `docs/swagger.json`, `docs/swagger.yaml` | generated | Include the domain endpoints. On a sync conflict, regenerate with `make swagger` |
 
+### Web seams
+
+Fork-only UI lives in `web/marmot/src/lib/domains/`, `components/domain/` and `routes/domains/`. These are the upstream files it touches:
+
+| File | Location | Why |
+| --- | --- | --- |
+| `web/marmot/messages/{en,es}.json` | `domains_*` keys | Paraglide catalogue; keys sorted, so a sync conflict is a line merge |
+| `routes/+layout.svelte` | Governance menu entry and `pagetitle_domains` | Navigation |
+| `routes/discover/+page.svelte` | `DomainFilter` in the filter column | `@domain` filter |
+| `routes/discover/[type]/[service]/[name]/+page.svelte` | `DomainChip`; `domainWrite` joins `canManageAssets` | Shows the domain; hides edits the asset's domain does not allow |
+| `routes/products/[id]/+page.svelte` | `DomainChip`; `domainWrite` joins `canManage` | Same for products |
+| `routes/glossary/[[id]]/+page.svelte` | `DomainChip`, `DomainSelect` in the create modal; `canEditTerm` for the selected term's edits | Same for terms; creating stays on `glossary:manage` |
+| `components/asset/AssetBlade.svelte`, `components/product/ProductBlade.svelte` | read-only `DomainChip` | Domain in the Discover side panels |
+| `components/product/DataProductForm.svelte` | `DomainSelect`, assigned after create | Domain on creation |
+| `routes/pipelines/new/+page.svelte`, `routes/pipelines/[id]/edit/+page.svelte` | `PipelineDomain` | Pipeline domain, with the explicit asset move |
+| `components/query/QueryBuilder.svelte`, `components/query/QueryInput.svelte` | `@domain` field, its values and its `=` operator | Query builder and `@` autocomplete |
+
 ## Write inventory
 
 Every operation that creates, changes, moves or deletes catalog content, and how domain-scoped write enforcement (delivery 2) covers it. `decorator` means the call goes through a service interface that `internal/core/domain` wraps in `server.go` (`decorators.go`).

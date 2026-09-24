@@ -2754,6 +2754,17 @@ definitions:
     - SubjectUser
     - SubjectTeam
     - SubjectServiceAccount
+  domain.WritableDomains:
+    properties:
+      all:
+        type: boolean
+      domain_ids:
+        items:
+          type: string
+        type: array
+      enforced:
+        type: boolean
+    type: object
   metamodel.AppliesTo:
     properties:
       assetTypes:
@@ -3002,9 +3013,13 @@ definitions:
         type: boolean
       domain_id:
         type: string
+      enforced:
+        description: Enforced reports whether writes are scoped by domain at all.
+        type: boolean
       write:
-        description: 'Write: edit entities in the domain (enforced from delivery 2
-          on).'
+        description: |-
+          Write: edit entities in the domain, as far as domains decide. Always true
+          while enforcement is off, when native RBAC alone applies.
         type: boolean
     type: object
   v1_domains.CreateRequest:
@@ -5257,6 +5272,24 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Change a pipeline's domain
+      tags:
+      - domains
+  /api/v1/domains/writable:
+    get:
+      description: For narrowing domain pickers. all is true while enforcement is
+        off or for global scope; otherwise domain_ids lists every writable domain.
+      operationId: getWritableDomains
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.WritableDomains'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Domains the caller may write in
       tags:
       - domains
   /api/v1/glossary/:

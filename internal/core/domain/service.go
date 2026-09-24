@@ -28,6 +28,7 @@ type Service interface {
 	GrantRole(ctx context.Context, p auth.Principal, domainID string, in GrantInput) (*RoleAssignment, error)
 	RevokeRole(ctx context.Context, p auth.Principal, domainID, assignmentID string) error
 	Enforcement(ctx context.Context) (*EnforcementState, error)
+	WritableDomains(ctx context.Context, p auth.Principal) (*WritableDomains, error)
 	EnforcementPlan(ctx context.Context, p auth.Principal) (*EnforcementPlan, error)
 	SetWriteEnforcement(ctx context.Context, p auth.Principal, on bool, confirm string) (*EnforcementState, error)
 }
