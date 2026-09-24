@@ -22,6 +22,7 @@ type Repository interface {
 	Create(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
 	Get(ctx context.Context, id string) (*GlossaryTerm, error)
 	GetByName(ctx context.Context, name string) (*GlossaryTerm, error)
+	ByNames(ctx context.Context, names []string) ([]*GlossaryTerm, error)
 	Update(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
 	SetParent(ctx context.Context, termID string, parentTermID *string) error
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
@@ -29,9 +30,33 @@ type Repository interface {
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 }
 
+// querier is what the repository needs from a connection. A pool and a
+// transaction both provide it; inside a transaction, Begin opens a savepoint,
+// so the multi-statement writes below nest without changes.
+type querier interface {
+	Begin(ctx context.Context) (pgx.Tx, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
 type PostgresRepository struct {
-	db       *pgxpool.Pool
+	db       querier
 	recorder metrics.Recorder
+}
+
+// InTx runs fn against a repository bound to one transaction, committed only
+// if fn succeeds.
+func (r *PostgresRepository) InTx(ctx context.Context, fn func(Repository) error) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if err := fn(&PostgresRepository{db: tx, recorder: r.recorder}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *PostgresRepository {
@@ -248,6 +273,39 @@ func (r *PostgresRepository) GetByName(ctx context.Context, name string) (*Gloss
 
 // SetParent moves a term under another one without touching the rest of
 // the row, so resolving a hierarchy cannot undo a concurrent edit.
+// ByNames returns every live term with one of the names. Names are not
+// unique, so a name may come back more than once.
+func (r *PostgresRepository) ByNames(ctx context.Context, names []string) ([]*GlossaryTerm, error) {
+	start := time.Now()
+	rows, err := r.db.Query(ctx, `
+		SELECT id, name, definition, user_definition, description, parent_term_id,
+			   metadata, tags, created_at, updated_at, deleted_at
+		FROM glossary_terms
+		WHERE name = ANY($1) AND deleted_at IS NULL
+		ORDER BY created_at ASC`, names)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "glossary_by_names", time.Since(start), false)
+		return nil, fmt.Errorf("getting glossary terms by name: %w", err)
+	}
+	defer rows.Close()
+	var terms []*GlossaryTerm
+	for rows.Next() {
+		var term GlossaryTerm
+		var metadataJSON []byte
+		if err := rows.Scan(&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
+			&term.Description, &term.ParentTermID,
+			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt); err != nil {
+			return nil, fmt.Errorf("scanning glossary term: %w", err)
+		}
+		if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+		}
+		terms = append(terms, &term)
+	}
+	r.recorder.RecordDBQuery(ctx, "glossary_by_names", time.Since(start), rows.Err() == nil)
+	return terms, rows.Err()
+}
+
 func (r *PostgresRepository) SetParent(ctx context.Context, termID string, parentTermID *string) error {
 	start := time.Now()
 

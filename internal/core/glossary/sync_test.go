@@ -74,6 +74,18 @@ func (r *fakeRepo) Update(ctx context.Context, term *GlossaryTerm, owners []Owne
 	return nil
 }
 
+func (r *fakeRepo) ByNames(_ context.Context, names []string) ([]*GlossaryTerm, error) {
+	var out []*GlossaryTerm
+	for _, t := range r.live() {
+		for _, n := range names {
+			if t.Name == n {
+				out = append(out, t)
+			}
+		}
+	}
+	return out, nil
+}
+
 func (r *fakeRepo) SetParent(ctx context.Context, termID string, parentTermID *string) error {
 	r.parentCall++
 	term, ok := r.terms[termID]

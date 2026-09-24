@@ -7,12 +7,14 @@ import (
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/glossary/importer"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
 
 type Handler struct {
 	glossaryService glossary.Service
+	importer        *importer.Importer
 	userService     user.Service
 	authService     auth.Service
 	config          *config.Config
@@ -21,6 +23,7 @@ type Handler struct {
 
 func NewHandler(
 	glossaryService glossary.Service,
+	glossaryImporter *importer.Importer,
 	userService user.Service,
 	authService auth.Service,
 	config *config.Config,
@@ -28,6 +31,7 @@ func NewHandler(
 ) *Handler {
 	return &Handler{
 		glossaryService: glossaryService,
+		importer:        glossaryImporter,
 		userService:     userService,
 		authService:     authService,
 		config:          config,
@@ -55,6 +59,35 @@ func (h *Handler) Routes() []common.Route {
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "glossary", "view"),
 				common.WithRateLimit(h.config, 50, 60),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/import/template",
+			Method:  http.MethodGet,
+			Handler: h.importTemplate,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/export",
+			Method:  http.MethodGet,
+			Handler: h.exportGlossary,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+				common.WithRateLimit(h.config, 10, 60),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/import",
+			Method:  http.MethodPost,
+			Handler: h.importTerms,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+				common.WithRateLimit(h.config, 20, 60),
 			},
 		},
 		{

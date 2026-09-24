@@ -48,6 +48,7 @@ import (
 	domainService "github.com/marmotdata/marmot/internal/core/domain"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
+	glossaryImporter "github.com/marmotdata/marmot/internal/core/glossary/importer"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/metamodel"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
@@ -583,7 +584,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
-		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
+		glossary.NewHandler(glossarySvc, glossaryImporter.New(metamodelRegistry, glossarySvc, glossaryImporter.ServiceOwners{Users: userSvc, Teams: teamSvc}), userSvc, authSvc, config, lookupsRecorder),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config, lookupsRecorder),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),

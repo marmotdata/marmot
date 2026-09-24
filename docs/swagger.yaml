@@ -2765,6 +2765,77 @@ definitions:
       enforced:
         type: boolean
     type: object
+  importer.Action:
+    enum:
+    - create
+    - update
+    - skip
+    - error
+    type: string
+    x-enum-varnames:
+    - ActionCreate
+    - ActionUpdate
+    - ActionSkip
+    - ActionError
+  importer.Problem:
+    properties:
+      code:
+        type: string
+      column:
+        type: string
+      message:
+        type: string
+    type: object
+  importer.Result:
+    properties:
+      applied:
+        type: boolean
+      problems:
+        description: |-
+          Problems concern the file as a whole, such as a missing column, and
+          block applying it; Warnings, such as an unknown column, do not.
+        items:
+          $ref: '#/definitions/importer.Problem'
+        type: array
+      rows:
+        items:
+          $ref: '#/definitions/importer.Row'
+        type: array
+      summary:
+        $ref: '#/definitions/importer.Summary'
+      warnings:
+        items:
+          $ref: '#/definitions/importer.Problem'
+        type: array
+    type: object
+  importer.Row:
+    properties:
+      action:
+        $ref: '#/definitions/importer.Action'
+      errors:
+        items:
+          $ref: '#/definitions/importer.Problem'
+        type: array
+      line:
+        type: integer
+      name:
+        type: string
+      warnings:
+        items:
+          $ref: '#/definitions/importer.Problem'
+        type: array
+    type: object
+  importer.Summary:
+    properties:
+      create:
+        type: integer
+      errors:
+        type: integer
+      skip:
+        type: integer
+      update:
+        type: integer
+    type: object
   metamodel.AppliesTo:
     properties:
       assetTypes:
@@ -9213,6 +9284,117 @@ paths:
       summary: Initiate OAuth login
       tags:
       - auth
+  /glossary/export:
+    get:
+      description: Every term in the import template's columns, so the file can be
+        edited and imported back with on_existing=update. Cells that a spreadsheet
+        would run as formulas are escaped in CSV.
+      parameters:
+      - description: xlsx (default) or csv
+        in: query
+        name: format
+        type: string
+      - description: Language for labels and help
+        in: query
+        name: locale
+        type: string
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Export the glossary
+      tags:
+      - glossary
+  /glossary/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Reads an XLSX or CSV in the template's shape and checks every row.
+        mode=validate (default) writes nothing; mode=apply writes all rows or none,
+        and only when no row has errors. Rows whose name matches a term are skipped
+        unless on_existing=update; on update, empty cells keep the current value.
+      parameters:
+      - description: XLSX or CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: validate (default) or apply
+        in: query
+        name: mode
+        type: string
+      - description: skip (default) or update
+        in: query
+        name: on_existing
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/importer.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/importer.Result'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Import glossary terms from a file
+      tags:
+      - glossary
+  /glossary/import/template:
+    get:
+      description: An XLSX (with drop-downs, comments and a guide sheet) or CSV whose
+        columns are the term's own fields plus the metamodel profile's glossary_term
+        fields. Headers are stable field IDs; labels follow ?locale= or Accept-Language.
+      parameters:
+      - description: xlsx (default) or csv
+        in: query
+        name: format
+        type: string
+      - description: Language for labels and help
+        in: query
+        name: locale
+        type: string
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Download the glossary import template
+      tags:
+      - glossary
   /oauth/token:
     post:
       consumes:

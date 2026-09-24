@@ -96,6 +96,12 @@ type Service interface {
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 	GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error)
 	SyncTerms(ctx context.Context, source string, inputs []TermInput) (*SyncResult, error)
+	// GetByName returns the live term with that name, or ErrTermNotFound.
+	GetByName(ctx context.Context, name string) (*GlossaryTerm, error)
+	// ByNames maps each name to every live term that has it.
+	ByNames(ctx context.Context, names []string) (map[string][]*GlossaryTerm, error)
+	// Import writes a validated batch of terms, all or none.
+	Import(ctx context.Context, terms []ImportTerm) ([]*GlossaryTerm, error)
 	SetSearchObserver(observer SearchObserver)
 }
 

@@ -9643,6 +9643,174 @@ const docTemplate = `{
                 }
             }
         },
+        "/glossary/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every term in the import template's columns, so the file can be edited and imported back with on_existing=update. Cells that a spreadsheet would run as formulas are escaped in CSV.",
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "text/csv"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Export the glossary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "xlsx (default) or csv",
+                        "name": "format",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Language for labels and help",
+                        "name": "locale",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/import": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reads an XLSX or CSV in the template's shape and checks every row. mode=validate (default) writes nothing; mode=apply writes all rows or none, and only when no row has errors. Rows whose name matches a term are skipped unless on_existing=update; on update, empty cells keep the current value.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Import glossary terms from a file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "XLSX or CSV file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "validate (default) or apply",
+                        "name": "mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "skip (default) or update",
+                        "name": "on_existing",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/importer.Result"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/importer.Result"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/import/template": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "An XLSX (with drop-downs, comments and a guide sheet) or CSV whose columns are the term's own fields plus the metamodel profile's glossary_term fields. Headers are stable field IDs; labels follow ?locale= or Accept-Language.",
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "text/csv"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Download the glossary import template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "xlsx (default) or csv",
+                        "name": "format",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Language for labels and help",
+                        "name": "locale",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/oauth/token": {
             "post": {
                 "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).\nFor token-exchange, supported subject_token_type values are\nurn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.",
@@ -13862,6 +14030,108 @@ const docTemplate = `{
                 },
                 "enforced": {
                     "type": "boolean"
+                }
+            }
+        },
+        "importer.Action": {
+            "type": "string",
+            "enum": [
+                "create",
+                "update",
+                "skip",
+                "error"
+            ],
+            "x-enum-varnames": [
+                "ActionCreate",
+                "ActionUpdate",
+                "ActionSkip",
+                "ActionError"
+            ]
+        },
+        "importer.Problem": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "column": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "importer.Result": {
+            "type": "object",
+            "properties": {
+                "applied": {
+                    "type": "boolean"
+                },
+                "problems": {
+                    "description": "Problems concern the file as a whole, such as a missing column, and\nblock applying it; Warnings, such as an unknown column, do not.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importer.Problem"
+                    }
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importer.Row"
+                    }
+                },
+                "summary": {
+                    "$ref": "#/definitions/importer.Summary"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importer.Problem"
+                    }
+                }
+            }
+        },
+        "importer.Row": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/importer.Action"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importer.Problem"
+                    }
+                },
+                "line": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importer.Problem"
+                    }
+                }
+            }
+        },
+        "importer.Summary": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "integer"
+                },
+                "errors": {
+                    "type": "integer"
+                },
+                "skip": {
+                    "type": "integer"
+                },
+                "update": {
+                    "type": "integer"
                 }
             }
         },
