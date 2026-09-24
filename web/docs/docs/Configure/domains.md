@@ -150,3 +150,4 @@ Errors carry a stable `code` next to the message, such as `forbidden`, `name_con
 - Elasticsearch search is not supported with domains.
 - Reading cannot be restricted per domain yet; `restricted: true` is rejected.
 - Asset rules and data product rules are global, and so are the links they derive.
+- With `openlineage.auth.enabled: false`, OpenLineage events carry no identity, so under write enforcement they cannot write anything. Keep OpenLineage authentication on and give the emitter's service account a role on the domains it writes.
