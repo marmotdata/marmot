@@ -43,7 +43,7 @@ jobs:
 
       - name: Reject fork-only paths
         run: |
-          forbidden='^(FORK\.md|CODEOWNERS|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE(\.md)?|\.vscode/)'
+          forbidden='^(FORK\.md|DOMAINS\.md|CODEOWNERS|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE(\.md)?|\.vscode/)'
           hits="$(git diff --name-only upstream/main..HEAD | grep -E "$forbidden" || true)"
           if [ -n "$hits" ]; then
             echo "::error::Esta rama toca rutas fork-only que no deben llegar a marmotdata/marmot:"
