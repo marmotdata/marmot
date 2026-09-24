@@ -21,6 +21,8 @@ type Repository interface {
 	List(ctx context.Context, e Entity, filter ListFilter) (*ListResult, error)
 	// Search ranks by full-text relevance.
 	Search(ctx context.Context, e Entity, q SearchQuery) ([]*Memory, error)
+	// SearchAll is Search over every entity.
+	SearchAll(ctx context.Context, q SearchQuery) ([]*Memory, error)
 }
 
 type PostgresRepository struct {
@@ -134,6 +136,10 @@ func entityScope(e Entity) scope {
 	}
 }
 
+func allEntities(args []any) (string, []any) {
+	return "TRUE", args
+}
+
 // where builds the filter shared by list and search. Placeholder numbering
 // continues after the args passed in.
 func where(sc scope, f Filter, args []any) (string, []any) {
@@ -199,6 +205,10 @@ func searchQuery(sc scope, q SearchQuery) (string, []any) {
 
 func (r *PostgresRepository) Search(ctx context.Context, e Entity, q SearchQuery) ([]*Memory, error) {
 	return r.search(ctx, entityScope(e), q)
+}
+
+func (r *PostgresRepository) SearchAll(ctx context.Context, q SearchQuery) ([]*Memory, error) {
+	return r.search(ctx, allEntities, q)
 }
 
 func (r *PostgresRepository) search(ctx context.Context, sc scope, q SearchQuery) ([]*Memory, error) {

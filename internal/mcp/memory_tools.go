@@ -31,6 +31,10 @@ type EntityRef struct {
 	DataProductName string `json:"data_product_name,omitempty" jsonschema:"Exact name of the data product, when the ID is not known"`
 }
 
+func (r EntityRef) empty() bool {
+	return r == EntityRef{}
+}
+
 // memoryTarget is a resolved, access-checked entity.
 type memoryTarget struct {
 	entity memory.Entity
@@ -96,6 +100,10 @@ pick up what earlier runs and people recorded.
 <instructions>
 - With a query: the entity's most relevant memories, closest first.
 - Without a query: the entity's most recently changed memories.
+- With a query and no entity: the most relevant memories on every asset and data product,
+  each labelled with its entity. Use it for "have we seen this before?".
+- Looking up one asset or data product already returns its newest memories; use recall for
+  anything that did not fit there.
 - session_id limits the result to one run.
 </instructions>`,
 	}, tc.recall)
@@ -295,6 +303,9 @@ func (tc *ToolContext) remember(ctx context.Context, _ *mcpsdk.CallToolRequest, 
 func (tc *ToolContext) recall(ctx context.Context, _ *mcpsdk.CallToolRequest, args RecallInput) (*mcpsdk.CallToolResult, any, error) {
 	filter := memory.Filter{SessionID: args.SessionID}
 
+	if args.EntityRef.empty() {
+		return tc.recallEverywhere(ctx, args, filter)
+	}
 	target, errResult := tc.resolveReadable(ctx, args.EntityRef)
 	if errResult != nil {
 		return errResult, nil, nil

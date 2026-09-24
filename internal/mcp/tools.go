@@ -185,6 +185,11 @@ func (tc *ToolContext) renderAssetDetails(ctx context.Context, a *asset.Asset) (
 		}
 	}
 
+	if mem := tc.memorySection(ctx, memory.Entity{Type: memory.EntityAsset, ID: a.ID},
+		fmt.Sprintf(`{"asset_id": "%s"}`, a.ID)); mem != "" {
+		formatted += "\n\n" + mem
+	}
+
 	formatted += "\n\n" + FormatNextActions(nextActions)
 
 	return &mcpsdk.CallToolResult{
@@ -1027,6 +1032,11 @@ func (tc *ToolContext) renderDataProductDetails(ctx context.Context, product *da
 	}
 
 	formatted := FormatDataProductCard(product, memberAssets, totalAssets, tc.config.Server.RootURL)
+
+	if mem := tc.memorySection(ctx, memory.Entity{Type: memory.EntityDataProduct, ID: product.ID},
+		fmt.Sprintf(`{"data_product_id": "%s"}`, product.ID)); mem != "" {
+		formatted += "\n\n" + mem
+	}
 
 	nextActions := map[string]string{
 		"Get member asset details": `Use discover_data with {"id": "asset-id"}`,

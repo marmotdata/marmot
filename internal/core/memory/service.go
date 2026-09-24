@@ -18,6 +18,8 @@ type Service interface {
 	Forget(ctx context.Context, e Entity, id string) error
 	List(ctx context.Context, e Entity, filter ListFilter) (*ListResult, error)
 	Search(ctx context.Context, e Entity, q SearchQuery) (*SearchResult, error)
+	// SearchAll searches every entity's memory.
+	SearchAll(ctx context.Context, q SearchQuery) (*SearchResult, error)
 }
 
 type service struct {
@@ -139,6 +141,12 @@ func (s *service) Search(ctx context.Context, e Entity, q SearchQuery) (*SearchR
 	}
 	return s.search(q, func(q SearchQuery) ([]*Memory, error) {
 		return s.repo.Search(ctx, e, q)
+	})
+}
+
+func (s *service) SearchAll(ctx context.Context, q SearchQuery) (*SearchResult, error) {
+	return s.search(q, func(q SearchQuery) ([]*Memory, error) {
+		return s.repo.SearchAll(ctx, q)
 	})
 }
 

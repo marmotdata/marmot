@@ -179,3 +179,32 @@ func TestListSorts(t *testing.T) {
 		t.Errorf("unknown sort: %v", err)
 	}
 }
+
+func TestSearchAllReadsEveryEntity(t *testing.T) {
+	pool := pgtest.TempDB(t)
+	ctx := t.Context()
+	svc := NewService(NewPostgresRepository(pool))
+	table := seedAsset(t, pool, "orders")
+	product := seedProduct(t, pool, "orders")
+
+	for _, e := range []Entity{table, product} {
+		if _, err := svc.Remember(ctx, e, RememberInput{Content: "partitions are archived after 90 days", Author: agent}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := svc.Remember(ctx, product, RememberInput{Content: "on-call is #orders", Author: agent}); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := svc.SearchAll(ctx, SearchQuery{Query: "archived partitions"})
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	got := map[EntityType]bool{}
+	for _, m := range result.Memories {
+		got[m.EntityType] = true
+	}
+	if len(result.Memories) != 2 || !got[EntityAsset] || !got[EntityDataProduct] {
+		t.Errorf("want the match on the asset and on the product, got %+v", result.Memories)
+	}
+}
