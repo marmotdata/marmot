@@ -154,10 +154,6 @@ type Config struct {
 		TablePreview bool `mapstructure:"table_preview"`
 	} `mapstructure:"experimental"`
 
-	Metamodel struct {
-		Profile string `mapstructure:"profile"`
-	} `mapstructure:"metamodel"`
-
 	Plugins struct {
 		// Registry overrides the OCI registry namespace core plugins
 		// are installed from, e.g. an internal mirror.
@@ -166,6 +162,12 @@ type Config struct {
 		// startup. Defaults to true.
 		Autoinstall bool `mapstructure:"autoinstall"`
 	} `mapstructure:"plugins"`
+
+	Metamodel struct {
+		// Profile is the path to a configurable-metadata-fields YAML file.
+		// Empty keeps the native-only schema.
+		Profile string `mapstructure:"profile"`
+	} `mapstructure:"metamodel"`
 }
 
 type BannerConfig struct {
@@ -350,7 +352,6 @@ func loadConfig(configPath string) error {
 	v.BindEnv("server.tls.key_path")
 	v.BindEnv("server.tls.ca_cert_path")
 	v.BindEnv("server.tls.insecure_skip_verify")
-	v.BindEnv("metamodel.profile")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
@@ -395,6 +396,8 @@ func loadConfig(configPath string) error {
 	v.BindEnv("search.elasticsearch.tls.ca_cert_path")
 	v.BindEnv("search.elasticsearch.tls.cert_path")
 	v.BindEnv("search.elasticsearch.tls.key_path")
+
+	v.BindEnv("metamodel.profile")
 
 	// Set defaults
 	setDefaults(v)
@@ -528,6 +531,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("search.elasticsearch.bulk_size", 500)
 	v.SetDefault("search.elasticsearch.flush_interval", 1000)
 	v.SetDefault("search.elasticsearch.reindex_on_start", false)
+
+	// Metamodel defaults
+	v.SetDefault("metamodel.profile", "")
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

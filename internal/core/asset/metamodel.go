@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/metamodel"
@@ -27,8 +28,19 @@ func (s *service) registry() *metamodel.Registry {
 	return s.metamodel
 }
 
-func (s *service) Metamodel() metamodel.Schema {
-	return s.registry().Schema()
+func (s *service) Metamodel(kind string) metamodel.Schema {
+	if kind == "" {
+		kind = "asset"
+	}
+	return s.registry().SchemaForKind(kind)
+}
+
+func (s *service) Missing(a *Asset) []metamodel.Violation {
+	registry := s.registry()
+	if !registry.Enabled() {
+		return nil
+	}
+	return registry.Missing(MetamodelValues(registry, a), "asset", !a.IsStub)
 }
 
 func (s *service) PatchFields(ctx context.Context, id string, version int64, fields map[string]any) (*Asset, error) {
@@ -45,7 +57,7 @@ func (s *service) validateAsset(a *Asset) error {
 	if !s.registry().Enabled() {
 		return nil
 	}
-	return s.registry().Validate(MetamodelValues(s.registry(), a), !a.IsStub)
+	return s.registry().Validate(MetamodelValues(s.registry(), a), "asset", !a.IsStub)
 }
 
 func applyFields(registry *metamodel.Registry, asset *Asset, fields map[string]any) error {
@@ -54,7 +66,7 @@ func applyFields(registry *metamodel.Registry, asset *Asset, fields map[string]a
 	}
 	for id, value := range fields {
 		field, ok := registry.Field(id)
-		if !ok {
+		if !ok || !slices.Contains(field.AppliesTo.EffectiveKinds(), "asset") {
 			return &metamodel.ValidationError{Fields: []metamodel.Violation{{Field: id, Code: "unknown_field"}}}
 		}
 		if value == nil && (!field.Nullable || field.Required) {
@@ -94,7 +106,7 @@ func applyFields(registry *metamodel.Registry, asset *Asset, fields map[string]a
 			}
 		}
 	}
-	return registry.Validate(MetamodelValues(registry, asset), !asset.IsStub)
+	return registry.Validate(MetamodelValues(registry, asset), "asset", !asset.IsStub)
 }
 
 func fieldTypeError(id string) error {
@@ -141,25 +153,9 @@ func setMetadataValue(object map[string]any, parts []string, value any) error {
 	return nil
 }
 
-func metadataValue(object map[string]any, binding string) (any, bool) {
-	parts := strings.Split(strings.TrimPrefix(binding, "metadata."), ".")
-	var value any = object
-	for _, part := range parts {
-		child, ok := value.(map[string]any)
-		if !ok {
-			return nil, false
-		}
-		value, ok = child[part]
-		if !ok {
-			return nil, false
-		}
-	}
-	return value, true
-}
-
 func MetamodelValues(registry *metamodel.Registry, asset *Asset) map[string]any {
 	values := make(map[string]any)
-	for _, f := range registry.Schema().Fields {
+	for _, f := range registry.Fields("asset") {
 		var value any
 		present := true
 		switch f.Storage {
@@ -184,7 +180,7 @@ func MetamodelValues(registry *metamodel.Registry, asset *Asset) map[string]any 
 		case "marmot.tags":
 			value = asset.Tags
 		default:
-			value, present = metadataValue(asset.Metadata, f.Storage)
+			value, present = metamodel.ValueAt(asset.Metadata, f.Storage)
 		}
 		if present {
 			values[f.ID] = value
@@ -218,12 +214,12 @@ func (s *service) preserveGoverned(current *Asset, input *UpdateInput) error {
 	if err != nil {
 		return err
 	}
-	for _, field := range registry.Schema().Fields {
+	for _, field := range registry.Fields("asset") {
 		if !strings.HasPrefix(field.Storage, "metadata.") {
 			continue
 		}
-		previous, existed := metadataValue(current.Metadata, field.Storage)
-		next, supplied := metadataValue(metadata, field.Storage)
+		previous, existed := metamodel.ValueAt(current.Metadata, field.Storage)
+		next, supplied := metamodel.ValueAt(metadata, field.Storage)
 		if supplied && (!existed || !reflect.DeepEqual(previous, next)) && input.ExpectedVersion == nil {
 			if _, patched := input.GovernedFields[field.ID]; !patched {
 				return ErrVersionRequired

@@ -20,23 +20,26 @@ var (
 	ErrInvalidPassword   = errors.New("invalid password")
 	ErrUnauthorized      = errors.New("unauthorized")
 	ErrInvalidAPIKey     = errors.New("invalid API key")
+	ErrUserInactive      = errors.New("user account is inactive")
 	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
 	ErrCannotDeleteSelf  = errors.New("user can't delete self")
 	ErrCannotDeleteAdmin = errors.New("can't delete admin user")
 )
 
 type User struct {
-	ID                 string                 `json:"id"`
-	Username           string                 `json:"username"`
-	Name               string                 `json:"name"`
-	ProfilePicture     string                 `json:"profile_picture,omitempty"`
-	Active             bool                   `json:"active"`
-	MustChangePassword bool                   `json:"must_change_password"`
-	Preferences        map[string]interface{} `json:"preferences"`
-	Roles              []Role                 `json:"roles"`
-	Identities         []UserIdentity         `json:"identities,omitempty"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
+	ID                 string `json:"id"`
+	Username           string `json:"username"`
+	Name               string `json:"name"`
+	ProfilePicture     string `json:"profile_picture,omitempty"`
+	Active             bool   `json:"active"`
+	MustChangePassword bool   `json:"must_change_password"`
+	// Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.
+	SessionsInvalidatedAt *time.Time             `json:"sessions_invalidated_at,omitempty"`
+	Preferences           map[string]interface{} `json:"preferences"`
+	Roles                 []Role                 `json:"roles"`
+	Identities            []UserIdentity         `json:"identities,omitempty"`
+	CreatedAt             time.Time              `json:"created_at"`
+	UpdatedAt             time.Time              `json:"updated_at"`
 } // @name User
 
 type Role struct {
@@ -116,6 +119,7 @@ type Service interface {
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
 	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
+	InvalidateSessions(ctx context.Context, userID string) error
 }
 
 type service struct {
@@ -422,9 +426,10 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	updates := map[string]interface{}{
-		"password_hash":        string(hash),
-		"must_change_password": false,
-		"updated_at":           time.Now(),
+		"password_hash":           string(hash),
+		"must_change_password":    false,
+		"sessions_invalidated_at": time.Now(),
+		"updated_at":              time.Now(),
 	}
 
 	if err := s.repo.UpdateUser(ctx, userID, updates); err != nil {
@@ -432,4 +437,11 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	return s.Get(ctx, userID)
+}
+
+// InvalidateSessions signs the user out everywhere by rejecting every token
+func (s *service) InvalidateSessions(ctx context.Context, userID string) error {
+	return s.repo.UpdateUser(ctx, userID, map[string]interface{}{
+		"sessions_invalidated_at": time.Now(),
+	})
 }

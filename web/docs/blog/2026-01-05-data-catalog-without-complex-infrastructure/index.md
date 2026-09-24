@@ -1,9 +1,7 @@
 ---
 slug: data-catalog-without-complex-infrastructure
 title: "Marmot: Data catalog without the complex infrastructure"
-authors:
-  - name: Charlie Haley
-    url: https://github.com/charlie-haley
+authors: [charlie]
 image: /img/marmot-banner.png
 description: "Data catalogs shouldn't need a platform team to run. Meet Marmot, an open source data catalog that needs only PostgreSQL, ships as a single Go binary, and deploys in minutes with no Kafka, Elasticsearch or Airflow."
 tags: [data-catalog, open-source, infrastructure, getting-started]

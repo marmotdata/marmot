@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/marmotdata/marmot/internal/core/user"
@@ -101,5 +102,71 @@ func TestResolver_UnknownType(t *testing.T) {
 	})
 	if err == nil {
 		t.Error("expected error for unknown principal_type")
+	}
+}
+
+// A leaked token could previously only be killed by rotating the signing key,
+// which signed everyone out. The cutoff rejects tokens issued before the user's
+// sessions were invalidated while leaving every other user untouched.
+func TestResolver_SessionRevocation(t *testing.T) {
+	cutoff := time.Date(2026, 9, 21, 12, 0, 0, 500_000_000, time.UTC)
+
+	tests := []struct {
+		name     string
+		issuedAt *jwt.NumericDate
+		wantErr  error
+	}{
+		{
+			name:     "token issued before the cutoff is revoked",
+			issuedAt: jwt.NewNumericDate(cutoff.Add(-time.Hour)),
+			wantErr:  ErrSessionRevoked,
+		},
+		{
+			// jwt iat carries whole seconds, so a replacement token minted in the
+			// same second as the invalidation has to survive or a password change
+			// would hand back a dead token.
+			name:     "token issued in the same second survives",
+			issuedAt: jwt.NewNumericDate(cutoff.Truncate(time.Second)),
+		},
+		{
+			name:     "token issued after the cutoff survives",
+			issuedAt: jwt.NewNumericDate(cutoff.Add(time.Hour)),
+		},
+		{
+			// A token without iat cannot prove it postdates the cutoff, so once
+			// one exists the token is refused rather than trusted.
+			name:    "token without iat is revoked once a cutoff exists",
+			wantErr: ErrSessionRevoked,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &user.User{ID: "u-1", Username: "alice", Active: true, SessionsInvalidatedAt: &cutoff}
+			svc := &mockUserService{getFn: func(_ context.Context, _ string) (*user.User, error) { return u, nil }}
+
+			_, err := NewResolver(svc).Resolve(context.Background(), &Claims{
+				RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1", IssuedAt: tt.issuedAt},
+			})
+
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Fatalf("err = %v, want %v", err, tt.wantErr)
+				}
+			} else if err != nil {
+				t.Fatalf("Resolve: %v", err)
+			}
+		})
+	}
+}
+
+func TestResolver_NoCutoffAcceptsAnyIssuedAt(t *testing.T) {
+	u := &user.User{ID: "u-1", Username: "alice", Active: true}
+	svc := &mockUserService{getFn: func(_ context.Context, _ string) (*user.User, error) { return u, nil }}
+
+	if _, err := NewResolver(svc).Resolve(context.Background(), &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1"},
+	}); err != nil {
+		t.Fatalf("Resolve: %v", err)
 	}
 }

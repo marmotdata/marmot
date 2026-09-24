@@ -6,6 +6,8 @@ export interface MetamodelPresentation {
 	order?: number;
 	/** Alternate editor for a string field's value; the stored type is unchanged. Only "user" exists. */
 	control?: string;
+	/** Offer this field as a segmented Discover filter. Only enum and boolean fields qualify. */
+	facet?: boolean;
 }
 
 export interface MetamodelConstraints {
@@ -17,6 +19,11 @@ export interface MetamodelConstraints {
 	maxItems?: number;
 }
 
+export interface MetamodelAppliesTo {
+	kinds?: string[];
+	assetTypes?: string[];
+}
+
 export interface MetamodelField {
 	id: string;
 	type: string;
@@ -25,7 +32,7 @@ export interface MetamodelField {
 	required: boolean;
 	nullable?: boolean;
 	storage: string;
-	appliesTo?: string;
+	appliesTo: MetamodelAppliesTo;
 	values?: string[];
 	validation?: MetamodelConstraints;
 	presentation?: MetamodelPresentation;
@@ -39,7 +46,7 @@ export interface MetamodelSchema {
 	fields: MetamodelField[];
 	hash: string;
 	enabled: boolean;
-	/** Profile-supplied catalogues by locale. Optional until the API serves them. */
+	/** Profile-supplied catalogues by locale, resolving presentation keys to text. */
 	messages?: Record<string, Record<string, string>>;
 }
 

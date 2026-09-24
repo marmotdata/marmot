@@ -1097,6 +1097,12 @@ definitions:
         items:
           $ref: '#/definitions/FacetValue'
         type: array
+      metadata:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/FacetValue'
+          type: array
+        type: object
       providers:
         items:
           $ref: '#/definitions/FacetValue'
@@ -2432,6 +2438,10 @@ definitions:
         items:
           $ref: '#/definitions/UserRole'
         type: array
+      sessions_invalidated_at:
+        description: Tokens issued before this moment are rejected at validation,
+          so setting it to now signs the user out of every session at once.
+        type: string
       updated_at:
         type: string
       username:
@@ -2503,6 +2513,17 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  metamodel.AppliesTo:
+    properties:
+      assetTypes:
+        items:
+          type: string
+        type: array
+      kinds:
+        items:
+          type: string
+        type: array
+    type: object
   metamodel.Constraints:
     properties:
       maxItems:
@@ -2521,7 +2542,7 @@ definitions:
   metamodel.Field:
     properties:
       appliesTo:
-        type: string
+        $ref: '#/definitions/metamodel.AppliesTo'
       core:
         type: boolean
       id:
@@ -2555,6 +2576,10 @@ definitions:
         type: string
       descriptionKey:
         type: string
+      facet:
+        description: Facet asks Discover to offer this field as a segmented filter.
+          Only enum and boolean fields qualify
+        type: boolean
       helpTextKey:
         type: string
       labelKey:
@@ -2580,8 +2605,40 @@ definitions:
         type: string
       id:
         type: string
+      messages:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        description: |-
+          Messages resolves labelKey/helpTextKey/descriptionKey to text, keyed by
+          locale then by key. A key missing from the current locale falls back to
+          defaultLocale, then to the raw key. Clients own this fallback chain.
+        type: object
       version:
         type: integer
+    type: object
+  pluginsdk.AssetField:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  pluginsdk.AssetSchema:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetField'
+        type: array
+      struct_name:
+        type: string
     type: object
   pluginsdk.ConfigField:
     properties:
@@ -2644,6 +2701,10 @@ definitions:
     - FieldTypeObject
   pluginsdk.Meta:
     properties:
+      asset_schemas:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetSchema'
+        type: array
       category:
         type: string
       config_spec:
@@ -2665,8 +2726,6 @@ definitions:
       status:
         type: string
       supports_data_preview:
-        type: boolean
-      supports_query:
         type: boolean
     type: object
   pluginsdk.ShowWhen:
@@ -5128,9 +5187,15 @@ paths:
       - mcp
   /api/v1/metamodel:
     get:
-      description: Returns the composed native and configured field schema. Clients
-        must not reinterpret source YAML.
+      description: Returns the composed native and configured field schema for an
+        entity kind. Clients must not reinterpret source YAML.
       operationId: getMetamodel
+      parameters:
+      - default: asset
+        description: Entity kind (asset, data_product)
+        in: query
+        name: kind
+        type: string
       produces:
       - application/json
       responses:
@@ -7940,6 +8005,33 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Update user preferences
+      tags:
+      - users
+  /api/v1/users/sign-out-all/{id}:
+    post:
+      description: Rejects every token issued to the user before now. Their password
+        and API keys are untouched, so this is the response to a leaked or overexposed
+        token rather than a lost credential.
+      operationId: postUsersIDSignOutAll
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Sign a user out of all sessions
       tags:
       - users
   /api/v1/users/update-password:

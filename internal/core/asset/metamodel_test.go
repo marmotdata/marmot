@@ -20,7 +20,6 @@ fields:
     type: integer
     core: true
     required: true
-    appliesTo: governed_assets
     storage: metadata.example.retention
     validation:
       minimum: 1
@@ -38,7 +37,7 @@ fields:
 
 func TestNativeProfileLeavesContractsUnchanged(t *testing.T) {
 	svc := NewService(newMemoryRepo())
-	schema := svc.Metamodel()
+	schema := svc.Metamodel("asset")
 	if schema.Enabled {
 		t.Fatal("native schema should not be marked enabled")
 	}
@@ -51,12 +50,18 @@ func TestNativeProfileLeavesContractsUnchanged(t *testing.T) {
 	}
 }
 
-func TestCreateRejectsMissingRequiredGovernedField(t *testing.T) {
+func TestCreateAllowsMissingRequiredGovernedField(t *testing.T) {
+	// A required governed field is completeness, not validity: discovery must be able to
+	// create an asset before anyone can fill in a value it has no way to know.
 	svc := newGovernedService(t)
-	_, err := svc.Create(context.Background(), validCreate("table"))
-	var invalid *metamodel.ValidationError
-	if !errors.As(err, &invalid) || invalid.Fields[0].Field != "retention" {
-		t.Fatalf("expected retention required, got %v", err)
+	created, err := svc.Create(context.Background(), validCreate("table"))
+	if err != nil {
+		t.Fatalf("a missing governed required field must not block Create: %v", err)
+	}
+	registry := mustLoadProfile(t)
+	missing := registry.Missing(MetamodelValues(registry, created), "asset", !created.IsStub)
+	if len(missing) != 1 || missing[0].Field != "retention" {
+		t.Fatalf("expected retention reported missing: %v", missing)
 	}
 }
 
@@ -79,11 +84,11 @@ func TestPatchFieldsDoesNotRequireFullDocument(t *testing.T) {
 	if updated.Version != created.Version+1 {
 		t.Fatalf("version not incremented: %d", updated.Version)
 	}
-	got, _ := metadataValue(updated.Metadata, "metadata.example.retention")
+	got, _ := metamodel.ValueAt(updated.Metadata, "metadata.example.retention")
 	if got != 90.0 {
 		t.Fatalf("retention not patched: %v", got)
 	}
-	if _, ok := metadataValue(updated.Metadata, "metadata.plugin.extra"); !ok {
+	if _, ok := metamodel.ValueAt(updated.Metadata, "metadata.plugin.extra"); !ok {
 		t.Fatal("unknown metadata was dropped")
 	}
 }
@@ -99,11 +104,11 @@ func TestLegacyUpdatePreservesGovernedMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, ok := metadataValue(updated.Metadata, "metadata.example.retention")
+	got, ok := metamodel.ValueAt(updated.Metadata, "metadata.example.retention")
 	if !ok || got != 30.0 {
 		t.Fatalf("governed field was wiped: %v %v", got, ok)
 	}
-	if extra, ok := metadataValue(updated.Metadata, "metadata.plugin.extra"); !ok || extra != "yes" {
+	if extra, ok := metamodel.ValueAt(updated.Metadata, "metadata.plugin.extra"); !ok || extra != "yes" {
 		t.Fatal("unrelated metadata was dropped")
 	}
 }
@@ -142,12 +147,14 @@ func TestNullablePatchRemovesOptionalField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := metadataValue(updated.Metadata, "metadata.example.note"); ok {
+	if _, ok := metamodel.ValueAt(updated.Metadata, "metadata.example.note"); ok {
 		t.Fatal("nullable field was not removed")
 	}
 }
 
-func TestAddTagRejectsAssetMissingRequiredField(t *testing.T) {
+func TestAddTagOnLegacyAssetMissingRequiredFieldStillSyncs(t *testing.T) {
+	// An asset created before the profile added `retention` has no way to have a value for
+	// it. Re-validating on every write must not stop it from syncing forever.
 	repo := newMemoryRepo()
 	svc := NewService(repo, WithMetamodel(mustLoadProfile(t)))
 	name, mrn := "legacy", "mrn:asset:legacy"
@@ -157,10 +164,8 @@ func TestAddTagRejectsAssetMissingRequiredField(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	_, err := svc.AddTag(context.Background(), "legacy-id", "x")
-	var invalid *metamodel.ValidationError
-	if !errors.As(err, &invalid) {
-		t.Fatalf("expected validation error, got %v", err)
+	if _, err := svc.AddTag(context.Background(), "legacy-id", "x"); err != nil {
+		t.Fatalf("a legacy asset missing a governed required field must keep syncing: %v", err)
 	}
 }
 

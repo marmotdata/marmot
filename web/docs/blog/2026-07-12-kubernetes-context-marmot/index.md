@@ -1,9 +1,7 @@
 ---
 slug: kubernetes-context-in-marmot
 title: "Catalog your Kubernetes clusters"
-authors:
-  - name: Bruno Schaatsbergen
-    url: https://github.com/bschaatsbergen
+authors: [bruno]
 image: /img/marmot-kubernetes-banner.png
 description: "Marmot's new Kubernetes, Amazon Elastic Kubernetes Service and Google Kubernetes Engine plugins catalog your clusters, so services, deployments and cron jobs land in the graph next to your databases and topics. This post covers how they work and how to draw lineage from a table back to the deployment that fills it."
 tags: [kubernetes, eks, gke, lineage, data-discovery]
@@ -88,7 +86,7 @@ resource "marmot_pipeline" "prod_gke" {
 }
 ```
 
-The [Terraform walkthrough](/blog/configure-marmot-with-terraform) goes deeper on managing pipelines declaratively, and the [Populating docs](/docs/Populating/) cover the CLI, Pulumi and the REST API.
+The [Terraform docs](/docs/Populating/Terraform) go deeper on managing pipelines declaratively, and the [Populating docs](/docs/Populating/) cover the CLI, Pulumi and the REST API.
 
 ---
 

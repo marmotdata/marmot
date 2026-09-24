@@ -39,6 +39,24 @@ type Filter struct {
 	Tags       []string     `json:"tags,omitempty"`        // Filter assets by tags
 	Limit      int          `json:"limit" validate:"omitempty,gte=1,lte=100"`
 	Offset     int          `json:"offset" validate:"omitempty,gte=0"`
+
+	// MetadataFilters: storage path → JSONB @> fragments (OR within a key, AND across keys).
+	// Callers resolve field IDs via the metamodel registry.
+	MetadataFilters map[string][]string
+	// MetadataFacets: facetable storage paths + candidate values (listing queries only).
+	MetadataFacets []MetadataFacetSpec
+}
+
+// MetadataFacetValue pairs a display value with its JSONB @> literal.
+type MetadataFacetValue struct {
+	Value   string
+	Literal string
+}
+
+// MetadataFacetSpec is a facetable field; Key is the storage path used in Facets.Metadata.
+type MetadataFacetSpec struct {
+	Key    string
+	Values []MetadataFacetValue
 }
 
 type FacetValue struct {
@@ -47,10 +65,11 @@ type FacetValue struct {
 } // @name FacetValue
 
 type Facets struct {
-	Types      map[ResultType]int `json:"types"`
-	AssetTypes []FacetValue       `json:"asset_types"`
-	Providers  []FacetValue       `json:"providers"`
-	Tags       []FacetValue       `json:"tags"`
+	Types      map[ResultType]int      `json:"types"`
+	AssetTypes []FacetValue            `json:"asset_types"`
+	Providers  []FacetValue            `json:"providers"`
+	Tags       []FacetValue            `json:"tags"`
+	Metadata   map[string][]FacetValue `json:"metadata,omitempty"`
 } // @name Facets
 
 type Response struct {

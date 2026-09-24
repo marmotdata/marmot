@@ -277,6 +277,24 @@ config:
   telemetry:
     enabled: true
 
+  # Configurable metadata fields (metamodel) profile. Empty keeps the native-only schema.
+  # The file itself isn't shipped by this chart: mount it (e.g. from a ConfigMap you manage)
+  # via the top-level volumes/volumeMounts below, then point profile at the mounted path.
+  #
+  # volumes:
+  #   - name: metamodel-profile
+  #     configMap:
+  #       name: my-metamodel-profile
+  # volumeMounts:
+  #   - name: metamodel-profile
+  #     mountPath: /etc/marmot-metamodel
+  #     readOnly: true
+  # config:
+  #   metamodel:
+  #     profile: /etc/marmot-metamodel/profile.yaml
+  metamodel:
+    profile: ""
+
   # Operator config (for Marmot server-side awareness of operator features)
   operator:
     enabled: false

@@ -11,6 +11,10 @@
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
 	import Tags from '$components/shared/Tags.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
+	import ProductGovernedFields from '$components/product/ProductGovernedFields.svelte';
+	import { fetchMetamodel } from '$lib/metamodel/api';
+	import type { MetamodelSchema } from '$lib/metamodel/types';
+	import { governedFields, governedPaths } from '$lib/metamodel/values';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import Stepper from '$components/ui/Stepper.svelte';
 	import Step from '$components/ui/Step.svelte';
@@ -61,6 +65,15 @@
 	let owners = $state<Owner[]>(initialOwners);
 	let tags = $state<string[]>(initialTags);
 	let metadata = $state<Record<string, unknown>>(initialMetadata);
+	let metamodel = $state<MetamodelSchema | null>(null);
+	let governed = $derived(metamodel?.enabled ? governedFields(metamodel.fields) : []);
+	let governedHidePaths = $derived(governedPaths(governed));
+
+	$effect(() => {
+		fetchMetamodel('data_product')
+			.then((schema) => (metamodel = schema))
+			.catch(() => (metamodel = null));
+	});
 
 	// Assets state
 	let manualAssetIds = $state<string[]>(initialManualAssetIds);
@@ -615,7 +628,26 @@
 						/>
 					</div>
 
-					<MetadataView bind:metadata readOnly={false} maxDepth={2} />
+					<MetadataView
+						bind:metadata
+						readOnly={false}
+						maxDepth={2}
+						hidePaths={governedHidePaths}
+						hasLeadingRows={governed.length > 0}
+					>
+						{#snippet leadingRows(editable)}
+							{#if metamodel}
+								<!-- No productId: stays staged in metadata until the wizard submits, like every other field here. -->
+								<ProductGovernedFields
+									bind:metadata
+									productId={undefined}
+									schema={metamodel}
+									fields={governed}
+									{editable}
+								/>
+							{/if}
+						{/snippet}
+					</MetadataView>
 				</div>
 			</div>
 		{/if}

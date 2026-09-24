@@ -18,11 +18,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// AssetResponse wraps an asset with enriched external links from rules.
+// AssetResponse wraps an asset with enriched external links from rules and the governance completeness the metamodel computed for it.
 type AssetResponse struct {
 	*asset.Asset
 	EnrichedExternalLinks []assetrule.EnrichedExternalLink `json:"enriched_external_links,omitempty"`
+	Metamodel             *MetamodelStatus                 `json:"metamodel,omitempty"`
 }
+
+type MetamodelStatus struct {
+	Missing []string `json:"missing,omitempty"`
+} // @name MetamodelStatus
 
 type CreateRequest struct {
 	Name          string                       `json:"name" validate:"required"`
@@ -124,8 +129,21 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, newAsset)
 }
 
-func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
+// withMetamodelStatus is the lightweight enrichment shared by every asset write/read response
+func (h *Handler) withMetamodelStatus(result *asset.Asset) *AssetResponse {
 	resp := &AssetResponse{Asset: result}
+	if missing := h.assetService.Missing(result); len(missing) > 0 {
+		ids := make([]string, len(missing))
+		for i, v := range missing {
+			ids[i] = v.Field
+		}
+		resp.Metamodel = &MetamodelStatus{Missing: ids}
+	}
+	return resp
+}
+
+func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
+	resp := h.withMetamodelStatus(result)
 
 	enrichedLinks, err := h.assetRuleService.GetEnrichedLinks(r.Context(), result.ID)
 	if err != nil {
@@ -338,16 +356,17 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary Get the effective metamodel schema
-// @Description Returns the composed native and configured field schema. Clients must not reinterpret source YAML.
+// @Description Returns the composed native and configured field schema for an entity kind. Clients must not reinterpret source YAML.
 // @Tags metamodel
 // @Produce json
+// @Param kind query string false "Entity kind (asset, data_product)" default(asset)
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} metamodel.Schema
 // @ID getMetamodel
 // @Router /api/v1/metamodel [get]
 func (h *Handler) getMetamodel(w http.ResponseWriter, r *http.Request) {
-	common.RespondJSON(w, http.StatusOK, h.assetService.Metamodel())
+	common.RespondJSON(w, http.StatusOK, h.assetService.Metamodel(r.URL.Query().Get("kind")))
 }
 
 type patchFieldsRequest struct {
@@ -405,7 +424,7 @@ func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.assetService.PatchFields(r.Context(), id, version, req.Fields)
+	updatedFields, err := h.assetService.PatchFields(r.Context(), id, version, req.Fields)
 	if err != nil {
 		if respondAssetWriteError(w, err) {
 			return
@@ -422,8 +441,8 @@ func (h *Handler) patchAssetFields(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("ETag", assetETag(updated.Version))
-	common.RespondJSON(w, http.StatusOK, updated)
+	w.Header().Set("ETag", assetETag(updatedFields.Version))
+	common.RespondJSON(w, http.StatusOK, h.withMetamodelStatus(updatedFields))
 }
 
 func assetETag(version int64) string { return `"` + strconv.FormatInt(version, 10) + `"` }

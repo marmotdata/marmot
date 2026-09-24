@@ -11,6 +11,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/metamodel"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
@@ -129,7 +130,10 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 
 	dp, err := h.dataProductService.Create(r.Context(), input)
 	if err != nil {
+		var validation *metamodel.ValidationError
 		switch {
+		case errors.As(err, &validation):
+			common.RespondJSON(w, http.StatusBadRequest, validation)
 		case errors.Is(err, dataproduct.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
 			common.RespondError(w, http.StatusBadRequest, err.Error())
@@ -233,7 +237,10 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 
 	dp, err := h.dataProductService.Update(r.Context(), id, input)
 	if err != nil {
+		var validation *metamodel.ValidationError
 		switch {
+		case errors.As(err, &validation):
+			common.RespondJSON(w, http.StatusBadRequest, validation)
 		case errors.Is(err, dataproduct.ErrInvalidInput):
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
 			common.RespondError(w, http.StatusBadRequest, err.Error())

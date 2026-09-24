@@ -1,3 +1,4 @@
+import type { MessageContext } from './labels';
 import type { MetamodelField } from './types';
 
 export type Draft = string | string[] | null | undefined;
@@ -27,6 +28,29 @@ export function readMetadataValue(
 	return value;
 }
 
+/** Immutable write at a governed field's storage path, creating intermediate objects as needed. */
+export function writeMetadataValue(
+	metadata: Record<string, unknown>,
+	storage: string,
+	value: unknown
+): Record<string, unknown> {
+	const path = metadataPath(storage);
+	const root: Record<string, unknown> = { ...metadata };
+	let cursor = root;
+	for (const part of path.slice(0, -1)) {
+		const next = cursor[part];
+		cursor[part] = isPlainObject(next) ? { ...next } : {};
+		cursor = cursor[part] as Record<string, unknown>;
+	}
+	const leaf = path[path.length - 1];
+	if (value === null || value === undefined) {
+		delete cursor[leaf];
+	} else {
+		cursor[leaf] = value;
+	}
+	return root;
+}
+
 /**
  * Profile fields stored in asset metadata: required first, then by section, order and id.
  * Sections follow the order the profile first mentions them; fields without one come last.
@@ -50,6 +74,11 @@ export function governedFields(fields: MetamodelField[]): MetamodelField[] {
 				(a.presentation?.order ?? 0) - (b.presentation?.order ?? 0) ||
 				a.id.localeCompare(b.id)
 		);
+}
+
+/** Governed fields the profile offers as segmented Discover filters, in the same order as governedFields. */
+export function facetableFields(fields: MetamodelField[]): MetamodelField[] {
+	return governedFields(fields).filter((field) => field.presentation?.facet);
 }
 
 export function governedPaths(fields: MetamodelField[]): string[][] {
@@ -92,17 +121,55 @@ export function typeLabel(field: MetamodelField): string {
 	return field.type === 'list' ? `list<${field.itemType ?? '?'}>` : field.type;
 }
 
-/**
- * A profile section id as a heading: "data_quality" -> "Data quality". Sections are not
- * translated (the profile format has no sectionKey), so this only reformats the raw id; an
- * empty section is the caller's business, typically an i18n fallback like "Other".
- */
-export function sectionLabel(section: string): string {
-	return section
-		.split(/[_-]+/)
-		.filter(Boolean)
-		.map((word, i) => (i === 0 ? word[0].toUpperCase() + word.slice(1) : word))
-		.join(' ');
+/** An Iconify name for a field's type, shared by the governed table and the blade summary. */
+export function typeIcon(field: MetamodelField): string {
+	if (field.presentation?.control === 'user') return 'material-symbols:person-outline-rounded';
+	switch (field.type) {
+		case 'integer':
+		case 'number':
+			return 'material-symbols:tag-rounded';
+		case 'boolean':
+			return 'material-symbols:toggle-on-outline-rounded';
+		case 'date':
+			return 'material-symbols:calendar-today-outline-rounded';
+		case 'enum':
+			return 'material-symbols:list-alt-outline-rounded';
+		case 'list':
+			return 'material-symbols:format-list-bulleted-rounded';
+		default:
+			return 'material-symbols:text-fields-rounded';
+	}
+}
+
+/** Badge colour for a scalar value, matching the same convention as free-form metadata. */
+export function valueClass(value: unknown): string {
+	if (typeof value === 'boolean') {
+		return value
+			? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+			: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+	}
+	if (typeof value === 'number') {
+		return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
+	}
+	return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+}
+
+/** Resolves a section id through the same profile/native message chain as field labels. */
+export function sectionLabel(section: string, context: MessageContext): string {
+	// Inlines resolveMessage's fallback chain: a plain '.ts'-suffixed import works when a
+	// script runs directly under Node, but the app's tsconfig rejects it in bundled code.
+	const resolved =
+		context.messages?.[context.locale]?.[section] ??
+		context.messages?.[context.defaultLocale]?.[section] ??
+		context.native?.(section);
+	return (
+		resolved ??
+		section
+			.split(/[_-]+/)
+			.filter(Boolean)
+			.map((word, i) => (i === 0 ? word[0].toUpperCase() + word.slice(1) : word))
+			.join(' ')
+	);
 }
 
 export function isUnset(value: unknown): boolean {

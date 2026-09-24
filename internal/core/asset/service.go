@@ -199,7 +199,8 @@ type Service interface {
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
 	PatchFields(ctx context.Context, id string, version int64, fields map[string]any) (*Asset, error)
-	Metamodel() metamodel.Schema
+	Metamodel(kind string) metamodel.Schema
+	Missing(a *Asset) []metamodel.Violation
 	Delete(ctx context.Context, id string) error
 	DeleteByMRN(ctx context.Context, mrn string) error
 	AddTag(ctx context.Context, id string, tag string) (*Asset, error)

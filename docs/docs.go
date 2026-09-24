@@ -3831,7 +3831,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the composed native and configured field schema. Clients must not reinterpret source YAML.",
+                "description": "Returns the composed native and configured field schema for an entity kind. Clients must not reinterpret source YAML.",
                 "produces": [
                     "application/json"
                 ],
@@ -3840,6 +3840,15 @@ const docTemplate = `{
                 ],
                 "summary": "Get the effective metamodel schema",
                 "operationId": "getMetamodel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "asset",
+                        "description": "Entity kind (asset, data_product)",
+                        "name": "kind",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -8119,6 +8128,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/sign-out-all/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Sign a user out of all sessions",
+                "operationId": "postUsersIDSignOutAll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/update-password": {
             "post": {
                 "security": [
@@ -10190,6 +10240,15 @@ const docTemplate = `{
                         "$ref": "#/definitions/FacetValue"
                     }
                 },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/FacetValue"
+                        }
+                    }
+                },
                 "providers": {
                     "type": "array",
                     "items": {
@@ -12196,6 +12255,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/UserRole"
                     }
                 },
+                "sessions_invalidated_at": {
+                    "description": "Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -12305,6 +12368,23 @@ const docTemplate = `{
                 }
             }
         },
+        "metamodel.AppliesTo": {
+            "type": "object",
+            "properties": {
+                "assetTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kinds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "metamodel.Constraints": {
             "type": "object",
             "properties": {
@@ -12332,7 +12412,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "appliesTo": {
-                    "type": "string"
+                    "$ref": "#/definitions/metamodel.AppliesTo"
                 },
                 "core": {
                     "type": "boolean"
@@ -12379,6 +12459,10 @@ const docTemplate = `{
                 "descriptionKey": {
                     "type": "string"
                 },
+                "facet": {
+                    "description": "Facet asks Discover to offer this field as a segmented filter. Only enum and boolean fields qualify",
+                    "type": "boolean"
+                },
                 "helpTextKey": {
                     "type": "string"
                 },
@@ -12417,8 +12501,52 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "messages": {
+                    "description": "Messages resolves labelKey/helpTextKey/descriptionKey to text, keyed by\nlocale then by key. A key missing from the current locale falls back to\ndefaultLocale, then to the raw key. Clients own this fallback chain.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "version": {
                     "type": "integer"
+                }
+            }
+        },
+        "pluginsdk.AssetField": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.AssetSchema": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetField"
+                    }
+                },
+                "struct_name": {
+                    "type": "string"
                 }
             }
         },
@@ -12508,6 +12636,12 @@ const docTemplate = `{
         "pluginsdk.Meta": {
             "type": "object",
             "properties": {
+                "asset_schemas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetSchema"
+                    }
+                },
                 "category": {
                     "type": "string"
                 },
@@ -12539,9 +12673,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "supports_data_preview": {
-                    "type": "boolean"
-                },
-                "supports_query": {
                     "type": "boolean"
                 }
             }

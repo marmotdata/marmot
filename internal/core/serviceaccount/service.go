@@ -97,6 +97,8 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	return s.repo.SoftDelete(ctx, id)
 }
 
+const APIKeyPrefix = "mrmt_s_"
+
 func (s *service) CreateAPIKey(ctx context.Context, saID string, name string, expiresIn *time.Duration) (*APIKey, error) {
 	count, err := s.repo.CountAPIKeys(ctx, saID)
 	if err != nil {
@@ -111,7 +113,7 @@ func (s *service) CreateAPIKey(ctx context.Context, saID string, name string, ex
 		return nil, fmt.Errorf("generating api key: %w", err)
 	}
 
-	key := base64.URLEncoding.EncodeToString(keyBytes)
+	key := APIKeyPrefix + base64.URLEncoding.EncodeToString(keyBytes)
 	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("hashing api key: %w", err)

@@ -161,6 +161,37 @@ func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Sign a user out of all sessions
+// @Description Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential.
+// @Tags users
+// @Produce json
+// @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 204
+// @Failure 404 {object} common.ErrorResponse
+// @ID postUsersIDSignOutAll
+// @Router /api/v1/users/sign-out-all/{id} [post]
+func (h *Handler) signOutAllSessions(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := h.userService.InvalidateSessions(r.Context(), id); err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			common.RespondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		log.Error().Err(err).Str("user_id", id).Msg("Failed to invalidate sessions")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to sign out sessions")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // @Summary Update user password
 // @Description Update current user's password
 // @Tags users

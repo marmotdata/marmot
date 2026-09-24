@@ -1,16 +1,5 @@
-<script module lang="ts">
-	interface OwnerResult {
-		id: string;
-		name: string;
-		username?: string;
-		profile_picture?: string;
-		type: 'user' | 'team';
-	}
-</script>
-
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
-	import { fetchApi } from '$lib/api';
 	import { toasts } from '$lib/stores/toast';
 	import { locale } from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
@@ -22,13 +11,20 @@
 	import { nativeMessage, violationMessage } from '$lib/metamodel/i18n';
 	import { resolveMessage } from '$lib/metamodel/labels';
 	import {
+		lookupOwnerById,
+		searchUsers as searchUserOwners,
+		type OwnerResult
+	} from '$lib/metamodel/owners';
+	import {
 		draftFromValue,
 		isUnset,
 		readMetadataValue,
 		sameValue,
 		sectionLabel,
 		toPayload,
+		typeIcon,
 		typeLabel,
+		valueClass,
 		type Draft
 	} from '$lib/metamodel/values';
 
@@ -104,14 +100,7 @@
 
 	async function lookupOwner(id: string) {
 		try {
-			const response = await fetchApi(`/owners/search?q=${encodeURIComponent(id)}&limit=1`);
-			const data = response.ok ? await response.json() : null;
-			const hit: OwnerResult | undefined = data?.owners?.find(
-				(o: OwnerResult) => o.id === id && o.type === 'user'
-			);
-			resolvedOwners = { ...resolvedOwners, [id]: hit ?? null };
-		} catch {
-			resolvedOwners = { ...resolvedOwners, [id]: null };
+			resolvedOwners = { ...resolvedOwners, [id]: await lookupOwnerById(id) };
 		} finally {
 			delete pendingLookups[id];
 		}
@@ -123,37 +112,6 @@
 
 	function help(field: MetamodelField): string | undefined {
 		return resolveMessage(field.presentation?.helpTextKey, context);
-	}
-
-	function typeIcon(field: MetamodelField): string {
-		if (field.presentation?.control === 'user') return 'material-symbols:person-outline-rounded';
-		switch (field.type) {
-			case 'integer':
-			case 'number':
-				return 'material-symbols:tag-rounded';
-			case 'boolean':
-				return 'material-symbols:toggle-on-outline-rounded';
-			case 'date':
-				return 'material-symbols:calendar-today-outline-rounded';
-			case 'enum':
-				return 'material-symbols:list-alt-outline-rounded';
-			case 'list':
-				return 'material-symbols:format-list-bulleted-rounded';
-			default:
-				return 'material-symbols:text-fields-rounded';
-		}
-	}
-
-	function valueClass(value: unknown): string {
-		if (typeof value === 'boolean') {
-			return value
-				? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-				: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
-		}
-		if (typeof value === 'number') {
-			return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
-		}
-		return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
 	}
 
 	function text(value: unknown): string {
@@ -264,9 +222,7 @@
 		userSearchTimeout = setTimeout(async () => {
 			userSearching = true;
 			try {
-				const response = await fetchApi(`/owners/search?q=${encodeURIComponent(query)}&limit=20`);
-				const data = response.ok ? await response.json() : null;
-				userResults = ((data?.owners ?? []) as OwnerResult[]).filter((o) => o.type === 'user');
+				userResults = await searchUserOwners(query);
 			} catch {
 				userResults = [];
 			} finally {
@@ -685,7 +641,7 @@
 				colspan={editable ? 3 : 2}
 				class="bg-gray-50/60 px-4 pt-4 pb-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-900/40 dark:text-gray-500"
 			>
-				{section ? sectionLabel(section) : m.metamodel_other_section()}
+				{section ? sectionLabel(section, context) : m.metamodel_other_section()}
 			</td>
 		</tr>
 	{/if}
@@ -709,37 +665,37 @@
 					<span class="text-red-500" aria-hidden="true">*</span>
 					<span class="sr-only">({m.metamodel_required()})</span>
 				{/if}
+				{#if helpText}
+					<span class="text-gray-400 dark:text-gray-500" title={helpText} aria-hidden="true">
+						<IconifyIcon icon="mdi:information-outline" class="h-3.5 w-3.5" />
+					</span>
+				{/if}
 			</div>
 			<div class="mt-0.5 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
 				<IconifyIcon icon={typeIcon(field)} class="h-3.5 w-3.5" />
 				{typeLabel(field)}
 			</div>
-			{#if helpText}
-				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{helpText}</p>
-			{/if}
 		</td>
 		<td class="px-4 py-3 text-sm align-top">
 			{#if editingId === field.id}
 				{@render editor(field)}
 			{:else}
-				{@render display(field, value)}
+				<div class="inline-flex items-center gap-1.5">
+					{@render display(field, value)}
+					{#if editable}
+						<button
+							type="button"
+							onclick={() => startEdit(field, value)}
+							disabled={saving}
+							class="flex-shrink-0 rounded p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-earthy-terracotta-700 focus-visible:opacity-100 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-500"
+							title={m.common_edit()}
+							aria-label={`${m.common_edit()}: ${label(field)}`}
+						>
+							<IconifyIcon icon="material-symbols:edit-outline-rounded" class="h-4 w-4" />
+						</button>
+					{/if}
+				</div>
 			{/if}
 		</td>
-		{#if editable}
-			<td class="px-4 py-3 align-top">
-				{#if editingId !== field.id}
-					<button
-						type="button"
-						onclick={() => startEdit(field, value)}
-						disabled={saving}
-						class="rounded p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-earthy-terracotta-700 focus-visible:opacity-100 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-500"
-						title={m.common_edit()}
-						aria-label={`${m.common_edit()}: ${label(field)}`}
-					>
-						<IconifyIcon icon="material-symbols:edit-outline-rounded" class="h-4 w-4" />
-					</button>
-				{/if}
-			</td>
-		{/if}
 	</tr>
 {/each}
