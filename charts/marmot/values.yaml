@@ -277,6 +277,11 @@ config:
   telemetry:
     enabled: true
 
+  # Domains and subdomains with domain-scoped roles (fork-only, see DOMAINS.md).
+  # Needs the built-in Postgres search: it cannot be combined with Elasticsearch.
+  domains:
+    enabled: false
+
   # Configurable metadata fields (metamodel) profile. Empty keeps the native-only schema.
   # The file itself isn't shipped by this chart: mount it (e.g. from a ConfigMap you manage)
   # via the top-level volumes/volumeMounts below, then point profile at the mounted path.

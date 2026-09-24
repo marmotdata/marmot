@@ -1,3 +1,6 @@
 {{- if and .Values.postgresql.enabled .Values.cnpg.enabled }}
 {{- fail "postgresql.enabled and cnpg.enabled cannot both be true" }}
 {{- end }}
+{{- if and .Values.config.domains.enabled .Values.config.search.elasticsearch .Values.config.search.elasticsearch.enabled }}
+{{- fail "config.domains.enabled is not supported with the Elasticsearch search backend yet" }}
+{{- end }}

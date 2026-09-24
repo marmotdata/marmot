@@ -9,3 +9,16 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: postgresql.enabled and cnpg.enabled cannot both be true
+  - it: should reject domains with the Elasticsearch search backend
+    set:
+      config.domains.enabled: true
+      config.search.elasticsearch.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: config.domains.enabled is not supported with the Elasticsearch search backend yet
+  - it: should accept domains with the built-in search
+    set:
+      config.domains.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -128,3 +128,11 @@ tests:
       - matchRegex:
           path: data["config.yaml"]
           pattern: "profile: /etc/marmot-metamodel/profile.yaml"
+
+  - it: should pass the domains flag through
+    set:
+      config.domains.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "domains:\\n\\s+enabled: true"

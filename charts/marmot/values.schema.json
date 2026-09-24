@@ -399,6 +399,13 @@
             "enabled": { "type": "boolean" }
           }
         },
+        "domains": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
         "metamodel": {
           "type": "object",
           "additionalProperties": false,
