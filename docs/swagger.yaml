@@ -2513,6 +2513,48 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  domain.Domain:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      depth:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      parent_id:
+        type: string
+      path:
+        type: string
+      restricted:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  domain.Kind:
+    enum:
+    - asset
+    - data_product
+    - glossary_term
+    - ingestion_schedule
+    type: string
+    x-enum-varnames:
+    - KindAsset
+    - KindDataProduct
+    - KindGlossaryTerm
+    - KindIngestionSchedule
   metamodel.AppliesTo:
     properties:
       assetTypes:
@@ -2753,6 +2795,61 @@ definitions:
       fields:
         additionalProperties: {}
         type: object
+    type: object
+  v1_domains.CreateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      parent_id:
+        type: string
+      restricted:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_domains.MembersRequest:
+    properties:
+      ids:
+        items:
+          type: string
+        type: array
+      kind:
+        allOf:
+        - $ref: '#/definitions/domain.Kind'
+        enum:
+        - asset
+        - data_product
+        - glossary_term
+        - ingestion_schedule
+    type: object
+  v1_domains.MoveRequest:
+    properties:
+      parent_id:
+        description: ParentID is the new parent; null moves the domain to the root.
+        type: string
+    type: object
+  v1_domains.UpdateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      restricted:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   v1_roles.createRoleRequest:
     properties:
@@ -4231,6 +4328,325 @@ paths:
       summary: Add glossary terms to asset
       tags:
       - assets
+  /api/v1/domains:
+    get:
+      description: Lists the root domains, or the direct children of parent_id.
+      operationId: listDomains
+      parameters:
+      - description: Parent domain ID
+        in: query
+        name: parent_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Domain'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List domains
+      tags:
+      - domains
+    post:
+      consumes:
+      - application/json
+      operationId: createDomain
+      parameters:
+      - description: Domain; parent_id null creates a root
+        in: body
+        name: domain
+        required: true
+        schema:
+          $ref: '#/definitions/v1_domains.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Domain'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Create a domain
+      tags:
+      - domains
+  /api/v1/domains/{id}:
+    delete:
+      description: Only an empty domain without subdomains can be deleted.
+      operationId: deleteDomain
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete a domain
+      tags:
+      - domains
+    get:
+      operationId: getDomain
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Domain'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a domain
+      tags:
+      - domains
+    put:
+      consumes:
+      - application/json
+      description: Changes only the fields present in the body.
+      operationId: updateDomain
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: domain
+        required: true
+        schema:
+          $ref: '#/definitions/v1_domains.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Domain'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update a domain
+      tags:
+      - domains
+  /api/v1/domains/{id}/members:
+    put:
+      consumes:
+      - application/json
+      description: Sets the owning domain of every listed entity, all or none. Requires
+        the entity kind's manage permission as well.
+      operationId: assignDomainMembers
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Entities to assign
+        in: body
+        name: members
+        required: true
+        schema:
+          $ref: '#/definitions/v1_domains.MembersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Assign entities to a domain
+      tags:
+      - domains
+  /api/v1/domains/{id}/move:
+    post:
+      consumes:
+      - application/json
+      description: Moves the domain and its whole subtree under a new parent.
+      operationId: moveDomain
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New parent
+        in: body
+        name: move
+        required: true
+        schema:
+          $ref: '#/definitions/v1_domains.MoveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Domain'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Move a domain
+      tags:
+      - domains
+  /api/v1/domains/{id}/tree:
+    get:
+      description: Returns the domain and all its descendants, shallowest first.
+      operationId: getDomainTree
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Domain'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a domain subtree
+      tags:
+      - domains
+  /api/v1/domains/of/{kind}/{id}:
+    get:
+      description: Entities without an explicit domain belong to the Unassigned domain.
+      operationId: getEntityDomain
+      parameters:
+      - description: Entity kind
+        enum:
+        - asset
+        - data_product
+        - glossary_term
+        - ingestion_schedule
+        in: path
+        name: kind
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Domain'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get an entity's domain
+      tags:
+      - domains
   /api/v1/glossary/:
     post:
       consumes:

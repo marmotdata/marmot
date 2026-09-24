@@ -9,6 +9,11 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | File | Function / location | Why |
 | --- | --- | --- |
 | `internal/store/postgres/setup.go` | `Setup.Initialize`, last statement | Runs the fork migration track (`dgumigrations`, table `public.dgu_schema_version`) after the core one, so fork tables never take an upstream migration number |
+| `internal/api/v1/server.go` | `NewServer`, after the `server.handlers` list; two imports | Registers `/api/v1/domains` only when `domains.enabled` is set |
+| `pkg/config/config.go` | `Config.Domains`; `BindEnv("domains.enabled")`; `SetDefault("domains.enabled", false)` | The feature flag (`MARMOT_DOMAINS_ENABLED`) |
+| `pkg/config/config_test.go` | `TestLoad_DCRAllowedRedirectHostsFromEnv` | Asserts the flag is read from the environment; `Load` runs once per process, so it cannot live in its own test |
+| `permissions`, `role_permissions` (data, fork migration `002`) | rows `dgu_view_domains`, `dgu_manage_domains` | `domains:view` for `admin` and `user`, `domains:manage` for `admin`. Names are `dgu_`-prefixed so an upstream permission with the same name cannot collide |
+| `docs/docs.go`, `docs/swagger.json`, `docs/swagger.yaml` | generated | Include the domain endpoints. On a sync conflict, regenerate with `make swagger` |
 
 ## Write inventory
 
@@ -49,3 +54,7 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 | Asset docs | `assetdocs.Service` (wired in `server.go`) | to verify | verify what it writes before delivery 2 |
 
 Out of scope: subscriptions and notifications (per-user), users, roles, teams, SSO and service accounts (global administration).
+
+## Known gaps
+
+- Helm: `charts/marmot/values.schema.json` rejects unknown `config` keys, so `config.domains.enabled` cannot be set through the chart yet. Set `MARMOT_DOMAINS_ENABLED` through the chart's `env` value instead.
