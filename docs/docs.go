@@ -2409,6 +2409,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/domains/audit/{kind}/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every change of domain recorded for an entity, oldest first. Kind is asset, data_product, glossary_term, ingestion_schedule or domain.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Get an entity's domain history",
+                "operationId": "getDomainAuditLog",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entity kind",
+                        "name": "kind",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.AuditEntry"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/domains/capabilities": {
             "get": {
                 "security": [
@@ -2469,6 +2517,123 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/domains/enforcement": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Whether writes are scoped by domain. Off, native RBAC alone decides.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Get domain write enforcement state",
+                "operationId": "getDomainEnforcement",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.EnforcementState"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Turning it on needs the hash of the current plan; a plan that changed since it was reviewed is refused with plan_changed. Both directions are audited. Global scope only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Turn domain write enforcement on or off",
+                "operationId": "setDomainEnforcement",
+                "parameters": [
+                    {
+                        "description": "Target state",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_domains.EnforcementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.EnforcementState"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/DomainErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/domains/enforcement/plan": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Who would lose write access, and where, once writes are scoped by domain, and which pipelines have assets outside their domain. Its hash confirms the activation. Global scope only.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Plan domain write enforcement",
+                "operationId": "getDomainEnforcementPlan",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.EnforcementPlan"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/DomainErrorResponse"
                         }
@@ -2652,7 +2817,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage.",
+                "description": "Sets the domain for the pipeline's new assets. With move_assets, the assets it already ingested that are still in its previous domain move too, in the same transaction; assets placed in another domain stay. Moving assets also requires assets:manage. Under write enforcement the caller must be able to write in both domains; the change is audited.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2880,7 +3045,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Sets the owning domain of every listed entity, all or none. Requires the entity kind's manage permission as well.",
+                "description": "Sets the owning domain of every listed entity, all or none. Requires the entity kind's manage permission and, under write enforcement, write access to both the current and the target domain. Every change is audited.",
                 "consumes": [
                     "application/json"
                 ],
@@ -13306,6 +13471,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.AuditEntry": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "actor": {
+                    "type": "string"
+                },
+                "at": {
+                    "type": "string"
+                },
+                "entity_id": {
+                    "type": "string"
+                },
+                "entity_kind": {
+                    "type": "string"
+                },
+                "from_domain": {
+                    "type": "string"
+                },
+                "to_domain": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.Domain": {
             "type": "object",
             "properties": {
@@ -13348,6 +13539,58 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.DomainRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Path is the chain of names from the root, joined by \" / \".",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.EnforcementPlan": {
+            "type": "object",
+            "properties": {
+                "generated_at": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "pipelines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.PlanPipeline"
+                    }
+                },
+                "principals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.PlanPrincipal"
+                    }
+                },
+                "state": {
+                    "$ref": "#/definitions/domain.EnforcementState"
+                }
+            }
+        },
+        "domain.EnforcementState": {
+            "type": "object",
+            "properties": {
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "write": {
+                    "type": "boolean"
                 }
             }
         },
@@ -13459,6 +13702,55 @@ const docTemplate = `{
                 },
                 "moved_assets": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.PlanPipeline": {
+            "type": "object",
+            "properties": {
+                "assets_outside": {
+                    "type": "integer"
+                },
+                "domain": {
+                    "$ref": "#/definitions/domain.DomainRef"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.PlanPrincipal": {
+            "type": "object",
+            "properties": {
+                "keeps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.DomainRef"
+                    }
+                },
+                "loses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.DomainRef"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_type": {
+                    "$ref": "#/definitions/domain.SubjectType"
                 }
             }
         },
@@ -13916,6 +14208,18 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "v1_domains.EnforcementRequest": {
+            "type": "object",
+            "properties": {
+                "confirm": {
+                    "description": "Confirm is the hash of the plan the caller reviewed. Required to turn\nenforcement on; ignored when turning it off.",
+                    "type": "string"
+                },
+                "write": {
+                    "type": "boolean"
                 }
             }
         },

@@ -40,6 +40,10 @@ type Repository interface {
 	AuditLog(ctx context.Context, entityKind, entityID string) ([]AuditEntry, error)
 	AssetIDsByMRN(ctx context.Context, mrns []string) (map[string]string, error)
 	DocOwner(ctx context.Context, pageID, imageID string) (entityType, entityID string, found bool, err error)
+	All(ctx context.Context) ([]*Domain, error)
+	EnforcementState(ctx context.Context) (*EnforcementState, error)
+	EditorPrincipals(ctx context.Context) ([]EditorPrincipal, error)
+	PipelinesOutsideDomain(ctx context.Context) ([]PlanPipeline, error)
 }
 
 type membership struct {

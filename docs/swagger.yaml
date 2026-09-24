@@ -2520,6 +2520,23 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  domain.AuditEntry:
+    properties:
+      action:
+        type: string
+      actor:
+        type: string
+      at:
+        type: string
+      entity_id:
+        type: string
+      entity_kind:
+        type: string
+      from_domain:
+        type: string
+      to_domain:
+        type: string
+    type: object
   domain.Domain:
     properties:
       created_at:
@@ -2549,6 +2566,40 @@ definitions:
         type: array
       updated_at:
         type: string
+    type: object
+  domain.DomainRef:
+    properties:
+      id:
+        type: string
+      path:
+        description: Path is the chain of names from the root, joined by " / ".
+        type: string
+    type: object
+  domain.EnforcementPlan:
+    properties:
+      generated_at:
+        type: string
+      hash:
+        type: string
+      pipelines:
+        items:
+          $ref: '#/definitions/domain.PlanPipeline'
+        type: array
+      principals:
+        items:
+          $ref: '#/definitions/domain.PlanPrincipal'
+        type: array
+      state:
+        $ref: '#/definitions/domain.EnforcementState'
+    type: object
+  domain.EnforcementState:
+    properties:
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      write:
+        type: boolean
     type: object
   domain.GrantInput:
     properties:
@@ -2623,6 +2674,38 @@ definitions:
         type: string
       moved_assets:
         type: integer
+    type: object
+  domain.PlanPipeline:
+    properties:
+      assets_outside:
+        type: integer
+      domain:
+        $ref: '#/definitions/domain.DomainRef'
+      name:
+        type: string
+      schedule_id:
+        type: string
+    type: object
+  domain.PlanPrincipal:
+    properties:
+      keeps:
+        items:
+          $ref: '#/definitions/domain.DomainRef'
+        type: array
+      loses:
+        items:
+          $ref: '#/definitions/domain.DomainRef'
+        type: array
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      subject_id:
+        type: string
+      subject_type:
+        $ref: '#/definitions/domain.SubjectType'
     type: object
   domain.Role:
     enum:
@@ -2941,6 +3024,16 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  v1_domains.EnforcementRequest:
+    properties:
+      confirm:
+        description: |-
+          Confirm is the hash of the plan the caller reviewed. Required to turn
+          enforcement on; ignored when turning it off.
+        type: string
+      write:
+        type: boolean
     type: object
   v1_domains.MembersRequest:
     properties:
@@ -4635,7 +4728,8 @@ paths:
       consumes:
       - application/json
       description: Sets the owning domain of every listed entity, all or none. Requires
-        the entity kind's manage permission as well.
+        the entity kind's manage permission and, under write enforcement, write access
+        to both the current and the target domain. Every change is audited.
       operationId: assignDomainMembers
       parameters:
       - description: Domain ID
@@ -4860,6 +4954,37 @@ paths:
       summary: Get a domain subtree
       tags:
       - domains
+  /api/v1/domains/audit/{kind}/{id}:
+    get:
+      description: Every change of domain recorded for an entity, oldest first. Kind
+        is asset, data_product, glossary_term, ingestion_schedule or domain.
+      operationId: getDomainAuditLog
+      parameters:
+      - description: Entity kind
+        in: path
+        name: kind
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.AuditEntry'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get an entity's domain history
+      tags:
+      - domains
   /api/v1/domains/capabilities:
     get:
       description: Informative, for hiding actions in a UI; the server checks every
@@ -4902,6 +5027,81 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: What the caller may do in a domain
+      tags:
+      - domains
+  /api/v1/domains/enforcement:
+    get:
+      description: Whether writes are scoped by domain. Off, native RBAC alone decides.
+      operationId: getDomainEnforcement
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EnforcementState'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get domain write enforcement state
+      tags:
+      - domains
+    post:
+      consumes:
+      - application/json
+      description: Turning it on needs the hash of the current plan; a plan that changed
+        since it was reviewed is refused with plan_changed. Both directions are audited.
+        Global scope only.
+      operationId: setDomainEnforcement
+      parameters:
+      - description: Target state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_domains.EnforcementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EnforcementState'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Turn domain write enforcement on or off
+      tags:
+      - domains
+  /api/v1/domains/enforcement/plan:
+    get:
+      description: Who would lose write access, and where, once writes are scoped
+        by domain, and which pipelines have assets outside their domain. Its hash
+        confirms the activation. Global scope only.
+      operationId: getDomainEnforcementPlan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EnforcementPlan'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/DomainErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Plan domain write enforcement
       tags:
       - domains
   /api/v1/domains/import:
@@ -5019,7 +5219,8 @@ paths:
       description: Sets the domain for the pipeline's new assets. With move_assets,
         the assets it already ingested that are still in its previous domain move
         too, in the same transaction; assets placed in another domain stay. Moving
-        assets also requires assets:manage.
+        assets also requires assets:manage. Under write enforcement the caller must
+        be able to write in both domains; the change is audited.
       operationId: setPipelineDomain
       parameters:
       - description: Ingestion schedule ID

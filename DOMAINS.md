@@ -33,6 +33,13 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 - No principal and no pipeline: denied.
 - Moving entities between domains (`PUT /domains/{id}/members`, pipeline reassignment) needs `write` on both ends. Every change of domain goes to `domain_audit_log`, enforced or not, and so do domain moves.
 
+### Turning it on
+
+- `GET /api/v1/domains/enforcement/plan` (global scope only) lists the identities with `assets:manage` or `glossary:manage`, outside the admin role, that would lose write access, with the topmost domains they keep and lose. It also lists the pipelines whose ingested assets sit outside their domain: their runs could no longer update or remove them.
+- `POST /api/v1/domains/enforcement` with `{"write": true, "confirm": "<plan hash>"}` turns it on. A plan that changed since it was reviewed is refused with `plan_changed`. `{"write": false}` turns it off. Both need global scope and both are audited (`entity_kind = setting`).
+- `GET /api/v1/domains/enforcement` returns the state to anyone with `domains:view`.
+- CLI: `marmot domains enforcement status | plan | enable --confirm <hash> | disable` (`internal/cmd/domains.go`, fork-only; it calls the API directly because domains are not in the generated SDK).
+
 ### Assets (`asset.Service`)
 
 | Channel | Call site | Methods | Coverage |

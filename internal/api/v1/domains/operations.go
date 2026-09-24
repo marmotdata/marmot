@@ -100,6 +100,7 @@ var errorCodes = []struct {
 	{domain.ErrProtected, http.StatusConflict, "protected"},
 	{domain.ErrDuplicate, http.StatusConflict, "duplicate"},
 	{domain.ErrForbidden, http.StatusForbidden, "forbidden"},
+	{domain.ErrPlanChanged, http.StatusConflict, "plan_changed"},
 }
 
 func respondError(w http.ResponseWriter, err error, action string) {
