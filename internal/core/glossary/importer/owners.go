@@ -19,7 +19,9 @@ type TeamLookup interface {
 }
 
 // ServiceOwners resolves owner cells with Marmot's user and team services:
-// a username, or team:<name>.
+// a username, or team:<name>, ignoring case. Those services fall back to an
+// ILIKE match, where % and _ are wildcards, so only a result that equals the
+// cell ignoring case is accepted.
 type ServiceOwners struct {
 	Users UserLookup
 	Teams TeamLookup
@@ -36,6 +38,9 @@ func (o ServiceOwners) ResolveOwner(ctx context.Context, ref string) (glossary.O
 		if err != nil {
 			return glossary.OwnerInput{}, err
 		}
+		if !strings.EqualFold(t.Name, strings.TrimSpace(name)) {
+			return glossary.OwnerInput{}, ErrOwnerNotFound
+		}
 		return glossary.OwnerInput{ID: t.ID, Type: "team"}, nil
 	}
 	u, err := o.Users.GetUserByUsername(ctx, ref)
@@ -44,6 +49,9 @@ func (o ServiceOwners) ResolveOwner(ctx context.Context, ref string) (glossary.O
 	}
 	if err != nil {
 		return glossary.OwnerInput{}, err
+	}
+	if !strings.EqualFold(u.Username, ref) {
+		return glossary.OwnerInput{}, ErrOwnerNotFound
 	}
 	return glossary.OwnerInput{ID: u.ID, Type: "user"}, nil
 }

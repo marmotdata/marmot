@@ -62,6 +62,8 @@
 	function columnFormat(c: ImportColumn): string {
 		const sep = c.separator ?? '|';
 		switch (c.format) {
+			case 'name':
+				return m.glossary_import_format_name();
 			case 'text':
 				return m.glossary_import_format_string();
 			case 'term':
@@ -160,6 +162,7 @@
 		parent_cycle: m.glossary_import_code_parent_cycle,
 		owner_not_found: m.glossary_import_code_owner_not_found,
 		missing: m.glossary_import_code_missing,
+		matched_ignoring_case: m.glossary_import_code_matched_ignoring_case,
 		unknown_column: m.glossary_import_code_unknown_column,
 		missing_column: m.glossary_import_code_missing_column,
 		duplicate_column: m.glossary_import_code_duplicate_column

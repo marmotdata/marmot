@@ -46,6 +46,10 @@ func TestImportIsAllOrNothing(t *testing.T) {
 	if err != nil || len(written) != 2 {
 		t.Fatalf("written = %v, err = %v", written, err)
 	}
+	byName, err := svc.ByNames(ctx, []string{"INVOICE"})
+	if err != nil || len(byName["Invoice"]) != 1 {
+		t.Fatalf("ByNames ignores case: %v, %v", byName, err)
+	}
 	receipt, err := svc.GetByName(ctx, "Receipt")
 	if err != nil || receipt.ParentTermID == nil || len(receipt.Owners) != 1 {
 		t.Fatalf("receipt = %+v, err = %v", receipt, err)

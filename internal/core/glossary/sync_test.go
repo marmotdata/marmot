@@ -3,6 +3,7 @@ package glossary
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -78,7 +79,7 @@ func (r *fakeRepo) ByNames(_ context.Context, names []string) ([]*GlossaryTerm, 
 	var out []*GlossaryTerm
 	for _, t := range r.live() {
 		for _, n := range names {
-			if t.Name == n {
+			if strings.EqualFold(t.Name, n) {
 				out = append(out, t)
 			}
 		}

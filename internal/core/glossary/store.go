@@ -273,15 +273,15 @@ func (r *PostgresRepository) GetByName(ctx context.Context, name string) (*Gloss
 
 // SetParent moves a term under another one without touching the rest of
 // the row, so resolving a hierarchy cannot undo a concurrent edit.
-// ByNames returns every live term with one of the names. Names are not
-// unique, so a name may come back more than once.
+// ByNames returns every live term whose name matches one of names, ignoring
+// case. Names are not unique, so a name may come back more than once.
 func (r *PostgresRepository) ByNames(ctx context.Context, names []string) ([]*GlossaryTerm, error) {
 	start := time.Now()
 	rows, err := r.db.Query(ctx, `
 		SELECT id, name, definition, user_definition, description, parent_term_id,
 			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
-		WHERE name = ANY($1) AND deleted_at IS NULL
+		WHERE lower(name) IN (SELECT lower(n) FROM unnest($1::text[]) n) AND deleted_at IS NULL
 		ORDER BY created_at ASC`, names)
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "glossary_by_names", time.Since(start), false)

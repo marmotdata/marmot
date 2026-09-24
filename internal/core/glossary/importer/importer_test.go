@@ -9,6 +9,8 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/metamodel"
+	"github.com/marmotdata/marmot/internal/core/team"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -52,9 +54,11 @@ type fakeTerms map[string][]*glossary.GlossaryTerm
 
 func (f fakeTerms) ByNames(_ context.Context, names []string) (map[string][]*glossary.GlossaryTerm, error) {
 	out := map[string][]*glossary.GlossaryTerm{}
-	for _, n := range names {
-		if t, ok := f[n]; ok {
-			out[n] = t
+	for stored, terms := range f {
+		for _, n := range names {
+			if strings.EqualFold(stored, n) {
+				out[stored] = terms
+			}
 		}
 	}
 	return out, nil
@@ -344,10 +348,76 @@ func TestDescribeColumns(t *testing.T) {
 	for _, c := range cols {
 		byID[c.ID] = c
 	}
-	if a := byID["area"]; a.Label != "Área de negocio" || strings.Join(a.Values, ",") != "finance,legal" || !a.Profile || Describe(Column{Type: "enum"}) != "One of the allowed values." {
+	if a := byID["area"]; a.Label != "Área de negocio" || strings.Join(a.Values, ",") != "finance,legal" || !a.Profile || Describe(Column{Type: "enum"}) != "One of the allowed values, ignoring case; stored as the profile spells it." {
 		t.Fatalf("area = %+v", a)
 	}
 	if o := byID["owners"]; o.Separator != ListSeparator || o.Format != "owners" || o.Profile {
 		t.Fatalf("owners = %+v", o)
+	}
+}
+
+func TestNamesAndValuesIgnoreCase(t *testing.T) {
+	existing := fakeTerms{"Invoice": {{ID: "t-invoice", Name: "Invoice"}}}
+	im := New(registry(t), existing, fakeOwners{})
+	ctx := context.Background()
+	content := strings.Join([]string{
+		"name,definition,parent,owners,area",
+		"invoice,Reworded,,ana,FINANCE",
+		"Receipt,Proof,INVOICE,ana,Legal",
+		"Card,By card,receipt,ana,finance",
+		"Pago,Pay,,ana,finance",
+		"pago,Pay again,,ana,finance",
+	}, "\n")
+	result, err := im.Validate(ctx, csvSheet(t, content), OnExistingUpdate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows := map[int]Row{}
+	for _, r := range result.Rows {
+		rows[r.Line] = r
+	}
+	invoice := rows[2]
+	if invoice.Action != ActionUpdate || invoice.term.Name != "Invoice" || len(invoice.Warnings) != 1 || invoice.Warnings[0].Code != "matched_ignoring_case" {
+		t.Fatalf("invoice = %+v", invoice)
+	}
+	if v, _ := metamodel.ValueAt(invoice.term.Update.Metadata, "metadata.governance.area"); v != "finance" {
+		t.Fatalf("enum stored as %v, want the profile's spelling", v)
+	}
+	receipt := rows[3]
+	if receipt.term.ParentName != "Invoice" || len(receipt.Errors) != 0 {
+		t.Fatalf("receipt = %+v", receipt)
+	}
+	if card := rows[4]; card.term.ParentName != "Receipt" || len(card.Errors) != 0 {
+		t.Fatalf("a parent in the file is matched ignoring case too: %+v", card)
+	}
+	if rows[5].Errors[0].Code != "duplicate_in_file" || rows[6].Errors[0].Code != "duplicate_in_file" {
+		t.Fatalf("names differing only in case are duplicates: %+v %+v", rows[5], rows[6])
+	}
+}
+
+type lookups struct{}
+
+func (lookups) GetUserByUsername(_ context.Context, username string) (*user.User, error) {
+	// Mimics the ILIKE fallback: any pattern finds "ana".
+	return &user.User{ID: "u-ana", Username: "ana"}, nil
+}
+
+func (lookups) GetTeamByName(_ context.Context, name string) (*team.Team, error) {
+	return &team.Team{ID: "t-finance", Name: "Finance"}, nil
+}
+
+func TestServiceOwnersNeedTheSameNameIgnoringCase(t *testing.T) {
+	o := ServiceOwners{Users: lookups{}, Teams: lookups{}}
+	ctx := context.Background()
+	if got, err := o.ResolveOwner(ctx, "ANA"); err != nil || got.ID != "u-ana" {
+		t.Fatalf("ANA: %v %v", got, err)
+	}
+	if got, err := o.ResolveOwner(ctx, "team:finance"); err != nil || got.Type != "team" {
+		t.Fatalf("team:finance: %v %v", got, err)
+	}
+	for _, ref := range []string{"a%", "team:%"} {
+		if _, err := o.ResolveOwner(ctx, ref); !errors.Is(err, ErrOwnerNotFound) {
+			t.Fatalf("%q must not match through a wildcard: %v", ref, err)
+		}
 	}
 }

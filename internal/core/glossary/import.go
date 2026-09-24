@@ -10,6 +10,9 @@ import (
 // existing one (ExistingID) to update. ParentName names the parent term,
 // existing or another row of the same import, and is resolved when writing.
 type ImportTerm struct {
+	// Name is the term's name as the catalog will hold it, which parents in
+	// the same batch refer to.
+	Name       string
 	ExistingID string
 	Create     CreateTermInput
 	Update     UpdateTermInput
@@ -17,6 +20,9 @@ type ImportTerm struct {
 }
 
 func (t ImportTerm) name() string {
+	if t.Name != "" {
+		return t.Name
+	}
 	if t.ExistingID != "" && t.Update.Name != nil {
 		return *t.Update.Name
 	}
