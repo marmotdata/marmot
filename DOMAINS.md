@@ -14,11 +14,13 @@ Each row is a change to a file that also exists upstream. A PR that adds, moves 
 | `internal/api/v1/server.go` | the `config.Domains.Enabled` block: replaces the docs, assets, data products and glossary handlers in `server.handlers` | Route middleware: `domainsAPI.GuardDocs` scopes documentation pages and `domainsAPI.WithCreateTargets` reads `?domain_id=` on the create routes. The handler list itself is untouched |
 | `internal/api/v1/assets/operations.go`, `assets/terms.go`, `assets/documentation.go`, `dataproducts/operations.go`, `glossary/operations.go`, `assetrules/operations.go`, `lineage/operations.go` | the error `switch` after each decorated write, and `respondAssetWriteError`; one import each | `domain.ErrForbidden` → 403 instead of 500 |
 | `internal/core/runs/service.go` | `ProcessEntities`, first statement; one import | Puts the pipeline name in the context so new assets inherit the domain of the schedule with that name |
-| `internal/core/search/store.go` | `PostgresRepository.domainResolver`; `Search` resolves `@domain` first; `buildFilterClauses` and `buildListingFacetWhereClause` call `appendDomainClauses`; `buildFacetsParallel` skips cached facets when `filter.Domain` is set | `@domain:<id>` filter over a subtree. Cached facets are global counts and would ignore it |
+| `internal/core/lineage/service.go` | `service.edgeGuard` and the check at the top of `CreateDirectLineage`; the option lives in the new file `edge_guard.go` | Vets every edge, including those an OpenLineage event writes internally, which never go through a decorator |
+| `internal/core/search/store.go` | `PostgresRepository.domainResolver`; `Search` resolves `@domain` first; `buildFilterClauses` and `buildListingFacetWhereClause` call `appendDomainClauses`; `buildFacetsParallel` skips cached facets when `filter.Domain` is set | `@domain` filter over subtrees, by id, name or name path, and `NOT @domain` exclusion. Cached facets are global counts and would ignore it |
 | `internal/core/search/service.go` | `Filter.Domain` | Carries the resolved domain filter; never read from JSON |
 | `pkg/config/config.go` | `Config.Domains`; `BindEnv("domains.enabled")`; `SetDefault("domains.enabled", false)` | The feature flag (`MARMOT_DOMAINS_ENABLED`) |
 | `pkg/config/config_test.go` | `TestLoad_DCRAllowedRedirectHostsFromEnv` | Asserts the flag is read from the environment; `Load` runs once per process, so it cannot live in its own test |
 | `permissions`, `role_permissions` (data, fork migration `002`) | rows `dgu_view_domains`, `dgu_manage_domains` | `domains:view` for `admin` and `user`, `domains:manage` for `admin`. Names are `dgu_`-prefixed so an upstream permission with the same name cannot collide |
+| `charts/marmot/values.yaml`, `values.schema.json`, `templates/validation.yaml`, `tests/{configmap,validation}_test.yaml` | `config.domains`; the Elasticsearch check | The flag through the chart; refuses to render domains with Elasticsearch, as the server refuses to start |
 | `docs/docs.go`, `docs/swagger.json`, `docs/swagger.yaml` | generated | Include the domain endpoints. On a sync conflict, regenerate with `make swagger` |
 
 ### Web seams
@@ -36,7 +38,7 @@ Fork-only UI lives in `web/marmot/src/lib/domains/`, `components/domain/` and `r
 | `components/asset/AssetBlade.svelte`, `components/product/ProductBlade.svelte` | read-only `DomainChip` | Domain in the Discover side panels |
 | `components/product/DataProductForm.svelte`, `routes/assets/new/+page.svelte` | `DomainSelect`; `?domain_id=` on the create request | Domain on creation |
 | `routes/pipelines/new/+page.svelte`, `routes/pipelines/[id]/edit/+page.svelte` | `PipelineDomain` | Pipeline domain, with the explicit asset move |
-| `components/query/QueryBuilder.svelte`, `components/query/QueryInput.svelte` | `@domain` field, its values and its `=` operator | Query builder and `@` autocomplete |
+| `components/query/QueryBuilder.svelte`, `components/query/QueryInput.svelte` | `@domain` field, its values (shown by label, inserted by value) and its `=` operator | Query builder and `@` autocomplete |
 
 ## Write inventory
 
@@ -88,7 +90,7 @@ Every operation that creates, changes, moves or deletes catalog content, and how
 | --- | --- | --- | --- |
 | REST, ingestion | `internal/api/v1/lineage` (`/lineage/direct`, `/lineage/batch`), `internal/core/runs/service.go` | `lineage.Service` CreateDirectLineage, DeleteDirectLineage | decorator (`GuardLineage`): the **target** asset's domain decides; the downstream side declares what it reads. An MRN with no asset yet counts as Unassigned |
 | Agents | `internal/core/agent/service.go` | `lineage.Service` BatchObservedLineage | decorator; all edges or none. The run record is kept and the agent gets the error text, as for any lineage failure |
-| OpenLineage | `internal/core/lineage/openlineage.go` | edges written inside `ProcessOpenLineageEvent` | not checked per edge; the assets the event creates or updates go through the asset decorator, so an emitter without a role on the output's domain fails there |
+| OpenLineage | `internal/core/lineage/openlineage.go` | edges written inside `ProcessOpenLineageEvent` | `lineage.WithEdgeGuard`: each edge by its target, like any other; a refused edge is skipped with a warning and the rest of the event is processed |
 | REST | `internal/api/v1/assets/documentation.go` | `assetdocs.Service` Create, CreateGlobal | decorator (`GuardAssetDocs`): the asset's domain; global documentation needs global scope |
 | REST | `internal/api/v1/docs` (pages and images) | `docs.Service`, a concrete type | `domainsAPI.GuardDocs` adds a check as the innermost middleware of every write route: the page's owner (asset by MRN, or data product) decides |
 | Asset rules | `internal/api/v1/assetrules` | `assetrule.Service` Create, Update, Delete | decorator (`GuardAssetRules`): global scope while enforcement is on. Their evaluation writes derived links and is not scoped |
@@ -98,4 +100,3 @@ Out of scope: subscriptions and notifications (per-user), users, roles, teams, S
 ## Known gaps
 
 - Elasticsearch: `@domain` is only applied by the Postgres search backend, so the server refuses to start with `domains.enabled` and Elasticsearch together.
-- Helm: `charts/marmot/values.schema.json` rejects unknown `config` keys, so `config.domains.enabled` cannot be set through the chart yet. Set `MARMOT_DOMAINS_ENABLED` through the chart's `env` value instead.

@@ -29,8 +29,8 @@ MARMOT_DOMAINS_ENABLED=true
 ```
 
 - The tables are created on every start, enabled or not, so turning the flag on and off never changes the database schema.
-- Domains need the Postgres search backend. With Elasticsearch enabled, the server refuses to start.
-- The Helm chart does not accept `config.domains` yet. Set `MARMOT_DOMAINS_ENABLED` through the chart's `env` value.
+- Domains need the Postgres search backend. With Elasticsearch enabled, the server refuses to start, and the Helm chart refuses to render.
+- With the Helm chart, set `config.domains.enabled: true`.
 
 The flag only turns the feature on. It never restricts anyone by itself: see [write enforcement](#write-enforcement).
 
@@ -60,9 +60,14 @@ Discover has a domain filter, and the query language accepts `@domain`, which al
 @domain:"Finance/Payments"
 @kind:asset AND @domain = "HR"
 @domain:Unassigned
+@domain:Finance NOT @domain:"Finance/Payments"
 ```
 
-A value can be a domain ID, a name at any depth (every domain with that name matches), or a path of names from the root. `@domain` always narrows the whole query, whatever `AND`, `OR` or `NOT` surrounds it. The query builder offers it under simple fields, with the domain paths as values.
+- A value can be a domain ID, a name at any depth (every domain with that name matches), or a path of names from the root.
+- Unassigned also answers to its name in each UI language (`Sin asignar`), unless a real domain has that name.
+- Several `@domain` tokens select any of those domains. `NOT @domain:…` excludes a subtree.
+- The domain filter applies to the whole query: an `OR` around an `@domain` token does not widen it.
+- The query builder offers `@domain` under simple fields, with the domain paths as values.
 
 ## Domain roles
 
@@ -89,7 +94,7 @@ With enforcement on:
 - Creating needs the role on the destination. The create endpoints (`POST /api/v1/assets/`, `/products/`, `/glossary/`) take an optional `?domain_id=`: the entity is created straight in that domain. Without it, the destination is Unassigned, which is usually reserved for onboarding accounts.
 - Moving an entity to another domain needs the role on both its current domain and the target.
 - A scheduled ingestion run writes with the scope of its pipeline's domain. A run started over the API also needs the caller to be allowed there, so naming a pipeline grants nothing.
-- Lineage edges follow their **target**: the downstream asset declares what it reads, wherever the source lives.
+- Lineage edges follow their **target**: the downstream asset declares what it reads, wherever the source lives. This holds for the edges an OpenLineage event creates too: an edge the emitter may not write is skipped with a warning, and the rest of the event is processed.
 - Documentation pages follow the asset or product they belong to.
 - Asset rules and data product rules match assets anywhere, so only global administrators can change them.
 
@@ -144,5 +149,4 @@ Errors carry a stable `code` next to the message, such as `forbidden`, `name_con
 
 - Elasticsearch search is not supported with domains.
 - Reading cannot be restricted per domain yet; `restricted: true` is rejected.
-- Lineage edges created inside an OpenLineage event are not checked one by one. The assets the event creates or updates are, so an emitter without a role on the output's domain fails there.
 - Asset rules and data product rules are global, and so are the links they derive.
