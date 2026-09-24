@@ -281,6 +281,16 @@
             }
           }
         },
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "lookup_limit": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
         "logging": {
           "type": "object",
           "additionalProperties": false,

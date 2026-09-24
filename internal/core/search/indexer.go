@@ -22,6 +22,7 @@ type SearchDocument struct {
 	UpdatedAt       time.Time
 	Metadata        map[string]interface{}
 	Documentation   *string
+	Memory          *string
 }
 
 // SearchIndexer defines the interface for external search backends.

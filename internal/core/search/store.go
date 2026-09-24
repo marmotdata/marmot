@@ -88,6 +88,14 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 	return results, total, facets, nil
 }
 
+// An entity found only through its memory ranks below one found by its own
+// name or text.
+const (
+	// memoryMatchRank is the rank of a memory-only match among fuzzy name
+	// matches, which rank from about 30 to 100.
+	memoryMatchRank = "20.0"
+)
+
 // queryType determines which search strategy to use
 type queryType int
 
@@ -299,16 +307,19 @@ func (r *PostgresRepository) buildFuzzySearchQuery(searchQuery string, filter Fi
 	offsetParam := paramCount
 	params = append(params, filter.Limit, filter.Offset)
 
+	// Matches on the name rank by similarity. An entity whose name does not
+	// match but whose memory mentions the word ranks below them.
 	sqlQuery := fmt.Sprintf(`
 		SELECT type, entity_id, name, description, url_path,
-		       (word_similarity($%d, name) * 100.0)::real as rank,
+		       (CASE WHEN name %%> $%d THEN word_similarity($%d, name) * 100.0
+		             ELSE %s END)::real as rank,
 		       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 		FROM search_index
-		WHERE name %%> $%d
+		WHERE (name %%> $%d OR memory_text @@ plainto_tsquery('english', $%d))
 		%s
 		ORDER BY rank DESC, updated_at DESC
 		LIMIT $%d OFFSET $%d
-	`, queryParam, queryParam, whereSQL, limitParam, offsetParam)
+	`, queryParam, queryParam, memoryMatchRank, queryParam, queryParam, whereSQL, limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -337,25 +348,36 @@ func (r *PostgresRepository) buildFullTextSearchQuery(searchQuery string, filter
 	params = append(params, filter.Limit, filter.Offset)
 
 	// Full-text search with candidate limiting to avoid expensive scans on large result sets
-	// The CTE grabs first 1000 index matches (fast), then we rank within that set
+	// The CTEs grab the first 1000 index matches (fast), then we rank within that set
 	// This trades "most recent" for speed - acceptable for high-cardinality matches
+	// Entities matched by their own text rank above entities matched only
+	// through their memory, and take their candidate slots first.
 	sqlQuery := fmt.Sprintf(`
-		WITH candidates AS (
-			SELECT entity_id, type, name, description, url_path, search_text,
+		WITH text_matches AS (
+			SELECT type, entity_id, name, description, url_path,
+			       ts_rank_cd(search_text, websearch_to_tsquery('english', $%[1]d), 32) AS rank, 1 AS tier,
 			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 			FROM search_index
-			WHERE search_text @@ websearch_to_tsquery('english', $%d)
-			%s
+			WHERE search_text @@ websearch_to_tsquery('english', $%[1]d)
+			%[2]s
+			LIMIT 1000
+		), memory_matches AS (
+			SELECT type, entity_id, name, description, url_path,
+			       ts_rank_cd(memory_text, websearch_to_tsquery('english', $%[1]d), 32) AS rank, 0 AS tier,
+			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+			FROM search_index
+			WHERE memory_text @@ websearch_to_tsquery('english', $%[1]d)
+			  AND NOT search_text @@ websearch_to_tsquery('english', $%[1]d)
+			%[2]s
 			LIMIT 1000
 		)
 		SELECT
-			type, entity_id, name, description, url_path,
-			ts_rank_cd(search_text, websearch_to_tsquery('english', $%d), 32)::real as rank,
+			type, entity_id, name, description, url_path, rank::real,
 			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM candidates
-		ORDER BY rank DESC, updated_at DESC
-		LIMIT $%d OFFSET $%d
-	`, queryParam, whereSQL, queryParam, limitParam, offsetParam)
+		FROM (SELECT * FROM text_matches UNION ALL SELECT * FROM memory_matches) candidates
+		ORDER BY tier DESC, rank DESC, updated_at DESC
+		LIMIT $%[3]d OFFSET $%[4]d
+	`, queryParam, whereSQL, limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -771,14 +793,22 @@ func (r *PostgresRepository) GetSearchDocument(ctx context.Context, entityType, 
 		       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
 		        FROM doc_pages dp
 		        WHERE dp.entity_type = si.type
-		          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+		          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation,
+		       CASE si.type
+		         WHEN 'asset' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+		                            FROM memories m
+		                            WHERE m.asset_id = si.entity_id)
+		         WHEN 'data_product' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+		                                   FROM memories m
+		                                   WHERE m.data_product_id = si.entity_id::uuid)
+		       END AS memory
 		FROM search_index si
 		WHERE si.type = $1 AND si.entity_id = $2
 	`, entityType, entityID).Scan(
 		&doc.Type, &doc.EntityID, &doc.Name, &doc.Description, &doc.URLPath,
 		&doc.AssetType, &doc.PrimaryProvider, &doc.Providers, &doc.Tags,
 		&doc.MRN, &doc.CreatedBy, &doc.CreatedAt, &doc.UpdatedAt, &doc.Metadata,
-		&doc.Documentation,
+		&doc.Documentation, &doc.Memory,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -803,7 +833,15 @@ func (r *PostgresRepository) ScanSearchDocuments(ctx context.Context, afterType,
 			       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
 			        FROM doc_pages dp
 			        WHERE dp.entity_type = si.type
-			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation,
+			       CASE si.type
+			         WHEN 'asset' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+			                            FROM memories m
+			                            WHERE m.asset_id = si.entity_id)
+			         WHEN 'data_product' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+			                                   FROM memories m
+			                                   WHERE m.data_product_id = si.entity_id::uuid)
+			       END AS memory
 			FROM search_index si
 			ORDER BY si.type, si.entity_id
 			LIMIT $1
@@ -816,7 +854,15 @@ func (r *PostgresRepository) ScanSearchDocuments(ctx context.Context, afterType,
 			       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
 			        FROM doc_pages dp
 			        WHERE dp.entity_type = si.type
-			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation,
+			       CASE si.type
+			         WHEN 'asset' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+			                            FROM memories m
+			                            WHERE m.asset_id = si.entity_id)
+			         WHEN 'data_product' THEN (SELECT STRING_AGG(m.content, E'\n' ORDER BY m.updated_at DESC)
+			                                   FROM memories m
+			                                   WHERE m.data_product_id = si.entity_id::uuid)
+			       END AS memory
 			FROM search_index si
 			WHERE (si.type, si.entity_id) > ($1, $2)
 			ORDER BY si.type, si.entity_id
@@ -835,7 +881,7 @@ func (r *PostgresRepository) ScanSearchDocuments(ctx context.Context, afterType,
 			&doc.Type, &doc.EntityID, &doc.Name, &doc.Description, &doc.URLPath,
 			&doc.AssetType, &doc.PrimaryProvider, &doc.Providers, &doc.Tags,
 			&doc.MRN, &doc.CreatedBy, &doc.CreatedAt, &doc.UpdatedAt, &doc.Metadata,
-			&doc.Documentation,
+			&doc.Documentation, &doc.Memory,
 		); err != nil {
 			return nil, fmt.Errorf("scanning search document row: %w", err)
 		}

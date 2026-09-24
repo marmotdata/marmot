@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/memory"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -33,6 +34,8 @@ type ToolContext struct {
 	principal          auth.Principal
 	config             *config.Config
 	lookups            lookups.Recorder
+	memoryService      memory.Service
+	memoryAccess       MemoryAccess
 }
 
 // recordLookup increments the lookup counter with source=mcp. Safe to call
@@ -180,6 +183,11 @@ func (tc *ToolContext) renderAssetDetails(ctx context.Context, a *asset.Asset) (
 			formatted += "\n\n" + FormatAssetDataProducts(products, tc.config.Server.RootURL)
 			nextActions["Explore data product"] = fmt.Sprintf(`Use explore_data_products: {"id": "%s"}`, products[0].ID)
 		}
+	}
+
+	if mem := tc.memorySection(ctx, memory.Entity{Type: memory.EntityAsset, ID: a.ID},
+		fmt.Sprintf(`{"asset_id": "%s"}`, a.ID)); mem != "" {
+		formatted += "\n\n" + mem
 	}
 
 	formatted += "\n\n" + FormatNextActions(nextActions)
@@ -1024,6 +1032,11 @@ func (tc *ToolContext) renderDataProductDetails(ctx context.Context, product *da
 	}
 
 	formatted := FormatDataProductCard(product, memberAssets, totalAssets, tc.config.Server.RootURL)
+
+	if mem := tc.memorySection(ctx, memory.Entity{Type: memory.EntityDataProduct, ID: product.ID},
+		fmt.Sprintf(`{"data_product_id": "%s"}`, product.ID)); mem != "" {
+		formatted += "\n\n" + mem
+	}
 
 	nextActions := map[string]string{
 		"Get member asset details": `Use discover_data with {"id": "asset-id"}`,

@@ -1440,6 +1440,56 @@ definitions:
     - password
     - username
     type: object
+  Memory:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/memory.Author'
+      entity_id:
+        type: string
+      entity_type:
+        $ref: '#/definitions/memory.EntityType'
+      found_count:
+        description: FoundCount is how often a search has returned the memory.
+        type: integer
+      id:
+        type: string
+      last_found_at:
+        type: string
+      score:
+        description: |-
+          Score is the search relevance; higher is more relevant. Set on search
+          results only.
+        type: number
+      session_id:
+        description: SessionID is the session the entry was created in.
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/memory.Author'
+      updated_session_id:
+        type: string
+    type: object
+  MemoryList:
+    properties:
+      memories:
+        items:
+          $ref: '#/definitions/Memory'
+        type: array
+      total:
+        type: integer
+    type: object
+  MemorySearchResult:
+    properties:
+      memories:
+        items:
+          $ref: '#/definitions/Memory'
+        type: array
+    type: object
   MessageResponse:
     properties:
       message:
@@ -1651,6 +1701,13 @@ definitions:
         type: boolean
       running:
         type: boolean
+    type: object
+  RememberRequest:
+    properties:
+      content:
+        type: string
+      session_id:
+        type: string
     type: object
   RemoveTermRequest:
     properties:
@@ -2309,6 +2366,13 @@ definitions:
       role:
         type: string
     type: object
+  UpdateMemoryRequest:
+    properties:
+      content:
+        type: string
+      session_id:
+        type: string
+    type: object
   UpdatePasswordRequest:
     properties:
       new_password:
@@ -2505,6 +2569,23 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  memory.Author:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  memory.EntityType:
+    enum:
+    - asset
+    - data_product
+    type: string
+    x-enum-varnames:
+    - EntityAsset
+    - EntityDataProduct
   pluginsdk.AssetField:
     properties:
       description:
@@ -5014,6 +5095,299 @@ paths:
       summary: MCP endpoint
       tags:
       - mcp
+  /api/v1/memory/{entityType}/{entityId}:
+    get:
+      description: List an entity's memory. By default the most recently changed comes
+        first; sort=used ranks by use, sort=found by how often searches returned it,
+        sort=created lists the newest first.
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Session ID
+        in: query
+        name: session_id
+        type: string
+      - default: changed
+        description: Sort order
+        enum:
+        - changed
+        - used
+        - created
+        in: query
+        name: sort
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MemoryList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List memory
+      tags:
+      - memory
+    post:
+      consumes:
+      - application/json
+      description: Add a memory entry to an entity.
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Entry
+        in: body
+        name: memory
+        required: true
+        schema:
+          $ref: '#/definitions/RememberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Memory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Remember
+      tags:
+      - memory
+  /api/v1/memory/{entityType}/{entityId}/{memoryId}:
+    delete:
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Memory ID
+        in: path
+        name: memoryId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Forget a memory entry
+      tags:
+      - memory
+    get:
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Memory ID
+        in: path
+        name: memoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Memory'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a memory entry
+      tags:
+      - memory
+    put:
+      consumes:
+      - application/json
+      description: Replace an entry's content in place.
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Memory ID
+        in: path
+        name: memoryId
+        required: true
+        type: string
+      - description: Content
+        in: body
+        name: memory
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateMemoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Memory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update a memory entry
+      tags:
+      - memory
+  /api/v1/memory/{entityType}/{entityId}/search:
+    get:
+      description: Search an entity's memory.
+      parameters:
+      - description: Entity type
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Session ID
+        in: query
+        name: session_id
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MemorySearchResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Search memory
+      tags:
+      - memory
   /api/v1/metrics:
     get:
       consumes:

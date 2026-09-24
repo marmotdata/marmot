@@ -5,6 +5,7 @@
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import UserTable from './UserTable.svelte';
+	import Pagination from '$components/ui/Pagination.svelte';
 	import type { User } from '$lib/users/types';
 
 	let users: User[] = [];
@@ -21,7 +22,7 @@
 		goto(resolve('/users/new'));
 	}
 
-	async function fetchUsers() {
+	async function fetchUsers(stepBack = true) {
 		try {
 			loading = true;
 			const params = new URLSearchParams({
@@ -34,6 +35,11 @@
 			const data = await response.json();
 			users = data.users;
 			totalUsers = data.total;
+			// Past the last page, e.g. after deleting its only user: show the last page, once.
+			if (stepBack && users.length === 0 && offset > 0 && totalUsers > 0) {
+				offset = Math.floor((totalUsers - 1) / limit) * limit;
+				await fetchUsers(false);
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.users_error_generic();
 		} finally {
@@ -103,32 +109,18 @@
 				onDelete={handleUserDeleted}
 			/>
 
-			<div class="mt-4 flex items-center justify-between">
-				<div class="flex-1 flex justify-between items-center">
-					<p class="text-sm text-gray-700 dark:text-gray-300">
-						{m.users_pagination_showing({
-							from: offset + 1,
-							to: Math.min(offset + users.length, totalUsers),
-							total: totalUsers
-						})}
-					</p>
-					<div class="flex space-x-2">
-						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
-							disabled={offset === 0}
-							on:click={() => (offset = Math.max(0, offset - limit))}
-						>
-							{m.common_previous()}
-						</button>
-						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
-							disabled={offset + users.length >= totalUsers}
-							on:click={() => (offset = offset + limit)}
-						>
-							{m.common_next()}
-						</button>
-					</div>
-				</div>
+			<div class="mt-4">
+				<Pagination
+					page={offset / limit + 1}
+					pageSize={limit}
+					total={totalUsers}
+					disabled={loading}
+					summary={m.users_pagination_showing}
+					onChange={(page) => {
+						offset = (page - 1) * limit;
+						fetchUsers();
+					}}
+				/>
 			</div>
 		{/if}
 	</div>

@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/memory"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -74,6 +75,14 @@ type Server struct {
 	searchService      search.Service
 	config             *config.Config
 	lookups            lookups.Recorder
+	memoryService      memory.Service
+	memoryAccess       MemoryAccess
+}
+
+// SetMemory enables the memory tools.
+func (s *Server) SetMemory(svc memory.Service, access MemoryAccess) {
+	s.memoryService = svc
+	s.memoryAccess = access
 }
 
 func NewServer(
@@ -103,12 +112,16 @@ func NewServer(
 // CreateMCPServer builds a server scoped to one caller. Any principal the
 // API accepts can use MCP: users, and service accounts an agent runs as.
 func (s *Server) CreateMCPServer(ctx context.Context, principal auth.Principal) *mcpsdk.Server {
+	var opts *mcpsdk.ServerOptions
+	if s.memoryService != nil {
+		opts = &mcpsdk.ServerOptions{Instructions: memoryInstructions}
+	}
 	server := mcpsdk.NewServer(
 		&mcpsdk.Implementation{
 			Name:    "marmot-catalog",
 			Version: "1.0.0",
 		},
-		nil,
+		opts,
 	)
 
 	s.registerTools(server, principal)
@@ -128,7 +141,10 @@ func (s *Server) registerTools(server *mcpsdk.Server, principal auth.Principal) 
 		principal:          principal,
 		config:             s.config,
 		lookups:            s.lookups,
+		memoryService:      s.memoryService,
+		memoryAccess:       s.memoryAccess,
 	}
+	s.registerMemoryTools(server, tc)
 
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name: "discover_data",

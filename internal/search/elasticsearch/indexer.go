@@ -196,6 +196,9 @@ func documentToMap(doc search.SearchDocument) map[string]interface{} {
 	if doc.Documentation != nil {
 		m["documentation"] = *doc.Documentation
 	}
+	if doc.Memory != nil {
+		m["memory"] = *doc.Memory
+	}
 	if len(doc.Metadata) > 0 {
 		flat := make(map[string]interface{}, len(doc.Metadata))
 		for k, v := range doc.Metadata {

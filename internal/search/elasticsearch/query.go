@@ -14,7 +14,7 @@ func buildSearchQuery(filter search.Filter) map[string]interface{} {
 		must = append(must, map[string]interface{}{
 			"multi_match": map[string]interface{}{
 				"query":     filter.Query,
-				"fields":    []string{"name^5", "description^3", "tags^3", "mrn^2", "metadata.*^1.5", "documentation"},
+				"fields":    []string{"name^5", "description^3", "tags^3", "mrn^2", "metadata.*^1.5", "documentation", "memory"},
 				"fuzziness": "AUTO",
 				"type":      "best_fields",
 			},

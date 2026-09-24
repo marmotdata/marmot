@@ -3734,6 +3734,455 @@
                 }
             }
         },
+        "/api/v1/memory/{entityType}/{entityId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List an entity's memory. By default the most recently changed comes first; sort=used ranks by use, sort=found by how often searches returned it, sort=created lists the newest first.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "List memory",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "changed",
+                            "used",
+                            "created"
+                        ],
+                        "type": "string",
+                        "default": "changed",
+                        "description": "Sort order",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/MemoryList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a memory entry to an entity.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "Remember",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Entry",
+                        "name": "memory",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RememberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Memory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/{entityType}/{entityId}/search": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Search an entity's memory.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "Search memory",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/MemorySearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/{entityType}/{entityId}/{memoryId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "Get a memory entry",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Memory ID",
+                        "name": "memoryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Memory"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replace an entry's content in place.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "Update a memory entry",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Memory ID",
+                        "name": "memoryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Content",
+                        "name": "memory",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateMemoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Memory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "memory"
+                ],
+                "summary": "Forget a memory entry",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asset",
+                            "data_product"
+                        ],
+                        "type": "string",
+                        "description": "Entity type",
+                        "name": "entityType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Entity ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Memory ID",
+                        "name": "memoryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/metrics": {
             "get": {
                 "security": [
@@ -10628,6 +11077,78 @@
                 }
             }
         },
+        "Memory": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/memory.Author"
+                },
+                "entity_id": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "$ref": "#/definitions/memory.EntityType"
+                },
+                "found_count": {
+                    "description": "FoundCount is how often a search has returned the memory.",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_found_at": {
+                    "type": "string"
+                },
+                "score": {
+                    "description": "Score is the search relevance; higher is more relevant. Set on search\nresults only.",
+                    "type": "number"
+                },
+                "session_id": {
+                    "description": "SessionID is the session the entry was created in.",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/memory.Author"
+                },
+                "updated_session_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "MemoryList": {
+            "type": "object",
+            "properties": {
+                "memories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Memory"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "MemorySearchResult": {
+            "type": "object",
+            "properties": {
+                "memories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Memory"
+                    }
+                }
+            }
+        },
         "MessageResponse": {
             "type": "object",
             "properties": {
@@ -10945,6 +11466,17 @@
                 },
                 "running": {
                     "type": "boolean"
+                }
+            }
+        },
+        "RememberRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
                 }
             }
         },
@@ -11937,6 +12469,17 @@
                 }
             }
         },
+        "UpdateMemoryRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
+                }
+            }
+        },
         "UpdatePasswordRequest": {
             "type": "object",
             "required": [
@@ -12230,6 +12773,31 @@
                     }
                 }
             }
+        },
+        "memory.Author": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "memory.EntityType": {
+            "type": "string",
+            "enum": [
+                "asset",
+                "data_product"
+            ],
+            "x-enum-varnames": [
+                "EntityAsset",
+                "EntityDataProduct"
+            ]
         },
         "pluginsdk.AssetField": {
             "type": "object",

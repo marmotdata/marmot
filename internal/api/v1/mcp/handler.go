@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	memoryAPI "github.com/marmotdata/marmot/internal/api/v1/memory"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/memory"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
@@ -74,4 +76,9 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 	}
+}
+
+// SetMemory enables the memory tools, with access checked like the REST API.
+func (h *Handler) SetMemory(svc memory.Service) {
+	h.mcpServer.SetMemory(svc, memoryAPI.Access{Users: h.userService})
 }

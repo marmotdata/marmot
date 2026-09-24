@@ -24,6 +24,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
+	memoryAPI "github.com/marmotdata/marmot/internal/api/v1/memory"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
@@ -47,6 +48,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	memoryService "github.com/marmotdata/marmot/internal/core/memory"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
@@ -148,6 +150,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	dataProductSvc := dataproductService.NewService(dataProductRepo)
 	docsRepo := docsService.NewPostgresRepository(db)
 	docsSvc := docsService.NewService(docsRepo)
+	memorySvc := memoryService.NewService(memoryService.NewPostgresRepository(db))
 	notificationRepo := notificationService.NewPostgresRepository(db)
 	notificationSvc := notificationService.NewService(
 		notificationRepo,
@@ -499,6 +502,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 				teamSvc.SetSearchObserver(syncSvc)
 				dataProductSvc.SetSearchObserver(syncSvc)
 				docsSvc.SetSearchObserver(&docsSearchSyncAdapter{syncSvc: syncSvc, assetSvc: assetSvc})
+				memorySvc = memoryService.NotifySearch(memorySvc, syncSvc)
 
 				reindexer = searchService.NewReindexer(esClient, searchRepo, esConfig.BulkSize)
 				reindexBroadcaster := websocket.NewSearchReindexBroadcaster(wsHub)
@@ -537,19 +541,23 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider)
 	common.SetOAuthAuthorizeCompleter(authHandler)
 
+	mcpHandler := mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder)
+	mcpHandler.SetMemory(memorySvc)
+
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
 		users.NewHandler(userSvc, authSvc, config),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
+		mcpHandler,
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config, lookupsRecorder),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
+		memoryAPI.NewHandler(memorySvc, userSvc, authSvc, config),
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),

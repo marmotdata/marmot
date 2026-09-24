@@ -19,6 +19,7 @@
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
+	import MemoryPanel from '$components/memory/MemoryPanel.svelte';
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
@@ -31,7 +32,7 @@
 	import { formatList } from '$lib/utils';
 
 	let productId = $derived($page.params.id);
-	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
+	let activeTab = $derived($page.url.searchParams.get('tab') || 'memory');
 
 	let product = $state<DataProduct | null>(null);
 	let resolvedAssets = $state<ResolvedAssetsResponse | null>(null);
@@ -107,6 +108,7 @@
 	);
 
 	const tabs: Tab[] = [
+		{ id: 'memory', label: m.memory_tab(), icon: 'material-symbols:neurology-outline' },
 		{ id: 'documentation', label: m.common_documentation(), icon: 'material-symbols:description' },
 		{ id: 'assets', label: m.products_assets(), icon: 'material-symbols:database' },
 		{ id: 'metadata', label: m.products_tab_metadata(), icon: 'material-symbols:data-object' },
@@ -789,6 +791,13 @@
 									permissionResource="assets"
 									permissionAction="manage"
 								/>
+							</div>
+						{/if}
+
+						<!-- Memory Tab -->
+						{#if activeTab === 'memory'}
+							<div class="mt-6 max-w-5xl">
+								<MemoryPanel entityType="data_product" entityId={product.id} />
 							</div>
 						{/if}
 

@@ -372,6 +372,7 @@
 	"common_overview": "Overview",
 	"common_owner": "Owner",
 	"common_owners": "Owners",
+	"common_pagination_showing": "Showing {from}-{to} of {total}",
 	"common_previous": "Previous",
 	"common_remove": "Remove",
 	"common_required": "Required",
@@ -682,6 +683,45 @@
 	"login_signin_heading": "Sign In",
 	"login_username_label": "Username",
 	"login_username_placeholder": "Enter your username",
+	"memory_add": "Add memory",
+	"memory_add_placeholder": "What should agents and people know?",
+	"memory_delete_message": "Delete this memory? This cannot be undone.",
+	"memory_delete_title": "Delete memory",
+	"memory_description": "What agents and people have recorded about this entity.",
+	"memory_edited_by": "edited by {name}",
+	"memory_empty": "Nothing remembered yet.",
+	"memory_error_delete": "Failed to delete memory",
+	"memory_error_load": "Failed to load memory",
+	"memory_error_save": "Failed to save memory",
+	"memory_error_search": "Memory search failed",
+	"memory_found_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "found {count} time",
+				"countPlural=other": "found {count} times"
+			}
+		}
+	],
+	"memory_no_match": "Nothing matches.",
+	"memory_search_placeholder": "Search memory",
+	"memory_search_results": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} match",
+				"countPlural=other": "{count} matches"
+			}
+		}
+	],
+	"memory_session": "session {id}",
+	"memory_sort_changed": "Recently updated",
+	"memory_sort_created": "Newest",
+	"memory_sort_label": "Sort memory",
+	"memory_sort_used": "Popular",
+	"memory_tab": "Memory",
 	"metrics_asset_types_title": "Asset Types",
 	"metrics_count_searches": "searches",
 	"metrics_count_views": "views",

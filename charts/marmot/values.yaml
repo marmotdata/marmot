@@ -157,6 +157,10 @@ config:
     #     cert_path: ""
     #     key_path: ""
 
+  # Agent memory
+  # memory:
+  #   lookup_limit: 25  # memories an MCP lookup of one asset or data product carries
+
   # Logging configuration
   logging:
     level: "info"
