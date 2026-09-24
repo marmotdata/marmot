@@ -27,6 +27,7 @@
 	import Tags from '$components/shared/Tags.svelte';
 	import ExternalLinks from '$components/shared/ExternalLinks.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainChip from '$components/domain/DomainChip.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { tablePreviewEnabled } from '$lib/stores/features';
@@ -515,6 +516,7 @@
 										/>
 									{/if}
 								</div>
+								<DomainChip kind="asset" entityId={asset.id} canEdit={canManageAssets} />
 								{#if asset}
 									<div>
 										<div class="flex items-center gap-1.5 mb-1">

@@ -17,6 +17,9 @@
 	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainChip from '$components/domain/DomainChip.svelte';
+	import DomainSelect from '$components/domain/DomainSelect.svelte';
+	import { assignToDomain, errorMessage as domainErrorMessage } from '$lib/domains/api';
 	import Button from '$components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
 	import Tags from '$components/shared/Tags.svelte';
@@ -41,6 +44,7 @@
 	let newTermDefinition = '';
 	let newTermDescription = '';
 	let newTermOwners: Owner[] = [];
+	let newTermDomain = '';
 	let isCreating = false;
 	let createError = '';
 
@@ -175,6 +179,7 @@
 		newTermDefinition = '';
 		newTermDescription = '';
 		newTermOwners = [];
+		newTermDomain = '';
 		createError = '';
 		showCreateModal = true;
 	}
@@ -208,6 +213,14 @@
 				const info = await parseApiError(response);
 				if (isLimitExceeded(info)) toasts.warning(info.message);
 				throw new Error(info.message);
+			}
+
+			const created: GlossaryTerm = await response.json();
+			// The term exists either way; a failed assignment leaves it in Unassigned.
+			if (newTermDomain) {
+				await assignToDomain(newTermDomain, 'glossary_term', [created.id]).catch((error) =>
+					toasts.error(domainErrorMessage(error))
+				);
 			}
 
 			showCreateModal = false;
@@ -492,6 +505,13 @@
 										/>
 									{/if}
 								</div>
+
+								<DomainChip
+									kind="glossary_term"
+									entityId={selectedTerm.id}
+									canEdit={canManageGlossary}
+									variant="section"
+								/>
 
 								<!-- Tags Section -->
 								<div>
@@ -788,6 +808,8 @@
 							{m.glossary_owners_default_hint()}
 						</p>
 					</div>
+
+					<DomainSelect id="term-domain" bind:value={newTermDomain} />
 
 					<div class="flex justify-end gap-3 pt-4">
 						<Button

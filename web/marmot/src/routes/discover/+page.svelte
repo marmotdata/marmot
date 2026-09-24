@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import DomainFilter from '$components/domain/DomainFilter.svelte';
 	import { writable, type Writable } from 'svelte/store';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -540,6 +541,8 @@
 									</label>
 								{/each}
 							</div>
+
+							<DomainFilter query={searchQuery} onQueryChange={handleRunQuery} />
 
 							<!-- Asset-specific filters (only show when Asset is selected) -->
 							{#if showAssetFilters}

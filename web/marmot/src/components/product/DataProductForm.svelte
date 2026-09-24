@@ -8,6 +8,9 @@
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainSelect from '$components/domain/DomainSelect.svelte';
+	import { assignToDomain, errorMessage } from '$lib/domains/api';
+	import { toasts } from '$lib/stores/toast';
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
 	import Tags from '$components/shared/Tags.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
@@ -61,6 +64,7 @@
 	// Form state
 	let name = $state(initialName);
 	let description = $state(initialDescription);
+	let domainId = $state('');
 	let documentation = $state(initialDocumentation);
 	let owners = $state<Owner[]>(initialOwners);
 	let tags = $state<string[]>(initialTags);
@@ -367,6 +371,13 @@
 
 		const created = await response.json();
 
+		// The product exists either way; a failed assignment leaves it in Unassigned.
+		if (domainId) {
+			await assignToDomain(domainId, 'data_product', [created.id]).catch((error) =>
+				toasts.error(errorMessage(error))
+			);
+		}
+
 		// Add manual assets if any
 		if (manualAssetIds.length > 0) {
 			await fetchApi(`/products/assets/${created.id}`, {
@@ -597,6 +608,11 @@
 							<OwnerSelector bind:selectedOwners={owners} />
 						</div>
 					</div>
+					{#if mode === 'create'}
+						<div class="mt-5">
+							<DomainSelect id="product-domain" bind:value={domainId} />
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/if}

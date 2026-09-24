@@ -31,6 +31,7 @@
 	import { createKeyboardNavigationState } from '$lib/keyboard';
 	import Tags from '$components/shared/Tags.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import DomainChip from '$components/domain/DomainChip.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { formatList } from '$lib/utils';
 
@@ -785,6 +786,7 @@
 									disabled={!canManage}
 								/>
 							</div>
+							<DomainChip kind="data_product" entityId={product.id} canEdit={canManage} />
 						</div>
 					</div>
 				</div>
