@@ -46,6 +46,7 @@ type service struct {
 	metrics         MetricsClient
 	assetSvc        asset.Service
 	lineageObserver LineageChangeObserver
+	edgeGuard       EdgeGuard
 }
 
 type ServiceOption func(*service)
@@ -79,6 +80,11 @@ func (s *service) GetDirectLineage(ctx context.Context, edgeID string) (*Lineage
 }
 
 func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
+	if s.edgeGuard != nil {
+		if err := s.edgeGuard(ctx, sourceMRN, targetMRN); err != nil {
+			return "", err
+		}
+	}
 	existed, err := s.repo.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
 		return "", err

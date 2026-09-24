@@ -215,6 +215,12 @@ func (g *Guard) AuthorizeAssetMRNs(ctx context.Context, mrns ...string) error {
 	})
 }
 
+// AuthorizeEdge is the lineage.EdgeGuard: the target's domain decides, since
+// the downstream side declares what it reads.
+func (g *Guard) AuthorizeEdge(ctx context.Context, _, targetMRN string) error {
+	return g.AuthorizeAssetMRNs(ctx, targetMRN)
+}
+
 // AuthorizeDoc checks a documentation write against the entity that owns the
 // page: the entity named in the path, or the owner of pageID or imageID. A page
 // or image that does not exist is left for the handler to report.

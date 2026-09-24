@@ -293,15 +293,10 @@ type guardedLineage struct {
 
 // GuardLineage scopes lineage edges by their target: the downstream asset
 // declares what it reads, so its domain decides, wherever the source lives.
+// Creating edges is vetted inside the service (lineage.WithEdgeGuard) so the
+// edges an OpenLineage event writes internally are covered too.
 func GuardLineage(inner lineage.Service, g *Guard) lineage.Service {
 	return &guardedLineage{Service: inner, g: g}
-}
-
-func (s *guardedLineage) CreateDirectLineage(ctx context.Context, sourceMRN, targetMRN, lineageType, jobMRN string) (string, error) {
-	if err := s.g.AuthorizeAssetMRNs(ctx, targetMRN); err != nil {
-		return "", err
-	}
-	return s.Service.CreateDirectLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN)
 }
 
 func (s *guardedLineage) DeleteDirectLineage(ctx context.Context, edgeID string) error {

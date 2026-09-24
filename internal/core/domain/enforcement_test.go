@@ -117,11 +117,6 @@ type innerLineage struct {
 	writes int
 }
 
-func (s *innerLineage) CreateDirectLineage(context.Context, string, string, string, string) (string, error) {
-	s.writes++
-	return "edge", nil
-}
-
 func (s *innerLineage) GetDirectLineage(context.Context, string) (*lineage.LineageEdge, error) {
 	return &lineage.LineageEdge{Target: s.target}, nil
 }
@@ -335,12 +330,9 @@ func TestWriteEnforcement(t *testing.T) {
 		edges := &innerLineage{}
 		guarded := domain.GuardLineage(edges, guard)
 		c := as(ctx, steward)
-		_, err := guarded.CreateDirectLineage(c, mrnOf(inLegal), mrnOf(inFinance), "", "")
-		allowed(t, err)
-		_, err = guarded.CreateDirectLineage(c, mrnOf(inFinance), mrnOf(inLegal), "", "")
-		denied(t, err)
-		_, err = guarded.CreateDirectLineage(c, mrnOf(inFinance), "mrn://table/nowhere/stub", "", "")
-		denied(t, err)
+		allowed(t, guard.AuthorizeEdge(c, mrnOf(inLegal), mrnOf(inFinance)))
+		denied(t, guard.AuthorizeEdge(c, mrnOf(inFinance), mrnOf(inLegal)))
+		denied(t, guard.AuthorizeEdge(c, mrnOf(inFinance), "mrn://table/nowhere/stub"))
 		edges.target = mrnOf(inLegal)
 		denied(t, guarded.DeleteDirectLineage(c, "edge"))
 		denied(t, guarded.BatchObservedLineage(c, []lineage.ObservedEdge{
@@ -348,8 +340,8 @@ func TestWriteEnforcement(t *testing.T) {
 			{Source: mrnOf(inFinance), Target: mrnOf(inLegal)},
 		}))
 		allowed(t, guarded.BatchObservedLineage(c, []lineage.ObservedEdge{{Source: mrnOf(inLegal), Target: mrnOf(inFinance)}}))
-		if edges.writes != 2 {
-			t.Fatalf("inner writes = %d, want 2", edges.writes)
+		if edges.writes != 1 {
+			t.Fatalf("inner writes = %d, want 1", edges.writes)
 		}
 	})
 	t.Run("documentation follows the owning entity", func(t *testing.T) {

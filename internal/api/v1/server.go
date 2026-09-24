@@ -152,7 +152,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	roleSvc := roleService.NewService(roleStore)
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
 	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore)
-	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
+	var lineageOpts []lineageService.ServiceOption
+	if domainGuard != nil {
+		lineageOpts = append(lineageOpts, lineageService.WithEdgeGuard(domainGuard.AuthorizeEdge))
+	}
+	lineageSvc := lineageService.NewService(lineageRepo, assetSvc, lineageOpts...)
 	if domainGuard != nil {
 		lineageSvc = domainService.GuardLineage(lineageSvc, domainGuard)
 	}
