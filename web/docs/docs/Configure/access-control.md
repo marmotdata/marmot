@@ -83,6 +83,7 @@ These are every permission in open source Marmot. Build custom roles out of them
 | `sso:manage` | Map identity provider groups onto Marmot teams. |
 | `metrics:view` | See catalog metrics and usage analytics. |
 | `agents:emit` | Record agent run telemetry. For AI agents, not people. |
+| `memory:write` | Add, edit and delete memory on assets and data products. For an agent over MCP, combine it with `assets:view`, `glossary:view` and `teams:view` in a role. |
 
 Two of these carry more than their name suggests. `roles:manage` can grant itself every other permission, so it is effectively administrative. `service_accounts:manage` can issue an API key for any account, including one more privileged than the holder.
 
