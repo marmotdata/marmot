@@ -2284,7 +2284,7 @@ html[data-theme="dark"] .DocSearch-Button:hover {
   gap: 0.5rem 1.5rem;
   /* Matches the max-w-3xl paragraph above it. */
   max-width: 48rem;
-  margin: 2.5rem auto 0;
+  margin: 2rem auto 0;
   padding-top: 1.5rem;
   border-top: 1px solid rgba(123, 89, 53, 0.16);
 }
@@ -2299,12 +2299,12 @@ html[data-theme="dark"] .DocSearch-Button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  margin: 3.5rem auto 0;
+  gap: 0.75rem;
+  margin: 2.5rem auto 0;
 }
 
 .supported-by-label {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2316,30 +2316,12 @@ html[data-theme="dark"] .DocSearch-Button:hover {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem 3.5rem;
+  gap: 0.75rem 2.25rem;
 }
 
-.supported-by-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.supported-by-mark {
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-}
-
-.supported-by-name {
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: #3f3a35;
-}
-
-.supported-by-img {
-  height: 2.25rem;
+/* The badge files are NVIDIA's official artwork with the white panel removed, plus a dark-mode copy with the black linework and wordmark flipped to white. */
+.supported-by-badge {
+  height: 3rem;
   width: auto;
 }
 
@@ -2396,7 +2378,6 @@ html[data-theme="dark"] .proof-label {
   color: #8b8783;
 }
 
-html[data-theme="dark"] .supported-by-name,
 html[data-theme="dark"] .proof-value,
 html[data-theme="dark"] .proof-claim {
   color: #e5e2df;
@@ -2425,23 +2406,6 @@ html[data-theme="dark"] .proof-fact-link:focus-visible {
   }
 
   .supported-by {
-    margin-top: 2.5rem;
-  }
-
-  .supported-by-logos {
-    gap: 1.25rem 2.5rem;
-  }
-
-  .supported-by-mark,
-  .supported-by-img {
-    height: 1.75rem;
-  }
-
-  .supported-by-mark {
-    width: 1.75rem;
-  }
-
-  .supported-by-name {
-    font-size: 1.375rem;
+    margin-top: 2rem;
   }
 }

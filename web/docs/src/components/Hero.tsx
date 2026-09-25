@@ -5,7 +5,7 @@ import SupportedBy from "./SupportedBy";
 
 export default function Hero(): JSX.Element {
   return (
-    <header className="relative pt-32 pb-8 sm:pt-40 sm:pb-10 lg:pt-44 lg:pb-12 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 hero-glow overflow-hidden">
+    <header className="relative pt-20 pb-8 sm:pt-24 sm:pb-10 lg:pt-24 lg:pb-12 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 hero-glow overflow-hidden">
       <div className="relative max-w-6xl mx-auto text-center">
         <h1
           data-animate
