@@ -193,7 +193,7 @@
 
 	let {
 		value = $bindable(''),
-		placeholder = m.editor_placeholder(),
+		placeholder,
 		disabled = false,
 		pageId = null,
 		onImageUpload = undefined
@@ -206,6 +206,7 @@
 	let isUploading = false;
 	let uploadError = '';
 	let fileInput: HTMLInputElement;
+	let editorPlaceholder = $derived(placeholder ?? m.editor_placeholder());
 
 	// Separate counters for different types of updates to minimize re-renders
 	let selectionVersion = $state(0); // Only for toolbar state updates
@@ -312,7 +313,7 @@
 					codeBlock: false
 				}),
 				Placeholder.configure({
-					placeholder: placeholder
+					placeholder: editorPlaceholder
 				}),
 				Link.configure({
 					openOnClick: false,

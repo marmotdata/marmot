@@ -20,8 +20,8 @@
 		show = $bindable(),
 		title,
 		message,
-		confirmText = m.common_confirm(),
-		cancelText = m.common_cancel(),
+		confirmText,
+		cancelText,
 		variant = 'danger',
 		checkboxLabel,
 		checkboxChecked = $bindable(false),
@@ -116,12 +116,12 @@
 
 			<div class="border-t border-gray-200 dark:border-gray-700">
 				<div class="flex items-center justify-end gap-3 px-6 py-4 bg-white/30 dark:bg-black/20">
-					<Button variant="clear" click={handleCancel} text={cancelText} />
+					<Button variant="clear" click={handleCancel} text={cancelText ?? m.common_cancel()} />
 					<button
 						onclick={() => onConfirm(checkboxChecked)}
 						class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors {variantColors.buttonClass}"
 					>
-						{confirmText}
+						{confirmText ?? m.common_confirm()}
 					</button>
 				</div>
 			</div>

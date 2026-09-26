@@ -17,7 +17,7 @@
 	let metadataFieldsCache: MetadataFieldSuggestion[] | null = null;
 
 	export let value = '';
-	export let placeholder = m.query_input_placeholder();
+	export let placeholder: string | undefined = undefined;
 	export let isLoading = false;
 	export let onQueryChange: (query: string) => void = () => {};
 	export let onSubmit: () => void = () => {};
@@ -679,7 +679,7 @@
 			bind:value
 			on:input={handleInput}
 			on:keydown={handleKeydown}
-			{placeholder}
+			placeholder={placeholder ?? m.query_input_placeholder()}
 			rows="1"
 			class="plain-input"
 			autocomplete="off"
@@ -698,7 +698,7 @@
 				on:input={handleInput}
 				on:keydown={handleKeydown}
 				on:scroll={syncScroll}
-				{placeholder}
+				placeholder={placeholder ?? m.query_input_placeholder()}
 				rows="1"
 				class="fancy-input"
 				autocomplete="off"
