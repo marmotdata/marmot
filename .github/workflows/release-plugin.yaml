@@ -105,7 +105,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install oras
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       # One manifest per platform, then an index over them. This is the
       # shape internal/plugin/install reads: platform manifests whose layer
