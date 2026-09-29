@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
@@ -134,17 +135,26 @@
 		{#if recovery.length}
 			<div class="mx-auto mt-5 max-w-xl space-y-4 text-center">
 				<p class="text-sm font-medium">{m.totp_recovery_help()}</p>
-				<ul
-					class="grid grid-cols-1 gap-2 rounded-md bg-gray-50 p-4 text-center font-mono text-sm dark:bg-gray-900 sm:grid-cols-2"
-				>
-					{#each recovery as item (item)}<li>{item}</li>{/each}
-				</ul>
+				<div class="relative rounded-md bg-gray-50 dark:bg-gray-900">
+					<button
+						type="button"
+						class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-200 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+						aria-label={copied === 'recovery' ? m.common_copied() : m.common_copy()}
+						title={copied === 'recovery' ? m.common_copied() : m.common_copy()}
+						onclick={() => void copy(recovery.join('\n'), 'recovery')}
+					>
+						<IconifyIcon
+							icon={copied === 'recovery'
+								? 'material-symbols:check'
+								: 'material-symbols:content-copy-outline'}
+							class="h-4 w-4"
+						/>
+					</button>
+					<ul class="space-y-2 p-4 pr-12 text-left font-mono text-sm">
+						{#each recovery as item (item)}<li class="break-all select-all">{item}</li>{/each}
+					</ul>
+				</div>
 				<div class="flex flex-wrap justify-center gap-3">
-					<Button
-						text={copied === 'recovery' ? m.common_copied() : m.common_copy()}
-						variant="clear"
-						click={() => void copy(recovery.join('\n'), 'recovery')}
-					/>
 					<Button
 						text={m.totp_saved_codes()}
 						variant="filled"
