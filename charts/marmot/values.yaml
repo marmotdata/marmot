@@ -164,6 +164,11 @@ config:
 
   # Authentication configuration
   auth:
+    totp:
+      enabled: false
+      required: false
+      issuer: "Marmot"
+
     anonymous:
       enabled: false
       role: "user"
