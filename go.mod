@@ -22,6 +22,7 @@ require (
 	github.com/opensearch-project/opensearch-go/v4 v4.7.3
 	github.com/ory/fosite v0.49.0
 	github.com/prometheus/client_golang v1.24.1
+	github.com/pquerna/otp v1.5.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
@@ -76,6 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.0 // indirect
 	github.com/aws/smithy-go v1.27.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/centrifugal/protocol v0.22.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
