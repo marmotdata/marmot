@@ -7,9 +7,10 @@ import (
 )
 
 type MarmotSession struct {
-	UserID    string
-	Username  string
-	ExpiresAt map[fosite.TokenType]time.Time
+	UserID     string
+	Username   string
+	AuthMethod string
+	ExpiresAt  map[fosite.TokenType]time.Time
 }
 
 func NewMarmotSession(userID, username string) *MarmotSession {
@@ -48,6 +49,7 @@ func (s *MarmotSession) GetSubject() string {
 func (s *MarmotSession) copyInto(dst *MarmotSession) {
 	dst.UserID = s.UserID
 	dst.Username = s.Username
+	dst.AuthMethod = s.AuthMethod
 	dst.ExpiresAt = make(map[fosite.TokenType]time.Time, len(s.ExpiresAt))
 	for k, v := range s.ExpiresAt {
 		dst.ExpiresAt[k] = v
@@ -60,8 +62,9 @@ func (s *MarmotSession) Clone() fosite.Session {
 		expiresAt[k] = v
 	}
 	return &MarmotSession{
-		UserID:    s.UserID,
-		Username:  s.Username,
-		ExpiresAt: expiresAt,
+		UserID:     s.UserID,
+		Username:   s.Username,
+		AuthMethod: s.AuthMethod,
+		ExpiresAt:  expiresAt,
 	}
 }

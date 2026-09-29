@@ -109,7 +109,12 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	token, err := h.authService.GenerateToken(ctx, usr, nil)
+	// Only an authorization code bound to an SSO session may bypass local MFA.
+	claims := map[string]interface{}{}
+	if mSession.AuthMethod == "sso" {
+		claims["auth_method"] = "sso"
+	}
+	token, err := h.authService.GenerateToken(ctx, usr, claims)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token")
 		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
@@ -194,7 +199,7 @@ func (h *Handler) exchangeViaAccessToken(w http.ResponseWriter, r *http.Request,
 
 // respondWithMarmotToken issues a Marmot JWT for the resolved user and writes the RFC 8693 response.
 func (h *Handler) respondWithMarmotToken(w http.ResponseWriter, r *http.Request, usr *user.User) {
-	token, err := h.authService.GenerateToken(r.Context(), usr, nil)
+	token, err := h.authService.GenerateToken(r.Context(), usr, map[string]interface{}{"auth_method": "sso"})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token")
 		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
