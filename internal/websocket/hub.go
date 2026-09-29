@@ -7,9 +7,9 @@ import (
 
 	"github.com/centrifugal/centrifuge"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 )
 
@@ -79,14 +79,12 @@ func (h *Hub) Start(ctx context.Context) {
 
 		if event.Token != "" {
 			if claims, err := h.authSvc.ValidateToken(ctx, event.Token); err == nil {
-				u, err := h.userSvc.Get(ctx, claims.Subject)
-				if err != nil {
-					log.Debug().Err(err).Msg("WS: failed to look up user from JWT subject")
+				principal, err := auth.NewResolver(h.userSvc).Resolve(ctx, claims)
+				if err != nil || principal.AsUser() == nil {
+					log.Debug().Err(err).Msg("WS: invalid or revoked user session")
 					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
 				}
-				if !u.Active {
-					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
-				}
+				u := principal.AsUser()
 				if err := h.requireIngestionView(ctx, u.ID); err != nil {
 					return centrifuge.ConnectReply{}, err
 				}

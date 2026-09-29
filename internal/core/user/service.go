@@ -119,6 +119,7 @@ type Service interface {
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
 	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
+	RequirePasswordChange(ctx context.Context, userID string) error
 	InvalidateSessions(ctx context.Context, userID string) error
 }
 
@@ -437,6 +438,15 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	return s.Get(ctx, userID)
+}
+
+func (s *service) RequirePasswordChange(ctx context.Context, userID string) error {
+	now := time.Now()
+	return s.repo.UpdateUser(ctx, userID, map[string]interface{}{
+		"must_change_password":    true,
+		"sessions_invalidated_at": now,
+		"updated_at":              now,
+	})
 }
 
 // InvalidateSessions signs the user out everywhere by rejecting every token

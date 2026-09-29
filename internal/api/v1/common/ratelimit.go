@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -110,7 +111,11 @@ func WithRateLimit(cfg *config.Config, limit int, window int) func(http.HandlerF
 			if ok && user.Username != "anonymous" {
 				rateLimitID = fmt.Sprintf("user:%s", user.ID)
 			} else {
-				rateLimitID = fmt.Sprintf("ip:%s", r.RemoteAddr)
+				host, _, err := net.SplitHostPort(r.RemoteAddr)
+				if err != nil {
+					host = r.RemoteAddr
+				}
+				rateLimitID = fmt.Sprintf("ip:%s", host)
 			}
 
 			key := fmt.Sprintf("%s:endpoint:%s", rateLimitID, r.URL.Path)

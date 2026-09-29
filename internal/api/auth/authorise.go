@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	coreauth "github.com/marmotdata/marmot/internal/core/auth"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	"github.com/ory/fosite"
 	"github.com/rs/zerolog/log"
@@ -64,7 +65,7 @@ func (h *Handler) HasPendingAuthorize(r *http.Request) bool {
 	return true
 }
 
-func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string) (string, error) {
+func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string, authMethod ...string) (string, error) {
 	cookie, err := r.Cookie("oauth_session")
 	if err != nil {
 		return "", err
@@ -79,6 +80,9 @@ func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, user
 	}
 
 	session := marmotOAuth2.NewMarmotSession(userID, username)
+	if len(authMethod) > 0 && authMethod[0] == "sso" {
+		session.AuthMethod = "sso"
+	}
 
 	resp, err := h.oauthProvider.NewAuthorizeResponse(r.Context(), pending, session)
 	if err != nil {
@@ -141,9 +145,19 @@ func (h *Handler) handleAuthorizeComplete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	usr, err := h.userService.Get(r.Context(), claims.Subject)
+	principal, err := coreauth.NewResolver(h.userService).Resolve(r.Context(), claims)
+	if err != nil || principal.AsUser() == nil {
+		common.RespondError(w, http.StatusUnauthorized, "Session expired")
+		return
+	}
+	usr := principal.AsUser()
+	pending, err := common.TOTPEnrollmentPending(r.Context(), h.config, usr.ID, claims)
 	if err != nil {
-		common.RespondError(w, http.StatusUnauthorized, "User not found")
+		common.RespondError(w, http.StatusServiceUnavailable, "Two-factor policy unavailable")
+		return
+	}
+	if pending {
+		common.RespondError(w, http.StatusUnauthorized, "Two-factor enrollment required")
 		return
 	}
 
@@ -159,7 +173,7 @@ func (h *Handler) handleAuthorizeComplete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	redirectURL, err := h.CompleteAuthorize(w, r, usr.ID, usr.Username)
+	redirectURL, err := h.CompleteAuthorize(w, r, usr.ID, usr.Username, claims.AuthMethod)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to complete OAuth authorize flow")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to complete authorization")

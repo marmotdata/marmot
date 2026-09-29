@@ -8,6 +8,8 @@ import (
 )
 
 type AuthConfig struct {
+	TOTPEnabled      bool     `json:"totp_enabled,omitempty"`
+	TOTPRequired     bool     `json:"totp_required,omitempty"`
 	EnabledProviders []string `json:"enabled_providers"`
 } // @name AuthConfig
 
@@ -21,6 +23,8 @@ type AuthConfig struct {
 func (h *Handler) getAuthConfig(w http.ResponseWriter, r *http.Request) {
 	config := AuthConfig{
 		EnabledProviders: h.oauthManager.GetProviderNames(),
+		TOTPEnabled:      h.config.Auth.TOTP.Enabled,
+		TOTPRequired:     h.config.Auth.TOTP.Required,
 	}
 
 	common.RespondJSON(w, http.StatusOK, config)

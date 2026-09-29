@@ -199,6 +199,7 @@ func TestStore_AuthorizeCode_HydratesCallerSession(t *testing.T) {
 
 	expiry := time.Now().Add(time.Minute).UTC().Round(time.Second)
 	session := NewMarmotSession("user-42", "alice")
+	session.AuthMethod = "sso"
 	session.SetExpiresAt(fosite.AuthorizeCode, expiry)
 
 	req := &fosite.Request{ID: "req-hydrate", Client: builtinCLIClient, Session: session}
@@ -210,7 +211,7 @@ func TestStore_AuthorizeCode_HydratesCallerSession(t *testing.T) {
 	if _, err := s.GetAuthorizeCodeSession(ctx, "sig", into); err != nil {
 		t.Fatalf("get: %v", err)
 	}
-	if into.UserID != "user-42" || into.Username != "alice" {
+	if into.UserID != "user-42" || into.Username != "alice" || into.AuthMethod != "sso" {
 		t.Fatalf("caller session was not hydrated: %+v", into)
 	}
 	if !into.GetExpiresAt(fosite.AuthorizeCode).Equal(expiry) {
