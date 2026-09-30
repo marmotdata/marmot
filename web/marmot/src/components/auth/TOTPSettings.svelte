@@ -127,13 +127,19 @@
 {#if error}<p role="alert" class="mt-5 text-sm text-red-700 dark:text-red-300">{error}</p>{/if}
 {#if status?.local}
 	<section
-		class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+		class={enrollmentToken
+			? ''
+			: 'rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800'}
 		aria-labelledby="totp-title"
 	>
-		<h2 id="totp-title" class="text-lg font-semibold">{m.totp_title()}</h2>
-		<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{m.totp_local_help()}</p>
+		{#if !enrollmentToken}
+			<h2 id="totp-title" class="text-lg font-semibold">{m.totp_title()}</h2>
+			<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{m.totp_local_help()}</p>
+		{:else}
+			<h2 id="totp-title" class="sr-only">{m.totp_title()}</h2>
+		{/if}
 		{#if recovery.length}
-			<div class="mx-auto mt-5 max-w-xl space-y-4 text-center">
+			<div class="mx-auto {enrollmentToken ? '' : 'mt-5'} max-w-xl space-y-4 text-center">
 				<p class="text-sm font-medium">{m.totp_recovery_help()}</p>
 				<div class="relative rounded-md bg-gray-50 dark:bg-gray-900">
 					<button
@@ -168,7 +174,7 @@
 			</div>
 		{:else if action}
 			<form
-				class="mt-5 space-y-4"
+				class="{enrollmentToken ? '' : 'mt-5'} space-y-4"
 				onsubmit={(event) => {
 					event.preventDefault();
 					void submit();
