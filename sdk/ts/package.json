@@ -68,7 +68,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
     "@langchain/core": "^1.1.44",
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.6.3",
     "openapi-typescript": "^7.4.0",
     "tsup": "^8.3.0",
     "tsx": "^4.21.0",
