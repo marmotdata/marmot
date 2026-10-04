@@ -41,7 +41,7 @@
     "docusaurus-plugin-llms": "^0.4.0",
     "postcss": "^8.5.23",
     "postcss-import": "^16.1.1",
-    "typescript": "~5.8.3",
+    "typescript": "~7.0.2",
     "unplugin-icons": "~22.1.0"
   },
   "browserslist": {
