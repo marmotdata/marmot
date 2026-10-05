@@ -526,3 +526,4 @@ func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[s
 func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error) {
 	return nil, nil
 }
+func (m *mockUserService) RequirePasswordChange(_ context.Context, _ string) error { return nil }

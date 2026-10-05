@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/mfa"
 	"github.com/marmotdata/marmot/internal/core/serviceaccount"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/pkg/config"
@@ -33,6 +34,23 @@ func SetOAuthManager(m *auth.OAuthManager) {
 
 var globalServiceAccountService serviceaccount.Service
 
+var globalTOTPService *mfa.Service
+
+func SetTOTPService(svc *mfa.Service) { globalTOTPService = svc }
+
+// TOTPEnrollmentPending checks the current server policy against the stored
+// factor. SSO sessions and API keys use their own authentication contracts.
+func TOTPEnrollmentPending(ctx context.Context, cfg *config.Config, id string, claims *auth.Claims) (bool, error) {
+	if !cfg.Auth.TOTP.Required || claims.AuthMethod == "sso" {
+		return false, nil
+	}
+	if globalTOTPService == nil {
+		return false, mfa.ErrUnavailable
+	}
+	status, err := globalTOTPService.Status(ctx, id)
+	return status.Local && !status.Enabled, err
+}
+
 // SetServiceAccountService registers the SA service so WithAuth can fall through to SA key validation.
 func SetServiceAccountService(svc serviceaccount.Service) {
 	globalServiceAccountService = svc
@@ -41,7 +59,7 @@ func SetServiceAccountService(svc serviceaccount.Service) {
 // OAuthAuthorizeCompleter completes a pending OAuth authorise flow (PKCE) from the login endpoint.
 type OAuthAuthorizeCompleter interface {
 	HasPendingAuthorize(r *http.Request) bool
-	CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string) (string, error)
+	CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string, authMethod ...string) (string, error)
 }
 
 var globalOAuthAuthorizeCompleter OAuthAuthorizeCompleter
@@ -58,6 +76,23 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 // registers the handler under it, so that drift between the two cannot lock a
 // user with a pending change out of the only endpoint that can clear it.
 const UpdatePasswordPath = "/api/v1/users/update-password" //nolint:gosec // G101: a route path, not a credential
+
+type jwtSessionKey struct{}
+
+// RequireJWTSession keeps API keys and exchanged IdP tokens out of interactive account changes.
+// An empty method accepts any signed Marmot JWT; "local" requires a local login session.
+func RequireJWTSession(method string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			actual, ok := r.Context().Value(jwtSessionKey{}).(string)
+			if !ok || (method != "" && actual != method) {
+				RespondError(w, http.StatusForbidden, "Interactive session required")
+				return
+			}
+			next(w, r)
+		}
+	}
+}
 
 // passwordChangeGate blocks every request from a user whose
 // must_change_password is still set, except the password change itself.
@@ -134,7 +169,19 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 						}
 						return
 					}
+					if p.AsUser() != nil {
+						pending, gateErr := TOTPEnrollmentPending(r.Context(), cfg, p.ID(), claims)
+						if gateErr != nil {
+							RespondError(w, http.StatusServiceUnavailable, "Two-factor policy unavailable")
+							return
+						}
+						if pending {
+							RespondError(w, http.StatusUnauthorized, "Two-factor enrollment required")
+							return
+						}
+					}
 					ctx := setPrincipalContext(r.Context(), p)
+					ctx = context.WithValue(ctx, jwtSessionKey{}, claims.AuthMethod)
 					next(w, r.WithContext(ctx))
 					return
 				}

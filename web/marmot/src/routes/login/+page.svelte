@@ -4,8 +4,11 @@
 	import { page } from '$app/stores';
 	import Button from '$components/ui/Button.svelte';
 	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
+	import TOTPChallenge from '$components/auth/TOTPChallenge.svelte';
+	import TOTPSettings from '$components/auth/TOTPSettings.svelte';
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
+	import { loginRedirect } from '$lib/auth/loginRedirect';
 	import Icon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
 
@@ -15,10 +18,14 @@
 	let confirmPassword = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let redirecting = $state(false);
 	let showPasswordChangeForm = $state(false);
 	interface LoginResponse {
 		access_token?: string;
 		requires_password_change?: boolean;
+		requires_totp?: boolean;
+		requires_totp_enrollment?: boolean;
+		mfa_token?: string;
 	}
 	let loginData: LoginResponse | null = $state(null);
 	let usernameInput = $state<HTMLInputElement>();
@@ -130,6 +137,7 @@
 	}
 
 	async function handleSubmit() {
+		if (loading) return;
 		error = '';
 		loading = true;
 
@@ -147,31 +155,7 @@
 			}
 
 			const data = await response.json();
-			loginData = data;
-
-			if (data.requires_password_change) {
-				showPasswordChangeForm = true;
-				setTimeout(() => newPasswordInput?.focus(), 100);
-				return;
-			}
-
-			if (data.access_token) {
-				auth.setToken(data.access_token);
-				if ($page.url.searchParams.has('oauth_pending')) {
-					await loadPendingConsent();
-					if (pendingConsent) {
-						return;
-					}
-				}
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
-			} else {
-				throw new Error(m.login_error_no_token());
-			}
+			await finishLogin(data);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.login_error_login_failed();
 		} finally {
@@ -179,7 +163,51 @@
 		}
 	}
 
+	async function finishLogin(data: LoginResponse) {
+		if (data.requires_totp) {
+			loginData = data;
+			password = '';
+			newPassword = '';
+			confirmPassword = '';
+			showPasswordChangeForm = false;
+			return;
+		}
+		if (data.requires_totp_enrollment) {
+			loginData = data;
+			password = '';
+			showPasswordChangeForm = false;
+			return;
+		}
+
+		if (data.requires_password_change) {
+			loginData = data;
+			showPasswordChangeForm = true;
+			setTimeout(() => newPasswordInput?.focus(), 100);
+			return;
+		}
+
+		if (data.access_token) {
+			auth.setToken(data.access_token);
+			if ($page.url.searchParams.has('oauth_pending')) {
+				await loadPendingConsent();
+				if (pendingConsent) {
+					return;
+				}
+			}
+			const redirectTo = loginRedirect(
+				$page.url.searchParams.get('redirect'),
+				window.location.origin
+			);
+			// Full navigation applies the account language preference from the new token.
+			redirecting = true;
+			window.location.assign(resolve(redirectTo));
+		} else {
+			throw new Error(m.login_error_no_token());
+		}
+	}
+
 	async function handlePasswordChange() {
+		if (loading) return;
 		error = '';
 
 		if (newPassword !== confirmPassword) {
@@ -195,14 +223,17 @@
 		loading = true;
 
 		try {
-			const response = await fetch('/api/v1/users/update-password', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${loginData?.access_token ?? ''}`
-				},
-				body: JSON.stringify({ new_password: newPassword })
-			});
+			const response = await fetch(
+				loginData?.mfa_token ? '/api/v1/users/login/password' : '/api/v1/users/update-password',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${loginData?.access_token ?? ''}`
+					},
+					body: JSON.stringify({ new_password: newPassword, mfa_token: loginData?.mfa_token })
+				}
+			);
 
 			if (!response.ok) {
 				throw new Error(m.login_error_update_password());
@@ -210,17 +241,7 @@
 
 			const passwordData = await response.json();
 
-			if (passwordData.access_token) {
-				auth.setToken(passwordData.access_token);
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
-			} else {
-				throw new Error(m.login_error_no_token());
-			}
+			await finishLogin(passwordData);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.login_error_password_change_failed();
 		} finally {
@@ -228,8 +249,30 @@
 		}
 	}
 
+	async function verifyTOTP(code: string) {
+		if (loading) return;
+		loading = true;
+		error = '';
+		try {
+			const response = await fetch('/api/v1/users/login/totp', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ mfa_token: loginData?.mfa_token, code })
+			});
+			if (!response.ok)
+				throw new Error(response.status === 429 ? m.totp_rate_limited() : m.totp_invalid_code());
+			await finishLogin(await response.json());
+		} catch (err) {
+			error = err instanceof Error ? err.message : m.totp_error();
+		} finally {
+			loading = false;
+		}
+	}
+
 	function goBackToLogin() {
 		showPasswordChangeForm = false;
+		loginData = null;
+		password = '';
 		newPassword = '';
 		confirmPassword = '';
 		error = '';
@@ -245,11 +288,17 @@
 				<img src="/images/marmot.svg" alt="Marmot" class="h-20 w-20" />
 			</div>
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				{pendingConsent
-					? m.login_authorize_heading()
-					: showPasswordChangeForm
-						? m.login_change_password_heading()
-						: m.login_signin_heading()}
+				{redirecting
+					? m.login_finishing_heading()
+					: pendingConsent
+						? m.login_authorize_heading()
+						: loginData?.requires_totp
+							? m.totp_title()
+							: loginData?.requires_totp_enrollment
+								? m.totp_enrollment_title()
+								: showPasswordChangeForm
+									? m.login_change_password_heading()
+									: m.login_signin_heading()}
 			</h1>
 			{#if showPasswordChangeForm && !pendingConsent}
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -271,7 +320,15 @@
 				</div>
 			{/if}
 
-			{#if pendingConsent}
+			{#if redirecting}
+				<div role="status" class="flex flex-col items-center gap-4 py-8 text-center">
+					<div
+						class="h-9 w-9 animate-spin rounded-full border-2 border-earthy-terracotta-200 border-t-earthy-terracotta-700"
+						aria-hidden="true"
+					/>
+					<p class="text-sm text-gray-600 dark:text-gray-300">{m.login_finishing_help()}</p>
+				</div>
+			{:else if pendingConsent}
 				<div class="space-y-5">
 					<p class="text-sm text-gray-700 dark:text-gray-300">
 						{m.login_consent_intro()}
@@ -299,6 +356,21 @@
 							click={handleConsentCancel}
 						/>
 					</div>
+				</div>
+			{:else if loginData?.requires_totp}
+				<div class="space-y-5">
+					<p class="text-sm text-gray-600 dark:text-gray-300">{m.totp_login_help()}</p>
+					<TOTPChallenge verify={verifyTOTP} {loading} />
+					<Button text={m.common_cancel()} variant="clear" click={goBackToLogin} />
+				</div>
+			{:else if loginData?.requires_totp_enrollment}
+				<div class="space-y-5">
+					<p class="text-sm text-gray-600 dark:text-gray-300">{m.totp_enrollment_help()}</p>
+					<TOTPSettings
+						enrollmentToken={loginData.mfa_token}
+						onEnrolled={() => void finishLogin({ access_token: auth.getToken() || '' })}
+					/>
+					<Button text={m.common_cancel()} variant="clear" click={goBackToLogin} />
 				</div>
 			{:else if !showPasswordChangeForm}
 				<form

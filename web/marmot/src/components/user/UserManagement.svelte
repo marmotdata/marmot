@@ -15,6 +15,7 @@
 	let editingUserId: string | null = null;
 	let loading = false;
 	let error: string | null = null;
+	let totpPolicy: 'loading' | 'off' | 'optional' | 'required' | 'error' = 'loading';
 	let searchTimer: ReturnType<typeof setTimeout>;
 
 	function goCreate() {
@@ -42,6 +43,16 @@
 	}
 
 	onMount(fetchUsers);
+	onMount(async () => {
+		try {
+			const response = await fetch('/auth-providers');
+			if (!response.ok) throw new Error('Auth configuration unavailable');
+			const config = await response.json();
+			totpPolicy = !config.totp_enabled ? 'off' : config.totp_required ? 'required' : 'optional';
+		} catch {
+			totpPolicy = 'error';
+		}
+	});
 
 	function scheduleSearch() {
 		if (searchTimer) clearTimeout(searchTimer);
@@ -132,4 +143,24 @@
 			</div>
 		{/if}
 	</div>
+</div>
+
+<div
+	class="mt-3 flex items-center justify-end gap-2 px-1 text-xs text-gray-500 dark:text-gray-400"
+	aria-live="polite"
+>
+	<span>{m.users_totp_policy_label()}</span>
+	<span
+		class="rounded-full border border-gray-200/70 bg-gray-100/50 px-2.5 py-1 font-medium text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300"
+	>
+		{totpPolicy === 'required'
+			? m.users_totp_policy_required()
+			: totpPolicy === 'optional'
+				? m.users_totp_policy_optional()
+				: totpPolicy === 'off'
+					? m.users_totp_policy_off()
+					: totpPolicy === 'loading'
+						? m.common_loading()
+						: m.totp_status_unavailable()}
+	</span>
 </div>

@@ -80,7 +80,7 @@ func (h *Handler) handleLoginExchange(w http.ResponseWriter, r *http.Request) {
 
 	// Minted here rather than at the callback, so no token is ever written to
 	// the database.
-	token, err := h.authService.GenerateToken(r.Context(), usr, nil)
+	token, err := h.authService.GenerateToken(r.Context(), usr, map[string]interface{}{"auth_method": "sso"})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token for login handoff")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to complete login")

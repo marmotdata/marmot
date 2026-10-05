@@ -71,6 +71,7 @@ func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error    
 func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error)                { return nil, nil }
 func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error  { return nil }
 func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error)              { return nil, nil }
+func (m *mockUserService) RequirePasswordChange(_ context.Context, _ string) error { return nil }
 
 type mockOAuthProvider struct {
 	typ string
