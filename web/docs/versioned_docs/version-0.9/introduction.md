@@ -64,7 +64,7 @@ Plugins read a source's structure and metadata into PostgreSQL; the data itself 
 <CalloutCard
   title="Building for a regulated environment?"
   description="Run it yourself so nothing leaves your VPC, and read the source to verify exactly what is collected."
-  href="/pricing#contact"
+  href="https://cloud.marmotdata.io/#pricing"
   buttonText="Talk to us"
   variant="secondary"
   icon="mdi:shield-check-outline"

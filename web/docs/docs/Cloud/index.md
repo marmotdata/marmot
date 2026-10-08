@@ -121,7 +121,7 @@ The catalog, the query language, the plugins, the MCP server and the SDKs are id
   <DocCard
     title="Pricing"
     description="What each plan includes and what it costs"
-    href="https://cloud.marmotdata.io/pricing"
+    href="https://cloud.marmotdata.io/#pricing"
     icon="mdi:chart-box"
   />
   <DocCard

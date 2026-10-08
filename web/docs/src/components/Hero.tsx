@@ -7,6 +7,29 @@ export default function Hero(): JSX.Element {
   return (
     <header className="relative pt-20 pb-8 sm:pt-24 sm:pb-10 lg:pt-24 lg:pb-12 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 hero-glow overflow-hidden">
       <div className="relative max-w-6xl mx-auto text-center">
+        <a
+          data-animate
+          href="https://cloud.marmotdata.io"
+          className="cloud-pill mb-8"
+        >
+          <span className="cloud-pill-tag">New</span>
+          Marmot Cloud: launch a hosted instance in a minute
+          <svg
+            className="cloud-pill-arrow"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 7l5 5m0 0l-5 5m5-5H6"
+            />
+          </svg>
+        </a>
+
         <h1
           data-animate
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.05]"
@@ -32,10 +55,10 @@ export default function Hero(): JSX.Element {
           className="mt-10 flex flex-row items-center justify-center gap-3"
         >
           <a
-            href="/docs/introduction"
+            href="https://cloud.marmotdata.io/signup"
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Get started
+            Start free
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"
@@ -60,12 +83,27 @@ export default function Hero(): JSX.Element {
           </a>
         </div>
 
+        <p
+          data-animate
+          data-animate-delay="4"
+          className="mt-5 text-sm text-gray-400 dark:text-gray-500"
+        >
+          Free account on Marmot Cloud, pay when you launch. Or{" "}
+          <a
+            href="/docs/quick-start"
+            className="text-earthy-terracotta-700 dark:text-earthy-terracotta-400 font-medium hover:underline"
+          >
+            self-host it
+          </a>{" "}
+          free, forever.
+        </p>
+
         <SupportedBy />
         <ProofRow />
       </div>
 
-      {/* The figure is part of the same header unit: the headline makes the
-          claim, the figure is the evidence. */}
+      {/* The diagram stays inside the header, so it reads as part of the
+          headline rather than as a section of its own. */}
       <div className="relative mt-12">
         <ContextDiagram />
       </div>

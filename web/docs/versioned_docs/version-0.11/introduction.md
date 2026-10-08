@@ -136,7 +136,7 @@ Everything in these docs applies to every edition. The data model, the query lan
 <CalloutCard
   title="Building for a regulated environment?"
   description="Run Marmot inside your own VPC, or talk to us about an enterprise plan with data residency, VPC peering and audit export on Marmot Cloud."
-  href="/pricing#contact"
+  href="https://cloud.marmotdata.io/#pricing"
   buttonText="Talk to us"
   variant="secondary"
   icon="mdi:shield-lock-outline"

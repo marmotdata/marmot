@@ -8,14 +8,15 @@ export default function CTA(): JSX.Element {
           data-animate
           className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight"
         >
-          See how Marmot fits into your stack.
+          Your context layer, live in about a minute.
         </h2>
         <p
           data-animate
           data-animate-delay="1"
           className="mt-4 text-lg text-gray-500 dark:text-gray-400"
         >
-          Deploy it yourself in a few minutes, or talk to us about your setup.
+          Launch it on Marmot Cloud and skip the infrastructure, or self-host
+          the open source core.
         </p>
 
         <div
@@ -24,10 +25,10 @@ export default function CTA(): JSX.Element {
           className="mt-8 flex flex-row justify-center items-center gap-3"
         >
           <a
-            href="/docs/quick-start"
+            href="https://cloud.marmotdata.io/signup"
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Get started
+            Start free
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"
@@ -43,16 +44,24 @@ export default function CTA(): JSX.Element {
             </svg>
           </a>
           <a
-            href="mailto:support@marmotdata.io"
+            href="/docs/quick-start"
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-earthy-brown-200/70 dark:border-gray-700/70 transition-all duration-200 hover:-translate-y-0.5"
           >
-            Talk to us
+            Self-host it
           </a>
         </div>
 
         <p
           data-animate
           data-animate-delay="3"
+          className="mt-5 text-sm text-gray-400 dark:text-gray-500"
+        >
+          Free account · Pay when you launch
+        </p>
+
+        <p
+          data-animate
+          data-animate-delay="4"
           className="mt-14 text-sm text-gray-400 dark:text-gray-500 leading-relaxed"
         >
           Built by engineers from HashiCorp, Adidas, Just Eat Takeaway.com and

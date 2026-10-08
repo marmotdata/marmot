@@ -11,10 +11,19 @@ import IntroDiagram from '@site/src/components/IntroDiagram';
 Marmot is the open source **context layer** for your whole stack. It is a single catalog for every asset your systems and teams depend on: services, APIs, queues, topics, brokers, databases, tables and pipelines. It records what each one is, who owns it, what it means and what it connects to, then hands that context to whoever needs it, whether that is an engineer in a browser or an AI agent over [MCP](MCP/index.md).
 
 <CalloutCard
+  title="Marmot Cloud is live"
+  description="The managed edition: everything in the open source core, plus SSO, backups and the features that ship to Cloud first. An instance in about a minute. Free account, billed only once you launch."
+  href="https://cloud.marmotdata.io/signup"
+  buttonText="Start free"
+  icon="mdi:cloud-outline"
+/>
+
+<CalloutCard
   title="Get started in five minutes"
   description="Run Marmot locally with Docker Compose and catalog your first assets."
   docId="quick-start"
   buttonText="Quick Start"
+  variant="secondary"
   icon="mdi:rocket-launch"
 />
 
@@ -142,7 +151,7 @@ Everything in these docs applies to every edition. The data model, the query lan
 <CalloutCard
   title="Building for a regulated environment?"
   description="Run Marmot inside your own VPC, or talk to us about an enterprise plan with data residency, VPC peering and audit export on Marmot Cloud."
-  href="/pricing#contact"
+  href="https://cloud.marmotdata.io/#pricing"
   buttonText="Talk to us"
   variant="secondary"
   icon="mdi:shield-lock-outline"

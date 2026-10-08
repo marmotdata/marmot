@@ -130,6 +130,36 @@ const config: Config = {
             offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
             publisher: { "@id": "https://marmotdata.io/#organization" },
           },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://marmotdata.io/#cloud",
+            name: "Marmot Cloud",
+            description:
+              "Marmot Cloud is the managed edition of Marmot: everything in the open source core, plus SSO, backups, private networking and the features that ship to Cloud first. Provisioning, upgrades and TLS are handled for you. Free account, pay when you launch an instance.",
+            url: "https://cloud.marmotdata.io",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "Web",
+            offers: [
+              {
+                "@type": "Offer",
+                name: "Team",
+                price: "49",
+                priceCurrency: "USD",
+                url: "https://cloud.marmotdata.io/signup",
+                description:
+                  "Per instance, per month. 100 seats, 5,000 assets, all plugins, MCP server, SSO and 30-day backups.",
+              },
+              {
+                "@type": "Offer",
+                name: "Enterprise",
+                priceCurrency: "USD",
+                url: "https://cloud.marmotdata.io/#pricing",
+                description:
+                  "Custom priced. Unlimited instances, seats and assets, private networking and VPC peering, audit log export, 99.9% uptime SLA and priority support.",
+              },
+            ],
+            publisher: { "@id": "https://marmotdata.io/#organization" },
+          },
         ],
       }),
     },
@@ -153,7 +183,7 @@ const config: Config = {
       {
         title: "Marmot",
         description:
-          "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team.",
+          "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team. Self-host it free, or run it on Marmot Cloud at cloud.marmotdata.io.",
         docsDir: [
           { path: "docs", routeBasePath: "docs", label: "Documentation" },
           { path: "resources", routeBasePath: "resources", label: "Resources" },
@@ -239,6 +269,12 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     image: "img/social-card-dark.png",
+    announcementBar: {
+      id: "marmot-cloud-launch",
+      content:
+        '<span class="cloud-announcement"><span class="cloud-announcement-tag">New</span> Marmot Cloud is live.<span class="cloud-announcement-more"> Hosted Marmot, nothing to run.</span> <a href="https://cloud.marmotdata.io/signup">Start free</a></span>',
+      isCloseable: true,
+    },
     navbar: {
       title: "",
       logo: {
@@ -247,13 +283,22 @@ const config: Config = {
         srcDark: "img/marmot-text-light.svg",
       },
       items: [
+        {
+          href: "https://cloud.marmotdata.io",
+          label: "Cloud",
+          position: "left",
+        },
         { to: "/docs/introduction", label: "Docs", position: "left" },
         {
           href: "https://plugins.marmotdata.io",
           label: "Plugins",
           position: "left",
         },
-        { to: "/pricing", label: "Pricing", position: "left" },
+        {
+          href: "https://cloud.marmotdata.io/#pricing",
+          label: "Pricing",
+          position: "left",
+        },
         { to: "/resources", label: "Resources", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         {
@@ -267,10 +312,45 @@ const config: Config = {
           className: "header-github-link",
           "aria-label": "GitHub repository",
         },
+        // Sign in is a plain text link and Start free is the button, so the
+        // header has only one obvious action. Both are styled in custom.css.
+        {
+          href: "https://cloud.marmotdata.io/login",
+          label: "Sign in",
+          position: "right",
+          className: "signin-link",
+        },
+        {
+          href: "https://cloud.marmotdata.io/signup",
+          label: "Start free",
+          position: "right",
+          className: "cloud-button",
+        },
       ],
     },
     footer: {
       links: [
+        {
+          title: "Marmot Cloud",
+          items: [
+            {
+              label: "Overview",
+              href: "https://cloud.marmotdata.io",
+            },
+            {
+              label: "Start free",
+              href: "https://cloud.marmotdata.io/signup",
+            },
+            {
+              label: "Sign in",
+              href: "https://cloud.marmotdata.io/login",
+            },
+            {
+              label: "Cloud pricing",
+              href: "https://cloud.marmotdata.io/#pricing",
+            },
+          ],
+        },
         {
           title: "Docs",
           items: [
@@ -331,7 +411,7 @@ const config: Config = {
             },
             {
               label: "Pricing",
-              to: "/pricing",
+              href: "https://cloud.marmotdata.io/#pricing",
             },
             {
               label: "API Reference",
@@ -342,7 +422,7 @@ const config: Config = {
               href: "https://github.com/marmotdata/marmot/",
             },
             {
-              label: "Security & Bug Bounty",
+              label: "Security & Disclosure",
               to: "/security",
             },
             {

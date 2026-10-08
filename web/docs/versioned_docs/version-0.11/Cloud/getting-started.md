@@ -16,7 +16,7 @@ This guide gets you a running instance, a terminal signed in to it, and an empty
 <Steps>
 <Step title="Create your account">
 
-Sign up at [cloud.marmotdata.io](https://cloud.marmotdata.io) and pick a plan. Free needs no card and has no end date, which is enough to point Marmot at a system you actually run. The [pricing page](https://cloud.marmotdata.io/pricing) covers what each plan includes.
+Sign up at [cloud.marmotdata.io](https://cloud.marmotdata.io) and pick a plan. Free needs no card and has no end date, which is enough to point Marmot at a system you actually run. The [pricing page](https://cloud.marmotdata.io/#pricing) covers what each plan includes.
 
 </Step>
 <Step title="Launch an instance">
@@ -138,7 +138,7 @@ Pick the cloud your data lives in. Each guide walks you from the empty configura
   <DocCard
     title="Pricing"
     description="What each plan includes and what it costs"
-    href="https://cloud.marmotdata.io/pricing"
+    href="https://cloud.marmotdata.io/#pricing"
     icon="mdi:chart-box"
   />
 </DocCardGrid>

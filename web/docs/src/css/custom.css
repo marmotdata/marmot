@@ -1187,6 +1187,10 @@ html[data-theme="dark"] .hub-pulse {
   animation-delay: 1.2s;
 }
 
+/* ============================================
+   Narrow-screen navbar
+   ============================================ */
+
 @media (max-width: 996px) {
   .navbar__items--right {
     display: flex !important;
@@ -2261,6 +2265,215 @@ html[data-theme="dark"] .DocSearch-Button:hover {
 
 .DocSearch-Search-Icon {
   color: #9ca3af !important;
+}
+
+/* ============================================
+   Marmot Cloud
+
+   Preflight is off, so every line in here is declared rather than left to a
+   Tailwind `border-*` utility.
+   ============================================ */
+
+/* The launch banner that sits above the navbar. */
+div[class*="announcementBar_"] {
+  --docusaurus-announcement-bar-height: 2.5rem;
+  background: linear-gradient(90deg, #b34822 0%, #d25a30 50%, #e86f42 100%);
+  color: #fff;
+  font-weight: 500;
+  border-bottom: none;
+}
+
+div[class*="announcementBar_"] button[class*="announcementBarClose"] {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cloud-announcement {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+.cloud-announcement a {
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+
+.cloud-announcement a:hover {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.cloud-announcement-tag {
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* On phones, drop the tag and the trailing sentence so the bar stays one line. */
+@media (max-width: 640px) {
+  .cloud-announcement-tag,
+  .cloud-announcement-more {
+    display: none;
+  }
+}
+
+/* The Start free button in the navbar. */
+.cloud-button {
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
+  color: white !important;
+  padding: 0.4rem 1.1rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: -0.01em;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(210, 90, 48, 0.2);
+  margin-right: 0 !important;
+}
+
+.cloud-button:hover {
+  background: linear-gradient(135deg, #c04e28 0%, #d25a30 100%) !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(210, 90, 48, 0.25) !important;
+}
+
+html[data-theme="dark"] .cloud-button {
+  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
+  box-shadow: 0 1px 3px rgba(232, 111, 66, 0.3);
+}
+
+html[data-theme="dark"] .cloud-button:hover {
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
+  box-shadow: 0 4px 12px rgba(232, 111, 66, 0.3) !important;
+}
+
+/* Sign in stays plain text beside the button, so only one thing in the
+   header reads as the main action. */
+.signin-link {
+  font-weight: 500;
+}
+
+@media (max-width: 996px) {
+  .cloud-button {
+    display: inline-flex !important;
+    padding: 0.35rem 0.9rem !important;
+    font-size: 0.8rem !important;
+    margin-left: 0.5rem !important;
+  }
+
+  .navbar__item.navbar__link.cloud-button {
+    display: inline-flex !important;
+  }
+
+  /* Below this width the header cannot hold both. Keep the button and hide
+     Sign in, which is still reachable from the sidebar menu. */
+  .navbar__items--right .signin-link {
+    display: none !important;
+  }
+}
+
+/* At phone widths DocSearch is positioned absolutely against the right edge,
+   so the right-hand group has to stop short of it or the button ends up
+   underneath. GitHub goes as well, since the sidebar menu already has it. */
+@media (max-width: 640px) {
+  .navbar__items--right {
+    padding-right: 2.75rem;
+  }
+
+  .navbar__items--right .header-github-link {
+    display: none !important;
+  }
+
+  .cloud-button {
+    flex-shrink: 0;
+    padding: 0.3rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    margin-left: 0.25rem !important;
+  }
+}
+
+/* The header bar already shows the button, so hide the sidebar copy. */
+.navbar-sidebar .cloud-button {
+  display: none !important;
+}
+
+/* --- The small pill link that sits above the hero headline --- */
+
+.cloud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(210, 90, 48, 0.28);
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cloud-pill:hover {
+  border-color: rgba(210, 90, 48, 0.5);
+  color: #4b5563;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+html[data-theme="dark"] .cloud-pill {
+  border-color: rgba(247, 136, 94, 0.3);
+  background: rgba(46, 46, 46, 0.6);
+  color: #d1d5db;
+}
+
+html[data-theme="dark"] .cloud-pill:hover {
+  border-color: rgba(247, 136, 94, 0.55);
+  color: #d1d5db;
+}
+
+.cloud-pill-tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(210, 90, 48, 0.12);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b34822;
+}
+
+html[data-theme="dark"] .cloud-pill-tag {
+  background: rgba(247, 136, 94, 0.16);
+  color: #f7885e;
+}
+
+.cloud-pill-arrow {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.375rem;
+  color: #b34822;
+  transition: transform 0.2s ease;
+}
+
+.cloud-pill:hover .cloud-pill-arrow {
+  transform: translateX(2px);
+}
+
+html[data-theme="dark"] .cloud-pill-arrow {
+  color: #f7885e;
 }
 
 /* --- Legal page tables --- */

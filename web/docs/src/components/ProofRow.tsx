@@ -29,7 +29,7 @@ export default function ProofRow(): JSX.Element {
         <Fact value={INTEGRATIONS} label="integrations" />
       </a>
       <span className="proof-sep" aria-hidden="true" />
-      <a className="proof-fact-link" href="/pricing">
+      <a className="proof-fact-link" href="https://cloud.marmotdata.io/#pricing">
         <span className="proof-claim">Self-host or Cloud</span>
       </a>
     </div>
