@@ -1191,6 +1191,33 @@ html[data-theme="dark"] .hub-pulse {
    Narrow-screen navbar
    ============================================ */
 
+/* As on cloud.marmotdata.io, only links that leave Marmot get the external
+   arrow. Cloud, Pricing, Sign in and Start free are all Marmot. Labels never
+   wrap. */
+.navbar__items
+  .navbar__link[href^="https://cloud.marmotdata.io"]
+  svg[class*="iconExternalLink"] {
+  display: none;
+}
+
+.navbar__items .navbar__link {
+  white-space: nowrap;
+}
+
+/* Between the hamburger breakpoint and a full desktop width, the links
+   tighten up and search shrinks to its icon so the header stays one row. */
+@media (min-width: 997px) and (max-width: 1279px) {
+  .navbar__items .navbar__link {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .navbar__items--right .DocSearch-Button-Placeholder,
+  .navbar__items--right .DocSearch-Button-Keys {
+    display: none;
+  }
+}
+
 @media (max-width: 996px) {
   .navbar__items--right {
     display: flex !important;
@@ -2384,14 +2411,25 @@ html[data-theme="dark"] .cloud-button:hover {
   }
 }
 
-/* At phone widths DocSearch is positioned absolutely against the right edge,
-   so the right-hand group has to stop short of it or the button ends up
-   underneath. GitHub goes as well, since the sidebar menu already has it. */
-@media (max-width: 640px) {
+/* Once the hamburger menu shows, DocSearch is positioned absolutely against
+   the right edge. Search shrinks to its icon and the right-hand group stops
+   short of it, or the button and GitHub end up underneath. */
+@media (max-width: 996px) {
   .navbar__items--right {
     padding-right: 2.75rem;
   }
 
+  .navbar__search .DocSearch-Button-Placeholder,
+  .navbar__search .DocSearch-Button-Keys,
+  [class*="navbarSearchContainer"] .DocSearch-Button-Placeholder,
+  [class*="navbarSearchContainer"] .DocSearch-Button-Keys {
+    display: none;
+  }
+}
+
+/* At phone widths GitHub goes as well, since the sidebar menu already has
+   it. */
+@media (max-width: 640px) {
   .navbar__items--right .header-github-link {
     display: none !important;
   }
