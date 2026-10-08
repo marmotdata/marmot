@@ -54,7 +54,7 @@
     "generate": "openapi-typescript ../../docs/.openapi3.yaml -o src/_gen/schema.ts && node scripts/generate-models.mjs"
   },
   "dependencies": {
-    "openapi-fetch": "^0.13.0",
+    "openapi-fetch": "^0.17.0",
     "yaml": "^2.5.0"
   },
   "peerDependencies": {
