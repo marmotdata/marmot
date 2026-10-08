@@ -12,9 +12,8 @@ updates:
       go:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      go-major:
+      go-other:
         patterns: ["*"]
-        update-types: ["major"]
       go-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -31,9 +30,8 @@ updates:
       go-sdk:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      go-sdk-major:
+      go-sdk-other:
         patterns: ["*"]
-        update-types: ["major"]
       go-sdk-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -52,9 +50,8 @@ updates:
       frontend:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      frontend-major:
+      frontend-other:
         patterns: ["*"]
-        update-types: ["major"]
       frontend-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -71,9 +68,8 @@ updates:
       ts-sdk:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      ts-sdk-major:
+      ts-sdk-other:
         patterns: ["*"]
-        update-types: ["major"]
       ts-sdk-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -90,9 +86,8 @@ updates:
       python-sdk:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      python-sdk-major:
+      python-sdk-other:
         patterns: ["*"]
-        update-types: ["major"]
       python-sdk-security:
         applies-to: security-updates
         patterns: ["*"]
