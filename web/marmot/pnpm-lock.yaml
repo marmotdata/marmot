@@ -105,8 +105,8 @@ importers:
         specifier: ^5.5.3
         version: 5.5.3
       croner:
-        specifier: ^9.1.0
-        version: 9.1.0
+        specifier: ^10.0.1
+        version: 10.0.1
       cronstrue:
         specifier: ^3.14.0
         version: 3.14.0
@@ -1542,8 +1542,8 @@ packages:
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
-  croner@9.1.0:
-    resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
+  croner@10.0.1:
+    resolution: {integrity: sha512-ixNtAJndqh173VQ4KodSdJEI6nuioBWI0V1ITNKhZZsO0pEMoDxz539T4FTTbSZ/xIOSuDnzxLVRqBVSvPNE2g==}
     engines: {node: '>=18.0'}
 
   cronstrue@3.14.0:
@@ -4385,7 +4385,7 @@ snapshots:
 
   create-require@1.1.1: {}
 
-  croner@9.1.0: {}
+  croner@10.0.1: {}
 
   cronstrue@3.14.0: {}
 
