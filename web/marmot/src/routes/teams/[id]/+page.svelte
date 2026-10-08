@@ -83,6 +83,47 @@
 	$: isTeamOwner = members.some((m) => m.user_id === currentUserId && m.role === 'owner');
 	$: canEditTeam = canManageTeams || isTeamOwner;
 
+	let editingDetails = false;
+	let savingDetails = false;
+	let detailsError: string | null = null;
+	let detailsForm = { name: '', description: '' };
+
+	function startEditDetails() {
+		if (!team) return;
+		detailsForm = { name: team.name, description: team.description ?? '' };
+		detailsError = null;
+		editingDetails = true;
+	}
+
+	async function saveDetails() {
+		if (!team) return;
+		const name = detailsForm.name.trim();
+		const description = detailsForm.description.trim();
+		if (!name) {
+			detailsError = m.teams_error_name_required();
+			return;
+		}
+		savingDetails = true;
+		detailsError = null;
+		try {
+			const response = await fetchApi(`/teams/${teamId}`, {
+				method: 'PUT',
+				body: JSON.stringify({ name, description })
+			});
+			if (response.ok) {
+				team = { ...team, name, description };
+				editingDetails = false;
+			} else {
+				detailsError =
+					response.status === 409 ? m.teams_error_name_exists() : m.teams_error_update();
+			}
+		} catch {
+			detailsError = m.teams_error_update();
+		} finally {
+			savingDetails = false;
+		}
+	}
+
 	function getIconType(asset: Asset): string {
 		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
 			return asset.providers[0];
@@ -479,23 +520,94 @@
 					<Users class="h-8 w-8 text-blue-700 dark:text-blue-300" />
 				</div>
 				<div class="flex-1">
-					<div class="flex items-center gap-3 mb-2">
-						<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-							{team.name}
-						</h1>
-						{#if team.created_via_sso}
-							<span
-								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-							>
-								<Lock class="h-3 w-3 mr-1" />
-								{m.teams_sso_managed_badge()}
-							</span>
+					{#if editingDetails}
+						<form
+							class="space-y-3"
+							onsubmit={(event) => {
+								event.preventDefault();
+								saveDetails();
+							}}
+						>
+							<div>
+								<label
+									for="team-name"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+								>
+									{m.teams_name_label()}
+								</label>
+								<input
+									id="team-name"
+									type="text"
+									required
+									maxlength="255"
+									bind:value={detailsForm.name}
+									class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<label
+									for="team-description"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+								>
+									{m.teams_description_label()}
+								</label>
+								<textarea
+									id="team-description"
+									rows="3"
+									bind:value={detailsForm.description}
+									placeholder={m.teams_description_placeholder()}
+									class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent"
+								></textarea>
+							</div>
+							{#if detailsError}
+								<p class="text-sm text-red-600 dark:text-red-400" role="alert">{detailsError}</p>
+							{/if}
+							<div class="flex gap-2">
+								<button
+									type="submit"
+									disabled={savingDetails}
+									class="px-4 py-2 text-sm font-medium text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 rounded-lg disabled:opacity-50"
+								>
+									{m.common_save()}
+								</button>
+								<button
+									type="button"
+									disabled={savingDetails}
+									onclick={() => (editingDetails = false)}
+									class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+								>
+									{m.common_cancel()}
+								</button>
+							</div>
+						</form>
+					{:else}
+						<div class="flex items-center gap-3 mb-2">
+							<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+								{team.name}
+							</h1>
+							{#if team.created_via_sso}
+								<span
+									class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+								>
+									<Lock class="h-3 w-3 mr-1" />
+									{m.teams_sso_managed_badge()}
+								</span>
+							{/if}
+							{#if canManageTeams && !team.created_via_sso}
+								<button
+									type="button"
+									onclick={startEditDetails}
+									class="ml-auto px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
+								>
+									{m.common_edit()}
+								</button>
+							{/if}
+						</div>
+						{#if team.description}
+							<p class="text-gray-600 dark:text-gray-400">
+								{team.description}
+							</p>
 						{/if}
-					</div>
-					{#if team.description}
-						<p class="text-gray-600 dark:text-gray-400">
-							{team.description}
-						</p>
 					{/if}
 					{#if team.sso_provider}
 						<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
