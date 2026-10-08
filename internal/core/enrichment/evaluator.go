@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -321,14 +322,26 @@ func BuildPatternCondition(columnRef, patternType, patternValue string, startPar
 	}
 }
 
-// RenumberParameters renumbers SQL parameters from $2, $3, ... to $1, $2, ...
+// sqlParameter matches a positional placeholder so RenumberParameters can shift
+// each one exactly once.
+var sqlParameter = regexp.MustCompile(`\$(\d+)`)
+
+// RenumberParameters renumbers SQL parameters from $2, $3, ... to $1, $2, ...,
+// which is what makes the SQL line up with the parameter list after the
+// builder's unused $1 has been dropped.
+//
+// This has to be a single pass. Rewriting $3 to $2 and then, in a later pass,
+// every $2 to $1 collapses both placeholders onto $1, so a rule with two
+// filters ended up with one placeholder and two arguments and the query was
+// rejected with "expected 1 arguments, got 2".
 func RenumberParameters(sql string) string {
-	for i := 20; i >= 2; i-- {
-		old := fmt.Sprintf("$%d", i)
-		new := fmt.Sprintf("$%d", i-1)
-		sql = strings.ReplaceAll(sql, old, new)
-	}
-	return sql
+	return sqlParameter.ReplaceAllStringFunc(sql, func(match string) string {
+		n, err := strconv.Atoi(match[1:])
+		if err != nil || n <= 1 {
+			return match
+		}
+		return fmt.Sprintf("$%d", n-1)
+	})
 }
 
 // GetNestedMetadataValue extracts a value from nested metadata using dot notation.

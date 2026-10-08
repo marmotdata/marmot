@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import Layout from "@theme/Layout";
 import Head from "@docusaurus/Head";
+import useBrokenLinks from "@docusaurus/useBrokenLinks";
 import { Icon } from "@iconify/react";
 
 const API_BASE = "https://api.marmotdata.io";
@@ -425,6 +426,9 @@ const servicesFeatures = [
 ];
 
 export default function Pricing(): JSX.Element {
+  // The #contact card is a plain div, so register it for the broken anchor check.
+  useBrokenLinks().collectAnchor("contact");
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {

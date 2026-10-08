@@ -24,6 +24,8 @@
 	import { searchTerms, getTerm } from '$lib/glossary/api';
 	import type { GlossaryTerm } from '$lib/glossary/types';
 	import type { Asset } from '$lib/assets/types';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDateTime } from '$lib/utils';
 
 	let ruleId = $derived($page.params.id);
 	let canManage = $derived(auth.hasPermission('assets', 'manage'));
@@ -69,8 +71,12 @@
 	let previewCount = $state<number | null>(null);
 
 	const tabs: Tab[] = [
-		{ id: 'configuration', label: 'Configuration', icon: 'material-symbols:settings' },
-		{ id: 'assets', label: 'Matched Assets', icon: 'material-symbols:database' }
+		{
+			id: 'configuration',
+			label: m.assetrules_tab_configuration(),
+			icon: 'material-symbols:settings'
+		},
+		{ id: 'assets', label: m.assetrules_tab_matched_assets(), icon: 'material-symbols:database' }
 	];
 
 	// Derived pagination
@@ -102,7 +108,7 @@
 			rule = await getAssetRule(ruleId);
 			await populateForm(rule);
 		} catch (e) {
-			loadError = e instanceof Error ? e.message : 'Failed to load asset rule';
+			loadError = e instanceof Error ? e.message : m.assetrules_load_one_error();
 		} finally {
 			isLoading = false;
 		}
@@ -180,7 +186,7 @@
 			});
 			previewCount = result.asset_count;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to preview rule';
+			error = e instanceof Error ? e.message : m.assetrules_preview_error();
 		} finally {
 			previewing = false;
 		}
@@ -189,12 +195,12 @@
 	async function handleSave() {
 		error = null;
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.assetrules_validation_name_required();
 			return;
 		}
 		const validLinks = links.filter((l) => l.name.trim() && l.url.trim());
 		if (validLinks.length === 0 && selectedTerms.length === 0) {
-			error = 'At least one link or glossary term is required';
+			error = m.assetrules_validation_enrichment_required();
 			return;
 		}
 
@@ -213,7 +219,7 @@
 			rule = await updateAssetRule(ruleId, input);
 			await populateForm(rule);
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to update asset rule';
+			error = e instanceof Error ? e.message : m.assetrules_update_error();
 		} finally {
 			saving = false;
 		}
@@ -224,7 +230,7 @@
 			await deleteAssetRule(ruleId);
 			goto(resolve('/asset-rules'));
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to delete asset rule';
+			error = e instanceof Error ? e.message : m.assetrules_delete_error();
 			showDeleteModal = false;
 		}
 	}
@@ -239,16 +245,6 @@
 	function getIconType(asset: Asset): string {
 		if (asset.providers?.length === 1) return asset.providers[0];
 		return asset.type || 'unknown';
-	}
-
-	function formatDate(d: string): string {
-		return new Date(d).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 	}
 
 	async function handleAssetPageChange(newPage: number) {
@@ -268,7 +264,9 @@
 </script>
 
 <svelte:head>
-	<title>{rule?.name || 'Asset Rule'} - Marmot</title>
+	<title
+		>{m.assetrules_detail_page_title({ name: rule?.name || m.assetrules_fallback_name() })}</title
+	>
 </svelte:head>
 
 <div class="h-full overflow-y-auto">
@@ -279,7 +277,7 @@
 				class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
 			>
 				<IconifyIcon icon="mdi:arrow-left" class="w-5 h-5 mr-1" />
-				Back to Asset Rules
+				{m.assetrules_back_to_rules()}
 			</button>
 		</div>
 
@@ -297,7 +295,7 @@
 				<p class="text-sm text-red-600 dark:text-red-300 mb-4">{loadError}</p>
 				<Button
 					click={() => goto(resolve('/asset-rules'))}
-					text="Back to Asset Rules"
+					text={m.assetrules_back_to_rules()}
 					variant="clear"
 				/>
 			</div>
@@ -325,7 +323,7 @@
 									? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
 									: 'bg-gray-100 dark:bg-gray-700 text-gray-500'}"
 							>
-								{rule.is_enabled ? 'Active' : 'Disabled'}
+								{rule.is_enabled ? m.common_active() : m.common_disabled()}
 							</span>
 						</div>
 						{#if rule.description}
@@ -335,23 +333,23 @@
 							{#if rule.links?.length > 0}
 								<span class="flex items-center gap-1">
 									<IconifyIcon icon="material-symbols:link" class="w-3.5 h-3.5" />
-									{rule.links.length} link{rule.links.length !== 1 ? 's' : ''}
+									{m.assetrules_link_count({ count: rule.links.length })}
 								</span>
 							{/if}
 							{#if rule.term_ids?.length > 0}
 								<span class="flex items-center gap-1">
 									<IconifyIcon icon="material-symbols:book" class="w-3.5 h-3.5" />
-									{rule.term_ids.length} term{rule.term_ids.length !== 1 ? 's' : ''}
+									{m.assetrules_term_count({ count: rule.term_ids.length })}
 								</span>
 							{/if}
 							<span class="flex items-center gap-1">
 								<IconifyIcon icon="material-symbols:database" class="w-3.5 h-3.5" />
-								{rule.membership_count || 0} matched asset{rule.membership_count !== 1 ? 's' : ''}
+								{m.assetrules_matched_asset_count({ count: rule.membership_count || 0 })}
 							</span>
 							{#if rule.updated_at}
 								<span class="flex items-center gap-1">
 									<IconifyIcon icon="material-symbols:schedule" class="w-3.5 h-3.5" />
-									Updated {formatDate(rule.updated_at)}
+									{m.assetrules_updated_at({ date: formatDateTime(rule.updated_at) })}
 								</span>
 							{/if}
 						</div>
@@ -362,7 +360,7 @@
 					<Button
 						click={() => (showDeleteModal = true)}
 						icon="material-symbols:delete"
-						text="Delete"
+						text={m.common_delete()}
 						variant="clear"
 					/>
 				{/if}
@@ -390,11 +388,11 @@
 								class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"
 							>
 								<IconifyIcon icon="material-symbols:info-outline" class="w-4 h-4" />
-								Basic Information
+								{m.assetrules_basic_information_heading()}
 							</h2>
 							<div>
 								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-									Name <span class="text-red-500">*</span>
+									{m.common_name()} <span class="text-red-500">*</span>
 								</label>
 								<input
 									type="text"
@@ -405,13 +403,13 @@
 							</div>
 							<div>
 								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-									Description
+									{m.common_description()}
 								</label>
 								<textarea
 									bind:value={description}
 									rows="3"
 									disabled={!canManage}
-									placeholder="What does this rule do?"
+									placeholder={m.assetrules_detail_description_placeholder()}
 									class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent disabled:opacity-50 resize-y transition-all"
 								></textarea>
 							</div>
@@ -425,18 +423,17 @@
 								class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"
 							>
 								<IconifyIcon icon="material-symbols:filter-list" class="w-4 h-4" />
-								Query
+								{m.assetrules_query_heading()}
 							</h2>
 							<p class="text-sm text-gray-500 dark:text-gray-400">
-								Define a query to match assets. Enrichments will be automatically applied to all
-								matching assets.
+								{m.assetrules_query_description()}
 							</p>
 							<QueryBuilder
 								query={queryExpression}
 								onQueryChange={(q) => (queryExpression = q)}
 								initiallyExpanded={true}
 								showRunButton={true}
-								runButtonText={previewing ? 'Previewing...' : 'Preview'}
+								runButtonText={previewing ? m.assetrules_previewing() : m.assetrules_preview()}
 								runButtonIcon={previewing ? 'mdi:loading' : 'material-symbols:visibility'}
 								onRunClick={() => handlePreview()}
 							/>
@@ -446,7 +443,7 @@
 									class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center gap-2"
 								>
 									<IconifyIcon icon="material-symbols:check-circle" class="w-4 h-4" />
-									Matches {previewCount} asset{previewCount !== 1 ? 's' : ''}
+									{m.assetrules_preview_matches_count({ count: previewCount })}
 								</div>
 							{/if}
 						</div>
@@ -456,7 +453,7 @@
 								<Button
 									click={handleSave}
 									icon={saving ? '' : 'material-symbols:save'}
-									text={saving ? 'Saving...' : 'Save Changes'}
+									text={saving ? m.assetrules_saving() : m.assetrules_save_changes()}
 									variant="filled"
 									disabled={saving}
 								/>
@@ -474,7 +471,7 @@
 								class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"
 							>
 								<IconifyIcon icon="material-symbols:link" class="w-4 h-4" />
-								External Links
+								{m.assetrules_external_links_heading()}
 							</h2>
 							<ExternalLinks bind:links canEdit={canManage} />
 						</div>
@@ -487,7 +484,7 @@
 								class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"
 							>
 								<IconifyIcon icon="material-symbols:book" class="w-4 h-4" />
-								Glossary Terms
+								{m.assetrules_glossary_terms_heading()}
 							</h2>
 
 							{#if selectedTerms.length > 0}
@@ -515,7 +512,7 @@
 											{#if canManage}
 												<button
 													onclick={() => removeTerm(term.id)}
-													aria-label="Remove term {term.name}"
+													aria-label={m.assetrules_remove_term_aria({ name: term.name })}
 													class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded flex-shrink-0"
 												>
 													<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
@@ -525,7 +522,9 @@
 									{/each}
 								</div>
 							{:else if !canManage}
-								<p class="text-sm text-gray-400 dark:text-gray-500 italic">No terms attached</p>
+								<p class="text-sm text-gray-400 dark:text-gray-500 italic">
+									{m.assetrules_no_terms_attached()}
+								</p>
 							{/if}
 
 							{#if canManage}
@@ -540,7 +539,7 @@
 											value={termSearchQuery}
 											oninput={handleTermSearch}
 											onfocus={() => (showTermSearch = true)}
-											placeholder="Search terms..."
+											placeholder={m.assetrules_search_terms_placeholder()}
 											class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent"
 										/>
 									</div>
@@ -550,7 +549,7 @@
 										>
 											{#if isSearchingTerms}
 												<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-													Searching...
+													{m.assetrules_searching()}
 												</div>
 											{:else}
 												{#each termSearchResults as term (term.id)}
@@ -607,9 +606,11 @@
 							>
 								<IconifyIcon icon="material-symbols:database" class="text-3xl opacity-50" />
 							</div>
-							<p class="font-medium text-gray-900 dark:text-gray-100">No matched assets yet</p>
+							<p class="font-medium text-gray-900 dark:text-gray-100">
+								{m.assetrules_no_matched_assets_heading()}
+							</p>
 							<p class="text-sm mt-1">
-								Assets will appear here after the next reconciliation cycle
+								{m.assetrules_no_matched_assets_hint()}
 							</p>
 						</div>
 					{:else}
@@ -676,10 +677,11 @@
 								class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
 							>
 								<p class="text-sm text-gray-600 dark:text-gray-400">
-									Showing {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(
-										currentPage * PAGE_SIZE,
-										assetsTotal
-									)} of {assetsTotal} assets
+									{m.assetrules_showing_assets({
+										start: (currentPage - 1) * PAGE_SIZE + 1,
+										end: Math.min(currentPage * PAGE_SIZE, assetsTotal),
+										total: assetsTotal
+									})}
 								</p>
 								<div class="flex gap-2">
 									<button
@@ -687,14 +689,14 @@
 										disabled={currentPage === 1 || isLoadingAssets}
 										class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 									>
-										Previous
+										{m.common_previous()}
 									</button>
 									<button
 										onclick={() => handleAssetPageChange(currentPage + 1)}
 										disabled={currentPage >= totalAssetPages || isLoadingAssets}
 										class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 									>
-										Next
+										{m.common_next()}
 									</button>
 								</div>
 							</div>
@@ -708,9 +710,9 @@
 
 <ConfirmModal
 	bind:show={showDeleteModal}
-	title="Delete Asset Rule"
-	message="Are you sure you want to delete this asset rule? External links and glossary terms will no longer be automatically applied to matching assets."
-	confirmText="Delete"
+	title={m.assetrules_delete_title()}
+	message={m.assetrules_delete_confirm_message()}
+	confirmText={m.common_delete()}
 	variant="danger"
 	onConfirm={handleDelete}
 	onCancel={() => (showDeleteModal = false)}

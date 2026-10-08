@@ -35,7 +35,12 @@ const config: Config = {
   projectName: "marmot",
 
   onBrokenLinks: "warn",
-  onBrokenMarkdownLinks: "warn",
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -98,7 +103,7 @@ const config: Config = {
             "@id": "https://marmotdata.io/#organization",
             name: "Marmot",
             url: "https://marmotdata.io",
-            logo: "https://marmotdata.io/img/social-card.png",
+            logo: "https://marmotdata.io/img/social-card-light.png",
             sameAs: [
               "https://github.com/marmotdata/marmot",
               "https://discord.gg/TWCk7hVFN4",
@@ -233,7 +238,7 @@ const config: Config = {
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    image: "img/social-card.png",
+    image: "img/social-card-dark.png",
     navbar: {
       title: "",
       logo: {

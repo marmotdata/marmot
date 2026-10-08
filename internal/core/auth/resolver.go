@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/marmotdata/marmot/internal/core/user"
 )
 
 var ErrUserInactive = errors.New("user account is inactive")
+
+var ErrSessionRevoked = errors.New("session revoked")
 
 // Resolver converts validated JWT claims to a Principal.
 type Resolver interface {
@@ -34,6 +37,12 @@ func (r *userResolver) Resolve(ctx context.Context, claims *Claims) (Principal, 
 		}
 		if !u.Active {
 			return nil, ErrUserInactive
+		}
+		if u.SessionsInvalidatedAt != nil {
+			cutoff := u.SessionsInvalidatedAt.Truncate(time.Second)
+			if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(cutoff) {
+				return nil, ErrSessionRevoked
+			}
 		}
 		return NewUserPrincipal(u), nil
 	default:

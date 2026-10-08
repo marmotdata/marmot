@@ -10,6 +10,8 @@
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import Button from '$components/ui/Button.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate, formatRelativeTime } from '$lib/utils';
 
 	const recentProducts: Writable<DataProduct[]> = writable([]);
 	const allProducts: Writable<DataProduct[]> = writable([]);
@@ -37,7 +39,7 @@
 				const errorData = await response.json();
 				throw {
 					status: response.status,
-					message: errorData.error || 'Unable to complete your request'
+					message: errorData.error || m.products_error_generic()
 				};
 			}
 
@@ -63,7 +65,7 @@
 		} catch (e: unknown) {
 			const err = e as { status?: number; message?: string };
 			const errorStatus = err.status || 500;
-			$error = { status: errorStatus, message: err.message || 'Unknown error' };
+			$error = { status: errorStatus, message: err.message || m.products_error_unknown() };
 			console.error('Error fetching products:', e);
 		} finally {
 			$isLoading = false;
@@ -86,33 +88,10 @@
 			console.error('Error loading product:', err);
 		}
 	}
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
-	function formatRelativeTime(dateString: string): string {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-		return formatDate(dateString);
-	}
 </script>
 
 <svelte:head>
-	<title>Data Products - Marmot</title>
+	<title>{m.products_page_title()}</title>
 </svelte:head>
 
 <div class="h-full overflow-y-auto">
@@ -120,16 +99,16 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between mb-6">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Data Products</h1>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.products_heading()}</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					Logical groupings of related data assets
+					{m.products_subheading()}
 				</p>
 			</div>
 			{#if canManageProducts}
 				<Button
 					click={() => goto(resolve('/products/new'))}
 					icon="material-symbols:add"
-					text="New Product"
+					text={m.products_new_product()}
 					variant="filled"
 				/>
 			{/if}
@@ -140,7 +119,7 @@
 				<div
 					class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-100 px-4 py-3 rounded-lg"
 				>
-					Something went wrong on our end. Please try again later.
+					{m.products_error_server()}
 				</div>
 			{:else}
 				<div
@@ -206,17 +185,16 @@
 					/>
 				</div>
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-					No data products yet
+					{m.products_empty_title()}
 				</h2>
 				<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-					Data products help you organize and share curated collections of data assets with your
-					team.
+					{m.products_empty_description()}
 				</p>
 				{#if canManageProducts}
 					<Button
 						click={() => goto(resolve('/products/new'))}
 						icon="material-symbols:add"
-						text="Create your first product"
+						text={m.products_create_first()}
 						variant="filled"
 					/>
 				{/if}
@@ -227,7 +205,7 @@
 				<h2
 					class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4"
 				>
-					Recently Updated
+					{m.products_recently_updated()}
 				</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 					{#each $recentProducts as product (product.id)}
@@ -241,7 +219,7 @@
 								{#if product.icon_url}
 									<AuthenticatedImage
 										src={product.icon_url}
-										alt="{product.name} icon"
+										alt={m.products_icon_alt({ name: product.name })}
 										class="w-full h-full object-cover"
 									/>
 								{:else}
@@ -261,7 +239,9 @@
 									{product.description.replace(/<[^>]*>/g, '').slice(0, 80)}
 								</p>
 							{:else}
-								<p class="text-xs text-gray-400 dark:text-gray-500 italic mb-3">No description</p>
+								<p class="text-xs text-gray-400 dark:text-gray-500 italic mb-3">
+									{m.products_no_description()}
+								</p>
 							{/if}
 							<div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
 								<span class="flex items-center gap-1">
@@ -290,11 +270,10 @@
 					<h2
 						class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
 					>
-						All Products
+						{m.products_all_products()}
 					</h2>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{$totalProducts}
-						{$totalProducts === 1 ? 'product' : 'products'}
+						{m.products_product_count({ count: $totalProducts })}
 					</span>
 				</div>
 				<div
@@ -314,7 +293,7 @@
 								{#if product.icon_url}
 									<AuthenticatedImage
 										src={product.icon_url}
-										alt="{product.name} icon"
+										alt={m.products_icon_alt({ name: product.name })}
 										class="w-full h-full object-cover"
 									/>
 								{:else}
@@ -334,7 +313,7 @@
 							<div class="flex items-center gap-4 flex-shrink-0">
 								<span
 									class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-									title="Assets"
+									title={m.products_assets()}
 								>
 									<IconifyIcon icon="material-symbols:database" class="w-3.5 h-3.5" />
 									{product.asset_count || 0}

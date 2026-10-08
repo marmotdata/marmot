@@ -18,6 +18,8 @@
 	import { auth } from '$lib/stores/auth';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 
 	interface SearchResultMetadata {
 		type?: string;
@@ -164,7 +166,7 @@
 				const errorData = await response.json();
 				throw {
 					status: response.status,
-					message: errorData.error || 'Unable to complete your request'
+					message: errorData.error || m.discover_error_generic()
 				};
 			}
 
@@ -181,7 +183,7 @@
 		} catch (e: unknown) {
 			const err = e as { status?: number; message?: string };
 			const errorStatus = err.status || 500;
-			$error = { status: errorStatus, message: err.message || 'Unknown error' };
+			$error = { status: errorStatus, message: err.message || m.discover_error_unknown() };
 			console.error('Error fetching results:', e);
 		} finally {
 			$isLoading = false;
@@ -362,20 +364,12 @@
 
 	function getKindLabel(kind: string): string {
 		const labels: Record<string, string> = {
-			asset: 'Asset',
-			glossary: 'Glossary',
-			team: 'Team',
-			data_product: 'Product'
+			asset: m.discover_kind_asset(),
+			glossary: m.discover_kind_glossary(),
+			team: m.discover_kind_team(),
+			data_product: m.discover_kind_product()
 		};
 		return labels[kind] || kind;
-	}
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
 	}
 
 	function getResultSubtitle(result: SearchResult): string {
@@ -410,7 +404,7 @@
 </script>
 
 <svelte:head>
-	<title>Discover - Marmot</title>
+	<title>{m.discover_page_title()}</title>
 </svelte:head>
 
 <div class="h-full flex flex-col">
@@ -425,13 +419,15 @@
 					<button
 						onclick={() => (filtersExpanded = !filtersExpanded)}
 						class="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-						title={filtersExpanded ? 'Collapse filters' : 'Expand filters'}
+						title={filtersExpanded
+							? m.discover_filters_collapse_title()
+							: m.discover_filters_expand_title()}
 					>
 						{#if filtersExpanded}
 							<h2
 								class="font-semibold text-xs text-gray-900 dark:text-gray-100 uppercase tracking-wider"
 							>
-								Filters
+								{m.discover_filters_heading()}
 							</h2>
 							<IconifyIcon icon="mdi:chevron-left" class="text-gray-500" />
 						{:else}
@@ -447,7 +443,7 @@
 									onclick={clearAllFilters}
 									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-medium"
 								>
-									Clear filters
+									{m.discover_clear_filters()}
 								</button>
 							</div>
 
@@ -456,7 +452,7 @@
 								<h3
 									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 								>
-									Kind
+									{m.discover_kind_heading()}
 								</h3>
 								{#each ['asset', 'data_product', 'glossary', 'team'] as kind (kind)}
 									<label class="flex items-center justify-between mb-2">
@@ -492,7 +488,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 										>
-											Type
+											{m.common_type()}
 										</h3>
 										{#each $facets.asset_types as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2">
@@ -524,7 +520,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 										>
-											Providers
+											{m.discover_providers_heading()}
 										</h3>
 										{#each $facets.providers as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2">
@@ -556,7 +552,7 @@
 										<h3
 											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 										>
-											Tags
+											{m.common_tags()}
 										</h3>
 										{#each $facets.tags as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2 gap-2">
@@ -600,19 +596,20 @@
 				<!-- Header with Filters -->
 				<div class="mb-4">
 					<div class="flex items-center justify-between mb-3">
-						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Discover</h1>
+						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+							{m.discover_heading()}
+						</h1>
 						<div class="flex items-center gap-3">
 							{#if canManageAssets}
 								<Button
 									href="/assets/new"
 									icon="material-symbols:add"
-									text="New Asset"
+									text={m.discover_new_asset_button()}
 									variant="filled"
 								/>
 							{/if}
 							<div class="text-xs text-gray-500 dark:text-gray-400">
-								{$totalResults}
-								{$totalResults === 1 ? 'result' : 'results'}
+								{m.discover_result_count({ count: $totalResults })}
 							</div>
 						</div>
 					</div>
@@ -635,13 +632,13 @@
 								<h2
 									class="text-xs font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-200 uppercase tracking-wider"
 								>
-									Active Filters
+									{m.discover_active_filters_heading()}
 								</h2>
 								<button
 									onclick={clearAllFilters}
 									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-100 font-medium"
 								>
-									Clear all
+									{m.discover_clear_all()}
 								</button>
 							</div>
 							<div class="flex flex-wrap gap-1.5">
@@ -650,13 +647,13 @@
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
 										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
-											>Type:</span
+											>{m.discover_filter_type_label()}</span
 										>
 										{type}
 										<button
 											onclick={() => removeFilter('types', type)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
-											aria-label={`Remove ${type} filter`}
+											aria-label={m.discover_remove_filter_aria({ value: type })}
 										>
 											<svg
 												class="w-3.5 h-3.5"
@@ -680,13 +677,13 @@
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
 										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
-											>Provider:</span
+											>{m.discover_filter_provider_label()}</span
 										>
 										{provider}
 										<button
 											onclick={() => removeFilter('providers', provider)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
-											aria-label={`Remove ${provider} filter`}
+											aria-label={m.discover_remove_filter_aria({ value: provider })}
 										>
 											<svg
 												class="w-3.5 h-3.5"
@@ -710,13 +707,13 @@
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
 										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
-											>Tag:</span
+											>{m.discover_filter_tag_label()}</span
 										>
 										{tag}
 										<button
 											onclick={() => removeFilter('tags', tag)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
-											aria-label={`Remove ${tag} filter`}
+											aria-label={m.discover_remove_filter_aria({ value: tag })}
 										>
 											<svg
 												class="w-3.5 h-3.5"
@@ -744,7 +741,7 @@
 						<div
 							class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-100 px-4 py-3 rounded-lg"
 						>
-							Something went wrong on our end. Please try again later.
+							{m.discover_error_server()}
 						</div>
 					{:else}
 						<div
@@ -764,8 +761,7 @@
 							</svg>
 							<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-100">
 								{#if $error.status === 400}
-									Your search query appears to be incomplete or invalid. Please check your syntax
-									and try again.
+									{m.discover_error_invalid_query()}
 								{:else}
 									{$error.message}
 								{/if}
@@ -777,10 +773,11 @@
 					<div class="flex justify-between items-center mb-3">
 						<p class="text-xs text-gray-600 dark:text-gray-400">
 							{#if $totalResults > 0}
-								{(currentPage - 1) * itemsPerPage + 1}-{Math.min(
-									currentPage * itemsPerPage,
-									$totalResults
-								)} of {$totalResults}
+								{m.discover_pagination_range({
+									from: (currentPage - 1) * itemsPerPage + 1,
+									to: Math.min(currentPage * itemsPerPage, $totalResults),
+									total: $totalResults
+								})}
 							{/if}
 						</p>
 						<div class="flex gap-1.5">
@@ -789,14 +786,14 @@
 								disabled={currentPage === 1}
 								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 							>
-								Previous
+								{m.common_previous()}
 							</button>
 							<button
 								onclick={() => handlePageChange(currentPage + 1)}
 								disabled={currentPage * itemsPerPage >= $totalResults}
 								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 							>
-								Next
+								{m.common_next()}
 							</button>
 						</div>
 					</div>
@@ -834,9 +831,9 @@
 										<div class="flex justify-center mb-4">
 											<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400" />
 										</div>
-										<p class="text-gray-600 dark:text-gray-400 text-lg">No results found</p>
+										<p class="text-gray-600 dark:text-gray-400 text-lg">{m.common_no_results()}</p>
 										<p class="text-gray-500 dark:text-gray-500 text-sm mt-2">
-											Try adjusting your search or filters
+											{m.discover_no_results_hint()}
 										</p>
 									</div>
 								</div>
@@ -946,7 +943,7 @@
 														{#if result.metadata?.icon_url}
 															<AuthenticatedImage
 																src={result.metadata.icon_url}
-																alt="{result.name} icon"
+																alt={m.discover_product_icon_alt({ name: result.name })}
 																class="w-full h-full object-cover"
 															/>
 														{:else}
@@ -969,7 +966,7 @@
 														{#if result.metadata?.asset_count !== undefined}
 															<span class="flex items-center gap-1">
 																<IconifyIcon icon="material-symbols:database" class="w-3 h-3" />
-																{result.metadata.asset_count} assets
+																{m.discover_asset_count({ count: result.metadata.asset_count })}
 															</span>
 														{/if}
 														{#if result.metadata?.owner_count}
@@ -1016,7 +1013,7 @@
 											{/if}
 											<span>
 												{#if result.updated_at}
-													Updated {formatDate(result.updated_at)}
+													{m.discover_updated_date({ date: formatDate(result.updated_at) })}
 												{/if}
 											</span>
 										</div>

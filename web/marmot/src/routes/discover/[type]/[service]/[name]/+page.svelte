@@ -26,6 +26,7 @@
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { tablePreviewEnabled } from '$lib/stores/features';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Owner {
 		id: string;
@@ -71,14 +72,14 @@
 				`/assets/lookup/${assetType}/${assetService}/${encodeURIComponent(assetName)}`
 			);
 			if (!response.ok) {
-				throw new Error('Failed to fetch asset');
+				throw new Error(m.discover_asset_fetch_error());
 			}
 			const data = await response.json();
 			enrichedLinks = data.enriched_external_links || [];
 			asset = data;
 		} catch (err) {
 			console.error('Error fetching asset:', err);
-			error = err instanceof Error ? err.message : 'Failed to load asset';
+			error = err instanceof Error ? err.message : m.discover_asset_load_error();
 		} finally {
 			loading = false;
 		}
@@ -248,16 +249,24 @@
 	let isAgent = $derived(checkIsAgent(asset));
 
 	const allTabs: Tab[] = [
-		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
-		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
-		{ id: 'runs', label: 'Runs', icon: 'material-symbols:bolt-outline' },
-		{ id: 'query', label: 'Query', icon: 'material-symbols:code' },
-		{ id: 'preview', label: 'Preview', icon: 'material-symbols:preview' },
-		{ id: 'environments', label: 'Environments', icon: 'material-symbols:deployed-code' },
-		{ id: 'schema', label: 'Schema', icon: 'material-symbols:table' },
-		{ id: 'run-history', label: 'Run History', icon: 'material-symbols:history' },
-		{ id: 'lineage', label: 'Lineage', icon: 'material-symbols:account-tree' },
-		{ id: 'contents', label: 'Contents', icon: 'material-symbols:folder-open-outline' }
+		{ id: 'documentation', label: m.common_documentation(), icon: 'material-symbols:description' },
+		{ id: 'metadata', label: m.discover_tab_metadata(), icon: 'material-symbols:data-object' },
+		{ id: 'runs', label: m.discover_tab_runs(), icon: 'material-symbols:bolt-outline' },
+		{ id: 'query', label: m.discover_tab_query(), icon: 'material-symbols:code' },
+		{ id: 'preview', label: m.discover_tab_preview(), icon: 'material-symbols:preview' },
+		{
+			id: 'environments',
+			label: m.discover_tab_environments(),
+			icon: 'material-symbols:deployed-code'
+		},
+		{ id: 'schema', label: m.discover_tab_schema(), icon: 'material-symbols:table' },
+		{ id: 'run-history', label: m.discover_tab_run_history(), icon: 'material-symbols:history' },
+		{ id: 'lineage', label: m.discover_tab_lineage(), icon: 'material-symbols:account-tree' },
+		{
+			id: 'contents',
+			label: m.discover_tab_contents(),
+			icon: 'material-symbols:folder-open-outline'
+		}
 	];
 
 	// Providers whose assets form a drive tree worth browsing as folders.
@@ -314,14 +323,13 @@
 		try {
 			previewData = await fetchAssetPreview(asset.id);
 		} catch (err) {
-			let errorMsg = 'Failed to fetch preview data';
+			let errorMsg = m.discover_preview_fetch_error();
 			const status =
 				typeof err === 'object' && err !== null && 'status' in err
 					? (err as { status?: number }).status
 					: undefined;
 			if (status === 403) {
-				errorMsg =
-					'You do not have permission to preview data. The "assets:preview" permission is required.';
+				errorMsg = m.discover_preview_permission_error();
 			} else if (err instanceof Error) {
 				errorMsg = err.message;
 			}
@@ -362,7 +370,7 @@
 								d="M10 19l-7-7m0 0l7-7m-7 7h18"
 							/>
 						</svg>
-						Back
+						{m.common_back()}
 					</button>
 				</div>
 
@@ -388,7 +396,7 @@
 								<div class="space-y-2 max-w-2xl pt-1">
 									<textarea
 										bind:value={userDescription}
-										placeholder="Add your notes..."
+										placeholder={m.discover_notes_placeholder()}
 										rows="2"
 										class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
 									></textarea>
@@ -400,7 +408,7 @@
 													disabled={savingDescription}
 													class="px-2 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
 												>
-													Delete
+													{m.common_delete()}
 												</button>
 											{/if}
 										</div>
@@ -410,7 +418,7 @@
 												disabled={savingDescription}
 												class="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
 											>
-												Cancel
+												{m.common_cancel()}
 											</button>
 											<button
 												onclick={() => saveDescription()}
@@ -422,7 +430,7 @@
 														class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
 													></div>
 												{/if}
-												Save
+												{m.common_save()}
 											</button>
 										</div>
 									</div>
@@ -432,13 +440,15 @@
 									{#if asset.user_description}
 										<p class="text-sm text-gray-500 dark:text-gray-400">{asset.user_description}</p>
 									{:else if canManageAssets}
-										<span class="text-sm text-gray-400 dark:text-gray-500 italic">No notes</span>
+										<span class="text-sm text-gray-400 dark:text-gray-500 italic"
+											>{m.discover_no_notes()}</span
+										>
 									{/if}
 									{#if canManageAssets}
 										<button
 											onclick={startEditingDescription}
 											class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-											title="Edit notes"
+											title={m.discover_edit_notes_title()}
 										>
 											<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
 										</button>
@@ -455,7 +465,7 @@
 											class="w-3.5 h-3.5 text-gray-400"
 										/>
 										<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-											>Tags</span
+											>{m.common_tags()}</span
 										>
 									</div>
 									<Tags
@@ -472,7 +482,7 @@
 											class="w-3.5 h-3.5 text-gray-400"
 										/>
 										<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-											>Owners</span
+											>{m.common_owners()}</span
 										>
 									</div>
 									{#if loadingOwners}
@@ -497,7 +507,7 @@
 												class="w-3.5 h-3.5 text-gray-400"
 											/>
 											<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-												>Subscribe</span
+												>{m.discover_subscribe_label()}</span
 											>
 										</div>
 										<SubscribeButton assetId={asset.id} />
@@ -530,7 +540,7 @@
 					<div class="rounded-lg max-w-full {activeTab === 'preview' ? '' : 'overflow-x-auto'}">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-								<p class="text-gray-500 dark:text-gray-400">Loading asset information...</p>
+								<p class="text-gray-500 dark:text-gray-400">{m.discover_asset_loading()}</p>
 							</div>
 						{:else if activeTab === 'metadata'}
 							<div class="mt-6">
@@ -541,7 +551,7 @@
 								{/if}
 								{#if asset.sources && Array.isArray(asset.sources) && asset.sources.length > 0}
 									<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-										Asset Sources
+										{m.discover_asset_sources_heading()}
 									</h3>
 									<AssetSources sources={asset.sources} />
 								{/if}
@@ -561,7 +571,9 @@
 									<CodeBlock code={asset.query} language={asset.query_language || 'sql'} />
 								{:else}
 									<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-										<p class="text-gray-500 dark:text-gray-400 italic">No query available</p>
+										<p class="text-gray-500 dark:text-gray-400 italic">
+											{m.discover_no_query_available()}
+										</p>
 									</div>
 								{/if}
 							</div>
@@ -578,7 +590,9 @@
 									<AssetEnvironmentsView environments={asset.environments} />
 								{:else}
 									<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-										<p class="text-gray-500 dark:text-gray-400 italic">No environments available</p>
+										<p class="text-gray-500 dark:text-gray-400 italic">
+											{m.asset_environments_empty()}
+										</p>
 									</div>
 								{/if}
 							</div>
@@ -603,7 +617,7 @@
 						{:else}
 							<div class="mt-6">
 								<p class="text-gray-500 dark:text-gray-400">
-									{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} coming soon.
+									{m.discover_tab_coming_soon({ tab: activeTab })}
 								</p>
 							</div>
 						{/if}

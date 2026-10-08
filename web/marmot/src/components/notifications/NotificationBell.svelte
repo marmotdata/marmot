@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { notifications, unreadCount } from '$lib/stores/notifications';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
 
 	onMount(() => {
 		if ($auth) {
@@ -19,7 +20,7 @@
 <a
 	href={resolve('/notifications')}
 	class="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-	aria-label="Notifications"
+	aria-label={m.notif_bell_aria()}
 >
 	<Icon icon="material-symbols:notifications-outline" class="w-5 h-5" />
 	{#if $unreadCount > 0}

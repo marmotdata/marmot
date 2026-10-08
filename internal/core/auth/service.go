@@ -9,6 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/user"
 )
 
@@ -90,6 +91,7 @@ func (s *service) GenerateTokenForPrincipal(ctx context.Context, p Principal, pr
 		Roles:       p.Roles(),
 		Permissions: p.Permissions(),
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(),
 			Subject:   p.ID(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

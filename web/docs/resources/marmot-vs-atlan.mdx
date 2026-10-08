@@ -131,7 +131,7 @@ Both expose governed metadata to AI agents over a native MCP server, so on the a
       { status: "yes", text: "Via MCP and API, column-level" },
     ]},
     { feature: "Connectors", cells: [
-      "~28 plugins, plus catalog-as-code",
+      "70+ plugins, plus catalog-as-code",
       "Large managed library",
     ]},
     { feature: "Ingestion methods", cells: [
@@ -203,7 +203,7 @@ Marmot runs every MCP and API query with the permissions of the API key behind i
 
 **Atlan ships a large managed connector library with nothing for you to deploy.** Its hosted connectors span warehouses, databases, dashboards and pipelines, and because the platform is managed, keeping them running is the vendor's job rather than yours.
 
-Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. The trade is real: if you want the most of your stack catalogued by a managed service with no work, Atlan leads on out-of-the-box breadth. If you provision with Terraform or Pulumi, the gap closes quickly, and you keep the whole thing in your own infrastructure.
+Marmot ships 70+ plugins spanning databases, warehouses, lakes, object storage, streaming, orchestration, compute, BI and search. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. Atlan still leads on managed breadth, and you are paying it to do the connector work for you. The trade is narrower than it was: with 70+ plugins plus catalog-as-code you cover the same ground yourself, and you keep the whole thing in your own infrastructure.
 
 ---
 

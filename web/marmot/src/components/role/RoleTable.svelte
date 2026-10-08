@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toasts } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import { deleteRole } from '$lib/roles/api';
 	import EditRoleForm from './EditRoleForm.svelte';
 	import ViewRoleForm from './ViewRoleForm.svelte';
@@ -37,10 +38,10 @@
 
 		try {
 			await deleteRole(roleToDelete.id);
-			toasts.success(`Role "${roleToDelete.name}" deleted`);
+			toasts.success(m.roles_delete_success({ name: roleToDelete.name }));
 			onDelete(roleToDelete.id);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete role');
+			toasts.error(err instanceof Error ? err.message : m.roles_error_delete());
 		} finally {
 			showDeleteModal = false;
 			roleToDelete = null;
@@ -52,26 +53,29 @@
 	<table class="min-w-full">
 		<thead>
 			<tr>
-				<th class="w-8 px-3 py-3 bg-earthy-brown-100 dark:bg-gray-800" aria-label="Expand"></th>
+				<th
+					class="w-8 px-3 py-3 bg-earthy-brown-100 dark:bg-gray-800"
+					aria-label={m.roles_expand_aria()}
+				></th>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Name</th
+					>{m.common_name()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Description</th
+					>{m.common_description()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Permissions</th
+					>{m.roles_header_permissions()}</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Users</th
+					>{m.roles_header_users()}</th
 				>
 				<th
 					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>Actions</th
+					>{m.common_actions()}</th
 				>
 			</tr>
 		</thead>
@@ -105,7 +109,7 @@
 									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
 								>
 									<Lock class="h-3 w-3" />
-									system
+									{m.ui_role_system_badge()}
 								</span>
 							{/if}
 						</div>
@@ -134,7 +138,7 @@
 								class="text-earthy-terracotta-700 hover:text-earthy-terracotta-800 dark:text-earthy-terracotta-500 dark:hover:text-earthy-terracotta-400 mr-3"
 								on:click={() => switchToEdit(role.id)}
 							>
-								Edit
+								{m.common_edit()}
 							</button>
 							<button
 								type="button"
@@ -144,7 +148,7 @@
 									showDeleteModal = true;
 								}}
 							>
-								Delete
+								{m.common_delete()}
 							</button>
 						{/if}
 					</td>
@@ -179,11 +183,11 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete Role"
+	title={m.roles_delete_title()}
 	message={roleToDelete && (roleToDelete.user_count ?? 0) > 0
-		? `This role is assigned to ${roleToDelete.user_count} user(s). You must reassign them before deletion.`
-		: 'Are you sure you want to delete this role? This action cannot be undone.'}
-	confirmText="Delete"
+		? m.roles_delete_assigned_warning({ count: roleToDelete.user_count })
+		: m.roles_delete_confirm_message()}
+	confirmText={m.common_delete()}
 	resourceName={roleToDelete?.name || ''}
 	requireConfirmation={true}
 	onConfirm={handleDelete}

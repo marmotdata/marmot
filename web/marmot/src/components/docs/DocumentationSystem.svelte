@@ -6,6 +6,8 @@
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 	import type { Page, PageTree, EntityType } from '$lib/docs/types';
 	import { marked } from 'marked';
 	import { common, createLowlight } from 'lowlight';
@@ -88,7 +90,7 @@
 				`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`
 			);
 			if (!response.ok) {
-				throw new Error('Failed to load documentation');
+				throw new Error(m.docs_load_error());
 			}
 			const tree: PageTree = await response.json();
 			pageTree = tree;
@@ -111,7 +113,7 @@
 				await selectPage(tree.pages[0]);
 			}
 		} catch (err) {
-			loadError = err instanceof Error ? err.message : 'Failed to load documentation';
+			loadError = err instanceof Error ? err.message : m.docs_load_error();
 		} finally {
 			isLoading = false;
 		}
@@ -120,7 +122,7 @@
 	async function selectPage(page: Page) {
 		// If editing current page, prompt to save
 		if (isEditing && selectedPage) {
-			const shouldSave = confirm('You have unsaved changes. Save before switching?');
+			const shouldSave = confirm(m.docs_unsaved_changes_confirm());
 			if (shouldSave) {
 				await saveContent();
 			}
@@ -156,7 +158,7 @@
 					method: 'POST',
 					body: JSON.stringify({
 						parent_id: parentId,
-						title: 'Untitled',
+						title: m.docs_untitled_page(),
 						content: ''
 					})
 				}
@@ -198,7 +200,7 @@
 			const response = await fetchApi(`/docs/pages/${selectedPage.id}`, {
 				method: 'PUT',
 				body: JSON.stringify({
-					title: editedTitle.trim() || 'Untitled',
+					title: editedTitle.trim() || m.docs_untitled_page(),
 					emoji: editedEmoji,
 					content: editedContent
 				})
@@ -303,14 +305,14 @@
 		<div class="flex items-center justify-between p-2">
 			{#if !sidebarCollapsed}
 				<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-					>Pages</span
+					>{m.docs_pages_heading()}</span
 				>
 			{/if}
 			<button
 				type="button"
 				onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
 				class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-				title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+				title={sidebarCollapsed ? m.docs_expand_sidebar_title() : m.docs_collapse_sidebar_title()}
 			>
 				<Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} class="h-4 w-4" />
 			</button>
@@ -331,7 +333,7 @@
 							onclick={loadPageTree}
 							class="text-xs text-earthy-terracotta-600 hover:underline mt-2"
 						>
-							Retry
+							{m.common_retry()}
 						</button>
 					</div>
 				{:else if pageTree}
@@ -355,7 +357,7 @@
 				{#if pageTree && pageTree.pages.length === 0}
 					<div class="text-center">
 						<Icon icon="mdi:file-document-plus-outline" class="h-12 w-12 mx-auto mb-3 opacity-30" />
-						<p class="text-sm mb-3">No documentation yet</p>
+						<p class="text-sm mb-3">{m.docs_no_documentation_yet()}</p>
 						{#if canEdit}
 							<button
 								type="button"
@@ -363,12 +365,12 @@
 								class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-earthy-terracotta-600 hover:text-earthy-terracotta-700 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 rounded-lg transition-colors"
 							>
 								<Icon icon="mdi:plus" class="h-4 w-4" />
-								Create first page
+								{m.docs_create_first_page()}
 							</button>
 						{/if}
 					</div>
 				{:else}
-					<p class="text-sm">Select a page to view</p>
+					<p class="text-sm">{m.docs_select_page_hint()}</p>
 				{/if}
 			</div>
 		{:else}
@@ -384,7 +386,7 @@
 										type="button"
 										onclick={() => (showEmojiPicker = !showEmojiPicker)}
 										class="text-4xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors"
-										title="Change emoji"
+										title={m.docs_change_emoji_title()}
 									>
 										{editedEmoji || '📄'}
 									</button>
@@ -401,14 +403,14 @@
 													onclick={handleRemoveEmoji}
 													class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
 												>
-													Remove emoji
+													{m.docs_remove_emoji()}
 												</button>
 												<button
 													type="button"
 													onclick={() => (showEmojiPicker = false)}
 													class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
 												>
-													Close
+													{m.common_close()}
 												</button>
 											</div>
 										</div>
@@ -418,7 +420,7 @@
 									type="text"
 									bind:value={editedTitle}
 									class="text-3xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 focus:border-earthy-terracotta-500 focus:outline-none text-gray-900 dark:text-gray-100 w-full"
-									placeholder="Page title"
+									placeholder={m.docs_page_title_placeholder()}
 								/>
 							</div>
 						{:else}
@@ -442,7 +444,7 @@
 								disabled={isSaving}
 								class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50"
 							>
-								Cancel
+								{m.common_cancel()}
 							</button>
 							<button
 								type="button"
@@ -450,14 +452,14 @@
 								disabled={isSaving}
 								class="px-3 py-1.5 text-sm text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded disabled:opacity-50"
 							>
-								{isSaving ? 'Saving...' : 'Save'}
+								{isSaving ? m.docs_saving() : m.common_save()}
 							</button>
 						{:else if canEdit}
 							<button
 								type="button"
 								onclick={startEditing}
 								class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-								title="Edit"
+								title={m.common_edit()}
 							>
 								<Icon icon="mdi:pencil-outline" class="h-4 w-4" />
 							</button>
@@ -472,7 +474,7 @@
 					<DocEditor
 						bind:value={editedContent}
 						pageId={selectedPage.id}
-						placeholder="Start writing..."
+						placeholder={m.docs_start_writing_placeholder()}
 						disabled={isSaving}
 					/>
 				{:else if selectedPage.content}
@@ -485,14 +487,14 @@
 				{:else}
 					<div class="text-center py-8 text-gray-400 dark:text-gray-500">
 						<Icon icon="mdi:file-document-outline" class="h-10 w-10 mx-auto mb-2 opacity-30" />
-						<p class="text-sm">This page is empty</p>
+						<p class="text-sm">{m.docs_page_empty()}</p>
 						{#if canEdit}
 							<button
 								type="button"
 								onclick={startEditing}
 								class="text-sm text-earthy-terracotta-600 hover:underline mt-2"
 							>
-								Add content
+								{m.docs_add_content()}
 							</button>
 						{/if}
 					</div>
@@ -501,7 +503,7 @@
 
 			<!-- Page metadata footer (minimal) -->
 			<div class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-3">
-				<span>Updated {new Date(selectedPage.updated_at).toLocaleDateString()}</span>
+				<span>{m.docs_updated_at({ date: formatDate(selectedPage.updated_at) })}</span>
 				{#if selectedPage.image_count && selectedPage.image_count > 0}
 					<span class="flex items-center gap-1">
 						<Icon icon="mdi:image-outline" class="h-3 w-3" />
@@ -516,12 +518,10 @@
 <!-- Delete confirmation modal -->
 <ConfirmModal
 	bind:show={showDeleteModal}
-	title="Delete Page"
-	message={pageToDelete
-		? `Are you sure you want to delete "${pageToDelete.title}"? This will also delete all sub-pages and images.`
-		: ''}
-	confirmText="Delete"
-	cancelText="Cancel"
+	title={m.docs_delete_page_title()}
+	message={pageToDelete ? m.docs_delete_page_confirm({ title: pageToDelete.title }) : ''}
+	confirmText={m.common_delete()}
+	cancelText={m.common_cancel()}
 	variant="danger"
 	onConfirm={deletePage}
 	onCancel={() => {

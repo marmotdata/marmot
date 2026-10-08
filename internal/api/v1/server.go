@@ -834,17 +834,26 @@ func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.
 		return
 	}
 
+	// Everything the message interpolates rides in data so the UI can rebuild the copy in the viewer's language
+	data := map[string]interface{}{
+		"run_id":        run.ID,
+		"pipeline_name": run.PipelineName,
+		"status":        string(run.Status),
+		"link":          fmt.Sprintf("/runs?tab=history&run=%s", run.ID),
+	}
+	if run.Summary != nil && run.Summary.TotalEntities > 0 {
+		data["total_entities"] = run.Summary.TotalEntities
+	}
+	if run.ErrorMessage != "" {
+		data["error_message"] = run.ErrorMessage
+	}
+
 	input := notificationService.CreateNotificationInput{
 		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeUser, ID: user.ID}},
 		Type:       notificationService.TypeJobComplete,
 		Title:      title,
 		Message:    message,
-		Data: map[string]interface{}{
-			"run_id":        run.ID,
-			"pipeline_name": run.PipelineName,
-			"status":        string(run.Status),
-			"link":          fmt.Sprintf("/runs?tab=history&run=%s", run.ID),
-		},
+		Data:       data,
 	}
 
 	if err := n.notificationSvc.Create(ctx, input); err != nil {
@@ -1241,7 +1250,9 @@ func (n *docsMentionNotifier) handleUserMention(ctx context.Context, mention doc
 			"entity_type": entityType,
 			"entity_id":   entityID,
 			"mentioner":   mentionerName,
-			"link":        link,
+			// Distinguishes user and team mentions so the UI can rebuild the copy from type and data
+			"mention_target": "user",
+			"link":           link,
 		},
 	}
 
@@ -1287,7 +1298,9 @@ func (n *docsMentionNotifier) handleTeamMention(ctx context.Context, mention doc
 			"entity_type": entityType,
 			"entity_id":   entityID,
 			"mentioner":   mentionerName,
-			"link":        link,
+			// Distinguishes user and team mentions so the UI can rebuild the copy from type and data
+			"mention_target": "team",
+			"link":           link,
 		},
 	}
 

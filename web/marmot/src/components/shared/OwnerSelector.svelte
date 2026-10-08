@@ -5,10 +5,11 @@
 	import { Users } from 'lucide-svelte';
 	import Avatar from '$components/user/Avatar.svelte';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
+	import { m } from '$lib/paraglide/messages';
 
 	export let selectedOwners: Owner[] | null = [];
 	export let onChange: (owners: Owner[]) => void = () => {};
-	export let placeholder = 'Search users or teams...';
+	export let placeholder = m.owners_search_placeholder();
 	export let className = '';
 	export let minSearchLength = 2;
 	export let disabled = false;
@@ -17,7 +18,7 @@
 	export let hideSelectedOwners = false; // If true, hide the selected owners badges
 
 	$: safeSelectedOwners = selectedOwners || [];
-	$: searchPlaceholder = userOnly ? 'Search users...' : placeholder;
+	$: searchPlaceholder = userOnly ? m.owners_search_users_placeholder() : placeholder;
 	$: availableResults = searchResults.filter(
 		(o) => !safeSelectedOwners.some((so) => so.id === o.id && so.type === o.type)
 	);
@@ -166,7 +167,9 @@
 						: 'bg-gray-200 dark:bg-gray-700'} flex-shrink-0 {owner.type === 'team' && !disabled
 						? 'cursor-pointer'
 						: 'cursor-default'} transition-colors"
-					title={owner.type === 'user' ? `@${owner.username}` : `Team: ${owner.name}`}
+					title={owner.type === 'user'
+						? `@${owner.username}`
+						: m.owners_team_title({ name: owner.name })}
 				>
 					{#if owner.type === 'team'}
 						<div
@@ -189,7 +192,7 @@
 							type="button"
 							on:click|stopPropagation={() => removeOwner(owner)}
 							class="absolute inset-0 rounded-full bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
-							title="Remove {owner.name}"
+							title={m.owners_remove_title({ name: owner.name })}
 						>
 							<Icon icon="material-symbols:close" class="h-5 w-5" />
 						</button>
@@ -202,7 +205,7 @@
 					type="button"
 					on:click={openAddOwner}
 					class="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center flex-shrink-0"
-					title="Add owner"
+					title={m.owners_add_owner_title()}
 				>
 					<Icon icon="material-symbols:add" class="h-4 w-4" />
 				</button>
@@ -229,7 +232,7 @@
 			<div class="max-h-60 overflow-auto">
 				{#if searchQuery.length < minSearchLength}
 					<div class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-						Type at least {minSearchLength} characters to search
+						{m.owners_type_to_search_hint({ count: minSearchLength })}
 					</div>
 				{:else if isLoading}
 					<div
@@ -238,11 +241,11 @@
 						<div
 							class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"
 						></div>
-						Searching...
+						{m.owners_searching()}
 					</div>
 				{:else if searchResults.length === 0}
 					<div class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-						No users or teams found
+						{m.owners_no_results()}
 					</div>
 				{:else}
 					{@const availableOwners = searchResults.filter(
@@ -278,7 +281,7 @@
 											<span
 												class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
 											>
-												Team
+												{m.owners_team_badge()}
 											</span>
 										{/if}
 									</div>
@@ -300,7 +303,7 @@
 					on:click={closeDropdown}
 					class="w-full px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
 				>
-					Close
+					{m.common_close()}
 				</button>
 			</div>
 		</div>

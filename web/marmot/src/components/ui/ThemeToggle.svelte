@@ -3,6 +3,7 @@
 	import { fetchApi } from '$lib/api';
 	import Button from './Button.svelte';
 	import { theme } from '$lib/stores/theme';
+	import { m } from '$lib/paraglide/messages';
 
 	type ThemeType = 'light' | 'dark' | 'auto';
 
@@ -64,7 +65,7 @@
 		click={handleThemeChange('light')}
 		disabled={loading}
 		icon="material-symbols:sunny"
-		text="Light"
+		text={m.ui_theme_light()}
 	/>
 
 	<Button
@@ -73,7 +74,7 @@
 		click={handleThemeChange('dark')}
 		disabled={loading}
 		icon="material-symbols:moon-stars"
-		text="Dark"
+		text={m.ui_theme_dark()}
 	/>
 
 	<Button
@@ -82,6 +83,6 @@
 		click={handleThemeChange('auto')}
 		disabled={loading}
 		icon="material-symbols:wand-stars-rounded"
-		text="Auto"
+		text={m.ui_theme_auto()}
 	/>
 </div>

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import IconifyIcon from '@iconify/svelte';
 
 	interface SubscriptionWithAsset {
@@ -16,11 +17,11 @@
 	}
 
 	const typeLabels: Record<string, string> = {
-		asset_change: 'Asset Changes',
-		schema_change: 'Schema Changes',
-		upstream_schema_change: 'Upstream Schema',
-		downstream_schema_change: 'Downstream Schema',
-		lineage_change: 'Lineage Changes'
+		asset_change: m.subscriptions_type_asset_change(),
+		schema_change: m.subscriptions_type_schema_change(),
+		upstream_schema_change: m.subscriptions_type_upstream_schema(),
+		downstream_schema_change: m.subscriptions_type_downstream_schema(),
+		lineage_change: m.subscriptions_type_lineage_change()
 	};
 
 	let subscriptions: SubscriptionWithAsset[] = $state([]);
@@ -59,10 +60,11 @@
 </script>
 
 <div>
-	<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Subscriptions</h2>
+	<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+		{m.subscriptions_heading()}
+	</h2>
 	<p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-		Assets you're subscribed to for notifications. Manage notification types per asset or
-		unsubscribe.
+		{m.subscriptions_description()}
 	</p>
 
 	{#if loading}
@@ -76,7 +78,7 @@
 				class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3"
 			/>
 			<p class="text-sm text-gray-500 dark:text-gray-400">
-				No active subscriptions. Subscribe to assets from their detail page.
+				{m.subscriptions_empty()}
 			</p>
 		</div>
 	{:else}
@@ -93,7 +95,7 @@
 									: '#'}
 								class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 truncate block"
 							>
-								{sub.asset_name || 'Unknown Asset'}
+								{sub.asset_name || m.subscriptions_unknown_asset()}
 							</a>
 							<div class="flex items-center gap-2 mt-1">
 								{#if sub.asset_type}
@@ -119,7 +121,7 @@
 						type="button"
 						onclick={() => unsubscribe(sub)}
 						class="flex-shrink-0 ml-3 p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors cursor-pointer"
-						title="Unsubscribe"
+						title={m.subscriptions_unsubscribe_title()}
 					>
 						<IconifyIcon icon="material-symbols:notifications-off-outline" class="w-4 h-4" />
 					</button>

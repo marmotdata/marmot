@@ -162,3 +162,111 @@ func TestDCR_LoopbackRedirectURIs_Accepted(t *testing.T) {
 		})
 	}
 }
+
+func newDCRHandlerWithHosts(hosts ...string) *Handler {
+	h := newDCRHandler()
+	h.config.Auth.DCR.AllowedRedirectHosts = hosts
+	return h
+}
+
+func TestDCR_AllowlistedExternalRedirectURIs_Accepted(t *testing.T) {
+	cases := []string{
+		`{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"]}`,
+		`{"redirect_uris":["https://CLAUDE.AI/api/mcp/auth_callback"]}`,
+		`{"redirect_uris":["https://claude.ai:443/api/mcp/auth_callback"]}`,
+		`{"redirect_uris":["https://claude.ai/cb?state=keep"]}`,
+		`{"redirect_uris":["http://localhost:9999/callback","https://claude.ai/api/mcp/auth_callback"]}`,
+	}
+
+	for _, body := range cases {
+		t.Run(body, func(t *testing.T) {
+			h := newDCRHandlerWithHosts("claude.ai")
+			req := httptest.NewRequest(http.MethodPost, "/oauth/register", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+
+			h.handleDCR(rec, req)
+
+			if rec.Code != http.StatusCreated {
+				t.Fatalf("expected 201 for %q, got %d: %s", body, rec.Code, rec.Body.String())
+			}
+		})
+	}
+}
+
+func TestDCR_ExternalRedirectURIs_RejectedDespiteAllowlist(t *testing.T) {
+	cases := []string{
+		`{"redirect_uris":["http://claude.ai/api/mcp/auth_callback"]}`,
+		`{"redirect_uris":["https://evil.com/cb"]}`,
+		`{"redirect_uris":["https://sub.claude.ai/cb"]}`,
+		`{"redirect_uris":["https://claude.ai.evil.com/cb"]}`,
+		`{"redirect_uris":["https://claude.ai:8443/cb"]}`,
+		`{"redirect_uris":["https://claude.ai/cb#fragment"]}`,
+		`{"redirect_uris":["https://claude.ai/cb#"]}`,
+		`{"redirect_uris":["https://claude.ai@evil.com/cb"]}`,
+		`{"redirect_uris":["https://claude.ai/cb","https://evil.com/cb"]}`,
+	}
+
+	for _, body := range cases {
+		t.Run(body, func(t *testing.T) {
+			h := newDCRHandlerWithHosts("claude.ai")
+			req := httptest.NewRequest(http.MethodPost, "/oauth/register", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+
+			h.handleDCR(rec, req)
+
+			if rec.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400 for %q, got %d: %s", body, rec.Code, rec.Body.String())
+			}
+
+			var resp oauthErrorResponse
+			_ = json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Error != "invalid_redirect_uri" {
+				t.Fatalf("expected error 'invalid_redirect_uri' for %q, got %q", body, resp.Error)
+			}
+		})
+	}
+}
+
+func TestDCR_UppercaseAllowlistEntry(t *testing.T) {
+	h := newDCRHandlerWithHosts("CLAUDE.AI")
+
+	body := `{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"]}`
+	req := httptest.NewRequest(http.MethodPost, "/oauth/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.handleDCR(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201 for uppercase entry, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestDCR_AllowlistEntryWithPort(t *testing.T) {
+	h := newDCRHandlerWithHosts("claude.ai:8443")
+
+	body := `{"redirect_uris":["https://claude.ai:8443/cb"]}`
+	req := httptest.NewRequest(http.MethodPost, "/oauth/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.handleDCR(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201 for matching port, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	h = newDCRHandlerWithHosts("claude.ai:8443")
+	body = `{"redirect_uris":["https://claude.ai/cb"]}`
+	req = httptest.NewRequest(http.MethodPost, "/oauth/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
+
+	h.handleDCR(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing port, got %d: %s", rec.Code, rec.Body.String())
+	}
+}

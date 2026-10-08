@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import type { Asset } from '$lib/assets/types';
@@ -82,7 +83,7 @@
 			searchResults = data.assets || [];
 		} catch (err) {
 			console.error('Error searching assets:', err);
-			error = 'Failed to search assets';
+			error = m.lineage_search_error();
 			searchResults = [];
 		} finally {
 			isSearching = false;
@@ -102,7 +103,7 @@
 			await onAdd(asset.mrn);
 			show = false;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to add lineage';
+			error = err instanceof Error ? err.message : m.lineage_add_error();
 		} finally {
 			isAdding = false;
 		}
@@ -164,7 +165,9 @@
 						class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 					/>
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-						Add {direction === 'upstream' ? 'Upstream' : 'Downstream'}
+						{direction === 'upstream'
+							? m.lineage_add_upstream_title()
+							: m.lineage_add_downstream_title()}
 					</h3>
 				</div>
 				<button
@@ -183,7 +186,7 @@
 					bind:value={searchQuery}
 					oninput={handleSearchInput}
 					onkeydown={handleKeyDown}
-					placeholder="Search for an asset..."
+					placeholder={m.lineage_search_placeholder()}
 					disabled={isAdding}
 					class="w-full px-3 py-2 pl-9 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent disabled:opacity-50"
 				/>
@@ -208,7 +211,7 @@
 					</div>
 				{:else if searchQuery && searchResults.length === 0}
 					<div class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-						No assets found
+						{m.lineage_no_assets_found()}
 					</div>
 				{:else if searchResults.length > 0}
 					<div class="space-y-1">
@@ -252,7 +255,7 @@
 					</div>
 				{:else}
 					<div class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-						Start typing to search
+						{m.lineage_search_hint()}
 					</div>
 				{/if}
 			</div>

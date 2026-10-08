@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { theme } from '$lib/stores/theme';
+import { applyStoredLanguage } from '$lib/i18n';
 
 export const isAnonymousMode = writable<boolean>(false);
 
@@ -22,6 +23,7 @@ function createAuthStore() {
 						theme.set(userTheme);
 					}
 				}
+				applyStoredLanguage(payload?.preferences?.language);
 
 				isAnonymousMode.set(false);
 			}
@@ -113,6 +115,7 @@ interface JwtPayload {
 	permissions?: string[];
 	preferences?: {
 		theme?: string;
+		language?: string;
 	};
 	[key: string]: unknown;
 }

@@ -3,6 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Page } from '$lib/docs/types';
 	import { createEventDispatcher } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let pages: Page[] = [];
 	export let selectedPageId: string | null = null;
@@ -100,7 +101,7 @@
 							type="button"
 							class="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
 							on:click|stopPropagation={() => handleCreate(page.id)}
-							title="Add sub-page"
+							title={m.docs_add_subpage_title()}
 						>
 							<Icon icon="mdi:plus" class="h-3 w-3 text-gray-500" />
 						</button>
@@ -108,7 +109,7 @@
 							type="button"
 							class="p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-900/20"
 							on:click={(e) => handleDelete(page, e)}
-							title="Delete"
+							title={m.common_delete()}
 						>
 							<Icon icon="mdi:delete-outline" class="h-3 w-3 text-red-500" />
 						</button>
@@ -139,7 +140,7 @@
 			on:click={() => handleCreate(null)}
 		>
 			<Icon icon="mdi:plus" class="h-3.5 w-3.5" />
-			<span>Add page</span>
+			<span>{m.docs_add_page()}</span>
 		</button>
 	{/if}
 </div>

@@ -19,13 +19,15 @@ type APIKey struct {
 	CreatedAt  time.Time  `json:"created_at"`
 } // @name APIKey
 
+const UserAPIKeyPrefix = "mrmt_u_"
+
 func (s *service) CreateAPIKey(ctx context.Context, userID string, name string, expiresIn *time.Duration) (*APIKey, error) {
 	keyBytes := make([]byte, 32)
 	if _, err := rand.Read(keyBytes); err != nil {
 		return nil, fmt.Errorf("generating API key: %w", err)
 	}
 
-	key := base64.URLEncoding.EncodeToString(keyBytes)
+	key := UserAPIKeyPrefix + base64.URLEncoding.EncodeToString(keyBytes)
 	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("hashing API key: %w", err)
@@ -80,11 +82,22 @@ func (s *service) ValidateAPIKey(ctx context.Context, apiKey string) (*User, err
 		return nil, fmt.Errorf("getting API key: %w", err)
 	}
 
-	// Update last used timestamp
+	// Fetch the user associated with the valid API key
+	user, err := s.Get(ctx, apiKeyObj.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// A deactivated user keeps their keys, so without this the key would outlive
+	// the account: the JWT path refuses an inactive user and this has to agree.
+	if !user.Active {
+		return nil, ErrUserInactive
+	}
+
+	// Only a key that actually authenticated counts as used.
 	if err := s.repo.UpdateAPIKeyLastUsed(ctx, apiKeyObj.ID); err != nil {
 		return nil, fmt.Errorf("updating API key last used timestamp: %w", err)
 	}
 
-	// Fetch the user associated with the valid API key
-	return s.Get(ctx, apiKeyObj.UserID)
+	return user, nil
 }

@@ -8011,6 +8011,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/sign-out-all/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Sign a user out of all sessions",
+                "operationId": "postUsersIDSignOutAll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/update-password": {
             "post": {
                 "security": [
@@ -11757,6 +11798,9 @@ const docTemplate = `{
                 "banner": {
                     "$ref": "#/definitions/BannerResponse"
                 },
+                "default_language": {
+                    "type": "string"
+                },
                 "encryption_configured": {
                     "type": "boolean"
                 },
@@ -12082,6 +12126,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/UserRole"
                     }
                 },
+                "sessions_invalidated_at": {
+                    "description": "Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -12191,6 +12239,40 @@ const docTemplate = `{
                 }
             }
         },
+        "pluginsdk.AssetField": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.AssetSchema": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetField"
+                    }
+                },
+                "struct_name": {
+                    "type": "string"
+                }
+            }
+        },
         "pluginsdk.ConfigField": {
             "type": "object",
             "properties": {
@@ -12277,6 +12359,12 @@ const docTemplate = `{
         "pluginsdk.Meta": {
             "type": "object",
             "properties": {
+                "asset_schemas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetSchema"
+                    }
+                },
                 "category": {
                     "type": "string"
                 },

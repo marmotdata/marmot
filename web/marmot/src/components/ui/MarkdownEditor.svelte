@@ -1,5 +1,6 @@
 <script lang="ts">
 	import MarkdownRenderer from './MarkdownRenderer.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let value: string;
 	export let placeholder: string = '';
@@ -20,7 +21,7 @@
 					? 'text-gray-500 dark:text-gray-400'
 					: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 border-b-2 border-earthy-terracotta-700 dark:border-earthy-terracotta-500'}"
 			>
-				Write
+				{m.ui_markdown_write_tab()}
 			</button>
 			<button
 				type="button"
@@ -29,7 +30,7 @@
 					? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 border-b-2 border-earthy-terracotta-700 dark:border-earthy-terracotta-500'
 					: 'text-gray-500 dark:text-gray-400'}"
 			>
-				Preview
+				{m.ui_markdown_preview_tab()}
 			</button>
 		</div>
 	{/if}
@@ -41,7 +42,9 @@
 			{#if value}
 				<MarkdownRenderer content={value} />
 			{:else}
-				<p class="text-sm text-gray-400 dark:text-gray-500 italic">Nothing to preview</p>
+				<p class="text-sm text-gray-400 dark:text-gray-500 italic">
+					{m.ui_markdown_nothing_to_preview()}
+				</p>
 			{/if}
 		</div>
 	{:else}
@@ -54,7 +57,7 @@
 		></textarea>
 		{#if showPreview}
 			<p class="text-xs text-gray-500 dark:text-gray-400">
-				Markdown is supported. Use **bold**, *italic*, `code`, and more.
+				{m.ui_markdown_hint()}
 			</p>
 		{/if}
 	{/if}

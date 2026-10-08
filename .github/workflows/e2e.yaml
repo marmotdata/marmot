@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Check if commenter has permissions
         id: check-permissions
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
@@ -51,7 +51,7 @@ jobs:
 
       - name: Add reaction to comment
         if: steps.check-permissions.outputs.result == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -69,7 +69,7 @@ jobs:
 
       - name: Notify if permission denied
         if: steps.check-permissions.outputs.result != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create pending check
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         id: create-check
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,3 +1,5 @@
+import { m } from '$lib/paraglide/messages';
+
 export interface TeamWebhook {
 	id: string;
 	team_id: string;
@@ -27,40 +29,70 @@ export interface UpdateWebhookInput {
 	enabled?: boolean;
 }
 
-export const NOTIFICATION_TYPE_OPTIONS: { type: string; label: string; icon: string }[] = [
-	{ type: 'system', label: 'System', icon: 'material-symbols:info-outline' },
-	{ type: 'schema_change', label: 'Schema Change', icon: 'material-symbols:schema-outline' },
-	{ type: 'asset_change', label: 'Asset Change', icon: 'material-symbols:database-outline' },
-	{ type: 'team_invite', label: 'Team Invite', icon: 'material-symbols:group-add-outline' },
-	{ type: 'mention', label: 'Mention', icon: 'material-symbols:alternate-email' },
-	{ type: 'job_complete', label: 'Job Complete', icon: 'material-symbols:check-circle-outline' },
+// Built on call rather than at import so the labels follow a language change without a page reload
+export const notificationTypeOptions = (): { type: string; label: string; icon: string }[] => [
+	{ type: 'system', label: m.webhook_type_system(), icon: 'material-symbols:info-outline' },
+	{
+		type: 'schema_change',
+		label: m.webhook_type_schema_change(),
+		icon: 'material-symbols:schema-outline'
+	},
+	{
+		type: 'asset_change',
+		label: m.webhook_type_asset_change(),
+		icon: 'material-symbols:database-outline'
+	},
+	{
+		type: 'team_invite',
+		label: m.webhook_type_team_invite(),
+		icon: 'material-symbols:group-add-outline'
+	},
+	{ type: 'mention', label: m.webhook_type_mention(), icon: 'material-symbols:alternate-email' },
+	{
+		type: 'job_complete',
+		label: m.webhook_type_job_complete(),
+		icon: 'material-symbols:check-circle-outline'
+	},
 	{
 		type: 'upstream_schema_change',
-		label: 'Upstream Schema Change',
+		label: m.webhook_type_upstream_schema_change(),
 		icon: 'material-symbols:arrow-upward-alt'
 	},
 	{
 		type: 'downstream_schema_change',
-		label: 'Downstream Schema Change',
+		label: m.webhook_type_downstream_schema_change(),
 		icon: 'material-symbols:arrow-downward-alt'
 	},
-	{ type: 'lineage_change', label: 'Lineage Change', icon: 'material-symbols:timeline' }
+	{
+		type: 'lineage_change',
+		label: m.webhook_type_lineage_change(),
+		icon: 'material-symbols:timeline'
+	}
 ];
 
-export const NOTIFICATION_TYPE_LABELS: Record<string, string> = Object.fromEntries(
-	NOTIFICATION_TYPE_OPTIONS.map((o) => [o.type, o.label])
-);
+export const notificationTypeLabels = (): Record<string, string> =>
+	Object.fromEntries(notificationTypeOptions().map((o) => [o.type, o.label]));
 
-export const NOTIFICATION_TYPES = NOTIFICATION_TYPE_OPTIONS.map((o) => o.type);
+export const NOTIFICATION_TYPES = [
+	'system',
+	'schema_change',
+	'asset_change',
+	'team_invite',
+	'mention',
+	'job_complete',
+	'upstream_schema_change',
+	'downstream_schema_change',
+	'lineage_change'
+];
 
-export const PROVIDER_OPTIONS = [
-	{ value: 'slack', label: 'Slack', icon: 'mdi:slack' },
-	{ value: 'discord', label: 'Discord', icon: 'mdi:discord' },
-	{ value: 'generic', label: 'Generic Webhook', icon: 'mdi:webhook' }
-] as const;
+export const providerOptions = () => [
+	{ value: 'slack', label: m.webhook_provider_slack(), icon: 'mdi:slack' },
+	{ value: 'discord', label: m.webhook_provider_discord(), icon: 'mdi:discord' },
+	{ value: 'generic', label: m.webhook_provider_generic(), icon: 'mdi:webhook' }
+];
 
-export const PROVIDER_LABELS: Record<string, string> = {
-	slack: 'Slack',
-	discord: 'Discord',
-	generic: 'Generic Webhook'
-};
+export const providerLabels = (): Record<string, string> => ({
+	slack: m.webhook_provider_slack(),
+	discord: m.webhook_provider_discord(),
+	generic: m.webhook_provider_generic()
+});

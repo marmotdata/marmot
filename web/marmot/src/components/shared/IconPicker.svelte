@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		value = $bindable(''),
@@ -19,7 +20,7 @@
 
 	const commonIcons: { label: string; icons: { name: string; id: string }[] }[] = [
 		{
-			label: 'Services',
+			label: m.icons_category_services(),
 			icons: [
 				{ name: 'GitHub', id: 'simple-icons:github' },
 				{ name: 'GitLab', id: 'simple-icons:gitlab' },
@@ -36,7 +37,7 @@
 			]
 		},
 		{
-			label: 'Data & Infra',
+			label: m.icons_category_data_infra(),
 			icons: [
 				{ name: 'Snowflake', id: 'simple-icons:snowflake' },
 				{ name: 'dbt', id: 'simple-icons:dbt' },
@@ -53,7 +54,7 @@
 			]
 		},
 		{
-			label: 'Cloud & DevOps',
+			label: m.icons_category_cloud_devops(),
 			icons: [
 				{ name: 'AWS', id: 'simple-icons:amazonaws' },
 				{ name: 'GCP', id: 'simple-icons:googlecloud' },
@@ -70,26 +71,26 @@
 			]
 		},
 		{
-			label: 'General',
+			label: m.icons_category_general(),
 			icons: [
-				{ name: 'Link', id: 'material-symbols:link' },
-				{ name: 'Docs', id: 'material-symbols:description' },
-				{ name: 'Dashboard', id: 'material-symbols:dashboard' },
-				{ name: 'Code', id: 'material-symbols:code' },
-				{ name: 'Database', id: 'material-symbols:database' },
-				{ name: 'API', id: 'material-symbols:api' },
-				{ name: 'Web', id: 'material-symbols:globe' },
-				{ name: 'Monitor', id: 'material-symbols:monitor-heart' },
-				{ name: 'Alert', id: 'material-symbols:notifications' },
-				{ name: 'Chart', id: 'material-symbols:bar-chart' },
-				{ name: 'Table', id: 'material-symbols:table' },
-				{ name: 'Settings', id: 'material-symbols:settings' },
-				{ name: 'Book', id: 'material-symbols:menu-book' },
-				{ name: 'Bug', id: 'material-symbols:bug-report' },
-				{ name: 'Lock', id: 'material-symbols:lock' },
-				{ name: 'Key', id: 'material-symbols:key' },
-				{ name: 'Email', id: 'material-symbols:mail' },
-				{ name: 'Folder', id: 'material-symbols:folder' }
+				{ name: m.icons_name_link(), id: 'material-symbols:link' },
+				{ name: m.icons_name_docs(), id: 'material-symbols:description' },
+				{ name: m.icons_name_dashboard(), id: 'material-symbols:dashboard' },
+				{ name: m.icons_name_code(), id: 'material-symbols:code' },
+				{ name: m.icons_name_database(), id: 'material-symbols:database' },
+				{ name: m.icons_name_api(), id: 'material-symbols:api' },
+				{ name: m.icons_name_web(), id: 'material-symbols:globe' },
+				{ name: m.icons_name_monitor(), id: 'material-symbols:monitor-heart' },
+				{ name: m.icons_name_alert(), id: 'material-symbols:notifications' },
+				{ name: m.icons_name_chart(), id: 'material-symbols:bar-chart' },
+				{ name: m.icons_name_table(), id: 'material-symbols:table' },
+				{ name: m.icons_name_settings(), id: 'material-symbols:settings' },
+				{ name: m.icons_name_book(), id: 'material-symbols:menu-book' },
+				{ name: m.icons_name_bug(), id: 'material-symbols:bug-report' },
+				{ name: m.icons_name_lock(), id: 'material-symbols:lock' },
+				{ name: m.icons_name_key(), id: 'material-symbols:key' },
+				{ name: m.icons_name_email(), id: 'material-symbols:mail' },
+				{ name: m.icons_name_folder(), id: 'material-symbols:folder' }
 			]
 		}
 	];
@@ -163,7 +164,7 @@
 		type="button"
 		onclick={() => (open = !open)}
 		class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-		title={value || 'Choose icon'}
+		title={value || m.icons_choose_icon_title()}
 	>
 		<IconifyIcon
 			icon={value || 'material-symbols:image-outline'}
@@ -171,7 +172,9 @@
 				? 'text-gray-700 dark:text-gray-200'
 				: 'text-gray-400 dark:text-gray-500'}"
 		/>
-		<span class="text-gray-500 dark:text-gray-400">{value ? 'Change icon' : 'Icon'}</span>
+		<span class="text-gray-500 dark:text-gray-400">
+			{value ? m.icons_change_icon() : m.icons_icon_label()}
+		</span>
 	</button>
 
 	{#if open}
@@ -183,7 +186,7 @@
 					type="text"
 					bind:value={searchQuery}
 					oninput={handleSearchInput}
-					placeholder="Search icons..."
+					placeholder={m.icons_search_placeholder()}
 					class="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600"
 					autofocus
 				/>
@@ -192,7 +195,7 @@
 			<div class="max-h-56 overflow-y-auto p-2">
 				{#if searchQuery.trim()}
 					{#if searching}
-						<p class="text-xs text-gray-400 text-center py-4">Searching...</p>
+						<p class="text-xs text-gray-400 text-center py-4">{m.icons_searching()}</p>
 					{:else if searchResults.length > 0}
 						<div class="grid grid-cols-6 gap-1">
 							{#each searchResults as result (`${result.prefix}:${result.name}`)}
@@ -211,7 +214,7 @@
 							{/each}
 						</div>
 					{:else}
-						<p class="text-xs text-gray-400 text-center py-4">No icons found</p>
+						<p class="text-xs text-gray-400 text-center py-4">{m.icons_no_results()}</p>
 					{/if}
 				{:else}
 					{#each commonIcons as category (category.label)}
@@ -249,7 +252,7 @@
 						onclick={() => selectIcon('')}
 						class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
 					>
-						Remove
+						{m.common_remove()}
 					</button>
 				</div>
 			{/if}

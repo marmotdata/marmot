@@ -12,6 +12,15 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
   icon="mdi:rocket-launch"
 />
 
+<CalloutCard
+  title="Would rather not run it?"
+  description="Marmot Cloud gives you a managed instance on its own hostname, with the database, upgrades, backups and TLS handled for you."
+  docId="Cloud/index"
+  buttonText="Marmot Cloud"
+  variant="secondary"
+  icon="mdi:cloud-outline"
+/>
+
 ## Deployment Options
 
 <DocCardGrid>

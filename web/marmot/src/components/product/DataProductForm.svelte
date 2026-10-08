@@ -15,6 +15,8 @@
 	import Stepper from '$components/ui/Stepper.svelte';
 	import Step from '$components/ui/Step.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatList } from '$lib/utils';
 
 	type FormMode = 'create' | 'edit';
 
@@ -281,7 +283,7 @@
 	function handleNextStep() {
 		if (currentStep === 1) {
 			if (!name.trim()) {
-				error = 'Name is required';
+				error = m.products_name_required();
 				return;
 			}
 		}
@@ -294,7 +296,7 @@
 
 	async function handleSave() {
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.products_name_required();
 			currentStep = 1;
 			return;
 		}
@@ -309,7 +311,12 @@
 				await handleUpdate();
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : `Failed to ${mode} data product`;
+			error =
+				err instanceof Error
+					? err.message
+					: mode === 'create'
+						? m.products_error_create()
+						: m.products_error_update();
 		} finally {
 			saving = false;
 		}
@@ -342,7 +349,7 @@
 
 		if (!response.ok) {
 			const errorData = await response.json();
-			throw new Error(errorData.error || 'Failed to create data product');
+			throw new Error(errorData.error || m.products_error_create());
 		}
 
 		const created = await response.json();
@@ -378,7 +385,7 @@
 
 		if (!updateResponse.ok) {
 			const errorData = await updateResponse.json();
-			throw new Error(errorData.error || 'Failed to update data product');
+			throw new Error(errorData.error || m.products_error_update());
 		}
 
 		// Handle rules - delete removed rules, update existing, create new
@@ -450,15 +457,17 @@
 		}, 300);
 	}
 
-	const pageTitle = $derived(mode === 'create' ? 'Create Data Product' : 'Edit Data Product');
+	const pageTitle = $derived(
+		mode === 'create' ? m.products_form_create_title() : m.products_form_edit_title()
+	);
 	const saveButtonText = $derived(
 		saving
 			? mode === 'create'
-				? 'Creating...'
-				: 'Saving...'
+				? m.products_creating()
+				: m.products_saving()
 			: mode === 'create'
-				? 'Create Data Product'
-				: 'Save Changes'
+				? m.products_form_create_title()
+				: m.products_save_changes()
 	);
 </script>
 
@@ -481,7 +490,7 @@
 						{pageTitle}
 					</h1>
 					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						Step {currentStep} of {totalSteps}
+						{m.products_step_of({ current: currentStep, total: totalSteps })}
 					</p>
 				</div>
 			</div>
@@ -497,10 +506,10 @@
 				onStepClick={(step) => (currentStep = step)}
 				{canNavigateToStep}
 			>
-				<Step title="Basic Info" icon="material-symbols:info-outline" />
-				<Step title="Details" icon="material-symbols:description" />
-				<Step title="Assets" icon="material-symbols:database" />
-				<Step title="Rules" icon="material-symbols:filter-list" />
+				<Step title={m.products_step_basic_info()} icon="material-symbols:info-outline" />
+				<Step title={m.products_step_details()} icon="material-symbols:description" />
+				<Step title={m.products_assets()} icon="material-symbols:database" />
+				<Step title={m.products_tab_rules()} icon="material-symbols:filter-list" />
 			</Stepper>
 		</div>
 	</div>
@@ -531,18 +540,18 @@
 						icon="material-symbols:info-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Basic Information
+					{m.products_basic_information()}
 				</h3>
 
 				<div class="space-y-5">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Name <span class="text-red-500">*</span>
+							{m.common_name()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							type="text"
 							bind:value={name}
-							placeholder="e.g., Customer Analytics"
+							placeholder={m.products_name_placeholder()}
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							required
 						/>
@@ -550,11 +559,11 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Description
+							{m.common_description()}
 						</label>
 						<textarea
 							bind:value={description}
-							placeholder="A brief description of this data product..."
+							placeholder={m.products_description_placeholder()}
 							rows="2"
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
 						></textarea>
@@ -563,14 +572,14 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 						<div>
 							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-								Tags
+								{m.common_tags()}
 							</label>
 							<Tags bind:tags canEdit={true} />
 						</div>
 
 						<div>
 							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-								Owners
+								{m.common_owners()}
 							</label>
 							<OwnerSelector bind:selectedOwners={owners} />
 						</div>
@@ -589,20 +598,20 @@
 						icon="material-symbols:description"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Details
+					{m.common_details()}
 				</h3>
 
 				<div class="space-y-5">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Documentation
+							{m.common_documentation()}
 						</label>
 						<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-							Rich documentation with formatting, images, and links.
+							{m.products_documentation_hint()}
 						</p>
 						<RichTextEditor
 							bind:value={documentation}
-							placeholder="Add detailed documentation for this data product..."
+							placeholder={m.products_documentation_placeholder()}
 						/>
 					</div>
 
@@ -621,12 +630,11 @@
 						icon="material-symbols:database"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Manual Assets
-					<span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+					{m.products_manual_assets_heading()}
+					<span class="text-xs font-normal text-gray-500 ml-2">{m.products_optional_suffix()}</span>
 				</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Search and add specific assets to this data product. You can also add dynamic rules in the
-					next step.
+					{m.products_manual_assets_hint()}
 				</p>
 
 				<!-- Dynamic assets info (edit mode only) -->
@@ -636,7 +644,11 @@
 					>
 						<div class="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
 							<IconifyIcon icon="material-symbols:auto-awesome" class="h-4 w-4" />
-							<span>{resolvedAssets.dynamic.length} assets matched by rules</span>
+							<span
+								>{m.products_assets_matched_by_rules({
+									count: resolvedAssets.dynamic.length
+								})}</span
+							>
 						</div>
 					</div>
 				{/if}
@@ -652,7 +664,7 @@
 							type="text"
 							value={assetSearchQuery}
 							oninput={handleAssetSearchInput}
-							placeholder="Search assets by name, MRN, or type..."
+							placeholder={m.products_form_asset_search_placeholder()}
 							class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 						/>
 						{#if isSearchingAssets}
@@ -688,7 +700,9 @@
 										</div>
 									</div>
 									{#if manualAssetIds.includes(asset.id)}
-										<span class="text-xs text-green-600 dark:text-green-400">Added</span>
+										<span class="text-xs text-green-600 dark:text-green-400"
+											>{m.products_asset_added_badge()}</span
+										>
 									{:else}
 										<IconifyIcon
 											icon="material-symbols:add"
@@ -705,7 +719,9 @@
 				{#if manualAssetIds.length > 0}
 					<div>
 						<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-							{mode === 'edit' ? 'Manual Assets' : 'Selected Assets'} ({manualAssetIds.length})
+							{mode === 'edit'
+								? m.products_manual_assets_count({ count: manualAssetIds.length })
+								: m.products_selected_assets_count({ count: manualAssetIds.length })}
 						</h4>
 						<div class="space-y-2">
 							{#each manualAssetIds as assetId (assetId)}
@@ -747,11 +763,15 @@
 							icon="material-symbols:database"
 							class="h-12 w-12 mx-auto mb-3 opacity-50"
 						/>
-						<p>{mode === 'edit' ? 'No manual assets added' : 'No assets added yet'}</p>
+						<p>
+							{mode === 'edit'
+								? m.products_no_manual_assets_added()
+								: m.products_no_assets_added_yet()}
+						</p>
 						<p class="text-sm">
-							Search and add assets above, or {mode === 'edit'
-								? 'use rules for dynamic matching'
-								: 'add rules in the next step'}
+							{mode === 'edit'
+								? m.products_no_manual_assets_hint_edit()
+								: m.products_no_manual_assets_hint_create()}
 						</p>
 					</div>
 				{/if}
@@ -774,12 +794,13 @@
 									icon="material-symbols:auto-awesome"
 									class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 								/>
-								Dynamic Rules
-								<span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+								{m.products_dynamic_rules()}
+								<span class="text-xs font-normal text-gray-500 ml-2"
+									>{m.products_optional_suffix()}</span
+								>
 							</h3>
 							<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-								Automatically include assets that match your criteria. Rules are evaluated
-								continuously to keep your data product up to date.
+								{m.products_dynamic_rules_hint()}
 							</p>
 						</div>
 						{#if !showRuleForm && rules.length > 0}
@@ -787,7 +808,7 @@
 								variant="clear"
 								click={() => openRuleForm()}
 								icon="material-symbols:add"
-								text="Add Rule"
+								text={m.products_add_rule()}
 							/>
 						{/if}
 					</div>
@@ -802,7 +823,7 @@
 							class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
 						>
 							<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-								{editingRuleIndex !== null ? 'Edit Rule' : 'Create New Rule'}
+								{editingRuleIndex !== null ? m.products_edit_rule() : m.products_create_new_rule()}
 							</h4>
 						</div>
 
@@ -811,23 +832,23 @@
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
 									<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-										Rule Name <span class="text-red-500">*</span>
+										{m.products_rule_name_field_label()} <span class="text-red-500">*</span>
 									</label>
 									<input
 										type="text"
 										bind:value={ruleForm.name}
-										placeholder="e.g., All Customer Tables"
+										placeholder={m.products_rule_name_input_placeholder()}
 										class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 									/>
 								</div>
 								<div>
 									<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-										Description
+										{m.common_description()}
 									</label>
 									<input
 										type="text"
 										bind:value={ruleForm.description}
-										placeholder="Brief description of what this rule matches..."
+										placeholder={m.products_rule_description_input_placeholder()}
 										class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 									/>
 								</div>
@@ -836,14 +857,14 @@
 							<!-- Query Builder with integrated Preview button -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-									Query Expression
+									{m.products_query_expression_field_label()}
 								</label>
 								<QueryBuilder
 									query={ruleForm.query_expression || ''}
 									onQueryChange={(q) => (ruleForm.query_expression = q)}
 									initiallyExpanded={true}
 									showRunButton={true}
-									runButtonText={isPreviewLoading ? 'Searching...' : 'Preview'}
+									runButtonText={isPreviewLoading ? m.products_searching() : m.products_preview()}
 									runButtonIcon={isPreviewLoading ? 'mdi:loading' : 'material-symbols:visibility'}
 									onRunClick={(q) => previewRule(q)}
 								/>
@@ -872,12 +893,12 @@
 										<div class="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
 											<IconifyIcon icon="material-symbols:check-circle" class="h-4 w-4" />
 											<span class="font-medium"
-												>{rulePreviewTotal} asset{rulePreviewTotal !== 1 ? 's' : ''} matched</span
+												>{m.products_asset_matched_count({ count: rulePreviewTotal })}</span
 											>
 										</div>
 										{#if rulePreviewTotal > rulePreviewResults.length}
 											<span class="text-xs text-gray-500 dark:text-gray-400">
-												Showing first {rulePreviewResults.length}
+												{m.products_showing_first({ count: rulePreviewResults.length })}
 											</span>
 										{/if}
 									</div>
@@ -933,7 +954,7 @@
 										icon="material-symbols:search"
 										class="h-10 w-10 mx-auto mb-2 opacity-40"
 									/>
-									<p class="text-sm">Click "Preview" to see which assets match this rule</p>
+									<p class="text-sm">{m.products_preview_hint()}</p>
 								</div>
 							{/if}
 
@@ -942,11 +963,13 @@
 								class="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-700"
 							>
 								<div class="flex gap-3">
-									<Button variant="clear" click={closeRuleForm} text="Cancel" />
+									<Button variant="clear" click={closeRuleForm} text={m.common_cancel()} />
 									<Button
 										variant="filled"
 										click={saveRule}
-										text={editingRuleIndex !== null ? 'Update Rule' : 'Add Rule'}
+										text={editingRuleIndex !== null
+											? m.products_update_rule()
+											: m.products_add_rule()}
 										icon="material-symbols:check"
 										disabled={!ruleForm.name.trim()}
 									/>
@@ -995,7 +1018,7 @@
 											type="button"
 											onclick={() => openRuleForm(index)}
 											class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-											title="Edit rule"
+											title={m.products_edit_rule_tooltip()}
 										>
 											<IconifyIcon icon="material-symbols:edit" class="h-4 w-4" />
 										</button>
@@ -1003,7 +1026,7 @@
 											type="button"
 											onclick={() => deleteRule(index)}
 											class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-											title="Delete rule"
+											title={m.products_delete_rule_tooltip()}
 										>
 											<IconifyIcon icon="material-symbols:delete" class="h-4 w-4" />
 										</button>
@@ -1030,10 +1053,10 @@
 							<p
 								class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400"
 							>
-								Add your first rule
+								{m.products_add_first_rule_prompt()}
 							</p>
 							<p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-								Rules automatically include assets that match your criteria
+								{m.products_add_first_rule_hint()}
 							</p>
 						</div>
 					</button>
@@ -1051,10 +1074,14 @@
 						variant="clear"
 						click={() => currentStep--}
 						icon="material-symbols:arrow-back"
-						text="Previous"
+						text={m.common_previous()}
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto(resolve('/products'))} text="Cancel" />
+					<Button
+						variant="clear"
+						click={() => goto(resolve('/products'))}
+						text={m.common_cancel()}
+					/>
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">
@@ -1062,15 +1089,17 @@
 					<Button
 						variant="filled"
 						click={handleNextStep}
-						text="Next"
+						text={m.common_next()}
 						icon="material-symbols:arrow-forward"
 						disabled={currentStep === 1 && !canProceedFromStep1}
 					/>
 				{:else}
 					<div class="text-sm text-gray-500 dark:text-gray-400 mr-4">
 						<IconifyIcon icon="material-symbols:inventory-2" class="inline h-4 w-4 mr-1" />
-						{manualAssetIds.length} manual asset{manualAssetIds.length !== 1 ? 's' : ''}, {rules.length}
-						rule{rules.length !== 1 ? 's' : ''}
+						{formatList([
+							m.products_manual_asset_count({ count: manualAssetIds.length }),
+							m.products_rule_count({ count: rules.length })
+						])}
 					</div>
 					<Button
 						variant="filled"

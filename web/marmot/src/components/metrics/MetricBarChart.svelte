@@ -1,6 +1,7 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface ChartData {
 		label: string;
@@ -33,7 +34,9 @@
 		/>
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
 		{#if data.length > limit}
-			<span class="text-xs text-gray-500 dark:text-gray-400">Top {limit}</span>
+			<span class="text-xs text-gray-500 dark:text-gray-400"
+				>{m.metrics_top_limit({ count: limit })}</span
+			>
 		{/if}
 	</div>
 
@@ -52,7 +55,7 @@
 		<div class="flex items-center justify-center h-32">
 			<div class="text-center">
 				<IconifyIcon icon="mdi:chart-bar" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
-				<p class="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
+				<p class="text-gray-500 dark:text-gray-400 text-sm">{m.metrics_no_data()}</p>
 			</div>
 		</div>
 	{:else}

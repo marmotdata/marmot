@@ -15,6 +15,8 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
+
 from langchain_core.language_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.messages.ai import UsageMetadata
@@ -54,7 +56,7 @@ def _scripted_model() -> FakeMessagesListChatModel:
     return FakeMessagesListChatModel(responses=[reply])
 
 
-def main() -> None:
+async def main() -> None:
     host = resolve_host()
     credential = resolve_credential(host)
     catalog = MarmotCatalog(AuthenticatedApiClient(host, credential))
@@ -77,13 +79,18 @@ def main() -> None:
     # A real agent supplies that chain; here one stands in and calls the tools a
     # model would have chosen. `config` must be forwarded so the nested runs
     # inherit the root.
-    def pipeline(question: str, config: RunnableConfig) -> str:
-        print("search_catalog ->", search.invoke({"query": "orders", "limit": 3}, config=config))
+    async def pipeline(question: str, config: RunnableConfig) -> str:
+        print(
+            "search_catalog ->",
+            await search.ainvoke({"query": "orders", "limit": 3}, config=config),
+        )
         print("query_orders ->", query_orders.invoke({"sql": "select 1"}, config=config))
-        answer = model.invoke([SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config)
+        answer = await model.ainvoke(
+            [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)], config=config
+        )
         return str(answer.content)
 
-    reply = RunnableLambda(pipeline).invoke(
+    reply = await RunnableLambda(pipeline).ainvoke(
         DEFAULT_PROMPT, config=RunnableConfig(callbacks=[handler])
     )
     print("model ->", reply)
@@ -93,4 +100,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

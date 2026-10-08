@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Role {
 		id: string;
@@ -37,17 +38,17 @@
 
 	async function createRole() {
 		// TODO: Implement when backend is ready
-		alert('Role creation not yet implemented');
+		alert(m.rolemgmt_create_not_implemented());
 	}
 
 	async function updateRole() {
 		// TODO: Implement when backend is ready
-		alert('Role update not yet implemented');
+		alert(m.rolemgmt_update_not_implemented());
 	}
 
 	async function deleteRole() {
 		// TODO: Implement when backend is ready
-		alert('Role deletion not yet implemented');
+		alert(m.rolemgmt_delete_not_implemented());
 	}
 </script>
 
@@ -59,13 +60,13 @@
 			<h3
 				class="text-lg font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200"
 			>
-				Roles & Permissions
+				{m.rolemgmt_heading()}
 			</h3>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={() => (creatingRole = !creatingRole)}
 			>
-				{creatingRole ? 'Cancel' : 'Add Role'}
+				{creatingRole ? m.common_cancel() : m.rolemgmt_add_role()}
 			</button>
 		</div>
 
@@ -76,13 +77,13 @@
 				<h4
 					class="text-base font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200 mb-4"
 				>
-					Create New Role
+					{m.rolemgmt_create_heading()}
 				</h4>
 				<div class="space-y-4">
 					<div>
 						<label
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
-							>Role Name</label
+							>{m.rolemgmt_role_name_label()}</label
 						>
 						<input
 							type="text"
@@ -93,7 +94,7 @@
 					<div>
 						<label
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
-							>Description</label
+							>{m.common_description()}</label
 						>
 						<textarea
 							bind:value={newRole.description}
@@ -106,7 +107,7 @@
 							on:click={createRole}
 							disabled={loading}
 						>
-							Create Role
+							{m.rolemgmt_create_button()}
 						</button>
 					</div>
 				</div>
@@ -130,19 +131,19 @@
 						<tr>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 dark:text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900"
-								>Role Name</th
+								>{m.rolemgmt_role_name_label()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 dark:text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900"
-								>Description</th
+								>{m.common_description()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 dark:text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900"
-								>Users</th
+								>{m.rolemgmt_users_column()}</th
 							>
 							<th
 								class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-500 dark:text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900"
-								>Actions</th
+								>{m.common_actions()}</th
 							>
 						</tr>
 					</thead>
@@ -162,7 +163,7 @@
 												<div>
 													<label
 														class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
-														>Role Name</label
+														>{m.rolemgmt_role_name_label()}</label
 													>
 													<input
 														type="text"
@@ -173,7 +174,7 @@
 												<div>
 													<label
 														class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
-														>Description</label
+														>{m.common_description()}</label
 													>
 													<textarea
 														bind:value={role.description}
@@ -185,13 +186,13 @@
 														class="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 														on:click={() => (editingRoleId = null)}
 													>
-														Cancel
+														{m.common_cancel()}
 													</button>
 													<button
 														class="px-4 py-2 bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 														on:click={() => updateRole(role)}
 													>
-														Save Changes
+														{m.rolemgmt_save_changes()}
 													</button>
 												</div>
 											</div>
@@ -208,20 +209,20 @@
 									>
 									<td
 										class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 dark:text-gray-400"
-										>{role.users?.length || 0} users</td
+										>{m.rolemgmt_users_count({ count: role.users?.length || 0 })}</td
 									>
 									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 										<button
 											class="text-earthy-terracotta-700 hover:text-earthy-terracotta-700 mr-3"
 											on:click={() => (editingRoleId = role.id)}
 										>
-											Edit
+											{m.common_edit()}
 										</button>
 										<button
 											class="text-red-600 hover:text-red-900"
 											on:click={() => deleteRole(role.id)}
 										>
-											Delete
+											{m.common_delete()}
 										</button>
 									</td>
 								{/if}

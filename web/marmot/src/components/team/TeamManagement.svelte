@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import TeamTable from './TeamTable.svelte';
 	import type { Team } from '$lib/teams/types';
 
@@ -32,7 +33,7 @@
 			teams = data.teams;
 			totalTeams = data.total;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			error = err instanceof Error ? err.message : m.teams_error_generic();
 		} finally {
 			loading = false;
 		}
@@ -62,7 +63,7 @@
 			<div class="flex-1 max-w-md">
 				<input
 					type="text"
-					placeholder="Search teams..."
+					placeholder={m.teams_search_placeholder()}
 					bind:value={teamQuery}
 					on:input={handleQueryInput}
 					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
@@ -72,7 +73,7 @@
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={goCreate}
 			>
-				Create Team
+				{m.teams_create_team()}
 			</button>
 		</div>
 

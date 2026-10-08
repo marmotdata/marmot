@@ -5,6 +5,7 @@
 		notificationPreferences,
 		type NotificationType
 	} from '$lib/stores/notificationPreferences';
+	import { m } from '$lib/paraglide/messages';
 
 	let loading = true;
 	let preferences: Record<NotificationType, boolean>;
@@ -17,56 +18,56 @@
 	}[] = [
 		{
 			type: 'system',
-			label: 'System',
-			description: 'System announcements and updates',
+			label: m.notifpref_system_label(),
+			description: m.notifpref_system_description(),
 			icon: 'material-symbols:info-outline'
 		},
 		{
 			type: 'schema_change',
-			label: 'Schema Changes',
-			description: 'Schema changes to assets you own',
+			label: m.notifpref_schema_change_label(),
+			description: m.notifpref_schema_change_description(),
 			icon: 'material-symbols:schema-outline'
 		},
 		{
 			type: 'upstream_schema_change',
-			label: 'Upstream Schema Changes',
-			description: 'Schema changes to assets upstream of yours',
+			label: m.notifpref_upstream_schema_change_label(),
+			description: m.notifpref_upstream_schema_change_description(),
 			icon: 'material-symbols:arrow-upward-alt'
 		},
 		{
 			type: 'downstream_schema_change',
-			label: 'Downstream Schema Changes',
-			description: 'Schema changes to assets downstream of yours',
+			label: m.notifpref_downstream_schema_change_label(),
+			description: m.notifpref_downstream_schema_change_description(),
 			icon: 'material-symbols:arrow-downward-alt'
 		},
 		{
 			type: 'asset_change',
-			label: 'Asset Changes',
-			description: 'Metadata changes to assets you own',
+			label: m.notifpref_asset_change_label(),
+			description: m.notifpref_asset_change_description(),
 			icon: 'material-symbols:database-outline'
 		},
 		{
 			type: 'lineage_change',
-			label: 'Lineage Changes',
-			description: 'New or removed lineage connections involving your assets',
+			label: m.notifpref_lineage_change_label(),
+			description: m.notifpref_lineage_change_description(),
 			icon: 'material-symbols:timeline'
 		},
 		{
 			type: 'mention',
-			label: 'Mentions',
-			description: 'When someone mentions you',
+			label: m.notifpref_mention_label(),
+			description: m.notifpref_mention_description(),
 			icon: 'material-symbols:alternate-email'
 		},
 		{
 			type: 'asset_deleted',
-			label: 'Asset Deletions',
-			description: 'When assets you own or subscribe to are deleted',
+			label: m.notifpref_asset_deleted_label(),
+			description: m.notifpref_asset_deleted_description(),
 			icon: 'material-symbols:delete-outline'
 		},
 		{
 			type: 'job_complete',
-			label: 'Job Completion',
-			description: 'Pipeline job completions',
+			label: m.notifpref_job_complete_label(),
+			description: m.notifpref_job_complete_description(),
 			icon: 'material-symbols:check-circle-outline'
 		}
 	];

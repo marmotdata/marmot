@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
@@ -35,6 +36,46 @@ func isLoopbackRedirectURI(raw string) bool {
 	}
 	ip := net.ParseIP(host)
 	return ip != nil && ip.IsLoopback()
+}
+
+// isAllowedExternalRedirectURI reports whether raw is an https redirect URI on an allowlisted host.
+func isAllowedExternalRedirectURI(raw string, allowedHosts []string) bool {
+	if len(allowedHosts) == 0 || len(raw) > maxRedirectURILen {
+		return false
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" {
+		return false
+	}
+	// RFC 6749 forbids fragments in redirect URIs.
+	if u.User != nil || u.Fragment != "" || strings.Contains(raw, "#") {
+		return false
+	}
+	for _, entry := range allowedHosts {
+		if redirectHostMatches(entry, u) {
+			return true
+		}
+	}
+	return false
+}
+
+// redirectHostMatches reports whether an allowlist entry matches the URI host; an explicit :443 counts as no port since the scheme is always https here.
+func redirectHostMatches(entry string, u *url.URL) bool {
+	hostname := strings.ToLower(u.Hostname())
+	if hostname == "" {
+		return false
+	}
+	port := u.Port()
+	if port == "443" {
+		port = ""
+	}
+	if host, entryPort, err := net.SplitHostPort(strings.ToLower(entry)); err == nil {
+		if entryPort == "443" {
+			entryPort = ""
+		}
+		return host == hostname && port == entryPort
+	}
+	return strings.ToLower(entry) == hostname && port == ""
 }
 
 type dcrRequest struct {
@@ -74,9 +115,9 @@ func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, uri := range req.RedirectURIs {
-		if !isLoopbackRedirectURI(uri) {
+		if !isLoopbackRedirectURI(uri) && !isAllowedExternalRedirectURI(uri, h.config.Auth.DCR.AllowedRedirectHosts) {
 			respondOAuthError(w, http.StatusBadRequest, "invalid_redirect_uri",
-				"redirect_uris must be loopback http URLs (http://localhost, http://127.0.0.1, or http://[::1])")
+				"redirect_uris must be loopback http URLs (http://localhost, http://127.0.0.1, or http://[::1]) or https URLs on a host listed in auth.dcr.allowed_redirect_hosts")
 			return
 		}
 	}

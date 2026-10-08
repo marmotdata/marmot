@@ -7,11 +7,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const tabs = [
-		{ id: 'profile', label: 'Profile' },
-		{ id: 'subscriptions', label: 'Subscriptions' },
-		{ id: 'api-keys', label: 'API Keys' }
+		{ id: 'profile', label: m.profile_tab_profile() },
+		{ id: 'subscriptions', label: m.profile_tab_subscriptions() },
+		{ id: 'api-keys', label: m.profile_tab_api_keys() }
 	];
 
 	$: activeTab = $page.url.searchParams.get('tab') || tabs[0]?.id;

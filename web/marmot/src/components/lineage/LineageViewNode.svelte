@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages';
 	import Icon from '$components/ui/Icon.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import Arrow from '$components/ui/Arrow.svelte';
@@ -103,7 +104,7 @@
 							d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
 						/>
 					</svg>
-					<span class="ml-1">View Full</span>
+					<span class="ml-1">{m.lineage_view_full()}</span>
 				</a>
 				<Arrow {expanded} />
 			</div>
@@ -112,7 +113,9 @@
 			<div class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
 				{#if node.asset.description}
 					<div class="mt-3">
-						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">Description</h5>
+						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">
+							{m.common_description()}
+						</h5>
 						<p class="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
 							{node.asset.description}
 						</p>
@@ -120,7 +123,7 @@
 				{/if}
 				{#if node.asset.tags?.length > 0}
 					<div class="mt-3">
-						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">Tags</h5>
+						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">{m.common_tags()}</h5>
 						<div class="mt-1 flex flex-wrap gap-2">
 							{#each node.asset.tags as tag (tag)}
 								<span
@@ -133,7 +136,9 @@
 				{/if}
 				{#if Object.keys(node.asset.metadata || {}).length > 0}
 					<div class="mt-3">
-						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">Metadata</h5>
+						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">
+							{m.lineage_metadata_heading()}
+						</h5>
 						<div class="">
 							<MetadataView
 								metadata={node.asset.metadata}

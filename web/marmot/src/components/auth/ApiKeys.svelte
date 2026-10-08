@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDateTime } from '$lib/utils';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import Button from '$components/ui/Button.svelte';
 	import DatePicker from '$components/ui/DatePicker.svelte';
@@ -16,14 +18,14 @@
 	}
 
 	const expirationOptions = [
-		{ value: '1', label: '1 day' },
-		{ value: '7', label: '7 days' },
-		{ value: '30', label: '30 days' },
-		{ value: '90', label: '90 days' },
-		{ value: '180', label: '180 days' },
-		{ value: '365', label: '365 days' },
-		{ value: 'custom', label: 'Custom' },
-		{ value: 'never', label: 'No expiration' }
+		{ value: '1', label: m.apikeys_expiration_days_option({ count: 1 }) },
+		{ value: '7', label: m.apikeys_expiration_days_option({ count: 7 }) },
+		{ value: '30', label: m.apikeys_expiration_days_option({ count: 30 }) },
+		{ value: '90', label: m.apikeys_expiration_days_option({ count: 90 }) },
+		{ value: '180', label: m.apikeys_expiration_days_option({ count: 180 }) },
+		{ value: '365', label: m.apikeys_expiration_days_option({ count: 365 }) },
+		{ value: 'custom', label: m.apikeys_expiration_custom() },
+		{ value: 'never', label: m.apikeys_expiration_never() }
 	];
 
 	let apiKeys: ApiKey[] | null = null;
@@ -53,7 +55,7 @@
 			const data = await response.json();
 			apiKeys = data === null ? [] : data;
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to fetch API keys');
+			toasts.error(err instanceof Error ? err.message : m.apikeys_fetch_error());
 			apiKeys = [];
 		}
 	}
@@ -87,18 +89,18 @@
 
 	async function createApiKey() {
 		if (!newKeyName.trim()) {
-			toasts.warning('Key name cannot be empty');
+			toasts.warning(m.apikeys_error_name_empty());
 			return;
 		}
 
 		if (apiKeys && apiKeys.some((key) => key.name === newKeyName)) {
-			toasts.warning('An API key with this name already exists');
+			toasts.warning(m.apikeys_error_name_exists());
 			return;
 		}
 
 		const expiresInDays = resolveExpiresInDays();
 		if (expiresInDays === null) {
-			toasts.warning('Custom expiration must be a date in the future');
+			toasts.warning(m.apikeys_error_custom_date_future());
 			return;
 		}
 
@@ -123,9 +125,9 @@
 			expiration = '90';
 			customDate = '';
 			creatingKey = false;
-			toasts.success('API key created successfully');
+			toasts.success(m.apikeys_created_success());
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to create API key');
+			toasts.error(err instanceof Error ? err.message : m.apikeys_create_error());
 		} finally {
 			isGenerating = false;
 		}
@@ -143,12 +145,12 @@
 				toasts.error(errorMsg);
 				return;
 			}
-			toasts.success(`API key "${keyToDelete.name}" deleted`);
+			toasts.success(m.apikeys_deleted_success({ name: keyToDelete.name }));
 			apiKeys = (apiKeys || []).filter((key) => key.id !== keyToDelete.id);
 			showDeleteDialog = false;
 			keyToDelete = null;
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to delete API key');
+			toasts.error(err instanceof Error ? err.message : m.apikeys_delete_error());
 		}
 	}
 
@@ -165,10 +167,10 @@
 >
 	<div class="p-6">
 		<div class="flex justify-between items-center mb-6">
-			<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">API Keys</h3>
+			<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{m.apikeys_heading()}</h3>
 			<Button
 				variant="filled"
-				text={creatingKey ? 'Cancel' : 'New Key'}
+				text={creatingKey ? m.common_cancel() : m.apikeys_new_key_button()}
 				icon={creatingKey ? 'material-symbols:close' : 'material-symbols:add-2'}
 				click={() => {
 					creatingKey = !creatingKey;
@@ -180,14 +182,14 @@
 		{#if creatingKey}
 			<div class="mb-6 bg-earthy-brown-100 dark:bg-gray-800 rounded-lg p-6 animate-slide-down">
 				<h4 class="text-base font-medium text-gray-900 dark:text-gray-100 mb-4">
-					Create New API Key
+					{m.apikeys_create_heading()}
 				</h4>
 				<div class="space-y-4">
 					<div>
 						<label
 							for="key-name"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>Key Name</label
+							>{m.apikeys_name_label()}</label
 						>
 						<input
 							type="text"
@@ -195,14 +197,14 @@
 							bind:value={newKeyName}
 							onkeydown={handleKeydown}
 							class="block w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
-							placeholder="Enter a descriptive name for your key"
+							placeholder={m.apikeys_name_placeholder()}
 						/>
 					</div>
 					<div>
 						<label
 							for="key-expiration"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>Expiration</label
+							>{m.apikeys_expiration_label()}</label
 						>
 						<div class="flex items-center gap-3">
 							<select
@@ -222,21 +224,20 @@
 								/>
 								{#if customDate && daysUntil(customDate) !== null}
 									<span class="text-sm text-gray-600 dark:text-gray-400">
-										expires in {daysUntil(customDate)}
-										{daysUntil(customDate) === 1 ? 'day' : 'days'}
+										{m.apikeys_expires_in_days({ count: daysUntil(customDate) ?? 0 })}
 									</span>
 								{/if}
 							{/if}
 						</div>
 						{#if expiration === 'never'}
 							<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-								This key will remain valid until you delete it.
+								{m.apikeys_never_expires_hint()}
 							</p>
 						{/if}
 					</div>
 					<Button
 						variant="filled"
-						text={isGenerating ? 'Generating...' : 'Generate Key'}
+						text={isGenerating ? m.apikeys_generating() : m.apikeys_generate_button()}
 						loading={isGenerating}
 						disabled={!newKeyName || isGenerating || (expiration === 'custom' && !customDate)}
 						click={createApiKey}
@@ -249,12 +250,12 @@
 			<div class="mb-6 bg-earthy-brown-100 dark:bg-gray-800 rounded-lg p-6 animate-slide-down">
 				<div class="flex justify-between items-start mb-3">
 					<h4 class="text-base font-medium text-gray-900 dark:text-gray-100">
-						New API Key Created
+						{m.apikeys_created_heading()}
 					</h4>
 					<Button variant="clear" icon="cross" click={() => (newlyCreatedKey = null)} />
 				</div>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-					Make sure to copy your API key now. You won't be able to see it again!
+					{m.apikeys_copy_warning()}
 				</p>
 				<div class="flex items-center space-x-2 bg-earthy-brown-50 dark:bg-gray-900 rounded-md p-3">
 					<code class="text-sm text-gray-900 dark:text-gray-100 flex-1 font-mono"
@@ -262,7 +263,7 @@
 					>
 					<Button
 						variant="clear"
-						text={copied ? 'Copied!' : 'Copy'}
+						text={copied ? m.common_copied() : m.common_copy()}
 						click={() => {
 							navigator.clipboard.writeText(newlyCreatedKey || '');
 							copied = true;
@@ -274,9 +275,9 @@
 		{/if}
 
 		{#if apiKeys === null}
-			<p class="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
+			<p class="text-gray-500 dark:text-gray-400 text-sm">{m.common_loading()}</p>
 		{:else if apiKeys.length === 0}
-			<p class="text-gray-500 dark:text-gray-400 text-sm">No API keys found.</p>
+			<p class="text-gray-500 dark:text-gray-400 text-sm">{m.apikeys_none_found()}</p>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-full">
@@ -284,23 +285,23 @@
 						<tr>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Name</th
+								>{m.common_name()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Created</th
+								>{m.apikeys_column_created()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Expires</th
+								>{m.apikeys_column_expires()}</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Last Used</th
+								>{m.apikeys_column_last_used()}</th
 							>
 							<th
 								class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>Actions</th
+								>{m.common_actions()}</th
 							>
 						</tr>
 					</thead>
@@ -314,18 +315,18 @@
 									>{key.name}</td
 								>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-									{new Date(key.created_at).toLocaleString()}
+									{formatDateTime(key.created_at)}
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-									{key.expires_at ? new Date(key.expires_at).toLocaleString() : 'Never'}
+									{key.expires_at ? formatDateTime(key.expires_at) : m.common_never()}
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-									{key.last_used_at ? new Date(key.last_used_at).toLocaleString() : 'Never'}
+									{key.last_used_at ? formatDateTime(key.last_used_at) : m.common_never()}
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 									<Button
 										variant="clear"
-										text="Delete"
+										text={m.common_delete()}
 										click={() => {
 											keyToDelete = key;
 											showDeleteDialog = true;
@@ -343,9 +344,9 @@
 
 <DeleteModal
 	show={showDeleteDialog}
-	title="Delete API Key"
-	message="Are you sure you want to delete this API key? This action cannot be undone."
-	confirmText="Delete"
+	title={m.apikeys_delete_title()}
+	message={m.apikeys_delete_confirm()}
+	confirmText={m.common_delete()}
 	resourceName={keyToDelete?.name || ''}
 	requireConfirmation={true}
 	onConfirm={deleteApiKey}

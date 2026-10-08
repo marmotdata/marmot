@@ -9,6 +9,7 @@
 	import { listRoles } from '$lib/roles/api';
 	import { fetchApi } from '$lib/api';
 	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import type { Role } from '$lib/roles/types';
 
 	let username = $state('');
@@ -23,30 +24,29 @@
 	let currentStep = $state(1);
 
 	const stepperSteps = [
-		{ title: 'Basic Info', icon: 'material-symbols:person-outline' },
-		{ title: 'Credentials', icon: 'material-symbols:lock-outline' },
-		{ title: 'Roles', icon: 'material-symbols:shield-outline' },
-		{ title: 'Review', icon: 'material-symbols:summarize' }
+		{ title: m.users_step_basic_info(), icon: 'material-symbols:person-outline' },
+		{ title: m.users_step_credentials(), icon: 'material-symbols:lock-outline' },
+		{ title: m.users_step_roles(), icon: 'material-symbols:shield-outline' },
+		{ title: m.users_step_review(), icon: 'material-symbols:summarize' }
 	];
 
 	// Validation
 	let usernameError = $derived.by(() => {
 		const u = username.trim();
 		if (!u) return null;
-		if (u.length < 3) return 'Username must be at least 3 characters';
-		if (u.length > 255) return 'Username is too long';
-		if (!/^[a-zA-Z0-9._-]+$/.test(u))
-			return 'Only letters, numbers, dots, underscores, and hyphens';
+		if (u.length < 3) return m.users_error_username_min();
+		if (u.length > 255) return m.users_error_username_too_long();
+		if (!/^[a-zA-Z0-9._-]+$/.test(u)) return m.users_error_username_charset();
 		return null;
 	});
 	let passwordError = $derived.by(() => {
 		if (!password) return null;
-		if (password.length < 8) return 'Password must be at least 8 characters';
+		if (password.length < 8) return m.users_error_password_min();
 		return null;
 	});
 	let confirmError = $derived.by(() => {
 		if (!passwordConfirm) return null;
-		if (passwordConfirm !== password) return 'Passwords do not match';
+		if (passwordConfirm !== password) return m.users_error_passwords_mismatch();
 		return null;
 	});
 
@@ -73,7 +73,15 @@
 		if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
 		return score;
 	});
-	let strengthLabel = $derived(['', 'Weak', 'Fair', 'Good', 'Strong'][passwordStrength] ?? '');
+	let strengthLabel = $derived(
+		[
+			'',
+			m.users_strength_weak(),
+			m.users_strength_fair(),
+			m.users_strength_good(),
+			m.users_strength_strong()
+		][passwordStrength] ?? ''
+	);
 
 	// Convert selected IDs to role objects and names for review + submit
 	let selectedRoles = $derived(availableRoles.filter((r) => selectedRoleIds.includes(r.id)));
@@ -85,22 +93,22 @@
 			const userRole = availableRoles.find((r) => r.name === 'user');
 			if (userRole) selectedRoleIds = [userRole.id];
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to load roles');
+			toasts.error(err instanceof Error ? err.message : m.users_error_load_roles());
 		}
 	});
 
 	function handleNext() {
 		error = null;
 		if (currentStep === 1 && !canProceedToStep2) {
-			error = usernameError ?? 'Fill in all required fields';
+			error = usernameError ?? m.users_error_fill_required();
 			return;
 		}
 		if (currentStep === 2 && !canProceedToStep3) {
-			error = passwordError ?? confirmError ?? 'Password does not meet requirements';
+			error = passwordError ?? confirmError ?? m.users_error_password_requirements();
 			return;
 		}
 		if (currentStep === 3 && !canProceedToStep4) {
-			error = 'Select at least one role';
+			error = m.users_error_select_role();
 			return;
 		}
 		currentStep = Math.min(currentStep + 1, stepperSteps.length);
@@ -108,7 +116,7 @@
 
 	async function handleSave() {
 		if (!canProceedToStep2 || !canProceedToStep3 || !canProceedToStep4) {
-			error = 'Please complete all required fields';
+			error = m.users_error_complete_required();
 			return;
 		}
 
@@ -134,10 +142,10 @@
 				return;
 			}
 
-			toasts.success(`User "${username.trim()}" created`);
+			toasts.success(m.users_create_success({ username: username.trim() }));
 			goto(resolve('/admin?tab=users'));
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to create user';
+			error = err instanceof Error ? err.message : m.users_error_create();
 		} finally {
 			saving = false;
 		}
@@ -149,7 +157,7 @@
 </script>
 
 <StepperPage
-	title="Create User"
+	title={m.users_create_title()}
 	steps={stepperSteps}
 	{currentStep}
 	onBack={goBack}
@@ -165,8 +173,8 @@
 				? canProceedToStep4
 				: true}
 	{saving}
-	saveLabel="Create User"
-	savingLabel="Creating..."
+	saveLabel={m.users_create_title()}
+	savingLabel={m.users_creating_label()}
 	{error}
 	{canNavigateToStep}
 	onStepClick={(step) => (currentStep = step)}
@@ -181,7 +189,7 @@
 					icon="material-symbols:person-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Basic Information
+				{m.users_basic_information_heading()}
 			</h3>
 
 			<div class="space-y-6">
@@ -191,13 +199,13 @@
 							for="user-username"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 						>
-							Username <span class="text-red-500">*</span>
+							{m.users_username_label()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							id="user-username"
 							type="text"
 							bind:value={username}
-							placeholder="e.g., alice"
+							placeholder={m.users_username_placeholder()}
 							autocomplete="off"
 							class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {usernameError
 								? 'border-red-500 dark:border-red-500'
@@ -211,7 +219,7 @@
 							</p>
 						{:else}
 							<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-								Letters, numbers, dots, underscores, hyphens. 3–255 characters.
+								{m.users_username_hint()}
 							</p>
 						{/if}
 					</div>
@@ -221,13 +229,13 @@
 							for="user-name"
 							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 						>
-							Display name <span class="text-red-500">*</span>
+							{m.users_display_name_label()} <span class="text-red-500">*</span>
 						</label>
 						<input
 							id="user-name"
 							type="text"
 							bind:value={name}
-							placeholder="e.g., Alice Chen"
+							placeholder={m.users_display_name_placeholder()}
 							onkeydown={(e) => {
 								if (e.key === 'Enter' && canProceedToStep2) {
 									e.preventDefault();
@@ -238,7 +246,7 @@
 							required
 						/>
 						<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-							Shown across the app — usually the person's full name.
+							{m.users_display_name_hint()}
 						</p>
 					</div>
 				</div>
@@ -256,11 +264,11 @@
 					icon="material-symbols:lock-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Set Password
+				{m.users_set_password_heading()}
 			</h3>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-				The user can change this after logging in. Consider sharing it via a secure channel.
+				{m.users_password_intro()}
 			</p>
 
 			<div class="space-y-6">
@@ -269,7 +277,7 @@
 						for="user-password"
 						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 					>
-						Password <span class="text-red-500">*</span>
+						{m.users_password_label()} <span class="text-red-500">*</span>
 					</label>
 					<div class="relative">
 						<input
@@ -277,7 +285,7 @@
 							type={showPassword ? 'text' : 'password'}
 							bind:value={password}
 							autocomplete="new-password"
-							placeholder="At least 8 characters"
+							placeholder={m.users_password_placeholder()}
 							class="w-full px-4 py-2.5 pr-10 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {passwordError
 								? 'border-red-500 dark:border-red-500'
 								: 'border-gray-300 dark:border-gray-600'}"
@@ -286,7 +294,9 @@
 							type="button"
 							onclick={() => (showPassword = !showPassword)}
 							class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
-							aria-label={showPassword ? 'Hide password' : 'Show password'}
+							aria-label={showPassword
+								? m.users_hide_password_aria()
+								: m.users_show_password_aria()}
 						>
 							<IconifyIcon
 								icon={showPassword
@@ -330,7 +340,7 @@
 									{strengthLabel}
 								</span>
 								<span class="text-xs text-gray-400 dark:text-gray-500">
-									{password.length} chars
+									{m.users_password_char_count({ count: password.length })}
 								</span>
 							</div>
 						</div>
@@ -349,14 +359,14 @@
 						for="user-password-confirm"
 						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 					>
-						Confirm password <span class="text-red-500">*</span>
+						{m.users_confirm_password_label()} <span class="text-red-500">*</span>
 					</label>
 					<input
 						id="user-password-confirm"
 						type={showPassword ? 'text' : 'password'}
 						bind:value={passwordConfirm}
 						autocomplete="new-password"
-						placeholder="Re-enter the password"
+						placeholder={m.users_confirm_password_placeholder()}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && canProceedToStep3) {
 								e.preventDefault();
@@ -380,7 +390,7 @@
 								icon="material-symbols:check-circle-outline"
 								class="h-4 w-4 mr-1 flex-shrink-0"
 							/>
-							Passwords match
+							{m.users_passwords_match()}
 						</p>
 					{/if}
 				</div>
@@ -399,19 +409,19 @@
 						icon="material-symbols:shield-outline"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Assign Roles <span class="text-red-500 ml-1">*</span>
+					{m.users_assign_roles_heading()} <span class="text-red-500 ml-1">*</span>
 				</h3>
 			</div>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Pick at least one role. Roles determine what this user can see and do.
+				{m.users_roles_intro()}
 			</p>
 
 			<RoleSelector
 				roles={availableRoles}
 				selectedIds={selectedRoleIds}
 				onChange={(ids) => (selectedRoleIds = ids)}
-				emptyMessage="No roles available."
+				emptyMessage={m.users_no_roles_available()}
 			/>
 		</div>
 	{/if}
@@ -430,13 +440,13 @@
 				</div>
 				<div class="min-w-0">
 					<div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-0.5">
-						Ready to create
+						{m.users_ready_to_create()}
 					</div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-						{name || 'unnamed'}
+						{name || m.users_unnamed()}
 					</h3>
 					<p class="text-sm text-gray-500 dark:text-gray-400 font-mono truncate">
-						@{username || 'unset'}
+						@{username || m.users_unset()}
 					</p>
 				</div>
 			</div>
@@ -448,7 +458,7 @@
 						class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide"
 					>
 						<IconifyIcon icon="material-symbols:lock-outline" class="h-3.5 w-3.5" />
-						Password
+						{m.users_password_label()}
 					</div>
 					<div class="flex items-center gap-2">
 						<code
@@ -457,7 +467,7 @@
 							{'•'.repeat(Math.min(password.length, 16))}
 						</code>
 						<span class="text-xs text-gray-500 dark:text-gray-400"
-							>{password.length} chars · {strengthLabel}</span
+							>{m.users_password_char_count({ count: password.length })} · {strengthLabel}</span
 						>
 					</div>
 				</div>
@@ -469,15 +479,15 @@
 							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
 						>
 							<IconifyIcon icon="material-symbols:shield-outline" class="h-3.5 w-3.5" />
-							Roles
+							{m.users_step_roles()}
 						</div>
 						<span class="text-xs text-gray-400 dark:text-gray-500">
-							{selectedRoles.length} assigned
+							{m.users_roles_assigned_count({ count: selectedRoles.length })}
 						</span>
 					</div>
 
 					{#if selectedRoles.length === 0}
-						<p class="text-sm text-gray-400 dark:text-gray-500 italic">None</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.common_none()}</p>
 					{:else}
 						<ul class="space-y-1.5">
 							{#each selectedRoles as role (role.id)}
@@ -498,7 +508,7 @@
 													class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
 												>
 													<IconifyIcon icon="material-symbols:lock" class="h-2.5 w-2.5" />
-													system
+													{m.users_system_role_badge()}
 												</span>
 											{/if}
 										</div>
@@ -524,10 +534,11 @@
 					class="h-5 w-5 text-gray-500 dark:text-gray-400 mt-0.5 flex-shrink-0"
 				/>
 				<div class="text-sm text-gray-700 dark:text-gray-300">
-					<p class="font-medium text-gray-900 dark:text-gray-100">Next: share credentials</p>
+					<p class="font-medium text-gray-900 dark:text-gray-100">
+						{m.users_next_share_credentials()}
+					</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-						Deliver the username and password securely. The user can change their password once
-						logged in.
+						{m.users_share_credentials_hint()}
 					</p>
 				</div>
 			</div>

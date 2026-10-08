@@ -5,6 +5,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Arrow from '$components/ui/Arrow.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		asset = undefined,
@@ -301,7 +302,7 @@
 	<div class="space-y-2">
 		{#if metadataEntries.length === 0}
 			<div class="text-center py-6">
-				<p class="text-sm text-gray-500 dark:text-gray-400">No configuration data</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400">{m.shared_metadata_no_config()}</p>
 			</div>
 		{:else}
 			{#each metadataEntries as [key, value] (key)}
@@ -316,14 +317,14 @@
 							{#if isObject(value)}
 								{@render metadataDisclosure(
 									key,
-									'View Details',
+									m.shared_metadata_view_details(),
 									getObjectPreview(value),
 									formatJson(value)
 								)}
 							{:else if isArray(value) && containsObject(value)}
 								{@render metadataDisclosure(
 									key,
-									'View array',
+									m.shared_metadata_view_array(),
 									getArrayPreview(value),
 									formatJson(value)
 								)}
@@ -340,14 +341,14 @@
 									{/each}
 									{#if value.length > 5}
 										<span class="text-xs text-gray-500 dark:text-gray-400">
-											+{value.length - 5} more
+											{m.shared_metadata_more_count({ count: value.length - 5 })}
 										</span>
 									{/if}
 								</div>
 							{:else if isExpandableString(value)}
 								{@render metadataDisclosure(
 									key,
-									'View text',
+									m.shared_metadata_view_text(),
 									getStringPreview(value),
 									formatDisplayValue(value)
 								)}
@@ -372,7 +373,7 @@
 								icon="material-symbols:database-outline"
 								class="w-12 h-12 text-gray-300 dark:text-gray-600"
 							/>
-							<p class="text-sm text-gray-500 dark:text-gray-400">No metadata fields yet</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400">{m.shared_metadata_none_yet()}</p>
 						</div>
 					</div>
 				{:else}
@@ -382,12 +383,12 @@
 								<th
 									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
 								>
-									Key
+									{m.shared_metadata_key_header()}
 								</th>
 								<th
 									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
 								>
-									Value
+									{m.shared_metadata_value_header()}
 								</th>
 								{#if canEdit()}
 									<th class="px-4 py-2 w-10"></th>
@@ -422,7 +423,7 @@
 														onclick={() => updateMetadata(key)}
 														disabled={saving}
 														class="p-1.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 transition-colors"
-														title="Save"
+														title={m.common_save()}
 													>
 														<IconifyIcon icon="material-symbols:check-rounded" class="w-5 h-5" />
 													</button>
@@ -430,7 +431,7 @@
 														onclick={cancelEditing}
 														disabled={saving}
 														class="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-														title="Cancel"
+														title={m.common_cancel()}
 													>
 														<IconifyIcon icon="material-symbols:close-rounded" class="w-5 h-5" />
 													</button>
@@ -438,7 +439,7 @@
 														onclick={() => promptDeleteMetadata(key)}
 														disabled={saving}
 														class="p-1.5 text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-														title="Delete"
+														title={m.common_delete()}
 													>
 														<IconifyIcon
 															icon="material-symbols:delete-outline-rounded"
@@ -450,7 +451,7 @@
 										{:else if isObject(value)}
 											{@render metadataDisclosure(
 												key,
-												'View object',
+												m.shared_metadata_view_object(),
 												getObjectPreview(value),
 												formatJson(value),
 												true
@@ -458,7 +459,7 @@
 										{:else if isArray(value) && containsObject(value)}
 											{@render metadataDisclosure(
 												key,
-												'View array',
+												m.shared_metadata_view_array(),
 												getArrayPreview(value),
 												formatJson(value),
 												true
@@ -476,7 +477,7 @@
 										{:else if isExpandableString(value)}
 											{@render metadataDisclosure(
 												key,
-												'View text',
+												m.shared_metadata_view_text(),
 												getStringPreview(value),
 												formatDisplayValue(value),
 												true
@@ -493,7 +494,7 @@
 												<button
 													onclick={() => startEditing(key, value)}
 													class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
-													title="Edit"
+													title={m.common_edit()}
 												>
 													<IconifyIcon
 														icon="material-symbols:edit-outline-rounded"
@@ -514,7 +515,7 @@
 										<input
 											type="text"
 											bind:value={newKey}
-											placeholder="Key"
+											placeholder={m.shared_metadata_key_placeholder()}
 											class="w-full px-2 py-1.5 text-sm border-0 bg-transparent text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 rounded"
 											autofocus
 										/>
@@ -524,7 +525,7 @@
 											type="text"
 											bind:value={newValue}
 											onkeydown={(e) => e.key === 'Enter' && addMetadata()}
-											placeholder="Value"
+											placeholder={m.shared_metadata_value_placeholder()}
 											class="w-full px-2 py-1.5 text-sm border-0 bg-transparent text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 rounded"
 										/>
 									</td>
@@ -534,7 +535,7 @@
 												onclick={addMetadata}
 												disabled={saving || !newKey.trim()}
 												class="p-1.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 transition-colors"
-												title="Save"
+												title={m.common_save()}
 											>
 												<IconifyIcon icon="material-symbols:check-rounded" class="w-5 h-5" />
 											</button>
@@ -542,7 +543,7 @@
 												onclick={cancelAdding}
 												disabled={saving}
 												class="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-												title="Cancel"
+												title={m.common_cancel()}
 											>
 												<IconifyIcon icon="material-symbols:close-rounded" class="w-5 h-5" />
 											</button>
@@ -562,7 +563,7 @@
 						class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded transition-colors"
 					>
 						<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" />
-						<span>Add field</span>
+						<span>{m.shared_metadata_add_field()}</span>
 					</button>
 				</div>
 			{/if}
@@ -572,9 +573,9 @@
 
 <DeleteModal
 	show={showDeleteModal}
-	title="Delete Metadata Field"
-	message="Are you sure you want to delete the metadata field '{keyToDelete}'? This action cannot be undone."
-	confirmText="Delete"
+	title={m.shared_metadata_delete_title()}
+	message={m.shared_metadata_delete_confirm({ key: keyToDelete ?? '' })}
+	confirmText={m.common_delete()}
 	requireConfirmation={false}
 	onConfirm={confirmDeleteMetadata}
 	onCancel={cancelDeleteMetadata}

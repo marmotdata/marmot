@@ -11,6 +11,7 @@
 	import Stepper from './Stepper.svelte';
 	import Step from './Step.svelte';
 	import type { Snippet } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		title: string;
@@ -45,8 +46,8 @@
 		onSave,
 		canProceed = true,
 		saving = false,
-		saveLabel = 'Save',
-		savingLabel = 'Saving...',
+		saveLabel = m.common_save(),
+		savingLabel = m.ui_stepper_saving(),
 		saveIcon = 'material-symbols:check',
 		error = null,
 		hideFooter = false,
@@ -77,7 +78,7 @@
 						type="button"
 						onclick={handleBack}
 						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-						aria-label="Back"
+						aria-label={m.common_back()}
 					>
 						<IconifyIcon
 							icon="material-symbols:arrow-back"
@@ -88,7 +89,11 @@
 				<div>
 					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
 					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						Step {currentStep} of {steps.length} — {steps[currentStep - 1]?.title}
+						{m.ui_stepper_step_of({
+							current: currentStep,
+							total: steps.length,
+							title: steps[currentStep - 1]?.title ?? ''
+						})}
 					</p>
 				</div>
 			</div>
@@ -138,10 +143,10 @@
 							variant="clear"
 							click={handlePrevious}
 							icon="material-symbols:arrow-back"
-							text="Previous"
+							text={m.common_previous()}
 						/>
 					{:else if onCancel}
-						<Button variant="clear" click={onCancel} text="Cancel" />
+						<Button variant="clear" click={onCancel} text={m.common_cancel()} />
 					{/if}
 				</div>
 				<div class="flex items-center gap-3">
@@ -149,7 +154,7 @@
 						<Button
 							variant="filled"
 							click={onNext}
-							text="Next"
+							text={m.common_next()}
 							icon="material-symbols:arrow-forward"
 							disabled={!canProceed}
 						/>

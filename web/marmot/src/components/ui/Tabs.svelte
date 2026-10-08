@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export type Tab = {
 		id: string;
@@ -24,7 +25,7 @@
 </script>
 
 <div class="border-b border-gray-200 dark:border-gray-700">
-	<div class="flex gap-6" role="tablist" aria-label="Tabs">
+	<div class="flex gap-6" role="tablist" aria-label={m.ui_tabs_aria()}>
 		{#each tabs as tab (tab.id)}
 			<button
 				onclick={() => handleTabClick(tab.id)}

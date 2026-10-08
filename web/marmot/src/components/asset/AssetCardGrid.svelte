@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Icon from '$components/ui/Icon.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	export let title: string;
 	export let isLoading: boolean;
@@ -33,8 +34,7 @@
 				>
 					<Icon name={key} size="lg" />
 					<p class="text-gray-600 dark:text-gray-400 mt-2">
-						{getCount(value)}
-						{getCount(value) === 1 ? 'asset' : 'assets'}
+						{m.asset_card_grid_asset_count({ count: getCount(value) })}
 					</p>
 				</a>
 			{/each}

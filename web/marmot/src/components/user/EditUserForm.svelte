@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 	import { listRoles } from '$lib/roles/api';
 	import { Lock, Mail, User as UserIcon, Shield } from 'lucide-svelte';
 	import type { User, Role } from '$lib/users/types';
@@ -21,7 +22,7 @@
 		try {
 			availableRoles = await listRoles();
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to load roles');
+			toasts.error(err instanceof Error ? err.message : m.users_error_load_roles());
 		}
 	});
 
@@ -59,10 +60,10 @@
 			}
 
 			const updatedUser = await response.json();
-			toasts.success('User updated successfully');
+			toasts.success(m.users_update_success());
 			onUpdate(updatedUser);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'An error occurred');
+			toasts.error(err instanceof Error ? err.message : m.users_error_generic());
 		} finally {
 			loading = false;
 		}
@@ -86,14 +87,14 @@
 >
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
 		<UserIcon class="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
-		Edit User
+		{m.users_edit_heading()}
 	</h3>
 
 	<div class="space-y-6">
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			<div>
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Username
+					{m.users_username_label()}
 				</label>
 				<div
 					class="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-500 dark:text-gray-400"
@@ -104,7 +105,7 @@
 
 			<div>
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Name
+					{m.common_name()}
 				</label>
 				<input
 					type="text"
@@ -117,7 +118,7 @@
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
 			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
 				<Lock class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-				Authentication Method
+				{m.users_auth_method_heading()}
 			</h4>
 			<div class="flex flex-wrap gap-2">
 				{#if user.identities && user.identities.length > 0}
@@ -139,7 +140,7 @@
 						class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-50 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
 					>
 						<Mail class="h-4 w-4 mr-2" />
-						Password Authentication
+						{m.users_auth_password_method()}
 					</div>
 				{/if}
 			</div>
@@ -148,10 +149,10 @@
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
 			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
 				<Shield class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-				Roles
+				{m.users_header_roles()}
 			</h4>
 			{#if availableRoles.length === 0}
-				<p class="text-sm text-gray-500 dark:text-gray-400 italic">Loading roles...</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400 italic">{m.users_loading_roles()}</p>
 			{:else}
 				<div class="space-y-2">
 					{#each availableRoles as role (role.id)}
@@ -180,14 +181,14 @@
 
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
 			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-				Account Status
+				{m.users_account_status_label()}
 			</label>
 			<select
 				bind:value={editedUser.active}
 				class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
 			>
-				<option value={true}>Active</option>
-				<option value={false}>Inactive</option>
+				<option value={true}>{m.common_active()}</option>
+				<option value={false}>{m.common_inactive()}</option>
 			</select>
 		</div>
 	</div>
@@ -198,7 +199,7 @@
 			class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 text-sm font-medium"
 			on:click={onCancel}
 		>
-			Cancel
+			{m.common_cancel()}
 		</button>
 		<button
 			type="button"
@@ -209,7 +210,7 @@
 			{#if loading}
 				<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
 			{/if}
-			Save Changes
+			{m.users_save_changes()}
 		</button>
 	</div>
 </div>

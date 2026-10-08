@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toasts, type Toast } from '$lib/stores/toast';
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const variantStyles: Record<
 		Toast['variant'],
@@ -56,7 +57,7 @@
 				<button
 					onclick={() => toasts.remove(toast.id)}
 					class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-					aria-label="Dismiss notification"
+					aria-label={m.ui_toast_dismiss_aria()}
 				>
 					<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
 				</button>

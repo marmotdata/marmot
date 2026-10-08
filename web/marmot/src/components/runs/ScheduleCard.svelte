@@ -2,6 +2,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
 	import { getStatusColor, getStatusIcon } from '$lib/utils/status';
 	import { formatRelativeTime } from '$lib/utils/format';
 
@@ -34,8 +35,27 @@
 	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
 	let isOperatorManaged = $derived(!!schedule.managed_by);
 
+	function statusLabel(status: string): string {
+		switch (status) {
+			case 'pending':
+				return m.runs_status_pending();
+			case 'claimed':
+				return m.runs_status_claimed();
+			case 'running':
+				return m.runs_status_running();
+			case 'succeeded':
+				return m.runs_status_succeeded();
+			case 'failed':
+				return m.runs_status_failed();
+			case 'cancelled':
+				return m.runs_status_cancelled();
+			default:
+				return status.charAt(0).toUpperCase() + status.slice(1);
+		}
+	}
+
 	function formatSchedule(cronExpression: string): string {
-		if (!cronExpression) return 'Manual';
+		if (!cronExpression) return m.runs_schedule_manual();
 		return cronExpression;
 	}
 
@@ -53,11 +73,11 @@
 		const hours = Math.floor(minutes / 60);
 		const days = Math.floor(hours / 24);
 
-		if (diff < 0) return 'Overdue';
-		if (minutes < 1) return 'Now';
-		if (minutes < 60) return `In ${minutes}m`;
-		if (hours < 24) return `In ${hours}h`;
-		return `In ${days}d`;
+		if (diff < 0) return m.runs_next_run_overdue();
+		if (minutes < 1) return m.runs_next_run_now();
+		if (minutes < 60) return m.runs_next_run_in_minutes({ count: minutes });
+		if (hours < 24) return m.runs_next_run_in_hours({ count: hours });
+		return m.runs_next_run_in_days({ count: days });
 	}
 </script>
 
@@ -71,7 +91,7 @@
 				class="p-2 rounded-lg transition-colors {isRunning
 					? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
 					: 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}"
-				title={isRunning ? 'Running...' : 'Trigger now'}
+				title={isRunning ? m.runs_running_progress() : m.runs_trigger_now_title()}
 				onclick={() => !isRunning && onTrigger?.(schedule)}
 				disabled={isRunning}
 			>
@@ -92,10 +112,10 @@
 					{#if isOperatorManaged}
 						<span
 							class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-							title="Managed by Kubernetes operator"
+							title={m.runs_operator_managed_title()}
 						>
 							<IconifyIcon icon="mdi:kubernetes" class="h-3 w-3" />
-							Operator
+							{m.runs_operator_badge()}
 						</span>
 					{/if}
 				</div>
@@ -111,7 +131,7 @@
 				class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
 			>
 				<IconifyIcon icon="material-symbols:sync" class="h-3.5 w-3.5 mr-1.5 animate-spin" />
-				Running
+				{m.runs_status_running()}
 			</span>
 		{:else if schedule.last_run_status}
 			<span
@@ -120,7 +140,7 @@
 				)}"
 			>
 				<IconifyIcon icon={getStatusIcon(schedule.last_run_status)} class="h-3.5 w-3.5 mr-1.5" />
-				{schedule.last_run_status.charAt(0).toUpperCase() + schedule.last_run_status.slice(1)}
+				{statusLabel(schedule.last_run_status)}
 			</span>
 		{:else}
 			<span class="text-sm text-gray-500 dark:text-gray-400">—</span>
@@ -155,7 +175,7 @@
 			{#if onEdit && canManageIngestion && !isOperatorManaged}
 				<button
 					class="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-					title="Edit"
+					title={m.common_edit()}
 					onclick={() => onEdit?.(schedule)}
 				>
 					<IconifyIcon icon="material-symbols:edit" class="h-5 w-5" />
@@ -164,7 +184,7 @@
 			{#if onDelete && canManageIngestion && !isOperatorManaged}
 				<button
 					class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-					title="Delete"
+					title={m.common_delete()}
 					onclick={() => onDelete?.(schedule)}
 				>
 					<IconifyIcon icon="material-symbols:delete" class="h-5 w-5" />

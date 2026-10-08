@@ -7,6 +7,8 @@
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import yaml from 'js-yaml';
 
 	interface IngestionRunSummary {
@@ -83,13 +85,13 @@
 			});
 
 			const response = await fetchApi(`/ingestion/runs/${run.id}/entities?${params}`);
-			if (!response.ok) throw new Error('Failed to fetch entities');
+			if (!response.ok) throw new Error(m.runs_entities_fetch_error());
 
 			const data: RunEntitiesResponse = await response.json();
 			entities = data.entities || [];
 			entitiesTotal = data.total || 0;
 		} catch (err) {
-			entitiesError = err instanceof Error ? err.message : 'Failed to load entities';
+			entitiesError = err instanceof Error ? err.message : m.runs_entities_load_error();
 		} finally {
 			entitiesLoading = false;
 		}
@@ -175,7 +177,26 @@
 	}
 
 	function formatDateTime(dateString: string): string {
-		return new Date(dateString).toLocaleString();
+		return new Date(dateString).toLocaleString(getLocale());
+	}
+
+	function statusLabel(status: string): string {
+		switch (status) {
+			case 'pending':
+				return m.runs_status_pending();
+			case 'claimed':
+				return m.runs_status_claimed();
+			case 'running':
+				return m.runs_status_running();
+			case 'succeeded':
+				return m.runs_status_succeeded();
+			case 'failed':
+				return m.runs_status_failed();
+			case 'cancelled':
+				return m.runs_status_cancelled();
+			default:
+				return status.charAt(0).toUpperCase() + status.slice(1);
+		}
 	}
 
 	function handleBackdropClick(event: MouseEvent) {
@@ -224,11 +245,11 @@
 									class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
 								>
 									<IconifyIcon icon="material-symbols:delete-forever" class="w-3 h-3 mr-1" />
-									Teardown
+									{m.runs_teardown_badge()}
 								</span>
 							{/if}
 						</div>
-						<p class="text-sm text-gray-600 dark:text-gray-400">Ingestion Run Details</p>
+						<p class="text-sm text-gray-600 dark:text-gray-400">{m.runs_modal_subtitle()}</p>
 					</div>
 				</div>
 				<button
@@ -252,7 +273,7 @@
 							<dt
 								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
 							>
-								Status
+								{m.common_status()}
 							</dt>
 							<dd>
 								<span
@@ -264,7 +285,7 @@
 										icon={getStatusIcon(run.status)}
 										class="w-3.5 h-3.5 mr-1.5 {run.status === 'running' ? 'animate-spin' : ''}"
 									/>
-									{run.status.charAt(0).toUpperCase() + run.status.slice(1)}
+									{statusLabel(run.status)}
 								</span>
 							</dd>
 						</div>
@@ -274,7 +295,7 @@
 							<dt
 								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
 							>
-								Duration
+								{m.runs_duration_label()}
 							</dt>
 							<dd class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 								{formatDuration(run.started_at, run.finished_at)}
@@ -286,7 +307,7 @@
 							<dt
 								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
 							>
-								Source
+								{m.runs_source_heading()}
 							</dt>
 							<dd class="flex items-center gap-2">
 								<Icon name={run.source_name} size="xs" showLabel={false} />
@@ -301,7 +322,7 @@
 							<dt
 								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
 							>
-								Created By
+								{m.runs_created_by_label()}
 							</dt>
 							<dd class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
 								{run.created_by}
@@ -321,7 +342,7 @@
 								<div
 									class="text-xs font-medium text-green-700 dark:text-green-300 uppercase tracking-wide mt-1"
 								>
-									Created
+									{m.runs_summary_created()}
 								</div>
 							</div>
 							<div
@@ -333,7 +354,7 @@
 								<div
 									class="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide mt-1"
 								>
-									Updated
+									{m.runs_summary_updated()}
 								</div>
 							</div>
 							<div
@@ -345,7 +366,7 @@
 								<div
 									class="text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wide mt-1"
 								>
-									Deleted
+									{m.runs_summary_deleted()}
 								</div>
 							</div>
 							<div
@@ -357,7 +378,7 @@
 								<div
 									class="text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wide mt-1"
 								>
-									Errors
+									{m.runs_summary_errors()}
 								</div>
 							</div>
 						</div>
@@ -372,7 +393,7 @@
 								class="text-sm font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center"
 							>
 								<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-2" />
-								Error Details
+								{m.runs_error_details_heading()}
 							</h3>
 							<pre
 								class="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono bg-red-100 dark:bg-red-900/40 p-3 rounded-lg overflow-x-auto">{run.error_message}</pre>
@@ -394,11 +415,11 @@
 										icon="material-symbols:settings"
 										class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400"
 									/>
-									Configuration
+									{m.runs_config_heading()}
 								</h3>
 								<Button
 									variant="clear"
-									text={showRawConfig ? 'Structured View' : 'Raw YAML'}
+									text={showRawConfig ? m.runs_config_structured_view() : m.runs_config_raw_yaml()}
 									icon={showRawConfig ? 'material-symbols:view-list' : 'material-symbols:code'}
 									click={() => (showRawConfig = !showRawConfig)}
 								/>
@@ -428,7 +449,7 @@
 							class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
 						>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-								Entities
+								{m.runs_entities_heading()}
 								<span class="ml-1.5 text-xs font-normal text-gray-500 dark:text-gray-400">
 									({entitiesTotal})
 								</span>
@@ -440,7 +461,7 @@
 										click={() => goToEntitiesPage(entitiesPage - 1)}
 										disabled={entitiesPage === 1}
 										icon="mdi:chevron-left"
-										text="Previous"
+										text={m.common_previous()}
 									/>
 									<span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
 										{entitiesPage} / {Math.max(1, Math.ceil(entitiesTotal / entitiesLimit))}
@@ -449,7 +470,7 @@
 										variant="clear"
 										click={() => goToEntitiesPage(entitiesPage + 1)}
 										disabled={entitiesPage >= Math.ceil(entitiesTotal / entitiesLimit)}
-										text="Next"
+										text={m.common_next()}
 										icon="mdi:chevron-right"
 									/>
 								</div>
@@ -471,7 +492,7 @@
 								</div>
 							{:else if entities.length === 0}
 								<div class="text-center py-8">
-									<p class="text-gray-500 dark:text-gray-400">No entities found</p>
+									<p class="text-gray-500 dark:text-gray-400">{m.runs_no_entities_found()}</p>
 								</div>
 							{:else}
 								<div class="overflow-x-auto">
@@ -480,19 +501,19 @@
 											<tr>
 												<th
 													class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-													>Entity</th
+													>{m.runs_table_entity()}</th
 												>
 												<th
 													class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-													>Type</th
+													>{m.common_type()}</th
 												>
 												<th
 													class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-													>Status</th
+													>{m.common_status()}</th
 												>
 												<th
 													class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-													>Time</th
+													>{m.runs_table_time()}</th
 												>
 											</tr>
 										</thead>
@@ -520,7 +541,7 @@
 																	href={resolve(getAssetUrl(entity))}
 																	target="_blank"
 																	class="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-																	title="View asset"
+																	title={m.runs_view_asset_title()}
 																>
 																	<IconifyIcon
 																		icon="material-symbols:open-in-new"

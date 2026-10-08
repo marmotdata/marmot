@@ -1,6 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import { fetchApi } from '$lib/api';
 import { browser } from '$app/environment';
+import { m } from '$lib/paraglide/messages';
 
 export interface Notification {
 	id: string;
@@ -93,7 +94,7 @@ function createNotificationsStore() {
 				update((state) => ({
 					...state,
 					loading: false,
-					error: 'Failed to load notifications'
+					error: m.ui_notifications_load_error()
 				}));
 			}
 		} catch (err) {

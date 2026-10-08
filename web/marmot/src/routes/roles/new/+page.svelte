@@ -8,6 +8,7 @@
 	import { createRole, listPermissions } from '$lib/roles/api';
 	import type { Permission } from '$lib/roles/types';
 	import { toasts } from '$lib/stores/toast';
+	import { m } from '$lib/paraglide/messages';
 
 	let name = $state('');
 	let description = $state('');
@@ -18,9 +19,9 @@
 	let currentStep = $state(1);
 
 	const stepperSteps = [
-		{ title: 'Basic Info', icon: 'material-symbols:info-outline' },
-		{ title: 'Permissions', icon: 'material-symbols:security' },
-		{ title: 'Review', icon: 'material-symbols:summarize' }
+		{ title: m.roles_step_basic_info(), icon: 'material-symbols:info-outline' },
+		{ title: m.roles_step_permissions(), icon: 'material-symbols:security' },
+		{ title: m.roles_step_review(), icon: 'material-symbols:summarize' }
 	];
 
 	let canProceedToStep2 = $derived(name.trim().length >= 2);
@@ -35,7 +36,7 @@
 		try {
 			allPermissions = await listPermissions();
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : 'Failed to load permissions');
+			toasts.error(err instanceof Error ? err.message : m.roles_error_load_permissions());
 		}
 	});
 
@@ -56,7 +57,7 @@
 		error = null;
 		if (currentStep === 1) {
 			if (!canProceedToStep2) {
-				error = 'Name must be at least 2 characters';
+				error = m.roles_error_name_min();
 				return;
 			}
 			currentStep = 2;
@@ -70,7 +71,7 @@
 
 	async function handleSave() {
 		if (!name.trim()) {
-			error = 'Name is required';
+			error = m.roles_error_name_required();
 			return;
 		}
 		try {
@@ -81,10 +82,10 @@
 				description: description.trim() || undefined,
 				permission_ids: selectedPermIds
 			});
-			toasts.success(`Role "${name.trim()}" created`);
+			toasts.success(m.roles_create_success({ name: name.trim() }));
 			goto(resolve('/admin?tab=roles'));
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to create role';
+			error = err instanceof Error ? err.message : m.roles_error_create();
 		} finally {
 			saving = false;
 		}
@@ -96,7 +97,7 @@
 </script>
 
 <StepperPage
-	title="Create Role"
+	title={m.roles_create_title()}
 	steps={stepperSteps}
 	{currentStep}
 	onBack={goBack}
@@ -106,8 +107,8 @@
 	onSave={handleSave}
 	canProceed={currentStep === 1 ? canProceedToStep2 : true}
 	{saving}
-	saveLabel="Create Role"
-	savingLabel="Creating..."
+	saveLabel={m.roles_create_title()}
+	savingLabel={m.roles_creating_label()}
 	{error}
 	{canNavigateToStep}
 	onStepClick={(step) => (currentStep = step)}
@@ -121,7 +122,7 @@
 					icon="material-symbols:info-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Basic Information
+				{m.roles_basic_information_heading()}
 			</h3>
 
 			<div class="space-y-6">
@@ -130,13 +131,13 @@
 						for="role-name"
 						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 					>
-						Name <span class="text-red-500">*</span>
+						{m.common_name()} <span class="text-red-500">*</span>
 					</label>
 					<input
 						id="role-name"
 						type="text"
 						bind:value={name}
-						placeholder="e.g., data-reader, pipeline-operator"
+						placeholder={m.roles_name_placeholder()}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && canProceedToStep2) {
 								e.preventDefault();
@@ -147,7 +148,7 @@
 						required
 					/>
 					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						A short, memorable identifier for this role.
+						{m.roles_name_hint()}
 					</p>
 				</div>
 
@@ -156,17 +157,17 @@
 						for="role-description"
 						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 					>
-						Description
+						{m.common_description()}
 					</label>
 					<textarea
 						id="role-description"
 						bind:value={description}
 						rows="3"
-						placeholder="Who should get this role and what should they be able to do?"
+						placeholder={m.roles_description_placeholder()}
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
 					></textarea>
 					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						Explains the intent — future admins will thank you.
+						{m.roles_description_hint()}
 					</p>
 				</div>
 			</div>
@@ -183,17 +184,16 @@
 						icon="material-symbols:security"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Permissions
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+					{m.roles_step_permissions()}
+					<span class="ml-2 text-xs font-normal text-gray-500">{m.roles_optional_badge()}</span>
 				</h3>
 				<span class="text-xs text-gray-500 dark:text-gray-400">
-					{selectedPermIds.length} selected
+					{m.roles_selected_count({ count: selectedPermIds.length })}
 				</span>
 			</div>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Pick what this role can do. You can toggle whole resource groups by clicking the section
-				header.
+				{m.roles_permissions_intro()}
 			</p>
 
 			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
@@ -209,25 +209,27 @@
 					icon="material-symbols:summarize"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Review
+				{m.roles_step_review()}
 			</h3>
 
 			<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Name</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.common_name()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100 font-mono">{name}</dd>
 				</div>
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Description</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.common_description()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100">{description || '—'}</dd>
 				</div>
 			</dl>
 
 			<div>
 				<div class="flex items-center justify-between mb-3">
-					<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">Permissions</h4>
+					<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
+						{m.roles_step_permissions()}
+					</h4>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{selectedPermIds.length} of {allPermissions.length} granted
+						{m.roles_granted_count({ count: selectedPermIds.length, total: allPermissions.length })}
 					</span>
 				</div>
 
@@ -240,9 +242,9 @@
 							class="h-5 w-5 mt-0.5 flex-shrink-0"
 						/>
 						<div>
-							<p class="font-medium">No permissions selected.</p>
+							<p class="font-medium">{m.roles_no_permissions_selected()}</p>
 							<p class="text-xs mt-1">
-								This role won't grant any access. You can add permissions later by editing the role.
+								{m.roles_no_permissions_hint()}
 							</p>
 						</div>
 					</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as d3 from 'd3';
+	import { m } from '$lib/paraglide/messages';
 
 	export interface Bucket {
 		hour: Date;
@@ -111,9 +112,13 @@
 			.attr('fill', '#607b60')
 			.attr('rx', 2);
 
-		groups
-			.append('title')
-			.text((b) => `${d3.timeFormat('%H:%M')(b.hour)} — ${b.success} success, ${b.error} error`);
+		groups.append('title').text((b) =>
+			m.runs_activity_tooltip({
+				time: d3.timeFormat('%H:%M')(b.hour),
+				success: b.success,
+				error: b.error
+			})
+		);
 	}
 </script>
 

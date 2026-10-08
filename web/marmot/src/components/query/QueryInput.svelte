@@ -2,21 +2,22 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '$lib/assets/types';
+	import { m } from '$lib/paraglide/messages';
 
 	const operators = [
-		{ value: ':', display: 'equals (:)', type: 'operator' },
-		{ value: '>', display: 'greater than (>)', type: 'operator' },
-		{ value: '<', display: 'less than (<)', type: 'operator' },
-		{ value: '>=', display: 'greater equals (>=)', type: 'operator' },
-		{ value: '<=', display: 'less equals (<=)', type: 'operator' },
-		{ value: 'contains', display: 'contains', type: 'operator' },
-		{ value: 'range', display: 'range', type: 'operator' }
+		{ value: ':', display: m.query_op_suggest_equals(), type: 'operator' },
+		{ value: '>', display: m.query_op_suggest_greater(), type: 'operator' },
+		{ value: '<', display: m.query_op_suggest_less(), type: 'operator' },
+		{ value: '>=', display: m.query_op_suggest_greater_equal(), type: 'operator' },
+		{ value: '<=', display: m.query_op_suggest_less_equal(), type: 'operator' },
+		{ value: 'contains', display: m.query_op_suggest_contains(), type: 'operator' },
+		{ value: 'range', display: m.query_op_suggest_range(), type: 'operator' }
 	];
 
 	let metadataFieldsCache: MetadataFieldSuggestion[] | null = null;
 
 	export let value = '';
-	export let placeholder = 'Search assets...';
+	export let placeholder = m.query_input_placeholder();
 	export let isLoading = false;
 	export let onQueryChange: (query: string) => void = () => {};
 	export let onSubmit: () => void = () => {};

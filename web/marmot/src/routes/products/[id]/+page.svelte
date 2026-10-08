@@ -27,6 +27,8 @@
 	import { createKeyboardNavigationState } from '$lib/keyboard';
 	import Tags from '$components/shared/Tags.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatList } from '$lib/utils';
 
 	let productId = $derived($page.params.id);
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
@@ -105,10 +107,10 @@
 	);
 
 	const tabs: Tab[] = [
-		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
-		{ id: 'assets', label: 'Assets', icon: 'material-symbols:database' },
-		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
-		{ id: 'rules', label: 'Rules', icon: 'material-symbols:filter-list' }
+		{ id: 'documentation', label: m.common_documentation(), icon: 'material-symbols:description' },
+		{ id: 'assets', label: m.products_assets(), icon: 'material-symbols:database' },
+		{ id: 'metadata', label: m.products_tab_metadata(), icon: 'material-symbols:data-object' },
+		{ id: 'rules', label: m.products_tab_rules(), icon: 'material-symbols:filter-list' }
 	];
 
 	// All tabs are always visible
@@ -134,7 +136,7 @@
 			const response = await fetchApi(`/products/${productId}`);
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to load data product');
+				throw new Error(errorData.error || m.products_error_load());
 			}
 
 			const data = await response.json();
@@ -147,7 +149,7 @@
 			// Load resolved assets
 			await loadResolvedAssets();
 		} catch (err) {
-			loadError = err instanceof Error ? err.message : 'Failed to load data product';
+			loadError = err instanceof Error ? err.message : m.products_error_load();
 		} finally {
 			if (showLoading) {
 				isLoading = false;
@@ -312,11 +314,11 @@
 
 	async function saveRule() {
 		if (!ruleForm.name.trim()) {
-			ruleError = 'Rule name is required';
+			ruleError = m.products_rule_name_required();
 			return;
 		}
 		if (!ruleForm.query_expression?.trim()) {
-			ruleError = 'Query expression is required';
+			ruleError = m.products_rule_query_required();
 			return;
 		}
 
@@ -347,7 +349,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to save rule');
+				throw new Error(errorData.error || m.products_error_save_rule());
 			}
 
 			// Reload product to get updated rules and resolved assets (without full page spinner)
@@ -357,7 +359,7 @@
 			rulePreviewResults = [];
 			rulePreviewTotal = 0;
 		} catch (err) {
-			ruleError = err instanceof Error ? err.message : 'Failed to save rule';
+			ruleError = err instanceof Error ? err.message : m.products_error_save_rule();
 		} finally {
 			savingRule = false;
 		}
@@ -607,11 +609,13 @@
 				class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-6 text-center max-w-md"
 			>
 				<IconifyIcon icon="material-symbols:error" class="h-12 w-12 text-red-400 mx-auto mb-3" />
-				<h3 class="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Failed to Load</h3>
+				<h3 class="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
+					{m.products_load_failed_title()}
+				</h3>
 				<p class="text-sm text-red-600 dark:text-red-300 mb-4">{loadError}</p>
 				<Button
 					click={() => goto(resolve('/products'))}
-					text="Back to Data Products"
+					text={m.products_back_to_products()}
 					variant="clear"
 				/>
 			</div>
@@ -632,7 +636,7 @@
 								d="M10 19l-7-7m0 0l7-7m-7 7h18"
 							/>
 						</svg>
-						Back
+						{m.common_back()}
 					</button>
 				</div>
 
@@ -655,8 +659,12 @@
 								{product.name}
 							</h1>
 							<span class="text-sm text-gray-400 dark:text-gray-500">
-								{product.asset_count || 0} assets{#if product.rules && product.rules.length > 0}, {product
-										.rules.length} rule{product.rules.length === 1 ? '' : 's'}{/if}
+								{product.rules && product.rules.length > 0
+									? formatList([
+											m.products_asset_count({ count: product.asset_count || 0 }),
+											m.products_rule_count({ count: product.rules.length })
+										])
+									: m.products_asset_count({ count: product.asset_count || 0 })}
 							</span>
 						</div>
 
@@ -665,7 +673,7 @@
 							<div class="space-y-2 max-w-2xl">
 								<textarea
 									bind:value={editedDescription}
-									placeholder="Add a description..."
+									placeholder={m.products_add_description_placeholder()}
 									rows="2"
 									class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
 								></textarea>
@@ -677,7 +685,7 @@
 												disabled={savingDescription}
 												class="px-2 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
 											>
-												Delete
+												{m.common_delete()}
 											</button>
 										{/if}
 									</div>
@@ -687,7 +695,7 @@
 											disabled={savingDescription}
 											class="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
 										>
-											Cancel
+											{m.common_cancel()}
 										</button>
 										<button
 											onclick={() => saveDescription()}
@@ -699,7 +707,7 @@
 													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
 												></div>
 											{/if}
-											Save
+											{m.common_save()}
 										</button>
 									</div>
 								</div>
@@ -709,14 +717,15 @@
 								{#if product.description}
 									<p class="text-sm text-gray-500 dark:text-gray-400">{product.description}</p>
 								{:else if canManage}
-									<span class="text-sm text-gray-400 dark:text-gray-500 italic">No description</span
+									<span class="text-sm text-gray-400 dark:text-gray-500 italic"
+										>{m.products_no_description()}</span
 									>
 								{/if}
 								{#if canManage}
 									<button
 										onclick={startEditingDescription}
 										class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-										title="Edit description"
+										title={m.products_edit_description_title()}
 									>
 										<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
 									</button>
@@ -732,7 +741,8 @@
 										icon="material-symbols:label-outline"
 										class="w-3.5 h-3.5 text-gray-400"
 									/>
-									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Tags</span
+									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
+										>{m.common_tags()}</span
 									>
 								</div>
 								<Tags
@@ -749,7 +759,7 @@
 										class="w-3.5 h-3.5 text-gray-400"
 									/>
 									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-										>Owners</span
+										>{m.common_owners()}</span
 									>
 								</div>
 								<OwnerSelector
@@ -800,10 +810,10 @@
 												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium"
 											>
 												<IconifyIcon icon="material-symbols:person" class="w-3.5 h-3.5" />
-												Manual
+												{m.products_manual_badge()}
 											</span>
 											<span class="text-sm text-gray-600 dark:text-gray-400">
-												Search and add assets directly to this product
+												{m.products_manual_search_hint()}
 											</span>
 										</div>
 										<div class="relative">
@@ -816,7 +826,7 @@
 												value={assetSearchQuery}
 												oninput={(e) => handleAssetSearch(e.currentTarget.value)}
 												onkeydown={handleAssetSearchKeydown}
-												placeholder="Search for assets to add manually..."
+												placeholder={m.products_asset_search_placeholder()}
 												class="w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
 											/>
 											{#if isSearchingAssets}
@@ -870,14 +880,14 @@
 															class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded-lg disabled:opacity-50 transition-colors"
 														>
 															<IconifyIcon icon="material-symbols:add" class="w-3.5 h-3.5" />
-															{isAddingAsset ? 'Adding...' : 'Add'}
+															{isAddingAsset ? m.products_adding() : m.common_add()}
 														</button>
 													</div>
 												{/each}
 											</div>
 										{:else if assetSearchQuery && !isSearchingAssets}
 											<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-												No assets found matching "{assetSearchQuery}"
+												{m.products_no_assets_found({ query: assetSearchQuery })}
 											</p>
 										{/if}
 									</div>
@@ -913,7 +923,7 @@
 												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium"
 											>
 												<IconifyIcon icon="material-symbols:person" class="w-4 h-4" />
-												{resolvedAssets.manual_assets.length} manual
+												{m.products_manual_count({ count: resolvedAssets.manual_assets.length })}
 											</span>
 										{/if}
 										{#if resolvedAssets.dynamic_assets.length > 0}
@@ -921,7 +931,9 @@
 												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-sm font-medium"
 											>
 												<IconifyIcon icon="material-symbols:filter-list" class="w-4 h-4" />
-												{resolvedAssets.dynamic_assets.length} from rules
+												{m.products_from_rules_count({
+													count: resolvedAssets.dynamic_assets.length
+												})}
 											</span>
 										{/if}
 									</div>
@@ -967,7 +979,7 @@
 																? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
 																: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'}"
 														>
-															{isManual ? 'Manual' : 'Rule'}
+															{isManual ? m.products_manual_badge() : m.products_rule_badge()}
 														</span>
 														{#if canManage && isManual}
 															<button
@@ -977,7 +989,7 @@
 																}}
 																disabled={removingAssetId === assetId}
 																class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
-																title="Remove from product"
+																title={m.products_remove_from_product()}
 															>
 																{#if removingAssetId === assetId}
 																	<div
@@ -1011,10 +1023,14 @@
 											class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
 										>
 											<p class="text-sm text-gray-600 dark:text-gray-400">
-												Showing {(currentAssetPage - 1) * ASSETS_PER_PAGE + 1}-{Math.min(
-													currentAssetPage * ASSETS_PER_PAGE,
-													resolvedAssets.all_assets.length
-												)} of {resolvedAssets.all_assets.length} assets
+												{m.products_showing_assets({
+													start: (currentAssetPage - 1) * ASSETS_PER_PAGE + 1,
+													end: Math.min(
+														currentAssetPage * ASSETS_PER_PAGE,
+														resolvedAssets.all_assets.length
+													),
+													total: resolvedAssets.all_assets.length
+												})}
 											</p>
 											<div class="flex gap-2">
 												<button
@@ -1022,14 +1038,14 @@
 													disabled={currentAssetPage === 1 || isLoadingAssets}
 													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 												>
-													Previous
+													{m.common_previous()}
 												</button>
 												<button
 													onclick={() => handleAssetPageChange(currentAssetPage + 1)}
 													disabled={currentAssetPage >= totalAssetPages || isLoadingAssets}
 													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 												>
-													Next
+													{m.common_next()}
 												</button>
 											</div>
 										</div>
@@ -1040,13 +1056,12 @@
 											icon="material-symbols:database"
 											class="h-12 w-12 mx-auto mb-3 opacity-50"
 										/>
-										<p>No assets in this data product</p>
+										<p>{m.products_no_assets_title()}</p>
 										<p class="text-sm mt-1">
 											{#if canManage}
-												Search above to add assets manually, or create rules to include assets
-												dynamically
+												{m.products_no_assets_hint_manage()}
 											{:else}
-												Assets can be added manually or matched by rules
+												{m.products_no_assets_hint_readonly()}
 											{/if}
 										</p>
 									</div>
@@ -1065,7 +1080,7 @@
 											class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"
 										>
 											<IconifyIcon icon="material-symbols:filter-list" class="h-5 w-5" />
-											Dynamic Rules
+											{m.products_dynamic_rules()}
 											{#if product.rules}
 												<span class="text-sm font-normal text-gray-500">
 													({product.rules.length})
@@ -1076,7 +1091,7 @@
 											<Button
 												click={openAddRuleForm}
 												icon="material-symbols:add"
-												text="Add Rule"
+												text={m.products_add_rule()}
 												variant="filled"
 											/>
 										{/if}
@@ -1088,7 +1103,7 @@
 											class="mb-6 p-4 rounded-lg border border-earthy-terracotta-200 dark:border-earthy-terracotta-800 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20"
 										>
 											<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
-												{editingRule ? 'Edit Rule' : 'Add New Rule'}
+												{editingRule ? m.products_edit_rule() : m.products_add_new_rule()}
 											</h4>
 
 											{#if ruleError}
@@ -1104,12 +1119,12 @@
 													<label
 														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 													>
-														Rule Name *
+														{m.products_rule_name_label()}
 													</label>
 													<input
 														type="text"
 														bind:value={ruleForm.name}
-														placeholder="e.g., All staging tables"
+														placeholder={m.products_rule_name_placeholder()}
 														class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
 													/>
 												</div>
@@ -1118,12 +1133,12 @@
 													<label
 														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 													>
-														Description
+														{m.common_description()}
 													</label>
 													<input
 														type="text"
 														bind:value={ruleForm.description}
-														placeholder="Optional description"
+														placeholder={m.products_rule_description_placeholder()}
 														class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
 													/>
 												</div>
@@ -1132,14 +1147,16 @@
 													<label
 														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 													>
-														Query Expression *
+														{m.products_query_expression_label()}
 													</label>
 													<QueryBuilder
 														query={ruleForm.query_expression || ''}
 														onQueryChange={(q) => (ruleForm.query_expression = q)}
 														initiallyExpanded={true}
 														showRunButton={true}
-														runButtonText={isPreviewLoading ? 'Searching...' : 'Preview'}
+														runButtonText={isPreviewLoading
+															? m.products_searching()
+															: m.products_preview()}
 														runButtonIcon={isPreviewLoading
 															? 'mdi:loading'
 															: 'material-symbols:visibility'}
@@ -1176,12 +1193,14 @@
 															>
 																<IconifyIcon icon="material-symbols:check-circle" class="h-4 w-4" />
 																<span class="font-medium"
-																	>{rulePreviewTotal} asset{rulePreviewTotal !== 1 ? 's' : ''} matched</span
+																	>{m.products_asset_matched_count({
+																		count: rulePreviewTotal
+																	})}</span
 																>
 															</div>
 															{#if rulePreviewTotal > rulePreviewResults.length}
 																<span class="text-xs text-gray-500 dark:text-gray-400">
-																	Showing first {rulePreviewResults.length}
+																	{m.products_showing_first({ count: rulePreviewResults.length })}
 																</span>
 															{/if}
 														</div>
@@ -1238,7 +1257,7 @@
 															class="h-8 w-8 mx-auto mb-2 opacity-40"
 														/>
 														<p class="text-sm">
-															Click "Preview" to see which assets match this rule
+															{m.products_preview_hint()}
 														</p>
 													</div>
 												{/if}
@@ -1254,7 +1273,7 @@
 														for="rule-enabled"
 														class="text-sm text-gray-700 dark:text-gray-300"
 													>
-														Enable this rule
+														{m.products_enable_rule_label()}
 													</label>
 												</div>
 
@@ -1262,13 +1281,13 @@
 													<Button
 														click={saveRule}
 														icon={savingRule ? '' : 'material-symbols:save'}
-														text={savingRule ? 'Saving...' : 'Save Rule'}
+														text={savingRule ? m.products_saving() : m.products_save_rule()}
 														variant="filled"
 														disabled={savingRule}
 													/>
 													<Button
 														click={cancelRuleForm}
-														text="Cancel"
+														text={m.common_cancel()}
 														variant="clear"
 														disabled={savingRule}
 													/>
@@ -1306,7 +1325,7 @@
 																<span
 																	class="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
 																>
-																	{rule.matched_asset_count} matched
+																	{m.products_matched_count({ count: rule.matched_asset_count })}
 																</span>
 															{/if}
 															<button
@@ -1314,15 +1333,17 @@
 																class="text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors {rule.is_enabled
 																	? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
 																	: 'bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-																title={rule.is_enabled ? 'Click to disable' : 'Click to enable'}
+																title={rule.is_enabled
+																	? m.products_click_to_disable()
+																	: m.products_click_to_enable()}
 															>
-																{rule.is_enabled ? 'Active' : 'Disabled'}
+																{rule.is_enabled ? m.common_active() : m.common_disabled()}
 															</button>
 															{#if canManage}
 																<button
 																	onclick={() => openEditRuleForm(rule)}
 																	class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-																	title="Edit rule"
+																	title={m.products_edit_rule_tooltip()}
 																>
 																	<IconifyIcon icon="material-symbols:edit" class="h-4 w-4" />
 																</button>
@@ -1330,7 +1351,7 @@
 																	onclick={() => confirmDeleteRule(rule)}
 																	disabled={deletingRuleId === rule.id}
 																	class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-																	title="Delete rule"
+																	title={m.products_delete_rule_tooltip()}
 																>
 																	{#if deletingRuleId === rule.id}
 																		<div
@@ -1359,16 +1380,16 @@
 												icon="material-symbols:filter-list"
 												class="h-12 w-12 mx-auto mb-3 opacity-50"
 											/>
-											<p>No rules defined</p>
+											<p>{m.products_no_rules_title()}</p>
 											<p class="text-sm mt-1">
-												Rules automatically include assets matching specific criteria
+												{m.products_no_rules_hint()}
 											</p>
 											{#if canManage}
 												<div class="mt-4">
 													<Button
 														click={openAddRuleForm}
 														icon="material-symbols:add"
-														text="Add Your First Rule"
+														text={m.products_add_first_rule()}
 														variant="filled"
 													/>
 												</div>
@@ -1402,12 +1423,10 @@
 <!-- Delete Rule Confirmation Modal -->
 <ConfirmModal
 	bind:show={showDeleteRuleModal}
-	title="Delete Rule"
-	message={ruleToDelete
-		? `Are you sure you want to delete the rule "${ruleToDelete.name}"? This will remove any dynamically matched assets from this data product.`
-		: ''}
-	confirmText="Delete"
-	cancelText="Cancel"
+	title={m.products_delete_rule_title()}
+	message={ruleToDelete ? m.products_delete_rule_confirm({ name: ruleToDelete.name }) : ''}
+	confirmText={m.common_delete()}
+	cancelText={m.common_cancel()}
 	variant="danger"
 	onConfirm={deleteRule}
 	onCancel={() => {

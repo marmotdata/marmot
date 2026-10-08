@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { m } from '$lib/paraglide/messages';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
@@ -57,7 +58,7 @@ export function getErrorMessage(error: unknown): string {
 	if (typeof error === 'string') {
 		return error;
 	}
-	return 'An unexpected error occurred';
+	return m.toast_unexpected_error();
 }
 
 /**
@@ -84,7 +85,7 @@ export interface ApiErrorInfo {
 
 export async function parseApiError(response: Response): Promise<ApiErrorInfo> {
 	const info: ApiErrorInfo = {
-		message: `Request failed with status ${response.status}`,
+		message: m.toast_request_failed({ status: response.status }),
 		status: response.status
 	};
 	try {

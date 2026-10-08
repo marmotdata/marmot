@@ -27,15 +27,13 @@ if TYPE_CHECKING:
     from marmot.integrations.catalog import AgentRegistry
 
 try:
-    from langchain_core.callbacks import BaseCallbackHandler as _BaseCallbackHandler
+    from langchain_core.callbacks import AsyncCallbackHandler as _AsyncCallbackHandler
     from langchain_core.messages import BaseMessage
     from langchain_core.outputs import ChatGeneration
 
     _LANGCHAIN_AVAILABLE = True
 except ImportError:
-    _BaseCallbackHandler = object  # type: ignore[assignment,misc]
-    # `isinstance(x, ())` is always False, so the checks below degrade cleanly
-    # when langchain is absent — the handler cannot be constructed anyway.
+    _AsyncCallbackHandler = object  # type: ignore[assignment,misc]
     BaseMessage = ()  # type: ignore[assignment,misc]
     ChatGeneration = ()  # type: ignore[assignment,misc]
     _LANGCHAIN_AVAILABLE = False
@@ -54,8 +52,8 @@ _TOOL_METADATA_KEY = "marmot_asset_mrn"
 _TOOL_RECORD_LOOKUPS_KEY = "marmot_record_lookups"
 
 
-class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-type]
-    """LangChain callback handler that auto-registers the agent and captures
+class MarmotCallbackHandler(_AsyncCallbackHandler):  # type: ignore[misc,valid-type]
+    """LangChain async callback handler that auto-registers the agent and captures
     lineage to the data sources it reads.
 
     Usage::
@@ -72,7 +70,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             model="claude-opus-4-7",
             owner="data-eng",
         )
-        agent.invoke(
+        await agent.ainvoke(
             {"input": "..."},
             config=RunnableConfig(callbacks=[handler]),
         )
@@ -118,19 +116,14 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             system_prompt_hash=shared.sha256_hex(system_prompt)[:16] if system_prompt else None,
             extra_metadata=extra_metadata or {},
         )
-
         self._agent_mrn: str | None = None
         self._agent_id: str | None = None
-
-        # Per-run accumulators, keyed by the root chain run_id.
         self._root_of: dict[UUID, UUID] = {}
         self._upstreams: dict[UUID, set[str]] = {}
         self._run_started: dict[UUID, datetime] = {}
         self._tool_traces: dict[UUID, list[ToolCall]] = {}
-        self._tokens: dict[UUID, list[int]] = {}  # [in, out]
+        self._tokens: dict[UUID, list[int]] = {}
         self._run_error: dict[UUID, str] = {}
-
-        # In-flight tool calls, keyed by the tool's own run_id (not the root).
         self._tool_open: dict[UUID, dict[str, Any]] = {}
 
     @property
@@ -150,7 +143,34 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             return
         self._upstreams.setdefault(root, set()).add(mrn)
 
-    def on_chain_start(
+    async def _ensure_agent_registered(self) -> None:
+        if self._agent_mrn is not None:
+            return
+        try:
+            asset = await self._catalog.aregister_agent(self._spec)
+        except Exception as e:
+            _LOG.warning("failed to register Marmot agent asset: %s", e)
+            return
+        self._agent_id = _str_or_none(asset.id)
+        self._agent_mrn = _str_or_none(asset.mrn)
+        await self._emit_declared_invocations()
+
+    async def _emit_declared_invocations(self) -> None:
+        if not self._agent_mrn or not self._tools:
+            return
+        edges = [
+            LineageEdge(source=self._agent_mrn, target=mrn, type=AGENT_INVOKES)
+            for tool in self._tools
+            if (mrn := _tool_asset_mrn(tool))
+        ]
+        if not edges:
+            return
+        try:
+            await self._catalog.awrite_edges(edges)
+        except Exception as e:
+            _LOG.warning("failed to write %s edges: %s", AGENT_INVOKES, e)
+
+    async def on_chain_start(
         self,
         serialized: dict[str, Any] | None,
         inputs: dict[str, Any],
@@ -165,12 +185,12 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             self._run_started[run_id] = datetime.now(timezone.utc)
             self._tool_traces[run_id] = []
             self._tokens[run_id] = [0, 0]
-            self._ensure_agent_registered()
+            await self._ensure_agent_registered()
         else:
             root = self._root_of.get(parent_run_id, parent_run_id)
             self._root_of[run_id] = root
 
-    def on_tool_start(
+    async def on_tool_start(
         self,
         serialized: dict[str, Any] | None,
         input_str: str,
@@ -184,11 +204,9 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         if root is None:
             return
         self._root_of[run_id] = root
-
         mrn = (metadata or {}).get(_TOOL_METADATA_KEY)
         if isinstance(mrn, str) and mrn:
             self._upstreams.setdefault(root, set()).add(mrn)
-
         self._tool_open[run_id] = {
             "tool_name": (serialized or {}).get("name") or kwargs.get("name") or "tool",
             "target_mrn": mrn if isinstance(mrn, str) and mrn else None,
@@ -196,7 +214,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             "record_lookups": bool((metadata or {}).get(_TOOL_RECORD_LOOKUPS_KEY, False)),
         }
 
-    def on_tool_end(
+    async def on_tool_end(
         self,
         output: Any,
         *,
@@ -214,7 +232,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
                 self._upstreams.setdefault(root, set()).add(mrn)
         self._close_tool_call(run_id, root, status="success")
 
-    def on_tool_error(
+    async def on_tool_error(
         self,
         error: BaseException,
         *,
@@ -244,7 +262,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             )
         )
 
-    def on_llm_end(
+    async def on_llm_end(
         self,
         response: LLMResult,
         *,
@@ -262,7 +280,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         bucket[0] += tin
         bucket[1] += tout
 
-    def on_retriever_start(
+    async def on_retriever_start(
         self,
         serialized: dict[str, Any] | None,
         query: str,
@@ -280,7 +298,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         if isinstance(mrn, str) and mrn:
             self._upstreams.setdefault(root, set()).add(mrn)
 
-    def on_chain_end(
+    async def on_chain_end(
         self,
         outputs: dict[str, Any],
         *,
@@ -289,9 +307,9 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         **kwargs: Any,
     ) -> None:
         if parent_run_id is None:
-            self._flush(run_id)
+            await self._flush(run_id)
 
-    def on_chain_error(
+    async def on_chain_error(
         self,
         error: BaseException,
         *,
@@ -301,7 +319,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
     ) -> None:
         if parent_run_id is None:
             self._run_error[run_id] = f"{type(error).__name__}: {error}"
-            self._flush(run_id)
+            await self._flush(run_id)
 
     def _resolve_root(self, run_id: UUID, parent_run_id: UUID | None) -> UUID | None:
         if run_id in self._root_of:
@@ -310,20 +328,15 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             return self._root_of[parent_run_id]
         return None
 
-    def _flush(self, root_run_id: UUID) -> None:
-        # Pull and clear all per-run state in one place so a partial failure
-        # doesn't leak between runs.
+    async def _flush(self, root_run_id: UUID) -> None:
         started_at = self._run_started.pop(root_run_id, None)
         tool_calls = self._tool_traces.pop(root_run_id, [])
         tokens = self._tokens.pop(root_run_id, [0, 0])
         error = self._run_error.pop(root_run_id, "")
         upstreams = self._upstreams.pop(root_run_id, set())
-        # Clear any tool-open entries that belonged to this run (defensive — they
-        # should already be gone through on_tool_end/on_tool_error).
         self._tool_open = {
             k: v for k, v in self._tool_open.items() if self._root_of.get(k) != root_run_id
         }
-        # Garbage-collect run_id → root mappings for this run.
         self._root_of = {k: v for k, v in self._root_of.items() if v != root_run_id}
 
         if started_at is None or not self._agent_mrn:
@@ -331,17 +344,11 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
 
         ended_at = datetime.now(timezone.utc)
         status = "error" if error else "success"
-
-        # Observed MRNs that aren't already represented as a tool_call.target_mrn
-        # (e.g. catalog-traversal tools where the touched MRN comes out of the
-        # tool's *output* rather than declared in metadata). Drop the agent's
-        # own MRN — the agent encountering itself in a search result shouldn't
-        # produce a self-loop.
         explicit = {call.target_mrn for call in tool_calls if call.target_mrn}
         observed_extras = sorted((upstreams - explicit) - {self._agent_mrn}) if upstreams else []
 
         try:
-            self._catalog.record_run(
+            await self._catalog.arecord_run(
                 AgentRunRecord(
                     agent_mrn=self._agent_mrn,
                     run_id=str(root_run_id),
@@ -358,39 +365,6 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             )
         except Exception as e:
             _LOG.warning("failed to record Marmot agent run: %s", e)
-
-    def _ensure_agent_registered(self) -> None:
-        if self._agent_mrn is not None:
-            return
-        try:
-            asset = self._catalog.register_agent(self._spec)
-        except Exception as e:
-            _LOG.warning("failed to register Marmot agent asset: %s", e)
-            return
-
-        self._agent_id = _str_or_none(asset.id)
-        self._agent_mrn = _str_or_none(asset.mrn)
-        self._emit_declared_invocations()
-
-    def _emit_declared_invocations(self) -> None:
-        """Emit one ``AGENT_INVOKES`` edge per tool that declares an upstream
-        MRN at construction time. The server treats these as ``declared`` edges
-        and they are stable across runs — repeated emission is a safe no-op via
-        the existing ``(source, target, event_id)`` uniqueness.
-        """
-        if not self._agent_mrn or not self._tools:
-            return
-        edges = [
-            LineageEdge(source=self._agent_mrn, target=mrn, type=AGENT_INVOKES)
-            for tool in self._tools
-            if (mrn := _tool_asset_mrn(tool))
-        ]
-        if not edges:
-            return
-        try:
-            self._catalog.write_edges(edges)
-        except Exception as e:
-            _LOG.warning("failed to write %s edges: %s", AGENT_INVOKES, e)
 
 
 def marmot_tool(

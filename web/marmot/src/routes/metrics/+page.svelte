@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import TopMetricsTable from '$components/metrics/MetricsTable.svelte';
@@ -28,25 +29,25 @@
 
 	const timeRanges: TimeRange[] = [
 		{
-			label: 'Last 7 days',
+			label: m.metrics_range_7d(),
 			value: '7d',
 			start: () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 			end: () => new Date().toISOString()
 		},
 		{
-			label: 'Last 30 days',
+			label: m.metrics_range_30d(),
 			value: '30d',
 			start: () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
 			end: () => new Date().toISOString()
 		},
 		{
-			label: 'Last 90 days',
+			label: m.metrics_range_90d(),
 			value: '90d',
 			start: () => new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
 			end: () => new Date().toISOString()
 		},
 		{
-			label: 'Last 12 months',
+			label: m.metrics_range_12m(),
 			value: '12m',
 			start: () => new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
 			end: () => new Date().toISOString()
@@ -98,7 +99,7 @@
 			};
 		} catch (err) {
 			console.error('Error fetching asset metrics:', err);
-			metricsError = err instanceof Error ? err.message : 'Failed to load metrics';
+			metricsError = err instanceof Error ? err.message : m.metrics_load_error();
 		} finally {
 			metricsLoading = false;
 		}
@@ -198,9 +199,9 @@
 <div class="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 	<div class="flex justify-between items-center mb-8">
 		<div>
-			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Metrics</h1>
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.metrics_heading()}</h1>
 			<p class="text-gray-600 dark:text-gray-400 mt-1">
-				Analytics and insights for your data platform
+				{m.metrics_subheading()}
 			</p>
 		</div>
 
@@ -246,7 +247,7 @@
 	<!-- Asset Overview Cards -->
 	<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 		<MetricCard
-			title="Total Assets"
+			title={m.metrics_total_assets_title()}
 			value={assetMetrics.totalAssets}
 			icon="mdi:database"
 			loading={metricsLoading}
@@ -254,16 +255,18 @@
 		/>
 
 		<MetricCard
-			title="With Schemas"
+			title={m.metrics_with_schemas_title()}
 			value={assetMetrics.assetsWithSchemas}
 			icon="mdi:database-check"
 			loading={metricsLoading}
 			error={metricsError}
-			subtitle="{Math.round(assetMetrics.schemasPercentage)}% coverage"
+			subtitle={m.metrics_schemas_coverage_subtitle({
+				percent: Math.round(assetMetrics.schemasPercentage)
+			})}
 		/>
 
 		<MetricCard
-			title="Asset Types"
+			title={m.metrics_asset_types_title()}
 			value={Object.keys(assetMetrics.assetsByType).length}
 			icon="mdi:shape"
 			loading={metricsLoading}
@@ -271,7 +274,7 @@
 		/>
 
 		<MetricCard
-			title="Data Sources"
+			title={m.metrics_data_sources_title()}
 			value={Object.keys(assetMetrics.assetsByProvider).length}
 			icon="mdi:database-sync"
 			loading={metricsLoading}
@@ -285,7 +288,7 @@
 		<div class="lg:col-span-1">
 			<PieChart
 				data={typeChartData}
-				title="Asset Types"
+				title={m.metrics_asset_types_title()}
 				icon="mdi:shape-outline"
 				loading={metricsLoading}
 				error={metricsError}
@@ -301,12 +304,12 @@
 				{endDate}
 				timeRangeLabel={selectedTimeRange.label}
 				endpoint="/metrics/top-assets"
-				title="Most Viewed Assets"
+				title={m.metrics_most_viewed_assets_title()}
 				icon="mdi:eye"
 				emptyIcon="mdi:database-outline"
-				emptyMessage="No asset views found"
-				emptyDescription="Data will appear here once users start viewing assets"
-				countLabel="views"
+				emptyMessage={m.metrics_no_asset_views()}
+				emptyDescription={m.metrics_no_asset_views_hint()}
+				countLabel={m.metrics_count_views()}
 				limit={8}
 				transformData={transformAssetsData}
 				onItemClick={handleAssetClick}
@@ -318,7 +321,7 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 		<BarChart
 			data={providerChartData}
-			title="Top Data Providers"
+			title={m.metrics_top_data_providers_title()}
 			icon="mdi:database-sync-outline"
 			loading={metricsLoading}
 			error={metricsError}
@@ -330,7 +333,7 @@
 
 		<BarChart
 			data={ownerChartData}
-			title="Top Asset Owners"
+			title={m.metrics_top_asset_owners_title()}
 			icon="mdi:account-group-outline"
 			loading={metricsLoading}
 			error={metricsError}
@@ -347,12 +350,12 @@
 			{endDate}
 			timeRangeLabel={selectedTimeRange.label}
 			endpoint="/metrics/top-queries"
-			title="Top Search Queries"
+			title={m.metrics_top_search_queries_title()}
 			icon="mdi:magnify"
 			emptyIcon="mdi:database-search-outline"
-			emptyMessage="No search queries found"
-			emptyDescription="Data will appear here once users start searching"
-			countLabel="searches"
+			emptyMessage={m.metrics_no_search_queries()}
+			emptyDescription={m.metrics_no_search_queries_hint()}
+			countLabel={m.metrics_count_searches()}
 			limit={5}
 			transformData={transformQueriesData}
 		/>

@@ -20,6 +20,7 @@
 	import { gfm } from '@truto/turndown-plugin-gfm';
 	import Icon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import MentionList from '$components/editor/MentionList.svelte';
 
 	// Debounce helper
@@ -192,7 +193,7 @@
 
 	let {
 		value = $bindable(''),
-		placeholder = 'Start typing...',
+		placeholder = m.editor_placeholder(),
 		disabled = false,
 		pageId = null,
 		onImageUpload = undefined
@@ -487,7 +488,7 @@
 
 		// Validate file size (5MB max)
 		if (file.size > 5 * 1024 * 1024) {
-			uploadError = 'Image exceeds maximum size (5MB)';
+			uploadError = m.docs_editor_image_too_large();
 			setTimeout(() => (uploadError = ''), 3000);
 			return;
 		}
@@ -495,7 +496,7 @@
 		// Validate file type
 		const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 		if (!validTypes.includes(file.type)) {
-			uploadError = 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP';
+			uploadError = m.docs_editor_image_invalid_type();
 			setTimeout(() => (uploadError = ''), 3000);
 			return;
 		}
@@ -519,7 +520,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to upload image');
+				throw new Error(errorData.error || m.docs_editor_image_upload_error());
 			}
 
 			const imageMeta = await response.json();
@@ -531,7 +532,7 @@
 				onImageUpload(imageMeta.url);
 			}
 		} catch (err) {
-			uploadError = err instanceof Error ? err.message : 'Failed to upload image';
+			uploadError = err instanceof Error ? err.message : m.docs_editor_image_upload_error();
 			setTimeout(() => (uploadError = ''), 3000);
 		} finally {
 			isUploading = false;
@@ -602,7 +603,7 @@
 	}
 
 	function setLink() {
-		const url = window.prompt('Enter URL:');
+		const url = window.prompt(m.docs_editor_enter_url_prompt());
 		if (url) {
 			editor?.chain().focus().setLink({ href: url }).run();
 		}
@@ -774,7 +775,7 @@
 			class="p-1.5 rounded {isBoldActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Bold (Ctrl+B)"
+			title={m.docs_editor_bold_title()}
 		>
 			<Icon icon="material-symbols:format-bold" class="h-4 w-4" />
 		</button>
@@ -786,7 +787,7 @@
 			class="p-1.5 rounded {isItalicActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Italic (Ctrl+I)"
+			title={m.docs_editor_italic_title()}
 		>
 			<Icon icon="material-symbols:format-italic" class="h-4 w-4" />
 		</button>
@@ -798,7 +799,7 @@
 			class="p-1.5 rounded {isCodeActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Inline Code"
+			title={m.docs_editor_inline_code_title()}
 		>
 			<Icon icon="material-symbols:code" class="h-4 w-4" />
 		</button>
@@ -812,7 +813,7 @@
 			class="p-1.5 rounded {isHeading1Active
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 1"
+			title={m.docs_editor_heading_title({ level: 1 })}
 		>
 			H1
 		</button>
@@ -824,7 +825,7 @@
 			class="p-1.5 rounded {isHeading2Active
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 2"
+			title={m.docs_editor_heading_title({ level: 2 })}
 		>
 			H2
 		</button>
@@ -836,7 +837,7 @@
 			class="p-1.5 rounded {isHeading3Active
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
-			title="Heading 3"
+			title={m.docs_editor_heading_title({ level: 3 })}
 		>
 			H3
 		</button>
@@ -850,7 +851,7 @@
 			class="p-1.5 rounded {isAlignLeft
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Align Left"
+			title={m.docs_editor_align_left_title()}
 		>
 			<Icon icon="material-symbols:format-align-left" class="h-4 w-4" />
 		</button>
@@ -862,7 +863,7 @@
 			class="p-1.5 rounded {isAlignCenter
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Align Center"
+			title={m.docs_editor_align_center_title()}
 		>
 			<Icon icon="material-symbols:format-align-center" class="h-4 w-4" />
 		</button>
@@ -874,7 +875,7 @@
 			class="p-1.5 rounded {isAlignRight
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Align Right"
+			title={m.docs_editor_align_right_title()}
 		>
 			<Icon icon="material-symbols:format-align-right" class="h-4 w-4" />
 		</button>
@@ -888,7 +889,7 @@
 			class="p-1.5 rounded {isBulletListActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Bullet List"
+			title={m.docs_editor_bullet_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-bulleted" class="h-4 w-4" />
 		</button>
@@ -900,7 +901,7 @@
 			class="p-1.5 rounded {isOrderedListActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Numbered List"
+			title={m.docs_editor_numbered_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-numbered" class="h-4 w-4" />
 		</button>
@@ -914,7 +915,7 @@
 			class="p-1.5 rounded {isBlockquoteActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Quote"
+			title={m.docs_editor_quote_title()}
 		>
 			<Icon icon="material-symbols:format-quote" class="h-4 w-4" />
 		</button>
@@ -926,7 +927,7 @@
 			class="p-1.5 rounded {isCodeBlockActive
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Code Block"
+			title={m.docs_editor_code_block_title()}
 		>
 			<Icon icon="material-symbols:code-blocks" class="h-4 w-4" />
 		</button>
@@ -941,7 +942,7 @@
 					on:click={addColumnBefore}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Add column before"
+					title={m.docs_editor_add_column_before_title()}
 				>
 					<Icon icon="mdi:table-column-plus-before" class="h-4 w-4" />
 				</button>
@@ -950,7 +951,7 @@
 					on:click={addColumnAfter}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Add column after"
+					title={m.docs_editor_add_column_after_title()}
 				>
 					<Icon icon="mdi:table-column-plus-after" class="h-4 w-4" />
 				</button>
@@ -959,7 +960,7 @@
 					on:click={deleteColumn}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Delete column"
+					title={m.docs_editor_delete_column_title()}
 				>
 					<Icon icon="mdi:table-column-remove" class="h-4 w-4" />
 				</button>
@@ -968,7 +969,7 @@
 					on:click={addRowBefore}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Add row above"
+					title={m.docs_editor_add_row_above_title()}
 				>
 					<Icon icon="mdi:table-row-plus-before" class="h-4 w-4" />
 				</button>
@@ -977,7 +978,7 @@
 					on:click={addRowAfter}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Add row below"
+					title={m.docs_editor_add_row_below_title()}
 				>
 					<Icon icon="mdi:table-row-plus-after" class="h-4 w-4" />
 				</button>
@@ -986,7 +987,7 @@
 					on:click={deleteRow}
 					{disabled}
 					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Delete row"
+					title={m.docs_editor_delete_row_title()}
 				>
 					<Icon icon="mdi:table-row-remove" class="h-4 w-4" />
 				</button>
@@ -995,7 +996,7 @@
 					on:click={deleteTable}
 					{disabled}
 					class="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
-					title="Delete table"
+					title={m.docs_editor_delete_table_title()}
 				>
 					<Icon icon="mdi:table-remove" class="h-4 w-4" />
 				</button>
@@ -1006,7 +1007,7 @@
 				on:click={insertTable}
 				{disabled}
 				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Insert Table"
+				title={m.docs_editor_insert_table_title()}
 			>
 				<Icon icon="material-symbols:table" class="h-4 w-4" />
 			</button>
@@ -1020,7 +1021,7 @@
 				on:click={unsetLink}
 				{disabled}
 				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Remove Link"
+				title={m.docs_editor_remove_link_title()}
 			>
 				<Icon icon="material-symbols:link-off" class="h-4 w-4" />
 			</button>
@@ -1030,7 +1031,7 @@
 				on:click={setLink}
 				{disabled}
 				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				title="Add Link"
+				title={m.docs_editor_add_link_title()}
 			>
 				<Icon icon="material-symbols:link" class="h-4 w-4" />
 			</button>
@@ -1041,7 +1042,7 @@
 			on:click={openFileDialog}
 			disabled={disabled || isUploading}
 			class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-			title="Insert Image"
+			title={m.docs_editor_insert_image_title()}
 		>
 			{#if isUploading}
 				<Icon icon="mdi:loading" class="h-4 w-4 animate-spin" />

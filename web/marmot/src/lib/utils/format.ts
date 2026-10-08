@@ -1,9 +1,12 @@
+import { getLocale } from '$lib/paraglide/runtime';
+import { m } from '$lib/paraglide/messages';
+
 /**
- * Format a date string to a localized date format
+ * Format a date string as a date in the active UI locale
  */
 export function formatDate(dateString: string): string {
-	if (!dateString) return 'Unknown';
-	return new Date(dateString).toLocaleDateString('en-US', {
+	if (!dateString) return m.common_unknown();
+	return new Date(dateString).toLocaleDateString(getLocale(), {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric'
@@ -11,11 +14,11 @@ export function formatDate(dateString: string): string {
 }
 
 /**
- * Format a date string to a localized date and time format
+ * Format a date string as a date and time in the active UI locale
  */
 export function formatDateTime(dateString: string): string {
-	if (!dateString) return 'Unknown';
-	return new Date(dateString).toLocaleString('en-US', {
+	if (!dateString) return m.common_unknown();
+	return new Date(dateString).toLocaleString(getLocale(), {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric',
@@ -25,10 +28,10 @@ export function formatDateTime(dateString: string): string {
 }
 
 /**
- * Format a date string to a relative time (e.g., "2 hours ago")
+ * Format a date string as a relative time (e.g. "2 hours ago") in the active UI locale
  */
 export function formatRelativeTime(dateString: string): string {
-	if (!dateString) return 'Unknown';
+	if (!dateString) return m.common_unknown();
 
 	const date = new Date(dateString);
 	const now = new Date();
@@ -37,12 +40,31 @@ export function formatRelativeTime(dateString: string): string {
 	const diffHours = Math.floor(diffMs / 3600000);
 	const diffDays = Math.floor(diffMs / 86400000);
 
-	if (diffMins < 1) return 'Just now';
-	if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-	if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-	if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+	if (diffMins < 1) return m.common_just_now();
+	const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'always' });
+	if (diffMins < 60) return rtf.format(-diffMins, 'minute');
+	if (diffHours < 24) return rtf.format(-diffHours, 'hour');
+	if (diffDays < 7) return rtf.format(-diffDays, 'day');
 
 	return formatDate(dateString);
+}
+
+/**
+ * Format a number with grouping separators in the active UI locale
+ */
+export function formatNumber(value: number): string {
+	return value.toLocaleString(getLocale());
+}
+
+/**
+ * Join items into a natural-language list in the active UI locale (e.g. "a, b and c")
+ */
+export function formatList(items: string[]): string {
+	try {
+		return new Intl.ListFormat(getLocale(), { style: 'long', type: 'conjunction' }).format(items);
+	} catch {
+		return items.join(', ');
+	}
 }
 
 /**

@@ -2,6 +2,8 @@
 	import { fetchApi } from '$lib/api';
 	import { marked } from 'marked';
 	import { sanitizeHtml } from '$lib/sanitize';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDate } from '$lib/utils';
 
 	marked.setOptions({
 		gfm: true,
@@ -40,19 +42,21 @@
 >
 	{#if loading}
 		<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-			<p class="text-gray-500 dark:text-gray-400">Loading documentation...</p>
+			<p class="text-gray-500 dark:text-gray-400">{m.asset_docs_loading()}</p>
 		</div>
 	{:else if error}
 		<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-			<p class="text-red-500 dark:text-red-400">Failed to load documentation</p>
+			<p class="text-red-500 dark:text-red-400">{m.asset_docs_load_error()}</p>
 		</div>
 	{:else if documentation.length}
 		{#each documentation as doc (doc.source)}
 			<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
 				<div class="mb-4 flex justify-between items-center">
-					<span class="text-sm text-gray-500 dark:text-gray-400">Source: {doc.source}</span>
 					<span class="text-sm text-gray-500 dark:text-gray-400">
-						Updated: {new Date(doc.updated_at).toLocaleDateString()}
+						{m.asset_docs_source_label({ source: doc.source })}
+					</span>
+					<span class="text-sm text-gray-500 dark:text-gray-400">
+						{m.asset_docs_updated_date({ date: formatDate(doc.updated_at) })}
 					</span>
 				</div>
 				<div>
@@ -63,7 +67,7 @@
 		{/each}
 	{:else}
 		<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-			<p class="text-gray-500 dark:text-gray-400 italic">No documentation available</p>
+			<p class="text-gray-500 dark:text-gray-400 italic">{m.asset_docs_empty()}</p>
 		</div>
 	{/if}
 </div>

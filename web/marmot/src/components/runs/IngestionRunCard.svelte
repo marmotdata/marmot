@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 	import { getStatusColor, getStatusIcon } from '$lib/utils/status';
 	import { formatRelativeTime, formatDuration } from '$lib/utils/format';
 
@@ -32,6 +33,25 @@
 		const end = completedAt ? new Date(completedAt) : new Date();
 		return formatDuration(end.getTime() - start.getTime());
 	}
+
+	function statusLabel(status: string): string {
+		switch (status) {
+			case 'pending':
+				return m.runs_status_pending();
+			case 'claimed':
+				return m.runs_status_claimed();
+			case 'running':
+				return m.runs_status_running();
+			case 'succeeded':
+				return m.runs_status_succeeded();
+			case 'failed':
+				return m.runs_status_failed();
+			case 'cancelled':
+				return m.runs_status_cancelled();
+			default:
+				return status.charAt(0).toUpperCase() + status.slice(1);
+		}
+	}
 </script>
 
 <div
@@ -39,7 +59,7 @@
 	on:click={onClick}
 	role="button"
 	tabindex="0"
-	aria-label="View run details for {run.pipeline_name}"
+	aria-label={m.runs_view_details_aria({ name: run.pipeline_name })}
 	on:keydown={(e) => e.key === 'Enter' && onClick()}
 >
 	<div class="flex items-start justify-between mb-3">
@@ -64,12 +84,12 @@
 							class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
 						>
 							<IconifyIcon icon="material-symbols:delete-forever" class="w-3 h-3 mr-1" />
-							Teardown
+							{m.runs_teardown_badge()}
 						</span>
 					{/if}
 				</div>
 				<p class="text-sm text-gray-600 dark:text-gray-400 truncate">
-					Source: {run.source_name}
+					{m.runs_source_label({ source: run.source_name })}
 				</p>
 			</div>
 		</div>
@@ -84,7 +104,7 @@
 					icon={getStatusIcon(run.status)}
 					class="w-3 h-3 mr-1 {run.status === 'running' ? 'animate-spin' : ''}"
 				/>
-				{run.status.charAt(0).toUpperCase() + run.status.slice(1)}
+				{statusLabel(run.status)}
 			</span>
 		</div>
 	</div>
@@ -94,7 +114,7 @@
 			<dt
 				class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
 			>
-				Started
+				{m.runs_started_label()}
 			</dt>
 			<dd class="text-gray-900 dark:text-gray-100">
 				{formatRelativeTime(run.started_at)}
@@ -105,7 +125,7 @@
 			<dt
 				class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
 			>
-				Duration
+				{m.runs_duration_label()}
 			</dt>
 			<dd class="text-gray-900 dark:text-gray-100">
 				{getRunDuration(run.started_at, run.finished_at)}
@@ -116,7 +136,7 @@
 			<dt
 				class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
 			>
-				Created By
+				{m.runs_created_by_label()}
 			</dt>
 			<dd class="text-gray-900 dark:text-gray-100 truncate">
 				{run.created_by}
@@ -127,7 +147,7 @@
 			<dt
 				class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
 			>
-				Run ID
+				{m.runs_run_id_label()}
 			</dt>
 			<dd class="text-gray-900 dark:text-gray-100 font-mono text-xs truncate">
 				{run.run_id}
@@ -142,13 +162,13 @@
 					<div class="text-lg font-semibold text-green-600 dark:text-green-400">
 						{run.summary.assets_created}
 					</div>
-					<div class="text-xs text-gray-500 dark:text-gray-400">Created</div>
+					<div class="text-xs text-gray-500 dark:text-gray-400">{m.runs_summary_created()}</div>
 				</div>
 				<div class="text-center">
 					<div class="text-lg font-semibold text-blue-600 dark:text-blue-400">
 						{run.summary.assets_updated}
 					</div>
-					<div class="text-xs text-gray-500 dark:text-gray-400">Updated</div>
+					<div class="text-xs text-gray-500 dark:text-gray-400">{m.runs_summary_updated()}</div>
 				</div>
 				<div class="text-center">
 					<div
@@ -156,13 +176,13 @@
 					>
 						{run.summary.assets_deleted}
 					</div>
-					<div class="text-xs text-gray-500 dark:text-gray-400">Deleted</div>
+					<div class="text-xs text-gray-500 dark:text-gray-400">{m.runs_summary_deleted()}</div>
 				</div>
 				<div class="text-center">
 					<div class="text-lg font-semibold text-red-600 dark:text-red-400">
 						{run.summary.errors}
 					</div>
-					<div class="text-xs text-gray-500 dark:text-gray-400">Errors</div>
+					<div class="text-xs text-gray-500 dark:text-gray-400">{m.runs_summary_errors()}</div>
 				</div>
 			</div>
 		</div>

@@ -140,7 +140,7 @@ The Marmot MCP server exposes the catalog as tools, namespaced `mcp__marmot__*`:
 
 | Tool             | Purpose                                                       |
 | ---------------- | ------------------------------------------------------------- |
-| `discover_data`  | Find or browse assets — by name, type, provider, tags, or MRN |
+| `discover_data`  | Find or browse assets by name, type, provider, tags, or MRN |
 | `find_ownership` | Resolve who owns an asset, or what a team/user owns           |
 | `lookup_term`    | Search the business glossary for term definitions             |
 
@@ -185,11 +185,11 @@ Two ways to attribute lineage from tools you ship as your own MCP server alongsi
 
 ### MRNs in tool output
 
-If your tool returns objects with `mrn` fields — `{ mrn, ... }` or `{ results: [{ mrn, ... }] }` — or text bodies that mention `mrn://...` URIs, the tracker picks them up on every `PostToolUse` hook. This is the same mechanism that captures MRNs from Marmot's MCP responses.
+If your tool returns objects with `mrn` fields (`{ mrn, ... }` or `{ results: [{ mrn, ... }] }`), or text bodies that mention `mrn://...` URIs, the tracker picks them up on every `PostToolUse` hook. This is the same mechanism that captures MRNs from Marmot's MCP responses.
 
 ### Manual `record_source`
 
-Use this when the upstream is only known at runtime — for example a tool that picks one of several tables:
+Use this when the upstream is only known at runtime, for example a tool that picks one of several tables:
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },

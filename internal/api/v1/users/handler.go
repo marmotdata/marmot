@@ -71,6 +71,15 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/users/sign-out-all/{id}",
+			Method:  http.MethodPost,
+			Handler: h.signOutAllSessions,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "users", "manage"),
+			},
+		},
+		{
 			Path:    "/api/v1/users/login",
 			Method:  http.MethodPost,
 			Handler: h.login,

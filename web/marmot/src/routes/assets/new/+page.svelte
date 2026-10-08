@@ -8,6 +8,7 @@
 	import StepperPage from '$components/ui/StepperPage.svelte';
 	import TagsInput from '$components/shared/TagsInput.svelte';
 	import { providerIconMap, typeIconMap } from '$lib/iconloader';
+	import { m } from '$lib/paraglide/messages';
 
 	let name = $state('');
 	let assetType = $state('');
@@ -18,9 +19,9 @@
 	let error = $state<string | null>(null);
 	let currentStep = $state(1);
 	const stepperSteps = [
-		{ title: 'Basic Info', icon: 'material-symbols:info-outline' },
-		{ title: 'Type & Providers', icon: 'material-symbols:category' },
-		{ title: 'Details', icon: 'material-symbols:description' }
+		{ title: m.assetnew_step_basic_info(), icon: 'material-symbols:info-outline' },
+		{ title: m.assetnew_step_type_providers(), icon: 'material-symbols:category' },
+		{ title: m.assetnew_step_details(), icon: 'material-symbols:description' }
 	];
 
 	// Field-level validation
@@ -28,20 +29,19 @@
 	let touched = $state<Record<string, boolean>>({});
 
 	function validateName(value: string): string | null {
-		if (!value.trim()) return 'Asset name is required';
-		if (value.trim().length < 2) return 'Name must be at least 2 characters';
-		if (!/^[a-zA-Z0-9_\-.]+$/.test(value.trim()))
-			return 'Name can only contain letters, numbers, underscores, hyphens, and dots';
+		if (!value.trim()) return m.assetnew_error_name_required();
+		if (value.trim().length < 2) return m.assetnew_error_name_too_short();
+		if (!/^[a-zA-Z0-9_\-.]+$/.test(value.trim())) return m.assetnew_error_name_charset();
 		return null;
 	}
 
 	function validateType(value: string): string | null {
-		if (!value.trim()) return 'Asset type is required';
+		if (!value.trim()) return m.assetnew_error_type_required();
 		return null;
 	}
 
 	function validateProviders(value: string[]): string | null {
-		if (value.length === 0) return 'At least one provider is required';
+		if (value.length === 0) return m.assetnew_error_provider_required();
 		return null;
 	}
 
@@ -213,7 +213,7 @@
 
 	async function handleSave() {
 		if (!name.trim() || !assetType.trim() || providers.length === 0) {
-			error = 'Name, type, and at least one provider are required';
+			error = m.assetnew_error_missing_required();
 			return;
 		}
 
@@ -252,7 +252,7 @@
 			const assetName = encodeURIComponent(data.name);
 			goto(resolve(`/discover/${type}/${provider}/${assetName}`));
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to create asset';
+			error = err instanceof Error ? err.message : m.assetnew_error_create();
 		} finally {
 			saving = false;
 		}
@@ -292,7 +292,7 @@
 </script>
 
 <StepperPage
-	title="Create Asset"
+	title={m.assetnew_create_asset()}
 	steps={stepperSteps}
 	{currentStep}
 	onBack={() => goto(resolve('/discover'))}
@@ -306,8 +306,8 @@
 			? canProceedToStep3
 			: !!name.trim() && !!assetType.trim() && providers.length > 0}
 	{saving}
-	saveLabel="Create Asset"
-	savingLabel="Creating..."
+	saveLabel={m.assetnew_create_asset()}
+	savingLabel={m.assetnew_creating()}
 	{error}
 	{canNavigateToStep}
 	onStepClick={(step) => (currentStep = step)}
@@ -323,18 +323,17 @@
 				/>
 				<div class="flex-1">
 					<h4 class="text-sm font-semibold text-green-900 dark:text-green-100">
-						Automate asset discovery
+						{m.assetnew_banner_title()}
 					</h4>
 					<p class="text-sm text-green-700 dark:text-green-300 mt-1">
-						Instead of adding assets manually, set up a Pipeline to automatically discover and sync
-						assets from your data sources.
+						{m.assetnew_banner_description()}
 					</p>
 					<a
 						href={resolve('/runs?tab=pipelines')}
 						class="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
 					>
 						<IconifyIcon icon="material-symbols:rocket-launch" class="h-4 w-4" />
-						Set up a Pipeline
+						{m.assetnew_banner_cta()}
 					</a>
 				</div>
 			</div>
@@ -351,16 +350,16 @@
 					icon="material-symbols:info-outline"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Basic Information
+				{m.assetnew_basic_info_heading()}
 			</h3>
 			<div>
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Asset Name <span class="text-red-500">*</span>
+					{m.assetnew_name_label()} <span class="text-red-500">*</span>
 				</label>
 				<input
 					type="text"
 					bind:value={name}
-					placeholder="e.g., user_events, orders_table"
+					placeholder={m.assetnew_name_placeholder()}
 					oninput={() => {
 						if (touched['name']) validateField('name');
 						else clearFieldError('name');
@@ -386,7 +385,7 @@
 					</p>
 				{:else}
 					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						A unique identifier for this asset in your data catalog
+						{m.assetnew_name_hint()}
 					</p>
 				{/if}
 			</div>
@@ -403,14 +402,14 @@
 					icon="material-symbols:category"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Type & Providers
+				{m.assetnew_type_providers_heading()}
 			</h3>
 
 			<div class="space-y-6">
 				<!-- Type -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Type <span class="text-red-500">*</span>
+						{m.common_type()} <span class="text-red-500">*</span>
 					</label>
 					<div class="relative">
 						<input
@@ -428,7 +427,7 @@
 								validateField('type');
 							}}
 							onkeydown={handleTypeKeydown}
-							placeholder="e.g., Table, Queue, Topic, Database..."
+							placeholder={m.assetnew_type_placeholder()}
 							class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
 								'type'
 							] && touched['type']
@@ -466,7 +465,7 @@
 						</p>
 					{:else}
 						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-							The type of asset: Table, Queue, Topic, Database, View, DAG, etc.
+							{m.assetnew_type_hint()}
 						</p>
 					{/if}
 				</div>
@@ -474,7 +473,7 @@
 				<!-- Providers -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Providers <span class="text-red-500">*</span>
+						{m.assetnew_providers_label()} <span class="text-red-500">*</span>
 					</label>
 
 					{#if providers.length > 0}
@@ -509,7 +508,7 @@
 								validateField('providers');
 							}}
 							onkeydown={handleProviderKeydown}
-							placeholder="e.g., Kafka, Snowflake, PostgreSQL, Airflow..."
+							placeholder={m.assetnew_providers_placeholder()}
 							class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
 								'providers'
 							] &&
@@ -559,7 +558,7 @@
 						</p>
 					{:else}
 						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-							The data platform or service: Kafka, Snowflake, PostgreSQL, Airflow, dbt, S3, etc.
+							{m.assetnew_providers_hint()}
 						</p>
 					{/if}
 				</div>
@@ -577,35 +576,35 @@
 					icon="material-symbols:description"
 					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 				/>
-				Additional Details
-				<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+				{m.assetnew_details_heading()}
+				<span class="ml-2 text-xs font-normal text-gray-500">{m.assetnew_optional_suffix()}</span>
 			</h3>
 
 			<div class="space-y-6">
 				<!-- Description -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Description
+						{m.common_description()}
 					</label>
 					<textarea
 						bind:value={userDescription}
-						placeholder="Add a description to provide context about this asset..."
+						placeholder={m.assetnew_description_placeholder()}
 						rows="4"
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
 					></textarea>
 					<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-						Help others understand what this asset is used for
+						{m.assetnew_description_hint()}
 					</p>
 				</div>
 
 				<!-- Tags -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Tags
+						{m.common_tags()}
 					</label>
-					<TagsInput bind:tags placeholder="Type a tag and press Enter..." />
+					<TagsInput bind:tags placeholder={m.assetnew_tags_placeholder()} />
 					<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-						Add tags for better organization and discovery
+						{m.assetnew_tags_hint()}
 					</p>
 				</div>
 			</div>
@@ -617,19 +616,19 @@
 		>
 			<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
 				<IconifyIcon icon="material-symbols:summarize" class="h-5 w-5 mr-2 text-gray-500" />
-				Summary
+				{m.assetnew_summary_heading()}
 			</h4>
 			<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Name</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.common_name()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100 font-mono">{name}</dd>
 				</div>
 				<div>
-					<dt class="text-gray-500 dark:text-gray-400">Type</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.common_type()}</dt>
 					<dd class="font-medium text-gray-900 dark:text-gray-100">{assetType}</dd>
 				</div>
 				<div class="sm:col-span-2">
-					<dt class="text-gray-500 dark:text-gray-400">Providers</dt>
+					<dt class="text-gray-500 dark:text-gray-400">{m.assetnew_providers_label()}</dt>
 					<dd class="flex flex-wrap gap-1.5 mt-1">
 						{#each providers as provider (provider)}
 							<span
@@ -642,13 +641,13 @@
 				</div>
 				{#if userDescription}
 					<div class="sm:col-span-2">
-						<dt class="text-gray-500 dark:text-gray-400">Description</dt>
+						<dt class="text-gray-500 dark:text-gray-400">{m.common_description()}</dt>
 						<dd class="font-medium text-gray-900 dark:text-gray-100">{userDescription}</dd>
 					</div>
 				{/if}
 				{#if tags.length > 0}
 					<div class="sm:col-span-2">
-						<dt class="text-gray-500 dark:text-gray-400">Tags</dt>
+						<dt class="text-gray-500 dark:text-gray-400">{m.common_tags()}</dt>
 						<dd class="flex flex-wrap gap-1.5 mt-1">
 							{#each tags as tag (tag)}
 								<span

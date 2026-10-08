@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
 	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let username = $state('');
 	let password = $state('');
@@ -77,16 +78,16 @@
 				credentials: 'same-origin'
 			});
 			if (!response.ok) {
-				throw new Error('Failed to complete authorization');
+				throw new Error(m.login_error_complete_authorization());
 			}
 			const data = await response.json();
 			if (data.oauth_redirect) {
 				window.location.href = data.oauth_redirect;
 				return;
 			}
-			throw new Error('No redirect returned');
+			throw new Error(m.login_error_no_redirect());
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Authorization failed';
+			error = err instanceof Error ? err.message : m.login_error_authorization_failed();
 			loading = false;
 		}
 	}
@@ -142,7 +143,7 @@
 			});
 
 			if (!response.ok) {
-				throw new Error('Invalid credentials');
+				throw new Error(m.login_error_invalid_credentials());
 			}
 
 			const data = await response.json();
@@ -164,14 +165,15 @@
 				}
 				// Constrain redirect targets to in-app paths to keep open-redirect
 				// vectors closed and to satisfy resolve()'s internal-route contract.
+				// Full document navigation so the account language preference in the token applies from the first render
 				const redirectParam = $page.url.searchParams.get('redirect');
 				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				goto(resolve(redirectTo));
+				window.location.assign(resolve(redirectTo));
 			} else {
-				throw new Error('No token received from server');
+				throw new Error(m.login_error_no_token());
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Login failed';
+			error = err instanceof Error ? err.message : m.login_error_login_failed();
 		} finally {
 			loading = false;
 		}
@@ -181,12 +183,12 @@
 		error = '';
 
 		if (newPassword !== confirmPassword) {
-			error = 'Passwords do not match';
+			error = m.login_error_password_mismatch();
 			return;
 		}
 
 		if (newPassword.length < 8) {
-			error = 'Password must be at least 8 characters';
+			error = m.login_error_password_too_short();
 			return;
 		}
 
@@ -203,7 +205,7 @@
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to change password');
+				throw new Error(m.login_error_update_password());
 			}
 
 			const passwordData = await response.json();
@@ -212,14 +214,15 @@
 				auth.setToken(passwordData.access_token);
 				// Constrain redirect targets to in-app paths to keep open-redirect
 				// vectors closed and to satisfy resolve()'s internal-route contract.
+				// Full document navigation so the account language preference in the token applies from the first render
 				const redirectParam = $page.url.searchParams.get('redirect');
 				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				goto(resolve(redirectTo));
+				window.location.assign(resolve(redirectTo));
 			} else {
-				throw new Error('No token received from server');
+				throw new Error(m.login_error_no_token());
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Password change failed';
+			error = err instanceof Error ? err.message : m.login_error_password_change_failed();
 		} finally {
 			loading = false;
 		}
@@ -243,14 +246,14 @@
 			</div>
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 				{pendingConsent
-					? 'Authorize sign-in'
+					? m.login_authorize_heading()
 					: showPasswordChangeForm
-						? 'Change Password'
-						: 'Sign In'}
+						? m.login_change_password_heading()
+						: m.login_signin_heading()}
 			</h1>
 			{#if showPasswordChangeForm && !pendingConsent}
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					You must change your password before continuing
+					{m.login_change_password_hint()}
 				</p>
 			{/if}
 		</div>
@@ -271,8 +274,7 @@
 			{#if pendingConsent}
 				<div class="space-y-5">
 					<p class="text-sm text-gray-700 dark:text-gray-300">
-						An application is requesting permission to sign you in to Marmot. The authorization code
-						will be sent to:
+						{m.login_consent_intro()}
 					</p>
 					<div
 						class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 font-mono text-sm break-all text-gray-900 dark:text-gray-100"
@@ -280,20 +282,19 @@
 						{pendingConsent.redirect_uri}
 					</div>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						Only approve if you started this sign-in yourself (e.g. by running
-						<code>marmot login</code>). If you didn't, click Cancel.
+						{m.login_consent_warning({ command: 'marmot login' })}
 					</p>
 					<div class="space-y-3">
 						<Button
 							class="w-full justify-center"
 							{loading}
-							text="Authorize"
+							text={m.login_authorize_button()}
 							variant="filled"
 							click={handleConsentAllow}
 						/>
 						<Button
 							class="w-full justify-center"
-							text="Cancel"
+							text={m.common_cancel()}
 							variant="clear"
 							click={handleConsentCancel}
 						/>
@@ -313,7 +314,7 @@
 								for="username"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								Username
+								{m.login_username_label()}
 							</label>
 							<input
 								bind:this={usernameInput}
@@ -323,7 +324,7 @@
 								required
 								onkeydown={handleUsernameKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder="Enter your username"
+								placeholder={m.login_username_placeholder()}
 							/>
 						</div>
 						<div>
@@ -331,7 +332,7 @@
 								for="password"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								Password
+								{m.login_password_label()}
 							</label>
 							<input
 								bind:this={passwordInput}
@@ -341,7 +342,7 @@
 								required
 								onkeydown={handlePasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder="Enter your password"
+								placeholder={m.login_password_placeholder()}
 							/>
 						</div>
 					</div>
@@ -350,7 +351,7 @@
 						class="w-full justify-center"
 						type="submit"
 						{loading}
-						text="Sign in"
+						text={m.login_signin_button()}
 						variant="filled"
 					/>
 				</form>
@@ -370,7 +371,7 @@
 								for="new-password"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								New Password
+								{m.login_new_password_label()}
 							</label>
 							<input
 								bind:this={newPasswordInput}
@@ -380,7 +381,7 @@
 								required
 								onkeydown={handleNewPasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder="Enter new password (min 8 characters)"
+								placeholder={m.login_new_password_placeholder()}
 							/>
 						</div>
 						<div>
@@ -388,7 +389,7 @@
 								for="confirm-password"
 								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
 							>
-								Confirm Password
+								{m.login_confirm_password_label()}
 							</label>
 							<input
 								bind:this={confirmPasswordInput}
@@ -398,7 +399,7 @@
 								required
 								onkeydown={handleConfirmPasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder="Confirm new password"
+								placeholder={m.login_confirm_password_placeholder()}
 							/>
 						</div>
 					</div>
@@ -408,12 +409,12 @@
 							class="w-full justify-center"
 							type="submit"
 							{loading}
-							text="Change Password"
+							text={m.login_change_password_button()}
 							variant="filled"
 						/>
 						<Button
 							class="w-full justify-center"
-							text="Back to Login"
+							text={m.login_back_to_login_button()}
 							variant="clear"
 							icon="material-symbols:arrow-back"
 							click={goBackToLogin}

@@ -13,6 +13,6 @@ export const agents: Agent[] = [
   { label: "Gemini", icon: "simple-icons:googlegemini" },
   { label: "Cursor", icon: "simple-icons:cursor" },
   { label: "Copilot", icon: "simple-icons:githubcopilot" },
-  // simple-icons has no Grok mark; logos: carries it and is currentColor too.
+  // simple-icons has no Grok mark; .agent-mark-icon forces currentColor.
   { label: "Grok", icon: "logos:grok-icon" },
 ];
