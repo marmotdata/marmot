@@ -22,6 +22,11 @@ func TestMetadataColumnRef(t *testing.T) {
 			expected: `metadata->>'x'' OR TRUE OR metadata->>''x'`,
 		},
 		{
+			name:     "error-based extraction payload stays inside the literal",
+			field:    "x' IS NOT NULL OR 1=CAST((SELECT value FROM system_secrets WHERE key='jwt_signing_key') AS int) OR metadata->>'x",
+			expected: `metadata->>'x'' IS NOT NULL OR 1=CAST((SELECT value FROM system_secrets WHERE key=''jwt_signing_key'') AS int) OR metadata->>''x'`,
+		},
+		{
 			name:     "quote in nested key is escaped",
 			field:    "a'--.b",
 			expected: `metadata->'a''--'->>'b'`,

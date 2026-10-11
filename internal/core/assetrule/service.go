@@ -277,10 +277,12 @@ func (s *service) PreviewRule(ctx context.Context, input RulePreviewInput, limit
 
 	assetIDs, err := s.evaluator.ExecuteRule(ctx, &input)
 	if err != nil {
+		// Database error text can echo row values, so it is logged rather than returned to the caller.
+		log.Warn().Err(err).Msg("Failed to execute asset rule preview")
 		return &RulePreview{
 			AssetIDs:   []string{},
 			AssetCount: 0,
-			Errors:     []string{err.Error()},
+			Errors:     []string{"failed to evaluate rule"},
 		}, nil
 	}
 
