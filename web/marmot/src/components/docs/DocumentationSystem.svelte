@@ -13,6 +13,7 @@
 	import { common, createLowlight } from 'lowlight';
 	import { toHtml } from 'hast-util-to-html';
 	import { sanitizeHtml } from '$lib/sanitize';
+	import { deferDocImages, docImages } from '$lib/docs/images';
 
 	// Create lowlight instance for syntax highlighting
 	const lowlight = createLowlight(common);
@@ -290,7 +291,9 @@
 			}
 		};
 
-		return sanitizeHtml(marked(preprocessMentions(content), { renderer }) as string);
+		return deferDocImages(
+			sanitizeHtml(marked(preprocessMentions(content), { renderer }) as string)
+		);
 	}
 </script>
 
@@ -480,6 +483,7 @@
 				{:else if selectedPage.content}
 					<div
 						class="doc-content prose prose-sm prose-gray dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-earthy-terracotta-600 dark:prose-a:text-earthy-terracotta-400 prose-img:rounded-lg"
+						use:docImages
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 						{@html renderMarkdown(selectedPage.content)}

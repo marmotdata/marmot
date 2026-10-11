@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy, mount, unmount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { Editor, textblockTypeInputRule } from '@tiptap/core';
+	import { Editor, mergeAttributes, textblockTypeInputRule } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Link from '@tiptap/extension-link';
@@ -20,6 +20,7 @@
 	import { gfm } from '@truto/turndown-plugin-gfm';
 	import Icon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
+	import { docImagePath, loadDocImage } from '$lib/docs/images';
 	import { m } from '$lib/paraglide/messages';
 	import MentionList from '$components/editor/MentionList.svelte';
 
@@ -50,6 +51,54 @@
 					})
 				})
 			];
+		}
+	});
+
+	// Image node that loads doc images with the auth token for display while keeping the
+	// canonical URL in the document, since <img> tags cannot authenticate themselves
+	const DocImage = Image.extend({
+		addNodeView() {
+			const baseAttributes = this.options.HTMLAttributes;
+			return ({ node }) => {
+				const img = document.createElement('img');
+				let currentSrc: string | null = null;
+
+				const render = (attributes: Record<string, unknown>) => {
+					for (const [key, val] of Object.entries(mergeAttributes(baseAttributes, attributes))) {
+						if (key === 'src') continue;
+						if (val === null || val === undefined) img.removeAttribute(key);
+						else img.setAttribute(key, String(val));
+					}
+
+					const src = (attributes.src as string | null) ?? null;
+					if (src === currentSrc) return;
+					currentSrc = src;
+
+					const path = src ? docImagePath(src) : null;
+					if (!path) {
+						if (src) img.src = src;
+						else img.removeAttribute('src');
+						return;
+					}
+					img.removeAttribute('src');
+					loadDocImage(path)
+						.then((objectUrl) => {
+							if (currentSrc === src) img.src = objectUrl;
+						})
+						.catch(() => {});
+				};
+
+				render(node.attrs);
+
+				return {
+					dom: img,
+					update: (updated) => {
+						if (updated.type !== node.type) return false;
+						render(updated.attrs);
+						return true;
+					}
+				};
+			};
 		}
 	});
 
@@ -324,7 +373,7 @@
 				TextAlign.configure({
 					types: ['heading', 'paragraph']
 				}),
-				Image.configure({
+				DocImage.configure({
 					inline: false,
 					allowBase64: true,
 					HTMLAttributes: {

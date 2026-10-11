@@ -353,12 +353,12 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set cache headers (images are immutable once created)
+	// Images are immutable once created but require auth, so only the requesting browser may cache them
 	w.Header().Set("Content-Type", image.ContentType)
 	w.Header().Set("Content-Security-Policy", "default-src 'none'")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Length", strconv.Itoa(image.SizeBytes))
-	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
 	w.Header().Set("ETag", `"`+imageID+`"`)
 	w.Header().Set("Last-Modified", image.CreatedAt.UTC().Format(time.RFC1123))
 
