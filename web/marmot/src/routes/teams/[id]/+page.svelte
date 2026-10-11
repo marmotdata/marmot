@@ -305,7 +305,8 @@
 			webhookForm = {
 				name: fullWebhook.name,
 				provider: fullWebhook.provider,
-				webhook_url: fullWebhook.webhook_url,
+				// The API only returns a masked URL, so it is shown as a placeholder and only sent if replaced
+				webhook_url: '',
 				notification_types: [...fullWebhook.notification_types],
 				enabled: fullWebhook.enabled
 			};
@@ -330,7 +331,11 @@
 	}
 
 	async function saveWebhook() {
-		if (!webhookForm.name || !webhookForm.webhook_url || !webhookForm.notification_types.length)
+		if (
+			!webhookForm.name ||
+			(!editingWebhook && !webhookForm.webhook_url) ||
+			!webhookForm.notification_types.length
+		)
 			return;
 
 		webhookError = null;
@@ -343,7 +348,7 @@
 					method: 'PUT',
 					body: JSON.stringify({
 						name: webhookForm.name,
-						webhook_url: webhookForm.webhook_url,
+						webhook_url: webhookForm.webhook_url || undefined,
 						notification_types: webhookForm.notification_types,
 						enabled: webhookForm.enabled
 					})
@@ -920,7 +925,7 @@
 								id="webhook-url"
 								type="url"
 								bind:value={webhookForm.webhook_url}
-								placeholder="https://hooks.slack.com/services/..."
+								placeholder={editingWebhook?.webhook_url ?? 'https://hooks.slack.com/services/...'}
 								class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-mono focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							/>
 						</div>
@@ -1013,7 +1018,7 @@
 								onclick={saveWebhook}
 								disabled={savingWebhook ||
 									!webhookForm.name ||
-									!webhookForm.webhook_url ||
+									(!editingWebhook && !webhookForm.webhook_url) ||
 									!webhookForm.notification_types.length}
 								class="px-5 py-2.5 text-sm font-medium text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>

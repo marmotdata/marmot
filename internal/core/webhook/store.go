@@ -14,9 +14,9 @@ import (
 // Repository defines the webhook data access interface.
 type Repository interface {
 	Create(ctx context.Context, webhook *Webhook) error
-	Get(ctx context.Context, id string) (*Webhook, error)
-	Update(ctx context.Context, id string, input UpdateWebhookInput) (*Webhook, error)
-	Delete(ctx context.Context, id string) error
+	Get(ctx context.Context, teamID, id string) (*Webhook, error)
+	Update(ctx context.Context, teamID, id string, input UpdateWebhookInput) (*Webhook, error)
+	Delete(ctx context.Context, teamID, id string) error
 	ListByTeam(ctx context.Context, teamID string) ([]*Webhook, error)
 	GetEnabledForNotificationType(ctx context.Context, teamID string, notificationType string) ([]*Webhook, error)
 	UpdateLastTriggered(ctx context.Context, id string, lastError *string) error
@@ -50,14 +50,14 @@ func (r *PostgresRepository) Create(ctx context.Context, webhook *Webhook) error
 	return nil
 }
 
-func (r *PostgresRepository) Get(ctx context.Context, id string) (*Webhook, error) {
+func (r *PostgresRepository) Get(ctx context.Context, teamID, id string) (*Webhook, error) {
 	var webhook Webhook
 	var typesRaw []byte
 
 	err := r.db.QueryRow(ctx, `
 		SELECT id, team_id, name, provider, webhook_url, notification_types, enabled,
 		       last_triggered_at, last_error, created_at, updated_at
-		FROM team_webhooks WHERE id = $1`, id,
+		FROM team_webhooks WHERE id = $1 AND team_id = $2`, id, teamID,
 	).Scan(
 		&webhook.ID, &webhook.TeamID, &webhook.Name, &webhook.Provider,
 		&webhook.WebhookURL, &typesRaw, &webhook.Enabled,
@@ -79,7 +79,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Webhook, erro
 	return &webhook, nil
 }
 
-func (r *PostgresRepository) Update(ctx context.Context, id string, input UpdateWebhookInput) (*Webhook, error) {
+func (r *PostgresRepository) Update(ctx context.Context, teamID, id string, input UpdateWebhookInput) (*Webhook, error) {
 	// Build dynamic update query
 	setClauses := []string{}
 	args := []interface{}{}
@@ -111,7 +111,7 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, input Update
 	}
 
 	if len(setClauses) == 0 {
-		return r.Get(ctx, id)
+		return r.Get(ctx, teamID, id)
 	}
 
 	setClauses = append(setClauses, "updated_at = NOW()")
@@ -123,8 +123,8 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, input Update
 		}
 		query += clause
 	}
-	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
-	args = append(args, id)
+	query += fmt.Sprintf(" WHERE id = $%d AND team_id = $%d", argIdx, argIdx+1)
+	args = append(args, id, teamID)
 	query += " RETURNING id, team_id, name, provider, webhook_url, notification_types, enabled, last_triggered_at, last_error, created_at, updated_at"
 
 	var webhook Webhook
@@ -151,8 +151,8 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, input Update
 	return &webhook, nil
 }
 
-func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	tag, err := r.db.Exec(ctx, `DELETE FROM team_webhooks WHERE id = $1`, id)
+func (r *PostgresRepository) Delete(ctx context.Context, teamID, id string) error {
+	tag, err := r.db.Exec(ctx, `DELETE FROM team_webhooks WHERE id = $1 AND team_id = $2`, id, teamID)
 	if err != nil {
 		return fmt.Errorf("deleting webhook: %w", err)
 	}

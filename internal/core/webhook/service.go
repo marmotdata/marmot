@@ -117,9 +117,9 @@ func (s *Service) Create(ctx context.Context, input CreateWebhookInput) (*Webhoo
 	return webhook, nil
 }
 
-// Get retrieves a webhook by ID with the URL decrypted.
-func (s *Service) Get(ctx context.Context, id string) (*Webhook, error) {
-	webhook, err := s.repo.Get(ctx, id)
+// Get retrieves a team's webhook by ID with the URL decrypted.
+func (s *Service) Get(ctx context.Context, teamID, id string) (*Webhook, error) {
+	webhook, err := s.repo.Get(ctx, teamID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,9 +127,9 @@ func (s *Service) Get(ctx context.Context, id string) (*Webhook, error) {
 	return webhook, nil
 }
 
-// GetMasked retrieves a webhook by ID with the URL masked.
-func (s *Service) GetMasked(ctx context.Context, id string) (*Webhook, error) {
-	webhook, err := s.Get(ctx, id)
+// GetMasked retrieves a team's webhook by ID with the URL masked.
+func (s *Service) GetMasked(ctx context.Context, teamID, id string) (*Webhook, error) {
+	webhook, err := s.Get(ctx, teamID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +137,8 @@ func (s *Service) GetMasked(ctx context.Context, id string) (*Webhook, error) {
 	return webhook, nil
 }
 
-// Update updates a webhook.
-func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInput) (*Webhook, error) {
+// Update updates a team's webhook.
+func (s *Service) Update(ctx context.Context, teamID, id string, input UpdateWebhookInput) (*Webhook, error) {
 	if err := s.validateUpdate(input); err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInpu
 		input.WebhookURL = &encrypted
 	}
 
-	webhook, err := s.repo.Update(ctx, id, input)
+	webhook, err := s.repo.Update(ctx, teamID, id, input)
 	if err != nil {
 		return nil, err
 	}
@@ -162,9 +162,9 @@ func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInpu
 	return webhook, nil
 }
 
-// Delete deletes a webhook.
-func (s *Service) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+// Delete deletes a team's webhook.
+func (s *Service) Delete(ctx context.Context, teamID, id string) error {
+	return s.repo.Delete(ctx, teamID, id)
 }
 
 // ListByTeam lists all webhooks for a team with masked URLs.
@@ -182,9 +182,9 @@ func (s *Service) ListByTeam(ctx context.Context, teamID string) ([]*Webhook, er
 	return webhooks, nil
 }
 
-// TestWebhook sends a test notification to the webhook.
-func (s *Service) TestWebhook(ctx context.Context, id string) error {
-	webhook, err := s.Get(ctx, id)
+// TestWebhook sends a test notification to a team's webhook.
+func (s *Service) TestWebhook(ctx context.Context, teamID, id string) error {
+	webhook, err := s.Get(ctx, teamID, id)
 	if err != nil {
 		return err
 	}
