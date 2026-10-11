@@ -55,12 +55,10 @@ func NewDispatcher(repo Repository, registry *ProviderRegistry, config Dispatche
 	}
 
 	d := &Dispatcher{
-		repo:     repo,
-		registry: registry,
-		config:   config,
-		httpClient: &http.Client{
-			Timeout: config.Timeout,
-		},
+		repo:       repo,
+		registry:   registry,
+		config:     config,
+		httpClient: newDeliveryClient(config.Timeout),
 	}
 
 	d.workerPool = worker.NewPool(worker.PoolConfig{

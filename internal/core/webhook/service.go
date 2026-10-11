@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"strings"
 	"time"
@@ -307,22 +308,30 @@ func validateWebhookURL(rawURL string) *ValidationError {
 		return &ValidationError{Message: "webhook_url must have a host"}
 	}
 
-	// Block known private/local hostnames
-	if host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "0.0.0.0" {
+	if strings.EqualFold(host, "localhost") {
 		return &ValidationError{Message: "webhook_url cannot target localhost or loopback addresses"}
 	}
 
-	// Resolve and check for private IPs
-	ips, err := net.LookupHost(host)
-	if err == nil {
+	// Delivery re-checks every resolved address at dial time, this early check only gives the caller a clear error
+	var addrs []netip.Addr
+	if ip, err := netip.ParseAddr(host); err == nil {
+		addrs = append(addrs, ip)
+	} else {
+		ips, err := net.LookupHost(host)
+		if err != nil || len(ips) == 0 {
+			return &ValidationError{Message: "webhook_url host could not be resolved"}
+		}
 		for _, ipStr := range ips {
-			ip := net.ParseIP(ipStr)
-			if ip == nil {
-				continue
+			ip, err := netip.ParseAddr(ipStr)
+			if err != nil {
+				return &ValidationError{Message: "webhook_url host could not be resolved"}
 			}
-			if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-				return &ValidationError{Message: "webhook_url cannot target private or internal network addresses"}
-			}
+			addrs = append(addrs, ip)
+		}
+	}
+	for _, ip := range addrs {
+		if isDisallowedIP(ip) {
+			return &ValidationError{Message: "webhook_url cannot target private or internal network addresses"}
 		}
 	}
 
