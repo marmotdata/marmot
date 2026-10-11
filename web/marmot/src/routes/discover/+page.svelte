@@ -457,7 +457,7 @@
 								</h3>
 								{#each ['asset', 'data_product', 'glossary', 'team'] as kind (kind)}
 									<label class="flex items-center justify-between mb-2 cursor-pointer">
-										<div class="flex items-center gap-2">
+										<div class="flex items-center">
 											<Checkbox
 												checked={selectedKinds.includes(kind)}
 												onchange={(e) => {
@@ -469,7 +469,7 @@
 													handleFilterChange();
 												}}
 											/>
-											<span class="text-sm text-gray-700 dark:text-gray-300"
+											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
 												>{getKindLabel(kind)}</span
 											>
 										</div>
@@ -491,7 +491,7 @@
 										</h3>
 										{#each $facets.asset_types as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2 cursor-pointer">
-												<div class="flex items-center gap-2">
+												<div class="flex items-center">
 													<Checkbox
 														checked={selectedTypes.includes(value)}
 														onchange={(e) => {
@@ -504,7 +504,7 @@
 															handleFilterChange();
 														}}
 													/>
-													<span class="text-sm text-gray-700 dark:text-gray-300">{value}</span>
+													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 												</div>
 												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
 											</label>
@@ -521,7 +521,7 @@
 										</h3>
 										{#each $facets.providers as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2 cursor-pointer">
-												<div class="flex items-center gap-2">
+												<div class="flex items-center">
 													<Checkbox
 														checked={selectedProviders.includes(value)}
 														onchange={(e) => {
@@ -534,7 +534,7 @@
 															handleFilterChange();
 														}}
 													/>
-													<span class="text-sm text-gray-700 dark:text-gray-300">{value}</span>
+													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 												</div>
 												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
 											</label>
@@ -551,7 +551,7 @@
 										</h3>
 										{#each $facets.tags as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2 gap-2 cursor-pointer">
-												<div class="flex items-center gap-2 min-w-0">
+												<div class="flex items-center min-w-0">
 													<Checkbox
 														checked={selectedTags.includes(value)}
 														onchange={(e) => {
@@ -565,7 +565,7 @@
 														}}
 													/>
 													<span
-														class="text-sm text-gray-700 dark:text-gray-300 truncate"
+														class="ml-2 text-sm text-gray-700 dark:text-gray-300 truncate"
 														title={value}
 													>
 														{value.length > 100 ? value.slice(0, 100) + '...' : value}

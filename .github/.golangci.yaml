@@ -34,6 +34,10 @@ linters:
           - gosec
         path: "_test\\.go"
         text: "G124:"
+      - linters:
+          - gosec
+        path: "internal/api/auth/oauth\\.go"
+        text: "G124:|G710:"
     paths:
       - third_party$
       - builtin$

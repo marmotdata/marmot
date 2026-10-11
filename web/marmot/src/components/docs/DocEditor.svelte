@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy, mount, unmount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { Editor, mergeAttributes, textblockTypeInputRule } from '@tiptap/core';
+	import { Editor, textblockTypeInputRule } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Link from '@tiptap/extension-link';
@@ -20,6 +20,7 @@
 	import { gfm } from '@truto/turndown-plugin-gfm';
 	import Icon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
+	import { mergeAttributes } from '@tiptap/core';
 	import { docImagePath, loadDocImage } from '$lib/docs/images';
 	import { m } from '$lib/paraglide/messages';
 	import MentionList from '$components/editor/MentionList.svelte';
