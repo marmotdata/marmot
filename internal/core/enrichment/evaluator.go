@@ -287,18 +287,7 @@ func EvaluateMetadataRuleInMemory(rule EnrichmentRule, metadata map[string]inter
 
 // BuildMetadataColumnRef builds a PostgreSQL column reference for a metadata field path.
 func BuildMetadataColumnRef(field string) string {
-	fieldPath := strings.Split(field, ".")
-	if len(fieldPath) > 1 {
-		jsonPath := ""
-		for i, f := range fieldPath[:len(fieldPath)-1] {
-			if i > 0 {
-				jsonPath += "->"
-			}
-			jsonPath += fmt.Sprintf("'%s'", f)
-		}
-		return fmt.Sprintf("metadata->%s->>'%s'", jsonPath, fieldPath[len(fieldPath)-1])
-	}
-	return fmt.Sprintf("metadata->>'%s'", fieldPath[0])
+	return query.MetadataColumnRef(field)
 }
 
 // BuildPatternCondition builds a SQL condition for pattern matching.

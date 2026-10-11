@@ -427,15 +427,15 @@ const config: Config = {
             },
             {
               label: "Privacy Policy",
-              to: "/privacy",
+              href: "https://cloud.marmotdata.io/privacy",
             },
             {
               label: "Terms of Service",
-              to: "/terms",
+              href: "https://cloud.marmotdata.io/terms",
             },
             {
               label: "Data Processing Agreement",
-              to: "/dpa",
+              href: "https://cloud.marmotdata.io/dpa",
             },
           ],
         },

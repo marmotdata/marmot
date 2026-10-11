@@ -460,20 +460,7 @@ func (r *PostgresMembershipRepository) evaluateMetadataRuleForAsset(ctx context.
 	}
 
 	// Build the JSON path expression
-	fieldPath := strings.Split(*rule.MetadataField, ".")
-	var columnRef string
-	if len(fieldPath) > 1 {
-		jsonPath := ""
-		for i, field := range fieldPath[:len(fieldPath)-1] {
-			if i > 0 {
-				jsonPath += "->"
-			}
-			jsonPath += fmt.Sprintf("'%s'", field)
-		}
-		columnRef = fmt.Sprintf("metadata->%s->>'%s'", jsonPath, fieldPath[len(fieldPath)-1])
-	} else {
-		columnRef = fmt.Sprintf("metadata->>'%s'", fieldPath[0])
-	}
+	columnRef := query.MetadataColumnRef(*rule.MetadataField)
 
 	var condition string
 	var args []interface{}

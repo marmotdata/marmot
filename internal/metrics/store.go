@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/query"
 )
 
 type MetricType string
@@ -251,9 +252,9 @@ func (s *PostgresStore) GetMetrics(ctx context.Context, opts QueryOptions) ([]Me
 
 	if len(opts.Labels) > 0 {
 		for key, value := range opts.Labels {
-			query += fmt.Sprintf(" AND labels->>'%s' = $%d", key, argNum)
-			args = append(args, value)
-			argNum++
+			query += fmt.Sprintf(" AND labels->>$%d::text = $%d", argNum, argNum+1)
+			args = append(args, key, value)
+			argNum += 2
 		}
 	}
 
@@ -330,9 +331,9 @@ func (s *PostgresStore) GetAggregatedMetrics(ctx context.Context, opts QueryOpti
 
 	if len(opts.Labels) > 0 {
 		for key, value := range opts.Labels {
-			query += fmt.Sprintf(" AND labels->>'%s' = $%d", key, argNum)
-			args = append(args, value)
-			argNum++
+			query += fmt.Sprintf(" AND labels->>$%d::text = $%d", argNum, argNum+1)
+			args = append(args, key, value)
+			argNum += 2
 		}
 	}
 
@@ -641,7 +642,7 @@ func (s *PostgresStore) getAssetsByOwnerFromSource(ctx context.Context, ownerFie
 
 	coalesceFields := make([]string, len(ownerFields))
 	for i, field := range ownerFields {
-		coalesceFields[i] = fmt.Sprintf("metadata->>'%s'", field)
+		coalesceFields[i] = query.MetadataColumnRef(field)
 	}
 
 	query := fmt.Sprintf(`
