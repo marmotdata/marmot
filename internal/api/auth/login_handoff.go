@@ -30,7 +30,7 @@ func (h *Handler) issueLoginHandoff(w http.ResponseWriter, r *http.Request, user
 	}
 
 	isSecure := h.cookiesAreSecure(r)
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     loginHandoffCookieName,
 		Value:    ticket,
 		Path:     "/",
@@ -53,7 +53,7 @@ func (h *Handler) handleLoginExchange(w http.ResponseWriter, r *http.Request) {
 	userID, takeErr := h.oauthProvider.Store.TakeLoginHandoff(r.Context(), cookie.Value)
 
 	isSecure := h.cookiesAreSecure(r)
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     loginHandoffCookieName,
 		Value:    "",
 		Path:     "/",

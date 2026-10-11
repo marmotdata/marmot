@@ -66,7 +66,7 @@ func runCredentialHelper(op string, in io.Reader, out io.Writer) error {
 		if !ok {
 			return fail(fmt.Sprintf("marmot: not logged in to %s or the token has expired, run: marmot login %s", name, name))
 		}
-		return json.NewEncoder(out).Encode(helperCredential{
+		return json.NewEncoder(out).Encode(helperCredential{ //nolint:gosec // G117: the Docker credential helper protocol requires the Secret field
 			ServerURL: server,
 			Username:  registryUsername,
 			Secret:    token,

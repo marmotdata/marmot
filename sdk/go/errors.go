@@ -101,7 +101,7 @@ func typed(status int, msg string) error {
 // framework's "[GET /x][404] body=..." wrapper.
 func extractPayloadMessage(err error) string {
 	v := reflect.ValueOf(err)
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return ""
 		}
@@ -114,7 +114,7 @@ func extractPayloadMessage(err error) string {
 	if !payload.IsValid() {
 		return ""
 	}
-	for payload.Kind() == reflect.Ptr {
+	for payload.Kind() == reflect.Pointer {
 		if payload.IsNil() {
 			return ""
 		}

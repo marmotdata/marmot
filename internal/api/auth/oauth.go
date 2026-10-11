@@ -38,7 +38,7 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 
 	isSecure := h.cookiesAreSecure(r)
 
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     "oauth_state",
 		Value:    state,
 		Path:     "/auth",
@@ -49,7 +49,7 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 	})
 
 	redirectURL := provider.GetAuthURL(state)
-	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect) //nolint:gosec // G710: the target is the configured provider's authorisation URL, not request input
 }
 
 // @Summary Handle OAuth callback

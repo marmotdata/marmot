@@ -15,8 +15,7 @@
 	);
 	let prompt = $derived(
 		(asset.metadata?.system_prompt || asset.metadata?.prompt || asset.metadata?.instructions) as
-			| string
-			| undefined
+			string | undefined
 	);
 
 	let promptExpanded = $state(false);

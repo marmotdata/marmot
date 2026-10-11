@@ -102,6 +102,7 @@ ignore = [
     "PLC0415",   # imports inside functions — deliberate for lazy/circular avoidance
     "PLR0911",   # too many returns — auth chain reads better as flat returns
     "PLR0913",   # too many arguments — option-heavy APIs need them
+    "PLR0917",   # too many positional arguments — same reasoning as PLR0913
     "PLR2004",   # magic value comparisons (HTTP status codes etc.)
     "TRY003",    # long messages in exception classes — too noisy
     "TRY300",    # else clause on try — stylistic
@@ -142,6 +143,7 @@ classmethod-decorators = ["pydantic.field_validator", "pydantic.model_validator"
     "PLW",  # ignore pylint warning
     "PLR",  # ignore pylint refactor
     "RUF012",  #  mutable default value for class attribute
+    "RUF036",  # None not last in a type union
     "S101",  # assert
     "TRY004",  # prefer `TypeError` exception for invalid type
     "TRY203",  # remove exception handler; error is immediately re-raised

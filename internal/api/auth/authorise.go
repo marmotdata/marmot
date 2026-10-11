@@ -37,7 +37,7 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	isSecure := h.cookiesAreSecure(r)
 
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     "oauth_session",
 		Value:    sessionID,
 		Path:     "/",
@@ -106,7 +106,7 @@ func (h *Handler) CompleteAuthorize(w http.ResponseWriter, r *http.Request, user
 	}
 
 	isSecure := h.cookiesAreSecure(r)
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     "oauth_session",
 		Value:    "",
 		Path:     "/",
@@ -199,7 +199,7 @@ func (h *Handler) handleAuthorizeCancel(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	isSecure := h.cookiesAreSecure(r)
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ //nolint:gosec // G124: HttpOnly and SameSite are set, Secure follows the request scheme so plain HTTP installs keep working
 		Name:     "oauth_session",
 		Value:    "",
 		Path:     "/",

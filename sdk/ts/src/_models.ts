@@ -172,3 +172,4 @@ export type UserRole = S["UserRole"];
 export type ValidateConfigRequest = S["ValidateConfigRequest"];
 export type ValidateConfigResponse = S["ValidateConfigResponse"];
 export type ValidationErrorDetail = S["ValidationErrorDetail"];
+export type ValidationErrorResponse = S["ValidationErrorResponse"];

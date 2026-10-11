@@ -54,8 +54,8 @@
     "generate": "openapi-typescript ../../docs/.openapi3.yaml -o src/_gen/schema.ts && node scripts/generate-models.mjs"
   },
   "dependencies": {
-    "openapi-fetch": "^0.13.0",
-    "yaml": "^2.5.0"
+    "openapi-fetch": "^0.17.0",
+    "yaml": "^2.9.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -67,15 +67,15 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
-    "@langchain/core": "^1.1.44",
-    "@types/node": "^22.0.0",
+    "@langchain/core": "^1.2.17",
+    "@types/node": "^26.6.4",
     "openapi-typescript": "^7.4.0",
     "tsup": "^8.3.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.0",
-    "vite": "^8.0.10",
+    "vite": "^8.3.4",
     "vitest": "^5.0.3",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "publishConfig": {
     "access": "public"

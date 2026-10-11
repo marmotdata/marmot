@@ -20,6 +20,7 @@
 
 	let {
 		currentStep,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars -- write-only bindable read by the parent
 		totalSteps = $bindable(0),
 		onStepClick,
 		canNavigateToStep,

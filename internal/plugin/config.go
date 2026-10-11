@@ -59,7 +59,7 @@ func extractSensitiveFieldsRecursive(t reflect.Type, prefix string, fields *[]st
 		return
 	}
 
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -86,7 +86,7 @@ func extractSensitiveFieldsRecursive(t reflect.Type, prefix string, fields *[]st
 		}
 
 		fieldType := field.Type
-		if fieldType.Kind() == reflect.Ptr {
+		if fieldType.Kind() == reflect.Pointer {
 			fieldType = fieldType.Elem()
 		}
 		if fieldType.Kind() == reflect.Struct {

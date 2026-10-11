@@ -102,11 +102,11 @@
 	let cronNextRuns = $derived.by(() => {
 		if (!cronExpression.trim()) return [];
 		try {
-			const cron = Cron(cronExpression);
+			const cron = new Cron(cronExpression);
 			const runs: Date[] = [];
 			const now = new Date();
 			for (let i = 0; i < 5; i++) {
-				const next = cron.next(i === 0 ? now : runs[i - 1]);
+				const next = cron.nextRun(i === 0 ? now : runs[i - 1]);
 				if (next) runs.push(next);
 			}
 			return runs;

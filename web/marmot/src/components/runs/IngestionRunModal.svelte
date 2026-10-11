@@ -9,7 +9,7 @@
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import { getLocale } from '$lib/paraglide/runtime';
-	import yaml from 'js-yaml';
+	import { dump as dumpYaml } from 'js-yaml';
 
 	interface IngestionRunSummary {
 		assets_created: number;
@@ -428,7 +428,7 @@
 								{#if showRawConfig}
 									<div class="max-h-72 overflow-y-auto rounded-lg">
 										<CodeBlock
-											code={yaml.dump(run.config, { indent: 2, lineWidth: -1 })}
+											code={dumpYaml(run.config, { indent: 2, lineWidth: -1 })}
 											language="yaml"
 										/>
 									</div>

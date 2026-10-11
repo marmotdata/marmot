@@ -1,4 +1,4 @@
-const IconsPlugin = require("unplugin-icons/webpack").default;
+const IconsPlugin = require("unplugin-icons/webpack");
 
 function unpluginIconsPlugin(context, options) {
   return {

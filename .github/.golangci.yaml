@@ -30,6 +30,10 @@ linters:
           - gosec
         path: "_test\\.go"
         text: "G306:"
+      - linters:
+          - gosec
+        path: "_test\\.go"
+        text: "G124:"
     paths:
       - third_party$
       - builtin$
