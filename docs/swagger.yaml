@@ -368,6 +368,10 @@ definitions:
         items:
           type: string
         type: array
+      totp_enabled:
+        type: boolean
+      totp_required:
+        type: boolean
     type: object
   AvailableFilters:
     properties:
@@ -2168,7 +2172,13 @@ definitions:
         type: string
       expires_in:
         type: integer
+      mfa_token:
+        type: string
       requires_password_change:
+        type: boolean
+      requires_totp:
+        type: boolean
+      requires_totp_enrollment:
         type: boolean
       token_type:
         type: string
@@ -2505,6 +2515,24 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  mfa.SetupResult:
+    properties:
+      qr:
+        type: string
+      secret:
+        type: string
+      uri:
+        type: string
+    type: object
+  mfa.Status:
+    properties:
+      enabled:
+        type: boolean
+      local:
+        type: boolean
+      recovery_remaining:
+        type: integer
+    type: object
   pluginsdk.AssetField:
     properties:
       description:
@@ -2658,6 +2686,33 @@ definitions:
       description:
         type: string
       name:
+        type: string
+    type: object
+  v1_users.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+    type: object
+  v1_users.RecoveryResponse:
+    properties:
+      access_token:
+        type: string
+      recovery_codes:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_users.TOTPRequest:
+    properties:
+      code:
+        type: string
+      mfa_token:
+        type: string
+      new_password:
+        type: string
+      password:
         type: string
     type: object
 info:
@@ -7669,6 +7724,34 @@ paths:
       summary: Delete API key
       tags:
       - users
+  /api/v1/users/change-password:
+    post:
+      consumes:
+      - application/json
+      operationId: changeOwnPassword
+      parameters:
+      - description: Current and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change the current local user's password
+      tags:
+      - users
   /api/v1/users/login:
     post:
       consumes:
@@ -7698,6 +7781,142 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
       summary: Login user
+      tags:
+      - users
+  /api/v1/users/login/password:
+    post:
+      consumes:
+      - application/json
+      operationId: changeLoginPassword
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Change a mandatory password before the second factor
+      tags:
+      - users
+  /api/v1/users/login/totp:
+    post:
+      consumes:
+      - application/json
+      operationId: verifyTOTPLogin
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Complete local login using a second factor
+      tags:
+      - users
+  /api/v1/users/login/totp/confirm:
+    post:
+      consumes:
+      - application/json
+      operationId: confirmRequiredTOTP
+      parameters:
+      - description: Enrollment challenge and code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_users.RecoveryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Confirm required TOTP enrollment and return recovery codes once
+      tags:
+      - users
+  /api/v1/users/login/totp/setup:
+    post:
+      consumes:
+      - application/json
+      operationId: setupRequiredTOTP
+      parameters:
+      - description: Enrollment challenge
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mfa.SetupResult'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Prepare required TOTP enrollment after password login
       tags:
       - users
   /api/v1/users/me:
@@ -7783,6 +8002,29 @@ paths:
       summary: Unlink OAuth account
       tags:
       - users
+  /api/v1/users/password/require-change/{id}:
+    post:
+      operationId: requirePasswordChange
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Require a local user to change their password at next login
+      tags:
+      - users
   /api/v1/users/preferences:
     put:
       consumes:
@@ -7839,6 +8081,279 @@ paths:
       summary: Sign a user out of all sessions
       tags:
       - users
+  /api/v1/users/totp:
+    delete:
+      consumes:
+      - application/json
+      operationId: disableTOTP
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_users.RecoveryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Disable TOTP with password and second factor
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      operationId: totpStatus
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mfa.Status'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Get local two-factor status
+      tags:
+      - users
+  /api/v1/users/totp/confirm:
+    post:
+      consumes:
+      - application/json
+      operationId: confirmTOTP
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_users.RecoveryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm TOTP and return recovery codes once
+      tags:
+      - users
+  /api/v1/users/totp/enrolled:
+    get:
+      operationId: listTOTPEnrollment
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users with an enrolled second factor
+      tags:
+      - users
+  /api/v1/users/totp/recovery:
+    post:
+      consumes:
+      - application/json
+      operationId: regenerateRecovery
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_users.RecoveryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Replace one-use recovery codes
+      tags:
+      - users
+  /api/v1/users/totp/reset/{id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: resetTOTP
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Administratively reset a local second factor
+      tags:
+      - users
+  /api/v1/users/totp/setup:
+    post:
+      consumes:
+      - application/json
+      operationId: setupTOTP
+      parameters:
+      - description: Verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_users.TOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mfa.SetupResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Prepare an encrypted TOTP enrollment
+      tags:
+      - users
   /api/v1/users/update-password:
     post:
       consumes:
@@ -7868,7 +8383,6 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
-      - ApiKeyAuth: []
       - BearerAuth: []
       summary: Update user password
       tags:

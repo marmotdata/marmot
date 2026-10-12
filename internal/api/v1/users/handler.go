@@ -5,26 +5,34 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/mfa"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
+	mfa         *mfa.Service
 	userService user.Service
 	authService auth.Service
 	config      *config.Config
 }
 
-func NewHandler(userService user.Service, authService auth.Service, cfg *config.Config) *Handler {
-	return &Handler{
+func NewHandler(userService user.Service, authService auth.Service, cfg *config.Config, factors ...*mfa.Service) *Handler {
+	h := &Handler{
 		userService: userService,
 		authService: authService,
 		config:      cfg,
 	}
+	if len(factors) > 0 {
+		h.mfa = factors[0]
+	}
+	return h
 }
 
 func (h *Handler) Routes() []common.Route {
-	return []common.Route{
+	passwordCfg := *h.config
+	passwordCfg.RateLimit.Enabled = true
+	routes := []common.Route{
 		{
 			Path:    "/api/v1/users",
 			Method:  http.MethodGet,
@@ -162,8 +170,21 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.updatePassword,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequireJWTSession("local"),
 				common.WithRateLimit(h.config, 10, 60),
 			},
 		},
+		{
+			Path: "/api/v1/users/change-password", Method: http.MethodPost, Handler: h.changeOwnPassword,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{common.WithAuth(h.userService, h.authService, h.config), common.RequireJWTSession("local"), common.WithRateLimit(&passwordCfg, 10, 60)},
+		},
+		{
+			Path: "/api/v1/users/password/require-change/{id}", Method: http.MethodPost, Handler: h.requirePasswordChange,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{common.WithAuth(h.userService, h.authService, h.config), common.RequirePermission(h.userService, "users", "manage")},
+		},
 	}
+	if h.config.Auth.TOTP.Enabled {
+		routes = append(routes, h.totpRoutes()...)
+	}
+	return routes
 }

@@ -122,11 +122,9 @@ func TestResolver_SessionRevocation(t *testing.T) {
 			wantErr:  ErrSessionRevoked,
 		},
 		{
-			// jwt iat carries whole seconds, so a replacement token minted in the
-			// same second as the invalidation has to survive or a password change
-			// would hand back a dead token.
-			name:     "token issued in the same second survives",
+			name:     "legacy token in the same second is conservatively revoked",
 			issuedAt: jwt.NewNumericDate(cutoff.Truncate(time.Second)),
+			wantErr:  ErrSessionRevoked,
 		},
 		{
 			name:     "token issued after the cutoff survives",
@@ -168,5 +166,20 @@ func TestResolver_NoCutoffAcceptsAnyIssuedAt(t *testing.T) {
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1"},
 	}); err != nil {
 		t.Fatalf("Resolve: %v", err)
+	}
+}
+
+func TestResolverSessionEpochRevokesWithinSameSecond(t *testing.T) {
+	cutoff := time.Now()
+	u := &user.User{ID: "u-1", Active: true}
+	svc := &mockUserService{getFn: func(_ context.Context, _ string) (*user.User, error) { return u, nil }}
+	claims := &Claims{SessionEpoch: sessionEpoch(u), RegisteredClaims: jwt.RegisteredClaims{Subject: u.ID, IssuedAt: jwt.NewNumericDate(cutoff)}}
+	u.SessionsInvalidatedAt = &cutoff
+	if _, err := NewResolver(svc).Resolve(context.Background(), claims); !errors.Is(err, ErrSessionRevoked) {
+		t.Fatal("old epoch survived invalidation", err)
+	}
+	claims.SessionEpoch = sessionEpoch(u)
+	if _, err := NewResolver(svc).Resolve(context.Background(), claims); err != nil {
+		t.Fatal("replacement epoch rejected", err)
 	}
 }

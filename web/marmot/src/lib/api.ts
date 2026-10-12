@@ -29,7 +29,7 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 		headers
 	});
 
-	if (response.status === 401 && !skipAuth) {
+	if (response.status === 401 && !skipAuth && token === auth.getToken()) {
 		auth.clearToken();
 		goto(resolve('/login'));
 		throw new Error('Unauthorized');

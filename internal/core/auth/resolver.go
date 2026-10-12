@@ -38,9 +38,14 @@ func (r *userResolver) Resolve(ctx context.Context, claims *Claims) (Principal, 
 		if !u.Active {
 			return nil, ErrUserInactive
 		}
-		if u.SessionsInvalidatedAt != nil {
+		if claims.SessionEpoch != "" {
+			if claims.SessionEpoch != sessionEpoch(u) {
+				return nil, ErrSessionRevoked
+			}
+		} else if u.SessionsInvalidatedAt != nil {
+			// Legacy JWTs cannot distinguish issuance and revocation within the same second.
 			cutoff := u.SessionsInvalidatedAt.Truncate(time.Second)
-			if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(cutoff) {
+			if claims.IssuedAt == nil || !claims.IssuedAt.Time.After(cutoff) {
 				return nil, ErrSessionRevoked
 			}
 		}
@@ -48,4 +53,11 @@ func (r *userResolver) Resolve(ctx context.Context, claims *Claims) (Principal, 
 	default:
 		return nil, fmt.Errorf("unknown principal_type %q", claims.PrincipalType)
 	}
+}
+
+func sessionEpoch(u *user.User) string {
+	if u.SessionsInvalidatedAt == nil {
+		return "0"
+	}
+	return u.SessionsInvalidatedAt.UTC().Format(time.RFC3339Nano)
 }

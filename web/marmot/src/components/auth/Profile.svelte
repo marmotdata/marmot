@@ -20,6 +20,10 @@
 	}
 
 	interface User {
+		username: string;
+		active: boolean;
+		created_at: string;
+		updated_at: string;
 		name: string;
 		email: string;
 		roles: Role[];
@@ -28,11 +32,14 @@
 	let loading = true;
 	let error: string | null = null;
 	let user: User = {
+		username: '',
+		active: false,
+		created_at: '',
+		updated_at: '',
 		name: '',
 		email: '',
 		roles: []
 	};
-
 	onMount(fetchProfile);
 
 	async function fetchProfile() {

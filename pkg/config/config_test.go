@@ -5,15 +5,38 @@ import "testing"
 // Load runs once per process, so this must stay the only test calling it.
 func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
 	t.Setenv("MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS", "claude.ai,example.com:8443")
+	t.Setenv("MARMOT_AUTH_TOTP_ENABLED", "true")
+	t.Setenv("MARMOT_AUTH_TOTP_REQUIRED", "true")
+	t.Setenv("MARMOT_SERVER_ENCRYPTION_KEY", "configured")
+	t.Setenv("MARMOT_AUTH_TOTP_ISSUER", "Example")
 
 	cfg, err := Load("")
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
 
+	if !cfg.Auth.TOTP.Enabled || !cfg.Auth.TOTP.Required || cfg.Auth.TOTP.Issuer != "Example" {
+		t.Fatal("TOTP configuration not read from environment")
+	}
 	got := cfg.Auth.DCR.AllowedRedirectHosts
 	if len(got) != 2 || got[0] != "claude.ai" || got[1] != "example.com:8443" {
 		t.Fatalf("unexpected allowlist from env: %v", got)
+	}
+}
+
+func TestValidate_TOTPRequiredNeedsEnabled(t *testing.T) {
+	cfg := validBaseConfig()
+	cfg.Auth.TOTP.Required = true
+	if err := validate(cfg); err == nil {
+		t.Fatal("required TOTP must not silently disable enforcement")
+	}
+	cfg.Auth.TOTP.Enabled = true
+	if err := validate(cfg); err == nil {
+		t.Fatal("required TOTP must have an encryption key")
+	}
+	cfg.Server.EncryptionKey = "configured"
+	if err := validate(cfg); err != nil {
+		t.Fatalf("enabled required TOTP: %v", err)
 	}
 }
 
