@@ -109,6 +109,12 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// The code outlives the sign-in that issued it, so a sign-out-all in between must still stop the exchange
+	if err := coreauth.CheckUserSession(usr, mSession.AuthenticatedAt); err != nil {
+		respondOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization is no longer valid")
+		return
+	}
+
 	token, err := h.authService.GenerateToken(ctx, usr, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token")

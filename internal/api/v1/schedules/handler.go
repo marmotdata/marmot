@@ -337,11 +337,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.encryptor != nil {
-		if err := runs.DecryptScheduleConfig(schedule, h.encryptor); err != nil {
-			log.Error().Err(err).Msg("Failed to decrypt config")
-		}
-	}
+	runs.MaskScheduleConfig(schedule)
 
 	common.RespondJSON(w, http.StatusCreated, schedule)
 }
@@ -385,12 +381,8 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.encryptor != nil {
-		for _, schedule := range schedules {
-			if err := runs.DecryptScheduleConfig(schedule, h.encryptor); err != nil {
-				log.Error().Err(err).Str("schedule_id", schedule.ID).Msg("Failed to decrypt config")
-			}
-		}
+	for _, schedule := range schedules {
+		runs.MaskScheduleConfig(schedule)
 	}
 
 	common.RespondJSON(w, http.StatusOK, ListSchedulesResponse{
@@ -431,11 +423,13 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.encryptor != nil {
-		if err := runs.DecryptScheduleConfig(schedule, h.encryptor); err != nil {
-			log.Error().Err(err).Msg("Failed to decrypt config")
-		}
+	// Without its plugin's spec the config cannot be masked and comes back empty, which the edit form would save over the real one, so ask the caller to retry until plugins have loaded
+	if _, err := plugin.GetRegistry().Get(schedule.PluginID); err != nil && !plugin.GetLoadState().Ready() {
+		common.RespondError(w, http.StatusServiceUnavailable, "Plugins are still loading")
+		return
 	}
+
+	runs.MaskScheduleConfig(schedule)
 
 	common.RespondJSON(w, http.StatusOK, schedule)
 }
@@ -478,6 +472,32 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	existing, err := h.service.GetSchedule(r.Context(), id)
+	if err != nil {
+		if err == runs.ErrScheduleNotFound {
+			common.RespondError(w, http.StatusNotFound, "Schedule not found")
+			return
+		}
+		log.Error().Err(err).Msg("Failed to get schedule")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+		return
+	}
+
+	// Secrets are only ever returned masked, so an unchanged secret comes back as the mask and has to be restored from what is stored; switching plugin carries nothing over
+	var previous map[string]interface{}
+	if existing.PluginID == req.PluginID {
+		if err := runs.DecryptScheduleConfig(existing, h.encryptor); err != nil {
+			log.Error().Err(err).Msg("Failed to decrypt config")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to decrypt config")
+			return
+		}
+		previous = existing.Config
+	}
+	if err := runs.RestoreMaskedScheduleConfig(req.PluginID, req.Config, previous); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Unknown plugin")
+		return
+	}
+
 	if h.encryptor != nil {
 		if err := runs.EncryptScheduleConfig(&runs.Schedule{
 			PluginID: req.PluginID,
@@ -517,11 +537,7 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.encryptor != nil {
-		if err := runs.DecryptScheduleConfig(schedule, h.encryptor); err != nil {
-			log.Error().Err(err).Msg("Failed to decrypt config")
-		}
-	}
+	runs.MaskScheduleConfig(schedule)
 
 	common.RespondJSON(w, http.StatusOK, schedule)
 }
@@ -644,6 +660,7 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 			common.RespondError(w, http.StatusInternalServerError, "Failed to trigger run")
 			return
 		}
+		runs.MaskScheduleConfig(schedule)
 		common.RespondJSON(w, http.StatusAccepted, schedule)
 		return
 	}

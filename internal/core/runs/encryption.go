@@ -44,3 +44,29 @@ func DecryptScheduleConfig(schedule *Schedule, encryptor *crypto.Encryptor) erro
 
 	return plugin.DecryptConfigForPlugin(schedule.PluginID, schedule.Config, encryptor)
 }
+
+// MaskScheduleConfig replaces sensitive fields in a schedule's config with plugin.SensitiveMask so stored secrets never leave the server, dropping the config entirely if the plugin's spec is unknown
+func MaskScheduleConfig(schedule *Schedule) {
+	if schedule.Config == nil {
+		return
+	}
+
+	entry, err := plugin.GetRegistry().Get(schedule.PluginID)
+	if err != nil {
+		schedule.Config = nil
+		return
+	}
+
+	schedule.Config = plugin.MaskSensitiveFieldsFromSpec(schedule.Config, entry.Meta.ConfigSpec)
+}
+
+// RestoreMaskedScheduleConfig fills sensitive fields left as plugin.SensitiveMask in an incoming config from the previous decrypted config
+func RestoreMaskedScheduleConfig(pluginID string, config, previous map[string]interface{}) error {
+	entry, err := plugin.GetRegistry().Get(pluginID)
+	if err != nil {
+		return fmt.Errorf("getting plugin: %w", err)
+	}
+
+	plugin.RestoreMaskedFieldsFromSpec(config, previous, entry.Meta.ConfigSpec)
+	return nil
+}
