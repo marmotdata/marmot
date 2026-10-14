@@ -156,19 +156,7 @@
 			}
 
 			if (data.access_token) {
-				auth.setToken(data.access_token);
-				if ($page.url.searchParams.has('oauth_pending')) {
-					await loadPendingConsent();
-					if (pendingConsent) {
-						return;
-					}
-				}
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
+				await completeSignIn(data.access_token);
 			} else {
 				throw new Error(m.login_error_no_token());
 			}
@@ -177,6 +165,22 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function completeSignIn(token: string) {
+		auth.setToken(token);
+		if ($page.url.searchParams.has('oauth_pending')) {
+			await loadPendingConsent();
+			if (pendingConsent) {
+				return;
+			}
+		}
+		// Constrain redirect targets to in-app paths to keep open-redirect
+		// vectors closed and to satisfy resolve()'s internal-route contract.
+		// Full document navigation so the account language preference in the token applies from the first render
+		const redirectParam = $page.url.searchParams.get('redirect');
+		const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
+		window.location.assign(resolve(redirectTo));
 	}
 
 	async function handlePasswordChange() {
@@ -211,13 +215,7 @@
 			const passwordData = await response.json();
 
 			if (passwordData.access_token) {
-				auth.setToken(passwordData.access_token);
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
+				await completeSignIn(passwordData.access_token);
 			} else {
 				throw new Error(m.login_error_no_token());
 			}
