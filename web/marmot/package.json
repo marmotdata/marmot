@@ -45,7 +45,7 @@
 		"vite-plugin-node-polyfills": "^0.28.0"
 	},
 	"dependencies": {
-		"@dagrejs/dagre": "^1.1.8",
+		"@dagrejs/dagre": "^3.1.1",
 		"@tiptap/core": "^3.31.4",
 		"@tiptap/extension-code-block-lowlight": "^3.31.4",
 		"@tiptap/extension-image": "^3.31.4",
