@@ -169,3 +169,23 @@ func TestUpdateSchedule_PluginSwitchCarriesNoSecrets(t *testing.T) {
 
 	assert.Nil(t, decryptedPassword(t, repo, enc))
 }
+
+func servedSchedule(pluginID string) *runs.Schedule {
+	s := storedSchedule(pluginID)
+	principalType, principalID := "service_account", "11111111-1111-1111-1111-111111111111"
+	s.ServedByType, s.ServedByID = &principalType, &principalID
+	s.Config = map[string]interface{}{"host": "db.internal", "password": plugin.SensitiveMask}
+	return s
+}
+
+// Only the serving process holds a served source's plugin and credentials, so Marmot must not edit it and must never run it.
+func TestUpdateSchedule_RefusesServedSource(t *testing.T) {
+	registerTestPlugin(t, "schedtest-a")
+	stored := servedSchedule("schedtest-a")
+	repo := &fakeScheduleRepo{schedules: map[string]*runs.Schedule{stored.ID: stored}}
+	h := NewHandler(runs.NewScheduleService(repo), nil, nil, nil, nil, &config.Config{}, true)
+
+	rec := doUpdate(h, "schedtest-a", map[string]interface{}{"host": "attacker.example", "password": "x"})
+	assert.Equal(t, http.StatusConflict, rec.Code, rec.Body.String())
+	assert.Equal(t, "db.internal", repo.schedules["sched-1"].Config["host"])
+}

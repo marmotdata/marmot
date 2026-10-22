@@ -24,12 +24,12 @@ type Config struct {
 
 	Host      string `json:"host" description:"Grafana URL, for example https://grafana.company.com" validate:"required,url"`
 	APIKey    string `json:"api_key" label:"Service Account Token" description:"Token of a Grafana service account" sensitive:"true" validate:"required"`
-	VerifySSL bool   `json:"verify_ssl" label:"Verify SSL" description:"Verify the TLS certificate of the Grafana host" default:"true"`
+	VerifySSL bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the TLS certificate of the Grafana host" default:"true"`
 
-	IncludePanels      bool `json:"include_panels" description:"Discover dashboard panels as Chart assets" default:"true"`
-	IncludeDatasources bool `json:"include_datasources" description:"Discover data sources as DataSource assets" default:"true"`
-	DiscoverLineage    bool `json:"discover_lineage" description:"Link charts and dashboards to the tables their SQL queries read" default:"true"`
-	PageSize           int  `json:"page_size" description:"Dashboards per search request" default:"100" validate:"min=1,max=5000"`
+	IncludePanels      bool `json:"include_panels" group:"Discovery" description:"Discover dashboard panels as Chart assets" default:"true"`
+	IncludeDatasources bool `json:"include_datasources" group:"Discovery" description:"Discover data sources as DataSource assets" default:"true"`
+	DiscoverLineage    bool `json:"discover_lineage" group:"Discovery" description:"Link charts and dashboards to the tables their SQL queries read" default:"true"`
+	PageSize           int  `json:"page_size" group:"Advanced" description:"Dashboards per search request" default:"100" validate:"min=1,max=5000"`
 }
 
 // Example configuration for the plugin

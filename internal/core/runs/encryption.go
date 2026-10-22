@@ -1,12 +1,14 @@
 package runs
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"maps"
 
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 var (
@@ -69,4 +71,40 @@ func RestoreMaskedScheduleConfig(pluginID string, config, previous map[string]in
 
 	plugin.RestoreMaskedFieldsFromSpec(config, previous, entry.Meta.ConfigSpec)
 	return nil
+}
+
+// EncryptPlaintextSecrets encrypts any sensitive config value stored in plaintext, such as nested secrets saved before nested fields were encrypted, skipping schedules whose plugin is not loaded
+func (s *ScheduleService) EncryptPlaintextSecrets(ctx context.Context, encryptor *crypto.Encryptor) error {
+	const pageSize = 100
+	for offset := 0; ; offset += pageSize {
+		schedules, _, err := s.repo.ListSchedules(ctx, nil, pageSize, offset)
+		if err != nil {
+			return fmt.Errorf("listing schedules: %w", err)
+		}
+
+		for _, schedule := range schedules {
+			if err := s.encryptPlaintextSecrets(ctx, schedule, encryptor); err != nil {
+				return fmt.Errorf("schedule %s: %w", schedule.ID, err)
+			}
+		}
+
+		if len(schedules) < pageSize {
+			return nil
+		}
+	}
+}
+
+func (s *ScheduleService) encryptPlaintextSecrets(ctx context.Context, schedule *Schedule, encryptor *crypto.Encryptor) error {
+	entry, err := plugin.GetRegistry().Get(schedule.PluginID)
+	if err != nil || schedule.Config == nil {
+		return nil
+	}
+
+	config := maps.Clone(schedule.Config)
+	changed, err := plugin.EncryptPlaintextFields(config, entry.Meta.ConfigSpec, encryptor)
+	if err != nil || !changed {
+		return err
+	}
+
+	return s.repo.ReplaceScheduleConfig(ctx, schedule.ID, schedule.Config, config)
 }

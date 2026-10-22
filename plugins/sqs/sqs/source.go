@@ -39,7 +39,7 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	DiscoverDLQ bool `json:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
+	DiscoverDLQ bool `json:"discover_dlq,omitempty" group:"Discovery" description:"Discover Dead Letter Queue relationships"`
 }
 
 // Example configuration for the plugin

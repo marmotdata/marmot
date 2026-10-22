@@ -51,12 +51,12 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Database string `json:"database" description:"Default database to connect to" default:"default"`
-	Secure   bool   `json:"secure" description:"Use TLS/SSL connection" default:"false"`
+	Secure   bool   `json:"secure" group:"Authentication" description:"Use TLS/SSL connection" default:"true"`
 
-	IncludeDatabases    bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics       bool `json:"enable_metrics" description:"Whether to include table metrics (row counts, sizes)" default:"true"`
-	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude system tables" default:"true"`
+	IncludeDatabases    bool `json:"include_databases" group:"Discovery" description:"Whether to discover databases" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics       bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics (row counts, sizes)" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" group:"Discovery" description:"Whether to exclude system tables" default:"true"`
 }
 
 // Example configuration for the plugin

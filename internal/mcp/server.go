@@ -6,6 +6,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/dataquery"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
@@ -72,6 +73,7 @@ type Server struct {
 	dataProductService DataProductService
 	lineageService     lineage.Service
 	searchService      search.Service
+	queryService       dataquery.Service
 	config             *config.Config
 	lookups            lookups.Recorder
 }
@@ -84,6 +86,7 @@ func NewServer(
 	dataProductService DataProductService,
 	lineageService lineage.Service,
 	searchService search.Service,
+	queryService dataquery.Service,
 	config *config.Config,
 	lookupsRecorder lookups.Recorder,
 ) *Server {
@@ -95,6 +98,7 @@ func NewServer(
 		dataProductService: dataProductService,
 		lineageService:     lineageService,
 		searchService:      searchService,
+		queryService:       queryService,
 		config:             config,
 		lookups:            lookupsRecorder,
 	}
@@ -125,6 +129,7 @@ func (s *Server) registerTools(server *mcpsdk.Server, principal auth.Principal) 
 		dataProductService: s.dataProductService,
 		lineageService:     s.lineageService,
 		searchService:      s.searchService,
+		queryService:       s.queryService,
 		principal:          principal,
 		config:             s.config,
 		lookups:            s.lookups,
@@ -317,4 +322,46 @@ This tool is two-phase and safe by default:
 Requires the assets:manage permission.
 </instructions>`,
 	}, tc.manageOwners)
+
+	// Query tools are only offered when data querying is enabled and the caller may
+	// run queries, so agents never see tools they cannot use.
+	if s.queryService == nil || !tc.canQuery() {
+		return
+	}
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "list_queryable_sources",
+		Description: `<usecase>
+Use this to see which data sources you can run SQL against through Marmot. Call it before
+query_data to learn the source names.
+</usecase>
+
+<instructions>
+Optional: {"search": "part of a name or plugin"} to narrow the list. Returns up to 50 sources with
+each one's name (pass it as "source" to query_data) and the plugin behind it, plus how many match
+in total; search when there are more than are shown.
+</instructions>`,
+	}, tc.listQueryableSources)
+
+	mcpsdk.AddTool(server, &mcpsdk.Tool{
+		Name: "query_data",
+		Description: `<usecase>
+Use this to READ data, not just metadata: run one read-only SQL statement against a source through
+Marmot. The query runs as you, is checked table by table against what you may query, is recorded
+in Marmot's query log, and returns the rows together with what the catalog says about every table
+it read (descriptions, tags).
+</usecase>
+
+<instructions>
+Provide:
+- source: a name from list_queryable_sources
+- statement: one read-only SQL statement in the source's own dialect. For Trino, qualify tables as
+  catalog.schema.table, e.g. SELECT * FROM postgresql.public.orders LIMIT 10
+- max_rows: optional cap on the rows returned
+
+Use discover_data first to find the right tables and read their descriptions. Access is checked for
+every table the statement reads: if you may not query any one of them, the whole query is refused
+with the reason. Writes are refused. Prefer LIMIT on exploratory queries.
+</instructions>`,
+	}, tc.queryData)
 }

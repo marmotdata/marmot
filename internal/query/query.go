@@ -34,6 +34,8 @@ const (
 	FieldProvider  FieldType = "provider"
 	FieldKind      FieldType = "kind"
 	FieldName      FieldType = "name"
+	// FieldTerm matches assets linked to a glossary term by the term's name.
+	FieldTerm FieldType = "term"
 )
 
 // RangeValue represents a range query with optional bounds

@@ -29,7 +29,7 @@ func (r RawPluginConfig) MaskSensitiveFields(configStruct interface{}) RawPlugin
 }
 
 func maskFieldInMap(m map[string]interface{}, path string) {
-	parent, key := parentMap(m, path)
+	parent, key := writableParentMap(m, path)
 	if parent == nil {
 		return
 	}

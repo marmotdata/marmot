@@ -28,7 +28,10 @@ export default ts.config(
 		}
 	},
 	{
-		files: ['**/*.svelte'],
+		// .svelte.ts/.svelte.js carry runes outside a component, so eslint-plugin-svelte routes them
+		// through svelte-eslint-parser the same way it does .svelte files; it needs the same inner
+		// TS parser wired up or type annotations in those files fail to parse.
+		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 
 		languageOptions: {
 			parserOptions: {

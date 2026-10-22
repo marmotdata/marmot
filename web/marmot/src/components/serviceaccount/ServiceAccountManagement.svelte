@@ -6,6 +6,8 @@
 	import { m } from '$lib/paraglide/messages';
 	import type { ServiceAccount } from '$lib/serviceaccounts/types';
 	import ServiceAccountTable from './ServiceAccountTable.svelte';
+	import CreateServiceAccountBlade from './CreateServiceAccountBlade.svelte';
+	import { page } from '$app/stores';
 
 	let accounts: ServiceAccount[] = [];
 	let filtered: ServiceAccount[] = [];
@@ -13,6 +15,7 @@
 	let loading = false;
 	let error: string | null = null;
 	let searchTimer: ReturnType<typeof setTimeout>;
+	let showCreate = false;
 
 	async function fetchAccounts() {
 		try {
@@ -47,11 +50,24 @@
 		applyFilter();
 	}
 
-	function goCreate() {
-		goto(resolve('/service-accounts/new'));
+	function handleCreated(sa: ServiceAccount) {
+		showCreate = false;
+		fetchAccounts();
+		goto(resolve('/service-accounts/[id]', { id: sa.id }));
 	}
 
-	onMount(fetchAccounts);
+	onMount(() => {
+		fetchAccounts();
+		// The old /service-accounts/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
+		if ($page.url.searchParams.get('create') === '1') {
+			showCreate = true;
+			goto(resolve('/admin?tab=service_accounts'), {
+				replaceState: true,
+				noScroll: true,
+				keepFocus: true
+			});
+		}
+	});
 </script>
 
 <div
@@ -69,7 +85,7 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={goCreate}
+				on:click={() => (showCreate = true)}
 			>
 				{m.serviceaccounts_add_button()}
 			</button>
@@ -96,3 +112,7 @@
 		{/if}
 	</div>
 </div>
+
+{#if showCreate}
+	<CreateServiceAccountBlade onClose={() => (showCreate = false)} onCreated={handleCreated} />
+{/if}

@@ -34,6 +34,7 @@
 	let isDropdownOpen = false;
 	let isGovernanceOpen = false;
 	let isAdmin = false;
+	let canQueryData = false;
 	let checkingAnonymousMode = true;
 	let manualNavigation = false;
 	let showSearchModal = false;
@@ -127,6 +128,7 @@
 
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
+			canQueryData = auth.hasPermission('assets', 'query');
 			userProfile.load();
 		}
 
@@ -148,6 +150,7 @@
 
 	$: if (browser && $auth) {
 		isAdmin = auth.hasRole('admin');
+		canQueryData = auth.hasPermission('assets', 'query');
 	}
 
 	function withManualNav(fn: () => void) {
@@ -207,7 +210,8 @@
 	const pageTitles: Record<string, () => string> = {
 		discover: m.pagetitle_discover,
 		runs: m.pagetitle_runs,
-		metrics: m.pagetitle_metrics,
+		query: m.pagetitle_query,
+		insights: m.pagetitle_insights,
 		glossary: m.pagetitle_glossary,
 		products: m.pagetitle_products,
 		teams: m.pagetitle_teams,
@@ -323,6 +327,36 @@
 								<span>{m.nav_discover()}</span>
 							</a>
 
+							{#if canQueryData}
+								<a
+									href={resolve('/query')}
+									class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+										'/query'
+									)
+										? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+										: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+								>
+									<span class="w-4 h-4 mr-1.5">
+										<Icon icon="material-symbols:terminal" />
+									</span>
+									<span>{m.nav_query()}</span>
+								</a>
+							{/if}
+
+							<a
+								href={resolve('/insights')}
+								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+									'/insights'
+								)
+									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+							>
+								<span class="w-4 h-4 mr-1.5">
+									<Icon icon="material-symbols:insights" />
+								</span>
+								<span>{m.nav_insights()}</span>
+							</a>
+
 							<a
 								href={resolve('/runs')}
 								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
@@ -335,20 +369,6 @@
 									<Icon icon="material-symbols:play-circle-outline" />
 								</span>
 								<span>{m.nav_runs()}</span>
-							</a>
-
-							<a
-								href={resolve('/metrics')}
-								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-									'/metrics'
-								)
-									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-							>
-								<span class="w-4 h-4 mr-1.5">
-									<Icon icon="material-symbols:area-chart-rounded" />
-								</span>
-								<span>{m.nav_metrics()}</span>
 							</a>
 
 							<div class="relative">
@@ -505,7 +525,8 @@
 			<div class="flex-1">
 				<slot />
 			</div>
-			{#if !$page.url.pathname.startsWith('/login')}
+			<!-- The query and glossary workspaces fill the viewport, so they have no footer -->
+			{#if !$page.url.pathname.startsWith('/login') && !$page.url.pathname.startsWith('/query') && !$page.url.pathname.startsWith('/glossary')}
 				<Footer />
 			{/if}
 		</main>

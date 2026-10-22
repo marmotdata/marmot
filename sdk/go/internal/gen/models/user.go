@@ -45,6 +45,9 @@ type User struct {
 	// roles
 	Roles []*UserRole `json:"roles"`
 
+	// Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.
+	SessionsInvalidatedAt string `json:"sessions_invalidated_at,omitempty"`
+
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
 

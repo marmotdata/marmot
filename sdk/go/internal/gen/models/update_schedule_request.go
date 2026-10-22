@@ -23,11 +23,19 @@ type UpdateScheduleRequest struct {
 	// enabled
 	Enabled bool `json:"enabled,omitempty"`
 
+	// IngestOnQuery refreshes the source's catalog in the background after
+	// data queries, rate-limited per source.
+	IngestOnQuery bool `json:"ingest_on_query,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
 	// plugin id
 	PluginID string `json:"plugin_id,omitempty"`
+
+	// Queryable lets agents and users query this source through Marmot; the
+	// plugin must support queries.
+	Queryable bool `json:"queryable,omitempty"`
 }
 
 // Validate validates this update schedule request

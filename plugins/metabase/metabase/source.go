@@ -24,14 +24,14 @@ type Config struct {
 
 	Host     string `json:"host" description:"Metabase URL, for example https://metabase.example.com" validate:"required,url"`
 	APIKey   string `json:"api_key,omitempty" label:"API Key" description:"API key (Metabase 0.49 and newer)" sensitive:"true"`
-	Username string `json:"username,omitempty" description:"Username for session login, used when no API key is set"`
-	Password string `json:"password,omitempty" description:"Password for session login" sensitive:"true"`
+	Username string `json:"username,omitempty" group:"Authentication" description:"Username for session login, used when no API key is set"`
+	Password string `json:"password,omitempty" group:"Authentication" description:"Password for session login" sensitive:"true"`
 
-	IncludeCharts   bool `json:"include_charts" description:"Discover questions and metrics as Chart assets" default:"true"`
-	IncludeModels   bool `json:"include_models" description:"Discover models as Data Model Object assets" default:"true"`
-	DiscoverLineage bool `json:"discover_lineage" description:"Link cards to the tables and models they read" default:"true"`
-	IncludeArchived bool `json:"include_archived" description:"Include archived dashboards and cards" default:"false"`
-	VerifySSL       bool `json:"verify_ssl" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
+	IncludeCharts   bool `json:"include_charts" group:"Discovery" description:"Discover questions and metrics as Chart assets" default:"true"`
+	IncludeModels   bool `json:"include_models" group:"Discovery" description:"Discover models as Data Model Object assets" default:"true"`
+	DiscoverLineage bool `json:"discover_lineage" group:"Discovery" description:"Link cards to the tables and models they read" default:"true"`
+	IncludeArchived bool `json:"include_archived" group:"Discovery" description:"Include archived dashboards and cards" default:"false"`
+	VerifySSL       bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
 }
 
 // Example configuration for the plugin

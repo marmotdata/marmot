@@ -167,3 +167,10 @@ func TestCoreManifestParses(t *testing.T) {
 	require.Contains(t, manifest.Plugins, "gcs")
 	assert.NotEmpty(t, manifest.Plugins["gcs"].Version)
 }
+
+func TestInstallRefusesUnpinnedPlugin(t *testing.T) {
+	dest := filepath.Join(t.TempDir(), "marmot-plugin-test")
+	err := Install(context.Background(), Options{}, "registry.invalid/plugins", "test", "1.0.0", "", dest)
+	require.Error(t, err)
+	assert.NoFileExists(t, dest)
+}

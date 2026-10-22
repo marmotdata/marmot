@@ -80,7 +80,7 @@ func TestValidate_FillsInTheDefaults(t *testing.T) {
 	assert.True(t, source.config.IncludeTags)
 	assert.True(t, source.config.IncludeDescriptions)
 	assert.True(t, source.config.IncludeUsage)
-	assert.False(t, source.config.Encrypted)
+	assert.True(t, source.config.Encrypted)
 	assert.False(t, source.config.TrustAllCertificates)
 	assert.Equal(t, 120, source.config.QueryTimeoutSeconds)
 	assert.Equal(t, 1000, source.config.PageSize)

@@ -7,15 +7,18 @@ import (
 	"strconv"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/pkg/config"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/rs/zerolog/log"
 )
+
+// servedScheduleMessage explains why a served source cannot be edited or run from Marmot: its plugin and credentials live with the process that serves it.
+const servedScheduleMessage = "This source is served by a plugin running outside Marmot; change or run it where that plugin runs"
 
 // RunCRDTrigger allows the handler to trigger operator-managed runs via the K8s API.
 type RunCRDTrigger interface {
@@ -236,12 +239,18 @@ func (h *Handler) validateConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type CreateScheduleRequest struct{
+type CreateScheduleRequest struct {
 	Name           string                 `json:"name"`
 	PluginID       string                 `json:"plugin_id"`
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
+	// Queryable lets agents and users query this source through Marmot; the
+	// plugin must support queries.
+	Queryable bool `json:"queryable"`
+	// IngestOnQuery refreshes the source's catalog in the background after
+	// data queries, rate-limited per source.
+	IngestOnQuery bool `json:"ingest_on_query"`
 } // @name CreateScheduleRequest
 
 type UpdateScheduleRequest struct {
@@ -250,20 +259,26 @@ type UpdateScheduleRequest struct {
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
+	// Queryable lets agents and users query this source through Marmot; the
+	// plugin must support queries.
+	Queryable bool `json:"queryable"`
+	// IngestOnQuery refreshes the source's catalog in the background after
+	// data queries, rate-limited per source.
+	IngestOnQuery bool `json:"ingest_on_query"`
 } // @name UpdateScheduleRequest
 
 type ListSchedulesResponse struct {
 	Schedules []*runs.Schedule `json:"schedules"`
-	Total     int                   `json:"total"`
-	Limit     int                   `json:"limit"`
-	Offset    int                   `json:"offset"`
+	Total     int              `json:"total"`
+	Limit     int              `json:"limit"`
+	Offset    int              `json:"offset"`
 } // @name ListSchedulesResponse
 
 type ListJobRunsResponse struct {
 	Runs   []*runs.JobRun `json:"runs"`
-	Total  int                 `json:"total"`
-	Limit  int                 `json:"limit"`
-	Offset int                 `json:"offset"`
+	Total  int            `json:"total"`
+	Limit  int            `json:"limit"`
+	Offset int            `json:"offset"`
 } // @name ListJobRunsResponse
 
 // @Summary Create a new ingestion schedule
@@ -295,6 +310,14 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusBadRequest, "Plugin ID is required")
 		return
 	}
+	if req.Queryable && !pluginSupportsQuery(req.PluginID) {
+		common.RespondError(w, http.StatusBadRequest, "This plugin does not support queries")
+		return
+	}
+	if req.Queryable && !canManageQueries(r) {
+		common.RespondError(w, http.StatusForbidden, "Making a source answer queries requires the access:manage permission")
+		return
+	}
 
 	user, _ := common.GetAuthenticatedUser(r.Context())
 	var createdBy *string
@@ -320,6 +343,8 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Config,
 		req.CronExpression,
 		req.Enabled,
+		req.Queryable,
+		req.IngestOnQuery,
 		createdBy,
 	)
 
@@ -471,6 +496,10 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusBadRequest, "Plugin ID is required")
 		return
 	}
+	if req.Queryable && !pluginSupportsQuery(req.PluginID) {
+		common.RespondError(w, http.StatusBadRequest, "This plugin does not support queries")
+		return
+	}
 
 	existing, err := h.service.GetSchedule(r.Context(), id)
 	if err != nil {
@@ -480,6 +509,16 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().Err(err).Msg("Failed to get schedule")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+		return
+	}
+
+	if existing.Served() {
+		common.RespondError(w, http.StatusConflict, servedScheduleMessage)
+		return
+	}
+
+	if (req.Queryable != existing.Queryable || req.IngestOnQuery != existing.IngestOnQuery) && !canManageQueries(r) {
+		common.RespondError(w, http.StatusForbidden, "Changing whether a source answers queries requires the access:manage permission")
 		return
 	}
 
@@ -517,6 +556,8 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Config,
 		req.CronExpression,
 		req.Enabled,
+		req.Queryable,
+		req.IngestOnQuery,
 	)
 
 	if err != nil {
@@ -646,6 +687,11 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().Err(err).Msg("Failed to get schedule")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+		return
+	}
+
+	if schedule.Served() {
+		common.RespondError(w, http.StatusConflict, servedScheduleMessage)
 		return
 	}
 
@@ -864,3 +910,19 @@ func (h *Handler) getJobRunEntities(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// pluginSupportsQuery reports whether a plugin can serve data queries, so a
+// source is never marked queryable when no query could ever succeed.
+func pluginSupportsQuery(pluginID string) bool {
+	entry, err := plugin.GetRegistry().Get(pluginID)
+	if err != nil {
+		return false
+	}
+	return entry.Meta.SupportsQuery
+}
+
+// canManageQueries reports whether the caller may decide which sources answer
+// data queries, which is separate from managing ingestion.
+func canManageQueries(r *http.Request) bool {
+	p, ok := common.PrincipalFromContext(r.Context())
+	return ok && (p.IsAdmin() || p.HasPermission("access", "manage"))
+}

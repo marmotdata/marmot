@@ -7,9 +7,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +28,7 @@ func testScheme() *runtime.Scheme {
 	_ = clientgoscheme.AddToScheme(s)
 	_ = runsv1alpha1.AddToScheme(s)
 	_ = batchv1.AddToScheme(s)
+	_ = appsv1.AddToScheme(s)
 	return s
 }
 
@@ -120,7 +123,7 @@ func TestBuildCronJob(t *testing.T) {
 	assert.Equal(t, "http://marmot:8080", container.Env[0].Value)
 
 	// Check volume mount
-	assert.Len(t, container.VolumeMounts, 1)
+	assert.Len(t, container.VolumeMounts, 2)
 	assert.Equal(t, "/config", container.VolumeMounts[0].MountPath)
 }
 
@@ -342,4 +345,106 @@ func TestCommonLabels(t *testing.T) {
 
 	assert.Equal(t, "marmot-operator", labels["app.kubernetes.io/managed-by"])
 	assert.Equal(t, "test", labels["runs.marmotdata.io/run"])
+}
+
+func TestBuildJobPassesSecretEnv(t *testing.T) {
+	run := newTestRun("secret-env", "test-ns", "")
+	run.Spec.Env = []corev1.EnvVar{{
+		Name: "PG_PASSWORD",
+		ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: "pg"},
+			Key:                  "password",
+		}},
+	}}
+
+	env := buildJob(run, testConfig()).Spec.Template.Spec.Containers[0].Env
+
+	require.Len(t, env, 2)
+	assert.Equal(t, "PG_PASSWORD", env[0].Name)
+	assert.Equal(t, "pg", env[0].ValueFrom.SecretKeyRef.Name)
+	assert.Equal(t, corev1.EnvVar{Name: "MARMOT_HOST", Value: "http://marmot:8080"}, env[1])
+}
+
+// A Run must never redirect the Job, and with it the ingest ServiceAccount token, to a host other than Marmot.
+func TestBuildJobIgnoresMarmotEnvOverrides(t *testing.T) {
+	run := newTestRun("hijack", "test-ns", "")
+	run.Spec.Env = []corev1.EnvVar{
+		{Name: "MARMOT_HOST", Value: "https://attacker.example"},
+		{Name: "MARMOT_PLUGINS_REGISTRY", Value: "attacker.example/plugins"},
+	}
+
+	for _, job := range []*batchv1.Job{buildJob(run, testConfig()), buildTeardownJob(run, testConfig()), buildTriggerJob(run, testConfig())} {
+		env := job.Spec.Template.Spec.Containers[0].Env
+		assert.Equal(t, []corev1.EnvVar{{Name: "MARMOT_HOST", Value: "http://marmot:8080"}}, env)
+	}
+	cronEnv := buildCronJob(run, testConfig()).Spec.JobTemplate.Spec.Template.Spec.Containers[0].Env
+	assert.Equal(t, []corev1.EnvVar{{Name: "MARMOT_HOST", Value: "http://marmot:8080"}}, cronEnv)
+}
+
+// Ingestion pods never get the Kubernetes API token, only one Marmot accepts and the API server refuses.
+func TestPodsMountOnlyAMarmotAudienceToken(t *testing.T) {
+	run := newTestRun("tokens", "test-ns", "")
+	for name, spec := range map[string]corev1.PodSpec{
+		"job":        buildJob(run, testConfig()).Spec.Template.Spec,
+		"deployment": buildDeployment(run, testConfig()).Spec.Template.Spec,
+	} {
+		t.Run(name, func(t *testing.T) {
+			require.NotNil(t, spec.AutomountServiceAccountToken)
+			assert.False(t, *spec.AutomountServiceAccountToken)
+
+			var projection *corev1.ServiceAccountTokenProjection
+			for _, v := range spec.Volumes {
+				if v.Projected != nil {
+					projection = v.Projected.Sources[0].ServiceAccountToken
+				}
+			}
+			require.NotNil(t, projection)
+			assert.Equal(t, "marmot", projection.Audience)
+			assert.Equal(t, int64(3600), *projection.ExpirationSeconds)
+			assert.Contains(t, spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "marmot-token", MountPath: "/var/run/secrets/marmot", ReadOnly: true})
+		})
+	}
+}
+
+func TestBuildDeploymentServes(t *testing.T) {
+	run := newTestRun("serving", "test-ns", "")
+	run.Spec.Serve = true
+
+	deployment := buildDeployment(run, testConfig())
+
+	assert.Equal(t, int32(1), *deployment.Spec.Replicas)
+	assert.Equal(t, commonLabels(run), deployment.Spec.Selector.MatchLabels)
+	assert.Equal(t, corev1.RestartPolicyAlways, deployment.Spec.Template.Spec.RestartPolicy)
+	assert.Equal(t, []string{"marmot", "ingest", "-c", "/config/pipeline.yaml", "--host", "$(MARMOT_HOST)", "--serve"}, deployment.Spec.Template.Spec.Containers[0].Command)
+	assert.Empty(t, deployment.Spec.Template.Spec.Containers[0].Ports, "a serving pod listens on nothing")
+}
+
+func TestReconcile_ServingRunReplacesItsJob(t *testing.T) {
+	scheme := testScheme()
+	run := newTestRun("serve-run", "default", "")
+	run.SetResourceVersion("1")
+	k8sClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(run).WithStatusSubresource(run).Build()
+	reconciler := &RunReconciler{Client: k8sClient, Scheme: scheme, Config: testConfig()}
+	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: "serve-run", Namespace: "default"}}
+	ctx := context.Background()
+
+	_, err := reconciler.Reconcile(ctx, req)
+	require.NoError(t, err)
+	require.NoError(t, k8sClient.Get(ctx, req.NamespacedName, &batchv1.Job{}))
+
+	require.NoError(t, k8sClient.Get(ctx, req.NamespacedName, run))
+	run.Spec.Serve = true
+	require.NoError(t, k8sClient.Update(ctx, run))
+	_, err = reconciler.Reconcile(ctx, req)
+	require.NoError(t, err)
+
+	require.NoError(t, k8sClient.Get(ctx, req.NamespacedName, &appsv1.Deployment{}))
+	assert.True(t, apierrors.IsNotFound(k8sClient.Get(ctx, req.NamespacedName, &batchv1.Job{})), "the one-shot Job is removed once the Run serves")
+
+	require.NoError(t, k8sClient.Get(ctx, req.NamespacedName, run))
+	run.Spec.Serve = false
+	require.NoError(t, k8sClient.Update(ctx, run))
+	_, err = reconciler.Reconcile(ctx, req)
+	require.NoError(t, err)
+	assert.True(t, apierrors.IsNotFound(k8sClient.Get(ctx, req.NamespacedName, &appsv1.Deployment{})), "the Deployment is removed once the Run stops serving")
 }

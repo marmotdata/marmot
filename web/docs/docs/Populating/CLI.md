@@ -60,6 +60,23 @@ This configuration connects to a Kafka broker at `kafka-broker:9092` with SASL P
 marmot ingest -c config.yaml
 ```
 
+### Credentials from the Environment
+
+Any string value can refer to an environment variable as `${NAME}`, which keeps credentials out of the file:
+
+```yaml
+runs:
+  - kafka:
+      bootstrap_servers: "kafka-broker:9092"
+      authentication:
+        type: "sasl_plaintext"
+        username: "${KAFKA_USERNAME}"
+        password: "${KAFKA_PASSWORD}"
+        mechanism: "PLAIN"
+```
+
+The CLI stops with an error if a referenced variable is not set, rather than connecting with an empty credential. Only the `${NAME}` form is expanded, so a plain `$` in a value is left as it is.
+
 ## Where Plugins Run
 
 Discovery runs wherever the CLI runs, not on the Marmot server. The CLI connects to your data sources directly and pushes the discovered assets to the Marmot API. This means the machine running `marmot ingest` needs network access to the data sources, while the Marmot server does not: it only receives the results.
@@ -68,6 +85,10 @@ On the first ingest, the CLI downloads the core plugins from `ghcr.io/marmotdata
 
 - `MARMOT_PLUGINS_AUTOINSTALL=false` disables the download, for example on air-gapped runners with pre-installed plugins
 - `MARMOT_PLUGINS_REGISTRY` installs from a registry mirror instead of GHCR
+
+## Serving Queries
+
+Add `--serve` and mark a run `queryable: true` to keep the CLI running after ingestion, answering Marmot's data queries from where it runs. The database credentials stay with the CLI and Marmot never connects to your network; see [Serving Queries from Your Network](../Configure/serving-plugins.md).
 
 ## Running in CI
 

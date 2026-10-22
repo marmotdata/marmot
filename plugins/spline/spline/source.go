@@ -32,19 +32,19 @@ type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 
 	Host   string `json:"host" description:"Spline REST gateway URL, for example http://spline:8080" validate:"required,url"`
-	UIHost string `json:"ui_host,omitempty" label:"UI Host" description:"Spline UI URL, used for links back to a run" validate:"omitempty,url"`
+	UIHost string `json:"ui_host,omitempty" group:"Advanced" label:"UI Host" description:"Spline UI URL, used for links back to a run" validate:"omitempty,url"`
 
 	Username string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
-	Token    string `json:"token,omitempty" description:"Bearer token, as an alternative to basic authentication" sensitive:"true"`
+	Token    string `json:"token,omitempty" group:"Authentication" description:"Bearer token, as an alternative to basic authentication" sensitive:"true"`
 
-	VerifySSL bool `json:"verify_ssl" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
+	VerifySSL bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
 
-	Days      int `json:"days" description:"Only ingest Spark runs from the last N days" default:"7" validate:"omitempty,min=1"`
-	MaxEvents int `json:"max_events" description:"Maximum number of Spark runs to read" default:"1000" validate:"omitempty,min=1"`
-	PageSize  int `json:"page_size" description:"Number of runs to read per request" default:"100" validate:"omitempty,min=1,max=1000"`
+	Days      int `json:"days" group:"Advanced" description:"Only ingest Spark runs from the last N days" default:"7" validate:"omitempty,min=1"`
+	MaxEvents int `json:"max_events" group:"Advanced" description:"Maximum number of Spark runs to read" default:"1000" validate:"omitempty,min=1"`
+	PageSize  int `json:"page_size" group:"Advanced" description:"Number of runs to read per request" default:"100" validate:"omitempty,min=1,max=1000"`
 
-	IncludeColumnLineage bool `json:"include_column_lineage" description:"Read column level lineage for each run" default:"true"`
+	IncludeColumnLineage bool `json:"include_column_lineage" group:"Discovery" description:"Read column level lineage for each run" default:"true"`
 }
 
 var _ = `

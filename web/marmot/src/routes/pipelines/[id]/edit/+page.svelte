@@ -3,16 +3,19 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import { auth } from '$lib/stores/auth';
 	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import Disclosure from '$components/ui/Disclosure.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import cronstrue from 'cronstrue/i18n';
 	import { Cron } from 'croner';
 	import { m } from '$lib/paraglide/messages';
+	import QueryAccessSection from '$components/dataquery/QueryAccessSection.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatList } from '$lib/utils';
 
@@ -34,6 +37,8 @@
 		placeholder?: string;
 		fields?: ConfigField[];
 		is_array?: boolean;
+		// The plugin names the section a field belongs to; ungrouped fields come first
+		group?: string;
 		validation?: {
 			pattern?: string;
 			min?: number;
@@ -50,6 +55,7 @@
 		icon?: string;
 		category?: string;
 		config_spec?: ConfigField[];
+		supports_query?: boolean;
 	}
 
 	let plugins = $state<Plugin[]>([]);
@@ -61,6 +67,8 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(false);
 	interface PipelineConfig {
 		tags?: string[];
 		external_links?: { name: string; url: string }[];
@@ -84,6 +92,24 @@
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
 	let configSpec = $derived(selectedPlugin?.config_spec || null);
+	// The plugin's own fields, without the base tags, links and filter that have their own step
+	let pluginFields = $derived(
+		(configSpec ?? []).filter(
+			(f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden
+		)
+	);
+	// Groups in the order the plugin first uses them
+	let fieldGroups = $derived.by(() => {
+		const groups: { name: string; fields: ConfigField[] }[] = [];
+		for (const field of pluginFields) {
+			if (!field.group) continue;
+			let group = groups.find((g) => g.name === field.group);
+			if (!group) groups.push((group = { name: field.group, fields: [] }));
+			group.fields.push(field);
+		}
+		return groups;
+	});
+	let queryCapable = $derived(selectedPlugin?.supports_query === true);
 	let hasSchedule = $derived(cronExpression.trim() !== '');
 
 	let cronDescription = $derived.by(() => {
@@ -192,6 +218,16 @@
 			selectedPluginId = pipeline.plugin_id;
 			cronExpression = pipeline.cron_expression || '';
 			disableSchedule = !pipeline.enabled && !!pipeline.cron_expression;
+			queryEnabled = pipeline.queryable === true;
+			ingestOnQuery = pipeline.ingest_on_query === true;
+			// The Query page's "Turn on" link arrives with ?query=1, so the switch is flipped and shown, ready to save
+			if ($page.url.searchParams.get('query') === '1' && auth.hasPermission('access', 'manage')) {
+				queryEnabled = true;
+				ingestOnQuery = true;
+				requestAnimationFrame(() =>
+					document.getElementById('query-access')?.scrollIntoView({ behavior: 'smooth' })
+				);
+			}
 			config = pipeline.config || {};
 
 			// Ensure base fields have proper defaults
@@ -251,7 +287,9 @@
 				plugin_id: selectedPluginId,
 				config: cleanedConfig,
 				cron_expression: cronExpression,
-				enabled
+				enabled,
+				queryable: queryCapable && queryEnabled,
+				ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
 			};
 
 			const response = await fetchApi(`/ingestion/schedules/${pipelineId}`, {
@@ -884,9 +922,7 @@
 							</div>
 						{:else if field.type === 'bool' || field.type === 'boolean'}
 							<div class="md:col-span-2">
-								<label
-									class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-								>
+								<label class="flex items-start py-1 cursor-pointer">
 									<input
 										type="checkbox"
 										bind:checked={configObj[field.name]}
@@ -1031,13 +1067,36 @@
 					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field (field.name)}
+						{#each pluginFields.filter((f) => !f.group) as field (field.name)}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}
 						{/each}
 					</div>
+
+					<!-- Each group the plugin declares becomes a collapsed section -->
+					{#if fieldGroups.length > 0}
+						<div
+							class="mt-6 divide-y divide-gray-100 border-y border-gray-100 dark:divide-gray-700 dark:border-gray-700"
+						>
+							{#each fieldGroups as group (group.name)}
+								<Disclosure title={group.name} hint={group.fields.map((f) => f.label).join(', ')}>
+									<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+										{#each group.fields as field (field.name)}
+											{#if !shouldHideField(field, config)}
+												{@render renderField(field, field.name, config, 0)}
+											{/if}
+										{/each}
+									</div>
+								</Disclosure>
+							{/each}
+						</div>
+					{/if}
 				</div>
+			{/if}
+
+			{#if queryCapable}
+				<QueryAccessSection bind:queryEnabled bind:ingestOnQuery {hasSchedule} />
 			{/if}
 
 			<!-- Schedule & Filtering -->

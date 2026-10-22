@@ -6,6 +6,7 @@
 	import Button from '$components/ui/Button.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import RoleSelector from '$lib/components/RoleSelector.svelte';
+	import CreateAPIKeyBlade from '$components/serviceaccount/CreateAPIKeyBlade.svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import {
@@ -36,7 +37,21 @@
 	let active = $state(true);
 	let selectedRoleIds = $state<string[]>([]);
 
-	let showNewKeyBanner = $derived($page.url.searchParams.get('created') === '1');
+	let showCreateKey = $state(false);
+	let keyJustCreated = $state(false);
+	let showNewKeyBanner = $derived(keyJustCreated || $page.url.searchParams.get('created') === '1');
+
+	// The old /api-keys/new route redirects here with ?create=1, so open the blade once the account has loaded and drop the flag so a refresh does not reopen it
+	$effect(() => {
+		if (sa && $page.url.searchParams.get('create') === '1') {
+			showCreateKey = true;
+			goto(resolve('/service-accounts/[id]', { id: sa.id }), {
+				replaceState: true,
+				noScroll: true,
+				keepFocus: true
+			});
+		}
+	});
 
 	$effect(() => {
 		if ($page.params.id) {
@@ -117,9 +132,11 @@
 		goto(resolve('/admin?tab=service_accounts'));
 	}
 
-	function goNewKey() {
+	async function handleKeyDone() {
+		showCreateKey = false;
+		keyJustCreated = true;
 		if (!sa) return;
-		goto(resolve(`/service-accounts/${sa.id}/api-keys/new`));
+		keys = await listAPIKeys(sa.id).catch(() => keys);
 	}
 
 	function formatDate(iso: string | undefined): string {
@@ -232,7 +249,10 @@
 					<button
 						type="button"
 						class="text-green-700 dark:text-green-400 hover:text-green-900"
-						onclick={() => goto(resolve(`/service-accounts/${sa!.id}`))}
+						onclick={() => {
+							keyJustCreated = false;
+							goto(resolve(`/service-accounts/${sa!.id}`));
+						}}
 						aria-label={m.serviceaccounts_dismiss_aria()}
 					>
 						<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
@@ -518,7 +538,7 @@
 
 							<button
 								type="button"
-								onclick={goNewKey}
+								onclick={() => (showCreateKey = true)}
 								disabled={keys.length >= MAX_KEYS}
 								class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-dashed transition-all
 									{keys.length >= MAX_KEYS
@@ -576,4 +596,8 @@
 			keyToDelete = null;
 		}}
 	/>
+{/if}
+
+{#if sa && showCreateKey}
+	<CreateAPIKeyBlade {sa} onClose={() => (showCreateKey = false)} onDone={handleKeyDone} />
 {/if}

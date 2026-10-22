@@ -121,7 +121,7 @@ func NewPostUsersBadRequest() *PostUsersBadRequest {
 //
 // Bad Request
 type PostUsersBadRequest struct {
-	Payload *models.ErrorResponse
+	Payload *models.ValidationErrorResponse
 }
 
 // IsSuccess returns true when this post users bad request response has a 2xx status code
@@ -164,13 +164,13 @@ func (o *PostUsersBadRequest) String() string {
 	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersBadRequest %s", 400, payload)
 }
 
-func (o *PostUsersBadRequest) GetPayload() *models.ErrorResponse {
+func (o *PostUsersBadRequest) GetPayload() *models.ValidationErrorResponse {
 	return o.Payload
 }
 
 func (o *PostUsersBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.ValidationErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

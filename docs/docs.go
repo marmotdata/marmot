@@ -5485,6 +5485,399 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/query/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists the query log, newest first. Callers without access:view only see their own queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "List queries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source name",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "allowed or denied",
+                        "name": "decision",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "running, completed, failed or denied",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only queries that referenced this MRN",
+                        "name": "mrn",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Principal type",
+                        "name": "principal_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Principal ID",
+                        "name": "principal_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only the caller's own queries",
+                        "name": "mine",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated clients to include: api, mcp or cli",
+                        "name": "client",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryHistoryResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/history/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns one query from the log, including the catalog context recorded when it ran. Callers without access:view can only read their own queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Get a query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryRecord"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/run": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Runs a read-only statement against a queryable source as the caller. The statement is planned first and refused unless the caller may query every table it references. Every attempt is recorded in the query log.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Run a query",
+                "parameters": [
+                    {
+                        "description": "Query",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryRunInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/sources": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Pages through the sources that answer data queries, in name order. Use a source's name as the \"source\" of a query.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "List queryable sources",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by source name or plugin",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size, at most 200",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryListSourcesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/sources/{name}/tables": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists the catalogued tables a queryable source can reach, busiest first, each with a statement that previews it in the source's own dialect.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "List a source's tables",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by table name",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 25,
+                        "description": "At most 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/QuerySourceTable"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Summarises data query activity over a window from hourly rollups: totals, a series and the busiest callers, sources and tables. Callers without access:view only see their own activity. The window defaults to the last 24 hours.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Query statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start of the window, RFC 3339",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End of the window, RFC 3339",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "hour or day; defaults by window length",
+                        "name": "interval",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 6,
+                        "description": "Entries in each top list",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryStats"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reports the long-running plugin processes that serve data queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Query plugin instance status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryStatusResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/roles": {
             "get": {
                 "security": [
@@ -8467,6 +8860,141 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/query/serve/enrol": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Issues a short-lived client certificate for a plugin running outside Marmot to connect and serve queries for the named sources. The caller must hold ingestion:serve, and each source must be free or already served by the caller.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Enrol a serving plugin",
+                "parameters": [
+                    {
+                        "description": "Certificate request and sources",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pluginserve.EnrolInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pluginserve.EnrolResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/query/serve/keys": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "List serving key generations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ServeKeyGeneration"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/query/serve/keys/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts a new generation of the CA and query signing keys that secure serving plugins. A graceful rotation publishes the new keys, uses them after the overlap and then retires the old ones, without interrupting serving plugins. An immediate rotation is for a suspected compromise: it switches at once and serving plugins must be restarted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Rotate serving keys",
+                "parameters": [
+                    {
+                        "description": "Rotation",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ServeRotateKeysRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ServeKeyGeneration"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -9549,11 +10077,19 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "ingest_on_query": {
+                    "description": "IngestOnQuery refreshes the source's catalog in the background after\ndata queries, rate-limited per source.",
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "queryable": {
+                    "description": "Queryable lets agents and users query this source through Marmot; the\nplugin must support queries.",
+                    "type": "boolean"
                 }
             }
         },
@@ -10759,6 +11295,26 @@ const docTemplate = `{
                 }
             }
         },
+        "PluginInstanceStatus": {
+            "type": "object",
+            "properties": {
+                "active_queries": {
+                    "type": "integer"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "restarts": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                }
+            }
+        },
         "PluginRun": {
             "type": "object",
             "properties": {
@@ -10870,6 +11426,52 @@ const docTemplate = `{
                 }
             }
         },
+        "QueryAssetContext": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "last_sync_at": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryColumn": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "QueryCount": {
             "type": "object",
             "properties": {
@@ -10881,6 +11483,353 @@ const docTemplate = `{
                 },
                 "query_type": {
                     "type": "string"
+                }
+            }
+        },
+        "QueryHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "queries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryRecord"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "QueryListSourcesResponse": {
+            "type": "object",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QuerySource"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "QueryRecord": {
+            "type": "object",
+            "properties": {
+                "audit_subject": {
+                    "type": "string"
+                },
+                "client": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "context": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryAssetContext"
+                    }
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "decision_detail": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "referenced_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rows_returned": {
+                    "type": "integer"
+                },
+                "source_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "statement": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "truncated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "QueryResult": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryColumn"
+                    }
+                },
+                "context": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryAssetContext"
+                    }
+                },
+                "query_id": {
+                    "type": "string"
+                },
+                "referenced_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "row_count": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "truncated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "QueryRunInput": {
+            "type": "object",
+            "required": [
+                "source",
+                "statement"
+            ],
+            "properties": {
+                "max_rows": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "statement": {
+                    "type": "string"
+                }
+            }
+        },
+        "QuerySource": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "ingest_on_query": {
+                    "type": "boolean"
+                },
+                "last_queried_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "queries_last_week": {
+                    "type": "integer"
+                },
+                "served": {
+                    "description": "Served is set when a plugin running outside Marmot answers this source's queries; Marmot then holds no usable config for it.",
+                    "type": "boolean"
+                },
+                "table_count": {
+                    "description": "Activity, filled in when sources are listed.",
+                    "type": "integer"
+                }
+            }
+        },
+        "QuerySourceTable": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "queries": {
+                    "type": "integer"
+                },
+                "sample_statement": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryStats": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "interval": {
+                    "type": "string"
+                },
+                "series": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryStatsPoint"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "top_callers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryStatsGroup"
+                    }
+                },
+                "top_sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryStatsGroup"
+                    }
+                },
+                "top_tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryStatsGroup"
+                    }
+                },
+                "totals": {
+                    "$ref": "#/definitions/QueryStatsTotals"
+                }
+            }
+        },
+        "QueryStatsGroup": {
+            "type": "object",
+            "properties": {
+                "allowed": {
+                    "type": "integer"
+                },
+                "denied": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "QueryStatsPoint": {
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "type": "string"
+                },
+                "denied": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "succeeded": {
+                    "type": "integer"
+                }
+            }
+        },
+        "QueryStatsTotals": {
+            "type": "object",
+            "properties": {
+                "allowed": {
+                    "type": "integer"
+                },
+                "callers": {
+                    "type": "integer"
+                },
+                "denied": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "queries": {
+                    "type": "integer"
+                },
+                "tables": {
+                    "type": "integer"
+                }
+            }
+        },
+        "QueryStatusResponse": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PluginInstanceStatus"
+                    }
                 }
             }
         },
@@ -11437,6 +12386,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "ingest_on_query": {
+                    "type": "boolean"
+                },
                 "last_run_at": {
                     "type": "string"
                 },
@@ -11453,6 +12405,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "plugin_id": {
+                    "type": "string"
+                },
+                "queryable": {
+                    "type": "boolean"
+                },
+                "served_by_id": {
+                    "type": "string"
+                },
+                "served_by_type": {
+                    "description": "ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
                     "type": "string"
                 },
                 "updated_at": {
@@ -11491,6 +12453,42 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "ServeKeyGeneration": {
+            "type": "object",
+            "properties": {
+                "activates_at": {
+                    "type": "string"
+                },
+                "active": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "retires_at": {
+                    "type": "string"
+                },
+                "storage": {
+                    "type": "string"
+                }
+            }
+        },
+        "ServeRotateKeysRequest": {
+            "type": "object",
+            "properties": {
+                "ca_key_uri": {
+                    "description": "CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty to have Marmot generate keys it stores encrypted, which is refused when the current keys are in a KMS.",
+                    "type": "string"
+                },
+                "immediate": {
+                    "description": "Immediate switches to the new keys at once and stops trusting the old ones, for a suspected compromise; serving plugins must then be restarted.",
+                    "type": "boolean"
+                },
+                "signing_key_uri": {
+                    "type": "string"
                 }
             }
         },
@@ -11981,11 +12979,19 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "ingest_on_query": {
+                    "description": "IngestOnQuery refreshes the source's catalog in the background after\ndata queries, rate-limited per source.",
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "queryable": {
+                    "description": "Queryable lets agents and users query this source through Marmot; the\nplugin must support queries.",
+                    "type": "boolean"
                 }
             }
         },
@@ -12286,6 +13292,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/pluginsdk.ConfigField"
                     }
                 },
+                "group": {
+                    "description": "Group names the section a field belongs to in the UI, such as \"Authentication\" or \"Advanced\"; fields without one are shown first and each group renders as its own collapsed section",
+                    "type": "string"
+                },
                 "hidden": {
                     "type": "boolean"
                 },
@@ -12397,6 +13407,9 @@ const docTemplate = `{
                 },
                 "supports_data_preview": {
                     "type": "boolean"
+                },
+                "supports_query": {
+                    "type": "boolean"
                 }
             }
         },
@@ -12427,6 +13440,68 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "pattern": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginserve.EnrolInput": {
+            "type": "object",
+            "properties": {
+                "csr": {
+                    "type": "string"
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginserve.EnrolSource"
+                    }
+                }
+            }
+        },
+        "pluginserve.EnrolResult": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "Address is the host:port to dial; when empty the serving process uses its Marmot host name with Port.",
+                    "type": "string"
+                },
+                "ca_bundle": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "enrolment_id": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "instance_id": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                },
+                "signing_keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "pluginserve.EnrolSource": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
                     "type": "string"
                 }
             }

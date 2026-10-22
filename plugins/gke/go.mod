@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/marmotdata/marmot/plugins/kubernetes v0.0.0-00010101000000-000000000000
-	github.com/marmotdata/plugin-sdk v0.0.0-20260913214252-a0eb271320a7
+	github.com/marmotdata/plugin-sdk v0.0.0-20261022181949-e1e9cea1ad2e
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.288.0

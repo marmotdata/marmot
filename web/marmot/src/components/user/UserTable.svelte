@@ -8,8 +8,8 @@
 	import { Lock, Mail } from 'lucide-svelte';
 
 	export let users = [];
-	export let editingUserId = null;
-	export let onEdit;
+	export let editingUserId: string | null = null;
+	export let onEdit: (userId: string | null) => void;
 	export let onUpdate;
 	export let onDelete;
 

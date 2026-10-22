@@ -46,10 +46,10 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	DiscoverJobs      bool `json:"discover_jobs" description:"Whether to discover Glue jobs" default:"true"`
-	DiscoverDatabases bool `json:"discover_databases" description:"Whether to discover Glue databases" default:"true"`
-	DiscoverTables    bool `json:"discover_tables" description:"Whether to discover Glue tables" default:"true"`
-	DiscoverCrawlers  bool `json:"discover_crawlers" description:"Whether to discover Glue crawlers" default:"true"`
+	DiscoverJobs      bool `json:"discover_jobs" group:"Discovery" description:"Whether to discover Glue jobs" default:"true"`
+	DiscoverDatabases bool `json:"discover_databases" group:"Discovery" description:"Whether to discover Glue databases" default:"true"`
+	DiscoverTables    bool `json:"discover_tables" group:"Discovery" description:"Whether to discover Glue tables" default:"true"`
+	DiscoverCrawlers  bool `json:"discover_crawlers" group:"Discovery" description:"Whether to discover Glue crawlers" default:"true"`
 }
 
 // Example configuration for the plugin

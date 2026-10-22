@@ -52,15 +52,15 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Catalog  string `json:"catalog" description:"Catalog to discover; an external catalog name switches discovery to it" default:"default_catalog"`
-	TLS      string `json:"tls" description:"TLS mode (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
+	TLS      string `json:"tls" group:"Authentication" description:"TLS mode (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
-	Databases        []string `json:"databases" description:"Databases to discover; all when empty"`
-	ExcludeDatabases []string `json:"exclude_databases" description:"Databases to skip" default:"[\"information_schema\",\"_statistics_\",\"sys\"]"`
+	Databases        []string `json:"databases" group:"Discovery" description:"Databases to discover; all when empty"`
+	ExcludeDatabases []string `json:"exclude_databases" group:"Discovery" description:"Databases to skip" default:"[\"information_schema\",\"_statistics_\",\"sys\"]"`
 
-	IncludeColumns           bool `json:"include_columns" description:"Whether to include column information" default:"true"`
-	IncludeViews             bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeMaterializedViews bool `json:"include_materialized_views" description:"Whether to discover asynchronous materialized views" default:"true"`
-	IncludeStatistics        bool `json:"include_statistics" description:"Whether to include row counts, sizes and column counts" default:"true"`
+	IncludeColumns           bool `json:"include_columns" group:"Discovery" description:"Whether to include column information" default:"true"`
+	IncludeViews             bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeMaterializedViews bool `json:"include_materialized_views" group:"Discovery" description:"Whether to discover asynchronous materialized views" default:"true"`
+	IncludeStatistics        bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts, sizes and column counts" default:"true"`
 }
 
 // Example configuration for the plugin

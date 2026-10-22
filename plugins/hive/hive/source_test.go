@@ -34,7 +34,7 @@ func TestValidate_AppliesDefaults(t *testing.T) {
 	assert.Equal(t, "hive", config.KerberosServiceName)
 	assert.Equal(t, "binary", config.Transport)
 	assert.Equal(t, "cliservice", config.HTTPPath)
-	assert.False(t, config.SSL)
+	assert.True(t, config.SSL)
 	assert.False(t, config.SSLSkipVerify)
 	assert.Equal(t, []string{"sys", "information_schema"}, config.ExcludeDatabases)
 	assert.True(t, config.IncludeColumns)

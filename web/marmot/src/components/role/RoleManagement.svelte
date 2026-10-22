@@ -4,7 +4,9 @@
 	import { resolve } from '$app/paths';
 	import { listRoles } from '$lib/roles/api';
 	import { m } from '$lib/paraglide/messages';
+	import { page } from '$app/stores';
 	import RoleTable from './RoleTable.svelte';
+	import CreateRoleBlade from './CreateRoleBlade.svelte';
 	import type { Role } from '$lib/roles/types';
 
 	let roles: Role[] = [];
@@ -14,6 +16,7 @@
 	let loading = false;
 	let error: string | null = null;
 	let searchTimer: ReturnType<typeof setTimeout>;
+	let showCreate = false;
 
 	async function fetchRoles() {
 		try {
@@ -43,8 +46,9 @@
 
 	$: if (roleQuery !== undefined) scheduleSearch();
 
-	function goCreate() {
-		goto(resolve('/roles/new'));
+	function handleCreated() {
+		showCreate = false;
+		fetchRoles();
 	}
 
 	async function handleRoleUpdated(updatedRole: Role) {
@@ -58,7 +62,14 @@
 		applyFilter();
 	}
 
-	onMount(fetchRoles);
+	onMount(() => {
+		fetchRoles();
+		// The old /roles/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
+		if ($page.url.searchParams.get('create') === '1') {
+			showCreate = true;
+			goto(resolve('/admin?tab=roles'), { replaceState: true, noScroll: true, keepFocus: true });
+		}
+	});
 </script>
 
 <div
@@ -76,7 +87,7 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={goCreate}
+				on:click={() => (showCreate = true)}
 			>
 				{m.roles_add_button()}
 			</button>
@@ -109,3 +120,7 @@
 		{/if}
 	</div>
 </div>
+
+{#if showCreate}
+	<CreateRoleBlade onClose={() => (showCreate = false)} onCreated={handleCreated} />
+{/if}

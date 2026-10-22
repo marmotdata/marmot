@@ -183,11 +183,11 @@ func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query
 				       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 				FROM search_index
 				%s
-				LIMIT 1000
+				LIMIT %d
 			) candidates
 			ORDER BY updated_at DESC
 			LIMIT $%d OFFSET $%d
-		`, whereSQL, limitParam, offsetParam)
+		`, whereSQL, structuredResultWindow, limitParam, offsetParam)
 		return sqlQuery, params
 	}
 
@@ -497,6 +497,9 @@ func (r *PostgresRepository) scanSearchResults(rows pgx.Rows) ([]*Result, error)
 	return results, nil
 }
 
+// structuredResultWindow is how many rows a filter-only listing considers before sorting and paging, which keeps unindexed filters bounded.
+const structuredResultWindow = 1000
+
 // buildFacets computes facet counts.
 // For search queries with text, we skip facet computation entirely (too expensive).
 // Facets are only computed for listing queries (no search text).
@@ -510,10 +513,23 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 
 	// For search queries, skip expensive facet computation
 	// The search results themselves provide the filtering - facets aren't needed
-	if searchQuery != "" || (parsedQuery != nil && parsedQuery.HasStructuredFilters()) {
-		// Just get a quick count from the search results
-		// We'll estimate total from the search query instead
+	if searchQuery != "" {
 		return facets, 0, nil
+	}
+
+	// Filter-only queries (such as @term or @type with no search text) are cheap to count, and without a total the UI cannot page past the first page. The count stops at the same 1000-row window the listing query pages through.
+	if parsedQuery != nil && parsedQuery.HasStructuredFilters() {
+		whereClauses, params, _ := r.buildFilterClauses(filter, parsedQuery, nil, 0)
+		whereSQL := ""
+		if len(whereClauses) > 0 {
+			whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+		}
+		var total int
+		countQuery := fmt.Sprintf(`SELECT count(*) FROM (SELECT 1 FROM search_index %s LIMIT %d) matches`, whereSQL, structuredResultWindow)
+		if err := r.db.QueryRow(ctx, countQuery, params...).Scan(&total); err != nil {
+			return facets, 0, nil
+		}
+		return facets, total, nil
 	}
 
 	// For unfiltered empty queries, use cached facets from summary_counts

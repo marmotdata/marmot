@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
+	queryAPI "github.com/marmotdata/marmot/internal/api/v1/dataquery"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
@@ -27,6 +29,7 @@ import (
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
+	serveAPI "github.com/marmotdata/marmot/internal/api/v1/pluginserve"
 	rolesAPI "github.com/marmotdata/marmot/internal/api/v1/roles"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
@@ -43,6 +46,7 @@ import (
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
+	queryService "github.com/marmotdata/marmot/internal/core/dataquery"
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
@@ -61,6 +65,7 @@ import (
 	operatorSync "github.com/marmotdata/marmot/internal/operator/sync"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/plugin/install"
+	"github.com/marmotdata/marmot/internal/pluginserve"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/marmot/internal/websocket"
@@ -109,6 +114,12 @@ type Server struct {
 
 	// Operator Run CRD syncer
 	operatorSyncer *operatorSync.Syncer
+
+	// Long-running plugin processes that serve data queries
+	pluginInstances *plugin.InstanceManager
+
+	// Accepts plugins that serve queries from outside Marmot
+	serveHub *pluginserve.Hub
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -301,6 +312,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		if err := install.LoadPlugins(installOpts); err != nil {
 			log.Error().Err(err).Msg("Failed to load external plugins")
 		}
+		if scheduleEncryptor != nil {
+			if err := scheduleSvc.EncryptPlaintextSecrets(context.Background(), scheduleEncryptor); err != nil {
+				log.Error().Err(err).Msg("Failed to encrypt plaintext pipeline secrets")
+			}
+		}
 		log.Info().Msg("Plugin loading complete")
 	}()
 
@@ -311,8 +327,10 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		SchedulerInterval: time.Duration(config.Pipelines.SchedulerInterval) * time.Second,
 		LeaseExpiry:       time.Duration(config.Pipelines.LeaseExpiry) * time.Second,
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
-		LinkAssets:        config.Experimental.TablePreview,
-		DB:                db,
+		// The query API lists a source's tables from these links, so they are kept
+		// whenever data querying is on as well as for table previews.
+		LinkAssets: config.Experimental.TablePreview || config.Query.Enabled,
+		DB:         db,
 	}
 	if config.Plugins.Autoinstall {
 		schedulerConfig.PluginInstall = &install.Options{Registry: config.Plugins.Registry}
@@ -517,6 +535,38 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		}
 	}
 
+	// Data queries: a queryable source is an ingestion source with querying switched
+	// on, resolved through the schedule service, so one connection both
+	// catalogs and answers queries.
+	var querySvc queryService.Service
+	var pluginInstances *plugin.InstanceManager
+	var serveHub *pluginserve.Hub
+	var serveEnroller *pluginserve.Enroller
+	var serveKeyring *pluginserve.Keyring
+	if config.Query.Enabled && config.Query.Serve.Enabled {
+		serveHub, serveEnroller, serveKeyring = startServeHub(config, db, scheduleSvc, scheduleEncryptor, pluginserve.Principals{Users: userSvc, ServiceAccounts: serviceAccountSvc})
+	}
+	if config.Query.Enabled {
+		pluginInstances = plugin.NewInstanceManager(time.Duration(config.Query.InstanceIdleTTL) * time.Second)
+		querySvc = queryService.NewService(
+			queryService.NewPostgresRepository(db),
+			queryAPI.NewScheduleSourceProvider(scheduleSvc),
+			assetSvc,
+			pluginInstances,
+			queryAPI.NewScheduleIngestTrigger(scheduleSvc),
+			scheduleEncryptor,
+			queryService.Options{
+				QueryTimeout:         time.Duration(config.Query.QueryTimeout) * time.Second,
+				MaxRowsDefault:       config.Query.MaxRowsDefault,
+				MaxRowsCap:           config.Query.MaxRowsCap,
+				IngestSourceInterval: time.Duration(config.Query.IngestOnQuerySourceInterval) * time.Second,
+				IngestGlobalInterval: time.Duration(config.Query.IngestOnQueryGlobalInterval) * time.Second,
+				Lineage:              lineageSvc,
+				Served:               servedRunner(serveHub),
+			},
+		)
+	}
+
 	server := &Server{
 		config:                     config,
 		metricsService:             metricsService,
@@ -543,7 +593,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		users.NewHandler(userSvc, authSvc, config),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
@@ -563,6 +613,14 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+	}
+	if querySvc != nil {
+		server.pluginInstances = pluginInstances
+		server.handlers = append(server.handlers, queryAPI.NewHandler(querySvc, userSvc, authSvc, config))
+	}
+	if serveHub != nil {
+		server.serveHub = serveHub
+		server.handlers = append(server.handlers, serveAPI.NewHandler(serveEnroller, serveKeyring, userSvc, authSvc, config))
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled
@@ -632,6 +690,64 @@ func (s *Server) Stop() {
 	if s.metricsService != nil {
 		s.metricsService.Stop()
 	}
+	if s.pluginInstances != nil {
+		s.pluginInstances.Stop()
+	}
+	if s.serveHub != nil {
+		s.serveHub.Stop()
+	}
+}
+
+// startServeHub starts accepting plugins that serve queries from outside Marmot. Serving was explicitly enabled, so a missing encryption key or an unusable listener stops startup rather than silently leaving served sources unreachable.
+func startServeHub(cfg *config.Config, db *pgxpool.Pool, schedules *runService.ScheduleService, encryptor *crypto.Encryptor, principals pluginserve.Principals) (*pluginserve.Hub, *pluginserve.Enroller, *pluginserve.Keyring) {
+	store := pluginserve.NewStore(db)
+	keyCfg := pluginserve.KeyConfig{CAKeyURI: cfg.Query.Serve.CAKeyURI, SigningKeyURI: cfg.Query.Serve.SigningKeyURI}
+	keyring, err := pluginserve.LoadKeyring(context.Background(), store, encryptor, keyCfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to load plugin serving keys")
+	}
+	if keyCfg.CAKeyURI != "" && !keyring.UsesKMS() {
+		log.Warn().Msg("query.serve KMS keys are configured but the serving keys in use are stored in the database; rotate the serving keys to move them to the KMS")
+	}
+
+	owners := func(ctx context.Context, source string) (pluginserve.Owner, error) {
+		schedule, err := schedules.GetScheduleByName(ctx, source)
+		if err != nil {
+			return pluginserve.Owner{}, err
+		}
+		if !schedule.Served() {
+			return pluginserve.Owner{}, fmt.Errorf("source %q is not served from outside Marmot", source)
+		}
+		return pluginserve.Owner{Type: *schedule.ServedByType, ID: *schedule.ServedByID}, nil
+	}
+
+	_, port, err := net.SplitHostPort(cfg.Query.Serve.ListenAddress)
+	if err != nil {
+		log.Fatal().Err(err).Str("listen_address", cfg.Query.Serve.ListenAddress).Msg("Invalid query.serve.listen_address")
+	}
+
+	// A replica address without a port, such as a pod IP, uses the listen port; JoinHostPort brackets IPv6 addresses.
+	replicaAddress := cfg.Query.Serve.ReplicaAddress
+	if _, _, err := net.SplitHostPort(replicaAddress); err != nil && replicaAddress != "" {
+		replicaAddress = net.JoinHostPort(replicaAddress, port)
+	}
+
+	hub := pluginserve.NewHub(keyring, store, owners, principals, pluginserve.HubConfig{
+		ListenAddress:  cfg.Query.Serve.ListenAddress,
+		ReplicaAddress: replicaAddress,
+	})
+	if err := hub.Start(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to start plugin serving")
+	}
+	return hub, pluginserve.NewEnroller(keyring, store, schedules, cfg.Query.Serve.PublicAddress, port), keyring
+}
+
+// servedRunner keeps a nil hub a nil interface, so the query service sees serving as disabled rather than calling a nil pointer.
+func servedRunner(hub *pluginserve.Hub) queryService.ServedRunner {
+	if hub == nil {
+		return nil
+	}
+	return hub
 }
 
 func (s *Server) RegisterRoutes(mux *http.ServeMux) {
@@ -801,7 +917,7 @@ type runCompletionNotifier struct {
 func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.Run) {
 	// Skip notifications for system/synthetic users that have no DB entry
 	switch run.CreatedBy {
-	case "scheduler", "system", "operator", "anonymous":
+	case "scheduler", "system", "operator", "anonymous", "query":
 		return
 	}
 

@@ -51,10 +51,10 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	IncludeEndpoints     bool `json:"include_endpoints" description:"Whether to discover inference endpoints" default:"true"`
-	IncludeModelPackages bool `json:"include_model_packages" description:"Whether to discover model package groups from the model registry" default:"true"`
-	IncludeFeatureGroups bool `json:"include_feature_groups" description:"Whether to discover feature groups from the feature store" default:"true"`
-	IncludeTrainingJobs  bool `json:"include_training_jobs" description:"Whether to discover training jobs. Accounts keep a long job history, so this is off by default" default:"false"`
+	IncludeEndpoints     bool `json:"include_endpoints" group:"Discovery" description:"Whether to discover inference endpoints" default:"true"`
+	IncludeModelPackages bool `json:"include_model_packages" group:"Discovery" description:"Whether to discover model package groups from the model registry" default:"true"`
+	IncludeFeatureGroups bool `json:"include_feature_groups" group:"Discovery" description:"Whether to discover feature groups from the feature store" default:"true"`
+	IncludeTrainingJobs  bool `json:"include_training_jobs" group:"Discovery" description:"Whether to discover training jobs. Accounts keep a long job history, so this is off by default" default:"false"`
 }
 
 // Example configuration for the plugin

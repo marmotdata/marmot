@@ -25,13 +25,13 @@ type Config struct {
 	TrackingURI string `json:"tracking_uri" label:"Tracking URI" description:"MLflow tracking server URL, also used as the model registry" validate:"required,url"`
 	Username    string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password    string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
-	Token       string `json:"token,omitempty" description:"Bearer token for authentication" sensitive:"true"`
-	VerifySSL   bool   `json:"verify_ssl" label:"Verify SSL" description:"Verify the server TLS certificate" default:"true"`
+	Token       string `json:"token,omitempty" group:"Authentication" description:"Bearer token for authentication" sensitive:"true"`
+	VerifySSL   bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the server TLS certificate" default:"true"`
 
-	IncludeExperiments bool `json:"include_experiments" description:"Discover experiments as assets" default:"true"`
-	IncludeDatasets    bool `json:"include_datasets" description:"Discover the datasets logged to each model's run" default:"true"`
-	IncludeMetrics     bool `json:"include_metrics" description:"Record the run metrics of each model" default:"true"`
-	MaxModels          int  `json:"max_models" description:"Maximum number of registered models to discover (0 = unlimited)" default:"0" validate:"omitempty,min=0"`
+	IncludeExperiments bool `json:"include_experiments" group:"Discovery" description:"Discover experiments as assets" default:"true"`
+	IncludeDatasets    bool `json:"include_datasets" group:"Discovery" description:"Discover the datasets logged to each model's run" default:"true"`
+	IncludeMetrics     bool `json:"include_metrics" group:"Discovery" description:"Record the run metrics of each model" default:"true"`
+	MaxModels          int  `json:"max_models" group:"Advanced" description:"Maximum number of registered models to discover (0 = unlimited)" default:"0" validate:"omitempty,min=0"`
 }
 
 // Example configuration for the plugin

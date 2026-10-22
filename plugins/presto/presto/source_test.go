@@ -40,7 +40,7 @@ func TestValidate_PasswordWithoutHTTPSFails(t *testing.T) {
 	// The driver drops the password on plain HTTP, so a config that
 	// looks authenticated would silently connect anonymously.
 	s := &Source{}
-	_, err := s.Validate(pluginsdk.RawConfig{"host": "localhost", "user": "marmot", "password": "secret"})
+	_, err := s.Validate(pluginsdk.RawConfig{"host": "localhost", "user": "marmot", "password": "secret", "secure": false})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "secure")
 }
@@ -58,7 +58,7 @@ func TestValidate_AppliesDefaults(t *testing.T) {
 	require.NotNil(t, s.config)
 
 	assert.Equal(t, 8080, s.config.Port)
-	assert.False(t, s.config.Secure)
+	assert.True(t, s.config.Secure)
 	assert.Equal(t, []string{"system", "jmx"}, s.config.ExcludeCatalogs)
 	assert.Empty(t, s.config.ExcludeSchemas)
 	assert.True(t, s.config.IncludeCatalogs)

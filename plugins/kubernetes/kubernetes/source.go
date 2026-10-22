@@ -32,19 +32,19 @@ type DiscoveryConfig struct {
 
 	ClusterName string `json:"cluster_name,omitempty" description:"Cluster name to prefix asset names with"`
 
-	Namespaces        []string `json:"namespaces,omitempty" description:"Namespaces to discover. Empty or [\"*\"] means all namespaces"`
-	ExcludeNamespaces []string `json:"exclude_namespaces,omitempty" description:"Namespaces to skip when discovering all namespaces" default:"[\"kube-system\",\"kube-public\",\"kube-node-lease\"]"`
-	LabelSelector     string   `json:"label_selector,omitempty" description:"Only discover namespaced resources matching this label selector (e.g. team=data)"`
+	Namespaces        []string `json:"namespaces,omitempty" group:"Discovery" description:"Namespaces to discover. Empty or [\"*\"] means all namespaces"`
+	ExcludeNamespaces []string `json:"exclude_namespaces,omitempty" group:"Discovery" description:"Namespaces to skip when discovering all namespaces" default:"[\"kube-system\",\"kube-public\",\"kube-node-lease\"]"`
+	LabelSelector     string   `json:"label_selector,omitempty" group:"Discovery" description:"Only discover namespaced resources matching this label selector (e.g. team=data)"`
 
-	DiscoverNamespaces   bool `json:"discover_namespaces" description:"Discover namespaces" default:"true"`
-	DiscoverServices     bool `json:"discover_services" description:"Discover services" default:"true"`
-	DiscoverDeployments  bool `json:"discover_deployments" description:"Discover deployments" default:"true"`
-	DiscoverStatefulSets bool `json:"discover_statefulsets" label:"Discover StatefulSets" description:"Discover stateful sets" default:"true"`
-	DiscoverCronJobs     bool `json:"discover_cronjobs" label:"Discover CronJobs" description:"Discover cron jobs, with their recent job runs as run history" default:"true"`
-	DiscoverPods         bool `json:"discover_pods" description:"Discover pods. Off by default because pods are short-lived and can flood the catalog" default:"false"`
+	DiscoverNamespaces   bool `json:"discover_namespaces" group:"Discovery" description:"Discover namespaces" default:"true"`
+	DiscoverServices     bool `json:"discover_services" group:"Discovery" description:"Discover services" default:"true"`
+	DiscoverDeployments  bool `json:"discover_deployments" group:"Discovery" description:"Discover deployments" default:"true"`
+	DiscoverStatefulSets bool `json:"discover_statefulsets" group:"Discovery" label:"Discover StatefulSets" description:"Discover stateful sets" default:"true"`
+	DiscoverCronJobs     bool `json:"discover_cronjobs" group:"Discovery" label:"Discover CronJobs" description:"Discover cron jobs, with their recent job runs as run history" default:"true"`
+	DiscoverPods         bool `json:"discover_pods" group:"Discovery" description:"Discover pods. Off by default because pods are short-lived and can flood the catalog" default:"false"`
 
-	LabelsToMetadata      bool `json:"labels_to_metadata" description:"Include resource labels in asset metadata" default:"true"`
-	AnnotationsToMetadata bool `json:"annotations_to_metadata" description:"Include resource annotations in asset metadata" default:"false"`
+	LabelsToMetadata      bool `json:"labels_to_metadata" group:"Discovery" description:"Include resource labels in asset metadata" default:"true"`
+	AnnotationsToMetadata bool `json:"annotations_to_metadata" group:"Discovery" description:"Include resource annotations in asset metadata" default:"false"`
 }
 
 // Validate checks the discovery options: at least one resource kind must
@@ -499,7 +499,7 @@ type Config struct {
 
 	Host          string `json:"host,omitempty" description:"API server URL for direct token authentication" validate:"omitempty,url"`
 	Token         string `json:"token,omitempty" description:"Bearer token, typically a service account token" sensitive:"true"`
-	CACertificate string `json:"ca_certificate,omitempty" label:"CA Certificate" description:"PEM-encoded CA certificate of the API server"`
+	CACertificate string `json:"ca_certificate,omitempty" group:"Authentication" label:"CA Certificate" description:"PEM-encoded CA certificate of the API server"`
 }
 
 // Example configuration for the plugin

@@ -55,20 +55,20 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Database string `json:"database" description:"Database to discover. When empty, every database on the server is discovered"`
-	SSLMode  string `json:"ssl_mode" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
+	SSLMode  string `json:"ssl_mode" group:"Authentication" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
 
 	// Discovery configuration
-	IncludeColumns       bool     `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeStatistics    bool     `json:"include_statistics" description:"Whether to collect row, column and size statistics" default:"true"`
-	DiscoverForeignKeys  bool     `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemSchemas bool     `json:"exclude_system_schemas" description:"Whether to exclude PostgreSQL and TimescaleDB internal schemas" default:"true"`
-	ExcludeDatabases     []string `json:"exclude_databases" description:"Databases to skip"`
+	IncludeColumns       bool     `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeStatistics    bool     `json:"include_statistics" group:"Advanced" description:"Whether to collect row, column and size statistics" default:"true"`
+	DiscoverForeignKeys  bool     `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemSchemas bool     `json:"exclude_system_schemas" group:"Discovery" description:"Whether to exclude PostgreSQL and TimescaleDB internal schemas" default:"true"`
+	ExcludeDatabases     []string `json:"exclude_databases" group:"Discovery" description:"Databases to skip"`
 
 	// TimescaleDB configuration
-	IncludeHypertables          bool `json:"include_hypertables" description:"Whether to record hypertable dimensions, chunk counts and policies" default:"true"`
-	IncludeContinuousAggregates bool `json:"include_continuous_aggregates" description:"Whether to record continuous aggregates and their source hypertable lineage" default:"true"`
-	IncludeCompression          bool `json:"include_compression" description:"Whether to record compression segment and order columns" default:"true"`
-	IncludeChunks               bool `json:"include_chunks" description:"Whether to read the oldest and newest chunk range. Off by default because a busy hypertable has thousands of chunks" default:"false"`
+	IncludeHypertables          bool `json:"include_hypertables" group:"Discovery" description:"Whether to record hypertable dimensions, chunk counts and policies" default:"true"`
+	IncludeContinuousAggregates bool `json:"include_continuous_aggregates" group:"Discovery" description:"Whether to record continuous aggregates and their source hypertable lineage" default:"true"`
+	IncludeCompression          bool `json:"include_compression" group:"Discovery" description:"Whether to record compression segment and order columns" default:"true"`
+	IncludeChunks               bool `json:"include_chunks" group:"Discovery" description:"Whether to read the oldest and newest chunk range. Off by default because a busy hypertable has thousands of chunks" default:"false"`
 }
 
 // Example configuration for the plugin

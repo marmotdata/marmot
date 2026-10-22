@@ -2,26 +2,26 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from '$components/ui/Button.svelte';
-	import Stepper from '$components/ui/Stepper.svelte';
-	import Step from '$components/ui/Step.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import ExternalLinks from '$components/shared/ExternalLinks.svelte';
-	import { createAssetRule, previewAssetRule } from '$lib/assetrules/api';
+	import RulePreviewPanel from '$components/assetrule/RulePreviewPanel.svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
+	import { createAssetRule } from '$lib/assetrules/api';
 	import type { ExternalLink, CreateAssetRuleInput } from '$lib/assetrules/types';
 	import { searchTerms } from '$lib/glossary/api';
 	import type { GlossaryTerm } from '$lib/glossary/types';
 	import { m } from '$lib/paraglide/messages';
+	import { useUnsavedChangesGuard } from '$lib/utils/unsavedChanges.svelte';
 
-	// Step state
-	let currentStep = $state(1);
-	let totalSteps = $state(0);
-
-	// Step 1: Basic Information
+	// Basics
 	let name = $state('');
 	let description = $state('');
+	let isEnabled = $state(true);
 
-	// Step 2: Enrichments
+	// Matching query
+	let queryExpression = $state('');
+
+	// Enrichments
 	let links = $state<ExternalLink[]>([]);
 	let selectedTerms = $state<GlossaryTerm[]>([]);
 	let termSearchQuery = $state('');
@@ -30,33 +30,37 @@
 	let showTermSearch = $state(false);
 	let termSearchTimeout: ReturnType<typeof setTimeout>;
 
-	// Step 3: Query
-	let queryExpression = $state('');
-
 	let saving = $state(false);
 	let error = $state<string | null>(null);
-	let previewing = $state(false);
-	let previewCount = $state<number | null>(null);
+	// Field errors stay hidden until the first submit so the form does not shout at people before they have typed anything
+	let submitted = $state(false);
+	let created = false;
 
-	let canProceedFromStep1 = $derived(name.trim() !== '');
+	let validLinks = $derived(links.filter((l) => l.name.trim() && l.url.trim()));
+	let nameError = $derived(name.trim() ? null : m.assetrules_validation_name_required());
+	let queryError = $derived(
+		queryExpression.trim() ? null : m.assetrules_validation_query_required()
+	);
+	let enrichmentError = $derived(
+		validLinks.length > 0 || selectedTerms.length > 0
+			? null
+			: m.assetrules_validation_enrichment_required()
+	);
+	let validationErrors = $derived(
+		[nameError, queryError, enrichmentError].filter((e) => e !== null)
+	);
 
-	function canNavigateToStep(stepNumber: number): boolean {
-		if (stepNumber === 1) return true;
-		return canProceedFromStep1;
-	}
+	let isDirty = $derived(
+		name.trim() !== '' ||
+			description.trim() !== '' ||
+			!isEnabled ||
+			queryExpression.trim() !== '' ||
+			links.some((l) => l.name.trim() || l.url.trim()) ||
+			selectedTerms.length > 0
+	);
 
-	function handleNextStep() {
-		if (currentStep === 1 && !name.trim()) {
-			error = m.assetrules_validation_name_required();
-			return;
-		}
-		if (currentStep < totalSteps) {
-			error = null;
-			currentStep++;
-		}
-	}
+	const unsavedGuard = useUnsavedChangesGuard(() => !created && !saving && isDirty);
 
-	// Term management
 	function handleTermSearch(e: Event) {
 		termSearchQuery = (e.target as HTMLInputElement).value;
 		clearTimeout(termSearchTimeout);
@@ -92,43 +96,10 @@
 		selectedTerms = selectedTerms.filter((t) => t.id !== termId);
 	}
 
-	// Preview
-	async function handlePreview() {
-		previewing = true;
-		error = null;
-		previewCount = null;
-		try {
-			const result = await previewAssetRule({
-				rule_type: 'query',
-				query_expression: queryExpression,
-				limit: 100
-			});
-			previewCount = result.asset_count;
-		} catch (e) {
-			error = e instanceof Error ? e.message : m.assetrules_preview_error();
-		} finally {
-			previewing = false;
-		}
-	}
-
-	// Save
 	async function handleSave() {
 		error = null;
-		if (!name.trim()) {
-			error = m.assetrules_validation_name_required();
-			currentStep = 1;
-			return;
-		}
-		const validLinks = links.filter((l) => l.name.trim() && l.url.trim());
-		if (validLinks.length === 0 && selectedTerms.length === 0) {
-			error = m.assetrules_validation_enrichment_required();
-			currentStep = 2;
-			return;
-		}
-		if (!queryExpression.trim()) {
-			error = m.assetrules_validation_query_required();
-			return;
-		}
+		submitted = true;
+		if (validationErrors.length > 0) return;
 
 		saving = true;
 		try {
@@ -140,319 +111,331 @@
 				rule_type: 'query',
 				query_expression: queryExpression.trim(),
 				priority: 0,
-				is_enabled: true
+				is_enabled: isEnabled
 			};
-			const created = await createAssetRule(input);
-			goto(resolve(`/asset-rules/${created.id}`));
+			const rule = await createAssetRule(input);
+			created = true;
+			goto(resolve('/asset-rules/[id]', { id: rule.id }));
 		} catch (e) {
 			error = e instanceof Error ? e.message : m.assetrules_create_error();
 		} finally {
 			saving = false;
 		}
 	}
+
+	const inputClass =
+		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:border-transparent focus:ring-2 focus:ring-earthy-terracotta-600 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100';
+	const cardClass =
+		'rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800';
 </script>
 
 <svelte:head>
 	<title>{m.assetrules_new_page_title()}</title>
 </svelte:head>
 
-<div class="min-h-screen">
-	<!-- Header -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-			<div class="flex items-center gap-4">
-				<button
-					onclick={() => goto(resolve('/asset-rules'))}
-					aria-label={m.assetrules_back_aria()}
-					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-				>
-					<IconifyIcon
-						icon="material-symbols:arrow-back"
-						class="h-6 w-6 text-gray-600 dark:text-gray-400"
-					/>
-				</button>
-				<div>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{m.assetrules_new_rule_heading()}
-					</h1>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						{m.assetrules_step_of({ current: currentStep, total: totalSteps })}
+<div class="flex min-h-full flex-col">
+	<div class="w-full flex-1 px-4 py-6 sm:px-6 lg:px-8">
+		<header class="mb-6">
+			<a
+				href={resolve('/asset-rules')}
+				class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+			>
+				<IconifyIcon icon="material-symbols:arrow-back" class="h-4 w-4" />
+				{m.assetrules_back_to_rules()}
+			</a>
+			<h1 class="mt-3 text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+				{m.assetrules_new_rule_heading()}
+			</h1>
+			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+				{m.assetrules_new_description()}
+			</p>
+		</header>
+
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<div class="space-y-6 lg:col-span-2">
+				<!-- Basics -->
+				<section class={cardClass} aria-labelledby="rule-basics-heading">
+					<h2
+						id="rule-basics-heading"
+						class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+					>
+						{m.assetrules_section_basics_heading()}
+					</h2>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						{m.assetrules_section_basics_hint()}
 					</p>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<!-- Step Indicator -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-			<Stepper
-				{currentStep}
-				bind:totalSteps
-				onStepClick={(step) => (currentStep = step)}
-				{canNavigateToStep}
-			>
-				<Step title={m.assetrules_step_basic_info()} icon="material-symbols:info-outline" />
-				<Step title={m.assetrules_step_enrichments()} icon="material-symbols:link" />
-				<Step title={m.assetrules_step_query()} icon="material-symbols:filter-list" />
-			</Stepper>
-		</div>
-	</div>
-
-	<!-- Main Content -->
-	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		{#if error}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:error"
-						class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0"
-					/>
-					<p class="ml-3 text-sm text-red-700 dark:text-red-300">{error}</p>
-				</div>
-			</div>
-		{/if}
-
-		<!-- Step 1: Basic Information -->
-		{#if currentStep === 1}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:info-outline"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.assetrules_basic_information_heading()}
-				</h3>
-
-				<div class="space-y-5">
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							{m.common_name()} <span class="text-red-500">*</span>
-						</label>
-						<input
-							type="text"
-							bind:value={name}
-							placeholder={m.assetrules_name_placeholder()}
-							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
-							required
-						/>
-					</div>
-
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							{m.common_description()}
-						</label>
-						<textarea
-							bind:value={description}
-							rows="2"
-							placeholder={m.assetrules_description_placeholder()}
-							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
-						></textarea>
-					</div>
-				</div>
-			</div>
-		{/if}
-
-		<!-- Step 2: Enrichments -->
-		{#if currentStep === 2}
-			<div class="space-y-6">
-				<!-- External Links -->
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<h3
-						class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
-					>
-						<IconifyIcon
-							icon="material-symbols:link"
-							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-						/>
-						{m.assetrules_external_links_heading()}
-					</h3>
-
-					<ExternalLinks bind:links canEdit={true} />
-				</div>
-
-				<!-- Glossary Terms -->
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<h3
-						class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
-					>
-						<IconifyIcon
-							icon="material-symbols:book"
-							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-						/>
-						{m.assetrules_glossary_terms_heading()}
-					</h3>
-
-					{#if selectedTerms.length > 0}
-						<div class="space-y-2 mb-4">
-							{#each selectedTerms as term (term.id)}
-								<div
-									class="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
-								>
-									<div class="flex items-center gap-2 min-w-0">
-										<IconifyIcon
-											icon="material-symbols:book"
-											class="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400 flex-shrink-0"
-										/>
-										<div class="min-w-0">
-											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												{term.name}
-											</span>
-											{#if term.definition}
-												<p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-													{term.definition}
-												</p>
-											{/if}
-										</div>
-									</div>
-									<button
-										onclick={() => removeTerm(term.id)}
-										aria-label={m.assetrules_remove_term_aria({ name: term.name })}
-										class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded flex-shrink-0"
-									>
-										<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
-									</button>
-								</div>
-							{/each}
+					<div class="mt-5 space-y-5">
+						<div>
+							<label
+								for="rule-name"
+								class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+							>
+								{m.common_name()} <span class="text-red-500">*</span>
+							</label>
+							<input
+								id="rule-name"
+								type="text"
+								bind:value={name}
+								placeholder={m.assetrules_name_placeholder()}
+								class={inputClass}
+								aria-invalid={submitted && nameError !== null}
+								aria-describedby={submitted && nameError ? 'rule-name-error' : undefined}
+								required
+							/>
+							{#if submitted && nameError}
+								<p id="rule-name-error" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
+									{nameError}
+								</p>
+							{/if}
 						</div>
+
+						<div>
+							<label
+								for="rule-description"
+								class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+							>
+								{m.common_description()}
+							</label>
+							<textarea
+								id="rule-description"
+								bind:value={description}
+								rows="2"
+								placeholder={m.assetrules_description_placeholder()}
+								class="{inputClass} resize-y"
+							></textarea>
+						</div>
+
+						<div class="flex items-start justify-between gap-4">
+							<div>
+								<span
+									id="rule-enabled-label"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+								>
+									{m.common_enabled()}
+								</span>
+								<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+									{m.assetrules_enabled_hint()}
+								</p>
+							</div>
+							<button
+								type="button"
+								role="switch"
+								aria-checked={isEnabled}
+								aria-labelledby="rule-enabled-label"
+								onclick={() => (isEnabled = !isEnabled)}
+								class="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {isEnabled
+									? 'bg-earthy-terracotta-600'
+									: 'bg-gray-300 dark:bg-gray-600'}"
+							>
+								<span
+									class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {isEnabled
+										? 'translate-x-4'
+										: 'translate-x-0.5'}"
+								></span>
+							</button>
+						</div>
+					</div>
+				</section>
+
+				<!-- Matching query -->
+				<section class={cardClass} aria-labelledby="rule-match-heading">
+					<h2
+						id="rule-match-heading"
+						class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+					>
+						{m.assetrules_section_match_heading()}
+					</h2>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						{m.assetrules_section_match_hint()}
+					</p>
+
+					<div class="mt-5">
+						<QueryBuilder
+							query={queryExpression}
+							onQueryChange={(q) => (queryExpression = q)}
+							initiallyExpanded={true}
+							showRunButton={false}
+						/>
+					</div>
+					{#if submitted && queryError}
+						<p class="mt-2 text-xs text-red-600 dark:text-red-400">{queryError}</p>
+					{/if}
+				</section>
+
+				<!-- Enrichments -->
+				<section class={cardClass} aria-labelledby="rule-apply-heading">
+					<h2
+						id="rule-apply-heading"
+						class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+					>
+						{m.assetrules_section_apply_heading()}
+					</h2>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						{m.assetrules_section_apply_hint()}
+					</p>
+					{#if submitted && enrichmentError}
+						<p class="mt-2 text-xs text-red-600 dark:text-red-400">{enrichmentError}</p>
 					{/if}
 
-					<div class="relative">
-						<div class="relative">
-							<IconifyIcon
-								icon="material-symbols:search"
-								class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-							/>
-							<input
-								type="text"
-								value={termSearchQuery}
-								oninput={handleTermSearch}
-								onfocus={() => (showTermSearch = true)}
-								placeholder={m.assetrules_term_search_placeholder()}
-								class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent"
-							/>
-						</div>
-						{#if showTermSearch && (termSearchResults.length > 0 || isSearchingTerms)}
-							<div
-								class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+					<div class="mt-5 space-y-6">
+						<div>
+							<h3
+								class="mb-3 flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300"
 							>
-								{#if isSearchingTerms}
-									<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-										{m.assetrules_searching()}
-									</div>
-								{:else}
-									{#each termSearchResults as term (term.id)}
-										<button
-											onclick={() => addTerm(term)}
-											class="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+								<IconifyIcon icon="material-symbols:link" class="h-4 w-4 text-gray-400" />
+								{m.assetrules_external_links_heading()}
+							</h3>
+							<ExternalLinks bind:links canEdit={true} />
+						</div>
+
+						<div class="border-t border-gray-100 pt-6 dark:border-gray-700">
+							<h3
+								class="mb-3 flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300"
+							>
+								<IconifyIcon icon="material-symbols:book" class="h-4 w-4 text-gray-400" />
+								{m.assetrules_glossary_terms_heading()}
+							</h3>
+
+							{#if selectedTerms.length > 0}
+								<div class="mb-4 space-y-2">
+									{#each selectedTerms as term (term.id)}
+										<div
+											class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/30"
 										>
-											<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												{term.name}
-											</div>
-											{#if term.definition}
-												<div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-													{term.definition}
+											<div class="flex min-w-0 items-center gap-2">
+												<IconifyIcon
+													icon="material-symbols:book"
+													class="h-4 w-4 flex-shrink-0 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+												/>
+												<div class="min-w-0">
+													<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+														{term.name}
+													</span>
+													{#if term.definition}
+														<p class="truncate text-xs text-gray-500 dark:text-gray-400">
+															{term.definition}
+														</p>
+													{/if}
 												</div>
-											{/if}
-										</button>
+											</div>
+											<button
+												type="button"
+												onclick={() => removeTerm(term.id)}
+												aria-label={m.assetrules_remove_term_aria({ name: term.name })}
+												class="flex-shrink-0 rounded p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+											>
+												<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+											</button>
+										</div>
 									{/each}
+								</div>
+							{/if}
+
+							<div class="relative">
+								<div class="relative">
+									<IconifyIcon
+										icon="material-symbols:search"
+										class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+									/>
+									<input
+										type="text"
+										value={termSearchQuery}
+										oninput={handleTermSearch}
+										onfocus={() => (showTermSearch = true)}
+										placeholder={m.assetrules_term_search_placeholder()}
+										aria-label={m.assetrules_term_search_placeholder()}
+										class="{inputClass} pl-9"
+									/>
+								</div>
+								{#if showTermSearch && (termSearchResults.length > 0 || isSearchingTerms)}
+									<div
+										class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+									>
+										{#if isSearchingTerms}
+											<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+												{m.assetrules_searching()}
+											</div>
+										{:else}
+											{#each termSearchResults as term (term.id)}
+												<button
+													type="button"
+													onclick={() => addTerm(term)}
+													class="w-full border-b border-gray-100 px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+												>
+													<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+														{term.name}
+													</div>
+													{#if term.definition}
+														<div class="truncate text-xs text-gray-500 dark:text-gray-400">
+															{term.definition}
+														</div>
+													{/if}
+												</button>
+											{/each}
+										{/if}
+									</div>
 								{/if}
 							</div>
-						{/if}
+						</div>
 					</div>
+				</section>
+			</div>
 
-					<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-						{m.assetrules_enrichments_hint()}
+			<aside class="lg:sticky lg:top-6 lg:self-start">
+				<RulePreviewPanel query={queryExpression} />
+			</aside>
+		</div>
+	</div>
+
+	<div
+		class="sticky bottom-0 z-20 border-t border-gray-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/90 sm:px-6 lg:px-8"
+	>
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+			<div class="min-w-0 text-sm" aria-live="polite">
+				{#if error}
+					<p class="flex items-start gap-1.5 text-red-600 dark:text-red-400">
+						<IconifyIcon icon="material-symbols:error" class="mt-0.5 h-4 w-4 flex-shrink-0" />
+						<span>{error}</span>
 					</p>
-				</div>
-			</div>
-		{/if}
-
-		<!-- Step 3: Query -->
-		{#if currentStep === 3}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:filter-list"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.assetrules_query_heading()}
-				</h3>
-
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					{m.assetrules_query_description()}
-				</p>
-
-				<QueryBuilder
-					query={queryExpression}
-					onQueryChange={(q) => (queryExpression = q)}
-					initiallyExpanded={true}
-					showRunButton={true}
-					runButtonText={previewing ? m.assetrules_previewing() : m.assetrules_preview()}
-					runButtonIcon={previewing ? 'mdi:loading' : 'material-symbols:visibility'}
-					onRunClick={() => handlePreview()}
-				/>
-
-				{#if previewCount !== null}
-					<div
-						class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center gap-2"
-					>
-						<IconifyIcon icon="material-symbols:check-circle" class="w-4 h-4" />
-						{m.assetrules_rule_matches_count({ count: previewCount })}
-					</div>
+				{:else if submitted && validationErrors.length > 0}
+					<ul class="space-y-0.5 text-red-600 dark:text-red-400">
+						{#each validationErrors as message (message)}
+							<li class="flex items-start gap-1.5">
+								<IconifyIcon icon="material-symbols:error" class="mt-0.5 h-4 w-4 flex-shrink-0" />
+								<span>{message}</span>
+							</li>
+						{/each}
+					</ul>
 				{/if}
 			</div>
-		{/if}
-
-		<!-- Footer Actions -->
-		<div
-			class="mt-8 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6"
-		>
-			<div>
-				{#if currentStep > 1}
-					<Button
-						variant="clear"
-						click={() => currentStep--}
-						icon="material-symbols:arrow-back"
-						text={m.common_previous()}
-					/>
-				{:else}
-					<Button
-						variant="clear"
-						click={() => goto(resolve('/asset-rules'))}
-						text={m.common_cancel()}
-					/>
-				{/if}
-			</div>
-			<div>
-				{#if currentStep < totalSteps}
-					<Button
-						variant="filled"
-						click={handleNextStep}
-						text={m.common_next()}
-						icon="material-symbols:arrow-forward"
-						disabled={currentStep === 1 && !canProceedFromStep1}
-					/>
-				{:else}
-					<Button
-						variant="filled"
-						click={handleSave}
-						text={saving ? m.assetrules_creating() : m.assetrules_create_rule_button()}
-						disabled={saving}
-						icon="material-symbols:check"
-					/>
-				{/if}
+			<div class="flex shrink-0 items-center justify-end gap-2">
+				<a
+					href={resolve('/asset-rules')}
+					class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+				>
+					{m.common_cancel()}
+				</a>
+				<button
+					type="button"
+					onclick={handleSave}
+					disabled={saving}
+					class="rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white hover:bg-earthy-terracotta-500 disabled:opacity-50"
+				>
+					{saving ? m.assetrules_creating() : m.assetrules_create_rule_button()}
+				</button>
 			</div>
 		</div>
 	</div>
 </div>
+
+<ConfirmModal
+	show={unsavedGuard.showConfirm}
+	title={m.common_discard_prompt()}
+	message={m.assetrules_unsaved_changes_confirm()}
+	confirmText={m.common_discard()}
+	cancelText={m.common_keep_editing()}
+	variant="warning"
+	onConfirm={unsavedGuard.confirmDiscard}
+	onCancel={unsavedGuard.cancelDiscard}
+/>

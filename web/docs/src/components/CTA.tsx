@@ -1,6 +1,11 @@
 import React from "react";
+import {
+  CONSOLE_URL,
+  useCloudSignedIn,
+} from "@site/src/hooks/useCloudSignedIn";
 
 export default function CTA(): JSX.Element {
+  const signedIn = useCloudSignedIn();
   return (
     <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 border-t border-dashed border-earthy-brown-200/70 dark:border-gray-800/70">
       <div className="max-w-2xl mx-auto text-center">
@@ -25,10 +30,12 @@ export default function CTA(): JSX.Element {
           className="mt-8 flex flex-row justify-center items-center gap-3"
         >
           <a
-            href="https://cloud.marmotdata.io/signup"
+            href={
+              signedIn ? CONSOLE_URL : "https://cloud.marmotdata.io/signup"
+            }
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Start free
+            {signedIn ? "Open console" : "Start free"}
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"

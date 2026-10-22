@@ -1,0 +1,28 @@
+{{- if (include "marmot.serveEnabled" .) }}
+{{- /*
+Plugins running outside Marmot dial this port with mutual TLS. It is a
+separate Service so it can be exposed on its own (for example as a layer 4
+LoadBalancer) without touching the HTTP Service or Ingress; whatever sits in
+front of it must pass TCP through rather than terminate TLS.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "marmot.fullname" . }}-serve
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+  {{- with .Values.serveService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.serveService.type }}
+  ports:
+    - port: {{ .Values.serveService.port }}
+      targetPort: serve
+      protocol: TCP
+      name: serve
+  selector:
+    {{- include "marmot.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+{{- end }}

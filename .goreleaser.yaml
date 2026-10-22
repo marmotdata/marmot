@@ -37,6 +37,21 @@ checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
   algorithm: sha256
 
+# Keyless Sigstore signatures, tied to this repository's release workflow
+# identity: the checksum file as a bundle, which covers every binary listed in
+# it, and each multi-arch image, which is what runs serving plugins on
+# Kubernetes. Plugin images are signed the same way in release-plugin.yaml.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args: ["sign-blob", "--bundle=${signature}", "${artifact}", "--yes"]
+    artifacts: checksum
+
+docker_signs:
+  - cmd: cosign
+    args: ["sign", "${artifact}@${digest}", "--yes"]
+    artifacts: manifests
+
 dockers:
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"

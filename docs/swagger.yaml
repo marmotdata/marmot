@@ -715,10 +715,20 @@ definitions:
         type: string
       enabled:
         type: boolean
+      ingest_on_query:
+        description: |-
+          IngestOnQuery refreshes the source's catalog in the background after
+          data queries, rate-limited per source.
+        type: boolean
       name:
         type: string
       plugin_id:
         type: string
+      queryable:
+        description: |-
+          Queryable lets agents and users query this source through Marmot; the
+          plugin must support queries.
+        type: boolean
     type: object
   CreateServiceAccountAPIKeyRequest:
     properties:
@@ -1522,6 +1532,19 @@ definitions:
       resource_type:
         type: string
     type: object
+  PluginInstanceStatus:
+    properties:
+      active_queries:
+        type: integer
+      last_used_at:
+        type: string
+      plugin_id:
+        type: string
+      restarts:
+        type: integer
+      started_at:
+        type: string
+    type: object
   PluginRun:
     properties:
       completed_at:
@@ -1595,6 +1618,36 @@ definitions:
       url:
         type: string
     type: object
+  QueryAssetContext:
+    properties:
+      asset_id:
+        type: string
+      description:
+        type: string
+      last_sync_at:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  QueryColumn:
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+    type: object
   QueryCount:
     properties:
       count:
@@ -1603,6 +1656,236 @@ definitions:
         type: string
       query_type:
         type: string
+    type: object
+  QueryHistoryResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      queries:
+        items:
+          $ref: '#/definitions/QueryRecord'
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryListSourcesResponse:
+    properties:
+      sources:
+        items:
+          $ref: '#/definitions/QuerySource'
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryRecord:
+    properties:
+      audit_subject:
+        type: string
+      client:
+        type: string
+      completed_at:
+        type: string
+      context:
+        items:
+          $ref: '#/definitions/QueryAssetContext'
+        type: array
+      decision:
+        type: string
+      decision_detail:
+        additionalProperties: {}
+        type: object
+      error:
+        type: string
+      id:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      rows_returned:
+        type: integer
+      source_id:
+        type: string
+      source_name:
+        type: string
+      started_at:
+        type: string
+      statement:
+        type: string
+      status:
+        type: string
+      truncated:
+        type: boolean
+    type: object
+  QueryResult:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/QueryColumn'
+        type: array
+      context:
+        items:
+          $ref: '#/definitions/QueryAssetContext'
+        type: array
+      query_id:
+        type: string
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      row_count:
+        type: integer
+      rows:
+        items:
+          items: {}
+          type: array
+        type: array
+      truncated:
+        type: boolean
+    type: object
+  QueryRunInput:
+    properties:
+      max_rows:
+        type: integer
+      source:
+        type: string
+      statement:
+        type: string
+    required:
+    - source
+    - statement
+    type: object
+  QuerySource:
+    properties:
+      id:
+        type: string
+      ingest_on_query:
+        type: boolean
+      last_queried_at:
+        type: string
+      name:
+        type: string
+      plugin_id:
+        type: string
+      queries_last_week:
+        type: integer
+      served:
+        description: Served is set when a plugin running outside Marmot answers this
+          source's queries; Marmot then holds no usable config for it.
+        type: boolean
+      table_count:
+        description: Activity, filled in when sources are listed.
+        type: integer
+    type: object
+  QuerySourceTable:
+    properties:
+      asset_id:
+        type: string
+      description:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      queries:
+        type: integer
+      sample_statement:
+        type: string
+      schema:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  QueryStats:
+    properties:
+      from:
+        type: string
+      interval:
+        type: string
+      series:
+        items:
+          $ref: '#/definitions/QueryStatsPoint'
+        type: array
+      to:
+        type: string
+      top_callers:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      top_sources:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      top_tables:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      totals:
+        $ref: '#/definitions/QueryStatsTotals'
+    type: object
+  QueryStatsGroup:
+    properties:
+      allowed:
+        type: integer
+      denied:
+        type: integer
+      key:
+        type: string
+      label:
+        type: string
+      plugin_id:
+        type: string
+      principal_type:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryStatsPoint:
+    properties:
+      bucket:
+        type: string
+      denied:
+        type: integer
+      failed:
+        type: integer
+      succeeded:
+        type: integer
+    type: object
+  QueryStatsTotals:
+    properties:
+      allowed:
+        type: integer
+      callers:
+        type: integer
+      denied:
+        type: integer
+      failed:
+        type: integer
+      queries:
+        type: integer
+      tables:
+        type: integer
+    type: object
+  QueryStatusResponse:
+    properties:
+      instances:
+        items:
+          $ref: '#/definitions/PluginInstanceStatus'
+        type: array
     type: object
   RawPluginConfig:
     additionalProperties: true
@@ -1976,6 +2259,8 @@ definitions:
         type: boolean
       id:
         type: string
+      ingest_on_query:
+        type: boolean
       last_run_at:
         type: string
       last_run_status:
@@ -1987,6 +2272,15 @@ definitions:
       next_run_at:
         type: string
       plugin_id:
+        type: string
+      queryable:
+        type: boolean
+      served_by_id:
+        type: string
+      served_by_type:
+        description: ServedByType and ServedByID name the principal whose plugin,
+          running outside Marmot, serves this source's queries; nil when Marmot runs
+          the plugin itself.
         type: string
       updated_at:
         type: string
@@ -2012,6 +2306,33 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  ServeKeyGeneration:
+    properties:
+      activates_at:
+        type: string
+      active:
+        type: boolean
+      id:
+        type: string
+      retires_at:
+        type: string
+      storage:
+        type: string
+    type: object
+  ServeRotateKeysRequest:
+    properties:
+      ca_key_uri:
+        description: CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty
+          to have Marmot generate keys it stores encrypted, which is refused when
+          the current keys are in a KMS.
+        type: string
+      immediate:
+        description: Immediate switches to the new keys at once and stops trusting
+          the old ones, for a suspected compromise; serving plugins must then be restarted.
+        type: boolean
+      signing_key_uri:
+        type: string
     type: object
   ServiceAccount:
     properties:
@@ -2333,10 +2654,20 @@ definitions:
         type: string
       enabled:
         type: boolean
+      ingest_on_query:
+        description: |-
+          IngestOnQuery refreshes the source's catalog in the background after
+          data queries, rate-limited per source.
+        type: boolean
       name:
         type: string
       plugin_id:
         type: string
+      queryable:
+        description: |-
+          Queryable lets agents and users query this source through Marmot; the
+          plugin must support queries.
+        type: boolean
     type: object
   UpdateServiceAccountRequest:
     properties:
@@ -2536,6 +2867,11 @@ definitions:
         items:
           $ref: '#/definitions/pluginsdk.ConfigField'
         type: array
+      group:
+        description: Group names the section a field belongs to in the UI, such as
+          "Authentication" or "Advanced"; fields without one are shown first and each
+          group renders as its own collapsed section
+        type: string
       hidden:
         type: boolean
       is_array:
@@ -2614,6 +2950,8 @@ definitions:
         type: string
       supports_data_preview:
         type: boolean
+      supports_query:
+        type: boolean
     type: object
   pluginsdk.ShowWhen:
     properties:
@@ -2633,6 +2971,48 @@ definitions:
       min_len:
         type: integer
       pattern:
+        type: string
+    type: object
+  pluginserve.EnrolInput:
+    properties:
+      csr:
+        type: string
+      sources:
+        items:
+          $ref: '#/definitions/pluginserve.EnrolSource'
+        type: array
+    type: object
+  pluginserve.EnrolResult:
+    properties:
+      address:
+        description: Address is the host:port to dial; when empty the serving process
+          uses its Marmot host name with Port.
+        type: string
+      ca_bundle:
+        type: string
+      certificate:
+        type: string
+      enrolment_id:
+        type: string
+      expires_at:
+        type: string
+      instance_id:
+        type: string
+      port:
+        type: string
+      signing_keys:
+        items:
+          type: string
+        type: array
+    type: object
+  pluginserve.EnrolSource:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      plugin_id:
         type: string
     type: object
   v1_roles.createRoleRequest:
@@ -6120,6 +6500,259 @@ paths:
       summary: Search data products
       tags:
       - products
+  /api/v1/query/history:
+    get:
+      description: Lists the query log, newest first. Callers without access:view
+        only see their own queries.
+      parameters:
+      - description: Source name
+        in: query
+        name: source
+        type: string
+      - description: allowed or denied
+        in: query
+        name: decision
+        type: string
+      - description: running, completed, failed or denied
+        in: query
+        name: status
+        type: string
+      - description: Only queries that referenced this MRN
+        in: query
+        name: mrn
+        type: string
+      - description: Principal type
+        in: query
+        name: principal_type
+        type: string
+      - description: Principal ID
+        in: query
+        name: principal_id
+        type: string
+      - description: Only the caller's own queries
+        in: query
+        name: mine
+        type: boolean
+      - description: 'Comma-separated clients to include: api, mcp or cli'
+        in: query
+        name: client
+        type: string
+      - default: 50
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryHistoryResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List queries
+      tags:
+      - query
+  /api/v1/query/history/{id}:
+    get:
+      description: Returns one query from the log, including the catalog context recorded
+        when it ran. Callers without access:view can only read their own queries.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryRecord'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a query
+      tags:
+      - query
+  /api/v1/query/run:
+    post:
+      consumes:
+      - application/json
+      description: Runs a read-only statement against a queryable source as the caller.
+        The statement is planned first and refused unless the caller may query every
+        table it references. Every attempt is recorded in the query log.
+      parameters:
+      - description: Query
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/QueryRunInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Run a query
+      tags:
+      - query
+  /api/v1/query/sources:
+    get:
+      description: Pages through the sources that answer data queries, in name order.
+        Use a source's name as the "source" of a query.
+      parameters:
+      - description: Search by source name or plugin
+        in: query
+        name: q
+        type: string
+      - default: 50
+        description: Page size, at most 200
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryListSourcesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List queryable sources
+      tags:
+      - query
+  /api/v1/query/sources/{name}/tables:
+    get:
+      description: Lists the catalogued tables a queryable source can reach, busiest
+        first, each with a statement that previews it in the source's own dialect.
+      parameters:
+      - description: Source name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Search by table name
+        in: query
+        name: q
+        type: string
+      - default: 25
+        description: At most 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/QuerySourceTable'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List a source's tables
+      tags:
+      - query
+  /api/v1/query/stats:
+    get:
+      description: 'Summarises data query activity over a window from hourly rollups:
+        totals, a series and the busiest callers, sources and tables. Callers without
+        access:view only see their own activity. The window defaults to the last 24
+        hours.'
+      parameters:
+      - description: Start of the window, RFC 3339
+        in: query
+        name: from
+        type: string
+      - description: End of the window, RFC 3339
+        in: query
+        name: to
+        type: string
+      - description: hour or day; defaults by window length
+        in: query
+        name: interval
+        type: string
+      - default: 6
+        description: Entries in each top list
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryStats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query statistics
+      tags:
+      - query
+  /api/v1/query/status:
+    get:
+      description: Reports the long-running plugin processes that serve data queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryStatusResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query plugin instance status
+      tags:
+      - query
   /api/v1/roles:
     get:
       description: List all active roles with user counts and permissions
@@ -8002,6 +8635,94 @@ paths:
       summary: OAuth token endpoint
       tags:
       - auth
+  /query/serve/enrol:
+    post:
+      consumes:
+      - application/json
+      description: Issues a short-lived client certificate for a plugin running outside
+        Marmot to connect and serve queries for the named sources. The caller must
+        hold ingestion:serve, and each source must be free or already served by the
+        caller.
+      parameters:
+      - description: Certificate request and sources
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pluginserve.EnrolInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pluginserve.EnrolResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Enrol a serving plugin
+      tags:
+      - query
+  /query/serve/keys:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServeKeyGeneration'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List serving key generations
+      tags:
+      - query
+  /query/serve/keys/rotate:
+    post:
+      consumes:
+      - application/json
+      description: 'Starts a new generation of the CA and query signing keys that
+        secure serving plugins. A graceful rotation publishes the new keys, uses them
+        after the overlap and then retires the old ones, without interrupting serving
+        plugins. An immediate rotation is for a suspected compromise: it switches
+        at once and serving plugins must be restarted.'
+      parameters:
+      - description: Rotation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ServeRotateKeysRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServeKeyGeneration'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Rotate serving keys
+      tags:
+      - query
 securityDefinitions:
   ApiKeyAuth:
     in: header

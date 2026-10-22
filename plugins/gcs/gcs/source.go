@@ -23,14 +23,14 @@ type Config struct {
 	ProjectID                string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
 	CredentialsFile          string `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
 	CredentialsJSON          string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
-	ServiceAccount           string `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
-	Endpoint                 string `json:"endpoint,omitempty" description:"Custom endpoint URL (for fake-gcs-server or other emulators)"`
-	DisableAuth              bool   `json:"disable_auth,omitempty" description:"Disable authentication (for local emulators)"`
+	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL (for fake-gcs-server or other emulators)"`
+	DisableAuth              bool   `json:"disable_auth,omitempty" group:"Advanced" description:"Disable authentication (for local emulators)"`
 
 	// Discovery options
-	IncludeMetadata    bool `json:"include_metadata" description:"Include bucket metadata like labels" default:"true"`
-	IncludeObjectCount bool `json:"include_object_count" description:"Count objects in each bucket (can be slow for large buckets)" default:"false"`
+	IncludeMetadata    bool `json:"include_metadata" group:"Discovery" description:"Include bucket metadata like labels" default:"true"`
+	IncludeObjectCount bool `json:"include_object_count" group:"Discovery" description:"Count objects in each bucket (can be slow for large buckets)" default:"false"`
 }
 
 // Meta describes the plugin to the Marmot host.

@@ -50,20 +50,20 @@ type Config struct {
 	Auth                string `json:"auth" description:"Authentication mechanism (NONE, NOSASL, LDAP, KERBEROS)" default:"NONE" validate:"omitempty,oneof=NONE NOSASL LDAP KERBEROS"`
 	Username            string `json:"username" description:"Username (hive when empty)" validate:"required_if=Auth LDAP"`
 	Password            string `json:"password" description:"Password, required for LDAP" sensitive:"true" validate:"required_if=Auth LDAP"`
-	KerberosServiceName string `json:"kerberos_service_name" label:"Kerberos Service Name" description:"Service part of the HiveServer2 Kerberos principal" default:"hive"`
-	Transport           string `json:"transport" description:"Thrift transport (binary or http)" default:"binary" validate:"omitempty,oneof=binary http"`
-	HTTPPath            string `json:"http_path" label:"HTTP Path" description:"Endpoint path for the http transport" default:"cliservice"`
-	SSL                 bool   `json:"ssl" label:"SSL" description:"Connect over TLS" default:"false"`
-	SSLSkipVerify       bool   `json:"ssl_skip_verify" label:"SSL Skip Verify" description:"Skip TLS certificate verification" default:"false"`
+	KerberosServiceName string `json:"kerberos_service_name" group:"Authentication" label:"Kerberos Service Name" description:"Service part of the HiveServer2 Kerberos principal" default:"hive"`
+	Transport           string `json:"transport" group:"Advanced" description:"Thrift transport (binary or http)" default:"binary" validate:"omitempty,oneof=binary http"`
+	HTTPPath            string `json:"http_path" group:"Advanced" label:"HTTP Path" description:"Endpoint path for the http transport" default:"cliservice"`
+	SSL                 bool   `json:"ssl" group:"Authentication" label:"SSL" description:"Connect over TLS" default:"true"`
+	SSLSkipVerify       bool   `json:"ssl_skip_verify" group:"Authentication" label:"SSL Skip Verify" description:"Skip TLS certificate verification" default:"false"`
 
-	Databases        []string `json:"databases" description:"Databases to discover (all when empty)"`
-	ExcludeDatabases []string `json:"exclude_databases" description:"Databases to skip" default:"[\"sys\",\"information_schema\"]"`
+	Databases        []string `json:"databases" group:"Discovery" description:"Databases to discover (all when empty)"`
+	ExcludeDatabases []string `json:"exclude_databases" group:"Discovery" description:"Databases to skip" default:"[\"sys\",\"information_schema\"]"`
 
-	IncludeColumns    bool `json:"include_columns" description:"Include column information" default:"true"`
-	IncludeViews      bool `json:"include_views" description:"Include views and materialized views" default:"true"`
-	IncludeStatistics bool `json:"include_statistics" description:"Include row counts and sizes from table statistics" default:"true"`
-	IncludePartitions bool `json:"include_partitions" description:"Count the partitions of partitioned tables" default:"true"`
-	IncludeDDL        bool `json:"include_ddl" label:"Include DDL" description:"Store the SHOW CREATE TABLE output in metadata" default:"false"`
+	IncludeColumns    bool `json:"include_columns" group:"Discovery" description:"Include column information" default:"true"`
+	IncludeViews      bool `json:"include_views" group:"Discovery" description:"Include views and materialized views" default:"true"`
+	IncludeStatistics bool `json:"include_statistics" group:"Advanced" description:"Include row counts and sizes from table statistics" default:"true"`
+	IncludePartitions bool `json:"include_partitions" group:"Advanced" description:"Count the partitions of partitioned tables" default:"true"`
+	IncludeDDL        bool `json:"include_ddl" group:"Discovery" label:"Include DDL" description:"Store the SHOW CREATE TABLE output in metadata" default:"false"`
 }
 
 // Example configuration for the plugin

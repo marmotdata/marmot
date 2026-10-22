@@ -4,7 +4,9 @@
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { page } from '$app/stores';
 	import TeamTable from './TeamTable.svelte';
+	import CreateTeamBlade from './CreateTeamBlade.svelte';
 	import type { Team } from '$lib/teams/types';
 
 	let teams: Team[] = [];
@@ -15,9 +17,12 @@
 	let loading = false;
 	let error: string | null = null;
 	let searchTimer: ReturnType<typeof setTimeout>;
+	let showCreate = false;
 
-	function goCreate() {
-		goto(resolve('/teams/new'));
+	function handleCreated(team: { id: string }) {
+		showCreate = false;
+		fetchTeams();
+		goto(resolve('/teams/[id]', { id: team.id }));
 	}
 
 	async function fetchTeams() {
@@ -39,7 +44,14 @@
 		}
 	}
 
-	onMount(fetchTeams);
+	onMount(() => {
+		fetchTeams();
+		// The old /teams/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
+		if ($page.url.searchParams.get('create') === '1') {
+			showCreate = true;
+			goto(resolve('/admin?tab=teams'), { replaceState: true, noScroll: true, keepFocus: true });
+		}
+	});
 
 	function handleQueryInput() {
 		if (searchTimer) clearTimeout(searchTimer);
@@ -71,7 +83,7 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={goCreate}
+				on:click={() => (showCreate = true)}
 			>
 				{m.teams_create_team()}
 			</button>
@@ -79,7 +91,9 @@
 
 		{#if loading && !teams.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -101,3 +115,7 @@
 		{/if}
 	</div>
 </div>
+
+{#if showCreate}
+	<CreateTeamBlade onClose={() => (showCreate = false)} onCreated={handleCreated} />
+{/if}

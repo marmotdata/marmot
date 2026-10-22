@@ -206,7 +206,7 @@ tests:
           path: spec.template.spec.containers[0].volumeMounts
           content:
             name: plugins
-            mountPath: /var/lib/marmot/plugins
+            mountPath: /var/lib/marmot
         template: deployment.yaml
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
