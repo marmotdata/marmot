@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -38,6 +38,10 @@ class User(BaseModel):
     preferences: dict[str, Any] | None = None
     profile_picture: StrictStr | None = None
     roles: list[UserRole] | None = None
+    sessions_invalidated_at: StrictStr | None = Field(
+        default=None,
+        description="Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
+    )
     updated_at: StrictStr | None = None
     username: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
@@ -50,6 +54,7 @@ class User(BaseModel):
         "preferences",
         "profile_picture",
         "roles",
+        "sessions_invalidated_at",
         "updated_at",
         "username",
     ]
@@ -131,6 +136,7 @@ class User(BaseModel):
                 "roles": [UserRole.from_dict(_item) for _item in obj["roles"]]
                 if obj.get("roles") is not None
                 else None,
+                "sessions_invalidated_at": obj.get("sessions_invalidated_at"),
                 "updated_at": obj.get("updated_at"),
                 "username": obj.get("username"),
             }

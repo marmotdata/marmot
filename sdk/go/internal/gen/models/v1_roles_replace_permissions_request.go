@@ -16,6 +16,9 @@ type V1RolesReplacePermissionsRequest struct {
 
 	// permission ids
 	PermissionIds []string `json:"permission_ids"`
+
+	// PermissionKeys names permissions as resource_type:action keys. They are added to PermIDs.
+	PermissionKeys []string `json:"permission_keys"`
 }
 
 // Validate validates this v1 roles replace permissions request

@@ -6,6 +6,18 @@
 	import ThemeToggle from '$components/ui/ThemeToggle.svelte';
 	import LanguageSelector from '$components/ui/LanguageSelector.svelte';
 	import NotificationPreferencesToggle from '$components/ui/NotificationPreferencesToggle.svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Pill from '$components/ui/Pill.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import Avatar from '$components/user/Avatar.svelte';
+	import { LABEL, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
+
+	// A setting row: what it is and why on the left, the control on the right; stacked on narrow screens.
+	const ROW =
+		'grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-center sm:gap-8';
+	const ROW_LABEL = 'text-sm font-medium text-gray-900 dark:text-gray-100';
+	const ROW_HINT = 'mt-0.5 text-xs text-gray-500 dark:text-gray-400';
 
 	interface Permission {
 		name: string;
@@ -22,16 +34,33 @@
 	interface User {
 		name: string;
 		email: string;
+		username?: string;
+		profile_picture?: string | null;
+		active?: boolean;
+		created_at?: string;
+		updated_at?: string;
 		roles: Role[];
 	}
 
-	let loading = true;
-	let error: string | null = null;
-	let user: User = {
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+	let user = $state<User>({
 		name: '',
 		email: '',
 		roles: []
-	};
+	});
+
+	// Every permission the caller's roles grant, once each, since two roles often share the same grant
+	let permissions = $derived.by(() => {
+		const seen: Record<string, { key: string; description: string }> = {};
+		for (const role of user.roles ?? []) {
+			for (const p of role.permissions ?? []) {
+				const key = `${p.resource_type}:${p.action}`;
+				seen[key] ??= { key, description: p.description };
+			}
+		}
+		return Object.values(seen).sort((a, b) => a.key.localeCompare(b.key));
+	});
 
 	onMount(fetchProfile);
 
@@ -53,135 +82,123 @@
 	}
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700"
->
-	<!-- Basic Information -->
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-			{m.profile_information_heading()}
-		</h3>
-		{#if loading}
-			<div class="mt-4">{m.common_loading()}</div>
-		{:else if error}
-			<div class="mt-4 text-red-600">{error}</div>
-		{:else}
-			<dl class="mt-4 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">{m.common_name()}</dt>
-					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{user.name}</dd>
-				</div>
-				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
-						{m.profile_username_label()}
-					</dt>
-					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{user.username}</dd>
-				</div>
-				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
-						{m.profile_account_created_label()}
-					</dt>
-					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-						{formatDate(user.created_at)}
-					</dd>
-				</div>
-				<div>
-					<dt class="text-sm font-medium text-gray-500 dark:text-gray-500">
-						{m.profile_last_updated_label()}
-					</dt>
-					<dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-						{formatDate(user.updated_at)}
-					</dd>
-				</div>
-			</dl>
-		{/if}
+{#if loading}
+	<div class="space-y-6">
+		<Skeleton class="h-24" />
+		<Skeleton class="h-40" />
+		<Skeleton class="h-64" />
 	</div>
+{:else if error}
+	<Alert>{error}</Alert>
+{:else}
+	<!-- One column of full-width panels, each a list of rows with what a setting is for on the left and its control on the right, the way Settings reads -->
+	<div class="space-y-6">
+		<Panel>
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex min-w-0 items-center gap-4">
+					<Avatar
+						name={user.name || user.username || ''}
+						profilePicture={user.profile_picture}
+						size="lg"
+					/>
+					<div class="min-w-0">
+						<div class="flex flex-wrap items-center gap-2">
+							<p
+								class="truncate text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100"
+							>
+								{user.name}
+							</p>
+							<Pill tone={user.active ? 'success' : 'danger'}>
+								{user.active ? m.common_active() : m.common_inactive()}
+							</Pill>
+						</div>
+						<p class="truncate text-sm text-gray-500 dark:text-gray-400">@{user.username}</p>
+					</div>
+				</div>
+				<dl class="flex gap-8 text-sm">
+					<div>
+						<dt class={LABEL}>{m.profile_account_created_label()}</dt>
+						<dd class="mt-1 tabular-nums text-gray-900 dark:text-gray-100">
+							{user.created_at ? formatDate(user.created_at) : '-'}
+						</dd>
+					</div>
+					<div>
+						<dt class={LABEL}>{m.profile_last_updated_label()}</dt>
+						<dd class="mt-1 tabular-nums text-gray-900 dark:text-gray-100">
+							{user.updated_at ? formatDate(user.updated_at) : '-'}
+						</dd>
+					</div>
+				</dl>
+			</div>
+		</Panel>
 
-	<!-- User Preferences -->
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-			{m.profile_preferences_heading()}
-		</h3>
-		<div class="space-y-4">
-			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
-					{m.profile_theme_label()}
-				</h4>
-				<ThemeToggle />
+		<Panel title={m.profile_preferences_heading()} icon="material-symbols:tune">
+			<div class="divide-y divide-gray-100 dark:divide-gray-700/60">
+				<div class={ROW}>
+					<div>
+						<p class={ROW_LABEL}>{m.profile_theme_label()}</p>
+						<p class={ROW_HINT}>{m.account_theme_hint()}</p>
+					</div>
+					<div><ThemeToggle /></div>
+				</div>
+				<div class={ROW}>
+					<div>
+						<p class={ROW_LABEL}>{m.profile_language_label()}</p>
+						<p class={ROW_HINT}>{m.account_language_hint()}</p>
+					</div>
+					<div><LanguageSelector /></div>
+				</div>
 			</div>
-			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
-					{m.profile_language_label()}
-				</h4>
-				<LanguageSelector />
-			</div>
-			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
-					{m.profile_notifications_label()}
-				</h4>
-				<NotificationPreferencesToggle />
-			</div>
-		</div>
-	</div>
+		</Panel>
 
-	<!-- Roles and Permissions -->
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-			{m.profile_roles_permissions_heading()}
-		</h3>
-		<div class="space-y-6">
-			<!-- Roles -->
-			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
-					{m.profile_assigned_roles_heading()}
-				</h4>
-				<div class="flex flex-wrap gap-2">
+		<Panel
+			title={m.profile_notifications_label()}
+			description={m.account_notifications_hint()}
+			icon="material-symbols:notifications-outline"
+		>
+			<NotificationPreferencesToggle />
+		</Panel>
+
+		<!-- Roles and Permissions -->
+		<Panel
+			flush
+			title={m.profile_roles_permissions_heading()}
+			icon="material-symbols:badge-outline"
+		>
+			{#snippet action()}
+				<div
+					class="flex flex-wrap justify-end gap-1.5"
+					aria-label={m.profile_assigned_roles_heading()}
+				>
 					{#each user.roles as role (role.name)}
-						<span
-							class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
-						>
-							{role.name}
-						</span>
+						<Pill tone="brand">{role.name}</Pill>
 					{/each}
 				</div>
-			</div>
-
-			<!-- Permissions -->
-			<div>
-				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">
-					{m.profile_permissions_heading()}
-				</h4>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{#each user.roles as role (role.name)}
-						{#each role.permissions as permission (permission.name)}
-							<div class="bg-earthy-brown-100 dark:bg-gray-800 rounded-md p-3">
-								<div class="font-medium text-gray-900 dark:text-gray-100">{permission.name}</div>
-								<div class="text-sm text-gray-600 dark:text-gray-400">{permission.description}</div>
-								<div class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-									{m.profile_permission_scope({
-										action: permission.action,
-										resource: permission.resource_type
-									})}
-								</div>
-							</div>
-						{/each}
-					{/each}
+			{/snippet}
+			{#if permissions.length > 0}
+				<div class="overflow-x-auto">
+					<table class="{TABLE} w-full">
+						<thead>
+							<tr class="border-b border-gray-100 dark:border-gray-700/60">
+								<th class={TH}>{m.profile_permissions_heading()}</th>
+								<th class={TH}>{m.common_description()}</th>
+							</tr>
+						</thead>
+						<tbody class={TBODY}>
+							<!-- resource_type:action, not permissions.name. The name column is decorative and inconsistent (view_assets beside service_accounts_view), while this pair is the key every check, API call and Terraform binding actually uses. -->
+							{#each permissions as permission (permission.key)}
+								<tr class={TR}>
+									<td
+										class="{TD} whitespace-nowrap font-mono text-xs text-gray-900 dark:text-gray-100"
+										>{permission.key}</td
+									>
+									<td class="{TD} text-gray-500 dark:text-gray-400">{permission.description}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				</div>
-			</div>
-		</div>
+			{/if}
+		</Panel>
 	</div>
-
-	<!-- Account Status -->
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-			{m.profile_account_status_heading()}
-		</h3>
-		<div class="flex items-center space-x-2">
-			<span
-				class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-			>
-				{user.active ? m.common_active() : m.common_inactive()}
-			</span>
-		</div>
-	</div>
-</div>
+{/if}

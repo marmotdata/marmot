@@ -4,6 +4,7 @@
 	import SearchListbox from '$components/ui/SearchListbox.svelte';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { INPUT } from '$lib/ui/classes';
 
 	export interface Owner {
 		id: string;
@@ -14,8 +15,7 @@
 		profile_picture?: string;
 	}
 
-	const inputClass =
-		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-earthy-terracotta-500 focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100';
+	const inputClass = INPUT;
 
 	let {
 		members = $bindable([]),
@@ -163,7 +163,7 @@
 						class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors
 							{isActive
 							? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
-							: 'hover:bg-earthy-brown-50 dark:hover:bg-gray-700'}"
+							: 'hover:bg-gray-50 dark:hover:bg-gray-700'}"
 					>
 						<Avatar name={owner.name} profilePicture={owner.profile_picture} size="sm" />
 						<div class="min-w-0 flex-1">

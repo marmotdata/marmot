@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -30,11 +30,13 @@ class UIConfigResponse(BaseModel):
 
     allow_unencrypted: StrictBool | None = None
     banner: BannerResponse | None = None
+    default_language: StrictStr | None = None
     encryption_configured: StrictBool | None = None
     table_preview_enabled: StrictBool | None = None
     __properties: ClassVar[list[str]] = [
         "allow_unencrypted",
         "banner",
+        "default_language",
         "encryption_configured",
         "table_preview_enabled",
     ]
@@ -96,6 +98,7 @@ class UIConfigResponse(BaseModel):
                 "banner": BannerResponse.from_dict(obj["banner"])
                 if obj.get("banner") is not None
                 else None,
+                "default_language": obj.get("default_language"),
                 "encryption_configured": obj.get("encryption_configured"),
                 "table_preview_enabled": obj.get("table_preview_enabled"),
             }

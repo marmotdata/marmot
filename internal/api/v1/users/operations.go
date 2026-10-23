@@ -3,6 +3,7 @@ package users
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
@@ -46,9 +47,17 @@ type SearchUsersResponse struct {
 // @ID getUsers
 // @Router /api/v1/users [get]
 func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	if offset < 0 {
+		offset = 0
+	}
 	filter := user.Filter{
-		Limit:  50,
-		Offset: 0,
+		Limit:  limit,
+		Offset: offset,
 		Query:  r.URL.Query().Get("query"),
 	}
 

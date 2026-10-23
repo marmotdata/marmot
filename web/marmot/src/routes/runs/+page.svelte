@@ -9,7 +9,10 @@
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
-	import Button from '$components/ui/Button.svelte';
+	import PageHeader from '$components/ui/PageHeader.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import { PANEL, BTN_PRIMARY, BTN_SECONDARY } from '$lib/ui/classes';
 	import IconifyIcon from '@iconify/svelte';
 	import IngestionRunModal, { type IngestionRun } from '$components/runs/IngestionRunModal.svelte';
 	import PipelineRow from '$components/runs/PipelineRow.svelte';
@@ -395,104 +398,57 @@
 </script>
 
 <div class="w-full px-4 py-6 sm:px-6 lg:px-8">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-		<div>
-			<h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-				{m.runs_heading()}
-			</h1>
-			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{m.runs_subheading()}</p>
-		</div>
-		{#if canManageIngestion}
-			<button
-				type="button"
-				onclick={showAvailable}
-				disabled={!$encryptionConfigured}
-				class="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500 disabled:cursor-not-allowed disabled:opacity-40"
-			>
-				<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-				{m.plugins_add()}
-			</button>
-		{/if}
-	</div>
+	<PageHeader title={m.runs_heading()} description={m.runs_subheading()}>
+		{#snippet actions()}
+			{#if canManageIngestion}
+				<button
+					type="button"
+					onclick={showAvailable}
+					disabled={!$encryptionConfigured}
+					class={BTN_PRIMARY}
+				>
+					<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+					{m.plugins_add()}
+				</button>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
-	<div class="mt-6"></div>
 	{#if pipelinesLoading}
-		<div class="space-y-2">
-			{#each Array(5) as _, i (i)}
-				<div class="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
-			{/each}
-		</div>
+		<Skeleton class="h-16" rows={5} />
 	{:else if pipelinesError}
-		<div
-			class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-		>
-			<div class="flex">
-				<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
-				<div class="ml-3">
-					<h3 class="text-sm font-medium text-red-800 dark:text-red-200">{m.common_error()}</h3>
-					<p class="mt-1 text-sm text-red-700 dark:text-red-300">{pipelinesError}</p>
-				</div>
-			</div>
-		</div>
+		<Alert title={m.common_error()}>{pipelinesError}</Alert>
 	{:else}
 		<!-- Unencrypted Mode Warning -->
 		{#if $allowUnencrypted}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:warning"
-						class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0"
-					/>
-					<div class="ml-3">
-						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-							{m.runs_unencrypted_mode_heading()}
-						</h3>
-						<p class="mt-1 text-sm text-red-700 dark:text-red-300">
-							{m.runs_unencrypted_mode_hint()}
-						</p>
-					</div>
-				</div>
+			<div class="mb-6">
+				<Alert title={m.runs_unencrypted_mode_heading()}>{m.runs_unencrypted_mode_hint()}</Alert>
 			</div>
 		{:else if !$encryptionConfigured}
 			<!-- Encryption Key Not Configured Warning -->
-			<div
-				class="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:warning"
-						class="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0"
-					/>
-					<div class="ml-3">
-						<h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">
-							{m.runs_encryption_not_configured_heading()}
-						</h3>
-						<p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-							{m.runs_encryption_not_configured_hint()}
-						</p>
-						<div class="mt-3 text-sm text-amber-700 dark:text-amber-300 space-y-2">
-							<p>{m.runs_encryption_get_started_hint()}</p>
-							<div
-								class="bg-amber-100 dark:bg-amber-900/40 rounded-md px-3 py-2 font-mono text-xs space-y-1"
-							>
-								<p>{installCliCommand}</p>
-								<p>{generateKeyCommand}</p>
-							</div>
-							<p>
-								{m.runs_encryption_set_env_hint({ variable: 'MARMOT_SERVER_ENCRYPTION_KEY' })}
-								<a
-									href="https://marmotdata.io/docs/Deploy/"
-									target="_blank"
-									rel="noopener noreferrer"
-									class="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
-									>{m.runs_deploy_docs_link()}</a
-								>
-							</p>
+			<div class="mb-6">
+				<Alert tone="warning" title={m.runs_encryption_not_configured_heading()}>
+					<p>{m.runs_encryption_not_configured_hint()}</p>
+					<div class="mt-3 space-y-2">
+						<p>{m.runs_encryption_get_started_hint()}</p>
+						<div
+							class="bg-amber-100 dark:bg-amber-900/40 rounded-md px-3 py-2 font-mono text-xs space-y-1"
+						>
+							<p>{installCliCommand}</p>
+							<p>{generateKeyCommand}</p>
 						</div>
+						<p>
+							{m.runs_encryption_set_env_hint({ variable: 'MARMOT_SERVER_ENCRYPTION_KEY' })}
+							<a
+								href="https://marmotdata.io/docs/Deploy/"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
+								>{m.runs_deploy_docs_link()}</a
+							>
+						</p>
 					</div>
-				</div>
+				</Alert>
 			</div>
 		{/if}
 
@@ -505,9 +461,7 @@
 				{canManageIngestion ? m.plugins_none_connected() : m.runs_no_pipelines_hint_readonly()}
 			</div>
 		{:else}
-			<ul
-				class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-700/60 dark:border-gray-700 dark:bg-gray-800"
-			>
+			<ul class="{PANEL} divide-y divide-gray-100 dark:divide-gray-700/60">
 				{#each pipelines as pipeline (pipeline.id)}
 					<PipelineRow
 						{pipeline}
@@ -529,20 +483,24 @@
 						{m.runs_page_of({ current: pipelinesPage, total: pipelinesTotalPages })}
 					</div>
 					<div class="flex items-center gap-2">
-						<Button
-							variant="clear"
-							click={() => goToPipelinesPage(pipelinesPage - 1)}
+						<button
+							type="button"
+							class={BTN_SECONDARY}
+							onclick={() => goToPipelinesPage(pipelinesPage - 1)}
 							disabled={pipelinesPage === 1}
-							icon="material-symbols:chevron-left"
-							text={m.common_previous()}
-						/>
-						<Button
-							variant="clear"
-							click={() => goToPipelinesPage(pipelinesPage + 1)}
+						>
+							<IconifyIcon icon="material-symbols:chevron-left" class="h-4 w-4" />
+							{m.common_previous()}
+						</button>
+						<button
+							type="button"
+							class={BTN_SECONDARY}
+							onclick={() => goToPipelinesPage(pipelinesPage + 1)}
 							disabled={pipelinesPage === pipelinesTotalPages}
-							text={m.common_next()}
-							icon="material-symbols:chevron-right"
-						/>
+						>
+							{m.common_next()}
+							<IconifyIcon icon="material-symbols:chevron-right" class="h-4 w-4" />
+						</button>
 					</div>
 				</div>
 			{/if}

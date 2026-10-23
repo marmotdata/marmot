@@ -64,7 +64,8 @@ func (h *Handler) listSources(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	limit, _ := strconv.Atoi(q.Get("limit"))
 	offset, _ := strconv.Atoi(q.Get("offset"))
-	sources, total, err := h.queryService.ListSources(r.Context(), dataquery.SourceFilter{Search: q.Get("q"), Limit: limit, Offset: offset})
+	principal, _ := common.PrincipalFromContext(r.Context())
+	sources, total, err := h.queryService.ListSources(r.Context(), dataquery.SourceFilter{Search: q.Get("q"), Limit: limit, Offset: offset, Principal: principal})
 	if err != nil {
 		respondServiceError(w, err)
 		return
@@ -86,7 +87,8 @@ func (h *Handler) listSources(w http.ResponseWriter, r *http.Request) {
 // @Router   /api/v1/query/sources/{name}/tables [get]
 func (h *Handler) listSourceTables(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	tables, err := h.queryService.ListSourceTables(r.Context(), r.PathValue("name"), r.URL.Query().Get("q"), limit)
+	principal, _ := common.PrincipalFromContext(r.Context())
+	tables, err := h.queryService.ListSourceTables(r.Context(), principal, r.PathValue("name"), r.URL.Query().Get("q"), limit)
 	if err != nil {
 		respondServiceError(w, err)
 		return
@@ -138,7 +140,7 @@ func (h *Handler) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter.Limit, _ = strconv.Atoi(q.Get("limit"))
-	if !principal.HasPermission("access", "view") && !principal.IsAdmin() {
+	if !common.HasPermission(r.Context(), "access", "view") {
 		filter.PrincipalType = string(principal.Type())
 		filter.PrincipalID = principal.ID()
 	}
@@ -206,6 +208,9 @@ func (h *Handler) query(w http.ResponseWriter, r *http.Request) {
 // @Param    principal_id query string false "Principal ID"
 // @Param    mine query bool false "Only the caller's own queries"
 // @Param    client query string false "Comma-separated clients to include: api, mcp or cli"
+// @Param    from query string false "Only queries started at or after this time (RFC 3339)"
+// @Param    to query string false "Only queries started before this time (RFC 3339)"
+// @Param    q query string false "Matches the caller, source, statement or a referenced MRN"
 // @Param    limit query int false "Page size" default(50)
 // @Param    offset query int false "Page offset" default(0)
 // @Security ApiKeyAuth
@@ -230,10 +235,23 @@ func (h *Handler) listQueries(w http.ResponseWriter, r *http.Request) {
 		Status:        q.Get("status"),
 		MRN:           q.Get("mrn"),
 		Clients:       splitList(q.Get("client")),
+		Search:        q.Get("q"),
 		Limit:         limit,
 		Offset:        offset,
 	}
-	if q.Get("mine") == "true" || !principal.HasPermission("access", "view") {
+	for name, dst := range map[string]*time.Time{"from": &filter.From, "to": &filter.To} {
+		raw := q.Get(name)
+		if raw == "" {
+			continue
+		}
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			common.RespondError(w, http.StatusBadRequest, name+" must be an RFC 3339 time")
+			return
+		}
+		*dst = t
+	}
+	if q.Get("mine") == "true" || !common.HasPermission(r.Context(), "access", "view") {
 		filter.PrincipalType = string(principal.Type())
 		filter.PrincipalID = principal.ID()
 	}
@@ -278,7 +296,7 @@ func (h *Handler) getQuery(w http.ResponseWriter, r *http.Request) {
 	}
 	// Someone else's query reads as missing, so ids cannot be probed.
 	ownQuery := query.PrincipalType == string(principal.Type()) && query.PrincipalID == principal.ID()
-	if !ownQuery && !principal.HasPermission("access", "view") {
+	if !ownQuery && !common.HasPermission(r.Context(), "access", "view") {
 		respondServiceError(w, dataquery.ErrQueryNotFound)
 		return
 	}

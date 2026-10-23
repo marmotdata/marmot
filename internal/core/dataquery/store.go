@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -74,8 +75,13 @@ type QueryFilter struct {
 	MRN           string
 	// Clients keeps only queries from these clients, such as mcp and cli
 	Clients []string
-	Limit   int
-	Offset  int
+	// From and To bound when the query started; either may be zero
+	From time.Time
+	To   time.Time
+	// Search matches the caller, the source, the statement or a referenced MRN, ignoring case
+	Search string
+	Limit  int
+	Offset int
 }
 
 // QueryOutcome is what is written back to a query record once it finishes.
@@ -99,6 +105,7 @@ type Repository interface {
 
 	ListSourceTables(ctx context.Context, filter SourceTablesFilter) ([]SourceTable, map[string]map[string]any, error)
 	SourceActivity(ctx context.Context, sources []*Source) error
+	SourcesWithTables(ctx context.Context, ids []string, assets func(idExpr string, next int) (string, []any)) ([]string, error)
 }
 
 // PostgresRepository implements Repository on pgx.
@@ -213,6 +220,17 @@ func (r *PostgresRepository) ListQueries(ctx context.Context, filter QueryFilter
 	}
 	if filter.MRN != "" {
 		where += ` AND referenced_mrns @> ARRAY[` + arg(filter.MRN) + `]::text[]`
+	}
+	if !filter.From.IsZero() {
+		where += ` AND started_at >= ` + arg(filter.From)
+	}
+	if !filter.To.IsZero() {
+		where += ` AND started_at < ` + arg(filter.To)
+	}
+	if search := strings.TrimSpace(filter.Search); search != "" {
+		pattern := arg("%" + likeEscaper.Replace(search) + "%")
+		where += ` AND (audit_subject ILIKE ` + pattern + ` OR source_name ILIKE ` + pattern +
+			` OR statement ILIKE ` + pattern + ` OR array_to_string(referenced_mrns, ' ') ILIKE ` + pattern + `)`
 	}
 
 	var total int

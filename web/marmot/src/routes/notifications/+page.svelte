@@ -6,15 +6,26 @@
 	import { m } from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import PageHeader from '$components/ui/PageHeader.svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Pill from '$components/ui/Pill.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
+	import SegmentedControl from '$components/ui/SegmentedControl.svelte';
+	import { BTN_GHOST, BTN_SECONDARY } from '$lib/ui/classes';
+	import { accessExpiryCopy } from '$lib/notifications/accessExpiry';
 
-	let filter: 'all' | 'unread' | 'read' = 'all';
+	type Filter = 'all' | 'unread' | 'read';
+	let filter = $state<Filter>('all');
 
-	$: state = $notifications;
-	$: filteredNotifications = state.notifications.filter((n) => {
-		if (filter === 'unread') return !n.read;
-		if (filter === 'read') return n.read;
-		return true;
-	});
+	let notifState = $derived($notifications);
+	let filteredNotifications = $derived(
+		notifState.notifications.filter((n) => {
+			if (filter === 'unread') return !n.read;
+			if (filter === 'read') return n.read;
+			return true;
+		})
+	);
 
 	onMount(() => {
 		notifications.refresh();
@@ -36,6 +47,10 @@
 				return 'material-symbols:group-add';
 			case 'mention':
 				return 'material-symbols:alternate-email';
+			case 'access_expiry':
+				return accessExpiryCopy(notification).expired
+					? 'material-symbols:timer-off-outline'
+					: 'material-symbols:timer-outline';
 			case 'job_complete':
 				if (notification.data?.status === 'failed') return 'material-symbols:error';
 				if (notification.data?.status === 'cancelled') return 'material-symbols:cancel';
@@ -46,64 +61,30 @@
 		}
 	}
 
+	// Colour only marks a state worth noticing (a failure, a deletion, a cancelled run); every other kind sits on a neutral tile with its own icon
 	function getNotificationColors(notification: Notification): { bg: string; icon: string } {
-		switch (notification.type) {
-			case 'schema_change':
-			case 'upstream_schema_change':
-			case 'downstream_schema_change':
-				return {
-					bg: 'bg-orange-100 dark:bg-orange-900/30',
-					icon: 'text-orange-700 dark:text-orange-400'
-				};
-			case 'lineage_change':
-				return {
-					bg: 'bg-purple-100 dark:bg-purple-900/30',
-					icon: 'text-purple-700 dark:text-purple-400'
-				};
-			case 'asset_change':
-				return {
-					bg: 'bg-earthy-blue-100 dark:bg-earthy-blue-900/30',
-					icon: 'text-earthy-blue-700 dark:text-earthy-blue-400'
-				};
-			case 'asset_deleted':
-				return {
-					bg: 'bg-red-100 dark:bg-red-900/30',
-					icon: 'text-red-700 dark:text-red-400'
-				};
-			case 'team_invite':
-				return {
-					bg: 'bg-purple-100 dark:bg-purple-900/30',
-					icon: 'text-purple-700 dark:text-purple-400'
-				};
-			case 'mention':
-				return {
-					bg: 'bg-earthy-green-100 dark:bg-earthy-green-900/30',
-					icon: 'text-earthy-green-700 dark:text-earthy-green-400'
-				};
-			case 'job_complete':
-				if (notification.data?.status === 'failed') {
-					return {
-						bg: 'bg-red-100 dark:bg-red-900/30',
-						icon: 'text-red-700 dark:text-red-400'
-					};
-				}
-				if (notification.data?.status === 'cancelled') {
-					return {
-						bg: 'bg-amber-100 dark:bg-amber-900/30',
-						icon: 'text-amber-700 dark:text-amber-400'
-					};
-				}
-				return {
-					bg: 'bg-green-100 dark:bg-green-900/30',
-					icon: 'text-green-700 dark:text-green-400'
-				};
-			case 'system':
-			default:
-				return {
-					bg: 'bg-gray-100 dark:bg-gray-700',
-					icon: 'text-gray-600 dark:text-gray-400'
-				};
+		const danger = { bg: 'bg-red-50 dark:bg-red-950/40', icon: 'text-red-600 dark:text-red-400' };
+		const warning = {
+			bg: 'bg-amber-50 dark:bg-amber-950/40',
+			icon: 'text-amber-600 dark:text-amber-400'
+		};
+		const neutral = {
+			bg: 'border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900',
+			icon: 'text-gray-500 dark:text-gray-400'
+		};
+		if (notification.type === 'asset_deleted') return danger;
+		if (notification.type === 'access_expiry') {
+			return accessExpiryCopy(notification).expired ? danger : warning;
 		}
+		if (notification.type === 'job_complete') {
+			if (notification.data?.status === 'failed') return danger;
+			if (notification.data?.status === 'cancelled') return warning;
+			return {
+				bg: 'bg-earthy-green-50 dark:bg-earthy-green-900/30',
+				icon: 'text-earthy-green-700 dark:text-earthy-green-400'
+			};
+		}
+		return neutral;
 	}
 
 	// Copy is rebuilt from the stored type and data so it translates, falling back to the server's English for old rows and unknown types
@@ -147,6 +128,8 @@
 					default:
 						return notification.title;
 				}
+			case 'access_expiry':
+				return accessExpiryCopy(notification).title;
 			case 'team_invite':
 				return m.notif_team_invite_title();
 			case 'mention':
@@ -222,6 +205,8 @@
 						return notification.message;
 				}
 			}
+			case 'access_expiry':
+				return accessExpiryCopy(notification).message;
 			case 'team_invite': {
 				const teamName = text(data, 'team_name');
 				const role = text(data, 'role');
@@ -261,7 +246,7 @@
 				)
 			);
 		} else if (notification.data?.team_id) {
-			goto(resolve(`/teams/${notification.data.team_id}` as `/${string}`));
+			goto(resolve(`/settings/teams/${String(notification.data.team_id)}`));
 		}
 	}
 
@@ -288,111 +273,59 @@
 	<title>{m.notif_page_title()}</title>
 </svelte:head>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<!-- Header -->
-	<div class="flex items-center justify-between mb-6">
-		<div>
-			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{m.notif_heading()}</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-				{m.notif_summary({ unread: state.summary.unread_count, total: state.summary.total_count })}
-			</p>
-		</div>
-		<div class="flex items-center gap-2">
-			{#if state.summary.unread_count > 0}
-				<button
-					type="button"
-					onclick={handleMarkAllAsRead}
-					class="px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-				>
+<div class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+	<PageHeader
+		title={m.notif_heading()}
+		description={m.notif_summary({
+			unread: notifState.summary.unread_count,
+			total: notifState.summary.total_count
+		})}
+	>
+		{#snippet actions()}
+			{#if notifState.summary.unread_count > 0}
+				<button type="button" onclick={handleMarkAllAsRead} class={BTN_SECONDARY}>
+					<Icon icon="material-symbols:done-all" class="h-5 w-5 text-gray-400" />
 					{m.notif_mark_all_read()}
 				</button>
 			{/if}
-			{#if state.notifications.some((n) => n.read)}
-				<button
-					type="button"
-					onclick={handleClearRead}
-					class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-				>
+			{#if notifState.notifications.some((n) => n.read)}
+				<button type="button" onclick={handleClearRead} class={BTN_GHOST}>
 					{m.notif_clear_read()}
 				</button>
 			{/if}
-		</div>
-	</div>
+		{/snippet}
+	</PageHeader>
 
-	<!-- Filter Tabs -->
-	<div class="flex items-center gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
-		<button
-			type="button"
-			onclick={() => (filter = 'all')}
-			class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px {filter === 'all'
-				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
-				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
-		>
-			{m.common_all()}
-		</button>
-		<button
-			type="button"
-			onclick={() => (filter = 'unread')}
-			class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 {filter ===
-			'unread'
-				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
-				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
-		>
-			{m.notif_filter_unread()}
-			{#if state.summary.unread_count > 0}
-				<span
-					class="px-1.5 py-0.5 text-xs rounded-full bg-earthy-terracotta-700/10 text-earthy-terracotta-700"
-				>
-					{state.summary.unread_count}
-				</span>
-			{/if}
-		</button>
-		<button
-			type="button"
-			onclick={() => (filter = 'read')}
-			class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px {filter === 'read'
-				? 'text-earthy-terracotta-700 border-earthy-terracotta-700'
-				: 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}"
-		>
-			{m.notif_filter_read()}
-		</button>
+	<div class="mb-4">
+		<SegmentedControl
+			options={[
+				{ id: 'all' as Filter, label: m.common_all() },
+				{ id: 'unread' as Filter, label: m.notif_filter_unread() },
+				{ id: 'read' as Filter, label: m.notif_filter_read() }
+			]}
+			value={filter}
+			onChange={(id) => (filter = id)}
+			size="sm"
+		/>
 	</div>
 
 	<!-- Notification List -->
-	<div
-		class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-	>
-		{#if state.loading && state.notifications.length === 0}
-			<div class="flex items-center justify-center py-16">
-				<div
-					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
+	<Panel flush>
+		{#if notifState.loading && notifState.notifications.length === 0}
+			<div class="p-5"><Skeleton class="h-14" rows={4} /></div>
 		{:else if filteredNotifications.length === 0}
-			<div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
-				<svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="1.5"
-						d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-					/>
-				</svg>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-					{m.notif_empty_heading()}
-				</h3>
-				<p class="text-sm text-gray-500 dark:text-gray-400">
-					{#if filter === 'unread'}
-						{m.notif_empty_unread()}
-					{:else if filter === 'read'}
-						{m.notif_empty_read()}
-					{:else}
-						{m.notif_empty_all()}
-					{/if}
-				</p>
-			</div>
+			<EmptyState
+				dashed={false}
+				icon="material-symbols:notifications-outline"
+				title={m.notif_empty_heading()}
+				description={filter === 'unread'
+					? m.notif_empty_unread()
+					: filter === 'read'
+						? m.notif_empty_read()
+						: m.notif_empty_all()}
+			/>
 		{:else}
-			<div class="divide-y divide-gray-200 dark:divide-gray-700">
+			<div class="divide-y divide-gray-100 dark:divide-gray-700/60">
 				{#each filteredNotifications as notification (notification.id)}
 					{@const colors = getNotificationColors(notification)}
 					<div
@@ -400,15 +333,15 @@
 						tabindex="0"
 						onclick={() => handleNotificationClick(notification)}
 						onkeydown={(e) => e.key === 'Enter' && handleNotificationClick(notification)}
-						class="relative flex items-start gap-4 p-4 transition-colors group cursor-pointer {notification.read
-							? 'opacity-60 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-							: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
+						class="group relative flex cursor-pointer items-start gap-4 px-5 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/40 {notification.read
+							? 'opacity-60'
+							: ''}"
 					>
 						{#if !notification.read}
-							<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-earthy-terracotta-700"></div>
+							<div class="absolute bottom-0 left-0 top-0 w-0.5 bg-earthy-terracotta-500"></div>
 						{/if}
 						<div
-							class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center {colors.bg}"
+							class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg {colors.bg}"
 						>
 							<Icon icon={getNotificationIcon(notification)} class="w-5 h-5 {colors.icon}" />
 						</div>
@@ -422,19 +355,15 @@
 									>
 										{renderNotificationTitle(notification)}
 									</p>
-									<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
 										{renderNotificationMessage(notification)}
 									</p>
 									<div class="flex items-center gap-2 mt-2">
-										<span class="text-xs text-gray-400 dark:text-gray-500">
+										<span class="text-xs text-gray-500 dark:text-gray-400">
 											{formatRelativeTime(notification.created_at)}
 										</span>
 										{#if notification.recipient_type === 'team'}
-											<span
-												class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
-											>
-												{m.notif_via_team()}
-											</span>
+											<Pill>{m.notif_via_team()}</Pill>
 										{/if}
 									</div>
 								</div>
@@ -443,7 +372,8 @@
 										<button
 											type="button"
 											onclick={(e) => handleMarkAsRead(e, notification.id)}
-											class="p-1.5 text-gray-400 hover:text-earthy-green-700 dark:hover:text-earthy-green-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+											class="rounded-md p-1.5 text-gray-400 opacity-0 transition hover:bg-gray-100 hover:text-gray-900 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+											aria-label={m.notif_mark_read_title()}
 											title={m.notif_mark_read_title()}
 										>
 											<Icon icon="material-symbols:check-circle-outline" class="w-4 h-4" />
@@ -452,7 +382,8 @@
 									<button
 										type="button"
 										onclick={(e) => handleDelete(e, notification.id)}
-										class="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+										class="rounded-md p-1.5 text-gray-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+										aria-label={m.notif_delete_title()}
 										title={m.notif_delete_title()}
 									>
 										<Icon icon="material-symbols:delete-outline" class="w-4 h-4" />
@@ -464,18 +395,18 @@
 				{/each}
 			</div>
 
-			{#if state.hasMore}
-				<div class="p-4 border-t border-gray-200 dark:border-gray-700">
+			{#if notifState.hasMore}
+				<div class="border-t border-gray-100 p-3 dark:border-gray-700/60">
 					<button
 						type="button"
 						onclick={() => notifications.loadMore()}
-						disabled={state.loading}
-						class="w-full py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+						disabled={notifState.loading}
+						class="{BTN_GHOST} w-full"
 					>
-						{state.loading ? m.common_loading() : m.notif_load_more()}
+						{notifState.loading ? m.common_loading() : m.notif_load_more()}
 					</button>
 				</div>
 			{/if}
 		{/if}
-	</div>
+	</Panel>
 </div>

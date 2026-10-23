@@ -2,6 +2,7 @@ package dataquery
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
@@ -14,24 +15,47 @@ type Decision struct {
 	Reason  string `json:"reason,omitempty"`
 } // @name QueryDecision
 
-// Authorizer decides whether a principal may run a planned query. resources are
-// the MRNs of every table the plan names, plus the whole-source resource when the
-// plan cannot name everything the statement reads (see SourceMRN). OSS Marmot
-// admits anyone holding assets:query to every queryable source; the cloud
-// distribution supplies one backed by its IAM, which decides table by table.
+// Authorizer decides who may query and what. OSS Marmot admits anyone holding assets:query to every queryable source; the cloud distribution supplies one backed by its IAM, which decides table by table.
 type Authorizer interface {
+	// Admits reports whether the principal may use data queries at all, which gates the query routes and MCP tools before any statement is planned.
+	Admits(ctx context.Context, principal auth.Principal) bool
+	// Authorize decides whether a principal may run a planned query. resources are the MRNs of every table the plan names, plus the whole-source resource when the plan cannot name everything the statement reads (see SourceMRN).
 	Authorize(ctx context.Context, principal auth.Principal, source *Source, resources []string) (Decision, error)
+	// Visible says which sources and tables the principal may query, so listings only offer what a query would be allowed to read.
+	Visible(ctx context.Context, principal auth.Principal) (Visibility, error)
 }
 
-// permissionAuthorizer is the OSS Authorizer: holding assets:query, which the
-// query routes also require, admits a principal to every queryable source.
+// Visibility is the part of the catalog a principal may query. A zero Visibility admits nothing.
+type Visibility struct {
+	// All admits every table of every queryable source.
+	All bool
+	// SourceIDs are the sources whose every table may be queried.
+	SourceIDs []string
+	// Assets, when set, returns a SQL condition over an asset id expression that admits the tables which may be queried one by one, numbering its parameters from next.
+	Assets func(idExpr string, next int) (sql string, args []any)
+}
+
+// coversSource reports whether every table of a source is visible.
+func (v Visibility) coversSource(sourceID string) bool {
+	return v.All || slices.Contains(v.SourceIDs, sourceID)
+}
+
+// permissionAuthorizer is the OSS Authorizer: holding assets:query admits a principal to every queryable source.
 type permissionAuthorizer struct{}
 
-func (permissionAuthorizer) Authorize(_ context.Context, principal auth.Principal, _ *Source, _ []string) (Decision, error) {
-	if principal.HasPermission("assets", "query") {
+func (permissionAuthorizer) Admits(_ context.Context, principal auth.Principal) bool {
+	return principal != nil && (principal.IsAdmin() || principal.HasPermission("assets", "query"))
+}
+
+func (a permissionAuthorizer) Authorize(ctx context.Context, principal auth.Principal, _ *Source, _ []string) (Decision, error) {
+	if a.Admits(ctx, principal) {
 		return Decision{Allowed: true}, nil
 	}
 	return Decision{Allowed: false, Reason: "querying data needs the assets:query permission"}, nil
+}
+
+func (a permissionAuthorizer) Visible(ctx context.Context, principal auth.Principal) (Visibility, error) {
+	return Visibility{All: a.Admits(ctx, principal)}, nil
 }
 
 // SourceMRN names a whole source. A statement the engine cannot plan is

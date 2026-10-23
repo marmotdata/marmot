@@ -1,68 +1,104 @@
 <script lang="ts">
+	import FilterSelect from '$components/ui/FilterSelect.svelte';
 	import { onMount } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
-	import { page } from '$app/stores';
+	import { listRoles } from '$lib/roles/api';
+	import {
+		SEARCH_FIELD,
+		BTN_PRIMARY,
+		LINK,
+		FILTER_PILL,
+		FILTER_PILL_ON,
+		FILTER_PILL_OFF
+	} from '$lib/ui/classes';
+	import Panel from '$components/ui/Panel.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
 	import UserTable from './UserTable.svelte';
 	import CreateUserBlade from './CreateUserBlade.svelte';
 	import type { User } from '$lib/users/types';
+	import type { Role } from '$lib/roles/types';
 
-	let users: User[] = [];
-	let totalUsers = 0;
-	let offset = 0;
-	let limit = 10;
-	let userQuery = '';
-	let editingUserId: string | null = null;
-	let loading = false;
-	let error: string | null = null;
-	let searchTimer: ReturnType<typeof setTimeout>;
-	let showCreate = false;
+	// The members list: search and role and status filters applied by the server, with the create blade opened from the page header
+	let {
+		createOpen = $bindable(false),
+		canManage = true
+	}: { createOpen?: boolean; canManage?: boolean } = $props();
 
-	function handleCreated() {
-		showCreate = false;
-		fetchUsers();
-	}
+	type StatusFilter = 'all' | 'active' | 'inactive';
+
+	let users = $state<User[]>([]);
+	let totalUsers = $state(0);
+	let roles = $state<Role[]>([]);
+	let userQuery = $state('');
+	let roleFilter = $state('');
+	let statusFilter = $state<StatusFilter>('all');
+	let editingUserId = $state<string | null>(null);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+	let seq = 0;
+
+	let filtered = $derived(!!userQuery.trim() || !!roleFilter || statusFilter !== 'all');
+
+	const PILL = FILTER_PILL;
+	const PILL_ON = FILTER_PILL_ON;
+	const PILL_OFF = FILTER_PILL_OFF;
 
 	async function fetchUsers() {
+		const mine = ++seq;
 		try {
 			loading = true;
-			const params = new URLSearchParams({
-				limit: limit.toString(),
-				offset: offset.toString(),
-				...(userQuery && { query: userQuery })
-			});
-
+			error = null;
+			const entries: [string, string][] = [];
+			if (userQuery.trim()) entries.push(['query', userQuery.trim()]);
+			if (roleFilter) entries.push(['role_ids', roleFilter]);
+			if (statusFilter !== 'all') entries.push(['active', String(statusFilter === 'active')]);
+			const params = new URLSearchParams(entries);
 			const response = await fetchApi(`/users?${params}`);
 			const data = await response.json();
-			users = data.users;
-			totalUsers = data.total;
+			if (mine !== seq) return;
+			users = data.users ?? [];
+			totalUsers = data.total ?? users.length;
 		} catch (err) {
-			error = err instanceof Error ? err.message : m.users_error_generic();
+			if (mine === seq) error = err instanceof Error ? err.message : m.users_error_generic();
 		} finally {
-			loading = false;
+			if (mine === seq) loading = false;
 		}
 	}
-
-	onMount(() => {
-		fetchUsers();
-		// The old /users/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
-		if ($page.url.searchParams.get('create') === '1') {
-			showCreate = true;
-			goto(resolve('/admin?tab=users'), { replaceState: true, noScroll: true, keepFocus: true });
-		}
-	});
 
 	function scheduleSearch() {
-		if (searchTimer) clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => {
-			offset = 0;
-			fetchUsers();
-		}, 300);
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(fetchUsers, 300);
 	}
 
-	$: if (userQuery !== undefined) scheduleSearch();
+	function setRole(id: string) {
+		roleFilter = id;
+		fetchUsers();
+	}
+
+	function setStatus(next: StatusFilter) {
+		statusFilter = next;
+		fetchUsers();
+	}
+
+	function clearFilters() {
+		userQuery = '';
+		roleFilter = '';
+		statusFilter = 'all';
+		fetchUsers();
+	}
+
+	function handleCreated() {
+		createOpen = false;
+		fetchUsers();
+	}
 
 	async function handleUserUpdated(updatedUser: User) {
 		users = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
@@ -74,79 +110,108 @@
 		users = users.filter((u) => u.id !== userId);
 		await fetchUsers();
 	}
+
+	onMount(() => {
+		fetchUsers();
+		listRoles()
+			.then((list) => (roles = list))
+			.catch(() => (roles = []));
+		// The old /users/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
+		if (page.url.searchParams.get('create') === '1') {
+			createOpen = true;
+			goto(resolve('/settings/members'), { replaceState: true, noScroll: true, keepFocus: true });
+		}
+	});
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
->
-	<div class="p-6">
-		<div class="flex justify-between items-center mb-6">
-			<div class="flex-1 max-w-md">
-				<input
-					type="text"
-					placeholder={m.users_search_placeholder()}
-					bind:value={userQuery}
-					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
-				/>
-			</div>
+<div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+	<div class="flex flex-wrap items-center gap-2" role="group" aria-label={m.members_filter_aria()}>
+		{#each [{ id: 'all', label: m.common_all() }, { id: 'active', label: m.common_active() }, { id: 'inactive', label: m.common_inactive() }] as option (option.id)}
 			<button
-				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={() => (showCreate = true)}
+				type="button"
+				aria-pressed={statusFilter === option.id}
+				onclick={() => setStatus(option.id as StatusFilter)}
+				class="{PILL} {statusFilter === option.id ? PILL_ON : PILL_OFF}">{option.label}</button
 			>
-				{m.users_add_button()}
-			</button>
-		</div>
-
-		{#if loading && !users.length}
-			<div class="flex justify-center p-8">
-				<div
-					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
-		{:else if error}
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-				{error}
-			</div>
-		{:else}
-			<UserTable
-				{users}
-				{editingUserId}
-				onEdit={(userId) => (editingUserId = userId)}
-				onUpdate={handleUserUpdated}
-				onDelete={handleUserDeleted}
+		{/each}
+		{#if roles.length > 0}
+			<span class="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" aria-hidden="true"></span>
+			<FilterSelect
+				label={m.members_role_filter_label()}
+				anyLabel={m.members_role_filter_any()}
+				searchPlaceholder={m.members_role_filter_search()}
+				options={roles.map((role) => ({ id: role.id, label: role.name }))}
+				value={roleFilter}
+				onChange={(id) => setRole(id)}
 			/>
-
-			<div class="mt-4 flex items-center justify-between">
-				<div class="flex-1 flex justify-between items-center">
-					<p class="text-sm text-gray-700 dark:text-gray-300">
-						{m.users_pagination_showing({
-							from: offset + 1,
-							to: Math.min(offset + users.length, totalUsers),
-							total: totalUsers
-						})}
-					</p>
-					<div class="flex space-x-2">
-						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
-							disabled={offset === 0}
-							on:click={() => (offset = Math.max(0, offset - limit))}
-						>
-							{m.common_previous()}
-						</button>
-						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
-							disabled={offset + users.length >= totalUsers}
-							on:click={() => (offset = offset + limit)}
-						>
-							{m.common_next()}
-						</button>
-					</div>
-				</div>
-			</div>
 		{/if}
 	</div>
+	<label class="{SEARCH_FIELD} w-full lg:w-72">
+		<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
+		<input
+			type="search"
+			bind:value={userQuery}
+			oninput={scheduleSearch}
+			placeholder={m.users_search_placeholder()}
+			aria-label={m.users_search_placeholder()}
+			class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100"
+		/>
+	</label>
 </div>
 
-{#if showCreate}
-	<CreateUserBlade onClose={() => (showCreate = false)} onCreated={handleCreated} />
+{#if error}
+	<Alert tone="error">{error}</Alert>
+{:else if loading && users.length === 0}
+	<Skeleton class="h-14" rows={5} />
+{:else if users.length === 0}
+	{#if filtered}
+		<EmptyState
+			icon="material-symbols:person-search-outline"
+			title={m.members_no_match_title()}
+			description={m.members_no_match_body()}
+		>
+			{#snippet action()}
+				<button type="button" class="text-sm {LINK}" onclick={clearFilters}>
+					{m.members_clear_filters()}
+				</button>
+			{/snippet}
+		</EmptyState>
+	{:else}
+		<EmptyState
+			icon="material-symbols:person-outline"
+			title={m.members_empty_title()}
+			description={m.members_empty_body()}
+		>
+			{#snippet action()}
+				{#if canManage}
+					<button type="button" class={BTN_PRIMARY} onclick={() => (createOpen = true)}>
+						<IconifyIcon icon="material-symbols:person-add-outline" class="h-5 w-5" />
+						{m.members_add_button()}
+					</button>
+				{/if}
+			{/snippet}
+		</EmptyState>
+	{/if}
+{:else}
+	<Panel flush>
+		<UserTable
+			{users}
+			{editingUserId}
+			{canManage}
+			onEdit={(userId) => (editingUserId = userId)}
+			onUpdate={handleUserUpdated}
+			onDelete={handleUserDeleted}
+		/>
+		<div
+			class="border-t border-gray-100 px-5 py-3 text-xs tabular-nums text-gray-500 dark:border-gray-700/60 dark:text-gray-400"
+		>
+			{totalUsers > users.length
+				? m.members_showing_first({ count: users.length, total: totalUsers })
+				: m.members_count({ count: totalUsers })}
+		</div>
+	</Panel>
+{/if}
+
+{#if createOpen}
+	<CreateUserBlade onClose={() => (createOpen = false)} onCreated={handleCreated} />
 {/if}

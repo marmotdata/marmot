@@ -6,7 +6,10 @@
 	import Sparkline from '$components/charts/Sparkline.svelte';
 	import DonutChart, { type DonutSlice } from '$components/charts/DonutChart.svelte';
 	import StackedColumns from '$components/charts/StackedColumns.svelte';
+	import SegmentedControl from '$components/ui/SegmentedControl.svelte';
+	import Alert from '$components/ui/Alert.svelte';
 	import { fetchApi } from '$lib/api';
+	import { PANEL, LABEL } from '$lib/ui/classes';
 	import { m } from '$lib/paraglide/messages';
 	import { formatNumber } from '$lib/utils/format';
 
@@ -47,9 +50,6 @@
 	}
 
 	// Kept in step with the data query overview so both Insights tabs read as one dashboard
-	const PANEL =
-		'rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800';
-	const KPI_LABEL = 'text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
 	const KPI_VALUE = 'mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100';
 	const KPI_SUB = 'mt-0.5 text-xs text-gray-500 dark:text-gray-400';
 
@@ -306,37 +306,23 @@
 <div class="space-y-5">
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 		<p class="text-sm text-gray-600 dark:text-gray-400">{m.metrics_subheading()}</p>
-		<div
-			class="inline-flex self-start rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-800"
-			role="group"
-			aria-label={m.dataquery_range_label()}
-		>
-			{#each ranges as r (r.id)}
-				<button
-					type="button"
-					onclick={() => setRange(r.id)}
-					aria-pressed={range === r.id}
-					class="rounded-md px-3 py-1 text-xs font-medium transition {range === r.id
-						? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-						: 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'}"
-					>{r.label}</button
-				>
-			{/each}
-		</div>
+		<SegmentedControl
+			options={ranges}
+			value={range}
+			onChange={setRange}
+			size="sm"
+			label={m.dataquery_range_label()}
+		/>
 	</div>
 
 	{#if error}
-		<div
-			class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300"
-		>
-			{error}
-		</div>
+		<Alert>{error}</Alert>
 	{/if}
 
 	<!-- KPI row -->
 	<div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
 		<div class="{PANEL} p-4">
-			<div class={KPI_LABEL}>{m.metrics_total_assets_title()}</div>
+			<div class={LABEL}>{m.metrics_total_assets_title()}</div>
 			<div class={KPI_VALUE}>{loading ? '–' : formatNumber(total)}</div>
 			<div class={KPI_SUB}>
 				{m.insights_kpi_across_types({ count: formatNumber(Object.keys(byType).length) })}
@@ -356,7 +342,7 @@
 			</div>
 		</div>
 		<div class="{PANEL} p-4">
-			<div class={KPI_LABEL}>{m.metrics_with_schemas_title()}</div>
+			<div class={LABEL}>{m.metrics_with_schemas_title()}</div>
 			<div class={KPI_VALUE}>
 				{loading ? '–' : schemaShare}<span class="text-base text-gray-400">%</span>
 			</div>
@@ -371,13 +357,13 @@
 			</div>
 		</div>
 		<div class="{PANEL} p-4">
-			<div class={KPI_LABEL}>{m.insights_kpi_views()}</div>
+			<div class={LABEL}>{m.insights_kpi_views()}</div>
 			<div class={KPI_VALUE}>{usageLoading ? '–' : formatNumber(totalViews)}</div>
 			<div class={KPI_SUB}>{m.insights_kpi_views_hint()}</div>
 			<Sparkline points={days.map((d) => ({ label: d.label, value: d.views }))} tone="calm" />
 		</div>
 		<div class="{PANEL} p-4">
-			<div class={KPI_LABEL}>{m.insights_kpi_searches()}</div>
+			<div class={LABEL}>{m.insights_kpi_searches()}</div>
 			<div class={KPI_VALUE}>{usageLoading ? '–' : formatNumber(totalSearches)}</div>
 			<div class={KPI_SUB}>{m.insights_kpi_searches_hint()}</div>
 			<Sparkline points={days.map((d) => ({ label: d.label, value: d.searches }))} tone="calm" />

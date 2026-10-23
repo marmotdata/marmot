@@ -1,20 +1,46 @@
+<script lang="ts" module>
+	export type Outcome = '' | 'completed' | 'denied' | 'failed';
+</script>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { getErrorMessage } from '$lib/stores/toast';
 	import { formatDateTime, formatNumber } from '$lib/utils/format';
 	import { listQueryHistory } from '$lib/dataquery/api';
 	import { clientLabel, outcome, subjectParts } from '$lib/dataquery/format';
-	import type { QueryDecision, QueryRecord, QueryRecordStatus } from '$lib/dataquery/types';
+	import type { QueryHistoryFilter, QueryRecord } from '$lib/dataquery/types';
 	import QueryDetail from './QueryDetail.svelte';
 	import SourcePicker from './SourcePicker.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
+	import SegmentedControl from '$components/ui/SegmentedControl.svelte';
+	import { BTN_GHOST, PANEL, SEARCH_FIELD, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
 
 	const PAGE_SIZE = 25;
+	const SEARCH_DELAY_MS = 300;
+	const TABLE_CHIPS = 2;
 
-	// Mine limits the log to the caller's own queries, for the Query page's history; the Data Access page shows everyone's
+	// Mine limits the log to the caller's own queries, for the Query page's history; the query audit page shows everyone's
 	// Heading is left off where the page or blade around the log already names it
-	let { mine = false, heading = true }: { mine?: boolean; heading?: boolean } = $props();
+	// Flush is set when the log sits edge to edge in a flush Panel, so the table drops its own border and the toolbar takes the panel's padding
+	// From bounds the log to queries started since then, and outcome is bindable so a summary above the log can filter it
+	let {
+		mine = false,
+		heading = true,
+		flush = false,
+		from = undefined,
+		outcome: outcomeFilter = $bindable('')
+	}: {
+		mine?: boolean;
+		heading?: boolean;
+		flush?: boolean;
+		from?: string;
+		outcome?: Outcome;
+	} = $props();
 
 	let queries = $state<QueryRecord[]>([]);
 	let total = $state(0);
@@ -23,13 +49,29 @@
 	let error = $state('');
 
 	let sourceFilter = $state('');
-	let decisionFilter = $state<QueryDecision | ''>('');
-	let statusFilter = $state<QueryRecordStatus | ''>('');
+	let search = $state('');
+	// The search as last sent, which trails the field by a short pause so typing does not fire a request per key
+	let appliedSearch = $state('');
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 	let selectedId = $state<string | null>(null);
 
-	let hasFilters = $derived(!!sourceFilter || !!decisionFilter || !!statusFilter);
+	let hasFilters = $derived(!!sourceFilter || !!outcomeFilter || !!search.trim());
 	let rangeEnd = $derived(Math.min(offset + queries.length, total));
+
+	const outcomeOptions: { id: Outcome; label: string }[] = [
+		{ id: '', label: m.dataquery_outcome_all() },
+		{ id: 'completed', label: m.dataquery_status_completed() },
+		{ id: 'denied', label: m.dataquery_decision_denied() },
+		{ id: 'failed', label: m.dataquery_status_failed() }
+	];
+
+	// One outcome filter stands for the decision and status pair, since a denied query only ever has the denied status
+	function outcomeParams(value: Outcome): Pick<QueryHistoryFilter, 'decision' | 'status'> {
+		if (value === 'denied') return { decision: 'denied' };
+		if (value === 'completed' || value === 'failed') return { status: value };
+		return {};
+	}
 
 	async function load() {
 		loading = true;
@@ -37,8 +79,9 @@
 		try {
 			const data = await listQueryHistory({
 				source: sourceFilter,
-				decision: decisionFilter,
-				status: statusFilter,
+				...outcomeParams(outcomeFilter),
+				q: appliedSearch || undefined,
+				from,
 				mine: mine || undefined,
 				limit: PAGE_SIZE,
 				offset
@@ -57,11 +100,20 @@
 		load();
 	}
 
+	function onSearchInput() {
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => (appliedSearch = search.trim()), SEARCH_DELAY_MS);
+	}
+
+	function setOutcome(value: Outcome) {
+		outcomeFilter = value;
+	}
+
 	function clearFilters() {
 		sourceFilter = '';
-		decisionFilter = '';
-		statusFilter = '';
-		applyFilters();
+		search = '';
+		appliedSearch = '';
+		outcomeFilter = '';
 	}
 
 	function goTo(newOffset: number) {
@@ -69,16 +121,80 @@
 		load();
 	}
 
-	onMount(async () => {
-		load();
+	// Reload whenever a filter changes, including the range and outcome set from outside through the props
+	let lastKey = '';
+	$effect(() => {
+		const key = `${from ?? ''}|${outcomeFilter}|${sourceFilter}|${appliedSearch}`;
+		if (key === lastKey) return;
+		const first = lastKey === '';
+		lastKey = key;
+		if (!first) applyFilters();
 	});
 
-	const selectClasses =
-		'appearance-none pl-3 pr-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent';
+	onMount(() => {
+		load();
+		return () => clearTimeout(searchTimer);
+	});
+
+	const dayFormat = new Intl.DateTimeFormat(getLocale(), {
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long'
+	});
+	const timeFormat = new Intl.DateTimeFormat(getLocale(), { hour: 'numeric', minute: '2-digit' });
+
+	function dayKey(iso: string): string {
+		const d = new Date(iso);
+		return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+	}
+
+	function dayLabel(iso: string): string {
+		const key = dayKey(iso);
+		const today = new Date();
+		if (key === dayKey(today.toISOString())) return m.dataquery_audit_today();
+		const yesterday = new Date(today.getTime() - 86_400_000);
+		if (key === dayKey(yesterday.toISOString())) return m.dataquery_audit_yesterday();
+		return dayFormat.format(new Date(iso));
+	}
+
+	// The statement's first meaningful line is enough to recognise a query in a list; the blade shows it whole
+	function statementPreview(statement: string): string {
+		return statement
+			.replace(/--[^\n]*/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+	}
+
+	// mrn://table/postgres/shop.public.orders reads as public.orders: the schema and table say which table without the service prefix
+	function tableName(mrn: string): string {
+		const last = mrn.split('/').pop() ?? mrn;
+		const parts = last.split('.');
+		return parts.length > 2 ? parts.slice(-2).join('.') : last;
+	}
+
+	function tables(query: QueryRecord): string[] {
+		return (query.referenced_mrns ?? []).filter((mrn) => !mrn.startsWith('mrn://source/'));
+	}
+
+	function reason(query: QueryRecord): string | null {
+		if (query.decision === 'denied') return query.decision_detail?.reason ?? null;
+		if (query.status === 'failed') return query.error ?? null;
+		return null;
+	}
+
+	function principalIcon(query: QueryRecord): string {
+		return query.principal_type === 'service_account'
+			? 'material-symbols:smart-toy-outline'
+			: 'material-symbols:person-outline';
+	}
 </script>
 
-<div class="space-y-4">
-	<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+<div class={flush ? '' : 'space-y-4'}>
+	<div
+		class="flex flex-col gap-3 {flush
+			? 'border-b border-gray-100 px-5 py-4 dark:border-gray-700/60'
+			: ''}"
+	>
 		{#if heading}
 			<div>
 				<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
@@ -90,52 +206,31 @@
 			</div>
 		{/if}
 		<div class="flex flex-wrap items-center gap-2">
+			<label class="{SEARCH_FIELD} w-full sm:w-80">
+				<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
+				<input
+					bind:value={search}
+					oninput={onSearchInput}
+					type="search"
+					placeholder={m.dataquery_audit_search_placeholder()}
+					aria-label={m.dataquery_audit_search_placeholder()}
+					class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100"
+				/>
+			</label>
 			<SourcePicker
 				bind:value={sourceFilter}
 				emptyLabel={m.dataquery_query_filter_all_sources()}
-				onchange={applyFilters}
 				size="sm"
 			/>
-			<div class="relative">
-				<select
-					bind:value={decisionFilter}
-					onchange={applyFilters}
-					class={selectClasses}
-					aria-label={m.dataquery_query_filter_decision_aria()}
-				>
-					<option value="">{m.dataquery_query_filter_all_decisions()}</option>
-					<option value="allowed">{m.dataquery_decision_allowed()}</option>
-					<option value="denied">{m.dataquery_decision_denied()}</option>
-				</select>
-				<IconifyIcon
-					icon="material-symbols:expand-more"
-					class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-				/>
-			</div>
-			<div class="relative">
-				<select
-					bind:value={statusFilter}
-					onchange={applyFilters}
-					class={selectClasses}
-					aria-label={m.dataquery_query_filter_status_aria()}
-				>
-					<option value="">{m.dataquery_query_filter_all_statuses()}</option>
-					<option value="running">{m.dataquery_status_running()}</option>
-					<option value="completed">{m.dataquery_status_completed()}</option>
-					<option value="failed">{m.dataquery_status_failed()}</option>
-					<option value="denied">{m.dataquery_status_denied()}</option>
-				</select>
-				<IconifyIcon
-					icon="material-symbols:expand-more"
-					class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-				/>
-			</div>
+			<SegmentedControl
+				options={outcomeOptions}
+				value={outcomeFilter}
+				onChange={setOutcome}
+				size="sm"
+				label={m.dataquery_audit_outcome_label()}
+			/>
 			{#if hasFilters}
-				<button
-					type="button"
-					onclick={clearFilters}
-					class="px-2.5 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:underline"
-				>
+				<button type="button" onclick={clearFilters} class="{BTN_GHOST} !text-xs">
 					{m.common_clear()}
 				</button>
 			{/if}
@@ -143,52 +238,52 @@
 	</div>
 
 	{#if loading && queries.length === 0}
-		<div class="flex items-center justify-center py-16">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
-		</div>
+		<div class={flush ? 'p-5' : ''}><Skeleton class="h-10" rows={5} /></div>
 	{:else if error}
-		<div
-			class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-		>
-			<p class="text-sm text-red-700 dark:text-red-300">{error}</p>
-		</div>
+		<div class={flush ? 'p-5' : ''}><Alert>{error}</Alert></div>
 	{:else if queries.length === 0}
-		<div
-			class="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-12 text-center"
-		>
-			<IconifyIcon
-				icon="material-symbols:receipt-long-outline"
-				class="h-10 w-10 mx-auto text-gray-300 dark:text-gray-600"
-			/>
-			<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-				{hasFilters ? m.dataquery_query_log_no_match() : m.dataquery_query_log_empty()}
-			</p>
-		</div>
+		<EmptyState
+			dashed={!flush}
+			icon="material-symbols:receipt-long-outline"
+			title={hasFilters ? m.dataquery_query_log_no_match() : m.dataquery_query_log_empty()}
+		/>
 	{:else}
 		<div
-			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+			class="{flush ? '' : `${PANEL} overflow-hidden`} {loading
+				? 'opacity-60 transition-opacity'
+				: ''}"
 		>
 			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+				<table class="{TABLE} w-full">
 					<thead>
-						<tr
-							class="text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700"
-						>
-							<th class="px-4 py-3 font-semibold">{m.dataquery_query_col_time()}</th>
-							<th class="px-4 py-3 font-semibold">{m.dataquery_query_col_who()}</th>
-							<th class="px-4 py-3 font-semibold">{m.dataquery_query_col_client()}</th>
-							<th class="px-4 py-3 font-semibold">{m.dataquery_query_col_source()}</th>
-							<th class="px-4 py-3 font-semibold">{m.dataquery_query_col_outcome()}</th>
-							<th class="px-4 py-3 font-semibold text-right">{m.dataquery_query_col_rows()}</th>
+						<tr class="border-b border-gray-100 dark:border-gray-700/60">
+							<th class="{TH} w-20">{m.dataquery_query_col_time()}</th>
+							<th class={TH}>{m.dataquery_query_col_who()}</th>
+							<th class="{TH} w-full">{m.dataquery_query_col_query()}</th>
+							<th class={TH}>{m.dataquery_query_col_source()}</th>
+							<th class={TH}>{m.dataquery_query_col_outcome()}</th>
+							<th class="{TH} text-right">{m.dataquery_query_col_rows()}</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
-						{#each queries as query (query.id)}
+					<tbody class={TBODY}>
+						{#each queries as query, i (query.id)}
 							{@const who = subjectParts(query.audit_subject)}
 							{@const badge = outcome(query)}
+							{@const read = tables(query)}
+							{@const why = reason(query)}
+							{#if i === 0 || dayKey(query.started_at) !== dayKey(queries[i - 1].started_at)}
+								<tr class="bg-gray-50/80 dark:bg-gray-900/40">
+									<th
+										colspan="6"
+										scope="colgroup"
+										class="px-4 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+									>
+										{dayLabel(query.started_at)}
+									</th>
+								</tr>
+							{/if}
 							<tr
-								class="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/40 {selectedId ===
-								query.id
+								class="{TR} cursor-pointer align-top {selectedId === query.id
 									? 'bg-gray-50 dark:bg-gray-700/40'
 									: ''}"
 								onclick={() => (selectedId = query.id)}
@@ -202,31 +297,64 @@
 								aria-label={m.dataquery_query_open_aria({ source: query.source_name })}
 							>
 								<td
-									class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 tabular-nums"
+									class="{TD} whitespace-nowrap tabular-nums text-gray-500 dark:text-gray-400"
+									title={formatDateTime(query.started_at)}
 								>
-									{formatDateTime(query.started_at)}
+									{timeFormat.format(new Date(query.started_at))}
 								</td>
-								<td class="px-4 py-3 whitespace-nowrap">
-									<span class="text-gray-900 dark:text-gray-100 font-medium">{who.name}</span>
-									{#if who.kind}
-										<span class="block text-xs text-gray-500 dark:text-gray-400">{who.kind}</span>
+								<td class="{TD} whitespace-nowrap">
+									<span class="inline-flex items-center gap-2" title={who.kind}>
+										<IconifyIcon
+											icon={principalIcon(query)}
+											class="h-4 w-4 flex-shrink-0 text-gray-400"
+											aria-label={who.kind}
+										/>
+										<span class="font-medium text-gray-900 dark:text-gray-100">{who.name}</span>
+									</span>
+								</td>
+								<td class="{TD} max-w-0">
+									<code
+										class="block truncate font-mono text-xs text-gray-800 dark:text-gray-200"
+										title={query.statement}>{statementPreview(query.statement)}</code
+									>
+									{#if why}
+										<span class="mt-1 block truncate text-xs text-red-600 dark:text-red-400"
+											>{why}</span
+										>
+									{:else if read.length > 0}
+										<span class="mt-1 flex flex-wrap items-center gap-1">
+											{#each read.slice(0, TABLE_CHIPS) as mrn (mrn)}
+												<span
+													class="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+													title={mrn}
+												>
+													<IconifyIcon icon="material-symbols:table-outline" class="h-3 w-3" />
+													{tableName(mrn)}
+												</span>
+											{/each}
+											{#if read.length > TABLE_CHIPS}
+												<span class="text-[11px] text-gray-500 dark:text-gray-400"
+													>{m.dataquery_audit_more_tables({
+														count: formatNumber(read.length - TABLE_CHIPS)
+													})}</span
+												>
+											{/if}
+										</span>
 									{/if}
 								</td>
-								<td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-									{clientLabel(query.client)}
+								<td class="{TD} whitespace-nowrap">
+									<span class="block text-gray-900 dark:text-gray-100">{query.source_name}</span>
+									<span class="block text-xs text-gray-500 dark:text-gray-400"
+										>{m.dataquery_audit_via({ client: clientLabel(query.client) })}</span
+									>
 								</td>
-								<td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-									{query.source_name}
-								</td>
-								<td class="px-4 py-3">
+								<td class="{TD} whitespace-nowrap">
 									<span
 										class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {badge.classes}"
 										>{badge.label}</span
 									>
 								</td>
-								<td
-									class="px-4 py-3 text-right whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-300"
-								>
+								<td class="{TD} whitespace-nowrap text-right tabular-nums">
 									{query.rows_returned !== undefined && query.rows_returned !== null
 										? formatNumber(query.rows_returned)
 										: '—'}
@@ -245,7 +373,7 @@
 			</div>
 
 			<div
-				class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"
+				class="flex items-center justify-between border-t border-gray-100 px-4 py-3 dark:border-gray-700/60"
 			>
 				<span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
 					{m.dataquery_query_log_range({
@@ -259,7 +387,7 @@
 						type="button"
 						onclick={() => goTo(offset - PAGE_SIZE)}
 						disabled={offset === 0 || loading}
-						class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+						class="{BTN_GHOST} !text-xs"
 					>
 						<IconifyIcon icon="material-symbols:chevron-left" class="h-4 w-4" />
 						{m.common_previous()}
@@ -268,7 +396,7 @@
 						type="button"
 						onclick={() => goTo(offset + PAGE_SIZE)}
 						disabled={offset + PAGE_SIZE >= total || loading}
-						class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+						class="{BTN_GHOST} !text-xs"
 					>
 						{m.common_next()}
 						<IconifyIcon icon="material-symbols:chevron-right" class="h-4 w-4" />

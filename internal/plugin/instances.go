@@ -95,12 +95,18 @@ func (m *InstanceManager) reapIdle() {
 // acquire returns a live process for the plugin, starting or restarting one
 // as needed, and marks it busy until release is called. The slow parts, the
 // ping and the process start, run outside the manager's lock.
-func (m *InstanceManager) acquire(pluginID string) (*pluginsdk.PluginProcess, error) {
+// registeredSource returns the registered source of a plugin, which the unkeyed query calls run on.
+func registeredSource(pluginID string) (Source, error) {
 	entry, err := GetRegistry().Get(pluginID)
 	if err != nil {
 		return nil, err
 	}
-	external, ok := entry.Source.(interface{ Binary() Binary })
+	return entry.Source, nil
+}
+
+// acquire returns a live instance of source, kept under key. Key is the plugin id for registered plugins, and whatever the caller chose for a source it resolved itself.
+func (m *InstanceManager) acquire(pluginID string, source Source) (*pluginsdk.PluginProcess, error) {
+	external, ok := source.(interface{ Binary() Binary })
 	if !ok {
 		return nil, fmt.Errorf("plugin %s is not an external plugin", pluginID)
 	}
@@ -173,7 +179,17 @@ func (m *InstanceManager) release(pluginID string, process *pluginsdk.PluginProc
 
 // PlanQuery asks the plugin what a statement would touch.
 func (m *InstanceManager) PlanQuery(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
-	process, err := m.acquire(pluginID)
+	source, err := registeredSource(pluginID)
+	if err != nil {
+		return nil, err
+	}
+	return m.PlanQueryOn(ctx, pluginID, source, config, req)
+}
+
+// PlanQueryOn is PlanQuery against a source the caller resolved, such as one plugin version among several, keeping its instance under key.
+func (m *InstanceManager) PlanQueryOn(ctx context.Context, key string, source Source, config map[string]any, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
+	pluginID := key
+	process, err := m.acquire(pluginID, source)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +201,17 @@ func (m *InstanceManager) PlanQuery(ctx context.Context, pluginID string, config
 // busy until the returned stream is closed, which keeps the reaper away
 // while rows are still flowing.
 func (m *InstanceManager) ExecuteQuery(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
-	process, err := m.acquire(pluginID)
+	source, err := registeredSource(pluginID)
+	if err != nil {
+		return nil, err
+	}
+	return m.ExecuteQueryOn(ctx, pluginID, source, config, req)
+}
+
+// ExecuteQueryOn is ExecuteQuery against a source the caller resolved, keeping its instance under key.
+func (m *InstanceManager) ExecuteQueryOn(ctx context.Context, key string, source Source, config map[string]any, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+	pluginID := key
+	process, err := m.acquire(pluginID, source)
 	if err != nil {
 		return nil, err
 	}

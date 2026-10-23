@@ -40,6 +40,7 @@ class TestUIConfigResponse(unittest.TestCase):
                     id = '',
                     message = '',
                     variant = '', ),
+                default_language = '',
                 encryption_configured = True,
                 table_preview_enabled = True
             )

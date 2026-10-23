@@ -33,6 +33,18 @@ class TestPluginsdkMeta(unittest.TestCase):
         model = PluginsdkMeta()
         if include_optional:
             return PluginsdkMeta(
+                asset_schemas = [
+                    marmot.generated.models.pluginsdk/asset_schema.pluginsdk.AssetSchema(
+                        description = '',
+                        display_name = '',
+                        fields = [
+                            marmot.generated.models.pluginsdk/asset_field.pluginsdk.AssetField(
+                                description = '',
+                                name = '',
+                                type = '', )
+                            ],
+                        struct_name = '', )
+                    ],
                 category = '',
                 config_spec = [
                     marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
@@ -42,6 +54,7 @@ class TestPluginsdkMeta(unittest.TestCase):
                             marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
                                 default = null,
                                 description = '',
+                                group = '',
                                 hidden = True,
                                 is_array = True,
                                 label = '',
@@ -65,6 +78,7 @@ class TestPluginsdkMeta(unittest.TestCase):
                                     min_len = 56,
                                     pattern = '', ), )
                             ],
+                        group = '',
                         hidden = True,
                         is_array = True,
                         label = '',
@@ -96,7 +110,8 @@ class TestPluginsdkMeta(unittest.TestCase):
                 id = '',
                 name = '',
                 status = '',
-                supports_data_preview = True
+                supports_data_preview = True,
+                supports_query = True
             )
         else:
             return PluginsdkMeta(

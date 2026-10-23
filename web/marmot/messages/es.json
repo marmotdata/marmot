@@ -1569,7 +1569,6 @@
 			}
 		}
 	],
-	"ui_sidebar_admin_nav_aria": "Navegación de administración",
 	"ui_stepper_saving": "Guardando...",
 	"ui_stepper_step_of": "Paso {current} de {total} — {title}",
 	"ui_tabs_aria": "Pestañas",

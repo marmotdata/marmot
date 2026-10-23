@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
+from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
 
 
@@ -28,6 +29,7 @@ class PluginsdkMeta(BaseModel):
     PluginsdkMeta
     """
 
+    asset_schemas: list[PluginsdkAssetSchema] | None = None
     category: StrictStr | None = None
     config_spec: list[PluginsdkConfigField] | None = None
     description: StrictStr | None = None
@@ -37,7 +39,9 @@ class PluginsdkMeta(BaseModel):
     name: StrictStr | None = None
     status: StrictStr | None = None
     supports_data_preview: StrictBool | None = None
+    supports_query: StrictBool | None = None
     __properties: ClassVar[list[str]] = [
+        "asset_schemas",
         "category",
         "config_spec",
         "description",
@@ -47,6 +51,7 @@ class PluginsdkMeta(BaseModel):
         "name",
         "status",
         "supports_data_preview",
+        "supports_query",
     ]
 
     model_config = ConfigDict(
@@ -86,6 +91,13 @@ class PluginsdkMeta(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in asset_schemas (list)
+        _items = []
+        if self.asset_schemas:
+            for _item_asset_schemas in self.asset_schemas:
+                if _item_asset_schemas:
+                    _items.append(_item_asset_schemas.to_dict())
+            _dict["asset_schemas"] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in config_spec (list)
         _items = []
         if self.config_spec:
@@ -106,6 +118,11 @@ class PluginsdkMeta(BaseModel):
 
         return cls.model_validate(
             {
+                "asset_schemas": [
+                    PluginsdkAssetSchema.from_dict(_item) for _item in obj["asset_schemas"]
+                ]
+                if obj.get("asset_schemas") is not None
+                else None,
                 "category": obj.get("category"),
                 "config_spec": [
                     PluginsdkConfigField.from_dict(_item) for _item in obj["config_spec"]
@@ -119,5 +136,6 @@ class PluginsdkMeta(BaseModel):
                 "name": obj.get("name"),
                 "status": obj.get("status"),
                 "supports_data_preview": obj.get("supports_data_preview"),
+                "supports_query": obj.get("supports_query"),
             }
         )

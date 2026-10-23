@@ -135,8 +135,10 @@ type QueryResult struct {
 // Service is data querying: queryable sources, policy-checked query execution
 // and the query log.
 type Service interface {
+	// Admits reports whether a principal may use data queries at all.
+	Admits(ctx context.Context, principal auth.Principal) bool
 	ListSources(ctx context.Context, filter SourceFilter) ([]*Source, int, error)
-	ListSourceTables(ctx context.Context, sourceName, search string, limit int) ([]SourceTable, error)
+	ListSourceTables(ctx context.Context, principal auth.Principal, sourceName, search string, limit int) ([]SourceTable, error)
 	InstanceStatus() []plugin.InstanceStatus
 
 	Query(ctx context.Context, principal auth.Principal, input QueryInput, client string) (*QueryResult, error)
@@ -179,11 +181,19 @@ func NewService(repo Repository, sources SourceProvider, assets asset.Service, r
 }
 
 // SourceFilter pages and searches queryable sources. Search matches the
-// source name or plugin.
+// source name or plugin. Principal, when set, narrows the list to the sources it may query.
 type SourceFilter struct {
-	Search string
-	Limit  int
-	Offset int
+	Search    string
+	Limit     int
+	Offset    int
+	Principal auth.Principal
+}
+
+// maxVisibleSources bounds how many sources are read to narrow a restricted principal's list, which is filtered after the read.
+const maxVisibleSources = 1000
+
+func (s *service) Admits(ctx context.Context, principal auth.Principal) bool {
+	return s.authorizer.Admits(ctx, principal)
 }
 
 func (s *service) ListSources(ctx context.Context, filter SourceFilter) ([]*Source, int, error) {
@@ -193,7 +203,7 @@ func (s *service) ListSources(ctx context.Context, filter SourceFilter) ([]*Sour
 	if filter.Offset < 0 {
 		filter.Offset = 0
 	}
-	sources, total, err := s.sources.ListQueryableSources(ctx, strings.TrimSpace(filter.Search), filter.Limit, filter.Offset)
+	sources, total, err := s.visibleSources(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -201,6 +211,52 @@ func (s *service) ListSources(ctx context.Context, filter SourceFilter) ([]*Sour
 		log.Warn().Err(err).Msg("Failed to load query source activity")
 	}
 	return sources, total, nil
+}
+
+// visibleSources lists the page of sources the filter's principal may query. Restricted principals are narrowed after the read, since the sources they reach through single tables are only known to the catalog.
+func (s *service) visibleSources(ctx context.Context, filter SourceFilter) ([]*Source, int, error) {
+	search := strings.TrimSpace(filter.Search)
+	if filter.Principal == nil {
+		return s.sources.ListQueryableSources(ctx, search, filter.Limit, filter.Offset)
+	}
+	visibility, err := s.authorizer.Visible(ctx, filter.Principal)
+	if err != nil {
+		return nil, 0, err
+	}
+	if visibility.All {
+		return s.sources.ListQueryableSources(ctx, search, filter.Limit, filter.Offset)
+	}
+
+	all, _, err := s.sources.ListQueryableSources(ctx, search, maxVisibleSources, 0)
+	if err != nil {
+		return nil, 0, err
+	}
+	var partial []string
+	for _, source := range all {
+		if !visibility.coversSource(source.ID) {
+			partial = append(partial, source.ID)
+		}
+	}
+	reachable := map[string]bool{}
+	if len(partial) > 0 && visibility.Assets != nil {
+		ids, err := s.repo.SourcesWithTables(ctx, partial, visibility.Assets)
+		if err != nil {
+			return nil, 0, err
+		}
+		for _, id := range ids {
+			reachable[id] = true
+		}
+	}
+	visible := make([]*Source, 0, len(all))
+	for _, source := range all {
+		if visibility.coversSource(source.ID) || reachable[source.ID] {
+			visible = append(visible, source)
+		}
+	}
+	total := len(visible)
+	start := min(filter.Offset, total)
+	end := min(start+filter.Limit, total)
+	return visible[start:end], total, nil
 }
 
 func (s *service) InstanceStatus() []plugin.InstanceStatus {

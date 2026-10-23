@@ -5553,6 +5553,24 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Only queries started at or after this time (RFC 3339)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only queries started before this time (RFC 3339)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Matches the caller, source, statement or a referenced MRN",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Page size",
@@ -5924,12 +5942,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new role with optional initial permissions",
+                "description": "Create a new role with optional initial permissions, named by id or by resource_type:action key. The body may be JSON or YAML.",
                 "consumes": [
-                    "application/json"
+                    "application/json",
+                    "application/yaml"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/json",
+                    "application/yaml"
                 ],
                 "tags": [
                     "roles"
@@ -5964,6 +5984,92 @@ const docTemplate = `{
                         "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/schema": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The JSON Schema a role document follows, for editors and tooling.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Role document schema",
+                "operationId": "getRolesSchema",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/validate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Checks a role document, in JSON or YAML, without saving it, and lists every problem found with where it is, so an editor can mark each one. Pass id to check an edit to an existing role, so it keeping its own name is not reported as a clash.",
+                "consumes": [
+                    "application/json",
+                    "application/yaml"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Validate a role document",
+                "operationId": "postRolesValidate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the role being edited",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Role document",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_roles.createRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ValidateRoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DocumentErrorResponse"
                         }
                     }
                 }
@@ -6134,7 +6240,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Atomically replace all permissions on a role. System roles enforce a minimum permission floor.",
+                "description": "Atomically replace all permissions on a role, named by id or by resource_type:action key. System roles enforce a minimum permission floor.",
                 "consumes": [
                     "application/json"
                 ],
@@ -10548,6 +10654,32 @@ const docTemplate = `{
                 }
             }
         },
+        "DocumentErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DocumentFieldError"
+                    }
+                }
+            }
+        },
+        "DocumentFieldError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Path is a JSONPath-style location such as bindings[2].members[0], or empty for the document as a whole.",
+                    "type": "string"
+                }
+            }
+        },
         "Documentation": {
             "type": "object",
             "properties": {
@@ -11982,6 +12114,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "permission_keys": {
+                    "description": "PermissionKeys are the same permissions as resource_type:action keys, the form a role document is written in.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "permissions": {
                     "type": "array",
                     "items": {
@@ -11993,6 +12132,17 @@ const docTemplate = `{
                 },
                 "user_count": {
                     "type": "integer"
+                }
+            }
+        },
+        "RoleDocumentProblem": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
                 }
             }
         },
@@ -13220,6 +13370,20 @@ const docTemplate = `{
                 }
             }
         },
+        "ValidateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RoleDocumentProblem"
+                    }
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
         "ValidationErrorDetail": {
             "type": "object",
             "properties": {
@@ -13520,6 +13684,13 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "permission_keys": {
+                    "description": "PermissionKeys names permissions as resource_type:action keys, the form a hand-written role document uses.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -13527,6 +13698,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "permission_keys": {
+                    "description": "PermissionKeys names permissions as resource_type:action keys. They are added to PermIDs.",
                     "type": "array",
                     "items": {
                         "type": "string"

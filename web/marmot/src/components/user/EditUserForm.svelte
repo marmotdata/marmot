@@ -1,10 +1,14 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { listRoles } from '$lib/roles/api';
-	import { Lock, Mail, User as UserIcon, Shield } from 'lucide-svelte';
+	import IconifyIcon from '@iconify/svelte';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
+	import Pill from '$components/ui/Pill.svelte';
+	import Blade from '$components/ui/Blade.svelte';
+	import RoleSelector from '$lib/components/RoleSelector.svelte';
 	import type { User, Role } from '$lib/users/types';
 	import type { Role as FullRole } from '$lib/roles/types';
 
@@ -20,7 +24,8 @@
 
 	let loading = $state(false);
 	let availableRoles: FullRole[] = $state([]);
-	let editedUser = $state({ ...user });
+	// The form edits a copy taken when it opens; the row remounts it for each user
+	let editedUser = $state(untrack(() => ({ ...user })));
 
 	onMount(async () => {
 		try {
@@ -30,20 +35,44 @@
 		}
 	});
 
-	function toggleRole(name: string) {
-		const has = editedUser.roles.some((r: Role) => r.name === name);
-		if (has) {
-			editedUser.roles = editedUser.roles.filter((r: Role) => r.name !== name);
-		} else {
-			const roleToAdd = availableRoles.find((r) => r.name === name);
-			if (roleToAdd) {
-				editedUser.roles = [
-					...editedUser.roles,
-					{ id: roleToAdd.id, name: roleToAdd.name, description: roleToAdd.description }
-				];
-			}
-		}
+	function providerDisplayName(provider: string): string {
+		const providerMap: Record<string, string> = {
+			google: 'Google',
+			github: 'GitHub',
+			gitlab: 'GitLab',
+			okta: 'Okta',
+			slack: 'Slack',
+			auth0: 'Auth0'
+		};
+		return providerMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
 	}
+
+	// The picker works in role ids; the user record and the API name roles
+	let selectedRoleIds = $derived(
+		editedUser.roles
+			.map((r: Role) => availableRoles.find((a) => a.name === r.name)?.id)
+			.filter((id): id is string => !!id)
+	);
+
+	function setRoles(ids: string[]) {
+		editedUser.roles = ids
+			.map((id) => availableRoles.find((r) => r.id === id))
+			.filter((r): r is FullRole => !!r)
+			.map((r) => ({ id: r.id, name: r.name, description: r.description }));
+	}
+
+	let dirty = $derived(
+		editedUser.name !== user.name ||
+			editedUser.active !== user.active ||
+			editedUser.roles
+				.map((r: Role) => r.name)
+				.sort()
+				.join() !==
+				user.roles
+					.map((r: Role) => r.name)
+					.sort()
+					.join()
+	);
 
 	async function updateUser() {
 		try {
@@ -72,149 +101,85 @@
 			loading = false;
 		}
 	}
-
-	function getProviderDisplay(provider: string): string {
-		const providerMap: Record<string, string> = {
-			google: 'Google',
-			github: 'GitHub',
-			gitlab: 'GitLab',
-			okta: 'Okta',
-			slack: 'Slack',
-			auth0: 'Auth0'
-		};
-		return providerMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
-	}
 </script>
 
-<div
-	class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 m-4"
+<Blade
+	title={user.name || user.username}
+	subtitle={user.username}
+	onClose={onCancel}
+	width="xl"
+	{dirty}
 >
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-		<UserIcon class="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
-		{m.users_edit_heading()}
-	</h3>
-
 	<div class="space-y-6">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			<div>
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					{m.users_username_label()}
-				</label>
-				<div
-					class="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-500 dark:text-gray-400"
-				>
-					{user.username}
-				</div>
-			</div>
-
-			<div>
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					{m.common_name()}
-				</label>
-				<input
-					type="text"
-					bind:value={editedUser.name}
-					class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
-				/>
-			</div>
+		<div>
+			<label for="edit-user-name-{user.id}" class="{LABEL} mb-1.5 block">{m.common_name()}</label>
+			<input id="edit-user-name-{user.id}" type="text" bind:value={editedUser.name} class={INPUT} />
 		</div>
 
-		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-				<Lock class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-				{m.users_auth_method_heading()}
-			</h4>
-			<div class="flex flex-wrap gap-2">
+		<div class="flex items-start justify-between gap-4">
+			<div>
+				<p
+					id="edit-user-status-{user.id}"
+					class="text-sm font-medium text-gray-900 dark:text-gray-100"
+				>
+					{m.users_account_status_label()}
+				</p>
+				<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{m.members_active_hint()}</p>
+			</div>
+			<button
+				type="button"
+				role="switch"
+				aria-checked={editedUser.active}
+				aria-labelledby="edit-user-status-{user.id}"
+				onclick={() => (editedUser.active = !editedUser.active)}
+				class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-earthy-terracotta-500/40 {editedUser.active
+					? 'bg-earthy-terracotta-600'
+					: 'bg-gray-200 dark:bg-gray-700'}"
+			>
+				<span
+					class="inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform {editedUser.active
+						? 'translate-x-5'
+						: 'translate-x-0.5'}"
+				></span>
+			</button>
+		</div>
+
+		<div>
+			<p class="{LABEL} mb-1.5">{m.users_auth_method_heading()}</p>
+			<div class="flex flex-wrap gap-1.5">
 				{#if user.identities && user.identities.length > 0}
 					{#each user.identities as identity (identity.provider + (identity.provider_email ?? ''))}
-						<div
-							class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-800"
-						>
-							<Lock class="h-4 w-4 mr-2" />
-							{getProviderDisplay(identity.provider)}
+						<Pill>
+							<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3" />
+							{providerDisplayName(identity.provider)}
 							{#if identity.provider_email}
-								<span class="ml-2 text-xs text-blue-600 dark:text-blue-400">
-									({identity.provider_email})
-								</span>
+								<span class="text-gray-500 dark:text-gray-400">({identity.provider_email})</span>
 							{/if}
-						</div>
+						</Pill>
 					{/each}
 				{:else}
-					<div
-						class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-50 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
-					>
-						<Mail class="h-4 w-4 mr-2" />
+					<Pill>
+						<IconifyIcon icon="material-symbols:mail-outline" class="h-3 w-3" />
 						{m.users_auth_password_method()}
-					</div>
+					</Pill>
 				{/if}
 			</div>
 		</div>
 
-		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-				<Shield class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-				{m.users_header_roles()}
-			</h4>
-			{#if availableRoles.length === 0}
-				<p class="text-sm text-gray-500 dark:text-gray-400 italic">{m.users_loading_roles()}</p>
-			{:else}
-				<div class="space-y-2">
-					{#each availableRoles as role (role.id)}
-						<label
-							class="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-						>
-							<input
-								type="checkbox"
-								checked={editedUser.roles.some((r: Role) => r.name === role.name)}
-								on:change={() => toggleRole(role.name)}
-								class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500"
-							/>
-							<span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
-								{role.name}
-								{#if role.description}
-									<span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
-										— {role.description}
-									</span>
-								{/if}
-							</span>
-						</label>
-					{/each}
-				</div>
+		<div>
+			<p class="{LABEL} mb-1.5">{m.users_header_roles()}</p>
+			{#if availableRoles.length > 0}
+				<RoleSelector roles={availableRoles} selectedIds={selectedRoleIds} onChange={setRoles} />
 			{/if}
-		</div>
-
-		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-				{m.users_account_status_label()}
-			</label>
-			<select
-				bind:value={editedUser.active}
-				class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
-			>
-				<option value={true}>{m.common_active()}</option>
-				<option value={false}>{m.common_inactive()}</option>
-			</select>
 		</div>
 	</div>
 
-	<div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-		<button
-			type="button"
-			class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 text-sm font-medium"
-			on:click={onCancel}
-		>
-			{m.common_cancel()}
-		</button>
-		<button
-			type="button"
-			class="px-4 py-2 bg-earthy-terracotta-600 text-white rounded-md hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-			on:click={updateUser}
-			disabled={loading}
-		>
-			{#if loading}
-				<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-			{/if}
-			{m.users_save_changes()}
-		</button>
-	</div>
-</div>
+	{#snippet footer(close)}
+		<div class="flex justify-end gap-2">
+			<button type="button" class={BTN_SECONDARY} onclick={close}>{m.common_cancel()}</button>
+			<button type="button" class={BTN_PRIMARY} onclick={updateUser} disabled={loading || !dirty}>
+				{loading ? m.members_saving_label() : m.users_save_changes()}
+			</button>
+		</div>
+	{/snippet}
+</Blade>

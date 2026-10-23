@@ -1,28 +1,66 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { listRoles } from '$lib/roles/api';
 	import { m } from '$lib/paraglide/messages';
-	import { page } from '$app/stores';
+	import {
+		BTN_PRIMARY,
+		LINK,
+		SEARCH_FIELD,
+		FILTER_PILL,
+		FILTER_PILL_ON,
+		FILTER_PILL_OFF
+	} from '$lib/ui/classes';
+	import Panel from '$components/ui/Panel.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
 	import RoleTable from './RoleTable.svelte';
 	import CreateRoleBlade from './CreateRoleBlade.svelte';
 	import type { Role } from '$lib/roles/types';
+	import { documentFromRole, type RoleDocument } from '$lib/roles/document';
 
-	let roles: Role[] = [];
-	let filteredRoles: Role[] = [];
-	let roleQuery = '';
-	let editingRoleId: string | null = null;
-	let loading = false;
-	let error: string | null = null;
-	let searchTimer: ReturnType<typeof setTimeout>;
-	let showCreate = false;
+	// Every role, filtered here because the list is small, with rows that expand to show or edit their permissions
+	let {
+		createOpen = $bindable(false),
+		canManage = true
+	}: { createOpen?: boolean; canManage?: boolean } = $props();
+
+	type KindFilter = 'all' | 'system' | 'custom';
+
+	let roles = $state<Role[]>([]);
+	let roleQuery = $state('');
+	let kindFilter = $state<KindFilter>('all');
+	let editingRoleId = $state<string | null>(null);
+	// The document a duplicated role starts the create blade with; cleared whenever the blade closes.
+	let createInitial = $state<RoleDocument | undefined>(undefined);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+
+	let filteredRoles = $derived.by(() => {
+		const q = roleQuery.trim().toLowerCase();
+		return roles
+			.filter((r) =>
+				kindFilter === 'all' ? true : kindFilter === 'system' ? r.is_system : !r.is_system
+			)
+			.filter(
+				(r) =>
+					!q || r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
+			);
+	});
+
+	const PILL = FILTER_PILL;
+	const PILL_ON = FILTER_PILL_ON;
+	const PILL_OFF = FILTER_PILL_OFF;
 
 	async function fetchRoles() {
 		try {
 			loading = true;
+			error = null;
 			roles = await listRoles();
-			applyFilter();
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.roles_error_generic();
 		} finally {
@@ -30,97 +68,108 @@
 		}
 	}
 
-	function applyFilter() {
-		const q = roleQuery.trim().toLowerCase();
-		filteredRoles = q
-			? roles.filter(
-					(r) => r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
-				)
-			: roles;
-	}
-
-	function scheduleSearch() {
-		if (searchTimer) clearTimeout(searchTimer);
-		searchTimer = setTimeout(applyFilter, 200);
-	}
-
-	$: if (roleQuery !== undefined) scheduleSearch();
-
 	function handleCreated() {
-		showCreate = false;
+		createOpen = false;
+		createInitial = undefined;
 		fetchRoles();
 	}
 
-	async function handleRoleUpdated(updatedRole: Role) {
-		roles = roles.map((r) => (r.id === updatedRole.id ? updatedRole : r));
-		editingRoleId = null;
-		applyFilter();
+	function handleDuplicate(role: Role) {
+		createInitial = { ...documentFromRole(role), name: `${role.name}-copy` };
+		createOpen = true;
 	}
 
-	async function handleRoleDeleted(roleId: string) {
+	function handleRoleUpdated(updatedRole: Role) {
+		roles = roles.map((r) => (r.id === updatedRole.id ? updatedRole : r));
+		editingRoleId = null;
+	}
+
+	function handleRoleDeleted(roleId: string) {
 		roles = roles.filter((r) => r.id !== roleId);
-		applyFilter();
 	}
 
 	onMount(() => {
 		fetchRoles();
 		// The old /roles/new route redirects here with ?create=1, so open the blade and drop the flag so a refresh does not reopen it
-		if ($page.url.searchParams.get('create') === '1') {
-			showCreate = true;
-			goto(resolve('/admin?tab=roles'), { replaceState: true, noScroll: true, keepFocus: true });
+		if (page.url.searchParams.get('create') === '1') {
+			createOpen = true;
+			goto(resolve('/settings/roles'), { replaceState: true, noScroll: true, keepFocus: true });
 		}
 	});
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
->
-	<div class="p-6">
-		<div class="flex justify-between items-center mb-6">
-			<div class="flex-1 max-w-md">
-				<input
-					type="text"
-					placeholder={m.roles_search_placeholder()}
-					bind:value={roleQuery}
-					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
-				/>
-			</div>
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+	<div class="flex flex-wrap items-center gap-2" role="group" aria-label={m.roles_filter_aria()}>
+		{#each [{ id: 'all', label: m.common_all() }, { id: 'system', label: m.ui_role_system_badge() }, { id: 'custom', label: m.roles_custom_filter() }] as option (option.id)}
 			<button
-				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={() => (showCreate = true)}
+				type="button"
+				aria-pressed={kindFilter === option.id}
+				onclick={() => (kindFilter = option.id as KindFilter)}
+				class="{PILL} {kindFilter === option.id ? PILL_ON : PILL_OFF}">{option.label}</button
 			>
-				{m.roles_add_button()}
-			</button>
-		</div>
-
-		{#if loading && !roles.length}
-			<div class="flex justify-center p-8">
-				<div
-					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
-		{:else if error}
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-				{error}
-			</div>
-		{:else}
-			<RoleTable
-				roles={filteredRoles}
-				{editingRoleId}
-				onEdit={(roleId) => (editingRoleId = roleId)}
-				onUpdate={handleRoleUpdated}
-				onDelete={handleRoleDeleted}
-			/>
-
-			{#if filteredRoles.length === 0}
-				<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-					{roleQuery ? m.roles_no_match_search() : m.roles_none_defined()}
-				</p>
-			{/if}
-		{/if}
+		{/each}
 	</div>
+	<label class="{SEARCH_FIELD} w-full sm:w-72">
+		<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
+		<input
+			type="search"
+			bind:value={roleQuery}
+			placeholder={m.roles_search_placeholder()}
+			aria-label={m.roles_search_placeholder()}
+			class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100"
+		/>
+	</label>
 </div>
 
-{#if showCreate}
-	<CreateRoleBlade onClose={() => (showCreate = false)} onCreated={handleCreated} />
+{#if error}
+	<Alert tone="error">{error}</Alert>
+{:else if loading && roles.length === 0}
+	<Skeleton class="h-14" rows={4} />
+{:else if roles.length === 0}
+	<EmptyState icon="material-symbols:badge-outline" title={m.roles_none_defined()}>
+		{#snippet action()}
+			{#if canManage}
+				<button type="button" class={BTN_PRIMARY} onclick={() => (createOpen = true)}>
+					<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+					{m.roles_new_button()}
+				</button>
+			{/if}
+		{/snippet}
+	</EmptyState>
+{:else if filteredRoles.length === 0}
+	<EmptyState icon="material-symbols:search-off" title={m.roles_no_match_search()}>
+		{#snippet action()}
+			<button
+				type="button"
+				class="text-sm {LINK}"
+				onclick={() => {
+					roleQuery = '';
+					kindFilter = 'all';
+				}}>{m.members_clear_filters()}</button
+			>
+		{/snippet}
+	</EmptyState>
+{:else}
+	<Panel flush>
+		<RoleTable
+			roles={filteredRoles}
+			{editingRoleId}
+			{canManage}
+			onEdit={(roleId) => (editingRoleId = roleId)}
+			onUpdate={handleRoleUpdated}
+			onDelete={handleRoleDeleted}
+			onDuplicate={handleDuplicate}
+		/>
+	</Panel>
+{/if}
+
+{#if createOpen}
+	<CreateRoleBlade
+		initial={createInitial}
+		onClose={() => {
+			createOpen = false;
+			createInitial = undefined;
+		}}
+		onCreated={handleCreated}
+	/>
 {/if}

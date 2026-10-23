@@ -69,7 +69,7 @@
 <div
 	class={staticPlacement
 		? 'flex h-full w-full bg-earthy-brown-50 dark:bg-gray-900'
-		: `fixed right-0 top-0 z-50 flex h-full w-full ${WIDTHS[width]} flex-col bg-earthy-brown-50 shadow-lg dark:bg-gray-900 dark:shadow-2xl`}
+		: `fixed right-0 top-0 z-50 flex h-full w-full ${WIDTHS[width]} flex-col border-l border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900`}
 	role={staticPlacement ? undefined : 'dialog'}
 	aria-modal={staticPlacement ? undefined : true}
 	aria-labelledby="{titleId}-title"
@@ -97,12 +97,12 @@
 	{#if !collapsed}
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<div
-				class="flex flex-none items-center justify-between gap-4 border-b border-gray-200 bg-earthy-brown-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-900"
+				class="flex flex-none items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-gray-700/60"
 			>
 				<div class="min-w-0">
 					<h2
 						id="{titleId}-title"
-						class="truncate text-2xl font-bold text-gray-900 dark:text-gray-100"
+						class="truncate text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100"
 					>
 						{title}
 					</h2>
@@ -116,7 +116,7 @@
 						<button
 							type="button"
 							onclick={requestClose}
-							class="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+							class="-mr-2 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
 							aria-label={m.common_close()}
 						>
 							<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
@@ -159,7 +159,7 @@
 
 			{#if footer}
 				<div
-					class="flex-none border-t border-gray-200 bg-earthy-brown-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-900"
+					class="flex-none border-t border-gray-100 bg-gray-50 px-6 py-3 dark:border-gray-700/60 dark:bg-gray-950/30"
 				>
 					{@render footer(requestClose)}
 				</div>

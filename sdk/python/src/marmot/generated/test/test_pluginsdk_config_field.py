@@ -39,6 +39,35 @@ class TestPluginsdkConfigField(unittest.TestCase):
                     marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
                         default = null,
                         description = '',
+                        fields = [
+                            marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
+                                default = null,
+                                description = '',
+                                group = '',
+                                hidden = True,
+                                is_array = True,
+                                label = '',
+                                name = '',
+                                options = [
+                                    marmot.generated.models.pluginsdk/field_option.pluginsdk.FieldOption(
+                                        label = '',
+                                        value = '', )
+                                    ],
+                                placeholder = '',
+                                required = True,
+                                sensitive = True,
+                                show_when = marmot.generated.models.pluginsdk/show_when.pluginsdk.ShowWhen(
+                                    field = '',
+                                    value = '', ),
+                                type = 'string',
+                                validation = marmot.generated.models.pluginsdk/validation.pluginsdk.Validation(
+                                    max = 56,
+                                    max_len = 56,
+                                    min = 56,
+                                    min_len = 56,
+                                    pattern = '', ), )
+                            ],
+                        group = '',
                         hidden = True,
                         is_array = True,
                         label = '',
@@ -62,6 +91,7 @@ class TestPluginsdkConfigField(unittest.TestCase):
                             min_len = 56,
                             pattern = '', ), )
                     ],
+                group = '',
                 hidden = True,
                 is_array = True,
                 label = '',

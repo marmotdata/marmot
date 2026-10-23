@@ -7,6 +7,8 @@
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
+	import Alert from '$components/ui/Alert.svelte';
 	import { formatList } from '$lib/utils';
 	import { type CreateWebhookInput } from '$lib/teams/webhooks';
 
@@ -18,11 +20,9 @@
 	let { onClose, onCreated }: Props = $props();
 
 	const formId = 'create-team-form';
-	const sectionClass =
-		'text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
-	const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-	const inputClass =
-		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-earthy-terracotta-500 focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100';
+	const sectionClass = LABEL;
+	const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+	const inputClass = INPUT;
 
 	let name = $state('');
 	let description = $state('');
@@ -156,11 +156,7 @@
 <Blade title={m.teams_create_team()} {onClose} width="2xl" {dirty}>
 	<form id={formId} onsubmit={handleSubmit} bind:this={formEl} class="space-y-8">
 		{#if error}
-			<div
-				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
-			>
-				{error}
-			</div>
+			<Alert tone="error">{error}</Alert>
 		{/if}
 
 		<section class="space-y-4">
@@ -257,18 +253,14 @@
 
 	{#snippet footer(close)}
 		<div class="flex items-center justify-end gap-2">
-			<button
-				type="button"
-				onclick={close}
-				class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-			>
+			<button type="button" onclick={close} class={BTN_SECONDARY}>
 				{m.common_cancel()}
 			</button>
 			<button
 				type="submit"
 				form={formId}
 				disabled={saving || !nameValid || !webhooksValid}
-				class="inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500 disabled:opacity-50"
+				class={BTN_PRIMARY}
 			>
 				{saving ? m.teams_creating() : m.teams_create_team()}
 			</button>

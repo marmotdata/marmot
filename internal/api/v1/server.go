@@ -40,6 +40,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
+	"github.com/marmotdata/marmot/internal/core/accessexpiry"
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
@@ -97,6 +98,9 @@ type Server struct {
 	// Data product membership evaluation
 	membershipService    *dataproductService.MembershipService
 	membershipReconciler *dataproductService.Reconciler
+
+	// Notices for API keys and grants about to expire
+	accessExpiry *accessexpiry.Runner
 
 	// Asset rule membership evaluation
 	assetRuleMembershipService *assetruleService.MembershipService
@@ -164,9 +168,12 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		notificationRepo,
 		&teamMembershipAdapter{teamSvc: teamSvc},
 		notificationService.WithDB(db),
-		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc}),
+		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc, db: db}),
 	)
 	notificationSvc.Start(context.Background())
+	// Expiry notices for credentials; an edition with its own grants adds a source for those to the same runner
+	accessExpiry := accessexpiry.NewRunner(db, notificationSvc,
+		accessexpiry.NewKeySource(db, accessexpiry.RoleHolders(db, "service_accounts", "manage")))
 	subscriptionRepo := subscription.NewPostgresRepository(db)
 	subscriptionSvc := subscription.NewService(subscriptionRepo)
 	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
@@ -210,6 +217,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	membershipReconciler.Start(context.Background())
 	assetRuleMemberSvc.Start(context.Background())
 	assetRuleReconciler.Start(context.Background())
+	accessExpiry.Start(context.Background())
 
 	// Register membership service with asset service for event hooks
 	assetSvc.SetMembershipObserver(membershipSvc)
@@ -574,6 +582,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		scheduler:                  scheduler,
 		membershipService:          membershipSvc,
 		membershipReconciler:       membershipReconciler,
+		accessExpiry:               accessExpiry,
 		assetRuleMembershipService: assetRuleMemberSvc,
 		assetRuleReconciler:        assetRuleReconciler,
 		notificationService:        notificationSvc,
@@ -665,6 +674,9 @@ func (s *Server) Stop() {
 	}
 	if s.membershipReconciler != nil {
 		s.membershipReconciler.Stop()
+	}
+	if s.accessExpiry != nil {
+		s.accessExpiry.Stop()
 	}
 	if s.membershipService != nil {
 		s.membershipService.Stop()
@@ -857,6 +869,7 @@ func (a *teamMembershipAdapter) GetTeamMemberUserIDs(ctx context.Context, teamID
 
 type userPreferencesAdapter struct {
 	userSvc userService.Service
+	db      *pgxpool.Pool
 }
 
 func (a *userPreferencesAdapter) GetNotificationPreferences(ctx context.Context, userID string) (map[string]bool, error) {
@@ -867,26 +880,34 @@ func (a *userPreferencesAdapter) GetNotificationPreferences(ctx context.Context,
 	return a.extractNotificationPrefs(user), nil
 }
 
+// GetNotificationPreferencesBatch reads the preferences of exactly the given users in one query, so a large fan-out still honours each recipient's choices.
 func (a *userPreferencesAdapter) GetNotificationPreferencesBatch(ctx context.Context, userIDs []string) (map[string]map[string]bool, error) {
 	result := make(map[string]map[string]bool, len(userIDs))
+	if len(userIDs) == 0 {
+		return result, nil
+	}
 
-	users, _, err := a.userSvc.List(ctx, userService.Filter{Limit: len(userIDs)})
+	rows, err := a.db.Query(ctx, `SELECT id::text, COALESCE(preferences->'notifications', '{}'::jsonb) FROM users WHERE id::text = ANY($1)`, userIDs)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	userMap := make(map[string]*userService.User, len(users))
-	for _, u := range users {
-		userMap[u.ID] = u
-	}
-
-	for _, id := range userIDs {
-		if user, exists := userMap[id]; exists {
-			result[id] = a.extractNotificationPrefs(user)
+	for rows.Next() {
+		var id string
+		var notifPrefs map[string]interface{}
+		if err := rows.Scan(&id, &notifPrefs); err != nil {
+			return nil, err
 		}
+		prefs := make(map[string]bool, len(notifPrefs))
+		for key, val := range notifPrefs {
+			if boolVal, ok := val.(bool); ok {
+				prefs[key] = boolVal
+			}
+		}
+		result[id] = prefs
 	}
-
-	return result, nil
+	return result, rows.Err()
 }
 
 func (a *userPreferencesAdapter) extractNotificationPrefs(user *userService.User) map[string]bool {

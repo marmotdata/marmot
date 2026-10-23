@@ -1034,6 +1034,24 @@ definitions:
       lineage_deleted:
         type: integer
     type: object
+  DocumentErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/DocumentFieldError'
+        type: array
+    type: object
+  DocumentFieldError:
+    properties:
+      message:
+        type: string
+      path:
+        description: Path is a JSONPath-style location such as bindings[2].members[0],
+          or empty for the document as a whole.
+        type: string
+    type: object
   Documentation:
     properties:
       content:
@@ -1988,6 +2006,12 @@ definitions:
         type: boolean
       name:
         type: string
+      permission_keys:
+        description: PermissionKeys are the same permissions as resource_type:action
+          keys, the form a role document is written in.
+        items:
+          type: string
+        type: array
       permissions:
         items:
           $ref: '#/definitions/RolePermission'
@@ -1996,6 +2020,13 @@ definitions:
         type: string
       user_count:
         type: integer
+    type: object
+  RoleDocumentProblem:
+    properties:
+      message:
+        type: string
+      path:
+        type: string
     type: object
   RolePermission:
     properties:
@@ -2820,6 +2851,15 @@ definitions:
       valid:
         type: boolean
     type: object
+  ValidateRoleResponse:
+    properties:
+      problems:
+        items:
+          $ref: '#/definitions/RoleDocumentProblem'
+        type: array
+      valid:
+        type: boolean
+    type: object
   ValidationErrorDetail:
     properties:
       field:
@@ -3025,10 +3065,22 @@ definitions:
         items:
           type: string
         type: array
+      permission_keys:
+        description: PermissionKeys names permissions as resource_type:action keys,
+          the form a hand-written role document uses.
+        items:
+          type: string
+        type: array
     type: object
   v1_roles.replacePermissionsRequest:
     properties:
       permission_ids:
+        items:
+          type: string
+        type: array
+      permission_keys:
+        description: PermissionKeys names permissions as resource_type:action keys.
+          They are added to PermIDs.
         items:
           type: string
         type: array
@@ -6537,6 +6589,18 @@ paths:
         in: query
         name: client
         type: string
+      - description: Only queries started at or after this time (RFC 3339)
+        in: query
+        name: from
+        type: string
+      - description: Only queries started before this time (RFC 3339)
+        in: query
+        name: to
+        type: string
+      - description: Matches the caller, source, statement or a referenced MRN
+        in: query
+        name: q
+        type: string
       - default: 50
         description: Page size
         in: query
@@ -6779,7 +6843,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new role with optional initial permissions
+      - application/yaml
+      description: Create a new role with optional initial permissions, named by id
+        or by resource_type:action key. The body may be JSON or YAML.
       operationId: postRoles
       parameters:
       - description: Role creation request
@@ -6790,6 +6856,7 @@ paths:
           $ref: '#/definitions/v1_roles.createRoleRequest'
       produces:
       - application/json
+      - application/yaml
       responses:
         "200":
           description: OK
@@ -6911,8 +6978,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Atomically replace all permissions on a role. System roles enforce
-        a minimum permission floor.
+      description: Atomically replace all permissions on a role, named by id or by
+        resource_type:action key. System roles enforce a minimum permission floor.
       operationId: postRolesIDPermissions
       parameters:
       - description: Role ID
@@ -6949,6 +7016,62 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Replace role permissions
+      tags:
+      - roles
+  /api/v1/roles/schema:
+    get:
+      description: The JSON Schema a role document follows, for editors and tooling.
+      operationId: getRolesSchema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Role document schema
+      tags:
+      - roles
+  /api/v1/roles/validate:
+    post:
+      consumes:
+      - application/json
+      - application/yaml
+      description: Checks a role document, in JSON or YAML, without saving it, and
+        lists every problem found with where it is, so an editor can mark each one.
+        Pass id to check an edit to an existing role, so it keeping its own name is
+        not reported as a clash.
+      operationId: postRolesValidate
+      parameters:
+      - description: ID of the role being edited
+        in: query
+        name: id
+        type: string
+      - description: Role document
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ValidateRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DocumentErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Validate a role document
       tags:
       - roles
   /api/v1/runs:

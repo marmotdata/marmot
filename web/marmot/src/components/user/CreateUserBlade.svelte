@@ -7,6 +7,8 @@
 	import { fetchApi } from '$lib/api';
 	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
+	import Alert from '$components/ui/Alert.svelte';
 	import type { Role } from '$lib/roles/types';
 
 	interface Props {
@@ -17,13 +19,10 @@
 	let { onClose, onCreated }: Props = $props();
 
 	const formId = 'create-user-form';
-	const sectionClass =
-		'text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
-	const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-	const inputClass =
-		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-earthy-terracotta-500 focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100';
-	const invalidInputClass =
-		'w-full rounded-lg border border-red-500 bg-white px-3 py-2 text-sm text-gray-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 dark:border-red-500 dark:bg-gray-800 dark:text-gray-100';
+	const sectionClass = LABEL;
+	const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+	const inputClass = INPUT;
+	const invalidInputClass = `${INPUT} !border-red-500 focus:!border-red-500 focus:!ring-red-500/30`;
 
 	let username = $state('');
 	let name = $state('');
@@ -139,11 +138,7 @@
 <Blade title={m.users_create_title()} {onClose} width="xl" {dirty}>
 	<form id={formId} onsubmit={handleSubmit} class="space-y-6">
 		{#if error}
-			<div
-				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
-			>
-				{error}
-			</div>
+			<Alert tone="error">{error}</Alert>
 		{/if}
 
 		<section class="space-y-4">
@@ -233,8 +228,8 @@
 											: passwordStrength === 2
 												? 'bg-amber-500'
 												: passwordStrength === 3
-													? 'bg-lime-500'
-													: 'bg-green-500'
+													? 'bg-earthy-green-500'
+													: 'bg-earthy-green-700'
 										: 'bg-gray-200 dark:bg-gray-700'}"
 								></div>
 							{/each}
@@ -247,8 +242,8 @@
 									: passwordStrength === 2
 										? 'text-amber-600 dark:text-amber-400'
 										: passwordStrength === 3
-											? 'text-lime-600 dark:text-lime-400'
-											: 'text-green-600 dark:text-green-400'}"
+											? 'text-earthy-green-600 dark:text-earthy-green-400'
+											: 'text-earthy-green-700 dark:text-earthy-green-400'}"
 							>
 								{strengthLabel}
 							</span>
@@ -284,7 +279,9 @@
 						{confirmError}
 					</p>
 				{:else if passwordConfirm && password && passwordConfirm === password}
-					<p class="mt-2 flex items-center text-sm text-green-600 dark:text-green-400">
+					<p
+						class="mt-2 flex items-center text-sm text-earthy-green-700 dark:text-earthy-green-400"
+					>
 						<IconifyIcon
 							icon="material-symbols:check-circle-outline"
 							class="mr-1 h-4 w-4 flex-shrink-0"
@@ -313,18 +310,14 @@
 
 	{#snippet footer(close)}
 		<div class="flex items-center justify-end gap-2">
-			<button
-				type="button"
-				onclick={close}
-				class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-			>
+			<button type="button" onclick={close} class={BTN_SECONDARY}>
 				{m.common_cancel()}
 			</button>
 			<button
 				type="submit"
 				form={formId}
 				disabled={saving || !identityValid || !credentialsValid || !rolesValid}
-				class="inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500 disabled:opacity-50"
+				class={BTN_PRIMARY}
 			>
 				{saving ? m.users_creating_label() : m.users_create_title()}
 			</button>

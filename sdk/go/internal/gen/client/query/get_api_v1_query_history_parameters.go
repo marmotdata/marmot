@@ -73,6 +73,11 @@ type GetAPIV1QueryHistoryParams struct {
 	// allowed or denied
 	Decision *string
 
+	// From.
+	//
+	// Only queries started at or after this time (RFC 3339)
+	From *string
+
 	// Limit.
 	//
 	// Page size
@@ -105,6 +110,11 @@ type GetAPIV1QueryHistoryParams struct {
 	// Principal type
 	PrincipalType *string
 
+	// Q.
+	//
+	// Matches the caller, source, statement or a referenced MRN
+	Q *string
+
 	// Source.
 	//
 	// Source name
@@ -114,6 +124,11 @@ type GetAPIV1QueryHistoryParams struct {
 	//
 	// running, completed, failed or denied
 	Status *string
+
+	// To.
+	//
+	// Only queries started before this time (RFC 3339)
+	To *string
 
 	HTTPClient *http.Client
 
@@ -208,6 +223,17 @@ func (o *GetAPIV1QueryHistoryParams) SetDecision(decision *string) {
 	o.Decision = decision
 }
 
+// WithFrom adds the from to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithFrom(from *string) *GetAPIV1QueryHistoryParams {
+	o.SetFrom(from)
+	return o
+}
+
+// SetFrom adds the from to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetFrom(from *string) {
+	o.From = from
+}
+
 // WithLimit adds the limit to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) WithLimit(limit *int64) *GetAPIV1QueryHistoryParams {
 	o.SetLimit(limit)
@@ -274,6 +300,17 @@ func (o *GetAPIV1QueryHistoryParams) SetPrincipalType(principalType *string) {
 	o.PrincipalType = principalType
 }
 
+// WithQ adds the q to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithQ(q *string) *GetAPIV1QueryHistoryParams {
+	o.SetQ(q)
+	return o
+}
+
+// SetQ adds the q to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetQ(q *string) {
+	o.Q = q
+}
+
 // WithSource adds the source to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) WithSource(source *string) *GetAPIV1QueryHistoryParams {
 	o.SetSource(source)
@@ -294,6 +331,17 @@ func (o *GetAPIV1QueryHistoryParams) WithStatus(status *string) *GetAPIV1QueryHi
 // SetStatus adds the status to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) SetStatus(status *string) {
 	o.Status = status
+}
+
+// WithTo adds the to to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithTo(to *string) *GetAPIV1QueryHistoryParams {
+	o.SetTo(to)
+	return o
+}
+
+// SetTo adds the to to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetTo(to *string) {
+	o.To = to
 }
 
 // WriteToRequest writes these params to a [runtime.ClientRequest].
@@ -332,6 +380,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		if qDecision != "" {
 
 			if err := r.SetQueryParam("decision", qDecision); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.From != nil {
+
+		// query param from
+		var qrFrom string
+
+		if o.From != nil {
+			qrFrom = *o.From
+		}
+		qFrom := qrFrom
+		if qFrom != "" {
+
+			if err := r.SetQueryParam("from", qFrom); err != nil {
 				return err
 			}
 		}
@@ -439,6 +504,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		}
 	}
 
+	if o.Q != nil {
+
+		// query param q
+		var qrQ string
+
+		if o.Q != nil {
+			qrQ = *o.Q
+		}
+		qQ := qrQ
+		if qQ != "" {
+
+			if err := r.SetQueryParam("q", qQ); err != nil {
+				return err
+			}
+		}
+	}
+
 	if o.Source != nil {
 
 		// query param source
@@ -468,6 +550,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		if qStatus != "" {
 
 			if err := r.SetQueryParam("status", qStatus); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.To != nil {
+
+		// query param to
+		var qrTo string
+
+		if o.To != nil {
+			qrTo = *o.To
+		}
+		qTo := qrTo
+		if qTo != "" {
+
+			if err := r.SetQueryParam("to", qTo); err != nil {
 				return err
 			}
 		}

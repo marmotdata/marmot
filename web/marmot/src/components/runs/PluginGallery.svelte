@@ -3,6 +3,13 @@
 	import { resolve } from '$app/paths';
 	import Icon from '$components/ui/Icon.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import {
+		PANEL,
+		SEARCH_FIELD,
+		FILTER_PILL,
+		FILTER_PILL_ON,
+		FILTER_PILL_OFF
+	} from '$lib/ui/classes';
 
 	interface Plugin {
 		id: string;
@@ -48,12 +55,9 @@
 			.sort((a, b) => a.name.localeCompare(b.name));
 	});
 
-	const PILL =
-		'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium capitalize transition';
-	const PILL_ON =
-		'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900';
-	const PILL_OFF =
-		'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200';
+	const PILL = FILTER_PILL + ' capitalize';
+	const PILL_ON = FILTER_PILL_ON;
+	const PILL_OFF = FILTER_PILL_OFF;
 </script>
 
 <section id="available" class="scroll-mt-20" aria-labelledby="available-heading">
@@ -65,9 +69,7 @@
 			</h2>
 			<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{m.plugins_available_body()}</p>
 		</div>
-		<label
-			class="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 focus-within:border-earthy-terracotta-500 focus-within:ring-2 focus-within:ring-earthy-terracotta-500/30 sm:w-72 dark:border-gray-700 dark:bg-gray-800"
-		>
+		<label class="{SEARCH_FIELD} w-full sm:w-72">
 			<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
 			<input
 				bind:value={search}
@@ -126,7 +128,7 @@
 									`/pipelines/new?plugin=${plugin.id}${plugin.supports_query ? '&query=1' : ''}` as NewRoute
 								)
 							: undefined}
-						class="group flex h-full items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 transition dark:border-gray-700 dark:bg-gray-800 {canAdd
+						class="{PANEL} group flex h-full items-start gap-3 p-4 transition {canAdd
 							? 'hover:-translate-y-px hover:border-earthy-terracotta-300 hover:shadow-sm dark:hover:border-earthy-terracotta-700'
 							: ''}"
 					>

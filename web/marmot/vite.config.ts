@@ -22,13 +22,15 @@ function iconBundlePlugin() {
 	};
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
 	plugins: [
 		iconBundlePlugin(),
 		paraglideVitePlugin({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide',
-			strategy: ['localStorage', 'preferredLanguage', 'baseLocale']
+			strategy: ['localStorage', 'preferredLanguage', 'baseLocale'],
+			// One module per message tree-shakes best for production, but the dev server serves modules unbundled, so it would fetch thousands of them on every page load. One module per locale keeps dev to a handful of requests.
+			outputStructure: command === 'build' ? 'message-modules' : 'locale-modules'
 		}),
 		sveltekit(),
 		Icons({
@@ -64,4 +66,4 @@ export default defineConfig({
 			}
 		}
 	}
-});
+}));

@@ -263,7 +263,7 @@
 									</a>
 								{:else if s.id === 'team'}
 									{#if isAdmin}
-										<a href={resolve('/admin?tab=users')} class={PRIMARY}>
+										<a href={resolve('/settings/members')} class={PRIMARY}>
 											<IconifyIcon icon="material-symbols:group-add-outline" class="h-4 w-4" />
 											{m.home_step_team_action()}
 										</a>

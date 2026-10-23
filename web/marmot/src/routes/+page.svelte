@@ -13,6 +13,8 @@
 	import { userProfile } from '$lib/stores/user';
 	import { setupHidden, setupRemoved, skippedSteps } from '$lib/stores/setup.svelte';
 	import Modal from '$components/ui/Modal.svelte';
+	import KpiTile from '$components/ui/KpiTile.svelte';
+	import { PANEL, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_DANGER } from '$lib/ui/classes';
 	import { m } from '$lib/paraglide/messages';
 	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
 	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
@@ -53,10 +55,9 @@
 
 	// The pages the homepage links into; none take route parameters, so resolve() accepts them with or without a query string
 	type HomeRoute =
-		| `${'/admin' | '/discover' | '/glossary' | '/insights' | '/query' | '/runs' | '/products/new'}`
-		| `${'/admin' | '/discover' | '/runs'}?${string}`;
+		| `${'/settings' | '/settings/system' | '/settings/members' | '/query-audit' | '/discover' | '/glossary' | '/insights' | '/query' | '/runs' | '/products/new'}`
+		| `${'/settings' | '/discover' | '/runs'}?${string}`;
 
-	const PANEL = 'rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800';
 	const TASK =
 		'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
 
@@ -373,11 +374,7 @@
 			</div>
 			<div class="flex flex-shrink-0 items-center gap-2">
 				{#if !setupComplete && !setupRemoved.value}
-					<button
-						type="button"
-						onclick={() => setupHidden.set(false)}
-						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-					>
+					<button type="button" onclick={() => setupHidden.set(false)} class={BTN_SECONDARY}>
 						<span class="flex gap-0.5" aria-hidden="true">
 							{#each Array(5) as _, i (i)}
 								<span
@@ -390,11 +387,7 @@
 						{m.home_setup_pill({ done: setupDone, total: 5 })}
 					</button>
 				{/if}
-				<button
-					type="button"
-					onclick={() => (connect = 'agent')}
-					class="inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500"
-				>
+				<button type="button" onclick={() => (connect = 'agent')} class={BTN_PRIMARY}>
 					<IconifyIcon icon="material-symbols:add-link" class="h-5 w-5" />
 					{m.home_connect_button()}
 				</button>
@@ -528,9 +521,7 @@
 						href={resolve('/query')}
 						class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
 					>
-						<div
-							class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-						>
+						<div class={LABEL}>
 							{m.home_kpi_queries()}
 						</div>
 						<div class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
@@ -541,29 +532,17 @@
 						</div>
 						<Sparkline points={hourly.map((h) => ({ label: h.label, value: h.total }))} />
 					</a>
-					<a
+					<KpiTile
 						href={resolve('/query')}
-						class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
-					>
-						<div
-							class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-						>
-							{m.home_kpi_agents()}
-						</div>
-						<div class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-							{formatNumber(activeAgentsToday)}
-						</div>
-						<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-							{m.home_kpi_agents_sub({ count: formatNumber(agentCount) })}
-						</div>
-					</a>
+						label={m.home_kpi_agents()}
+						value={formatNumber(activeAgentsToday)}
+						sub={m.home_kpi_agents_sub({ count: formatNumber(agentCount) })}
+					/>
 					<a
-						href={resolve(canViewAccess ? '/admin?tab=system' : '/query')}
+						href={resolve(canViewAccess ? '/query-audit' : '/query')}
 						class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
 					>
-						<div
-							class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-						>
+						<div class={LABEL}>
 							{m.home_kpi_refused()}
 						</div>
 						<div
@@ -582,22 +561,13 @@
 						/>
 					</a>
 				{/if}
-				<a
+				<KpiTile
 					href={resolve('/insights')}
-					class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
+					label={m.home_kpi_assets()}
+					value={formatNumber(sourceAssets)}
+					sub={m.home_kpi_assets_sub({ count: formatNumber(topProviders.length) })}
 				>
-					<div
-						class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-					>
-						{m.home_kpi_assets()}
-					</div>
-					<div class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-						{formatNumber(sourceAssets)}
-					</div>
-					<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-						{m.home_kpi_assets_sub({ count: formatNumber(topProviders.length) })}
-					</div>
-					<div class="mt-3 flex flex-wrap gap-1.5">
+					<div class="flex flex-wrap gap-1.5">
 						{#each topProviders.slice(0, 4) as [name] (name)}
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -607,7 +577,7 @@
 							</span>
 						{/each}
 					</div>
-				</a>
+				</KpiTile>
 			</div>
 
 			<!-- What happened, and what needs a look -->
@@ -617,7 +587,7 @@
 						m.home_activity_heading(),
 						'material-symbols:bolt-outline',
 						canQuery ? m.home_activity_link() : undefined,
-						canViewAccess ? '/admin?tab=system' : '/query'
+						canViewAccess ? '/query-audit' : '/query'
 					)}
 					{#if !canQuery}
 						<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">{m.home_needs_query()}</p>
@@ -754,7 +724,7 @@
 									'material-symbols:block',
 									m.home_attention_denied(),
 									deniedToday,
-									canViewAccess ? '/admin?tab=system' : '/query',
+									canViewAccess ? '/query-audit' : '/query',
 									'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
 								)}
 							{/if}
@@ -920,8 +890,7 @@
 					setupRemoved.set(true);
 					confirmClose = false;
 				}}
-				class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
-				>{m.home_setup_remove_confirm()}</button
+				class={BTN_DANGER}>{m.home_setup_remove_confirm()}</button
 			>
 		{/snippet}
 	</Modal>

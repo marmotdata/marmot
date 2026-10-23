@@ -267,7 +267,7 @@
 
 				// Make team mentions clickable links
 				if (mentionType === 'team' && id) {
-					return `<a href="/teams/${id}" class="${mentionClass}">@${label}</a>`;
+					return `<a href="/settings/teams/${id}" class="${mentionClass}">@${label}</a>`;
 				}
 
 				return `<span class="${mentionClass}">@${label}</span>`;

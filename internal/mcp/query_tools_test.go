@@ -8,15 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataquery"
 	"github.com/marmotdata/marmot/pkg/config"
 )
 
 func TestCanQuery(t *testing.T) {
-	assert.False(t, (&ToolContext{}).canQuery(), "no principal")
-	assert.False(t, (&ToolContext{principal: stubPrincipal{permissions: map[string]bool{"assets:view": true}}}).canQuery())
-	assert.True(t, (&ToolContext{principal: stubPrincipal{permissions: map[string]bool{"assets:query": true}}}).canQuery())
-	assert.True(t, (&ToolContext{principal: stubPrincipal{admin: true}}).canQuery())
+	ctx := context.Background()
+	assert.False(t, (&ToolContext{queryService: stubQuery{}}).canQuery(ctx), "no principal")
+	assert.False(t, (&ToolContext{principal: stubPrincipal{admin: true}}).canQuery(ctx), "no query service")
+	assert.False(t, (&ToolContext{queryService: stubQuery{}, principal: stubPrincipal{permissions: map[string]bool{"assets:view": true}}}).canQuery(ctx))
+	assert.True(t, (&ToolContext{queryService: stubQuery{}, principal: stubPrincipal{permissions: map[string]bool{"assets:query": true}}}).canQuery(ctx))
+	assert.True(t, (&ToolContext{queryService: stubQuery{}, principal: stubPrincipal{admin: true}}).canQuery(ctx))
 }
 
 func TestQueryDataRefusesWithoutPermission(t *testing.T) {
@@ -77,3 +80,8 @@ func TestRenderQueryResult(t *testing.T) {
 
 // stubQuery satisfies dataquery.Service for tool registration tests.
 type stubQuery struct{ dataquery.Service }
+
+// Admits mirrors the OSS authorizer, which lets in anyone holding assets:query.
+func (stubQuery) Admits(_ context.Context, p auth.Principal) bool {
+	return p != nil && (p.IsAdmin() || p.HasPermission("assets", "query"))
+}

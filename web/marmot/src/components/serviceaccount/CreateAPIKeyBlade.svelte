@@ -3,6 +3,9 @@
 	import Blade from '$components/ui/Blade.svelte';
 	import { createAPIKey } from '$lib/serviceaccounts/api';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
+	import Alert from '$components/ui/Alert.svelte';
+	import Pill from '$components/ui/Pill.svelte';
 	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
 	import { toasts } from '$lib/stores/toast';
 
@@ -15,11 +18,9 @@
 	let { sa, onClose, onDone }: Props = $props();
 
 	const formId = 'create-api-key-form';
-	const sectionClass =
-		'text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400';
-	const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-	const inputClass =
-		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-earthy-terracotta-500 focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100';
+	const sectionClass = LABEL;
+	const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+	const inputClass = INPUT;
 
 	let name = $state('');
 	let expiresPreset = $state<'never' | '30' | '90' | '365' | 'custom'>('never');
@@ -101,29 +102,17 @@
 >
 	{#if plaintextKey}
 		<div class="space-y-6">
-			<div
-				class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+			<Alert
+				tone="success"
+				title={m.serviceaccounts_key_created_named({ name: plaintextKey.name })}
 			>
-				<div class="mb-3 flex items-start gap-2">
-					<IconifyIcon
-						icon="material-symbols:check-circle"
-						class="mt-0.5 h-5 w-5 text-green-600 dark:text-green-400"
-					/>
-					<p class="text-sm font-medium text-green-800 dark:text-green-200">
-						{m.serviceaccounts_key_created_named({ name: plaintextKey.name })}
-					</p>
-				</div>
-				<div class="flex items-center gap-2">
+				<div class="mt-2 flex items-center gap-2">
 					<code
-						class="flex-1 break-all rounded border border-green-200 bg-white px-3 py-3 font-mono text-xs dark:border-green-700 dark:bg-gray-900"
+						class="flex-1 break-all rounded-lg border border-gray-200 bg-white px-3 py-3 font-mono text-xs text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
 					>
 						{plaintextKey.key}
 					</code>
-					<button
-						type="button"
-						class="flex shrink-0 items-center gap-1.5 rounded-md border border-green-300 px-3 py-2 text-sm text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/40"
-						onclick={copyKey}
-					>
+					<button type="button" class="{BTN_SECONDARY} shrink-0" onclick={copyKey}>
 						{#if copied}
 							<IconifyIcon icon="material-symbols:check" class="h-4 w-4" />
 							{m.serviceaccounts_key_copied_label()}
@@ -133,19 +122,9 @@
 						{/if}
 					</button>
 				</div>
-			</div>
+			</Alert>
 
-			<div
-				class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
-			>
-				<IconifyIcon
-					icon="material-symbols:warning-outline"
-					class="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400"
-				/>
-				<p class="text-sm text-amber-800 dark:text-amber-200">
-					{m.serviceaccounts_key_copy_now_hint()}
-				</p>
-			</div>
+			<Alert tone="warning">{m.serviceaccounts_key_copy_now_hint()}</Alert>
 
 			<section class="space-y-2">
 				<h3 class={sectionClass}>{m.serviceaccounts_key_use_heading()}</h3>
@@ -161,11 +140,7 @@
 	{:else}
 		<form id={formId} onsubmit={handleSubmit} class="space-y-6">
 			{#if error}
-				<div
-					class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
-				>
-					{error}
-				</div>
+				<Alert tone="error">{error}</Alert>
 			{/if}
 
 			<section class="space-y-4">
@@ -194,10 +169,11 @@
 							<button
 								type="button"
 								onclick={() => (expiresPreset = opt.id)}
-								class="rounded-md border px-3 py-2 text-sm transition-colors
+								aria-pressed={expiresPreset === opt.id}
+								class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors
 									{expiresPreset === opt.id
-									? 'border-earthy-terracotta-500 bg-earthy-terracotta-50 text-earthy-terracotta-700 dark:bg-earthy-terracotta-900/20 dark:text-earthy-terracotta-300'
-									: 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-gray-600 dark:text-gray-300'}"
+									? 'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
+									: 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}"
 							>
 								{opt.label}
 							</button>
@@ -233,57 +209,31 @@
 						</p>
 						<div class="mt-1 flex flex-wrap gap-1.5">
 							{#each sa.roles as role (role.id)}
-								<span
-									class="inline-flex items-center rounded-md bg-earthy-terracotta-100 px-2 py-0.5 text-xs font-medium text-earthy-terracotta-700 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-100"
-								>
-									{role.name}
-								</span>
+								<Pill>{role.name}</Pill>
 							{/each}
 						</div>
 					</div>
 				{/if}
 			</section>
 
-			<div
-				class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
-			>
-				<IconifyIcon
-					icon="material-symbols:warning-outline"
-					class="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400"
-				/>
-				<div class="text-sm text-amber-800 dark:text-amber-200">
-					<p class="font-medium">{m.serviceaccounts_key_shown_once_warning()}</p>
-					<p class="mt-1">{m.serviceaccounts_key_copy_next_step_hint()}</p>
-				</div>
-			</div>
+			<Alert tone="warning" title={m.serviceaccounts_key_shown_once_warning()}>
+				{m.serviceaccounts_key_copy_next_step_hint()}
+			</Alert>
 		</form>
 	{/if}
 
 	{#snippet footer(close)}
 		<div class="flex items-center justify-end gap-2">
 			{#if plaintextKey}
-				<button
-					type="button"
-					onclick={onDone}
-					class="inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500 disabled:opacity-50"
-				>
+				<button type="button" onclick={onDone} class={BTN_PRIMARY}>
 					<IconifyIcon icon="material-symbols:check" class="h-4 w-4" />
 					{m.serviceaccounts_key_done_button()}
 				</button>
 			{:else}
-				<button
-					type="button"
-					onclick={close}
-					class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-				>
+				<button type="button" onclick={close} class={BTN_SECONDARY}>
 					{m.common_cancel()}
 				</button>
-				<button
-					type="submit"
-					form={formId}
-					disabled={saving || !nameValid}
-					class="inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500 disabled:opacity-50"
-				>
+				<button type="submit" form={formId} disabled={saving || !nameValid} class={BTN_PRIMARY}>
 					<IconifyIcon icon="material-symbols:key" class="h-4 w-4" />
 					{saving ? m.serviceaccounts_creating_label() : m.serviceaccounts_key_create_button()}
 				</button>

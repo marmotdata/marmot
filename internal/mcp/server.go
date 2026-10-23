@@ -115,12 +115,12 @@ func (s *Server) CreateMCPServer(ctx context.Context, principal auth.Principal) 
 		nil,
 	)
 
-	s.registerTools(server, principal)
+	s.registerTools(ctx, server, principal)
 
 	return server
 }
 
-func (s *Server) registerTools(server *mcpsdk.Server, principal auth.Principal) {
+func (s *Server) registerTools(ctx context.Context, server *mcpsdk.Server, principal auth.Principal) {
 	tc := &ToolContext{
 		assetService:       s.assetService,
 		glossaryService:    s.glossaryService,
@@ -325,7 +325,7 @@ Requires the assets:manage permission.
 
 	// Query tools are only offered when data querying is enabled and the caller may
 	// run queries, so agents never see tools they cannot use.
-	if s.queryService == nil || !tc.canQuery() {
+	if s.queryService == nil || !tc.canQuery(ctx) {
 		return
 	}
 

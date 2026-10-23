@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { fade, scale } from 'svelte/transition';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from './Button.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { focusTrap } from '$lib/actions/focusTrap';
+	import { BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY } from '$lib/ui/classes';
 
+	// A yes or no question on the same white dialog as Modal, with an optional checkbox for a follow-on choice such as also deleting what the thing created
 	interface Props {
 		show: boolean;
 		title: string;
@@ -29,6 +32,8 @@
 		onCancel
 	}: Props = $props();
 
+	const id = $props.id();
+
 	function handleCancel() {
 		if (onCancel) {
 			onCancel();
@@ -37,93 +42,85 @@
 		}
 	}
 
-	let variantColors = $derived(
-		variant === 'danger'
-			? {
-					icon: 'material-symbols:warning',
-					iconBg: 'bg-red-100 dark:bg-red-900/20',
-					iconColor: 'text-red-600 dark:text-red-400',
-					buttonClass: 'bg-red-600 hover:bg-red-700 text-white'
-				}
-			: variant === 'warning'
-				? {
-						icon: 'material-symbols:info',
-						iconBg: 'bg-amber-100 dark:bg-amber-900/20',
-						iconColor: 'text-amber-600 dark:text-amber-400',
-						buttonClass: 'bg-amber-600 hover:bg-amber-700 text-white'
-					}
-				: {
-						icon: 'material-symbols:info',
-						iconBg: 'bg-blue-100 dark:bg-blue-900/20',
-						iconColor: 'text-blue-600 dark:text-blue-400',
-						buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white'
-					}
-	);
+	const VARIANTS = {
+		danger: {
+			icon: 'material-symbols:warning-outline',
+			iconBox: 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400',
+			button: BTN_DANGER
+		},
+		warning: {
+			icon: 'material-symbols:info-outline',
+			iconBox: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+			button:
+				'inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 disabled:cursor-not-allowed disabled:opacity-50'
+		},
+		info: {
+			icon: 'material-symbols:info-outline',
+			iconBox:
+				'bg-earthy-blue-50 text-earthy-blue-700 dark:bg-earthy-blue-900/30 dark:text-earthy-blue-300',
+			button: BTN_PRIMARY
+		}
+	};
+
+	let v = $derived(VARIANTS[variant]);
 </script>
 
+<svelte:window onkeydown={(e) => show && e.key === 'Escape' && handleCancel()} />
+
 {#if show}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-		onclick={handleCancel}
-		onkeydown={(e) => e.key === 'Escape' && handleCancel()}
-		role="presentation"
-		aria-hidden="true"
-	>
+	<div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 pt-[12vh]">
+		<button
+			type="button"
+			class="fixed inset-0 cursor-default bg-black/30"
+			onclick={handleCancel}
+			aria-label={m.common_close()}
+			tabindex="-1"
+			transition:fade={{ duration: 150 }}
+		></button>
 		<div
-			class="glass-modal rounded-xl shadow-xl max-w-md w-full overflow-hidden"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			class="relative w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
 			role="dialog"
 			aria-modal="true"
-			aria-labelledby="modal-title"
+			aria-labelledby="{id}-title"
+			transition:scale={{ start: 0.97, duration: 150 }}
+			use:focusTrap
 		>
-			<div class="p-6">
-				<div class="flex items-start gap-4">
-					<div class="flex-shrink-0 {variantColors.iconBg} rounded-full p-3">
-						<IconifyIcon icon={variantColors.icon} class="h-6 w-6 {variantColors.iconColor}" />
-					</div>
-					<div class="flex-1 min-w-0">
-						<h3
-							id="modal-title"
-							class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2"
-						>
-							{title}
-						</h3>
-						<p class="text-sm text-gray-600 dark:text-gray-400">
-							{message}
-						</p>
-					</div>
-				</div>
-				{#if checkboxLabel}
-					<div
-						class="mt-4 mx-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+			<div class="flex items-start gap-4 px-6 pb-5 pt-5">
+				<span
+					class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full {v.iconBox}"
+				>
+					<IconifyIcon icon={v.icon} class="h-5 w-5" />
+				</span>
+				<div class="min-w-0 flex-1">
+					<h2
+						id="{id}-title"
+						class="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100"
 					>
-						<label class="flex items-center gap-3 cursor-pointer group">
+						{title}
+					</h2>
+					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{message}</p>
+					{#if checkboxLabel}
+						<label
+							class="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 dark:border-gray-700"
+						>
 							<input
 								type="checkbox"
 								bind:checked={checkboxChecked}
-								class="w-5 h-5 text-amber-600 bg-white dark:bg-gray-700 border-amber-300 dark:border-amber-700 rounded focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 cursor-pointer transition-all"
+								class="h-4 w-4 cursor-pointer rounded border-gray-300 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:border-gray-600 dark:bg-gray-900"
 							/>
-							<span
-								class="text-sm font-medium text-amber-900 dark:text-amber-100 group-hover:text-amber-800 dark:group-hover:text-amber-50 transition-colors"
-							>
-								{checkboxLabel}
-							</span>
+							<span class="text-sm text-gray-700 dark:text-gray-300">{checkboxLabel}</span>
 						</label>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 
-			<div class="border-t border-gray-200 dark:border-gray-700">
-				<div class="flex items-center justify-end gap-3 px-6 py-4 bg-white/30 dark:bg-black/20">
-					<Button variant="clear" click={handleCancel} text={cancelText} />
-					<button
-						onclick={() => onConfirm(checkboxChecked)}
-						class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors {variantColors.buttonClass}"
-					>
-						{confirmText}
-					</button>
-				</div>
+			<div
+				class="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50 px-6 py-3 dark:border-gray-700 dark:bg-gray-900/40"
+			>
+				<button type="button" class={BTN_SECONDARY} onclick={handleCancel}>{cancelText}</button>
+				<button type="button" class={v.button} onclick={() => onConfirm(checkboxChecked)}>
+					{confirmText}
+				</button>
 			</div>
 		</div>
 	</div>

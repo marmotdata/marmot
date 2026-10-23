@@ -25,9 +25,11 @@ type Role struct {
 	IsSystem    bool         `json:"is_system"`
 	UserCount   int          `json:"user_count,omitempty"`
 	Permissions []Permission `json:"permissions,omitempty"`
-	DeletedAt   *time.Time   `json:"deleted_at,omitempty"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
+	// PermissionKeys are the same permissions as resource_type:action keys, the form a role document is written in.
+	PermissionKeys []string   `json:"permission_keys,omitempty"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 } // @name Role
 
 type Permission struct {
@@ -42,6 +44,8 @@ type CreateInput struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	PermIDs     []string `json:"permission_ids,omitempty"`
+	// PermissionKeys names permissions as resource_type:action keys, which read the same on every instance. They are added to PermIDs.
+	PermissionKeys []string `json:"permission_keys,omitempty"`
 }
 
 type UpdateInput struct {

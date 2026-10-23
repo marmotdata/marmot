@@ -28,8 +28,9 @@ type QueryDataInput struct {
 	MaxRows   int64  `json:"max_rows,omitempty"`
 }
 
-func (tc *ToolContext) canQuery() bool {
-	return tc.principal != nil && (tc.principal.IsAdmin() || tc.principal.HasPermission("assets", "query"))
+// canQuery asks the data query authorizer whether the caller may query at all.
+func (tc *ToolContext) canQuery(ctx context.Context) bool {
+	return tc.principal != nil && tc.queryService != nil && tc.queryService.Admits(ctx, tc.principal)
 }
 
 func (tc *ToolContext) listQueryableSources(
@@ -37,11 +38,11 @@ func (tc *ToolContext) listQueryableSources(
 	req *mcpsdk.CallToolRequest,
 	args ListQueryableSourcesInput,
 ) (*mcpsdk.CallToolResult, any, error) {
-	if !tc.canQuery() {
+	if !tc.canQuery(ctx) {
 		return tc.errorWithGuidance("Querying data is not available to you", "Running queries requires the assets:query permission.", nil), nil, nil
 	}
 
-	sources, total, err := tc.queryService.ListSources(ctx, dataquery.SourceFilter{Search: args.Search, Limit: sourcesPageSize})
+	sources, total, err := tc.queryService.ListSources(ctx, dataquery.SourceFilter{Search: args.Search, Limit: sourcesPageSize, Principal: tc.principal})
 	if err != nil {
 		return tc.errorWithGuidance("Could not list queryable sources", err.Error(), nil), nil, nil
 	}
@@ -69,7 +70,7 @@ func (tc *ToolContext) queryData(
 	req *mcpsdk.CallToolRequest,
 	args QueryDataInput,
 ) (*mcpsdk.CallToolResult, any, error) {
-	if !tc.canQuery() {
+	if !tc.canQuery(ctx) {
 		return tc.errorWithGuidance("Querying data is not available to you", "Running queries requires the assets:query permission.", nil), nil, nil
 	}
 	if strings.TrimSpace(args.Source) == "" || strings.TrimSpace(args.Statement) == "" {

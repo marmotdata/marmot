@@ -92,6 +92,11 @@ export interface QueryHistoryFilter {
 	mine?: boolean;
 	// Comma-separated clients to include, such as mcp,cli
 	client?: string;
+	// RFC 3339 bounds on when the query started
+	from?: string;
+	to?: string;
+	// Matches the caller, source, statement or a referenced MRN
+	q?: string;
 	limit?: number;
 	offset?: number;
 }

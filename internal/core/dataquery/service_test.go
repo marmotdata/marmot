@@ -108,7 +108,8 @@ type memRepo struct {
 	queries map[string]*Query
 	seq     int
 
-	lastStats StatsFilter
+	lastStats  StatsFilter
+	withTables []string
 }
 
 func newMemRepo() *memRepo {
@@ -150,6 +151,9 @@ func (m *memRepo) ListSourceTables(context.Context, SourceTablesFilter) ([]Sourc
 	return nil, nil, nil
 }
 func (m *memRepo) SourceActivity(context.Context, []*Source) error { return nil }
+func (m *memRepo) SourcesWithTables(_ context.Context, ids []string, _ func(string, int) (string, []any)) ([]string, error) {
+	return m.withTables, nil
+}
 
 func (m *memRepo) only(t *testing.T) *Query {
 	t.Helper()
@@ -373,8 +377,71 @@ func TestQueryUsesTheConfiguredAuthorizer(t *testing.T) {
 
 type authorizerFunc func(context.Context, auth.Principal, *Source, []string) (Decision, error)
 
+func (f authorizerFunc) Admits(context.Context, auth.Principal) bool { return true }
+
 func (f authorizerFunc) Authorize(ctx context.Context, p auth.Principal, s *Source, r []string) (Decision, error) {
 	return f(ctx, p, s, r)
+}
+
+func (f authorizerFunc) Visible(context.Context, auth.Principal) (Visibility, error) {
+	return Visibility{All: true}, nil
+}
+
+// visibilityAuthorizer hands every principal the same fixed visibility.
+type visibilityAuthorizer struct{ v Visibility }
+
+func (a visibilityAuthorizer) Admits(context.Context, auth.Principal) bool { return true }
+
+func (a visibilityAuthorizer) Authorize(context.Context, auth.Principal, *Source, []string) (Decision, error) {
+	return Decision{Allowed: true}, nil
+}
+
+func (a visibilityAuthorizer) Visible(context.Context, auth.Principal) (Visibility, error) {
+	return a.v, nil
+}
+
+func restrictedFixture(t *testing.T, v Visibility) *fixture {
+	t.Helper()
+	f := newFixture(t)
+	f.sources.sources["finance"] = &Source{ID: "src-3", Name: "finance", PluginID: testPluginID}
+	f.svc = NewService(f.repo, f.sources, nil, f.runner, nil, nil, Options{QueryTimeout: time.Minute, Authorizer: visibilityAuthorizer{v}})
+	return f
+}
+
+func TestListSourcesNarrowsToVisibleSources(t *testing.T) {
+	assets := func(string, int) (string, []any) { return "TRUE", nil }
+	f := restrictedFixture(t, Visibility{SourceIDs: []string{"src-1"}, Assets: assets})
+	f.repo.withTables = []string{"src-3"}
+
+	sources, total, err := f.svc.ListSources(context.Background(), SourceFilter{Principal: fakePrincipal{}})
+	require.NoError(t, err)
+	assert.Equal(t, 2, total)
+	var names []string
+	for _, s := range sources {
+		names = append(names, s.Name)
+	}
+	assert.ElementsMatch(t, []string{"warehouse", "finance"}, names, "a whole-source grant and a source with one visible table are listed; the rest are not")
+}
+
+func TestListSourcesWithNoVisibilityIsEmpty(t *testing.T) {
+	f := restrictedFixture(t, Visibility{})
+
+	sources, total, err := f.svc.ListSources(context.Background(), SourceFilter{Principal: fakePrincipal{}})
+	require.NoError(t, err)
+	assert.Zero(t, total)
+	assert.Empty(t, sources)
+}
+
+func TestListSourceTablesHidesUnreachableSource(t *testing.T) {
+	assets := func(string, int) (string, []any) { return "TRUE", nil }
+	f := restrictedFixture(t, Visibility{Assets: assets})
+
+	_, err := f.svc.ListSourceTables(context.Background(), fakePrincipal{}, "finance", "", 0)
+	assert.ErrorIs(t, err, ErrSourceNotFound, "a source with no table the principal may query is reported as missing")
+
+	f.repo.withTables = []string{"src-3"}
+	_, err = f.svc.ListSourceTables(context.Background(), fakePrincipal{}, "finance", "", 0)
+	assert.NoError(t, err)
 }
 
 func TestListSourcesDefaultsAndTrims(t *testing.T) {

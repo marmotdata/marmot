@@ -7,7 +7,7 @@
 </script>
 
 <a
-	href={resolve('/admin?tab=service_accounts')}
+	href={resolve('/settings/service-accounts')}
 	class="group inline-flex items-center gap-1.5 rounded-md bg-earthy-blue-50 px-2.5 py-1 text-xs text-earthy-blue-800 transition hover:bg-earthy-blue-100 dark:bg-earthy-blue-900/30 dark:text-earthy-blue-200 dark:hover:bg-earthy-blue-900/50"
 >
 	<IconifyIcon icon="material-symbols:info-outline" class="h-3.5 w-3.5" />

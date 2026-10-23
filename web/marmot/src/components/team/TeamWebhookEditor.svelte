@@ -1,6 +1,7 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_SECONDARY, INPUT } from '$lib/ui/classes';
 	import { notificationTypeOptions, providerOptions } from '$lib/teams/webhooks';
 
 	export interface PendingWebhook {
@@ -15,8 +16,7 @@
 	let { webhooks = $bindable([]) }: { webhooks?: PendingWebhook[] } = $props();
 
 	const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-	const inputClass =
-		'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-earthy-terracotta-500 focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100';
+	const inputClass = INPUT;
 
 	function addWebhook() {
 		webhooks = [
@@ -149,11 +149,7 @@
 	</div>
 {/if}
 
-<button
-	type="button"
-	onclick={addWebhook}
-	class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-earthy-terracotta-300 px-4 py-2.5 text-earthy-terracotta-700 transition-colors hover:border-earthy-terracotta-500 hover:bg-earthy-terracotta-50/60 dark:border-earthy-terracotta-800 dark:text-earthy-terracotta-400 dark:hover:bg-earthy-terracotta-900/20"
->
+<button type="button" onclick={addWebhook} class="{BTN_SECONDARY} w-full">
 	<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-	<span class="text-sm font-medium">{m.teams_add_integration()}</span>
+	{m.teams_add_integration()}
 </button>

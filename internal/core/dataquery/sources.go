@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/marmotdata/marmot/internal/core/auth"
 )
 
 // SourceTable is a catalogued table that a queryable source can read, with a
@@ -34,6 +36,8 @@ type SourceTablesFilter struct {
 	Metadata    map[string]string
 	Required    []string
 	Limit       int
+	// Assets, when set, narrows the list to the tables a restricted principal may query (see Visibility).
+	Assets func(idExpr string, next int) (sql string, args []any)
 }
 
 // sourceTableLocator says which tables a plugin's queries can reach and how
@@ -119,6 +123,11 @@ func (r *PostgresRepository) ListSourceTables(ctx context.Context, f SourceTable
 		args = append(args, key)
 		where += fmt.Sprintf(" AND COALESCE(%s, '') <> ''", prop(len(args)))
 	}
+	if f.Assets != nil {
+		cond, condArgs := f.Assets("a.id", len(args)+1)
+		args = append(args, condArgs...)
+		where += " AND " + cond
+	}
 	args = append(args, f.Limit)
 
 	rows, err := r.db.Query(ctx, `
@@ -160,6 +169,31 @@ func (r *PostgresRepository) ListSourceTables(ctx context.Context, f SourceTable
 		meta[t.MRN] = m
 	}
 	return tables, meta, rows.Err()
+}
+
+// SourcesWithTables returns the sources among ids that catalog at least one table the condition admits.
+func (r *PostgresRepository) SourcesWithTables(ctx context.Context, ids []string, assets func(idExpr string, next int) (string, []any)) ([]string, error) {
+	cond, condArgs := assets("a.id", 3)
+	rows, err := r.db.Query(ctx, `
+		SELECT DISTINCT link.schedule_id::text
+		FROM asset_schedules link
+		JOIN assets a ON a.id = link.asset_id
+		WHERE link.schedule_id::text = ANY($1) AND a.type IN ('Table', 'View')
+		  AND COALESCE(a.metadata->>'schema', '') <> ALL($2)
+		  AND `+cond, append([]any{ids, systemSchemas}, condArgs...)...)
+	if err != nil {
+		return nil, fmt.Errorf("finding sources with visible tables: %w", err)
+	}
+	defer rows.Close()
+	out := []string{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
 }
 
 // SourceActivity fills in each source's catalogued table count and recent
@@ -235,7 +269,7 @@ func (r *PostgresRepository) SourceActivity(ctx context.Context, sources []*Sour
 
 // ListSourceTables lists the catalogued tables a source can reach, busiest
 // first, each with a statement that previews it.
-func (s *service) ListSourceTables(ctx context.Context, sourceName, search string, limit int) ([]SourceTable, error) {
+func (s *service) ListSourceTables(ctx context.Context, principal auth.Principal, sourceName, search string, limit int) ([]SourceTable, error) {
 	source, err := s.sources.GetQueryableSource(ctx, sourceName)
 	if err != nil {
 		return nil, err
@@ -245,6 +279,26 @@ func (s *service) ListSourceTables(ctx context.Context, sourceName, search strin
 	}
 
 	filter := SourceTablesFilter{SourceID: source.ID, Search: strings.TrimSpace(search), Limit: limit}
+	if principal != nil {
+		visibility, err := s.authorizer.Visible(ctx, principal)
+		if err != nil {
+			return nil, err
+		}
+		if !visibility.coversSource(source.ID) {
+			// A source the principal can reach no table of is reported as missing, so its name is not confirmed to someone who may not query it.
+			if visibility.Assets == nil {
+				return nil, ErrSourceNotFound
+			}
+			reachable, err := s.repo.SourcesWithTables(ctx, []string{source.ID}, visibility.Assets)
+			if err != nil {
+				return nil, err
+			}
+			if len(reachable) == 0 {
+				return nil, ErrSourceNotFound
+			}
+			filter.Assets = visibility.Assets
+		}
+	}
 	locator, known := sourceTableLocators[source.PluginID]
 	if known {
 		filter.SourceLabel = locator.label
