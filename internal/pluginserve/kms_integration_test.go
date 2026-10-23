@@ -10,13 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/marmotdata/marmot/internal/core/runs"
-	"github.com/marmotdata/marmot/internal/store/postgres"
+	"github.com/marmotdata/marmot/internal/store/postgres/pgtest"
 )
 
 // vaultTransitKey creates an ECDSA P-256 key in the Vault transit engine named by VAULT_ADDR and VAULT_TOKEN and returns its sigstore URI. Without MARMOT_TEST_VAULT the test is skipped.
@@ -39,17 +38,8 @@ func vaultTransitKey(t *testing.T) string {
 // With KMS keys configured, Marmot stores only their URIs, never key material, and the whole serving path, certificates and signed queries alike, runs on keys that never leave the KMS.
 func TestServeWithVaultTransitKeys(t *testing.T) {
 	cfg := KeyConfig{CAKeyURI: vaultTransitKey(t), SigningKeyURI: vaultTransitKey(t)}
-	dsn := os.Getenv("MARMOT_TEST_POSTGRES_DSN")
-	if dsn == "" {
-		t.Skip("set MARMOT_TEST_POSTGRES_DSN as well")
-	}
 	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-	require.NoError(t, postgres.NewSetup(pool).Initialize(ctx))
-	_, err = pool.Exec(ctx, `DELETE FROM plugin_serve_keys`)
-	require.NoError(t, err)
+	pool := pgtest.TempDB(t)
 
 	store := NewStore(pool)
 	keyring, err := LoadKeyring(ctx, store, testEncryptor(t), cfg)

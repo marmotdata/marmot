@@ -31,9 +31,9 @@ type InstanceManager struct {
 	restarts  map[string]int
 	// starting serialises the health check and start of each plugin's process, so a slow start blocks only queries to that plugin.
 	starting map[string]*sync.Mutex
-	idleTTL   time.Duration
-	stop      chan struct{}
-	stopOnce  sync.Once
+	idleTTL  time.Duration
+	stop     chan struct{}
+	stopOnce sync.Once
 }
 
 type instance struct {
