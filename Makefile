@@ -105,16 +105,16 @@ sdk-go-generate: swagger $(GO_SWAGGER)
 	rm -rf $(SDK_GO_DIR)/internal/gen
 	mkdir -p $(SDK_GO_DIR)/internal/gen
 	$(GO_SWAGGER) generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
-	cd $(SDK_GO_DIR) && go mod tidy
+	cd $(SDK_GO_DIR) && GOWORK=off go mod tidy
 
 sdk-go-lint:
-	cd $(SDK_GO_DIR) && $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
+	cd $(SDK_GO_DIR) && GOWORK=off $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
 
 sdk-go-test:
-	cd $(SDK_GO_DIR) && go test ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go test ./...
 
 sdk-go-build:
-	cd $(SDK_GO_DIR) && go build ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go build ./...
 
 sdk-go-clean:
 	rm -rf $(SDK_GO_DIR)/internal/gen

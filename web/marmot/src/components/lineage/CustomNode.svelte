@@ -4,12 +4,14 @@
 	import IconifyIcon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data } = $props<{
+	let {
+		data
+	}: {
 		data: {
 			name: string;
 			type: string;
 			iconType: string;
-			service: string;
+			provider?: string;
 			isCurrent: boolean;
 			id: string;
 			mrn: string;
@@ -20,7 +22,7 @@
 			onAddUpstream?: (nodeMrn: string, event: MouseEvent) => void;
 			onAddDownstream?: (nodeMrn: string, event: MouseEvent) => void;
 		};
-	}>();
+	} = $props();
 
 	function handleClick() {
 		if (!data.isStub) {

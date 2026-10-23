@@ -4,6 +4,15 @@ export interface Role {
 	description?: string;
 }
 
+export interface UserIdentity {
+	id: string;
+	provider: string;
+	provider_user_id: string;
+	provider_email?: string;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface User {
 	id: string;
 	username: string;
@@ -12,6 +21,7 @@ export interface User {
 	profile_picture?: string;
 	active: boolean;
 	roles: Role[];
+	identities?: UserIdentity[];
 	created_at: string;
 	updated_at: string;
 }
