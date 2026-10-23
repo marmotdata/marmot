@@ -99,6 +99,9 @@ const (
 	queryTypeFullText
 )
 
+// searchOperatorChars send a query to full-text search with websearch_to_tsquery semantics.
+const searchOperatorChars = "\"'*?+-|&()~:"
+
 // classifyQuery determines the optimal search strategy based on query characteristics
 func classifyQuery(q string) queryType {
 	q = strings.TrimSpace(q)
@@ -107,7 +110,7 @@ func classifyQuery(q string) queryType {
 	}
 
 	words := strings.Fields(q)
-	hasSpecialChars := strings.ContainsAny(q, "\"'*?+-|&()~:")
+	hasSpecialChars := strings.ContainsAny(q, searchOperatorChars)
 
 	if len(q) <= 2 {
 		return queryTypePrefix
@@ -318,10 +321,10 @@ func (r *PostgresRepository) buildFullTextSearchQuery(searchQuery string, filter
 	var params []interface{}
 	paramCount := 0
 
-	// Add search query parameter
+	tsFunc, tsArg := fullTextQuery(searchQuery)
 	paramCount++
 	queryParam := paramCount
-	params = append(params, searchQuery)
+	params = append(params, tsArg)
 
 	whereClauses, params, paramCount := r.buildFilterClauses(filter, parsedQuery, params, paramCount)
 
@@ -344,20 +347,38 @@ func (r *PostgresRepository) buildFullTextSearchQuery(searchQuery string, filter
 			SELECT entity_id, type, name, description, url_path, search_text,
 			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 			FROM search_index
-			WHERE search_text @@ websearch_to_tsquery('english', $%d)
+			WHERE search_text @@ %s('english', $%d)
 			%s
 			LIMIT 1000
 		)
 		SELECT
 			type, entity_id, name, description, url_path,
-			ts_rank_cd(search_text, websearch_to_tsquery('english', $%d), 32)::real as rank,
+			ts_rank_cd(search_text, %s('english', $%d), 32)::real as rank,
 			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 		FROM candidates
 		ORDER BY rank DESC, updated_at DESC
 		LIMIT $%d OFFSET $%d
-	`, queryParam, whereSQL, queryParam, limitParam, offsetParam)
+	`, tsFunc, queryParam, whereSQL, tsFunc, queryParam, limitParam, offsetParam)
 
 	return sqlQuery, params
+}
+
+// fullTextQuery picks the tsquery function for a full-text search. A plain
+// multi-word query is still being typed in the search box, so its last word
+// matches as a prefix; websearch_to_tsquery would only match whole words, and
+// "data st" would find nothing until "steward" is complete. Queries with
+// operators keep websearch_to_tsquery.
+func fullTextQuery(q string) (fn, arg string) {
+	words := strings.Fields(q)
+	if len(words) < 2 || strings.ContainsAny(q, searchOperatorChars) {
+		return "websearch_to_tsquery", q
+	}
+	terms := make([]string, len(words))
+	for i, w := range words {
+		terms[i] = "'" + strings.ReplaceAll(w, `\`, `\\`) + "'"
+	}
+	terms[len(terms)-1] += ":*"
+	return "to_tsquery", strings.Join(terms, " & ")
 }
 
 // buildFilterClauses constructs WHERE clause conditions for filters

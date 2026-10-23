@@ -2,30 +2,19 @@ package runs
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/store/postgres/pgtest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/marmotdata/marmot/internal/store/postgres"
 )
 
-// newPostgresRepo migrates the database named by MARMOT_TEST_POSTGRES_DSN and returns a repository over it. Without that variable the test is skipped, so `go test ./...` stays offline.
+// newPostgresRepo returns a repository over a fresh migrated database of its own. Without that variable the test is skipped, so `go test ./...` stays offline.
 func newPostgresRepo(t *testing.T) (*SchedulePostgresRepository, context.Context) {
 	t.Helper()
-	dsn := os.Getenv("MARMOT_TEST_POSTGRES_DSN")
-	if dsn == "" {
-		t.Skip("set MARMOT_TEST_POSTGRES_DSN to run the Postgres persistence tests")
-	}
-	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-	require.NoError(t, postgres.NewSetup(pool).Initialize(ctx))
-	return &SchedulePostgresRepository{db: pool}, ctx
+	pool := pgtest.TempDB(t)
+	return &SchedulePostgresRepository{db: pool}, context.Background()
 }
 
 func servedBy(principalType string, id string) *Schedule {

@@ -76,3 +76,4 @@ logs/
 # JetBrains IDE
 /.idea
 
+go.work.sum

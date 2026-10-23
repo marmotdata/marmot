@@ -84,7 +84,7 @@ docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
 
 dev-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.9.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.15.0
 	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
 	go install github.com/go-swagger/go-swagger/cmd/swagger@$(GO_SWAGGER_VERSION)
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
@@ -105,16 +105,16 @@ sdk-go-generate: swagger $(GO_SWAGGER)
 	rm -rf $(SDK_GO_DIR)/internal/gen
 	mkdir -p $(SDK_GO_DIR)/internal/gen
 	$(GO_SWAGGER) generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
-	cd $(SDK_GO_DIR) && go mod tidy
+	cd $(SDK_GO_DIR) && GOWORK=off go mod tidy
 
 sdk-go-lint:
-	cd $(SDK_GO_DIR) && $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
+	cd $(SDK_GO_DIR) && GOWORK=off $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
 
 sdk-go-test:
-	cd $(SDK_GO_DIR) && go test ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go test ./...
 
 sdk-go-build:
-	cd $(SDK_GO_DIR) && go build ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go build ./...
 
 sdk-go-clean:
 	rm -rf $(SDK_GO_DIR)/internal/gen

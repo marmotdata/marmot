@@ -11,7 +11,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -30,7 +29,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/serviceaccount"
 	"github.com/marmotdata/marmot/internal/plugin"
 	pb "github.com/marmotdata/marmot/internal/pluginserve/proto"
-	"github.com/marmotdata/marmot/internal/store/postgres"
+	"github.com/marmotdata/marmot/internal/store/postgres/pgtest"
 )
 
 // harness is a migrated database with a serving identity, shared by the hubs and serving processes in one test. Tests are skipped without MARMOT_TEST_POSTGRES_DSN, so `go test ./...` stays offline.
@@ -46,19 +45,8 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	dsn := os.Getenv("MARMOT_TEST_POSTGRES_DSN")
-	if dsn == "" {
-		t.Skip("set MARMOT_TEST_POSTGRES_DSN to run the serving integration tests")
-	}
 	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-	require.NoError(t, postgres.NewSetup(pool).Initialize(ctx))
-
-	// Each run makes a fresh encryption key, so keys left by an earlier run could never be decrypted.
-	_, err = pool.Exec(ctx, `DELETE FROM plugin_serve_keys`)
-	require.NoError(t, err)
+	pool := pgtest.TempDB(t)
 
 	store := NewStore(pool)
 	keyring, err := LoadKeyring(ctx, store, testEncryptor(t), KeyConfig{})

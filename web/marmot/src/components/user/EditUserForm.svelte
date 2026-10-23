@@ -8,11 +8,15 @@
 	import type { User, Role } from '$lib/users/types';
 	import type { Role as FullRole } from '$lib/roles/types';
 
-	let { user, onCancel, onUpdate } = $props<{
+	let {
+		user,
+		onCancel,
+		onUpdate
+	}: {
 		user: User;
 		onCancel: () => void;
 		onUpdate: (updatedUser: User) => void;
-	}>();
+	} = $props();
 
 	let loading = $state(false);
 	let availableRoles: FullRole[] = $state([]);
