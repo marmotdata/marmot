@@ -39,16 +39,16 @@ type Config struct {
 	pluginsdk.Federation `json:",inline"`
 
 	ProjectID                string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	EmulatorHost             string `json:"emulator_host,omitempty" label:"Emulator Host" description:"Address of a Pub/Sub emulator, for example localhost:8085"`
+	EmulatorHost             string `json:"emulator_host,omitempty" group:"Advanced" label:"Emulator Host" description:"Address of a Pub/Sub emulator, for example localhost:8085"`
 	CredentialsFile          string `json:"credentials_file,omitempty" description:"Path to a service account JSON file"`
 	CredentialsJSON          string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
-	ServiceAccount           string `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
 
-	IncludeSubscriptions    bool `json:"include_subscriptions" description:"Whether to discover subscriptions" default:"true"`
-	IncludeSchemas          bool `json:"include_schemas" description:"Whether to attach topic schemas and their fields" default:"true"`
-	IncludeDeadLetterTopics bool `json:"include_dead_letter_topics" description:"Whether to record dead letter topics on subscriptions" default:"true"`
-	IncludeSampleMessages   bool `json:"include_sample_messages" description:"Whether to allow reading sample messages for asset previews" default:"false"`
+	IncludeSubscriptions    bool `json:"include_subscriptions" group:"Discovery" description:"Whether to discover subscriptions" default:"true"`
+	IncludeSchemas          bool `json:"include_schemas" group:"Discovery" description:"Whether to attach topic schemas and their fields" default:"true"`
+	IncludeDeadLetterTopics bool `json:"include_dead_letter_topics" group:"Discovery" description:"Whether to record dead letter topics on subscriptions" default:"true"`
+	IncludeSampleMessages   bool `json:"include_sample_messages" group:"Advanced" description:"Whether to allow reading sample messages for asset previews" default:"false"`
 }
 
 // Example configuration for the plugin

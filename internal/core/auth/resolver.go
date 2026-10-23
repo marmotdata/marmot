@@ -35,17 +35,22 @@ func (r *userResolver) Resolve(ctx context.Context, claims *Claims) (Principal, 
 		if err != nil {
 			return nil, fmt.Errorf("resolving user: %w", err)
 		}
-		if !u.Active {
-			return nil, ErrUserInactive
-		}
-		if u.SessionsInvalidatedAt != nil {
-			cutoff := u.SessionsInvalidatedAt.Truncate(time.Second)
-			if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(cutoff) {
-				return nil, ErrSessionRevoked
-			}
+		if err := CheckUserSession(u, claims.IssuedTime()); err != nil {
+			return nil, err
 		}
 		return NewUserPrincipal(u), nil
 	default:
 		return nil, fmt.Errorf("unknown principal_type %q", claims.PrincipalType)
 	}
+}
+
+// CheckUserSession reports whether a credential issued at issuedAt may still act for u, failing if the account is inactive or its sessions were revoked after issue; every path that turns a credential into a user must call it
+func CheckUserSession(u *user.User, issuedAt time.Time) error {
+	if !u.Active {
+		return ErrUserInactive
+	}
+	if u.SessionsInvalidatedAt != nil && issuedAt.Before(u.SessionsInvalidatedAt.Truncate(time.Second)) {
+		return ErrSessionRevoked
+	}
+	return nil
 }

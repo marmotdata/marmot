@@ -87,6 +87,8 @@ When multiple credentials are available, the CLI uses the first one found:
 2. Cached OAuth token from `marmot login` (for the active context)
 3. Kubernetes service account token (auto-detected in-cluster)
 
+A Kubernetes service account token is only accepted from the operator's ingestion ServiceAccount, projected for the `marmot` audience at `/var/run/secrets/marmot/token`, and it can only push ingestion results and serve queries: start and complete runs, write assets, lineage and documentation, and enrol a serving plugin.
+
 ---
 
 ## Contexts
@@ -144,6 +146,7 @@ This creates `~/.config/marmot/config.yaml` interactively. You can also use `mar
 | --- | --- | --- |
 | `host` | Marmot server URL | `http://localhost:8080` |
 | `api_key` | API key for authentication | (none) |
+| `ca_file` | PEM file of a CA to trust for the Marmot API in addition to the system's, also `--ca-file` or `MARMOT_CA_FILE` | (none) |
 | `output` | Default output format (`table`, `json`, `yaml`) | `table` |
 | `current_context` | Active context name | (none) |
 
@@ -231,6 +234,14 @@ marmot runs <list | get | entities> [flags]
 
 View pipeline ingestion runs. Filter with `--pipelines` and `--statuses`.
 
+### marmot query
+
+```
+marmot query <sources | tables | run | history | show | stats> [flags]
+```
+
+Run read-only SQL against catalogued sources as yourself, for example `marmot query run shop-pg --table orders`. It needs the `assets:query` permission, which admins hold by default, and every query is recorded.
+
 ### marmot lineage
 
 ```
@@ -274,10 +285,10 @@ View catalog metrics and usage statistics. `top-assets` and `top-queries` requir
 ### marmot admin
 
 ```
-marmot admin <reindex | reindex-status>
+marmot admin <reindex | reindex-status | serve-keys | rotate-serve-keys>
 ```
 
-Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress.
+Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress. `serve-keys` lists the key generations that secure [serving plugins](Configure/serving-plugins.md) and `rotate-serve-keys` rotates them: gracefully by default, or with `--immediate` after a suspected compromise. Pass `--ca-key-uri` and `--signing-key-uri` to rotate to keys held in a KMS.
 
 ### marmot service-accounts
 
@@ -312,13 +323,14 @@ See [users, roles and access](Configure/access-control.md) for what to grant.
 marmot ingest --config <file> [flags]
 ```
 
-Run plugins on this machine and push what they find to Marmot, rather than having the server run them. Use it in CI, or when the source is not reachable from the Marmot server. The configuration file lists the plugins to run and their settings; see [populating with the CLI](Populating/CLI.md).
+Run plugins on this machine and push what they find to Marmot, rather than having the server run them. Use it in CI, or when the source is not reachable from the Marmot server. The configuration file lists the plugins to run and their settings; see [populating with the CLI](Populating/CLI.md). `marmot plugin` is an alias and takes the same flags.
 
 | Flag | Description |
 | --- | --- |
 | `--config`, `-c` | Path to the ingestion config file. Required. |
 | `--quiet`, `-q` | Hide info logs and show errors only. On by default. |
 | `--destroy`, `-d` | Delete every asset this pipeline created. Prompts for confirmation. |
+| `--serve` | After ingesting, stay running and answer Marmot's queries for the run marked `queryable: true`. See [serving queries from your network](Configure/serving-plugins.md). |
 
 ### marmot generate-encryption-key
 
@@ -327,6 +339,14 @@ marmot generate-encryption-key
 ```
 
 Print a new 32-byte key for `server.encryption_key`, which Marmot uses to encrypt pipeline credentials at rest. Losing the key means losing the credentials encrypted with it, so store it wherever you keep your other secrets before starting the server.
+
+### marmot skills
+
+```
+marmot skills install [--project | --dir <path>]
+```
+
+Install the [Marmot skill](/docs/MCP/skills) for your AI agent, matching this version of the CLI.
 
 ### marmot credential-helper
 

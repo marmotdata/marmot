@@ -53,6 +53,50 @@ type Client struct {
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
+// This client is generated with a few options you might find useful for your swagger spec.
+//
+// Feel free to add you own set of options.
+
+// WithContentType allows the client to force the Content-Type header
+// to negotiate a specific Consumer from the server.
+//
+// You may use this option to set arbitrary extensions to your MIME media type.
+func WithContentType(mime string) ClientOption {
+	return func(r *runtime.ClientOperation) {
+		r.ConsumesMediaTypes = []string{mime}
+	}
+}
+
+// WithContentTypeApplicationJSON sets the Content-Type header to "application/json".
+func WithContentTypeApplicationJSON(r *runtime.ClientOperation) {
+	r.ConsumesMediaTypes = []string{"application/json"}
+}
+
+// WithContentTypeApplicationYaml sets the Content-Type header to "application/yaml".
+func WithContentTypeApplicationYaml(r *runtime.ClientOperation) {
+	r.ConsumesMediaTypes = []string{"application/yaml"}
+}
+
+// WithAccept allows the client to force the Accept header
+// to negotiate a specific Producer from the server.
+//
+// You may use this option to set arbitrary extensions to your MIME media type.
+func WithAccept(mime string) ClientOption {
+	return func(r *runtime.ClientOperation) {
+		r.ProducesMediaTypes = []string{mime}
+	}
+}
+
+// WithAcceptApplicationJSON sets the Accept header to "application/json".
+func WithAcceptApplicationJSON(r *runtime.ClientOperation) {
+	r.ProducesMediaTypes = []string{"application/json"}
+}
+
+// WithAcceptApplicationYaml sets the Accept header to "application/yaml".
+func WithAcceptApplicationYaml(r *runtime.ClientOperation) {
+	r.ProducesMediaTypes = []string{"application/yaml"}
+}
+
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
@@ -80,6 +124,12 @@ type ClientService interface {
 	// GetRolesIDContext get a role.
 	GetRolesIDContext(ctx context.Context, params *GetRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesIDOK, error)
 
+	// GetRolesSchema role document schema.
+	GetRolesSchema(params *GetRolesSchemaParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesSchemaOK, error)
+
+	// GetRolesSchemaContext role document schema.
+	GetRolesSchemaContext(ctx context.Context, params *GetRolesSchemaParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesSchemaOK, error)
+
 	// PatchRolesID update a role.
 	PatchRolesID(params *PatchRolesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchRolesIDOK, error)
 
@@ -97,6 +147,12 @@ type ClientService interface {
 
 	// PostRolesIDPermissionsContext replace role permissions.
 	PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error)
+
+	// PostRolesValidate validate a role document.
+	PostRolesValidate(params *PostRolesValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesValidateOK, error)
+
+	// PostRolesValidateContext validate a role document.
+	PostRolesValidateContext(ctx context.Context, params *PostRolesValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesValidateOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -369,6 +425,73 @@ func (a *Client) GetRolesIDContext(ctx context.Context, params *GetRolesIDParams
 	panic(msg)
 }
 
+// GetRolesSchema roles document schema.
+//
+// The JSON Schema a role document follows, for editors and tooling..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetRolesSchemaContext] instead.
+func (a *Client) GetRolesSchema(params *GetRolesSchemaParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesSchemaOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetRolesSchemaContext(ctx, params, authInfo, opts...)
+}
+
+// GetRolesSchemaContext roles document schema.
+//
+// The JSON Schema a role document follows, for editors and tooling..
+//
+// Do not use the deprecated [GetRolesSchemaParams.Context] with this method: it would be ignored.
+func (a *Client) GetRolesSchemaContext(ctx context.Context, params *GetRolesSchemaParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetRolesSchemaOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetRolesSchemaParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getRolesSchema",
+		Method:             "GET",
+		PathPattern:        "/api/v1/roles/schema",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetRolesSchemaReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetRolesSchemaOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getRolesSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PatchRolesID updates a role.
 //
 // Update a role's name or description. System roles cannot be renamed..
@@ -438,7 +561,7 @@ func (a *Client) PatchRolesIDContext(ctx context.Context, params *PatchRolesIDPa
 
 // PostRoles creates a role.
 //
-// Create a new role with optional initial permissions.
+// Create a new role with optional initial permissions, named by id or by resource_type:action key. The body may be JSON or YAML..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -457,7 +580,7 @@ func (a *Client) PostRoles(params *PostRolesParams, authInfo runtime.ClientAuthI
 
 // PostRolesContext creates a role.
 //
-// Create a new role with optional initial permissions.
+// Create a new role with optional initial permissions, named by id or by resource_type:action key. The body may be JSON or YAML..
 //
 // Do not use the deprecated [PostRolesParams.Context] with this method: it would be ignored.
 func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesOK, error) {
@@ -470,8 +593,8 @@ func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, 
 		ID:                 "postRoles",
 		Method:             "POST",
 		PathPattern:        "/api/v1/roles",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json", "application/yaml"},
+		ConsumesMediaTypes: []string{"application/json", "application/yaml"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRolesReader{formats: a.formats},
@@ -505,7 +628,7 @@ func (a *Client) PostRolesContext(ctx context.Context, params *PostRolesParams, 
 
 // PostRolesIDPermissions replaces role permissions.
 //
-// Atomically replace all permissions on a role. System roles enforce a minimum permission floor..
+// Atomically replace all permissions on a role, named by id or by resource_type:action key. System roles enforce a minimum permission floor..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -524,7 +647,7 @@ func (a *Client) PostRolesIDPermissions(params *PostRolesIDPermissionsParams, au
 
 // PostRolesIDPermissionsContext replaces role permissions.
 //
-// Atomically replace all permissions on a role. System roles enforce a minimum permission floor..
+// Atomically replace all permissions on a role, named by id or by resource_type:action key. System roles enforce a minimum permission floor..
 //
 // Do not use the deprecated [PostRolesIDPermissionsParams.Context] with this method: it would be ignored.
 func (a *Client) PostRolesIDPermissionsContext(ctx context.Context, params *PostRolesIDPermissionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesIDPermissionsOK, error) {
@@ -567,6 +690,73 @@ func (a *Client) PostRolesIDPermissionsContext(ctx context.Context, params *Post
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postRolesIDPermissions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostRolesValidate validates a role document.
+//
+// Checks a role document, in JSON or YAML, without saving it, and lists every problem found with where it is, so an editor can mark each one. Pass id to check an edit to an existing role, so it keeping its own name is not reported as a clash..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostRolesValidateContext] instead.
+func (a *Client) PostRolesValidate(params *PostRolesValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesValidateOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostRolesValidateContext(ctx, params, authInfo, opts...)
+}
+
+// PostRolesValidateContext validates a role document.
+//
+// Checks a role document, in JSON or YAML, without saving it, and lists every problem found with where it is, so an editor can mark each one. Pass id to check an edit to an existing role, so it keeping its own name is not reported as a clash..
+//
+// Do not use the deprecated [PostRolesValidateParams.Context] with this method: it would be ignored.
+func (a *Client) PostRolesValidateContext(ctx context.Context, params *PostRolesValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostRolesValidateOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostRolesValidateParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postRolesValidate",
+		Method:             "POST",
+		PathPattern:        "/api/v1/roles/validate",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/yaml"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostRolesValidateReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostRolesValidateOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postRolesValidate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -4,6 +4,11 @@
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import IconifyIcon from '@iconify/svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Pill from '$components/ui/Pill.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
+	import { BTN_GHOST, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
 
 	interface SubscriptionWithAsset {
 		id: string;
@@ -59,74 +64,71 @@
 	}
 </script>
 
-<div>
-	<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-		{m.subscriptions_heading()}
-	</h2>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-		{m.subscriptions_description()}
-	</p>
-
+<Panel
+	flush
+	title={m.subscriptions_heading()}
+	description={m.subscriptions_description()}
+	icon="material-symbols:notifications-outline"
+>
 	{#if loading}
-		<div class="flex items-center justify-center py-8">
-			<div class="animate-spin h-6 w-6 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
-		</div>
+		<div class="p-5"><Skeleton class="h-12" rows={3} /></div>
 	{:else if subscriptions.length === 0}
-		<div class="text-center py-8">
-			<IconifyIcon
-				icon="material-symbols:notifications-off-outline"
-				class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3"
-			/>
-			<p class="text-sm text-gray-500 dark:text-gray-400">
-				{m.subscriptions_empty()}
-			</p>
-		</div>
+		<EmptyState
+			dashed={false}
+			icon="material-symbols:notifications-off-outline"
+			title={m.subscriptions_empty()}
+		/>
 	{:else}
-		<div class="space-y-3">
-			{#each subscriptions as sub (sub.id)}
-				<div
-					class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-				>
-					<div class="flex items-center gap-3 min-w-0">
-						<div class="min-w-0">
-							<a
-								href={sub.asset_mrn
-									? resolve(`/discover/${sub.asset_mrn.replace('mrn://', '')}` as never)
-									: '#'}
-								class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 truncate block"
-							>
-								{sub.asset_name || m.subscriptions_unknown_asset()}
-							</a>
-							<div class="flex items-center gap-2 mt-1">
-								{#if sub.asset_type}
-									<span
-										class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-									>
-										{sub.asset_type}
-									</span>
-								{/if}
+		<div class="overflow-x-auto">
+			<table class="{TABLE} w-full">
+				<thead>
+					<tr class="border-b border-gray-100 dark:border-gray-700/60">
+						<th class={TH}>{m.subscriptions_column_asset()}</th>
+						<th class={TH}>{m.common_type()}</th>
+						<th class={TH}>{m.subscriptions_column_notifications()}</th>
+						<th class="{TH} text-right"><span class="sr-only">{m.common_actions()}</span></th>
+					</tr>
+				</thead>
+				<tbody class={TBODY}>
+					{#each subscriptions as sub (sub.id)}
+						<tr class={TR}>
+							<td class="{TD} max-w-xs">
+								<a
+									href={sub.asset_mrn
+										? resolve(
+												`/discover/${sub.asset_mrn.replace('mrn://', '')}` as `/discover/${string}/${string}/${string}`
+											)
+										: '#'}
+									class="block truncate font-medium text-gray-900 hover:text-earthy-terracotta-700 dark:text-gray-100 dark:hover:text-earthy-terracotta-400"
+								>
+									{sub.asset_name || m.subscriptions_unknown_asset()}
+								</a>
+							</td>
+							<td class="{TD} whitespace-nowrap">
+								{#if sub.asset_type}<Pill>{sub.asset_type}</Pill>{/if}
+							</td>
+							<td class={TD}>
 								<div class="flex flex-wrap gap-1">
 									{#each sub.notification_types as type (type)}
-										<span
-											class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
-										>
-											{typeLabels[type] || type}
-										</span>
+										<Pill tone="brand">{typeLabels[type] || type}</Pill>
 									{/each}
 								</div>
-							</div>
-						</div>
-					</div>
-					<button
-						type="button"
-						onclick={() => unsubscribe(sub)}
-						class="flex-shrink-0 ml-3 p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors cursor-pointer"
-						title={m.subscriptions_unsubscribe_title()}
-					>
-						<IconifyIcon icon="material-symbols:notifications-off-outline" class="w-4 h-4" />
-					</button>
-				</div>
-			{/each}
+							</td>
+							<td class="{TD} text-right">
+								<button
+									type="button"
+									onclick={() => unsubscribe(sub)}
+									class="{BTN_GHOST} hover:!bg-red-50 hover:!text-red-700 dark:hover:!bg-red-950/40 dark:hover:!text-red-300"
+									title={m.subscriptions_unsubscribe_title()}
+									aria-label={m.subscriptions_unsubscribe_title()}
+								>
+									<IconifyIcon icon="material-symbols:notifications-off-outline" class="h-4 w-4" />
+								</button>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	{/if}
-</div>
+</Panel>

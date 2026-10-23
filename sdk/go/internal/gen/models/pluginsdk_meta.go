@@ -18,6 +18,9 @@ import (
 // swagger:model pluginsdk.Meta
 type PluginsdkMeta struct {
 
+	// asset schemas
+	AssetSchemas []*PluginsdkAssetSchema `json:"asset_schemas"`
+
 	// category
 	Category string `json:"category,omitempty"`
 
@@ -44,11 +47,18 @@ type PluginsdkMeta struct {
 
 	// supports data preview
 	SupportsDataPreview bool `json:"supports_data_preview,omitempty"`
+
+	// supports query
+	SupportsQuery bool `json:"supports_query,omitempty"`
 }
 
 // Validate validates this pluginsdk meta
 func (m *PluginsdkMeta) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateAssetSchemas(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateConfigSpec(formats); err != nil {
 		res = append(res, err)
@@ -57,6 +67,36 @@ func (m *PluginsdkMeta) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *PluginsdkMeta) validateAssetSchemas(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.AssetSchemas) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.AssetSchemas); i++ {
+		if typeutils.IsZero(m.AssetSchemas[i]) { // not required
+			continue
+		}
+
+		if m.AssetSchemas[i] != nil {
+			if err := m.AssetSchemas[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("asset_schemas" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("asset_schemas" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -94,6 +134,10 @@ func (m *PluginsdkMeta) validateConfigSpec(formats strfmt.Registry) error {
 func (m *PluginsdkMeta) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateAssetSchemas(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateConfigSpec(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -101,6 +145,35 @@ func (m *PluginsdkMeta) ContextValidate(ctx context.Context, formats strfmt.Regi
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *PluginsdkMeta) contextValidateAssetSchemas(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.AssetSchemas); i++ {
+
+		if m.AssetSchemas[i] != nil {
+
+			if typeutils.IsZero(m.AssetSchemas[i]) { // not required
+				return nil
+			}
+
+			if err := m.AssetSchemas[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("asset_schemas" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("asset_schemas" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

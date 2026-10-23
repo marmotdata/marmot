@@ -36,8 +36,10 @@ class TestUpdateScheduleRequest(unittest.TestCase):
                 config = { },
                 cron_expression = '',
                 enabled = True,
+                ingest_on_query = True,
                 name = '',
-                plugin_id = ''
+                plugin_id = '',
+                queryable = True
             )
         else:
             return UpdateScheduleRequest(

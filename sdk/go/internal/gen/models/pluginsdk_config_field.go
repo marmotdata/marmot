@@ -27,6 +27,9 @@ type PluginsdkConfigField struct {
 	// fields
 	Fields []*PluginsdkConfigField `json:"fields"`
 
+	// Group names the section a field belongs to in the UI, such as "Authentication" or "Advanced"; fields without one are shown first and each group renders as its own collapsed section
+	Group string `json:"group,omitempty"`
+
 	// hidden
 	Hidden bool `json:"hidden,omitempty"`
 

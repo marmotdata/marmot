@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -29,7 +29,11 @@ class V1RolesCreateRoleRequest(BaseModel):
     description: StrictStr | None = None
     name: StrictStr | None = None
     permission_ids: list[StrictStr] | None = None
-    __properties: ClassVar[list[str]] = ["description", "name", "permission_ids"]
+    permission_keys: list[StrictStr] | None = Field(
+        default=None,
+        description="PermissionKeys names permissions as resource_type:action keys, the form a hand-written role document uses.",
+    )
+    __properties: ClassVar[list[str]] = ["description", "name", "permission_ids", "permission_keys"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -83,5 +87,6 @@ class V1RolesCreateRoleRequest(BaseModel):
                 "description": obj.get("description"),
                 "name": obj.get("name"),
                 "permission_ids": obj.get("permission_ids"),
+                "permission_keys": obj.get("permission_keys"),
             }
         )

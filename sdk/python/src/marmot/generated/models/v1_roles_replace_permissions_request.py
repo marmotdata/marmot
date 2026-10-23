@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -27,7 +27,11 @@ class V1RolesReplacePermissionsRequest(BaseModel):
     """
 
     permission_ids: list[StrictStr] | None = None
-    __properties: ClassVar[list[str]] = ["permission_ids"]
+    permission_keys: list[StrictStr] | None = Field(
+        default=None,
+        description="PermissionKeys names permissions as resource_type:action keys. They are added to PermIDs.",
+    )
+    __properties: ClassVar[list[str]] = ["permission_ids", "permission_keys"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -76,4 +80,9 @@ class V1RolesReplacePermissionsRequest(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        return cls.model_validate({"permission_ids": obj.get("permission_ids")})
+        return cls.model_validate(
+            {
+                "permission_ids": obj.get("permission_ids"),
+                "permission_keys": obj.get("permission_keys"),
+            }
+        )

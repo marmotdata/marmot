@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	coreauth "github.com/marmotdata/marmot/internal/core/auth"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	"github.com/ory/fosite"
 	"github.com/rs/zerolog/log"
@@ -144,6 +145,11 @@ func (h *Handler) handleAuthorizeComplete(w http.ResponseWriter, r *http.Request
 	usr, err := h.userService.Get(r.Context(), claims.Subject)
 	if err != nil {
 		common.RespondError(w, http.StatusUnauthorized, "User not found")
+		return
+	}
+
+	if err := coreauth.CheckUserSession(usr, claims.IssuedTime()); err != nil {
+		common.RespondError(w, http.StatusUnauthorized, "Invalid token")
 		return
 	}
 

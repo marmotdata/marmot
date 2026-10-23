@@ -3,7 +3,9 @@ package marmot
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/go-openapi/runtime"
 )
@@ -64,7 +66,11 @@ func mapErr(err error) error {
 		return err
 	}
 	if msg == "" {
-		msg = err.Error()
+		// A body-less response would otherwise surface go-swagger's "[GET /x][401] {}" wrapper.
+		msg = strings.ToLower(http.StatusText(code))
+		if msg == "" {
+			msg = err.Error()
+		}
 	}
 	return typed(code, msg)
 }

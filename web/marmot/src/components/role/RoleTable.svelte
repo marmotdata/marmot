@@ -1,22 +1,36 @@
 <script lang="ts">
+	import IconifyIcon from '@iconify/svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { deleteRole } from '$lib/roles/api';
+	import { BTN_GHOST, TABLE, TBODY, TD, TH } from '$lib/ui/classes';
+	import Pill from '$components/ui/Pill.svelte';
+	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import EditRoleForm from './EditRoleForm.svelte';
 	import ViewRoleForm from './ViewRoleForm.svelte';
-	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import { Lock, ChevronRight, ChevronDown } from 'lucide-svelte';
 	import type { Role } from '$lib/roles/types';
 
-	export let roles: Role[] = [];
-	export let editingRoleId: string | null = null;
-	export let onEdit: (roleId: string | null) => void;
-	export let onUpdate: (updatedRole: Role) => void;
-	export let onDelete: (roleId: string) => void;
+	let {
+		roles = [],
+		editingRoleId = null,
+		canManage = true,
+		onEdit,
+		onUpdate,
+		onDelete,
+		onDuplicate
+	}: {
+		roles?: Role[];
+		editingRoleId?: string | null;
+		canManage?: boolean;
+		onEdit: (roleId: string | null) => void;
+		onUpdate: (updatedRole: Role) => void;
+		onDelete: (roleId: string) => void;
+		onDuplicate?: (role: Role) => void;
+	} = $props();
 
-	let viewingRoleId: string | null = null;
-	let showDeleteModal = false;
-	let roleToDelete: Role | null = null;
+	let viewingRoleId = $state<string | null>(null);
+	let showDeleteModal = $state(false);
+	let roleToDelete = $state<Role | null>(null);
 
 	function toggleView(roleId: string) {
 		viewingRoleId = viewingRoleId === roleId ? null : roleId;
@@ -35,7 +49,6 @@
 
 	async function handleDelete() {
 		if (!roleToDelete) return;
-
 		try {
 			await deleteRole(roleToDelete.id);
 			toasts.success(m.roles_delete_success({ name: roleToDelete.name }));
@@ -50,36 +63,18 @@
 </script>
 
 <div class="overflow-x-auto">
-	<table class="min-w-full">
-		<thead>
+	<table class={TABLE}>
+		<thead class="border-b border-gray-100 dark:border-gray-700/60">
 			<tr>
-				<th
-					class="w-8 px-3 py-3 bg-earthy-brown-100 dark:bg-gray-800"
-					aria-label={m.roles_expand_aria()}
-				></th>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_name()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_description()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.roles_header_permissions()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.roles_header_users()}</th
-				>
-				<th
-					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_actions()}</th
-				>
+				<th class="{TH} w-8 pl-5 pr-0"><span class="sr-only">{m.roles_expand_aria()}</span></th>
+				<th class={TH}>{m.common_name()}</th>
+				<th class={TH}>{m.common_description()}</th>
+				<th class="{TH} text-right">{m.roles_header_permissions()}</th>
+				<th class="{TH} text-right">{m.roles_header_users()}</th>
+				<th class="{TH} pr-5 text-right"><span class="sr-only">{m.common_actions()}</span></th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
+		<tbody class={TBODY}>
 			{#each roles as role (role.id)}
 				{@const isEditing = editingRoleId === role.id}
 				{@const isViewing = viewingRoleId === role.id}
@@ -87,76 +82,78 @@
 				{@const isSystem = role.is_system}
 
 				<tr
-					class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 transition-colors cursor-pointer {isExpanded
-						? 'bg-earthy-brown-100 dark:bg-gray-800'
-						: ''}"
-					on:click={() => toggleView(role.id)}
+					class="cursor-pointer transition-colors {isExpanded
+						? 'bg-gray-50 dark:bg-gray-700/40'
+						: 'hover:bg-gray-50 dark:hover:bg-gray-700/40'}"
+					onclick={() => toggleView(role.id)}
 				>
-					<td class="w-8 px-3 py-4 text-gray-400 dark:text-gray-500">
-						{#if isExpanded}
-							<ChevronDown class="h-4 w-4" />
-						{:else}
-							<ChevronRight class="h-4 w-4" />
-						{/if}
-					</td>
-					<td class="px-6 py-4 whitespace-nowrap">
-						<div class="flex items-center gap-2">
-							<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-								{role.name}
-							</span>
-							{#if isSystem}
-								<span
-									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-								>
-									<Lock class="h-3 w-3" />
-									{m.ui_role_system_badge()}
-								</span>
-							{/if}
-						</div>
-					</td>
-					<td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 max-w-md truncate">
-						{role.description || '—'}
-					</td>
-					<td class="px-6 py-4 whitespace-nowrap">
-						<span
-							class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
+					<td class="{TD} w-8 pl-5 pr-0 text-gray-400">
+						<button
+							type="button"
+							class="flex items-center"
+							aria-expanded={isExpanded}
+							aria-label={m.roles_expand_aria()}
+							onclick={(e) => {
+								e.stopPropagation();
+								toggleView(role.id);
+							}}
 						>
-							{(role.permissions ?? []).length}
+							<IconifyIcon
+								icon="material-symbols:chevron-right"
+								class="h-4 w-4 transition-transform {isExpanded ? 'rotate-90' : ''}"
+							/>
+						</button>
+					</td>
+					<td class="{TD} whitespace-nowrap">
+						<span class="flex items-center gap-2">
+							<span class="font-medium text-gray-900 dark:text-gray-100">{role.name}</span>
+							{#if isSystem}
+								<Pill>
+									<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3" />
+									{m.ui_role_system_badge()}
+								</Pill>
+							{/if}
 						</span>
 					</td>
-					<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-						{role.user_count ?? 0}
+					<td class="{TD} max-w-md truncate text-gray-500 dark:text-gray-400">
+						{role.description || '—'}
 					</td>
-					<td
-						class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-						on:click|stopPropagation
-						role="cell"
-					>
-						{#if !isSystem}
+					<td class="{TD} text-right tabular-nums">{(role.permissions ?? []).length}</td>
+					<td class="{TD} text-right tabular-nums">{role.user_count ?? 0}</td>
+					<td class="{TD} whitespace-nowrap pr-5 text-right">
+						{#if !isSystem && canManage}
 							<button
 								type="button"
-								class="text-earthy-terracotta-700 hover:text-earthy-terracotta-800 dark:text-earthy-terracotta-500 dark:hover:text-earthy-terracotta-400 mr-3"
-								on:click={() => switchToEdit(role.id)}
+								class={BTN_GHOST}
+								onclick={(e) => {
+									e.stopPropagation();
+									switchToEdit(role.id);
+								}}
+								aria-label={m.roles_edit_aria({ name: role.name })}
+								title={m.common_edit()}
 							>
-								{m.common_edit()}
+								<IconifyIcon icon="material-symbols:edit-outline" class="h-4 w-4" />
 							</button>
 							<button
 								type="button"
-								class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-								on:click={() => {
+								class="{BTN_GHOST} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+								onclick={(e) => {
+									e.stopPropagation();
 									roleToDelete = role;
 									showDeleteModal = true;
 								}}
+								aria-label={m.roles_delete_aria({ name: role.name })}
+								title={m.common_delete()}
 							>
-								{m.common_delete()}
+								<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
 							</button>
 						{/if}
 					</td>
 				</tr>
 
 				{#if isExpanded}
-					<tr class="bg-earthy-brown-50 dark:bg-gray-900">
-						<td colspan="6" class="p-0">
+					<tr>
+						<td colspan="6" class="bg-gray-50/60 p-0 dark:bg-gray-900/30">
 							{#if isEditing}
 								<EditRoleForm
 									{role}
@@ -170,7 +167,8 @@
 								<ViewRoleForm
 									{role}
 									onClose={closeAll}
-									onEdit={isSystem ? null : () => switchToEdit(role.id)}
+									onEdit={isSystem || !canManage ? null : () => switchToEdit(role.id)}
+									onDuplicate={canManage && onDuplicate ? () => onDuplicate(role) : null}
 								/>
 							{/if}
 						</td>
@@ -185,7 +183,7 @@
 	show={showDeleteModal}
 	title={m.roles_delete_title()}
 	message={roleToDelete && (roleToDelete.user_count ?? 0) > 0
-		? m.roles_delete_assigned_warning({ count: roleToDelete.user_count })
+		? m.roles_delete_assigned_warning({ count: roleToDelete.user_count ?? 0 })
 		: m.roles_delete_confirm_message()}
 	confirmText={m.common_delete()}
 	resourceName={roleToDelete?.name || ''}

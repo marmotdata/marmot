@@ -50,19 +50,19 @@ type Config struct {
 	Password string `json:"password" description:"Password for the login" sensitive:"true" validate:"required"`
 	Database string `json:"database" description:"Discover only this database. Leave empty to discover every database the login can open"`
 
-	ExcludeDatabases []string `json:"exclude_databases" description:"Databases to skip" default:"[\"master\",\"model\",\"msdb\",\"tempdb\"]"`
-	ExcludeSchemas   []string `json:"exclude_schemas" description:"Schemas to skip" default:"[\"sys\",\"INFORMATION_SCHEMA\",\"guest\",\"db_owner\",\"db_accessadmin\",\"db_securityadmin\",\"db_ddladmin\",\"db_backupoperator\",\"db_datareader\",\"db_datawriter\",\"db_denydatareader\",\"db_denydatawriter\"]"`
+	ExcludeDatabases []string `json:"exclude_databases" group:"Discovery" description:"Databases to skip" default:"[\"master\",\"model\",\"msdb\",\"tempdb\"]"`
+	ExcludeSchemas   []string `json:"exclude_schemas" group:"Discovery" description:"Schemas to skip" default:"[\"sys\",\"INFORMATION_SCHEMA\",\"guest\",\"db_owner\",\"db_accessadmin\",\"db_securityadmin\",\"db_ddladmin\",\"db_backupoperator\",\"db_datareader\",\"db_datawriter\",\"db_denydatareader\",\"db_denydatawriter\"]"`
 
-	Encrypt                bool   `json:"encrypt" description:"Require an encrypted connection" default:"true"`
-	TrustServerCertificate bool   `json:"trust_server_certificate" description:"Accept the server certificate without verifying it. Needed for self-signed certificates" default:"false"`
-	ConnectTimeoutSeconds  int    `json:"connect_timeout_seconds" description:"Seconds to wait for a connection" default:"30" validate:"omitempty,min=1,max=600"`
-	ApplicationIntent      string `json:"application_intent" label:"Application Intent" description:"Connect to a read-only replica with ReadOnly" default:"ReadWrite" validate:"omitempty,oneof=ReadWrite ReadOnly"`
+	Encrypt                bool   `json:"encrypt" group:"Authentication" description:"Require an encrypted connection" default:"true"`
+	TrustServerCertificate bool   `json:"trust_server_certificate" group:"Authentication" description:"Accept the server certificate without verifying it. Needed for self-signed certificates" default:"false"`
+	ConnectTimeoutSeconds  int    `json:"connect_timeout_seconds" group:"Advanced" description:"Seconds to wait for a connection" default:"30" validate:"omitempty,min=1,max=600"`
+	ApplicationIntent      string `json:"application_intent" group:"Advanced" label:"Application Intent" description:"Connect to a read-only replica with ReadOnly" default:"ReadWrite" validate:"omitempty,oneof=ReadWrite ReadOnly"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information" default:"true"`
-	IncludeViews        bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeProcedures   bool `json:"include_procedures" description:"Whether to discover stored procedures and functions" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	IncludeStatistics   bool `json:"include_statistics" description:"Whether to collect row counts and table sizes" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information" default:"true"`
+	IncludeViews        bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeProcedures   bool `json:"include_procedures" group:"Discovery" description:"Whether to discover stored procedures and functions" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	IncludeStatistics   bool `json:"include_statistics" group:"Advanced" description:"Whether to collect row counts and table sizes" default:"true"`
 }
 
 // Example configuration for the plugin

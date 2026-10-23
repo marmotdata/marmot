@@ -313,19 +313,10 @@ const config: Config = {
           "aria-label": "GitHub repository",
         },
         // Sign in is a plain text link and Start free is the button, so the
-        // header has only one obvious action. Both are styled in custom.css.
-        {
-          href: "https://cloud.marmotdata.io/login",
-          label: "Sign in",
-          position: "right",
-          className: "signin-link",
-        },
-        {
-          href: "https://cloud.marmotdata.io/signup",
-          label: "Start free",
-          position: "right",
-          className: "cloud-button",
-        },
+        // header has only one obvious action; signed-in Cloud users get Open
+        // console instead (src/components/CloudAuthNavbarItem.tsx). Styled in
+        // custom.css.
+        { type: "custom-cloudAuth", position: "right" },
       ],
     },
     footer: {

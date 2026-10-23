@@ -36,17 +36,17 @@ type Config struct {
 	pluginsdk.Federation `json:",inline"`
 
 	ProjectID                string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	Locations                []string `json:"locations,omitempty" description:"Regions to scan. Every region is scanned when this is empty"`
+	Locations                []string `json:"locations,omitempty" group:"Discovery" description:"Regions to scan. Every region is scanned when this is empty"`
 	CredentialsFile          string   `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
 	CredentialsJSON          string   `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
-	ServiceAccount           string   `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
-	Endpoint                 string   `json:"endpoint,omitempty" description:"Custom endpoint URL, for testing against a local server"`
-	DisableAuth              bool     `json:"disable_auth,omitempty" description:"Disable authentication, for local testing"`
+	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string   `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string   `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL, for testing against a local server"`
+	DisableAuth              bool     `json:"disable_auth,omitempty" group:"Authentication" description:"Disable authentication, for local testing"`
 
-	IncludeJobs         bool `json:"include_jobs" description:"Whether to discover jobs" default:"true"`
-	IncludeExecutions   bool `json:"include_executions" description:"Whether to read recent job executions as run history" default:"true"`
-	MaxExecutionsPerJob int  `json:"max_executions_per_job" description:"How many recent executions to read per job" default:"10" validate:"omitempty,min=1,max=100"`
+	IncludeJobs         bool `json:"include_jobs" group:"Discovery" description:"Whether to discover jobs" default:"true"`
+	IncludeExecutions   bool `json:"include_executions" group:"Discovery" description:"Whether to read recent job executions as run history" default:"true"`
+	MaxExecutionsPerJob int  `json:"max_executions_per_job" group:"Advanced" description:"How many recent executions to read per job" default:"10" validate:"omitempty,min=1,max=100"`
 }
 
 // Example configuration for the plugin

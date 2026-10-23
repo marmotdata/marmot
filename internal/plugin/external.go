@@ -75,7 +75,16 @@ func LoadBinary(path string) {
 // plugin cannot shadow a built-in or another plugin that loaded
 // earlier.
 func registerExternalPlugin(path string) (bool, error) {
-	process, err := pluginsdk.Open(path, pluginLogger())
+	if err := checkBinaryTrust(path); err != nil {
+		return false, err
+	}
+	sum, err := pluginsdk.HashBinary(path)
+	if err != nil {
+		return false, err
+	}
+
+	binary := Binary{Path: path, SHA256: sum}
+	process, err := binary.open()
 	if err != nil {
 		return false, err
 	}
@@ -97,9 +106,9 @@ func registerExternalPlugin(path string) (bool, error) {
 	// Only plugins that advertise data-preview support get a source that
 	// implements DataFetcher, so the preview handler's type assertion
 	// keeps distinguishing plugins with and without preview support.
-	var source Source = &ExternalSource{path: path}
+	var source Source = &ExternalSource{binary: binary}
 	if sdkMeta.SupportsDataPreview {
-		source = &ExternalDataFetcherSource{ExternalSource{path: path}}
+		source = &ExternalDataFetcherSource{ExternalSource{binary: binary}}
 	}
 
 	if err := GetRegistry().Register(*sdkMeta, source); err != nil {
@@ -111,15 +120,31 @@ func registerExternalPlugin(path string) (bool, error) {
 	return true, nil
 }
 
+// Binary is a plugin binary Marmot has decided to trust, pinned to the sha256 it had at that moment so every later launch runs exactly those bytes.
+type Binary struct {
+	Path   string
+	SHA256 []byte
+}
+
+func (b Binary) open() (*pluginsdk.PluginProcess, error) {
+	return pluginsdk.Open(b.Path, b.SHA256, pluginLogger())
+}
+
 // ExternalSource adapts an external plugin binary to the internal
 // Source interface. Each call spawns the plugin process, performs the
 // call over gRPC, and kills the process again.
 type ExternalSource struct {
-	path string
+	binary Binary
+}
+
+// Binary returns the pinned plugin binary so the instance manager can
+// keep a long-running process of the same plugin for data queries.
+func (s *ExternalSource) Binary() Binary {
+	return s.binary
 }
 
 func (s *ExternalSource) Validate(config RawPluginConfig) (RawPluginConfig, error) {
-	process, err := pluginsdk.Open(s.path, pluginLogger())
+	process, err := s.binary.open()
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +158,7 @@ func (s *ExternalSource) Validate(config RawPluginConfig) (RawPluginConfig, erro
 }
 
 func (s *ExternalSource) Discover(ctx context.Context, config RawPluginConfig) (*DiscoveryResult, error) {
-	process, err := pluginsdk.Open(s.path, pluginLogger())
+	process, err := s.binary.open()
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +179,7 @@ type ExternalDataFetcherSource struct {
 }
 
 func (s *ExternalDataFetcherSource) FetchSampleData(ctx context.Context, config RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
-	process, err := pluginsdk.Open(s.path, pluginLogger())
+	process, err := s.binary.open()
 	if err != nil {
 		return nil, nil, err
 	}

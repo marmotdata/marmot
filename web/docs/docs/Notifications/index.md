@@ -58,6 +58,12 @@ alt="Notification preferences panel"
 
 />
 
+## Expiring Access
+
+Marmot tells you when an API key is about to expire, seven days ahead, and again once it has expired. Notices for your personal keys come to you. Notices for a service account's keys go to whoever created the account, or to everyone who manages service accounts if that person has left. A key created to last seven days or less only gets the second notice, since its short life was chosen on purpose.
+
+Each notice is sent once. Reading or deleting it does not bring it back, and an expired service account key stays listed on the **Settings** overview until it is replaced or removed. Turn them off with the **Access Expiry** preference.
+
 ## Aggregation
 
 Marmot batches rapid changes to prevent notification spam. If multiple updates happen to assets you own within a short window, they are grouped into a single notification rather than one per change.

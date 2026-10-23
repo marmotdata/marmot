@@ -7,11 +7,12 @@
 
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
-	import Button from './Button.svelte';
+	import Alert from './Alert.svelte';
 	import Stepper from './Stepper.svelte';
 	import Step from './Step.svelte';
 	import type { Snippet } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, LABEL, PANEL } from '$lib/ui/classes';
 
 	interface Props {
 		title: string;
@@ -32,6 +33,8 @@
 		canNavigateToStep?: (step: number) => boolean;
 		onStepClick?: (step: number) => void;
 		banner?: Snippet;
+		// Set inside a layout that already pads the page, such as Settings, so the stepper does not add its own container
+		embedded?: boolean;
 		children: Snippet;
 	}
 
@@ -54,6 +57,7 @@
 		canNavigateToStep,
 		onStepClick,
 		banner,
+		embedded = false,
 		children
 	}: Props = $props();
 
@@ -68,107 +72,80 @@
 	}
 </script>
 
-<div class="min-h-screen">
-	<!-- Header -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-			<div class="flex items-center gap-4">
-				{#if onBack}
+<div class={embedded ? '' : 'container mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}>
+	<header class="mb-6">
+		{#if onBack}
+			<button
+				type="button"
+				onclick={handleBack}
+				class="mb-2 inline-flex items-center gap-1 text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+			>
+				<IconifyIcon icon="material-symbols:arrow-back" class="h-4 w-4" />
+				{m.common_back()}
+			</button>
+		{/if}
+		<p class={LABEL}>
+			{m.ui_stepper_step_of({
+				current: currentStep,
+				total: steps.length,
+				title: steps[currentStep - 1]?.title ?? ''
+			})}
+		</p>
+		<h1 class="truncate text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+			{title}
+		</h1>
+	</header>
+
+	<div class="{PANEL} mb-6 px-5 py-4">
+		<Stepper {currentStep} bind:totalSteps {onStepClick} {canNavigateToStep}>
+			{#each steps as step (step.title)}
+				<Step title={step.title} icon={step.icon} />
+			{/each}
+		</Stepper>
+	</div>
+
+	{#if banner}
+		{@render banner()}
+	{/if}
+
+	{#if error}
+		<div class="mb-6"><Alert>{error}</Alert></div>
+	{/if}
+
+	{@render children()}
+
+	{#if !hideFooter}
+		<div
+			class="mt-8 flex items-center justify-between border-t border-gray-200 pt-6 dark:border-gray-700"
+		>
+			<div>
+				{#if currentStep > 1 && onPrevious}
+					<button type="button" class={BTN_SECONDARY} onclick={handlePrevious}>
+						<IconifyIcon icon="material-symbols:arrow-back" class="h-5 w-5" />
+						{m.common_previous()}
+					</button>
+				{:else if onCancel}
+					<button type="button" class={BTN_GHOST} onclick={onCancel}>{m.common_cancel()}</button>
+				{/if}
+			</div>
+			<div class="flex items-center gap-3">
+				{#if currentStep < steps.length && onNext}
+					<button type="button" class={BTN_PRIMARY} onclick={onNext} disabled={!canProceed}>
+						{m.common_next()}
+						<IconifyIcon icon="material-symbols:arrow-forward" class="h-5 w-5" />
+					</button>
+				{:else if onSave}
 					<button
 						type="button"
-						onclick={handleBack}
-						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-						aria-label={m.common_back()}
+						class={BTN_PRIMARY}
+						onclick={onSave}
+						disabled={saving || !canProceed}
 					>
-						<IconifyIcon
-							icon="material-symbols:arrow-back"
-							class="h-6 w-6 text-gray-600 dark:text-gray-400"
-						/>
+						<IconifyIcon icon={saveIcon} class="h-5 w-5" />
+						{saving ? savingLabel : saveLabel}
 					</button>
 				{/if}
-				<div>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						{m.ui_stepper_step_of({
-							current: currentStep,
-							total: steps.length,
-							title: steps[currentStep - 1]?.title ?? ''
-						})}
-					</p>
-				</div>
 			</div>
 		</div>
-	</div>
-
-	<!-- Step Indicator -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-			<Stepper {currentStep} bind:totalSteps {onStepClick} {canNavigateToStep}>
-				{#each steps as step (step.title)}
-					<Step title={step.title} icon={step.icon} />
-				{/each}
-			</Stepper>
-		</div>
-	</div>
-
-	<!-- Main Content -->
-	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		{#if banner}
-			{@render banner()}
-		{/if}
-
-		{#if error}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:error"
-						class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0"
-					/>
-					<p class="ml-3 text-sm text-red-700 dark:text-red-300">{error}</p>
-				</div>
-			</div>
-		{/if}
-
-		{@render children()}
-
-		{#if !hideFooter}
-			<div
-				class="mt-8 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6"
-			>
-				<div>
-					{#if currentStep > 1 && onPrevious}
-						<Button
-							variant="clear"
-							click={handlePrevious}
-							icon="material-symbols:arrow-back"
-							text={m.common_previous()}
-						/>
-					{:else if onCancel}
-						<Button variant="clear" click={onCancel} text={m.common_cancel()} />
-					{/if}
-				</div>
-				<div class="flex items-center gap-3">
-					{#if currentStep < steps.length && onNext}
-						<Button
-							variant="filled"
-							click={onNext}
-							text={m.common_next()}
-							icon="material-symbols:arrow-forward"
-							disabled={!canProceed}
-						/>
-					{:else if onSave}
-						<Button
-							variant="filled"
-							click={onSave}
-							text={saving ? savingLabel : saveLabel}
-							disabled={saving || !canProceed}
-							icon={saveIcon}
-						/>
-					{/if}
-				</div>
-			</div>
-		{/if}
-	</div>
+	{/if}
 </div>

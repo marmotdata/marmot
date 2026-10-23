@@ -169,8 +169,8 @@
 			}
 		}
 
-		// Check for simple fields (@kind, @type, @provider, @name)
-		const simpleFieldMatches = Array.from(value.matchAll(/@(kind|type|provider|name)\b/g));
+		// Check for simple fields (@kind, @type, @provider, @name, @term)
+		const simpleFieldMatches = Array.from(value.matchAll(/@(kind|type|provider|name|term)\b/g));
 		let currentSimpleMatch = null;
 		for (const match of simpleFieldMatches) {
 			if (match.index !== undefined && match.index < position) {
@@ -343,6 +343,7 @@
 				{ type: 'field', value: 'type', display: '@type' },
 				{ type: 'field', value: 'provider', display: '@provider' },
 				{ type: 'field', value: 'name', display: '@name' },
+				{ type: 'field', value: 'term', display: '@term' },
 				{ type: 'field', value: 'metadata', display: '@metadata.' }
 			];
 			showDropdown = true;

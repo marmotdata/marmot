@@ -84,7 +84,7 @@ func (h *Hub) Start(ctx context.Context) {
 					log.Debug().Err(err).Msg("WS: failed to look up user from JWT subject")
 					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
 				}
-				if !u.Active {
+				if err := auth.CheckUserSession(u, claims.IssuedTime()); err != nil {
 					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
 				}
 				if err := h.requireIngestionView(ctx, u.ID); err != nil {

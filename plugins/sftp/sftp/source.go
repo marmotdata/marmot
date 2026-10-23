@@ -59,22 +59,22 @@ type Config struct {
 
 	// Authentication. One of password or private_key is required.
 	Password             string `json:"password,omitempty" description:"Password for the user" sensitive:"true"`
-	PrivateKey           string `json:"private_key,omitempty" label:"Private Key" description:"PEM private key for the user, RSA, Ed25519 or ECDSA" sensitive:"true"`
-	PrivateKeyPassphrase string `json:"private_key_passphrase,omitempty" label:"Private Key Passphrase" description:"Passphrase protecting the private key" sensitive:"true"`
-	HostKey              string `json:"host_key,omitempty" label:"Host Key" description:"Server public key to trust, as written in known_hosts. Empty means any key is accepted"`
+	PrivateKey           string `json:"private_key,omitempty" group:"Authentication" label:"Private Key" description:"PEM private key for the user, RSA, Ed25519 or ECDSA" sensitive:"true"`
+	PrivateKeyPassphrase string `json:"private_key_passphrase,omitempty" group:"Authentication" label:"Private Key Passphrase" description:"Passphrase protecting the private key" sensitive:"true"`
+	HostKey              string `json:"host_key,omitempty" group:"Authentication" label:"Host Key" description:"Server public key to trust, as written in known_hosts. Empty means any key is accepted"`
 
 	// What to walk
-	RootDirectories []string `json:"root_directories" description:"Directories to walk" default:"[\"/\"]"`
-	MaxDepth        int      `json:"max_depth" description:"Levels below each root to walk" default:"10" validate:"min=1,max=100"`
-	MaxFiles        int      `json:"max_files" description:"Stop after this many files" default:"20000" validate:"min=1"`
-	FollowSymlinks  bool     `json:"follow_symlinks" description:"Walk into symlinks instead of skipping them" default:"false"`
-	StructuredOnly  bool     `json:"structured_only" description:"Only catalogue csv, tsv, json, jsonl, parquet and avro files" default:"false"`
+	RootDirectories []string `json:"root_directories" group:"Discovery" description:"Directories to walk" default:"[\"/\"]"`
+	MaxDepth        int      `json:"max_depth" group:"Advanced" description:"Levels below each root to walk" default:"10" validate:"min=1,max=100"`
+	MaxFiles        int      `json:"max_files" group:"Advanced" description:"Stop after this many files" default:"20000" validate:"min=1"`
+	FollowSymlinks  bool     `json:"follow_symlinks" group:"Discovery" description:"Walk into symlinks instead of skipping them" default:"false"`
+	StructuredOnly  bool     `json:"structured_only" group:"Discovery" description:"Only catalogue csv, tsv, json, jsonl, parquet and avro files" default:"false"`
 
 	// What to read from each file
-	IncludeColumns    bool  `json:"include_columns" description:"Infer columns for delimited and JSON files" default:"true"`
-	IncludeStatistics bool  `json:"include_statistics" description:"Emit size, row count and column count statistics" default:"true"`
-	SampleRows        int   `json:"sample_rows" description:"Rows read from a file to infer its columns" default:"200" validate:"min=1,max=10000"`
-	MaxReadBytes      int64 `json:"max_read_bytes" description:"Most bytes to read from a single file" default:"33554432" validate:"min=1"`
+	IncludeColumns    bool  `json:"include_columns" group:"Discovery" description:"Infer columns for delimited and JSON files" default:"true"`
+	IncludeStatistics bool  `json:"include_statistics" group:"Advanced" description:"Emit size, row count and column count statistics" default:"true"`
+	SampleRows        int   `json:"sample_rows" group:"Advanced" description:"Rows read from a file to infer its columns" default:"200" validate:"min=1,max=10000"`
+	MaxReadBytes      int64 `json:"max_read_bytes" group:"Advanced" description:"Most bytes to read from a single file" default:"33554432" validate:"min=1"`
 }
 
 // Example configuration for the plugin

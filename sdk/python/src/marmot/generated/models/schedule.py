@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -32,12 +32,19 @@ class Schedule(BaseModel):
     cron_expression: StrictStr | None = None
     enabled: StrictBool | None = None
     id: StrictStr | None = None
+    ingest_on_query: StrictBool | None = None
     last_run_at: StrictStr | None = None
     last_run_status: StrictStr | None = None
     managed_by: StrictStr | None = None
     name: StrictStr | None = None
     next_run_at: StrictStr | None = None
     plugin_id: StrictStr | None = None
+    queryable: StrictBool | None = None
+    served_by_id: StrictStr | None = None
+    served_by_type: StrictStr | None = Field(
+        default=None,
+        description="ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
+    )
     updated_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "config",
@@ -46,12 +53,16 @@ class Schedule(BaseModel):
         "cron_expression",
         "enabled",
         "id",
+        "ingest_on_query",
         "last_run_at",
         "last_run_status",
         "managed_by",
         "name",
         "next_run_at",
         "plugin_id",
+        "queryable",
+        "served_by_id",
+        "served_by_type",
         "updated_at",
     ]
 
@@ -110,12 +121,16 @@ class Schedule(BaseModel):
                 "cron_expression": obj.get("cron_expression"),
                 "enabled": obj.get("enabled"),
                 "id": obj.get("id"),
+                "ingest_on_query": obj.get("ingest_on_query"),
                 "last_run_at": obj.get("last_run_at"),
                 "last_run_status": obj.get("last_run_status"),
                 "managed_by": obj.get("managed_by"),
                 "name": obj.get("name"),
                 "next_run_at": obj.get("next_run_at"),
                 "plugin_id": obj.get("plugin_id"),
+                "queryable": obj.get("queryable"),
+                "served_by_id": obj.get("served_by_id"),
+                "served_by_type": obj.get("served_by_type"),
                 "updated_at": obj.get("updated_at"),
             }
         )

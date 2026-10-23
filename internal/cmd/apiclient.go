@@ -11,7 +11,12 @@ import (
 // newClient builds an SDK client configured from the active CLI context.
 func newClient() (*marmot.Client, error) {
 	token, isBearer := getAuthToken()
-	opts := marmot.ClientOptions{Host: getHost()}
+	// The server records queries from this User-Agent as coming from the CLI
+	httpClient, err := apiHTTPClient(0)
+	if err != nil {
+		return nil, err
+	}
+	opts := marmot.ClientOptions{Host: getHost(), UserAgent: "marmot-cli", HTTPClient: httpClient}
 	if token != "" {
 		if isBearer {
 			opts.Credential = auth.Bearer(token)

@@ -1,38 +1,45 @@
 version: 2
-updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+
+multi-ecosystem-groups:
+  all:
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
       - "kind/dependency"
+
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels:
       - "area/server"
     groups:
-      go:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-      go-other:
-        patterns: ["*"]
       go-security:
         applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "gomod"
     directory: "/sdk/go"
-    schedule:
-      interval: "weekly"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
     labels:
-      - "dependencies"
-      - "kind/dependency"
       - "area/sdk"
     groups:
-      go-sdk:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-      go-sdk-other:
-        patterns: ["*"]
       go-sdk-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/*"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels:
+      - "area/plugins"
+    groups:
+      plugins-security:
         applies-to: security-updates
         patterns: ["*"]
 
@@ -40,66 +47,44 @@ updates:
     directories:
       - "/web/marmot"
       - "/web/docs"
-    schedule:
-      interval: "weekly"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
     labels:
-      - "dependencies"
-      - "kind/dependency"
       - "area/frontend"
     groups:
-      frontend:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-      frontend-other:
-        patterns: ["*"]
       frontend-security:
         applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/sdk/ts"
-    schedule:
-      interval: "weekly"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
     labels:
-      - "dependencies"
-      - "kind/dependency"
       - "area/sdk"
     groups:
-      ts-sdk:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-      ts-sdk-other:
-        patterns: ["*"]
       ts-sdk-security:
         applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "uv"
     directory: "/sdk/python"
-    schedule:
-      interval: "weekly"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
     labels:
-      - "dependencies"
-      - "kind/dependency"
       - "area/sdk"
     groups:
-      python-sdk:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-      python-sdk-other:
-        patterns: ["*"]
       python-sdk-security:
         applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    schedule:
-      interval: "weekly"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
     labels:
-      - "dependencies"
-      - "kind/dependency"
       - "area/build"
     groups:
-      actions:
+      actions-security:
+        applies-to: security-updates
         patterns: ["*"]

@@ -88,52 +88,10 @@ func (e *Encryptor) DecryptString(ciphertext string) (string, error) {
 	return string(plaintext), nil
 }
 
-// EncryptMap encrypts all string values in a map that match the given keys
-func (e *Encryptor) EncryptMap(data map[string]interface{}, sensitiveKeys map[string]bool) error {
-	for key, value := range data {
-		if !sensitiveKeys[key] {
-			continue
-		}
-
-		// Only encrypt string values
-		strValue, ok := value.(string)
-		if !ok || strValue == "" {
-			continue
-		}
-
-		encrypted, err := e.EncryptString(strValue)
-		if err != nil {
-			return fmt.Errorf("encrypting field %s: %w", key, err)
-		}
-
-		data[key] = encrypted
-	}
-
-	return nil
-}
-
-// DecryptMap decrypts all string values in a map that match the given keys
-func (e *Encryptor) DecryptMap(data map[string]interface{}, sensitiveKeys map[string]bool) error {
-	for key, value := range data {
-		if !sensitiveKeys[key] {
-			continue
-		}
-
-		// Only decrypt string values
-		strValue, ok := value.(string)
-		if !ok || strValue == "" {
-			continue
-		}
-
-		decrypted, err := e.DecryptString(strValue)
-		if err != nil {
-			return fmt.Errorf("decrypting field %s: %w", key, err)
-		}
-
-		data[key] = decrypted
-	}
-
-	return nil
+// LooksEncrypted reports whether value has the shape of Encrypt output under any key, so callers can tell plaintext from ciphertext they cannot decrypt
+func LooksEncrypted(value string) bool {
+	data, err := base64.StdEncoding.DecodeString(value)
+	return err == nil && len(data) >= chacha20poly1305.NonceSizeX+chacha20poly1305.Overhead
 }
 
 // GenerateKey generates a random 32-byte encryption key

@@ -27,12 +27,12 @@ type Config struct {
 	Host      string `json:"host" description:"Kafka Connect REST URL (e.g. http://connect:8083)" validate:"required,url"`
 	Username  string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password  string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
-	VerifySSL bool   `json:"verify_ssl" label:"Verify SSL" description:"Whether to verify the TLS certificate of the Connect REST endpoint" default:"true"`
+	VerifySSL bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Whether to verify the TLS certificate of the Connect REST endpoint" default:"true"`
 
-	IncludeTasks    bool `json:"include_tasks" description:"Whether to discover connector tasks as Task assets" default:"true"`
-	IncludeTopics   bool `json:"include_topics" description:"Whether to discover the topics connectors read and write as Topic assets" default:"true"`
-	IncludeConfig   bool `json:"include_config" description:"Whether to store each connector's config in its metadata, with credentials masked" default:"true"`
-	DiscoverLineage bool `json:"discover_lineage" description:"Whether to link connectors to the topics and datasets they move data between" default:"true"`
+	IncludeTasks    bool `json:"include_tasks" group:"Discovery" description:"Whether to discover connector tasks as Task assets" default:"true"`
+	IncludeTopics   bool `json:"include_topics" group:"Discovery" description:"Whether to discover the topics connectors read and write as Topic assets" default:"true"`
+	IncludeConfig   bool `json:"include_config" group:"Discovery" description:"Whether to store each connector's config in its metadata, with credentials masked" default:"true"`
+	DiscoverLineage bool `json:"discover_lineage" group:"Discovery" description:"Whether to link connectors to the topics and datasets they move data between" default:"true"`
 }
 
 // Example configuration for the plugin

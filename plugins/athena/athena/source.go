@@ -64,19 +64,19 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	Catalogs         []string `json:"catalogs,omitempty" description:"Data catalogs to discover. All catalogs when empty"`
-	ExcludeCatalogs  []string `json:"exclude_catalogs,omitempty" description:"Data catalogs to skip"`
-	Databases        []string `json:"databases,omitempty" description:"Databases to discover. All databases when empty"`
-	ExcludeDatabases []string `json:"exclude_databases,omitempty" description:"Databases to skip"`
-	WorkGroups       []string `json:"workgroups,omitempty" description:"Workgroups to discover. All workgroups when empty"`
+	Catalogs         []string `json:"catalogs,omitempty" group:"Discovery" description:"Data catalogs to discover. All catalogs when empty"`
+	ExcludeCatalogs  []string `json:"exclude_catalogs,omitempty" group:"Discovery" description:"Data catalogs to skip"`
+	Databases        []string `json:"databases,omitempty" group:"Discovery" description:"Databases to discover. All databases when empty"`
+	ExcludeDatabases []string `json:"exclude_databases,omitempty" group:"Discovery" description:"Databases to skip"`
+	WorkGroups       []string `json:"workgroups,omitempty" group:"Discovery" description:"Workgroups to discover. All workgroups when empty"`
 
-	IncludeWorkGroups   bool `json:"include_workgroups" description:"Whether to catalog workgroups" default:"true"`
-	IncludeSavedQueries bool `json:"include_saved_queries" description:"Whether to catalog saved queries" default:"true"`
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include table columns" default:"true"`
-	IncludePartitions   bool `json:"include_partitions" description:"Whether to include partition keys" default:"true"`
-	DiscoverLineage     bool `json:"discover_lineage" description:"Whether to discover lineage between catalogs, databases, tables, buckets and saved queries" default:"true"`
+	IncludeWorkGroups   bool `json:"include_workgroups" group:"Discovery" description:"Whether to catalog workgroups" default:"true"`
+	IncludeSavedQueries bool `json:"include_saved_queries" group:"Discovery" description:"Whether to catalog saved queries" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include table columns" default:"true"`
+	IncludePartitions   bool `json:"include_partitions" group:"Discovery" description:"Whether to include partition keys" default:"true"`
+	DiscoverLineage     bool `json:"discover_lineage" group:"Discovery" description:"Whether to discover lineage between catalogs, databases, tables, buckets and saved queries" default:"true"`
 
-	MetadataAPI string `json:"metadata_api" description:"Which API reads databases and tables: auto, athena or glue" default:"auto" validate:"omitempty,oneof=auto athena glue"`
+	MetadataAPI string `json:"metadata_api" group:"Advanced" description:"Which API reads databases and tables: auto, athena or glue" default:"auto" validate:"omitempty,oneof=auto athena glue"`
 }
 
 // Example configuration for the plugin

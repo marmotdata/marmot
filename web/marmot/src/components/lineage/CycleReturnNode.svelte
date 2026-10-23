@@ -3,14 +3,16 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data } = $props<{
+	let {
+		data
+	}: {
 		data: {
 			targetName: string;
 			targetType: string;
 			targetId: string;
 			onReturnClick?: (targetId: string) => void;
 		};
-	}>();
+	} = $props();
 
 	function handleClick() {
 		if (data.onReturnClick) {

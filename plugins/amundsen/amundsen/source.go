@@ -58,22 +58,22 @@ type Config struct {
 	Database string `json:"database" description:"Neo4j database holding the Amundsen graph" default:"neo4j"`
 	// Neo4j decides encryption from the URI scheme, so these two rewrite
 	// it rather than being passed to the driver.
-	Encrypted            bool `json:"encrypted" description:"Connect over TLS" default:"false"`
-	TrustAllCertificates bool `json:"trust_all_certificates" description:"Accept any TLS certificate, including self signed ones" default:"false"`
+	Encrypted            bool `json:"encrypted" group:"Authentication" description:"Connect over TLS" default:"true"`
+	TrustAllCertificates bool `json:"trust_all_certificates" group:"Authentication" description:"Accept any TLS certificate, including self signed ones" default:"false"`
 
 	// Links
-	AmundsenURL string `json:"amundsen_url" label:"Amundsen URL" description:"Address of the Amundsen web app, used to link each asset back to its page" validate:"omitempty,url"`
+	AmundsenURL string `json:"amundsen_url" group:"Advanced" label:"Amundsen URL" description:"Address of the Amundsen web app, used to link each asset back to its page" validate:"omitempty,url"`
 
 	// What to import
-	IncludeUsers        bool `json:"include_users" description:"Record table owners from Amundsen" default:"true"`
-	IncludeDashboards   bool `json:"include_dashboards" description:"Import dashboards and their charts" default:"true"`
-	IncludeTags         bool `json:"include_tags" description:"Copy Amundsen tags onto assets" default:"true"`
-	IncludeDescriptions bool `json:"include_descriptions" description:"Copy Amundsen descriptions onto assets and columns" default:"true"`
-	IncludeUsage        bool `json:"include_usage" description:"Import Amundsen read counts as statistics" default:"true"`
+	IncludeUsers        bool `json:"include_users" group:"Discovery" description:"Record table owners from Amundsen" default:"true"`
+	IncludeDashboards   bool `json:"include_dashboards" group:"Discovery" description:"Import dashboards and their charts" default:"true"`
+	IncludeTags         bool `json:"include_tags" group:"Discovery" description:"Copy Amundsen tags onto assets" default:"true"`
+	IncludeDescriptions bool `json:"include_descriptions" group:"Discovery" description:"Copy Amundsen descriptions onto assets and columns" default:"true"`
+	IncludeUsage        bool `json:"include_usage" group:"Discovery" description:"Import Amundsen read counts as statistics" default:"true"`
 
 	// Performance
-	QueryTimeoutSeconds int `json:"query_timeout_seconds" description:"Per-query timeout" default:"120" validate:"min=1"`
-	PageSize            int `json:"page_size" description:"Records per query. Every query is paged, so a large graph does not have to fit in memory" default:"1000" validate:"min=1,max=100000"`
+	QueryTimeoutSeconds int `json:"query_timeout_seconds" group:"Advanced" description:"Per-query timeout" default:"120" validate:"min=1"`
+	PageSize            int `json:"page_size" group:"Advanced" description:"Records per query. Every query is paged, so a large graph does not have to fit in memory" default:"1000" validate:"min=1,max=100000"`
 }
 
 // Example configuration for the plugin

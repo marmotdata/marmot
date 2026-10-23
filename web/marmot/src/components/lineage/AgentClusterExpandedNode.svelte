@@ -4,7 +4,9 @@
 	import IconifyIcon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data } = $props<{
+	let {
+		data
+	}: {
 		data: {
 			provider: string;
 			assetType: string;
@@ -14,7 +16,7 @@
 			clusterKey: string;
 			onCollapse: (clusterKey: string) => void;
 		};
-	}>();
+	} = $props();
 
 	function handleCollapse(e: MouseEvent) {
 		e.stopPropagation();

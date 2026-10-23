@@ -36,7 +36,7 @@ func TestValidate_AppliesDefaults(t *testing.T) {
 
 	assert.Equal(t, 9042, s.config.Port)
 	assert.Equal(t, 10, s.config.ConnectTimeoutSeconds)
-	assert.False(t, s.config.SSL)
+	assert.True(t, s.config.SSL)
 	assert.False(t, s.config.SSLSkipVerify)
 	assert.True(t, s.config.ExcludeSystemKeyspaces)
 	assert.True(t, s.config.IncludeColumns)
@@ -97,6 +97,7 @@ func TestValidate_CACertWithoutSSLFails(t *testing.T) {
 	_, err := s.Validate(pluginsdk.RawConfig{
 		"hosts":       []interface{}{"cassandra-1"},
 		"ssl_ca_cert": "/etc/ssl/ca.pem",
+		"ssl":         false,
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "ssl")

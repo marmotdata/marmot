@@ -1,0 +1,70 @@
+suite: test plugin serving
+templates:
+  - serve-service.yaml
+  - deployment.yaml
+  - configmap.yaml
+tests:
+  - it: should expose nothing for serving plugins by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: serve-service.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: serve
+            containerPort: 8443
+            protocol: TCP
+        template: deployment.yaml
+
+  - it: should open the serve port and its own Service when enabled
+    set:
+      config.query.serve.enabled: true
+      serveService.type: LoadBalancer
+      serveService.annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+        template: serve-service.yaml
+      - equal:
+          path: metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"]
+          value: nlb
+        template: serve-service.yaml
+      - equal:
+          path: spec.ports[0].targetPort
+          value: serve
+        template: serve-service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: serve
+            containerPort: 8443
+            protocol: TCP
+        template: deployment.yaml
+
+  - it: should give each replica its pod IP so the others can forward queries
+    set:
+      config.query.serve.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_QUERY_SERVE_REPLICA_ADDRESS
+            value: "$(POD_IP)"
+        template: deployment.yaml
+
+  - it: should take the container port from the listen address
+    set:
+      config.query.serve.enabled: true
+      config.query.serve.listen_address: ":9443"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: serve
+            containerPort: 9443
+            protocol: TCP
+        template: deployment.yaml
+

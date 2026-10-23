@@ -27,7 +27,7 @@ func TestCreatedBy_NilForAnonymousUser(t *testing.T) {
 }
 
 func TestCreatedBy_NilForOperatorUser(t *testing.T) {
-	got := CreatedBy(ctxWithUser(GetOperatorUser()))
+	got := CreatedBy(ctxWithUser(&user.User{ID: "00000000-0000-0000-0000-000000000001", Username: "operator"}))
 
 	assert.Nil(t, got)
 }

@@ -39,12 +39,16 @@ class TestSchedule(unittest.TestCase):
                 cron_expression = '',
                 enabled = True,
                 id = '',
+                ingest_on_query = True,
                 last_run_at = '',
                 last_run_status = '',
                 managed_by = '',
                 name = '',
                 next_run_at = '',
                 plugin_id = '',
+                queryable = True,
+                served_by_id = '',
+                served_by_type = '',
                 updated_at = ''
             )
         else:

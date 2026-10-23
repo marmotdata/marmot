@@ -22,6 +22,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/pipelines"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/plugins"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/products"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/query"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/roles"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/runs"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/search"
@@ -89,6 +90,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot
 	cli.Pipelines = pipelines.New(transport, formats)
 	cli.Plugins = plugins.New(transport, formats)
 	cli.Products = products.New(transport, formats)
+	cli.Query = query.New(transport, formats)
 	cli.Roles = roles.New(transport, formats)
 	cli.Runs = runs.New(transport, formats)
 	cli.Search = search.New(transport, formats)
@@ -184,6 +186,8 @@ type Marmot struct {
 
 	Products products.ClientService
 
+	Query query.ClientService
+
 	Roles roles.ClientService
 
 	Runs runs.ClientService
@@ -220,6 +224,7 @@ func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.Pipelines.SetTransport(transport)
 	c.Plugins.SetTransport(transport)
 	c.Products.SetTransport(transport)
+	c.Query.SetTransport(transport)
 	c.Roles.SetTransport(transport)
 	c.Runs.SetTransport(transport)
 	c.Search.SetTransport(transport)

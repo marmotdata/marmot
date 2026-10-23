@@ -1,9 +1,14 @@
 import React from "react";
+import {
+  CONSOLE_URL,
+  useCloudSignedIn,
+} from "@site/src/hooks/useCloudSignedIn";
 import ContextDiagram from "./ContextDiagram";
 import ProofRow from "./ProofRow";
 import SupportedBy from "./SupportedBy";
 
 export default function Hero(): JSX.Element {
+  const signedIn = useCloudSignedIn();
   return (
     <header className="relative pt-20 pb-8 sm:pt-24 sm:pb-10 lg:pt-24 lg:pb-12 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 hero-glow overflow-hidden">
       <div className="relative max-w-6xl mx-auto text-center">
@@ -55,10 +60,12 @@ export default function Hero(): JSX.Element {
           className="mt-10 flex flex-row items-center justify-center gap-3"
         >
           <a
-            href="https://cloud.marmotdata.io/signup"
+            href={
+              signedIn ? CONSOLE_URL : "https://cloud.marmotdata.io/signup"
+            }
             className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
-            Start free
+            {signedIn ? "Open console" : "Start free"}
             <svg
               className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"

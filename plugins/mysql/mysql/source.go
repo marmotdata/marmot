@@ -46,11 +46,11 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Database string `json:"database" description:"Database name to connect to" validate:"required"`
-	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
+	TLS      string `json:"tls" group:"Authentication" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts    bool `json:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeRowCounts    bool `json:"include_row_counts" group:"Advanced" description:"Whether to include approximate row counts" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
 }
 
 // Example configuration for the plugin

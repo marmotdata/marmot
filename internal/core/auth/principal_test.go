@@ -149,20 +149,41 @@ func TestOperatorPrincipal(t *testing.T) {
 	if got, want := p.AuditSubject(), "operator"; got != want {
 		t.Errorf("AuditSubject() = %q, want %q", got, want)
 	}
-	if got, want := p.Roles(), []string{"admin"}; !slices.Equal(got, want) {
-		t.Errorf("Roles() = %v, want %v", got, want)
+	if got := p.Roles(); len(got) != 0 {
+		t.Errorf("Roles() = %v, want none", got)
 	}
 	if p.AsUser() != nil {
 		t.Errorf("AsUser() should be nil for operator")
 	}
-	if got := p.Permissions(); len(got) != 0 {
-		t.Errorf("Permissions() = %v, want empty", got)
+	if p.IsAdmin() {
+		t.Errorf("IsAdmin() = true, want false")
 	}
-	if !p.IsAdmin() {
-		t.Errorf("IsAdmin() = false, want true")
+	if got, want := p.Permissions(), []string{"ingestion:manage", "assets:manage", "ingestion:serve"}; !slices.Equal(got, want) {
+		t.Errorf("Permissions() = %v, want %v", got, want)
 	}
-	if !p.HasPermission("assets", "delete") {
-		t.Errorf("HasPermission bypass failed")
+}
+
+// The operator ServiceAccount token is held by every ingestion Job pod, so it must reach the ingest endpoints and nothing else.
+func TestOperatorPrincipal_LeastPrivilege(t *testing.T) {
+	p := NewOperatorPrincipal()
+
+	for _, allowed := range [][2]string{{"ingestion", "manage"}, {"assets", "manage"}, {"ingestion", "serve"}} {
+		if !p.HasPermission(allowed[0], allowed[1]) {
+			t.Errorf("HasPermission(%s, %s) = false, want true", allowed[0], allowed[1])
+		}
+	}
+	for _, denied := range [][2]string{
+		{"users", "manage"}, {"assets", "delete"}, {"assets", "query"},
+		{"access", "manage"}, {"service_accounts", "manage"},
+	} {
+		if p.HasPermission(denied[0], denied[1]) {
+			t.Errorf("HasPermission(%s, %s) = true, want false", denied[0], denied[1])
+		}
+	}
+
+	p.Permissions()[0] = "users:manage"
+	if p.HasPermission("users", "manage") {
+		t.Error("mutating Permissions() must not widen the principal")
 	}
 }
 

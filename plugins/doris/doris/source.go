@@ -48,15 +48,15 @@ type Config struct {
 	Port             int      `json:"port" description:"Doris frontend MySQL protocol port" default:"9030" validate:"omitempty,min=1,max=65535"`
 	User             string   `json:"user" description:"Username for authentication" validate:"required"`
 	Password         string   `json:"password" description:"Password for authentication" sensitive:"true"`
-	Databases        []string `json:"databases,omitempty" description:"Databases to discover (every database except exclude_databases when empty)"`
-	ExcludeDatabases []string `json:"exclude_databases,omitempty" description:"Databases to skip when databases is empty" default:"[\"information_schema\",\"mysql\",\"__internal_schema\"]"`
-	Catalog          string   `json:"catalog" description:"Doris catalog to discover" default:"internal"`
-	TLS              string   `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
+	Databases        []string `json:"databases,omitempty" group:"Discovery" description:"Databases to discover (every database except exclude_databases when empty)"`
+	ExcludeDatabases []string `json:"exclude_databases,omitempty" group:"Discovery" description:"Databases to skip when databases is empty" default:"[\"information_schema\",\"mysql\",\"__internal_schema\"]"`
+	Catalog          string   `json:"catalog" group:"Discovery" description:"Doris catalog to discover" default:"internal"`
+	TLS              string   `json:"tls" group:"Authentication" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
-	IncludeColumns           bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeViews             bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeMaterializedViews bool `json:"include_materialized_views" description:"Whether to discover async materialized views" default:"true"`
-	IncludeStatistics        bool `json:"include_statistics" description:"Whether to include row counts, data sizes and column counts" default:"true"`
+	IncludeColumns           bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeViews             bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeMaterializedViews bool `json:"include_materialized_views" group:"Discovery" description:"Whether to discover async materialized views" default:"true"`
+	IncludeStatistics        bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts, data sizes and column counts" default:"true"`
 }
 
 // Example configuration for the plugin

@@ -41,13 +41,13 @@ type Config struct {
 	ConnectionString string `json:"connection_string,omitempty" description:"Azure Storage connection string" sensitive:"true"`
 	AccountName      string `json:"account_name,omitempty" description:"Azure Storage account name"`
 	AccountKey       string `json:"account_key,omitempty" description:"Azure Storage account key" sensitive:"true"`
-	TenantID         string `json:"tenant_id,omitempty" label:"Tenant ID" description:"Entra tenant of the identity the Marmot identity token is exchanged for. Set with client_id and account_name to federate: no key is needed; grant the identity Storage Blob Data Reader on the account"`
-	ClientID         string `json:"client_id,omitempty" label:"Client ID" description:"Application (client) ID of the app registration or user-assigned managed identity whose federated credential trusts the Marmot issuer"`
-	Endpoint         string `json:"endpoint,omitempty" description:"Custom endpoint URL (for Azurite or other emulators)"`
+	TenantID         string `json:"tenant_id,omitempty" group:"Authentication" label:"Tenant ID" description:"Entra tenant of the identity the Marmot identity token is exchanged for. Set with client_id and account_name to federate: no key is needed; grant the identity Storage Blob Data Reader on the account"`
+	ClientID         string `json:"client_id,omitempty" group:"Authentication" label:"Client ID" description:"Application (client) ID of the app registration or user-assigned managed identity whose federated credential trusts the Marmot issuer"`
+	Endpoint         string `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL (for Azurite or other emulators)"`
 
 	// Discovery options
-	IncludeMetadata  bool `json:"include_metadata" description:"Include container metadata" default:"true"`
-	IncludeBlobCount bool `json:"include_blob_count" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
+	IncludeMetadata  bool `json:"include_metadata" group:"Discovery" description:"Include container metadata" default:"true"`
+	IncludeBlobCount bool `json:"include_blob_count" group:"Discovery" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
 }
 
 // Example configuration for the plugin

@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package marmot.serve.v1;
+
+option go_package = "github.com/marmotdata/marmot/internal/pluginserve/proto";
+
+// Plugin is served by `marmot ingest --serve` over the connection it opened to Marmot. Only Marmot calls it, and every call carries a Query signed by Marmot.
+service Plugin {
+  rpc PlanQuery(SignedQuery) returns (PlanQueryResponse);
+  rpc ExecuteQuery(SignedQuery) returns (stream QueryChunk);
+}
+
+// Replica is served by every Marmot replica to the others, so a query that arrives at one replica reaches the replica the plugin is connected to.
+service Replica {
+  rpc PlanQuery(ForwardedQuery) returns (PlanQueryResponse);
+  rpc ExecuteQuery(ForwardedQuery) returns (stream QueryChunk);
+}
+
+enum Operation {
+  OPERATION_UNSPECIFIED = 0;
+  OPERATION_PLAN = 1;
+  OPERATION_EXECUTE = 2;
+}
+
+// Query is one instruction to a serving plugin. Marmot serialises it once and signs those bytes; the plugin verifies the signature before parsing and acts only on what was signed.
+message Query {
+  uint32 version = 1;
+  // issuer is the Marmot instance id the plugin enrolled with.
+  string issuer = 2;
+  // audience is the SPIFFE ID in the serving process's certificate.
+  string audience = 3;
+  Operation operation = 4;
+  string source = 5;
+  string statement = 6;
+  int64 max_rows = 7;
+  // actor is the audit subject of the principal running the query.
+  string actor = 8;
+  // query_id is the query's id in Marmot's query log, empty for plans.
+  string query_id = 9;
+  int64 issued_at_unix = 10;
+  int64 expires_at_unix = 11;
+  bytes nonce = 12;
+  // channel_binding is the RFC 9266 tls-exporter value of the connection the query is sent on.
+  bytes channel_binding = 13;
+}
+
+message SignedQuery {
+  bytes query = 1;
+  bytes signature = 2;
+}
+
+// ForwardedQuery travels between replicas over mutual TLS. It is not signed: the receiving replica builds and signs the Query for its own connection to the plugin.
+message ForwardedQuery {
+  Operation operation = 1;
+  string source = 2;
+  string statement = 3;
+  int64 max_rows = 4;
+  string actor = 5;
+  string query_id = 6;
+}
+
+message PlanQueryResponse {
+  bytes plan_json = 1;
+}
+
+message QueryChunk {
+  bytes chunk_json = 1;
+}

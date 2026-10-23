@@ -32,47 +32,59 @@ var (
 	ErrJobRunNotClaimable    = errors.New("job run not claimable")
 	ErrInvalidJobStatus      = errors.New("invalid job status")
 	ErrInvalidCronExpression = errors.New("invalid cron expression")
+	// ErrSourceOwned is returned when a source name is already taken by a pipeline Marmot runs or by another principal's served plugin.
+	ErrSourceOwned = errors.New("source name is owned by another pipeline")
 )
 
 type Schedule struct {
-	ID                 string                 `json:"id"`
-	Name               string                 `json:"name"`
-	PluginID           string                 `json:"plugin_id"`
-	Config             map[string]interface{} `json:"config"`
-	CronExpression     string                 `json:"cron_expression"`
-	Enabled            bool                   `json:"enabled"`
-	LastRunAt          *time.Time             `json:"last_run_at,omitempty"`
-	LastRunStatus      *string                `json:"last_run_status,omitempty"`
-	NextRunAt          *time.Time             `json:"next_run_at,omitempty"`
-	ManagedBy          *string                `json:"managed_by,omitempty"`
-	CreatedBy          *string                `json:"created_by,omitempty"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
+	ID             string                 `json:"id"`
+	Name           string                 `json:"name"`
+	PluginID       string                 `json:"plugin_id"`
+	Config         map[string]interface{} `json:"config"`
+	CronExpression string                 `json:"cron_expression"`
+	Enabled        bool                   `json:"enabled"`
+	Queryable      bool                   `json:"queryable"`
+	IngestOnQuery  bool                   `json:"ingest_on_query"`
+	LastRunAt      *time.Time             `json:"last_run_at,omitempty"`
+	LastRunStatus  *string                `json:"last_run_status,omitempty"`
+	NextRunAt      *time.Time             `json:"next_run_at,omitempty"`
+	ManagedBy      *string                `json:"managed_by,omitempty"`
+	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
+	ServedByType *string   `json:"served_by_type,omitempty"`
+	ServedByID   *string   `json:"served_by_id,omitempty"`
+	CreatedBy    *string   `json:"created_by,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 } // @name Schedule
 
+// Served reports whether a plugin running outside Marmot serves this source, in which case Marmot never runs the plugin itself.
+func (s *Schedule) Served() bool {
+	return s.ServedByID != nil
+}
+
 type JobRun struct {
-	ID                 string     `json:"id"`
-	ScheduleID         *string    `json:"schedule_id,omitempty"`
-	PluginRunID        *string    `json:"plugin_run_id,omitempty"`
-	PipelineName       string     `json:"pipeline_name"`
-	SourceName         string     `json:"source_name"`
-	RunID              string     `json:"run_id"`
-	Status             string     `json:"status"`
-	ClaimedBy          *string    `json:"claimed_by,omitempty"`
-	ClaimedAt          *time.Time `json:"claimed_at,omitempty"`
-	StartedAt          *time.Time `json:"started_at,omitempty"`
-	FinishedAt         *time.Time `json:"finished_at,omitempty"`
-	Log                *string    `json:"log,omitempty"`
-	ErrorMessage       *string    `json:"error_message,omitempty"`
-	AssetsCreated      int        `json:"assets_created"`
-	AssetsUpdated      int        `json:"assets_updated"`
-	AssetsDeleted      int        `json:"assets_deleted"`
-	LineageCreated     int        `json:"lineage_created"`
-	DocumentationAdded int        `json:"documentation_added"`
+	ID                 string                 `json:"id"`
+	ScheduleID         *string                `json:"schedule_id,omitempty"`
+	PluginRunID        *string                `json:"plugin_run_id,omitempty"`
+	PipelineName       string                 `json:"pipeline_name"`
+	SourceName         string                 `json:"source_name"`
+	RunID              string                 `json:"run_id"`
+	Status             string                 `json:"status"`
+	ClaimedBy          *string                `json:"claimed_by,omitempty"`
+	ClaimedAt          *time.Time             `json:"claimed_at,omitempty"`
+	StartedAt          *time.Time             `json:"started_at,omitempty"`
+	FinishedAt         *time.Time             `json:"finished_at,omitempty"`
+	Log                *string                `json:"log,omitempty"`
+	ErrorMessage       *string                `json:"error_message,omitempty"`
+	AssetsCreated      int                    `json:"assets_created"`
+	AssetsUpdated      int                    `json:"assets_updated"`
+	AssetsDeleted      int                    `json:"assets_deleted"`
+	LineageCreated     int                    `json:"lineage_created"`
+	DocumentationAdded int                    `json:"documentation_added"`
 	Config             map[string]interface{} `json:"config,omitempty"`
-	CreatedBy          string     `json:"created_by"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          time.Time  `json:"updated_at"`
+	CreatedBy          string                 `json:"created_by"`
+	CreatedAt          time.Time              `json:"created_at"`
+	UpdatedAt          time.Time              `json:"updated_at"`
 } // @name JobRun
 
 // ValidJobStatus checks if a job status is valid
@@ -97,7 +109,10 @@ type ScheduleRepository interface {
 	UpdateScheduleNextRun(ctx context.Context, id string, nextRunAt time.Time) error
 	UpdateScheduleLastRun(ctx context.Context, id string, lastRunAt time.Time) error
 	GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error)
+	ListQueryableSchedules(ctx context.Context, search string, limit, offset int) ([]*Schedule, int, error)
 	UpsertSchedule(ctx context.Context, schedule *Schedule) error
+	ReplaceScheduleConfig(ctx context.Context, id string, previous, config map[string]interface{}) error
+	ClaimServedSources(ctx context.Context, schedules []*Schedule) error
 
 	// Job run operations
 	CreateJobRun(ctx context.Context, run *JobRun) error
@@ -155,8 +170,8 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 	}
 
 	query := `
-		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, next_run_at, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, next_run_at, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at, updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -165,6 +180,8 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 		configJSON,
 		schedule.CronExpression,
 		schedule.Enabled,
+		schedule.Queryable,
+		schedule.IngestOnQuery,
 		schedule.NextRunAt,
 		schedule.CreatedBy,
 	).Scan(&schedule.ID, &schedule.CreatedAt, &schedule.UpdatedAt)
@@ -182,7 +199,7 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 
 func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE id = $1`
 
@@ -195,9 +212,13 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 		&configJSON,
 		&schedule.CronExpression,
 		&schedule.Enabled,
+		&schedule.Queryable,
+		&schedule.IngestOnQuery,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
 		&schedule.ManagedBy,
+		&schedule.ServedByType,
+		&schedule.ServedByID,
 
 		&schedule.CreatedBy,
 		&schedule.CreatedAt,
@@ -220,7 +241,7 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 
 func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE name = $1`
 
@@ -233,9 +254,13 @@ func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name
 		&configJSON,
 		&schedule.CronExpression,
 		&schedule.Enabled,
+		&schedule.Queryable,
+		&schedule.IngestOnQuery,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
 		&schedule.ManagedBy,
+		&schedule.ServedByType,
+		&schedule.ServedByID,
 
 		&schedule.CreatedBy,
 		&schedule.CreatedAt,
@@ -271,8 +296,8 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 
 	query := `
 		UPDATE ingestion_schedules
-		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, updated_at = NOW()
-		WHERE id = $6
+		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, queryable = $6, ingest_on_query = $7, updated_at = NOW()
+		WHERE id = $8
 		RETURNING updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -281,6 +306,8 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 		configJSON,
 		schedule.CronExpression,
 		schedule.Enabled,
+		schedule.Queryable,
+		schedule.IngestOnQuery,
 		schedule.ID,
 	).Scan(&schedule.UpdatedAt)
 
@@ -323,8 +350,8 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules WHERE enabled = $1`
 		listQuery = `
 			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
-				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
+				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
+				s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
 					FROM ingestion_job_runs jr
@@ -341,8 +368,8 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules`
 		listQuery = `
 			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
-				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
+				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
+				s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
 					FROM ingestion_job_runs jr
@@ -385,10 +412,14 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 			&configJSON,
 			&schedule.CronExpression,
 			&schedule.Enabled,
+			&schedule.Queryable,
+			&schedule.IngestOnQuery,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
 			&schedule.ManagedBy,
-	
+			&schedule.ServedByType,
+			&schedule.ServedByID,
+
 			&schedule.CreatedBy,
 			&schedule.CreatedAt,
 			&schedule.UpdatedAt,
@@ -404,6 +435,80 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 	}
 
 	return schedules, total, nil
+}
+
+// ClaimServedSources records that each schedule's ServedByType/ServedByID serves the queryable source of its name from a plugin outside Marmot. The first principal to claim a free name owns it; later claims succeed only for that owner, or for the operator on a Run it already manages. The claims are all made or none are: if any name belongs to a pipeline someone else configured, ErrSourceOwned is returned and nothing is claimed.
+func (r *SchedulePostgresRepository) ClaimServedSources(ctx context.Context, schedules []*Schedule) error {
+	return pgx.BeginFunc(ctx, r.db, func(tx pgx.Tx) error {
+		for _, schedule := range schedules {
+			if err := claimServedSource(ctx, tx, schedule); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error {
+	if schedule.ServedByType == nil || schedule.ServedByID == nil {
+		return fmt.Errorf("claiming served source: no owner")
+	}
+	configJSON, err := json.Marshal(schedule.Config)
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+
+	query := `
+		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, managed_by, served_by_type, served_by_id)
+		VALUES ($1, $2, $3, '', true, true, 'serve', $4, $5)
+		ON CONFLICT (name) DO UPDATE SET
+			plugin_id = EXCLUDED.plugin_id,
+			config = EXCLUDED.config,
+			queryable = true,
+			served_by_type = EXCLUDED.served_by_type,
+			served_by_id = EXCLUDED.served_by_id,
+			updated_at = NOW()
+		WHERE (ingestion_schedules.served_by_type = EXCLUDED.served_by_type AND ingestion_schedules.served_by_id = EXCLUDED.served_by_id)
+		   OR (ingestion_schedules.managed_by = 'operator' AND ingestion_schedules.served_by_id IS NULL AND EXCLUDED.served_by_type = 'operator')
+		RETURNING id, managed_by, created_at, updated_at`
+
+	err = tx.QueryRow(ctx, query,
+		schedule.Name,
+		schedule.PluginID,
+		configJSON,
+		*schedule.ServedByType,
+		*schedule.ServedByID,
+	).Scan(&schedule.ID, &schedule.ManagedBy, &schedule.CreatedAt, &schedule.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("%w: %s", ErrSourceOwned, schedule.Name)
+	}
+	if err != nil {
+		return fmt.Errorf("claiming served source: %w", err)
+	}
+	schedule.Queryable = true
+	return nil
+}
+
+// ReplaceScheduleConfig swaps a schedule's config only if it still equals previous, so a concurrent edit or another replica doing the same rewrite is never overwritten
+func (r *SchedulePostgresRepository) ReplaceScheduleConfig(ctx context.Context, id string, previous, config map[string]interface{}) error {
+	previousJSON, err := json.Marshal(previous)
+	if err != nil {
+		return fmt.Errorf("marshaling previous config: %w", err)
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+
+	query := `
+		UPDATE ingestion_schedules
+		SET config = $1, updated_at = NOW()
+		WHERE id = $2 AND config = $3::jsonb`
+
+	if _, err := r.db.Exec(ctx, query, configJSON, id, previousJSON); err != nil {
+		return fmt.Errorf("replacing schedule config: %w", err)
+	}
+	return nil
 }
 
 func (r *SchedulePostgresRepository) UpdateScheduleNextRun(ctx context.Context, id string, nextRunAt time.Time) error {
@@ -448,7 +553,7 @@ func (r *SchedulePostgresRepository) UpdateScheduleLastRun(ctx context.Context, 
 
 func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE enabled = true AND managed_by IS NULL AND next_run_at IS NOT NULL AND next_run_at <= NOW()
 		ORDER BY next_run_at
@@ -471,10 +576,14 @@ func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, 
 			&configJSON,
 			&schedule.CronExpression,
 			&schedule.Enabled,
+			&schedule.Queryable,
+			&schedule.IngestOnQuery,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
 			&schedule.ManagedBy,
-	
+			&schedule.ServedByType,
+			&schedule.ServedByID,
+
 			&schedule.CreatedBy,
 			&schedule.CreatedAt,
 			&schedule.UpdatedAt,
@@ -490,6 +599,66 @@ func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, 
 
 	return schedules, nil
 }
+
+// ListQueryableSchedules pages through the sources that answer data
+// queries, whether or not they also have a cron schedule. Search matches the
+// source name or plugin, case-insensitively.
+func (r *SchedulePostgresRepository) ListQueryableSchedules(ctx context.Context, search string, limit, offset int) ([]*Schedule, int, error) {
+	pattern := "%" + likeEscaper.Replace(search) + "%"
+
+	var total int
+	if err := r.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM ingestion_schedules
+		WHERE queryable = true AND (name ILIKE $1 OR plugin_id ILIKE $1)`, pattern).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count queryable schedules: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
+		FROM ingestion_schedules
+		WHERE queryable = true AND (name ILIKE $1 OR plugin_id ILIKE $1)
+		ORDER BY name
+		LIMIT $2 OFFSET $3`, pattern, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list queryable schedules: %w", err)
+	}
+	defer rows.Close()
+
+	schedules := []*Schedule{}
+	for rows.Next() {
+		schedule := &Schedule{}
+		var configJSON []byte
+		if err := rows.Scan(
+			&schedule.ID,
+			&schedule.Name,
+			&schedule.PluginID,
+			&configJSON,
+			&schedule.CronExpression,
+			&schedule.Enabled,
+			&schedule.Queryable,
+			&schedule.IngestOnQuery,
+			&schedule.LastRunAt,
+			&schedule.NextRunAt,
+			&schedule.ManagedBy,
+			&schedule.ServedByType,
+			&schedule.ServedByID,
+			&schedule.CreatedBy,
+			&schedule.CreatedAt,
+			&schedule.UpdatedAt,
+		); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan schedule: %w", err)
+		}
+		if err := json.Unmarshal(configJSON, &schedule.Config); err != nil {
+			return nil, 0, fmt.Errorf("unmarshaling config: %w", err)
+		}
+		schedules = append(schedules, schedule)
+	}
+
+	return schedules, total, rows.Err()
+}
+
+// likeEscaper makes user input literal inside an ILIKE pattern.
+var likeEscaper = strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`)
 
 // Job run operations
 
@@ -965,7 +1134,11 @@ func (r *SchedulePostgresRepository) CancelJobRun(ctx context.Context, id string
 	return nil
 }
 
+// UpsertSchedule creates or updates a schedule that an external manager, such as the Kubernetes operator, owns. It only ever updates a schedule already owned by the same manager: a pipeline someone created in Marmot, or one another manager owns, keeps its config and the call returns ErrScheduleNameExists, so a Run named after it cannot take it over.
 func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedule *Schedule) error {
+	if schedule.ManagedBy == nil || *schedule.ManagedBy == "" {
+		return fmt.Errorf("upserting schedule: no manager")
+	}
 	if schedule.CronExpression != "" {
 		nextRun, err := validateCronExpression(schedule.CronExpression)
 		if err != nil {
@@ -988,8 +1161,8 @@ func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedul
 			cron_expression = EXCLUDED.cron_expression,
 			enabled = EXCLUDED.enabled,
 			next_run_at = EXCLUDED.next_run_at,
-			managed_by = EXCLUDED.managed_by,
 			updated_at = NOW()
+		WHERE ingestion_schedules.managed_by = EXCLUDED.managed_by
 		RETURNING id, managed_by, created_at, updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -1003,6 +1176,9 @@ func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedul
 		schedule.CreatedBy,
 	).Scan(&schedule.ID, &schedule.ManagedBy, &schedule.CreatedAt, &schedule.UpdatedAt)
 
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrScheduleNameExists
+	}
 	if err != nil {
 		return fmt.Errorf("failed to upsert schedule: %w", err)
 	}

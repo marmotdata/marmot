@@ -47,18 +47,18 @@ type Config struct {
 	ProjectID             string `json:"project_id" label:"Project ID" description:"Google Cloud Project ID" validate:"required"`
 	CredentialsPath       string `json:"credentials_path,omitempty" description:"Path to service account credentials JSON file"`
 	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content" sensitive:"true"`
-	UseDefaultCredentials bool   `json:"use_default_credentials" description:"Use default Google Cloud credentials" default:"false"`
+	UseDefaultCredentials bool   `json:"use_default_credentials" group:"Authentication" description:"Use default Google Cloud credentials" default:"false"`
 	// Federation: the pipeline presents a Marmot identity token and no
 	// key exists anywhere. Requires Marmot Cloud or Marmot Enterprise.
-	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; grant the pipeline's subject roles/bigquery.metadataViewer on the project"`
-	ServiceAccount           string `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	WorkloadIdentityProvider string `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; grant the pipeline's subject roles/bigquery.metadataViewer on the project"`
+	ServiceAccount           string `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
 
-	IncludeDatasets       bool `json:"include_datasets" description:"Whether to discover datasets" default:"true"`
-	IncludeTableStats     bool `json:"include_table_stats" description:"Whether to include table statistics (row count, size)" default:"true"`
-	IncludeViews          bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeExternalTables bool `json:"include_external_tables" description:"Whether to discover external tables" default:"true"`
-	ExcludeSystemDatasets bool `json:"exclude_system_datasets" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
-	MaxConcurrentRequests int  `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
+	IncludeDatasets       bool `json:"include_datasets" group:"Discovery" description:"Whether to discover datasets" default:"true"`
+	IncludeTableStats     bool `json:"include_table_stats" group:"Advanced" description:"Whether to include table statistics (row count, size)" default:"true"`
+	IncludeViews          bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeExternalTables bool `json:"include_external_tables" group:"Discovery" description:"Whether to discover external tables" default:"true"`
+	ExcludeSystemDatasets bool `json:"exclude_system_datasets" group:"Discovery" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
+	MaxConcurrentRequests int  `json:"max_concurrent_requests" group:"Advanced" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
 }
 
 // Example configuration for the plugin

@@ -12,7 +12,6 @@
 	import ProductBlade from '$components/product/ProductBlade.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from '$components/ui/Button.svelte';
 	import Checkbox from '$components/ui/Checkbox.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import GettingStarted from '$components/ui/GettingStarted.svelte';
@@ -409,13 +408,32 @@
 </svelte:head>
 
 <div class="h-full flex flex-col">
+	<div class="w-full px-4 pt-6 sm:px-6 lg:px-8">
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+			<div>
+				<h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+					{m.discover_heading()}
+				</h1>
+				<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{m.discover_subheading()}</p>
+			</div>
+			{#if canManageAssets}
+				<a
+					href={resolve('/assets/new')}
+					class="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500"
+				>
+					<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+					{m.discover_new_asset_button()}
+				</a>
+			{/if}
+		</div>
+	</div>
 	<!-- Main Content -->
 	<div class="flex-1 overflow-hidden">
-		<div class="max-w-[1600px] mx-auto px-4 py-4 h-full flex gap-4">
+		<div class="w-full px-4 py-5 sm:px-6 lg:px-8 h-full flex gap-5">
 			<!-- Filters Sidebar -->
 			<div class="{filtersExpanded ? 'w-56' : 'w-10'} flex-shrink-0 transition-all duration-300">
 				<div
-					class="sticky top-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+					class="sticky top-4 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
 				>
 					<button
 						onclick={() => (filtersExpanded = !filtersExpanded)}
@@ -426,7 +444,7 @@
 					>
 						{#if filtersExpanded}
 							<h2
-								class="font-semibold text-xs text-gray-900 dark:text-gray-100 uppercase tracking-wider"
+								class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 							>
 								{m.discover_filters_heading()}
 							</h2>
@@ -451,7 +469,7 @@
 							<!-- Kinds -->
 							<div class="mb-4">
 								<h3
-									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+									class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 								>
 									{m.discover_kind_heading()}
 								</h3>
@@ -473,8 +491,8 @@
 												>{getKindLabel(kind)}</span
 											>
 										</div>
-										<span class="text-xs text-gray-500 dark:text-gray-400"
-											>({$facets.types[kind] || 0})</span
+										<span class="text-xs tabular-nums text-gray-400"
+											>{$facets.types[kind] || 0}</span
 										>
 									</label>
 								{/each}
@@ -485,7 +503,7 @@
 								{#if $facets.asset_types.length > 0}
 									<div class="mb-4">
 										<h3
-											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 										>
 											{m.common_type()}
 										</h3>
@@ -506,7 +524,7 @@
 													/>
 													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 												</div>
-												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+												<span class="text-xs tabular-nums text-gray-400">{count}</span>
 											</label>
 										{/each}
 									</div>
@@ -515,7 +533,7 @@
 								{#if $facets.providers.length > 0}
 									<div class="mb-4">
 										<h3
-											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 										>
 											{m.discover_providers_heading()}
 										</h3>
@@ -536,7 +554,7 @@
 													/>
 													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 												</div>
-												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+												<span class="text-xs tabular-nums text-gray-400">{count}</span>
 											</label>
 										{/each}
 									</div>
@@ -545,7 +563,7 @@
 								{#if $facets.tags.length > 0}
 									<div>
 										<h3
-											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 										>
 											{m.common_tags()}
 										</h3>
@@ -571,8 +589,7 @@
 														{value.length > 100 ? value.slice(0, 100) + '...' : value}
 													</span>
 												</div>
-												<span class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
-													>({count})</span
+												<span class="flex-shrink-0 text-xs tabular-nums text-gray-400">{count}</span
 												>
 											</label>
 										{/each}
@@ -588,25 +605,6 @@
 			<div class="flex-1 flex flex-col min-h-0">
 				<!-- Header with Filters -->
 				<div class="mb-4">
-					<div class="flex items-center justify-between mb-3">
-						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
-							{m.discover_heading()}
-						</h1>
-						<div class="flex items-center gap-3">
-							{#if canManageAssets}
-								<Button
-									href="/assets/new"
-									icon="material-symbols:add"
-									text={m.discover_new_asset_button()}
-									variant="filled"
-								/>
-							{/if}
-							<div class="text-xs text-gray-500 dark:text-gray-400">
-								{m.discover_result_count({ count: $totalResults })}
-							</div>
-						</div>
-					</div>
-
 					<!-- Query Builder (Collapsible) -->
 					<div class="mb-3">
 						<QueryBuilder
@@ -618,12 +616,10 @@
 					</div>
 
 					{#if hasActiveFilters}
-						<div
-							class="bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 border border-earthy-terracotta-200 dark:border-earthy-terracotta-800 rounded-lg p-2"
-						>
-							<div class="flex items-center justify-between mb-1.5">
+						<div>
+							<div class="mb-1.5 flex items-center justify-between">
 								<h2
-									class="text-xs font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-200 uppercase tracking-wider"
+									class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
 								>
 									{m.discover_active_filters_heading()}
 								</h2>
@@ -637,15 +633,15 @@
 							<div class="flex flex-wrap gap-1.5">
 								{#each selectedTypes as type (type)}
 									<span
-										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
+										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
 									>
-										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+										<span class="text-gray-500 dark:text-gray-400"
 											>{m.discover_filter_type_label()}</span
 										>
 										{type}
 										<button
 											onclick={() => removeFilter('types', type)}
-											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
+											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
 											aria-label={m.discover_remove_filter_aria({ value: type })}
 										>
 											<svg
@@ -667,15 +663,15 @@
 
 								{#each selectedProviders as provider (provider)}
 									<span
-										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
+										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
 									>
-										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+										<span class="text-gray-500 dark:text-gray-400"
 											>{m.discover_filter_provider_label()}</span
 										>
 										{provider}
 										<button
 											onclick={() => removeFilter('providers', provider)}
-											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
+											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
 											aria-label={m.discover_remove_filter_aria({ value: provider })}
 										>
 											<svg
@@ -697,15 +693,15 @@
 
 								{#each selectedTags as tag (tag)}
 									<span
-										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
+										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
 									>
-										<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+										<span class="text-gray-500 dark:text-gray-400"
 											>{m.discover_filter_tag_label()}</span
 										>
 										{tag}
 										<button
 											onclick={() => removeFilter('tags', tag)}
-											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
+											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
 											aria-label={m.discover_remove_filter_aria({ value: tag })}
 										>
 											<svg
@@ -763,8 +759,8 @@
 					{/if}
 				{:else}
 					<!-- Pagination Header -->
-					<div class="flex justify-between items-center mb-3">
-						<p class="text-xs text-gray-600 dark:text-gray-400">
+					<div class="mb-3 flex items-center justify-between">
+						<p class="text-sm text-gray-500 dark:text-gray-400">
 							{#if $totalResults > 0}
 								{m.discover_pagination_range({
 									from: (currentPage - 1) * itemsPerPage + 1,
@@ -777,14 +773,14 @@
 							<button
 								onclick={() => handlePageChange(currentPage - 1)}
 								disabled={currentPage === 1}
-								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+								class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
 							>
 								{m.common_previous()}
 							</button>
 							<button
 								onclick={() => handlePageChange(currentPage + 1)}
 								disabled={currentPage * itemsPerPage >= $totalResults}
-								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+								class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
 							>
 								{m.common_next()}
 							</button>
@@ -796,7 +792,7 @@
 						{#if $isLoading}
 							{#each Array(itemsPerPage) as _, i (i)}
 								<div
-									class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 animate-pulse shadow-sm"
+									class="animate-pulse rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
 								>
 									<div class="flex justify-between items-start mb-2">
 										<div class="space-y-1.5">
@@ -838,7 +834,7 @@
 									<div
 										role="button"
 										tabindex="0"
-										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
+										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
 										onclick={() => handleAssetClick(result.id)}
 										onkeydown={(e) => e.key === 'Enter' && handleAssetClick(result.id)}
 									>
@@ -923,7 +919,7 @@
 									<div
 										role="button"
 										tabindex="0"
-										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
+										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
 										onclick={() => handleDataProductClick(result.id)}
 										onkeydown={(e) => e.key === 'Enter' && handleDataProductClick(result.id)}
 									>
@@ -1016,7 +1012,7 @@
 									<div
 										role="button"
 										tabindex="0"
-										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
+										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
 										onclick={() => navigateToResult(result)}
 										onkeydown={(e) => e.key === 'Enter' && navigateToResult(result)}
 									>

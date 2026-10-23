@@ -46,13 +46,13 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" default:"admin"`
 	Password string `json:"password" description:"Password for authentication (QuestDB ships with quest)" sensitive:"true"`
 	Database string `json:"database" description:"Database name, QuestDB has only one" default:"qdb"`
-	SSLMode  string `json:"ssl_mode" label:"SSL Mode" description:"SSL mode (disable, require)" default:"disable" validate:"omitempty,oneof=disable require"`
+	SSLMode  string `json:"ssl_mode" group:"Authentication" label:"SSL Mode" description:"SSL mode (disable, require)" default:"disable" validate:"omitempty,oneof=disable require"`
 
-	IncludeColumns           bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeViews             bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeMaterializedViews bool `json:"include_materialized_views" description:"Whether to discover materialized views" default:"true"`
-	IncludeStatistics        bool `json:"include_statistics" description:"Whether to include row counts, column counts and sizes" default:"true"`
-	ExcludeSystemTables      bool `json:"exclude_system_tables" description:"Whether to exclude QuestDB internal tables (sys.*, _*, telemetry)" default:"true"`
+	IncludeColumns           bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeViews             bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeMaterializedViews bool `json:"include_materialized_views" group:"Discovery" description:"Whether to discover materialized views" default:"true"`
+	IncludeStatistics        bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts, column counts and sizes" default:"true"`
+	ExcludeSystemTables      bool `json:"exclude_system_tables" group:"Discovery" description:"Whether to exclude QuestDB internal tables (sys.*, _*, telemetry)" default:"true"`
 }
 
 // Example configuration for the plugin
