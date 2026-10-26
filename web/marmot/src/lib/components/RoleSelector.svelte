@@ -1,16 +1,21 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role } from '$lib/roles/types';
 	import { m } from '$lib/paraglide/messages';
+	import { BTN_SECONDARY } from '$lib/ui/classes';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
 
+	// Picks roles for a member or service account. An instance has dozens of roles and a principal holds a few, so the few are shown as chips and the rest are reached through a search, rather than a checkbox per role.
 	interface Props {
 		selectedIds: string[];
 		onChange: (ids: string[]) => void;
 		roles?: Role[];
 		placeholder?: string;
 		emptyMessage?: string;
+		/** Kept for callers that still pass it; the picker no longer pages. */
 		pageSize?: number;
 	}
 
@@ -19,43 +24,32 @@
 		onChange,
 		roles: providedRoles,
 		placeholder = m.ui_roleselector_search_placeholder(),
-		emptyMessage = m.ui_roleselector_empty(),
-		pageSize = 6
+		emptyMessage = m.ui_roleselector_empty()
 	}: Props = $props();
 
 	let internalRoles = $state<Role[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+	let open = $state(false);
 	let query = $state('');
-	let page = $state(1);
+	let highlighted = $state(0);
+	let root: HTMLDivElement | undefined = $state();
+	let input: HTMLInputElement | undefined = $state();
+	const listId = $props.id();
 
 	let allRoles = $derived(providedRoles ?? internalRoles);
-
-	let filtered = $derived.by(() => {
+	let selected = $derived(
+		selectedIds.map((id) => allRoles.find((r) => r.id === id)).filter((r): r is Role => !!r)
+	);
+	let choices = $derived.by(() => {
 		const q = query.trim().toLowerCase();
-		if (!q) return allRoles;
-		return allRoles.filter(
-			(r) => r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
-		);
+		return allRoles
+			.filter((r) => !selectedIds.includes(r.id))
+			.filter(
+				(r) =>
+					!q || r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
+			);
 	});
-
-	let totalPages = $derived(Math.max(1, Math.ceil(filtered.length / pageSize)));
-
-	// Clamp page whenever filtered length or pageSize changes
-	$effect(() => {
-		if (page > totalPages) page = totalPages;
-	});
-
-	// Reset to page 1 when the search query changes
-	$effect(() => {
-		const _q = query;
-		page = 1;
-	});
-
-	let visible = $derived(filtered.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize));
-
-	let showingFrom = $derived(filtered.length === 0 ? 0 : (page - 1) * pageSize + 1);
-	let showingTo = $derived(Math.min(page * pageSize, filtered.length));
 
 	onMount(async () => {
 		if (providedRoles) return;
@@ -69,178 +63,144 @@
 		}
 	});
 
-	function toggle(id: string) {
-		const next = selectedIds.includes(id)
-			? selectedIds.filter((r) => r !== id)
-			: [...selectedIds, id];
-		onChange(next);
+	async function openPicker() {
+		open = true;
+		query = '';
+		highlighted = 0;
+		await tick();
+		input?.focus();
 	}
 
-	function clearSelection() {
-		onChange([]);
+	function add(role: Role) {
+		onChange([...selectedIds, role.id]);
+		query = '';
+		highlighted = 0;
+		input?.focus();
 	}
 
-	function prev() {
-		if (page > 1) page -= 1;
+	function remove(id: string) {
+		onChange(selectedIds.filter((r) => r !== id));
 	}
-	function next() {
-		if (page < totalPages) page += 1;
+
+	function onKeydown(e: KeyboardEvent) {
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			highlighted = Math.min(highlighted + 1, choices.length - 1);
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			highlighted = Math.max(highlighted - 1, 0);
+		} else if (e.key === 'Enter') {
+			e.preventDefault();
+			if (choices[highlighted]) add(choices[highlighted]);
+		} else if (e.key === 'Escape') {
+			// The picker closes first; the blade around it only on a second Escape
+			e.stopPropagation();
+			open = false;
+		}
+	}
+
+	function onWindowClick(e: MouseEvent) {
+		if (open && root && !root.contains(e.target as Node)) open = false;
 	}
 </script>
 
-<div class="space-y-3">
-	<!-- Search bar -->
-	<div class="relative">
-		<IconifyIcon
-			icon="material-symbols:search"
-			class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
-		/>
-		<input
-			type="text"
-			bind:value={query}
-			{placeholder}
-			class="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
-		/>
-		{#if query}
+<svelte:window onclick={onWindowClick} />
+
+{#if loading}
+	<Skeleton class="h-9" />
+{:else if error}
+	<Alert tone="error">{error}</Alert>
+{:else}
+	<div class="relative" bind:this={root}>
+		<div class="flex flex-wrap items-center gap-1.5">
+			{#each selected as role (role.id)}
+				<span
+					class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white py-0.5 pl-2 pr-1 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+					title={role.description}
+				>
+					{#if role.is_system}
+						<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3 text-gray-400" />
+					{/if}
+					{role.name}
+					<button
+						type="button"
+						onclick={() => remove(role.id)}
+						class="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+						aria-label={m.ui_roleselector_remove({ role: role.name })}
+					>
+						<IconifyIcon icon="material-symbols:close" class="h-3.5 w-3.5" />
+					</button>
+				</span>
+			{:else}
+				<span class="text-sm text-gray-500 dark:text-gray-400"
+					>{m.ui_roleselector_none_selected()}</span
+				>
+			{/each}
 			<button
 				type="button"
-				onclick={() => (query = '')}
-				class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-				aria-label={m.ui_roleselector_clear_search_aria()}
+				class="{BTN_SECONDARY} px-2 py-1 text-xs"
+				aria-haspopup="listbox"
+				aria-expanded={open}
+				onclick={openPicker}
 			>
-				<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+				<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
+				{m.ui_roleselector_add()}
 			</button>
-		{/if}
-	</div>
-
-	<!-- Selection summary -->
-	<div class="flex items-center justify-between text-xs">
-		<span class="text-gray-500 dark:text-gray-400">
-			{#if filtered.length === 0}
-				{m.ui_roleselector_no_results()}
-			{:else if query}
-				{m.ui_roleselector_showing_matched({
-					from: showingFrom,
-					to: showingTo,
-					count: filtered.length
-				})}
-			{:else}
-				{m.ui_roleselector_showing({ from: showingFrom, to: showingTo, count: filtered.length })}
-			{/if}
-		</span>
-		<div class="flex items-center gap-3">
-			<span class="text-gray-500 dark:text-gray-400">
-				{m.ui_roleselector_selected_count({ count: selectedIds.length })}
-			</span>
-			{#if selectedIds.length > 0}
-				<button
-					type="button"
-					class="text-xs text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline"
-					onclick={clearSelection}
-				>
-					{m.common_clear()}
-				</button>
-			{/if}
 		</div>
-	</div>
 
-	<!-- List -->
-	<div
-		class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800/50"
-	>
-		{#if loading}
-			<div class="flex justify-center p-8">
-				<div
-					class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
-		{:else if error}
-			<div class="p-4 text-sm text-red-600 dark:text-red-400">{error}</div>
-		{:else if filtered.length === 0}
-			<div class="p-8 text-sm text-gray-500 dark:text-gray-400 text-center">
-				{query ? m.ui_roleselector_no_match({ query }) : emptyMessage}
-			</div>
-		{:else}
-			<ul class="divide-y divide-gray-100 dark:divide-gray-700/60">
-				{#each visible as role (role.id)}
-					{@const isSelected = selectedIds.includes(role.id)}
-					<li>
-						<label
-							class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors
-								{isSelected
-								? 'bg-earthy-terracotta-50/60 dark:bg-earthy-terracotta-900/15 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/25'
-								: 'hover:bg-earthy-brown-50 dark:hover:bg-gray-800'}"
-						>
-							<input
-								type="checkbox"
-								checked={isSelected}
-								onchange={() => toggle(role.id)}
-								class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 flex-shrink-0"
-							/>
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 flex-wrap">
-									<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-										{role.name}
-									</span>
-									{#if role.is_system}
-										<span
-											class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
-										>
-											<IconifyIcon icon="material-symbols:lock" class="h-2.5 w-2.5" />
-											{m.ui_role_system_badge()}
-										</span>
-									{/if}
-								</div>
-								{#if role.description}
-									<p
-										class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate"
-										title={role.description}
-									>
-										{role.description}
-									</p>
-								{/if}
-							</div>
-							{#if isSelected}
-								<IconifyIcon
-									icon="material-symbols:check-circle"
-									class="h-4 w-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400 flex-shrink-0"
-								/>
-							{/if}
-						</label>
-					</li>
-				{/each}
-			</ul>
-
-			<!-- Pagination footer -->
-			{#if totalPages > 1}
-				<div
-					class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40"
-				>
-					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{m.ui_roleselector_page_of({ page, total: totalPages })}
-					</span>
-					<div class="flex items-center gap-1">
-						<button
-							type="button"
-							onclick={prev}
-							disabled={page <= 1}
-							class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-							aria-label={m.ui_roleselector_prev_page_aria()}
-						>
-							<IconifyIcon icon="material-symbols:chevron-left" class="h-4 w-4" />
-						</button>
-						<button
-							type="button"
-							onclick={next}
-							disabled={page >= totalPages}
-							class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-							aria-label={m.ui_roleselector_next_page_aria()}
-						>
-							<IconifyIcon icon="material-symbols:chevron-right" class="h-4 w-4" />
-						</button>
-					</div>
+		{#if open}
+			<div
+				class="absolute left-0 z-30 mt-2 w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+			>
+				<div class="border-b border-gray-100 p-2 dark:border-gray-700/60">
+					<input
+						bind:this={input}
+						bind:value={query}
+						oninput={() => (highlighted = 0)}
+						onkeydown={onKeydown}
+						type="search"
+						{placeholder}
+						aria-label={placeholder}
+						aria-controls={listId}
+						class="w-full rounded-md border-0 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:bg-gray-900 dark:text-gray-100"
+					/>
 				</div>
-			{/if}
+				<ul id={listId} class="max-h-72 overflow-y-auto py-1" role="listbox">
+					{#each choices as role, i (role.id)}
+						<li role="option" aria-selected={i === highlighted}>
+							<button
+								type="button"
+								onclick={() => add(role)}
+								onmouseenter={() => (highlighted = i)}
+								class="block w-full px-3 py-2 text-left {i === highlighted
+									? 'bg-gray-100 dark:bg-gray-700/60'
+									: ''}"
+							>
+								<span
+									class="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100"
+								>
+									{role.name}
+									{#if role.is_system}
+										<IconifyIcon
+											icon="material-symbols:lock-outline"
+											class="h-3 w-3 text-gray-400"
+										/>
+									{/if}
+								</span>
+								{#if role.description}
+									<span class="block truncate text-xs text-gray-500 dark:text-gray-400"
+										>{role.description}</span
+									>
+								{/if}
+							</button>
+						</li>
+					{:else}
+						<li class="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+							{query.trim() ? m.ui_roleselector_no_match({ query }) : emptyMessage}
+						</li>
+					{/each}
+				</ul>
+			</div>
 		{/if}
 	</div>
-</div>
+{/if}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 var (
@@ -19,6 +20,10 @@ type Service interface {
 	Delete(ctx context.Context, id string) error
 	ReplacePermissions(ctx context.Context, roleID string, permIDs []string) error
 	ListPermissions(ctx context.Context) ([]Permission, error)
+	// ResolvePermissionKeys turns resource_type:action keys into permission ids.
+	ResolvePermissionKeys(ctx context.Context, keys []string) ([]string, error)
+	// ValidateDocument checks a role document without saving it.
+	ValidateDocument(ctx context.Context, input CreateInput, existingID string) ([]DocumentProblem, error)
 }
 
 type service struct {
@@ -30,7 +35,11 @@ func NewService(store Store) Service {
 }
 
 func (s *service) List(ctx context.Context) ([]*Role, error) {
-	return s.store.List(ctx, false)
+	roles, err := s.store.List(ctx, false)
+	for _, r := range roles {
+		withPermissionKeys(r)
+	}
+	return roles, err
 }
 
 func (s *service) Get(ctx context.Context, id string) (*Role, error) {
@@ -41,18 +50,33 @@ func (s *service) Get(ctx context.Context, id string) (*Role, error) {
 		}
 		return nil, fmt.Errorf("getting role: %w", err)
 	}
-	return r, nil
+	// A deleted role is gone as far as callers are concerned, though its row is kept for the assignments that referenced it.
+	if r.DeletedAt != nil {
+		return nil, ErrNotFound
+	}
+	return withPermissionKeys(r), nil
 }
 
 func (s *service) Create(ctx context.Context, input CreateInput) (*Role, error) {
 	if input.Name == "" {
 		return nil, fmt.Errorf("name is required")
 	}
+	if len(input.PermissionKeys) > 0 {
+		ids, err := s.ResolvePermissionKeys(ctx, input.PermissionKeys)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			if !slices.Contains(input.PermIDs, id) {
+				input.PermIDs = append(input.PermIDs, id)
+			}
+		}
+	}
 	r, err := s.store.Create(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("creating role: %w", err)
 	}
-	return r, nil
+	return withPermissionKeys(r), nil
 }
 
 func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Role, error) {
@@ -69,7 +93,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Ro
 	if err != nil {
 		return nil, fmt.Errorf("updating role: %w", err)
 	}
-	return updated, nil
+	return withPermissionKeys(updated), nil
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {

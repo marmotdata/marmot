@@ -69,6 +69,12 @@
 			label: m.notifpref_job_complete_label(),
 			description: m.notifpref_job_complete_description(),
 			icon: 'material-symbols:check-circle-outline'
+		},
+		{
+			type: 'access_expiry',
+			label: m.notifpref_access_expiry_label(),
+			description: m.notifpref_access_expiry_description(),
+			icon: 'material-symbols:timer-outline'
 		}
 	];
 

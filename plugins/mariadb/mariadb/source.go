@@ -58,14 +58,14 @@ type Config struct {
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Database string `json:"database" description:"Database to discover" validate:"required"`
-	TLS      string `json:"tls" label:"TLS" description:"TLS mode (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
+	TLS      string `json:"tls" group:"Authentication" label:"TLS" description:"TLS mode (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table and view schemas" default:"true"`
-	IncludeViews        bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeSequences    bool `json:"include_sequences" description:"Whether to discover sequences" default:"true"`
-	IncludeRowCounts    bool `json:"include_row_counts" description:"Whether to include approximate row counts in table metadata" default:"true"`
-	IncludeStatistics   bool `json:"include_statistics" description:"Whether to emit row count, size and column count statistics" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table and view schemas" default:"true"`
+	IncludeViews        bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeSequences    bool `json:"include_sequences" group:"Discovery" description:"Whether to discover sequences" default:"true"`
+	IncludeRowCounts    bool `json:"include_row_counts" group:"Advanced" description:"Whether to include approximate row counts in table metadata" default:"true"`
+	IncludeStatistics   bool `json:"include_statistics" group:"Advanced" description:"Whether to emit row count, size and column count statistics" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
 }
 
 // Example configuration for the plugin

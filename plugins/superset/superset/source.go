@@ -22,15 +22,15 @@ type Config struct {
 	Host      string `json:"host" description:"Superset URL (e.g. https://superset.example.com)" validate:"required,url"`
 	Username  string `json:"username" description:"Username to log in with" validate:"required"`
 	Password  string `json:"password" description:"Password to log in with" validate:"required" sensitive:"true"`
-	Provider  string `json:"provider" description:"Authentication provider (db or ldap)" default:"db" validate:"oneof=db ldap"`
-	VerifySSL bool   `json:"verify_ssl" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
+	Provider  string `json:"provider" group:"Authentication" description:"Authentication provider (db or ldap)" default:"db" validate:"oneof=db ldap"`
+	VerifySSL bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the server's TLS certificate" default:"true"`
 
-	IncludeCharts    bool `json:"include_charts" description:"Discover charts" default:"true"`
-	IncludeDatasets  bool `json:"include_datasets" description:"Discover datasets" default:"true"`
-	IncludeDatabases bool `json:"include_databases" description:"Discover database connections" default:"true"`
-	IncludeDraft     bool `json:"include_draft" description:"Include unpublished (draft) dashboards" default:"true"`
-	DiscoverLineage  bool `json:"discover_lineage" description:"Link dashboards, charts, datasets and the tables they read" default:"true"`
-	PageSize         int  `json:"page_size" description:"Objects per API page" default:"100" validate:"min=1,max=1000"`
+	IncludeCharts    bool `json:"include_charts" group:"Discovery" description:"Discover charts" default:"true"`
+	IncludeDatasets  bool `json:"include_datasets" group:"Discovery" description:"Discover datasets" default:"true"`
+	IncludeDatabases bool `json:"include_databases" group:"Discovery" description:"Discover database connections" default:"true"`
+	IncludeDraft     bool `json:"include_draft" group:"Discovery" description:"Include unpublished (draft) dashboards" default:"true"`
+	DiscoverLineage  bool `json:"discover_lineage" group:"Discovery" description:"Link dashboards, charts, datasets and the tables they read" default:"true"`
+	PageSize         int  `json:"page_size" group:"Advanced" description:"Objects per API page" default:"100" validate:"min=1,max=1000"`
 }
 
 // Example configuration for the plugin

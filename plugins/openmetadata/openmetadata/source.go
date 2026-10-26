@@ -75,49 +75,49 @@ type Config struct {
 	// Connection
 	Host               string `json:"host" description:"OpenMetadata server URL, for example https://openmetadata.company.com" validate:"required,url"`
 	JWTToken           string `json:"jwt_token" label:"JWT Token" description:"Bot token or personal access token from OpenMetadata" sensitive:"true" validate:"required"`
-	TimeoutSeconds     int    `json:"timeout_seconds" description:"Per-request timeout" default:"60" validate:"min=1"`
-	InsecureSkipVerify bool   `json:"insecure_skip_verify" description:"Skip TLS certificate verification" default:"false"`
+	TimeoutSeconds     int    `json:"timeout_seconds" group:"Advanced" description:"Per-request timeout" default:"60" validate:"min=1"`
+	InsecureSkipVerify bool   `json:"insecure_skip_verify" group:"Authentication" description:"Skip TLS certificate verification" default:"false"`
 
 	// Scope
-	Services            []string `json:"services,omitempty" description:"Only import these OpenMetadata services (all if empty)"`
-	ExcludeServices     []string `json:"exclude_services,omitempty" description:"OpenMetadata services to skip"`
-	ServiceTypes        []string `json:"service_types,omitempty" description:"Only import these OpenMetadata service types, for example Postgres or Kafka (all if empty)"`
-	ExcludeServiceTypes []string `json:"exclude_service_types,omitempty" description:"OpenMetadata service types to skip"`
-	IncludeDeleted      bool     `json:"include_deleted" description:"Import entities OpenMetadata has soft deleted" default:"false"`
+	Services            []string `json:"services,omitempty" group:"Discovery" description:"Only import these OpenMetadata services (all if empty)"`
+	ExcludeServices     []string `json:"exclude_services,omitempty" group:"Discovery" description:"OpenMetadata services to skip"`
+	ServiceTypes        []string `json:"service_types,omitempty" group:"Discovery" description:"Only import these OpenMetadata service types, for example Postgres or Kafka (all if empty)"`
+	ExcludeServiceTypes []string `json:"exclude_service_types,omitempty" group:"Discovery" description:"OpenMetadata service types to skip"`
+	IncludeDeleted      bool     `json:"include_deleted" group:"Discovery" description:"Import entities OpenMetadata has soft deleted" default:"false"`
 
 	// What to import
-	IncludeTables           bool `json:"include_tables" description:"Import databases, tables and views" default:"true"`
-	IncludeStoredProcedures bool `json:"include_stored_procedures" description:"Import stored procedures as functions" default:"true"`
-	IncludeTopics           bool `json:"include_topics" description:"Import messaging topics" default:"true"`
-	IncludeContainers       bool `json:"include_containers" description:"Import object storage buckets and containers" default:"true"`
+	IncludeTables           bool `json:"include_tables" group:"Discovery" description:"Import databases, tables and views" default:"true"`
+	IncludeStoredProcedures bool `json:"include_stored_procedures" group:"Discovery" description:"Import stored procedures as functions" default:"true"`
+	IncludeTopics           bool `json:"include_topics" group:"Discovery" description:"Import messaging topics" default:"true"`
+	IncludeContainers       bool `json:"include_containers" group:"Discovery" description:"Import object storage buckets and containers" default:"true"`
 	// Off by default because Marmot's own S3, GCS and Azure Blob plugins
 	// stop at the bucket, so an imported prefix is an asset no later
 	// native run would ever touch again.
-	IncludeContainerPrefixes bool `json:"include_container_prefixes" description:"Also import the prefixes and folders inside a storage container. Marmot's own object storage plugins catalogue only the container itself" default:"false"`
-	IncludeDrives            bool `json:"include_drives" description:"Import drive directories, files, spreadsheets and worksheets" default:"true"`
-	IncludeDashboards        bool `json:"include_dashboards" description:"Import dashboards, charts and dashboard data models" default:"true"`
-	IncludePipelines         bool `json:"include_pipelines" description:"Import orchestration pipelines" default:"true"`
-	IncludeTasks             bool `json:"include_tasks" description:"Import the individual tasks of each pipeline" default:"true"`
-	IncludeRunHistory        bool `json:"include_run_history" description:"Import recent pipeline executions as run history" default:"true"`
-	RunHistoryDays           int  `json:"run_history_days" description:"How many days of pipeline executions to import" default:"7" validate:"min=1"`
-	RunHistoryLimit          int  `json:"run_history_limit" description:"Maximum executions to import per pipeline" default:"50" validate:"min=1,max=1000"`
-	IncludeMLModels          bool `json:"include_mlmodels" label:"Include ML Models" description:"Import machine learning models" default:"true"`
-	IncludeSearchIndexes     bool `json:"include_search_indexes" description:"Import search indices" default:"true"`
-	IncludeAPIs              bool `json:"include_apis" label:"Include APIs" description:"Import API collections and endpoints" default:"true"`
-	IncludeColumns           bool `json:"include_columns" description:"Import column, field and feature definitions" default:"true"`
-	IncludeLineage           bool `json:"include_lineage" description:"Import lineage between imported assets" default:"true"`
-	IncludeGlossary          bool `json:"include_glossary" description:"Import the business glossary as Marmot glossary terms, and assign them to the assets they are curated onto" default:"true"`
+	IncludeContainerPrefixes bool `json:"include_container_prefixes" group:"Discovery" description:"Also import the prefixes and folders inside a storage container. Marmot's own object storage plugins catalogue only the container itself" default:"false"`
+	IncludeDrives            bool `json:"include_drives" group:"Discovery" description:"Import drive directories, files, spreadsheets and worksheets" default:"true"`
+	IncludeDashboards        bool `json:"include_dashboards" group:"Discovery" description:"Import dashboards, charts and dashboard data models" default:"true"`
+	IncludePipelines         bool `json:"include_pipelines" group:"Discovery" description:"Import orchestration pipelines" default:"true"`
+	IncludeTasks             bool `json:"include_tasks" group:"Discovery" description:"Import the individual tasks of each pipeline" default:"true"`
+	IncludeRunHistory        bool `json:"include_run_history" group:"Discovery" description:"Import recent pipeline executions as run history" default:"true"`
+	RunHistoryDays           int  `json:"run_history_days" group:"Advanced" description:"How many days of pipeline executions to import" default:"7" validate:"min=1"`
+	RunHistoryLimit          int  `json:"run_history_limit" group:"Advanced" description:"Maximum executions to import per pipeline" default:"50" validate:"min=1,max=1000"`
+	IncludeMLModels          bool `json:"include_mlmodels" group:"Discovery" label:"Include ML Models" description:"Import machine learning models" default:"true"`
+	IncludeSearchIndexes     bool `json:"include_search_indexes" group:"Discovery" description:"Import search indices" default:"true"`
+	IncludeAPIs              bool `json:"include_apis" group:"Discovery" label:"Include APIs" description:"Import API collections and endpoints" default:"true"`
+	IncludeColumns           bool `json:"include_columns" group:"Discovery" description:"Import column, field and feature definitions" default:"true"`
+	IncludeLineage           bool `json:"include_lineage" group:"Discovery" description:"Import lineage between imported assets" default:"true"`
+	IncludeGlossary          bool `json:"include_glossary" group:"Discovery" description:"Import the business glossary as Marmot glossary terms, and assign them to the assets they are curated onto" default:"true"`
 
 	// How to import
-	Naming               string `json:"naming" description:"native names assets the way Marmot's own plugin for each technology names them, so a later native run merges with the imported assets. qualified uses the full OpenMetadata path, which keeps two services of the same technology apart" default:"native" validate:"omitempty,oneof=native qualified"`
-	TagsFromOpenMetadata bool   `json:"tags_from_openmetadata" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
-	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
-	LinkToOpenMetadata   bool   `json:"link_to_openmetadata" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
-	SourcePriority       int    `json:"source_priority" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"min=1"`
+	Naming               string `json:"naming" group:"Advanced" description:"native names assets the way Marmot's own plugin for each technology names them, so a later native run merges with the imported assets. qualified uses the full OpenMetadata path, which keeps two services of the same technology apart" default:"native" validate:"omitempty,oneof=native qualified"`
+	TagsFromOpenMetadata bool   `json:"tags_from_openmetadata" group:"Discovery" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
+	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" group:"Discovery" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
+	LinkToOpenMetadata   bool   `json:"link_to_openmetadata" group:"Advanced" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
+	SourcePriority       int    `json:"source_priority" group:"Advanced" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"min=1"`
 
 	// Performance
-	PageSize    int `json:"page_size" description:"Entities per API request" default:"250" validate:"min=1,max=1000"`
-	Concurrency int `json:"concurrency" description:"Parallel lineage requests" default:"8" validate:"min=1,max=64"`
+	PageSize    int `json:"page_size" group:"Advanced" description:"Entities per API request" default:"250" validate:"min=1,max=1000"`
+	Concurrency int `json:"concurrency" group:"Advanced" description:"Parallel lineage requests" default:"8" validate:"min=1,max=64"`
 }
 
 // Example configuration for the plugin

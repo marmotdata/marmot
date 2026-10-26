@@ -49,19 +49,19 @@ type Config struct {
 	Port        int    `json:"port" default:"8080" validate:"omitempty,min=1,max=65535" description:"Presto coordinator port"`
 	User        string `json:"user" validate:"required" description:"Username for authentication"`
 	Password    string `json:"password,omitempty" sensitive:"true" description:"Password (requires HTTPS)"`
-	Secure      bool   `json:"secure,omitempty" default:"false" description:"Use HTTPS"`
-	SSLCertPath string `json:"ssl_cert_path,omitempty" label:"SSL Cert Path" description:"Path to TLS certificate file"`
+	Secure      bool   `json:"secure,omitempty" group:"Authentication" default:"true" description:"Use HTTPS"`
+	SSLCertPath string `json:"ssl_cert_path,omitempty" group:"Authentication" label:"SSL Cert Path" description:"Path to TLS certificate file"`
 
 	// Scope
-	Catalog         string   `json:"catalog,omitempty" description:"Specific catalog to discover (all if empty)"`
-	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
-	ExcludeSchemas  []string `json:"exclude_schemas,omitempty" default:"[]" description:"Schemas to skip in every catalog"`
+	Catalog         string   `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
+	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
+	ExcludeSchemas  []string `json:"exclude_schemas,omitempty" group:"Discovery" default:"[]" description:"Schemas to skip in every catalog"`
 
 	// Discovery options
-	IncludeCatalogs bool `json:"include_catalogs" default:"true" description:"Create catalog-level assets"`
-	IncludeViews    bool `json:"include_views" default:"true" description:"Discover views and their definitions"`
-	IncludeColumns  bool `json:"include_columns" default:"true" description:"Include column info in table metadata"`
-	IncludeStats    bool `json:"include_stats,omitempty" default:"false" description:"Collect row counts with SHOW STATS (can be slow)"`
+	IncludeCatalogs bool `json:"include_catalogs" group:"Discovery" default:"true" description:"Create catalog-level assets"`
+	IncludeViews    bool `json:"include_views" group:"Discovery" default:"true" description:"Discover views and their definitions"`
+	IncludeColumns  bool `json:"include_columns" group:"Discovery" default:"true" description:"Include column info in table metadata"`
+	IncludeStats    bool `json:"include_stats,omitempty" group:"Advanced" default:"false" description:"Collect row counts with SHOW STATS (can be slow)"`
 }
 
 // Example configuration for the plugin.

@@ -18,7 +18,7 @@
 		errors: number;
 	}
 
-	interface IngestionRun {
+	export interface IngestionRun {
 		id: string;
 		pipeline_name: string;
 		source_name: string;

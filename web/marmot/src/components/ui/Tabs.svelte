@@ -25,23 +25,28 @@
 </script>
 
 <div class="border-b border-gray-200 dark:border-gray-700">
-	<div class="flex gap-6" role="tablist" aria-label={m.ui_tabs_aria()}>
+	<div class="flex gap-1" role="tablist" aria-label={m.ui_tabs_aria()}>
 		{#each tabs as tab (tab.id)}
 			<button
+				type="button"
 				onclick={() => handleTabClick(tab.id)}
 				role="tab"
 				aria-selected={activeTab === tab.id}
 				aria-controls="tabpanel-{tab.id}"
 				id="tab-{tab.id}"
-				class="flex items-center gap-2 py-4 px-1 border-b-2 text-sm font-medium transition-colors {activeTab ===
+				class="relative inline-flex h-10 items-center gap-1.5 px-2.5 text-sm font-medium transition {activeTab ===
 				tab.id
-					? 'border-earthy-terracotta-600 text-earthy-terracotta-600 dark:text-earthy-terracotta-400'
-					: 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'}"
+					? 'text-gray-900 dark:text-gray-100'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'}"
 			>
 				{#if tab.icon}
 					<IconifyIcon icon={tab.icon} class="h-4 w-4" aria-hidden="true" />
 				{/if}
 				{tab.label}
+				{#if activeTab === tab.id}
+					<span class="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-earthy-terracotta-500"
+					></span>
+				{/if}
 			</button>
 		{/each}
 	</div>

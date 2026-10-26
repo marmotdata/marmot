@@ -36,6 +36,9 @@ type Role struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// PermissionKeys are the same permissions as resource_type:action keys, the form a role document is written in.
+	PermissionKeys []string `json:"permission_keys"`
+
 	// permissions
 	Permissions []*RolePermission `json:"permissions"`
 

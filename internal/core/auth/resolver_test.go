@@ -64,8 +64,8 @@ func TestResolver_OperatorPrincipal(t *testing.T) {
 	if p.Type() != PrincipalTypeOperator {
 		t.Errorf("Type() = %q, want %q", p.Type(), PrincipalTypeOperator)
 	}
-	if !p.IsAdmin() {
-		t.Error("operator IsAdmin() = false, want true")
+	if p.IsAdmin() {
+		t.Error("operator IsAdmin() = true, want false")
 	}
 }
 

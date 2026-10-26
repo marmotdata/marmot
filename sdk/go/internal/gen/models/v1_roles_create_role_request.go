@@ -22,6 +22,9 @@ type V1RolesCreateRoleRequest struct {
 
 	// permission ids
 	PermissionIds []string `json:"permission_ids"`
+
+	// PermissionKeys names permissions as resource_type:action keys, the form a hand-written role document uses.
+	PermissionKeys []string `json:"permission_keys"`
 }
 
 // Validate validates this v1 roles create role request

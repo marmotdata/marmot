@@ -1,33 +1,51 @@
 <script lang="ts">
+	import IconifyIcon from '@iconify/svelte';
 	import { onMount } from 'svelte';
-	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import EditUserForm from './EditUserForm.svelte';
+	import { BTN_GHOST, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
+	import Pill from '$components/ui/Pill.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import { KeyRound, Lock, Mail, Pencil, RotateCcw, Trash2 } from 'lucide-svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
+	import EditUserForm from './EditUserForm.svelte';
+	import type { User } from '$lib/users/types';
 
-	export let users = [];
-	export let editingUserId = null;
-	export let onEdit;
-	export let onUpdate;
-	export let onDelete;
+	let {
+		users = [],
+		editingUserId = null,
+		canManage = true,
+		onEdit,
+		onUpdate,
+		onDelete
+	}: {
+		users?: User[];
+		editingUserId?: string | null;
+		canManage?: boolean;
+		onEdit: (userId: string | null) => void;
+		onUpdate: (user: User) => void;
+		onDelete: (userId: string) => void;
+	} = $props();
 
-	let totpStatus: 'loading' | 'disabled' | 'ready' | 'error' = 'loading';
-	let totpPolicy: 'loading' | 'off' | 'optional' | 'required' | 'error' = 'loading';
-	let totpUsers = new Set<string>();
-	let resetUser: { id: string; username: string } | null = null;
-	let passwordResetUser: { id: string; username: string } | null = null;
-	let resetting = false;
+	let editingUser = $derived(users.find((u) => u.id === editingUserId) ?? null);
+	let showDeleteModal = $state(false);
+	let userToDelete = $state<User | null>(null);
+
+	const currentUserId = auth.getCurrentUserId();
+	const canManageUsers = auth.hasRole('admin') || auth.hasPermission('users', 'manage');
+
+	let totpStatus = $state<'loading' | 'disabled' | 'ready' | 'error'>('loading');
+	let totpUsers = $state(new Set<string>());
+	let resetUser = $state<{ id: string; username: string } | null>(null);
+	let passwordResetUser = $state<{ id: string; username: string } | null>(null);
+	let resetting = $state(false);
+
 	onMount(async () => {
 		try {
 			const response = await fetch('/auth-providers');
 			if (!response.ok) throw new Error('Auth configuration unavailable');
-			const config = await response.json();
-			totpPolicy = !config.totp_enabled ? 'off' : config.totp_required ? 'required' : 'optional';
-			if (totpPolicy === 'off') {
+			if (!(await response.json()).totp_enabled) {
 				totpStatus = 'disabled';
 				return;
 			}
@@ -36,10 +54,10 @@
 			totpUsers = new Set((await enrolled.json()).user_ids);
 			totpStatus = 'ready';
 		} catch {
-			if (totpPolicy === 'loading') totpPolicy = 'error';
 			totpStatus = 'error';
 		}
 	});
+
 	async function resetTOTP() {
 		if (!resetUser || resetting) return;
 		resetting = true;
@@ -76,33 +94,7 @@
 		}
 	}
 
-	let showDeleteModal = false;
-	let userToDelete = null;
-
-	const currentUserId = auth.getCurrentUserId();
-
-	async function handleDelete() {
-		if (!userToDelete) return;
-
-		try {
-			const response = await fetchApi(`/users/${userToDelete.id}`, {
-				method: 'DELETE'
-			});
-			if (!response.ok) {
-				const errorMsg = await handleApiError(response);
-				toasts.error(errorMsg);
-				return;
-			}
-			toasts.success(m.users_delete_success({ name: userToDelete.username }));
-			onDelete(userToDelete.id);
-			showDeleteModal = false;
-			userToDelete = null;
-		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.users_error_delete());
-		}
-	}
-
-	function getProviderDisplay(provider: string): string {
+	function providerDisplayName(provider: string): string {
 		const providerMap: Record<string, string> = {
 			google: 'Google',
 			github: 'GitHub',
@@ -113,187 +105,188 @@
 		};
 		return providerMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
 	}
+
+	function initials(user: User): string {
+		const source = (user.name || user.username).trim();
+		const parts = source.split(/\s+/);
+		return (
+			parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : source.slice(0, 2)
+		).toUpperCase();
+	}
+
+	async function handleDelete() {
+		if (!userToDelete) return;
+		try {
+			const response = await fetchApi(`/users/${userToDelete.id}`, { method: 'DELETE' });
+			if (!response.ok) {
+				toasts.error(await handleApiError(response));
+				return;
+			}
+			toasts.success(m.users_delete_success({ name: userToDelete.username }));
+			onDelete(userToDelete.id);
+			showDeleteModal = false;
+			userToDelete = null;
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.users_error_delete());
+		}
+	}
 </script>
 
-<div class="mb-4 flex items-center justify-end gap-2 text-xs" aria-live="polite">
-	<span class="text-gray-500 dark:text-gray-400">{m.users_totp_policy_label()}</span>
-	<span
-		class={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${totpPolicy === 'required' ? 'border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200' : totpPolicy === 'optional' ? 'border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'border-gray-200 bg-gray-100 text-gray-600 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
-	>
-		{totpPolicy === 'required'
-			? m.users_totp_policy_required()
-			: totpPolicy === 'optional'
-				? m.users_totp_policy_optional()
-				: totpPolicy === 'off'
-					? m.users_totp_policy_off()
-					: totpPolicy === 'loading'
-						? m.common_loading()
-						: m.totp_status_unavailable()}
-	</span>
-</div>
-
 <div class="overflow-x-auto">
-	<table class="min-w-full">
-		<thead>
+	<table class={TABLE}>
+		<thead class="border-b border-gray-100 dark:border-gray-700/60">
 			<tr>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.users_username_label()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_name()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.users_header_auth()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.users_header_roles()}</th
-				>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_status()}</th
-				>
-				<th
-					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-					>{m.common_actions()}</th
-				>
+				<th class="{TH} pl-5">{m.members_col_member()}</th>
+				<th class={TH}>{m.users_header_auth()}</th>
+				<th class={TH}>{m.users_header_roles()}</th>
+				<th class={TH}>{m.common_status()}</th>
+				<th class="{TH} pr-5 text-right"><span class="sr-only">{m.common_actions()}</span></th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
+		<tbody class={TBODY}>
 			{#each users as user (user.id)}
-				<tr class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 transition-colors">
-					{#if editingUserId === user.id}
-						<td colspan="6">
-							<EditUserForm
-								{user}
-								onCancel={() => onEdit(null)}
-								onUpdate={(updatedUser) => onUpdate(updatedUser)}
-							/>
-						</td>
-					{:else}
-						<td
-							class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
-							>{user.username}</td
-						>
-						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400"
-							>{user.name}</td
-						>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<div class="flex flex-wrap items-center gap-1">
-								{#if user.identities && user.identities.length > 0}
-									{#each user.identities as identity (identity.provider)}
-										<span
-											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-										>
-											<Lock class="h-3 w-3 mr-1" />
-											{getProviderDisplay(identity.provider)}
-										</span>
-									{/each}
-								{:else}
-									<span
-										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-									>
-										<Mail class="h-3 w-3 mr-1" />
-										{m.users_auth_password_badge()}
-									</span>
-								{/if}
-								{#if !user.identities?.length}
-									<span
-										class={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${totpStatus === 'ready' && totpUsers.has(user.id) ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
-										>{totpStatus === 'ready'
-											? totpUsers.has(user.id)
-												? m.totp_badge()
-												: m.totp_not_enabled()
-											: totpStatus === 'disabled'
-												? m.totp_server_disabled()
-												: m.totp_status_unavailable()}</span
-									>
-								{/if}
-							</div>
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<div class="flex flex-wrap gap-1">
-								{#each user.roles as role (role.name)}
-									<span
-										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
-										>{role.name}</span
-									>
-								{/each}
-							</div>
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<span
-								class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}
-							>
-								{user.active ? m.common_active() : m.common_inactive()}
+				<tr class={TR}>
+					<td class="{TD} pl-5">
+						<span class="flex min-w-0 items-center gap-3">
+							{#if user.profile_picture}
+								<img
+									src={user.profile_picture}
+									alt=""
+									class="h-8 w-8 flex-shrink-0 rounded-full object-cover"
+								/>
+							{:else}
+								<span
+									class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-xs font-semibold text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+									aria-hidden="true">{initials(user)}</span
+								>
+							{/if}
+							<span class="min-w-0">
+								<span class="block truncate font-medium text-gray-900 dark:text-gray-100"
+									>{user.name || user.username}</span
+								>
+								<span class="block truncate font-mono text-xs text-gray-500 dark:text-gray-400"
+									>{user.username}</span
+								>
 							</span>
-							{#if user.must_change_password}<span
-									class="ml-2 text-xs text-amber-700 dark:text-amber-300"
-									>{m.users_password_reset_pending()}</span
-								>{/if}
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-							<div class="flex items-center justify-end gap-1">
-								{#if totpStatus === 'ready' && totpUsers.has(user.id) && currentUserId !== user.id && (auth.hasRole('admin') || auth.hasPermission('users', 'manage'))}
-									<button
-										type="button"
-										class="rounded-md p-2 text-earthy-terracotta-700 hover:bg-earthy-terracotta-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-earthy-terracotta-600 dark:text-earthy-terracotta-300 dark:hover:bg-gray-700"
-										aria-label={`${m.totp_reset()}: ${user.username}`}
-										title={m.totp_reset()}
-										on:click={() => (resetUser = user)}><RotateCcw class="h-4 w-4" /></button
-									>
-								{/if}
-								{#if currentUserId !== user.id}
-									{#if !user.identities?.length && (auth.hasRole('admin') || auth.hasPermission('users', 'manage'))}
-										<button
-											type="button"
-											class="rounded-md p-2 text-earthy-terracotta-700 hover:bg-earthy-terracotta-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-earthy-terracotta-600 dark:text-earthy-terracotta-300 dark:hover:bg-gray-700"
-											aria-label={`${m.users_require_password_change()}: ${user.username}`}
-											title={m.users_require_password_change()}
-											on:click={() => (passwordResetUser = user)}
-											><KeyRound class="h-4 w-4" /></button
-										>
-									{/if}
-									<button
-										type="button"
-										class="rounded-md p-2 text-earthy-terracotta-700 hover:bg-earthy-terracotta-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-earthy-terracotta-600 dark:text-earthy-terracotta-300 dark:hover:bg-gray-700"
-										aria-label={`${m.common_edit()}: ${user.username}`}
-										title={m.common_edit()}
-										on:click={() => onEdit(user.id)}
-									>
-										<Pencil class="h-4 w-4" />
-									</button>
-								{/if}
-								{#if currentUserId !== user.id && user.username !== 'admin'}
-									<button
-										type="button"
-										class="rounded-md p-2 text-red-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600 dark:text-red-400 dark:hover:bg-red-950"
-										aria-label={`${m.common_delete()}: ${user.username}`}
-										title={m.common_delete()}
-										on:click={() => {
-											userToDelete = user;
-											showDeleteModal = true;
-										}}
-									>
-										<Trash2 class="h-4 w-4" />
-									</button>
-								{/if}
-							</div>
-						</td>
-					{/if}
+							{#if currentUserId === user.id}
+								<Pill tone="brand">{m.members_you_badge()}</Pill>
+							{/if}
+						</span>
+					</td>
+					<td class={TD}>
+						<span class="flex flex-wrap gap-1">
+							{#if user.identities && user.identities.length > 0}
+								{#each user.identities as identity (identity.provider)}
+									<Pill>
+										<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3" />
+										{providerDisplayName(identity.provider)}
+									</Pill>
+								{/each}
+							{:else}
+								<Pill>
+									<IconifyIcon icon="material-symbols:mail-outline" class="h-3 w-3" />
+									{m.users_auth_password_badge()}
+								</Pill>
+								<Pill
+									tone={totpStatus === 'ready' && totpUsers.has(user.id) ? 'success' : 'neutral'}
+								>
+									{totpStatus === 'ready'
+										? totpUsers.has(user.id)
+											? m.totp_badge()
+											: m.totp_not_enabled()
+										: totpStatus === 'disabled'
+											? m.totp_server_disabled()
+											: m.totp_status_unavailable()}
+								</Pill>
+							{/if}
+						</span>
+					</td>
+					<td class={TD}>
+						<span class="flex flex-wrap gap-1">
+							{#each user.roles as role (role.name)}
+								<Pill tone={role.name === 'admin' ? 'brand' : 'neutral'}>{role.name}</Pill>
+							{:else}
+								<span class="text-gray-400 dark:text-gray-500">—</span>
+							{/each}
+						</span>
+					</td>
+					<td class={TD}>
+						<Pill tone={user.active ? 'success' : 'neutral'}>
+							{user.active ? m.common_active() : m.common_inactive()}
+						</Pill>
+						{#if user.must_change_password}
+							<span class="ml-2 text-xs text-amber-700 dark:text-amber-300"
+								>{m.users_password_reset_pending()}</span
+							>
+						{/if}
+					</td>
+					<td class="{TD} whitespace-nowrap pr-5 text-right">
+						{#if canManageUsers && currentUserId !== user.id && totpStatus === 'ready' && totpUsers.has(user.id)}
+							<button
+								type="button"
+								class={BTN_GHOST}
+								onclick={() => (resetUser = user)}
+								aria-label={`${m.totp_reset()}: ${user.username}`}
+								title={m.totp_reset()}
+							>
+								<IconifyIcon icon="material-symbols:lock-reset" class="h-4 w-4" />
+							</button>
+						{/if}
+						{#if canManageUsers && currentUserId !== user.id && !user.identities?.length}
+							<button
+								type="button"
+								class={BTN_GHOST}
+								onclick={() => (passwordResetUser = user)}
+								aria-label={`${m.users_require_password_change()}: ${user.username}`}
+								title={m.users_require_password_change()}
+							>
+								<IconifyIcon icon="material-symbols:key-outline" class="h-4 w-4" />
+							</button>
+						{/if}
+						{#if canManage && currentUserId !== user.id}
+							<button
+								type="button"
+								class={BTN_GHOST}
+								onclick={() => onEdit(user.id)}
+								aria-label={m.members_edit_aria({ name: user.username })}
+								title={m.common_edit()}
+							>
+								<IconifyIcon icon="material-symbols:edit-outline" class="h-4 w-4" />
+							</button>
+						{/if}
+						{#if canManage && currentUserId !== user.id && user.username !== 'admin'}
+							<button
+								type="button"
+								class="{BTN_GHOST} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+								onclick={() => {
+									userToDelete = user;
+									showDeleteModal = true;
+								}}
+								aria-label={m.members_delete_aria({ name: user.username })}
+								title={m.common_delete()}
+							>
+								<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
+							</button>
+						{/if}
+					</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
 </div>
 
+{#if editingUser}
+	<EditUserForm
+		user={editingUser}
+		onCancel={() => onEdit(null)}
+		onUpdate={(updatedUser) => onUpdate(updatedUser)}
+	/>
+{/if}
+
 <DeleteModal
 	show={showDeleteModal}
 	title={m.users_delete_title()}
-	message={m.users_delete_confirm_message()}
+	message={m.members_delete_message()}
 	confirmText={m.common_delete()}
 	resourceName={userToDelete?.username || ''}
 	requireConfirmation={true}
@@ -314,7 +307,6 @@
 		if (!resetting) resetUser = null;
 	}}
 />
-
 <ConfirmModal
 	show={!!passwordResetUser}
 	title={m.users_require_password_change()}

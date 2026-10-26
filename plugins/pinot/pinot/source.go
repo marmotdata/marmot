@@ -21,18 +21,18 @@ type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 
 	ControllerURL string `json:"controller_url" label:"Controller URL" description:"Pinot controller URL, for example http://localhost:9000" validate:"required,http_url"`
-	BrokerURL     string `json:"broker_url" label:"Broker URL" description:"Pinot broker URL for queries. When empty, queries go through the controller" validate:"omitempty,http_url"`
+	BrokerURL     string `json:"broker_url" group:"Advanced" label:"Broker URL" description:"Pinot broker URL for queries. When empty, queries go through the controller" validate:"omitempty,http_url"`
 	Username      string `json:"username" description:"Username for basic authentication"`
 	Password      string `json:"password" description:"Password for basic authentication" sensitive:"true"`
-	Token         string `json:"token" description:"Bearer token, used instead of a username and password" sensitive:"true"`
+	Token         string `json:"token" group:"Authentication" description:"Bearer token, used instead of a username and password" sensitive:"true"`
 	Database      string `json:"database" description:"Logical database to discover (Pinot 1.1 and later). Empty means the default database"`
-	VerifySSL     bool   `json:"verify_ssl" label:"Verify SSL" description:"Whether to verify the TLS certificate of the controller and broker" default:"true"`
+	VerifySSL     bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Whether to verify the TLS certificate of the controller and broker" default:"true"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts    bool `json:"include_row_counts" description:"Whether to count rows with a COUNT(*) query per table" default:"true"`
-	IncludeSizes        bool `json:"include_sizes" description:"Whether to include the segment size reported by the controller" default:"true"`
-	DiscoverLineage     bool `json:"discover_lineage" description:"Whether to link realtime tables to the Kafka topic or Kinesis stream that feeds them" default:"true"`
-	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to skip tables whose name starts with an underscore" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeRowCounts    bool `json:"include_row_counts" group:"Advanced" description:"Whether to count rows with a COUNT(*) query per table" default:"true"`
+	IncludeSizes        bool `json:"include_sizes" group:"Advanced" description:"Whether to include the segment size reported by the controller" default:"true"`
+	DiscoverLineage     bool `json:"discover_lineage" group:"Discovery" description:"Whether to link realtime tables to the Kafka topic or Kinesis stream that feeds them" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" group:"Discovery" description:"Whether to skip tables whose name starts with an underscore" default:"true"`
 }
 
 // Example configuration for the plugin

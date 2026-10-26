@@ -527,3 +527,35 @@ func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.
 	return nil, nil
 }
 func (m *mockUserService) RequirePasswordChange(_ context.Context, _ string) error { return nil }
+
+// A code issued before sign-out-all must not mint a token after it, or the code becomes a way back in for whoever holds it.
+func TestTokenEndpointRejectsCodeAfterSignOutAll(t *testing.T) {
+	const secret = "test-secret-key-for-signout----!"
+	c := newReplicaCluster(t)
+
+	clientID := c.register(c.replica(secret))
+	code := c.authorizeAndComplete(c.replica(secret), c.replica(secret), clientID)
+
+	revokedAt := time.Now().Add(time.Second)
+	c.user.SessionsInvalidatedAt = &revokedAt
+
+	rec := c.redeem(c.replica(secret), clientID, code, testCodeVerifier, "http://localhost:9999/callback")
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 after sign-out-all, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestTokenEndpointRejectsInactiveUser(t *testing.T) {
+	const secret = "test-secret-key-for-inactive---!"
+	c := newReplicaCluster(t)
+
+	clientID := c.register(c.replica(secret))
+	code := c.authorizeAndComplete(c.replica(secret), c.replica(secret), clientID)
+
+	c.user.Active = false
+
+	rec := c.redeem(c.replica(secret), clientID, code, testCodeVerifier, "http://localhost:9999/callback")
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for inactive user, got %d: %s", rec.Code, rec.Body.String())
+	}
+}

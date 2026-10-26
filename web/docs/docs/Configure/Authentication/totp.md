@@ -61,6 +61,6 @@ A five-minute per-account budget permits at most five failed second-factor attem
 
 ## Database migration and compatibility
 
-The feature adds the standard PostgreSQL migration `000054_user_totp.sql`. It creates the factor, recovery-code and one-use challenge tables. Existing accounts are unchanged until TOTP is enabled.
+The feature adds the standard PostgreSQL migration `000058_user_totp.sql`. It creates the factor, recovery-code and one-use challenge tables. Existing accounts are unchanged until TOTP is enabled.
 
 The normal JWT now includes the exact session revocation epoch. Legacy tokens without that claim remain valid until revoked; if their second-resolution issuance time overlaps a revocation, they are rejected conservatively. SSO callbacks themselves are unchanged.

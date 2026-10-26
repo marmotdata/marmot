@@ -1448,9 +1448,9 @@ func (r *PostgresRepository) GetAssetsByTerm(ctx context.Context, termID string,
 		return nil, 0, fmt.Errorf("counting assets by term: %w", err)
 	}
 
+	// A subquery rather than a join keeps the base select's unqualified columns unambiguous, since asset_terms has its own created_at.
 	query := baseSelectAsset + `
-		JOIN asset_terms at ON assets.id = at.asset_id
-		WHERE at.glossary_term_id = $1
+		WHERE assets.id IN (SELECT asset_id FROM asset_terms WHERE glossary_term_id = $1)
 		ORDER BY assets.name ASC
 		LIMIT $2 OFFSET $3`
 

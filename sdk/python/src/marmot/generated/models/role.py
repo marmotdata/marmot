@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -34,6 +34,10 @@ class Role(BaseModel):
     id: StrictStr | None = None
     is_system: StrictBool | None = None
     name: StrictStr | None = None
+    permission_keys: list[StrictStr] | None = Field(
+        default=None,
+        description="PermissionKeys are the same permissions as resource_type:action keys, the form a role document is written in.",
+    )
     permissions: list[RolePermission] | None = None
     updated_at: StrictStr | None = None
     user_count: StrictInt | None = None
@@ -44,6 +48,7 @@ class Role(BaseModel):
         "id",
         "is_system",
         "name",
+        "permission_keys",
         "permissions",
         "updated_at",
         "user_count",
@@ -112,6 +117,7 @@ class Role(BaseModel):
                 "id": obj.get("id"),
                 "is_system": obj.get("is_system"),
                 "name": obj.get("name"),
+                "permission_keys": obj.get("permission_keys"),
                 "permissions": [RolePermission.from_dict(_item) for _item in obj["permissions"]]
                 if obj.get("permissions") is not None
                 else None,

@@ -3,16 +3,23 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import { auth } from '$lib/stores/auth';
 	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
-	import Button from '$components/ui/Button.svelte';
+	import PageHeader from '$components/ui/PageHeader.svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT } from '$lib/ui/classes';
 	import IconifyIcon from '@iconify/svelte';
+	import Disclosure from '$components/ui/Disclosure.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import cronstrue from 'cronstrue/i18n';
 	import { Cron } from 'croner';
 	import { m } from '$lib/paraglide/messages';
+	import QueryAccessSection from '$components/dataquery/QueryAccessSection.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatList } from '$lib/utils';
 
@@ -34,6 +41,8 @@
 		placeholder?: string;
 		fields?: ConfigField[];
 		is_array?: boolean;
+		// The plugin names the section a field belongs to; ungrouped fields come first
+		group?: string;
 		validation?: {
 			pattern?: string;
 			min?: number;
@@ -50,6 +59,7 @@
 		icon?: string;
 		category?: string;
 		config_spec?: ConfigField[];
+		supports_query?: boolean;
 	}
 
 	let plugins = $state<Plugin[]>([]);
@@ -61,6 +71,8 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(false);
 	interface PipelineConfig {
 		tags?: string[];
 		external_links?: { name: string; url: string }[];
@@ -84,6 +96,24 @@
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
 	let configSpec = $derived(selectedPlugin?.config_spec || null);
+	// The plugin's own fields, without the base tags, links and filter that have their own step
+	let pluginFields = $derived(
+		(configSpec ?? []).filter(
+			(f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden
+		)
+	);
+	// Groups in the order the plugin first uses them
+	let fieldGroups = $derived.by(() => {
+		const groups: { name: string; fields: ConfigField[] }[] = [];
+		for (const field of pluginFields) {
+			if (!field.group) continue;
+			let group = groups.find((g) => g.name === field.group);
+			if (!group) groups.push((group = { name: field.group, fields: [] }));
+			group.fields.push(field);
+		}
+		return groups;
+	});
+	let queryCapable = $derived(selectedPlugin?.supports_query === true);
 	let hasSchedule = $derived(cronExpression.trim() !== '');
 
 	let cronDescription = $derived.by(() => {
@@ -192,6 +222,16 @@
 			selectedPluginId = pipeline.plugin_id;
 			cronExpression = pipeline.cron_expression || '';
 			disableSchedule = !pipeline.enabled && !!pipeline.cron_expression;
+			queryEnabled = pipeline.queryable === true;
+			ingestOnQuery = pipeline.ingest_on_query === true;
+			// The Query page's "Turn on" link arrives with ?query=1, so the switch is flipped and shown, ready to save
+			if ($page.url.searchParams.get('query') === '1' && auth.hasPermission('access', 'manage')) {
+				queryEnabled = true;
+				ingestOnQuery = true;
+				requestAnimationFrame(() =>
+					document.getElementById('query-access')?.scrollIntoView({ behavior: 'smooth' })
+				);
+			}
 			config = pipeline.config || {};
 
 			// Ensure base fields have proper defaults
@@ -251,7 +291,9 @@
 				plugin_id: selectedPluginId,
 				config: cleanedConfig,
 				cron_expression: cronExpression,
-				enabled
+				enabled,
+				queryable: queryCapable && queryEnabled,
+				ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
 			};
 
 			const response = await fetchApi(`/ingestion/schedules/${pipelineId}`, {
@@ -367,81 +409,336 @@
 	});
 </script>
 
-<div class="min-h-screen">
-	<!-- Header -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-4">
-					<button
-						onclick={() => goto(resolve('/runs?tab=pipelines'))}
-						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-					>
-						<IconifyIcon
-							icon="material-symbols:arrow-back"
-							class="h-6 w-6 text-gray-600 dark:text-gray-400"
-						/>
-					</button>
-					<div>
-						<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-							{m.pipelines_edit_pipeline()}
-						</h1>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-							{m.pipelines_edit_subtitle()}
-						</p>
+{#snippet renderField(
+	field: ConfigField,
+	fieldPath: string,
+	configObj: Record<string, unknown>,
+	depth: number = 0
+)}
+	{#if field.type === 'object' && field.is_array && field.fields}
+		<!-- Array of objects (e.g., external_links) -->
+		<div class="md:col-span-2">
+			<div class="block">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
+					</p>
+				{/if}
+				{#if true}
+					{@const arrayValue = (configObj[field.name] as Record<string, unknown>[]) || []}
+					<div class="space-y-3">
+						{#each arrayValue as item, index (index)}
+							<div
+								class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
+							>
+								<div class="flex items-end justify-end mb-3">
+									<button
+										type="button"
+										onclick={(e) => {
+											e.preventDefault();
+											arrayValue.splice(index, 1);
+											configObj[field.name] = [...arrayValue];
+										}}
+										class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+									>
+										<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+									</button>
+								</div>
+								<div class="grid grid-cols-1 gap-3">
+									{#each field.fields as nestedField (nestedField.name)}
+										<div>
+											<label class="block">
+												<span
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
+												>
+													{nestedField.label}
+													{#if nestedField.required}
+														<span class="text-red-500">*</span>
+													{/if}
+												</span>
+												<input
+													type={getFieldType(nestedField)}
+													bind:value={item[nestedField.name]}
+													oninput={(e) => {
+														configObj[field.name] = [...arrayValue];
+														// Validate URL fields
+														const input = e.target as HTMLInputElement;
+														if (
+															getFieldType(nestedField) === 'url' &&
+															input.value &&
+															!input.checkValidity()
+														) {
+															input.setCustomValidity(
+																m.pipelines_url_invalid({ label: nestedField.label })
+															);
+														} else {
+															input.setCustomValidity('');
+														}
+													}}
+													placeholder={nestedField.placeholder}
+													required={nestedField.required}
+													class={INPUT}
+												/>
+											</label>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/each}
+						<button
+							type="button"
+							onclick={(e) => {
+								e.preventDefault();
+								const newItem: Record<string, unknown> = {};
+								// Initialize with default values
+								field.fields?.forEach((f) => {
+									newItem[f.name] = f.default || '';
+								});
+								arrayValue.push(newItem);
+								configObj[field.name] = [...arrayValue];
+							}}
+							class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
+						>
+							<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+							{m.pipelines_add_field_item({ label: field.label })}
+						</button>
 					</div>
-				</div>
+				{/if}
 			</div>
 		</div>
-	</div>
-
-	<!-- Main Content -->
-	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		{#if error}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:error"
-						class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0"
-					/>
-					<p class="ml-3 text-sm text-red-700 dark:text-red-300">{error}</p>
+	{:else if field.type === 'object' && field.fields}
+		<div class="md:col-span-2">
+			<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+				<button
+					type="button"
+					onclick={() => toggleSection(fieldPath)}
+					class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+				>
+					<div class="flex items-center">
+						<IconifyIcon
+							icon={isExpanded(fieldPath)
+								? 'material-symbols:expand-more'
+								: 'material-symbols:chevron-right'}
+							class="h-5 w-5 text-gray-600 dark:text-gray-400 transition-transform"
+						/>
+						<span class="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+							{field.label}
+							{#if field.required}
+								<span class="text-red-500 ml-1">*</span>
+							{/if}
+						</span>
+					</div>
+					{#if field.description}
+						<span class="text-xs text-gray-600 dark:text-gray-400 ml-2 truncate"
+							>{field.description}</span
+						>
+					{/if}
+				</button>
+				{#if isExpanded(fieldPath)}
+					<div
+						class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
+					>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+							{#each field.fields as nestedField (nestedField.name)}
+								{@const nestedPath = `${fieldPath}.${nestedField.name}`}
+								{@const nestedConfigObj = (configObj[field.name] as Record<string, unknown>) || {}}
+								{#if !shouldHideField(nestedField, nestedConfigObj, config)}
+									{@render renderField(nestedField, nestedPath, nestedConfigObj, depth + 1)}
+								{/if}
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{:else if field.type === 'bool' || field.type === 'boolean'}
+		<div class="md:col-span-2">
+			<label class="flex items-start py-1 cursor-pointer">
+				<input
+					type="checkbox"
+					bind:checked={configObj[field.name]}
+					class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
+				/>
+				<div class="ml-3 flex-1">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+						{field.label}
+					</span>
+					{#if field.description}
+						<p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+							{field.description}
+						</p>
+					{/if}
 				</div>
+			</label>
+		</div>
+	{:else if field.type === 'multiselect'}
+		<!-- Array/List field -->
+		<div class="md:col-span-2">
+			<div class="block">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
+					</p>
+				{/if}
+				{#if true}
+					{@const arrayValue = (configObj[field.name] as string[]) || []}
+					<div class="space-y-2">
+						{#each arrayValue as item, index (index)}
+							<div class="flex items-center gap-2">
+								<input
+									type="text"
+									value={item}
+									oninput={(e) => {
+										const target = e.target as HTMLInputElement;
+										arrayValue[index] = target.value;
+										configObj[field.name] = [...arrayValue];
+									}}
+									placeholder={field.placeholder}
+									class="{INPUT} flex-1"
+								/>
+								<button
+									type="button"
+									onclick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										arrayValue.splice(index, 1);
+										configObj[field.name] = [...arrayValue];
+									}}
+									class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+									aria-label={m.pipelines_remove_item_aria()}
+								>
+									<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
+								</button>
+							</div>
+						{/each}
+						<div class="flex items-center gap-2">
+							<input
+								type="text"
+								placeholder={m.pipelines_typeahead_placeholder()}
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										const target = e.target as HTMLInputElement;
+										const value = target.value.trim();
+										if (value) {
+											const newArray = [...arrayValue, value];
+											configObj[field.name] = newArray;
+											target.value = '';
+										}
+									}
+								}}
+								class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
+							/>
+						</div>
+						<p class="text-xs text-gray-600 dark:text-gray-400">
+							{m.pipelines_press_enter_hint()}
+						</p>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{:else}
+		<div>
+			<label class="block">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
+					</p>
+				{/if}
+				{#if field.options && field.options.length > 0}
+					<select
+						value={configObj[field.name] || ''}
+						onchange={(e) => {
+							configObj[field.name] = (e.target as HTMLSelectElement).value;
+						}}
+						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all border-gray-300 dark:border-gray-600"
+						required={field.required}
+					>
+						<option value="">{m.pipelines_select_placeholder()}</option>
+						{#each field.options as option (option.value)}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				{:else}
+					<input
+						type={getFieldType(field)}
+						value={configObj[field.name] || ''}
+						oninput={(e) => {
+							const target = e.target as HTMLInputElement;
+							configObj[field.name] =
+								field.type === 'int' || field.type === 'number'
+									? Number(target.value)
+									: target.value;
+							autoDetectSourceType();
+						}}
+						placeholder={field.placeholder || (field.default ? String(field.default) : '')}
+						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {field.type ===
+						'password'
+							? 'font-mono'
+							: ''} border-gray-300 dark:border-gray-600"
+						required={field.required}
+					/>
+				{/if}
+			</label>
+		</div>
+	{/if}
+{/snippet}
+
+<div class="w-full px-4 py-6 sm:px-6 lg:px-8">
+	<PageHeader
+		title={m.pipelines_edit_pipeline()}
+		description={m.pipelines_edit_subtitle()}
+		backHref={resolve('/runs')}
+		backLabel={m.nav_runs()}
+	/>
+
+	<div>
+		{#if error}
+			<div class="mb-6">
+				<Alert>{error}</Alert>
 			</div>
 		{/if}
 
-		<div class="space-y-8">
+		<div class="space-y-6">
 			<!-- Basic Information -->
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:info-outline"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_basic_info_heading()}
-				</h3>
+			<Panel title={m.pipelines_basic_info_heading()} icon="material-symbols:info-outline">
 				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_name_label()} <span class="text-red-500">*</span>
 					</label>
 					<input
 						type="text"
 						bind:value={name}
 						placeholder={m.pipelines_name_placeholder()}
-						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+						class={INPUT}
 						required
 					/>
 				</div>
 
 				<!-- Tags -->
 				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
 						{m.common_tags()}
 					</span>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_tags_hint()}
 					</p>
 					{#if true}
@@ -457,7 +754,7 @@
 											tagsValue[index] = target.value;
 											config.tags = [...tagsValue];
 										}}
-										class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+										class="{INPUT} flex-1"
 									/>
 									<button
 										type="button"
@@ -491,7 +788,7 @@
 									class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
 								/>
 							</div>
-							<p class="text-xs text-gray-500 dark:text-gray-400">
+							<p class="text-xs text-gray-600 dark:text-gray-400">
 								{m.pipelines_press_enter_hint()}
 							</p>
 						</div>
@@ -500,10 +797,10 @@
 
 				<!-- External Links -->
 				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
 						{m.pipelines_external_links_label()}
 					</span>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_external_links_hint()}
 					</p>
 					{#if true}
@@ -530,7 +827,7 @@
 										<div>
 											<label class="block">
 												<span
-													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
 												>
 													{m.common_name()}
 												</span>
@@ -541,14 +838,14 @@
 														config.external_links = [...linksValue];
 													}}
 													placeholder={m.pipelines_link_name_placeholder()}
-													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+													class={INPUT}
 												/>
 											</label>
 										</div>
 										<div>
 											<label class="block">
 												<span
-													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
 												>
 													{m.pipelines_url_label()}
 												</span>
@@ -559,7 +856,7 @@
 														config.external_links = [...linksValue];
 													}}
 													placeholder="https://..."
-													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+													class={INPUT}
 												/>
 											</label>
 										</div>
@@ -580,20 +877,10 @@
 						</div>
 					{/if}
 				</div>
-			</div>
+			</Panel>
 
 			<!-- Plugin Selection (Read-only in edit mode) -->
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:extension"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_data_source_heading()}
-				</h3>
-
+			<Panel title={m.pipelines_data_source_heading()} icon="material-symbols:extension">
 				{#if pluginsStillLoading}
 					<div
 						class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
@@ -605,12 +892,7 @@
 				{/if}
 
 				{#if loadingPlugins || loadingPipeline}
-					<div class="flex items-center justify-center py-8">
-						<div
-							class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-						></div>
-						<span class="ml-3 text-sm text-gray-500">{m.common_loading()}</span>
-					</div>
+					<Skeleton class="h-32" />
 				{:else if selectedPlugin}
 					<div
 						class="border-2 border-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 rounded-lg p-5"
@@ -637,7 +919,7 @@
 							</div>
 						</div>
 						{#if selectedPlugin.description}
-							<p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+							<p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
 								{selectedPlugin.description}
 							</p>
 						{/if}
@@ -651,23 +933,11 @@
 						</div>
 					</div>
 				{/if}
-			</div>
+			</Panel>
 
 			<!-- Plugin Configuration -->
 			{#if configSpec && configSpec.length > 0}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<h3
-						class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
-					>
-						<IconifyIcon
-							icon="material-symbols:settings"
-							class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-						/>
-						{m.pipelines_connection_config_heading()}
-					</h3>
-
+				<Panel title={m.pipelines_connection_config_heading()} icon="material-symbols:settings">
 					<!-- AWS Credential Status Banner -->
 					{#if isAWSPlugin && awsCredentialStatus}
 						{#if awsCredentialStatus.available}
@@ -728,334 +998,47 @@
 							</div>
 						</div>
 					{/if}
-					{#snippet renderField(
-						field: ConfigField,
-						fieldPath: string,
-						configObj: Record<string, unknown>,
-						depth: number = 0
-					)}
-						{#if field.type === 'object' && field.is_array && field.fields}
-							<!-- Array of objects (e.g., external_links) -->
-							<div class="md:col-span-2">
-								<div class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if true}
-										{@const arrayValue = (configObj[field.name] as Record<string, unknown>[]) || []}
-										<div class="space-y-3">
-											{#each arrayValue as item, index (index)}
-												<div
-													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
-												>
-													<div class="flex items-end justify-end mb-3">
-														<button
-															type="button"
-															onclick={(e) => {
-																e.preventDefault();
-																arrayValue.splice(index, 1);
-																configObj[field.name] = [...arrayValue];
-															}}
-															class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-														>
-															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-														</button>
-													</div>
-													<div class="grid grid-cols-1 gap-3">
-														{#each field.fields as nestedField (nestedField.name)}
-															<div>
-																<label class="block">
-																	<span
-																		class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
-																	>
-																		{nestedField.label}
-																		{#if nestedField.required}
-																			<span class="text-red-500">*</span>
-																		{/if}
-																	</span>
-																	<input
-																		type={getFieldType(nestedField)}
-																		bind:value={item[nestedField.name]}
-																		oninput={(e) => {
-																			configObj[field.name] = [...arrayValue];
-																			// Validate URL fields
-																			const input = e.target as HTMLInputElement;
-																			if (
-																				getFieldType(nestedField) === 'url' &&
-																				input.value &&
-																				!input.checkValidity()
-																			) {
-																				input.setCustomValidity(
-																					m.pipelines_url_invalid({ label: nestedField.label })
-																				);
-																			} else {
-																				input.setCustomValidity('');
-																			}
-																		}}
-																		placeholder={nestedField.placeholder}
-																		required={nestedField.required}
-																		class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
-																	/>
-																</label>
-															</div>
-														{/each}
-													</div>
-												</div>
-											{/each}
-											<button
-												type="button"
-												onclick={(e) => {
-													e.preventDefault();
-													const newItem: Record<string, unknown> = {};
-													// Initialize with default values
-													field.fields?.forEach((f) => {
-														newItem[f.name] = f.default || '';
-													});
-													arrayValue.push(newItem);
-													configObj[field.name] = [...arrayValue];
-												}}
-												class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
-											>
-												<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-												{m.pipelines_add_field_item({ label: field.label })}
-											</button>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{:else if field.type === 'object' && field.fields}
-							<div class="md:col-span-2">
-								<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-									<button
-										type="button"
-										onclick={() => toggleSection(fieldPath)}
-										class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-									>
-										<div class="flex items-center">
-											<IconifyIcon
-												icon={isExpanded(fieldPath)
-													? 'material-symbols:expand-more'
-													: 'material-symbols:chevron-right'}
-												class="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform"
-											/>
-											<span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-												{field.label}
-												{#if field.required}
-													<span class="text-red-500 ml-1">*</span>
-												{/if}
-											</span>
-										</div>
-										{#if field.description}
-											<span class="text-xs text-gray-500 dark:text-gray-400 ml-2 truncate"
-												>{field.description}</span
-											>
-										{/if}
-									</button>
-									{#if isExpanded(fieldPath)}
-										<div
-											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
-										>
-											<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-												{#each field.fields as nestedField (nestedField.name)}
-													{@const nestedPath = `${fieldPath}.${nestedField.name}`}
-													{@const nestedConfigObj =
-														(configObj[field.name] as Record<string, unknown>) || {}}
-													{#if !shouldHideField(nestedField, nestedConfigObj, config)}
-														{@render renderField(
-															nestedField,
-															nestedPath,
-															nestedConfigObj,
-															depth + 1
-														)}
-													{/if}
-												{/each}
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{:else if field.type === 'bool' || field.type === 'boolean'}
-							<div class="md:col-span-2">
-								<label
-									class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-								>
-									<input
-										type="checkbox"
-										bind:checked={configObj[field.name]}
-										class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-									/>
-									<div class="ml-3 flex-1">
-										<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-											{field.label}
-										</span>
-										{#if field.description}
-											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-												{field.description}
-											</p>
-										{/if}
-									</div>
-								</label>
-							</div>
-						{:else if field.type === 'multiselect'}
-							<!-- Array/List field -->
-							<div class="md:col-span-2">
-								<div class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if true}
-										{@const arrayValue = (configObj[field.name] as string[]) || []}
-										<div class="space-y-2">
-											{#each arrayValue as item, index (index)}
-												<div class="flex items-center gap-2">
-													<input
-														type="text"
-														value={item}
-														oninput={(e) => {
-															const target = e.target as HTMLInputElement;
-															arrayValue[index] = target.value;
-															configObj[field.name] = [...arrayValue];
-														}}
-														placeholder={field.placeholder}
-														class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
-													/>
-													<button
-														type="button"
-														onclick={(e) => {
-															e.preventDefault();
-															e.stopPropagation();
-															arrayValue.splice(index, 1);
-															configObj[field.name] = [...arrayValue];
-														}}
-														class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-														aria-label={m.pipelines_remove_item_aria()}
-													>
-														<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
-													</button>
-												</div>
-											{/each}
-											<div class="flex items-center gap-2">
-												<input
-													type="text"
-													placeholder={m.pipelines_typeahead_placeholder()}
-													onkeydown={(e) => {
-														if (e.key === 'Enter') {
-															e.preventDefault();
-															const target = e.target as HTMLInputElement;
-															const value = target.value.trim();
-															if (value) {
-																const newArray = [...arrayValue, value];
-																configObj[field.name] = newArray;
-																target.value = '';
-															}
-														}
-													}}
-													class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
-												/>
-											</div>
-											<p class="text-xs text-gray-500 dark:text-gray-400">
-												{m.pipelines_press_enter_hint()}
-											</p>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{:else}
-							<div>
-								<label class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if field.options && field.options.length > 0}
-										<select
-											value={configObj[field.name] || ''}
-											onchange={(e) => {
-												configObj[field.name] = (e.target as HTMLSelectElement).value;
-											}}
-											class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all border-gray-300 dark:border-gray-600"
-											required={field.required}
-										>
-											<option value="">{m.pipelines_select_placeholder()}</option>
-											{#each field.options as option (option.value)}
-												<option value={option.value}>{option.label}</option>
-											{/each}
-										</select>
-									{:else}
-										<input
-											type={getFieldType(field)}
-											value={configObj[field.name] || ''}
-											oninput={(e) => {
-												const target = e.target as HTMLInputElement;
-												configObj[field.name] =
-													field.type === 'int' || field.type === 'number'
-														? Number(target.value)
-														: target.value;
-												autoDetectSourceType();
-											}}
-											placeholder={field.placeholder ||
-												(field.default ? String(field.default) : '')}
-											class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {field.type ===
-											'password'
-												? 'font-mono'
-												: ''} border-gray-300 dark:border-gray-600"
-											required={field.required}
-										/>
-									{/if}
-								</label>
-							</div>
-						{/if}
-					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field (field.name)}
+						{#each pluginFields.filter((f) => !f.group) as field (field.name)}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}
 						{/each}
 					</div>
-				</div>
+
+					<!-- Each group the plugin declares becomes a collapsed section -->
+					{#if fieldGroups.length > 0}
+						<div
+							class="mt-6 divide-y divide-gray-100 border-y border-gray-100 dark:divide-gray-700 dark:border-gray-700"
+						>
+							{#each fieldGroups as group (group.name)}
+								<Disclosure title={group.name} hint={group.fields.map((f) => f.label).join(', ')}>
+									<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+										{#each group.fields as field (field.name)}
+											{#if !shouldHideField(field, config)}
+												{@render renderField(field, field.name, config, 0)}
+											{/if}
+										{/each}
+									</div>
+								</Disclosure>
+							{/each}
+						</div>
+					{/if}
+				</Panel>
+			{/if}
+
+			{#if queryCapable}
+				<QueryAccessSection bind:queryEnabled bind:ingestOnQuery {hasSchedule} />
 			{/if}
 
 			<!-- Schedule & Filtering -->
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:schedule"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_schedule_heading()}
-				</h3>
+			<Panel title={m.pipelines_schedule_heading()} icon="material-symbols:schedule">
 				<div class="space-y-5">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
 							{m.pipelines_cron_label()}
-							<span class="text-xs font-normal text-gray-500 ml-1"
+							<span class="text-xs font-normal text-gray-600 dark:text-gray-400 ml-1"
 								>{m.pipelines_cron_optional()}</span
 							>
 						</label>
@@ -1063,14 +1046,14 @@
 							type="text"
 							bind:value={cronExpression}
 							placeholder="0 2 * * *"
-							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent font-mono text-sm transition-all"
+							class="{INPUT} font-mono"
 						/>
 						<div class="mt-2 flex items-start">
 							<IconifyIcon
 								icon="material-symbols:info-outline"
-								class="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0"
+								class="h-4 w-4 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0"
 							/>
-							<p class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+							<p class="ml-2 text-xs text-gray-600 dark:text-gray-400">
 								{m.pipelines_cron_hint()}
 							</p>
 						</div>
@@ -1167,12 +1150,12 @@
 							<div class="flex items-center gap-2">
 								<IconifyIcon
 									icon="material-symbols:filter-alt"
-									class="h-4 w-4 text-gray-500 dark:text-gray-400"
+									class="h-4 w-4 text-gray-600 dark:text-gray-400"
 								/>
-								<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+								<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400">
 									{m.pipelines_asset_filter_heading()}
 								</h4>
-								<span class="text-xs text-gray-400 dark:text-gray-500"
+								<span class="text-xs text-gray-600 dark:text-gray-400"
 									>{m.pipelines_filter_optional_suffix()}</span
 								>
 							</div>
@@ -1180,7 +1163,7 @@
 								icon={isExpanded('asset_filter')
 									? 'material-symbols:expand-less'
 									: 'material-symbols:expand-more'}
-								class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+								class="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
 							/>
 						</button>
 
@@ -1188,7 +1171,7 @@
 							<div
 								class="px-4 py-4 rounded-b-lg border border-t-0 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
 							>
-								<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+								<p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
 									{m.pipelines_filter_description()}
 								</p>
 
@@ -1202,11 +1185,11 @@
 												icon="material-symbols:check-circle-outline"
 												class="h-4 w-4 text-green-600 dark:text-green-400"
 											/>
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 												{m.pipelines_filter_include_label()}
 											</span>
 										</div>
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
 											{m.pipelines_filter_include_hint()}
 										</p>
 										{#if true}
@@ -1215,7 +1198,7 @@
 												{#each includeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<input
@@ -1226,10 +1209,10 @@
 																includeValue[index] = target.value;
 																config.filter = { ...config.filter, include: [...includeValue] };
 															}}
-															class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-sm"
+															class="{INPUT} flex-1 font-mono"
 														/>
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<button
@@ -1239,7 +1222,7 @@
 																includeValue.splice(index, 1);
 																config.filter = { ...config.filter, include: [...includeValue] };
 															}}
-															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
 															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
@@ -1248,7 +1231,7 @@
 												{/each}
 												<div class="flex items-center gap-1.5">
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<input
@@ -1272,12 +1255,12 @@
 														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-mono text-sm"
 													/>
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<div class="w-[30px]"></div>
 												</div>
-												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
 													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
@@ -1293,11 +1276,11 @@
 												icon="material-symbols:block"
 												class="h-4 w-4 text-amber-600 dark:text-amber-400"
 											/>
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 												{m.pipelines_filter_exclude_label()}
 											</span>
 										</div>
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
 											{m.pipelines_filter_exclude_hint()}
 										</p>
 										{#if true}
@@ -1306,7 +1289,7 @@
 												{#each excludeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<input
@@ -1317,10 +1300,10 @@
 																excludeValue[index] = target.value;
 																config.filter = { ...config.filter, exclude: [...excludeValue] };
 															}}
-															class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono text-sm"
+															class="{INPUT} flex-1 font-mono"
 														/>
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<button
@@ -1330,7 +1313,7 @@
 																excludeValue.splice(index, 1);
 																config.filter = { ...config.filter, exclude: [...excludeValue] };
 															}}
-															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
 															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
@@ -1339,7 +1322,7 @@
 												{/each}
 												<div class="flex items-center gap-1.5">
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<input
@@ -1363,12 +1346,12 @@
 														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-mono text-sm"
 													/>
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<div class="w-[30px]"></div>
 												</div>
-												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
 													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
@@ -1379,12 +1362,12 @@
 						{/if}
 					</div>
 				</div>
-			</div>
+			</Panel>
 		</div>
 
 		<!-- Footer Actions -->
 		<div class="mt-8 flex items-center justify-between">
-			<div class="text-sm text-gray-500 dark:text-gray-400">
+			<div class="text-sm text-gray-600 dark:text-gray-400">
 				{#if hasSchedule}
 					<IconifyIcon icon="material-symbols:schedule" class="inline h-4 w-4 mr-1" />
 					{m.pipelines_scheduled_pipeline()}
@@ -1394,18 +1377,22 @@
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">
-				<Button
-					variant="clear"
-					click={() => goto(resolve('/runs?tab=pipelines'))}
-					text={m.common_cancel()}
+				<button
+					type="button"
+					class={BTN_SECONDARY}
+					onclick={() => goto(resolve('/runs?tab=pipelines'))}
 					disabled={saving}
-				/>
-				<Button
-					variant="filled"
-					click={handleSave}
-					text={saving ? m.pipelines_saving() : m.pipelines_save_changes()}
+				>
+					{m.common_cancel()}
+				</button>
+				<button
+					type="button"
+					class={BTN_PRIMARY}
+					onclick={handleSave}
 					disabled={saving || !name || !selectedPluginId}
-				/>
+				>
+					{saving ? m.pipelines_saving() : m.pipelines_save_changes()}
+				</button>
 			</div>
 		</div>
 	</div>

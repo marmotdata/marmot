@@ -4,16 +4,17 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/dataquery"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mcp"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -31,13 +32,14 @@ func NewHandler(
 	dataProductService dataproduct.Service,
 	lineageService lineage.Service,
 	searchService search.Service,
+	queryService dataquery.Service,
 	authService auth.Service,
 	config *config.Config,
 	lookupsRecorder lookups.Recorder,
 ) *Handler {
 	teamAdapter := &teamServiceAdapter{teamService: teamService}
 	return &Handler{
-		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, config, lookupsRecorder),
+		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, queryService, config, lookupsRecorder),
 		userService: userService,
 		authService: authService,
 		config:      config,

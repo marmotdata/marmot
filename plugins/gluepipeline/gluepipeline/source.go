@@ -42,11 +42,11 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	IncludeWorkflows  bool `json:"include_workflows" description:"Whether to discover Glue workflows" default:"true"`
-	IncludeTriggers   bool `json:"include_triggers" description:"Whether to read trigger definitions" default:"true"`
-	IncludeRunHistory bool `json:"include_run_history" description:"Whether to collect workflow, job and crawler runs" default:"true"`
-	RunHistoryLimit   int  `json:"run_history_limit" description:"How many recent runs to read per workflow, job and crawler" default:"20" validate:"min=1,max=200"`
-	IncludeCrawlers   bool `json:"include_crawlers" description:"Whether to read crawlers for lineage and runs" default:"true"`
+	IncludeWorkflows  bool `json:"include_workflows" group:"Discovery" description:"Whether to discover Glue workflows" default:"true"`
+	IncludeTriggers   bool `json:"include_triggers" group:"Discovery" description:"Whether to read trigger definitions" default:"true"`
+	IncludeRunHistory bool `json:"include_run_history" group:"Discovery" description:"Whether to collect workflow, job and crawler runs" default:"true"`
+	RunHistoryLimit   int  `json:"run_history_limit" group:"Advanced" description:"How many recent runs to read per workflow, job and crawler" default:"20" validate:"min=1,max=200"`
+	IncludeCrawlers   bool `json:"include_crawlers" group:"Discovery" description:"Whether to read crawlers for lineage and runs" default:"true"`
 }
 
 // Example configuration for the plugin

@@ -1,6 +1,6 @@
 ---
 name: marmot
-description: Interact with a Marmot data catalog instance. Use this skill when the user wants to search for data assets, view lineage, browse glossary terms, check pipeline runs, manage tags or owners, view metrics, or do anything related to their data catalog. Covers the Marmot CLI, REST API and MCP server.
+description: Interact with a Marmot data catalog instance. Use this skill when the user wants to search for data assets, view lineage, browse glossary terms, check pipeline runs, manage tags or owners, view metrics, query catalogued data, or do anything related to their data catalog. Covers the Marmot CLI, REST API and MCP server.
 ---
 
 This skill helps you interact with a Marmot data catalog. Marmot catalogs data assets (databases, tables, topics, APIs, dashboards) across an organisation's data stack and tracks lineage between them.
@@ -23,13 +23,33 @@ export MARMOT_API_KEY=<key>
 
 Or pass `--host` and `--api-key` as flags on any command.
 
+`marmot skills install` refreshes this skill to match the installed CLI.
+
 ## MCP Server
 
 Marmot has a built-in MCP (Model Context Protocol) server. If the user has configured MCP, you can interact with the catalog directly using these tools instead of the CLI:
 
-- **discover_data** — unified data discovery. Supports natural language queries, lookups by ID or MRN (e.g. `postgres://db/schema/table`), filtering by type/provider/tags and metadata-based queries.
-- **find_ownership** — bidirectional ownership queries. "Who owns this asset?", "What does this user own?", "Show all data owned by the data-eng team". Works for assets and glossary terms.
-- **lookup_term** — business glossary lookups. Search for terms by name or retrieve definitions.
+Reading the catalog:
+
+- **discover_data**: unified data discovery. Supports natural language queries, lookups by ID or MRN (e.g. `postgres://db/schema/table`), filtering by type, provider and tags, and metadata-based queries.
+- **find_ownership**: ownership in both directions. "Who owns this asset?", "What does this user own?", "Show all data owned by the data-eng team". Works for assets and glossary terms.
+- **lookup_term**: business glossary lookups. Search for terms by name or retrieve definitions.
+- **explore_data_products**: curated collections of assets that serve a business purpose, and what they contain.
+- **explore_teams**: teams and their members.
+- **trace_lineage**: what feeds an asset (upstream) and what it feeds (downstream).
+
+Changing the catalog (only offered to callers allowed to make the change):
+
+- **update_documentation**: write or clear the human-authored description on an asset.
+- **manage_tags**: add or remove tags on an asset.
+- **manage_owners**: add or remove a user or team as an owner of an asset.
+
+Querying data (only offered to callers with `assets:query`):
+
+- **list_queryable_sources**: the sources that answer queries, searchable by name.
+- **query_data**: run one read-only SQL statement against a source. The answer carries the rows plus what the catalog knows about every table read, and the id the query was recorded under.
+
+Ask before calling the tools that change the catalog, even when the user's request implies the change. Say what you are about to write and to which asset.
 
 MCP configuration lives in `~/.claude.json` (user-level) or `.mcp.json` (project-level):
 
@@ -47,7 +67,33 @@ MCP configuration lives in `~/.claude.json` (user-level) or `.mcp.json` (project
 }
 ```
 
-Prefer MCP tools when available. Fall back to the CLI or REST API for operations MCP doesn't cover (e.g. writes, metrics, admin).
+Prefer MCP tools when available. Fall back to the CLI or REST API for operations MCP doesn't cover (e.g. glossary writes, metrics, admin).
+
+## Driving the CLI as an agent
+
+```bash
+marmot agent schema                       # every command, flag, example, exit code and setting as JSON
+export MARMOT_READ_ONLY=true              # refuse every command that is not a read (or pass --read-only)
+```
+
+Load `marmot agent schema` once rather than walking `--help`. Each command carries `access`: `read`, `write` (changes the server) or `local` (changes local config or credentials). Unless the user wants you to change things, work with `MARMOT_READ_ONLY=true`; a blocked command exits with code 9 and changes nothing.
+
+Branch on the exit code, not the message:
+
+| Code | Meaning | What to do |
+|---|---|---|
+| 0 | Success | |
+| 1 | Other failure | Read the message |
+| 2 | Usage: wrong arguments or flags | Fix the command line |
+| 3 | Not authenticated | Ask the user to run `marmot login` or set `MARMOT_API_KEY` |
+| 4 | Forbidden, including a query you may not run | Don't retry or work round it; tell the user what access is missing |
+| 5 | Not found | Check the id or name |
+| 6 | Rejected as invalid, including SQL the source cannot run | Fix the request |
+| 7 | Rate limited | Wait, then retry |
+| 8 | Server failed or unreachable | Retry later |
+| 9 | Blocked by read-only mode | Ask the user before turning it off |
+| 10 | Needs confirmation and there is no terminal | Show the user the change; pass `--yes` only once they agree |
+| 11 | Confirmation declined | Stop |
 
 ## CLI Reference
 
@@ -104,6 +150,26 @@ marmot runs entities <id>                 # entities processed in a run
 ```
 
 Filter with `--pipelines` and `--statuses`.
+
+### Querying data
+
+`marmot query` runs read-only SQL against catalogued sources as the caller, checks the caller may query every table the statement reads and records the query. It needs the `assets:query` permission.
+
+```bash
+marmot query sources [--search <text>]              # sources you can query
+marmot query tables <source> [--search <text>]      # catalogued tables on a source, busiest first
+marmot query run <source> --table <name>            # preview a table in the source's own dialect
+marmot query run <source> "SELECT ..."              # run a statement
+marmot query run <source> --file q.sql              # ... from a file
+marmot query run <source> - < q.sql                 # ... from stdin
+marmot query history [--decision denied] [--source <name>] [--mrn <mrn>]
+marmot query show <query-id>                        # one recorded query, with the reason if denied
+marmot query stats [--since 7d]                     # totals, busiest tables and callers
+```
+
+- `query run` prints rows on stdout and the row count, query id and catalog context on stderr, so the table pipes cleanly. `-o json` returns everything in one document, including `truncated` when the row limit was hit (raise it with `--max-rows`).
+- A denial gives the reason. Don't rewrite the query to get round it; tell the user what access is missing.
+- `--since` takes `30m`, `24h`, `7d`, `2w` or an RFC 3339 time.
 
 ### Authentication
 
@@ -200,6 +266,10 @@ The Marmot API is available at `{host}/api/v1/`. Authenticate with either the `X
 | `/api/v1/teams` | GET | List teams |
 | `/api/v1/teams/{id}` | GET | Get team |
 | `/api/v1/teams/{id}/members` | GET | Team members |
+| `/api/v1/query/sources` | GET | Sources you can query |
+| `/api/v1/query/sources/{name}/tables` | GET | Catalogued tables on a source |
+| `/api/v1/query/run` | POST | Run a read-only statement (`source`, `statement`, `max_rows`) |
+| `/api/v1/query/history` | GET | Query log (`mine=true` for your own) |
 | `/api/v1/admin/search/reindex` | POST | Trigger reindex |
 | `/api/v1/admin/search/reindex` | GET | Reindex status |
 
@@ -217,6 +287,7 @@ GET /api/v1/metrics/top-queries?start=2026-03-01T00:00:00Z&end=2026-03-26T00:00:
 - Prefer the CLI over raw API calls when the user has it installed.
 - Use `-o json` and pipe through `jq` when the user needs to extract or transform data.
 - Asset IDs are UUIDs. Asset MRNs (Marmot Resource Names) look like `mrn://type/provider/name`.
-- Destructive commands (`delete`) prompt for confirmation. Pass `--yes` to skip in scripts.
+- Destructive commands (`assets delete`, `apikeys delete`) ask for confirmation, and refuse when there is no terminal to ask on. Pass `--yes` only once the user has agreed to that specific change.
+- To answer a question from the data itself, find the table first (`discover_data` or `marmot query tables`), check its description and tags, then query it. Quote the query id with the answer so the user can find it in the log.
 - All list commands support `--limit` and `--offset` for pagination.
 - When using the REST API directly, authenticate with either `X-API-Key` or `Authorization: Bearer <token>` header.

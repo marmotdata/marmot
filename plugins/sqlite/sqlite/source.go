@@ -25,10 +25,10 @@ type Config struct {
 
 	Path string `json:"path" description:"Path to the SQLite database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics       bool `json:"enable_metrics" description:"Whether to include table metrics (row and column counts)" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude SQLite internal tables (sqlite_*)" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics       bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics (row and column counts)" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" group:"Discovery" description:"Whether to exclude SQLite internal tables (sqlite_*)" default:"true"`
 }
 
 // Meta describes the plugin to the Marmot host.

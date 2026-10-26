@@ -50,11 +50,34 @@ spec:
         user: "readonly"
 ```
 
-The resource's `metadata.name` is used as the pipeline name for tracking ingestion state.
+The resource's `metadata.name` is used as the pipeline name for tracking ingestion state. If a pipeline with that name already exists in Marmot and was not created by the operator, the operator leaves it untouched and logs a warning; rename the Run, or delete the existing pipeline if the operator should own it.
 
 ```bash
 kubectl apply -f my-pipeline.yaml
 ```
+
+## Credentials
+
+Keep credentials in a Kubernetes Secret rather than in the Run. Map each key into the ingestion container with `env`, then refer to it in `runs` as `${NAME}`. The Job pod reads the Secret directly, so the value never appears in the Run, the rendered pipeline config or Marmot's database, and the operator itself needs no access to Secrets.
+
+```yaml
+spec:
+  env:
+    - name: PG_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-readonly
+          key: password
+  runs:
+    - postgresql:
+        host: "db.example.com"
+        user: "readonly"
+        password: "${PG_PASSWORD}"
+```
+
+Variables starting with `MARMOT_` are reserved for the operator and are rejected. Marmot stores operator-managed pipelines with their sensitive fields masked, because the server never runs them.
+
+Ingestion pods authenticate to Marmot with their ServiceAccount token. That identity can only start and complete runs and write assets, lineage and documentation, so a token taken from an ingestion pod cannot administer Marmot.
 
 ## Pod Labels and Annotations
 
@@ -95,6 +118,7 @@ By default, deleting a Run resource runs `marmot ingest --destroy` to remove all
 | Field                        | Type                                                                                                                      | Default  | Description                                                     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
 | `runs`                       | array                                                                                                                     | required | Source configurations, same format as CLI YAML                  |
+| `serve`                      | boolean                                                                                                                   | `false`  | Run as a Deployment that ingests on start, then serves queries for the run marked `queryable: true`. See [Serving Queries from Your Network](../Configure/serving-plugins.md). Cannot be combined with `schedule` |
 | `schedule`                   | string                                                                                                                    |          | Cron expression. When set, creates a CronJob instead of a Job   |
 | `suspend`                    | boolean                                                                                                                   | `false`  | Pause scheduled executions. Only applies when `schedule` is set |
 | `concurrencyPolicy`          | `Allow` / `Forbid` / `Replace`                                                                                            | `Forbid` | How to handle concurrent Job executions                         |
@@ -103,6 +127,7 @@ By default, deleting a Run resource runs `marmot ingest --destroy` to remove all
 | `successfulJobsHistoryLimit` | int                                                                                                                       | `3`      | Successful CronJob runs to retain                               |
 | `failedJobsHistoryLimit`     | int                                                                                                                       | `1`      | Failed CronJob runs to retain                                   |
 | `resources`                  | [ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core) |          | CPU/memory requests and limits for the ingestion container      |
+| `env`                        | [EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core) array                       |          | Environment variables for the ingestion container, referenced in `runs` as `${NAME}`. `MARMOT_` names are reserved |
 | `podLabels`                  | map                                                                                                                       |          | Additional labels applied to the pod template                   |
 | `podAnnotations`             | map                                                                                                                       |          | Additional annotations applied to the pod template              |
 | `teardownOnDelete`           | boolean                                                                                                                   | `true`   | Run `marmot ingest --destroy` when the Run is deleted           |

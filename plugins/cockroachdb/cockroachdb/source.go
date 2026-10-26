@@ -27,18 +27,18 @@ type Config struct {
 	User     string `json:"user" description:"SQL user" validate:"required"`
 	Password string `json:"password" description:"Password for the SQL user. Leave empty on insecure clusters or with certificate authentication" sensitive:"true"`
 
-	Database         string   `json:"database,omitempty" description:"Discover only this database. Leave empty to discover every database"`
-	ExcludeDatabases []string `json:"exclude_databases,omitempty" description:"Databases to skip when discovering every database" default:"[\"system\"]"`
+	Database         string   `json:"database,omitempty" group:"Discovery" description:"Discover only this database. Leave empty to discover every database"`
+	ExcludeDatabases []string `json:"exclude_databases,omitempty" group:"Discovery" description:"Databases to skip when discovering every database" default:"[\"system\"]"`
 
-	SSLMode     string `json:"ssl_mode" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
-	SSLRootCert string `json:"ssl_root_cert,omitempty" label:"SSL Root Certificate" description:"Path to the CA certificate that signed the node certificates"`
-	SSLCert     string `json:"ssl_cert,omitempty" label:"SSL Client Certificate" description:"Path to the client certificate, for certificate authentication"`
-	SSLKey      string `json:"ssl_key,omitempty" label:"SSL Client Key" description:"Path to the client certificate key"`
+	SSLMode     string `json:"ssl_mode" group:"Authentication" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
+	SSLRootCert string `json:"ssl_root_cert,omitempty" group:"Authentication" label:"SSL Root Certificate" description:"Path to the CA certificate that signed the node certificates"`
+	SSLCert     string `json:"ssl_cert,omitempty" group:"Authentication" label:"SSL Client Certificate" description:"Path to the client certificate, for certificate authentication"`
+	SSLKey      string `json:"ssl_key,omitempty" group:"Authentication" label:"SSL Client Key" description:"Path to the client certificate key"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeViews        bool `json:"include_views" description:"Whether to discover views and materialized views" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	IncludeStatistics   bool `json:"include_statistics" description:"Whether to include row counts, column counts and table sizes" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeViews        bool `json:"include_views" group:"Discovery" description:"Whether to discover views and materialized views" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	IncludeStatistics   bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts, column counts and table sizes" default:"true"`
 }
 
 // Example configuration for the plugin

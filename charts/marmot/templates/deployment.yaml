@@ -52,6 +52,11 @@ spec:
               containerPort: {{ .Values.config.metrics.port }}
               protocol: TCP
             {{- end }}
+            {{- if (include "marmot.serveEnabled" .) }}
+            - name: serve
+              containerPort: {{ include "marmot.servePort" . }}
+              protocol: TCP
+            {{- end }}
           env:
             # ---- Encryption key (secret) ----
             {{- if or .Values.config.server.encryptionKeySecretRef .Values.config.server.autoGenerateEncryptionKey }}
@@ -148,6 +153,16 @@ spec:
               value: /var/lib/marmot/plugins
             {{- end }}
 
+            {{- if and (include "marmot.serveEnabled" .) (not (hasKey (.Values.env | default dict) "MARMOT_QUERY_SERVE_REPLICA_ADDRESS")) }}
+            # ---- Address other replicas forward serving-plugin queries to ----
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MARMOT_QUERY_SERVE_REPLICA_ADDRESS
+              value: "$(POD_IP)"
+            {{- end }}
+
             # ---- Additional environment variables ----
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
@@ -157,8 +172,11 @@ spec:
             - name: config
               mountPath: /etc/marmot
               readOnly: true
+            # Marmot creates plugins/ inside this volume itself, because it
+            # refuses plugin directories other users can write and an
+            # emptyDir root is world-writable
             - name: plugins
-              mountPath: /var/lib/marmot/plugins
+              mountPath: /var/lib/marmot
             # plugin sockets and scratch space
             - name: tmp
               mountPath: /tmp

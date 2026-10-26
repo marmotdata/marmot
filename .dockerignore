@@ -6,3 +6,5 @@ charts/
 .claude/
 .github/
 *.md
+# Embedded in the binary by skill.go, so the build needs it
+!SKILL.md

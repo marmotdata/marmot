@@ -1,42 +1,43 @@
+<script lang="ts" module>
+	import type { Team } from '$lib/teams/types';
+
+	/** A team as the list endpoint returns it, with the SSO fields the shared type leaves out. */
+	export type TeamRow = Team & { created_via_sso?: boolean; sso_provider?: string };
+</script>
+
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { Users, Lock, Trash2 } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import { BTN_GHOST, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
+	import Pill from '$components/ui/Pill.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import type { Team } from '$lib/teams/types';
 
-	export let teams: Team[];
-	export let totalTeams: number;
-	export let offset: number;
-	export let limit: number;
+	let {
+		teams,
+		canManage = true,
+		onDelete
+	}: { teams: TeamRow[]; canManage?: boolean; onDelete: (teamId: string) => void } = $props();
 
-	const dispatch = createEventDispatcher();
-
-	let deletingTeamId: string | null = null;
-	let showDeleteModal = false;
-	let teamToDelete: Team | null = null;
+	let deletingTeamId = $state<string | null>(null);
+	let showDeleteModal = $state(false);
+	let teamToDelete = $state<TeamRow | null>(null);
 
 	async function handleDeleteTeam() {
 		if (!teamToDelete) return;
-
 		try {
 			deletingTeamId = teamToDelete.id;
-			const response = await fetchApi(`/teams/${teamToDelete.id}`, {
-				method: 'DELETE'
-			});
-
+			const response = await fetchApi(`/teams/${teamToDelete.id}`, { method: 'DELETE' });
 			if (response.ok) {
 				toasts.success(m.teams_delete_success({ name: teamToDelete.name }));
-				dispatch('delete', teamToDelete.id);
+				onDelete(teamToDelete.id);
 				showDeleteModal = false;
 				teamToDelete = null;
 			} else {
-				const errorMsg = await handleApiError(response);
-				toasts.error(errorMsg);
+				toasts.error(await handleApiError(response));
 			}
 		} catch (err) {
 			toasts.error(err instanceof Error ? err.message : m.teams_error_generic());
@@ -45,168 +46,85 @@
 		}
 	}
 
-	function goToTeamPage(teamId: string) {
-		goto(resolve(`/teams/${teamId}`));
+	function open(teamId: string) {
+		goto(resolve('/settings/teams/[id]', { id: teamId }));
 	}
-
-	$: totalPages = Math.ceil(totalTeams / limit);
-	$: currentPage = Math.floor(offset / limit) + 1;
 </script>
 
 <div class="overflow-x-auto">
-	<table class="min-w-full">
-		<thead>
+	<table class={TABLE}>
+		<thead class="border-b border-gray-100 dark:border-gray-700/60">
 			<tr>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-				>
-					{m.teams_header_team()}
-				</th>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-				>
-					{m.common_description()}
-				</th>
-				<th
-					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-				>
-					{m.teams_header_source()}
-				</th>
-				<th
-					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-				>
-					{m.common_actions()}
-				</th>
+				<th class="{TH} pl-5">{m.teams_header_team()}</th>
+				<th class={TH}>{m.common_description()}</th>
+				<th class={TH}>{m.teams_header_source()}</th>
+				<th class="{TH} pr-5 text-right"><span class="sr-only">{m.common_actions()}</span></th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
+		<tbody class={TBODY}>
 			{#each teams as team (team.id)}
-				<tr
-					class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-					on:click={() => goToTeamPage(team.id)}
-				>
-					<td class="px-6 py-4 whitespace-nowrap">
-						<div class="flex items-center">
-							<Users class="h-5 w-5 text-gray-400 mr-2" />
-							<div>
-								<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-									{team.name}
-								</div>
-							</div>
-						</div>
+				<tr class="{TR} cursor-pointer" onclick={() => open(team.id)}>
+					<td class="{TD} pl-5">
+						<a
+							href={resolve('/settings/teams/[id]', { id: team.id })}
+							class="flex items-center gap-2.5 font-medium text-gray-900 hover:underline dark:text-gray-100"
+							onclick={(e) => e.stopPropagation()}
+						>
+							<IconifyIcon
+								icon="material-symbols:groups-outline"
+								class="h-4 w-4 flex-shrink-0 text-gray-400"
+							/>
+							{team.name}
+						</a>
 					</td>
-					<td class="px-6 py-4">
-						<div class="text-sm text-gray-500 dark:text-gray-400 max-w-md truncate">
-							{team.description || '—'}
-						</div>
+					<td class="{TD} max-w-md truncate text-gray-500 dark:text-gray-400">
+						{team.description || '—'}
 					</td>
-					<td class="px-6 py-4 whitespace-nowrap">
+					<td class={TD}>
 						{#if team.created_via_sso}
-							<span
-								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-							>
-								<Lock class="h-3 w-3 mr-1" />
-								{m.teams_sso_provider_badge({ provider: team.sso_provider })}
-							</span>
+							<Pill tone="info">
+								<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3" />
+								{m.teams_sso_provider_badge({ provider: team.sso_provider ?? '' })}
+							</Pill>
 						{:else}
-							<span
-								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-							>
-								{m.teams_manual_badge()}
-							</span>
+							<Pill>{m.teams_manual_badge()}</Pill>
 						{/if}
 					</td>
-					<td
-						class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-						on:click|stopPropagation
-					>
-						{#if !team.created_via_sso}
+					<td class="{TD} whitespace-nowrap pr-5 text-right">
+						{#if team.created_via_sso}
+							<span
+								class="inline-flex px-2.5 text-gray-400"
+								title={m.teams_sso_cannot_delete_title()}
+							>
+								<IconifyIcon icon="material-symbols:lock-outline" class="h-4 w-4" />
+							</span>
+						{:else if canManage}
 							<button
-								on:click={() => {
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
 									teamToDelete = team;
 									showDeleteModal = true;
 								}}
 								disabled={deletingTeamId === team.id}
-								class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+								class="{BTN_GHOST} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
 								title={m.teams_delete_tooltip()}
+								aria-label={m.teams_delete_tooltip()}
 							>
-								<Trash2 class="h-4 w-4" />
+								<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
 							</button>
-						{:else}
-							<span
-								class="text-gray-400 dark:text-gray-600"
-								title={m.teams_sso_cannot_delete_title()}
-							>
-								<Lock class="h-4 w-4" />
-							</span>
 						{/if}
 					</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
-
-	{#if teams.length === 0}
-		<div class="text-center py-8 text-gray-500 dark:text-gray-400">{m.teams_no_teams_found()}</div>
-	{/if}
-
-	{#if totalPages > 1}
-		<div
-			class="bg-white dark:bg-gray-900 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700"
-		>
-			<div class="flex-1 flex justify-between sm:hidden">
-				<button
-					on:click={() => dispatch('pageChange', Math.max(0, offset - limit))}
-					disabled={currentPage === 1}
-					class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{m.common_previous()}
-				</button>
-				<button
-					on:click={() => dispatch('pageChange', offset + limit)}
-					disabled={currentPage === totalPages}
-					class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{m.common_next()}
-				</button>
-			</div>
-			<div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-				<div>
-					<p class="text-sm text-gray-700 dark:text-gray-300">
-						{m.teams_pagination_showing({
-							from: offset + 1,
-							to: Math.min(offset + limit, totalTeams),
-							total: totalTeams
-						})}
-					</p>
-				</div>
-				<div>
-					<nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-						<button
-							on:click={() => dispatch('pageChange', Math.max(0, offset - limit))}
-							disabled={currentPage === 1}
-							class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							{m.common_previous()}
-						</button>
-						<button
-							on:click={() => dispatch('pageChange', offset + limit)}
-							disabled={currentPage === totalPages}
-							class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							{m.common_next()}
-						</button>
-					</nav>
-				</div>
-			</div>
-		</div>
-	{/if}
 </div>
 
 <DeleteModal
 	show={showDeleteModal}
 	title={m.teams_delete_title()}
-	message={m.teams_delete_confirm_message()}
+	message={m.teams_delete_message()}
 	confirmText={m.common_delete()}
 	resourceName={teamToDelete?.name || ''}
 	requireConfirmation={true}

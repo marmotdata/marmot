@@ -39,6 +39,9 @@ class TestRole(unittest.TestCase):
                 id = '',
                 is_system = True,
                 name = '',
+                permission_keys = [
+                    ''
+                    ],
                 permissions = [
                     marmot.generated.models.role_permission.RolePermission(
                         action = '',

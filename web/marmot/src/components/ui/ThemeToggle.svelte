@@ -1,88 +1,56 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
-	import Button from './Button.svelte';
 	import { theme } from '$lib/stores/theme';
 	import { m } from '$lib/paraglide/messages';
+	import SegmentedControl from './SegmentedControl.svelte';
 
 	type ThemeType = 'light' | 'dark' | 'auto';
 
-	let loading = true;
-	let currentTheme: ThemeType;
-
-	// Initialize currentTheme from the store on page load
 	theme.initialize();
-
-	// Subscribe to the theme store for updates
+	let currentTheme = $state<ThemeType>('auto');
 	theme.subscribe((value) => {
-		currentTheme = value;
+		currentTheme = value as ThemeType;
 	});
+
+	const options: { id: ThemeType; label: string; icon: string }[] = [
+		{ id: 'light', label: m.ui_theme_light(), icon: 'material-symbols:sunny-outline' },
+		{ id: 'dark', label: m.ui_theme_dark(), icon: 'material-symbols:dark-mode-outline' },
+		{ id: 'auto', label: m.ui_theme_auto(), icon: 'material-symbols:brightness-auto-outline' }
+	];
 
 	onMount(async () => {
 		try {
 			const response = await fetchApi('/users/me');
 			if (response.ok) {
 				const user = await response.json();
-				if (user.preferences?.theme) {
-					// Only update if the API returns a different theme
-					if (user.preferences.theme !== currentTheme) {
-						theme.set(user.preferences.theme);
-					}
+				// The saved preference wins over whatever this browser last used
+				if (user.preferences?.theme && user.preferences.theme !== currentTheme) {
+					theme.set(user.preferences.theme);
 				}
 			}
 		} catch (error) {
 			console.error('Failed to fetch theme preference:', error);
-		} finally {
-			loading = false;
 		}
 	});
 
-	const handleThemeChange = (newTheme: ThemeType) => () => {
-		theme.set(newTheme); // Update the theme in the store
-
-		// API call to update user preference (in the background)
+	function change(next: ThemeType) {
+		theme.set(next);
+		// Saved in the background; the theme has already changed on screen
 		fetchApi('/users/preferences', {
 			method: 'PUT',
-			body: JSON.stringify({
-				preferences: { theme: newTheme }
-			})
+			body: JSON.stringify({ preferences: { theme: next } })
 		})
 			.then((response) => {
-				if (!response.ok) {
-					console.error('Failed to update theme preference:', response.statusText);
-				}
+				if (!response.ok) console.error('Failed to update theme preference:', response.statusText);
 			})
-			.catch((error) => {
-				console.error('Failed to update theme preference:', error);
-			});
-	};
+			.catch((error) => console.error('Failed to update theme preference:', error));
+	}
 </script>
 
-<div class="inline-flex rounded-md shadow-sm">
-	<Button
-		variant={currentTheme === 'light' ? 'filled' : 'clear'}
-		class="rounded-r-none border-r-0"
-		click={handleThemeChange('light')}
-		disabled={loading}
-		icon="material-symbols:sunny"
-		text={m.ui_theme_light()}
-	/>
-
-	<Button
-		variant={currentTheme === 'dark' ? 'filled' : 'clear'}
-		class="rounded-none border-x"
-		click={handleThemeChange('dark')}
-		disabled={loading}
-		icon="material-symbols:moon-stars"
-		text={m.ui_theme_dark()}
-	/>
-
-	<Button
-		variant={currentTheme === 'auto' ? 'filled' : 'clear'}
-		class="rounded-l-none border-l-0"
-		click={handleThemeChange('auto')}
-		disabled={loading}
-		icon="material-symbols:wand-stars-rounded"
-		text={m.ui_theme_auto()}
-	/>
-</div>
+<SegmentedControl
+	{options}
+	value={currentTheme}
+	onChange={change}
+	label={m.profile_theme_label()}
+/>

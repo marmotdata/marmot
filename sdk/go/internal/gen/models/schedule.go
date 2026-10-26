@@ -32,6 +32,9 @@ type Schedule struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// ingest on query
+	IngestOnQuery bool `json:"ingest_on_query,omitempty"`
+
 	// last run at
 	LastRunAt string `json:"last_run_at,omitempty"`
 
@@ -49,6 +52,15 @@ type Schedule struct {
 
 	// plugin id
 	PluginID string `json:"plugin_id,omitempty"`
+
+	// queryable
+	Queryable bool `json:"queryable,omitempty"`
+
+	// served by id
+	ServedByID string `json:"served_by_id,omitempty"`
+
+	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
+	ServedByType string `json:"served_by_type,omitempty"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`

@@ -45,8 +45,8 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	IncludeConsumers bool `json:"include_consumers" description:"Whether to list the enhanced fan-out consumers registered on each stream" default:"true"`
-	IncludeShards    bool `json:"include_shards" description:"Whether to list shards to count total and open shards per stream" default:"true"`
+	IncludeConsumers bool `json:"include_consumers" group:"Discovery" description:"Whether to list the enhanced fan-out consumers registered on each stream" default:"true"`
+	IncludeShards    bool `json:"include_shards" group:"Discovery" description:"Whether to list shards to count total and open shards per stream" default:"true"`
 }
 
 // Example configuration for the plugin

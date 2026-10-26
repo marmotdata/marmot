@@ -80,6 +80,8 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.data_product_rules_response import DataProductRulesResponse
     from marmot.generated.models.dataset import Dataset
     from marmot.generated.models.destroy_run_response import DestroyRunResponse
+    from marmot.generated.models.document_error_response import DocumentErrorResponse
+    from marmot.generated.models.document_field_error import DocumentFieldError
     from marmot.generated.models.documentation import Documentation
     from marmot.generated.models.documentation_create_request import DocumentationCreateRequest
     from marmot.generated.models.documentation_result import DocumentationResult
@@ -118,17 +120,37 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.o_auth_link_request import OAuthLinkRequest
     from marmot.generated.models.owner_request import OwnerRequest
     from marmot.generated.models.permission import Permission
+    from marmot.generated.models.plugin_instance_status import PluginInstanceStatus
     from marmot.generated.models.plugin_run import PluginRun
+    from marmot.generated.models.pluginsdk_asset_field import PluginsdkAssetField
+    from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
     from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
     from marmot.generated.models.pluginsdk_field_option import PluginsdkFieldOption
     from marmot.generated.models.pluginsdk_field_type import PluginsdkFieldType
     from marmot.generated.models.pluginsdk_meta import PluginsdkMeta
     from marmot.generated.models.pluginsdk_show_when import PluginsdkShowWhen
     from marmot.generated.models.pluginsdk_validation import PluginsdkValidation
+    from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInput
+    from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
+    from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
     from marmot.generated.models.preview_request import PreviewRequest
     from marmot.generated.models.preview_response import PreviewResponse
     from marmot.generated.models.product_image_meta import ProductImageMeta
+    from marmot.generated.models.query_asset_context import QueryAssetContext
+    from marmot.generated.models.query_column import QueryColumn
     from marmot.generated.models.query_count import QueryCount
+    from marmot.generated.models.query_history_response import QueryHistoryResponse
+    from marmot.generated.models.query_list_sources_response import QueryListSourcesResponse
+    from marmot.generated.models.query_record import QueryRecord
+    from marmot.generated.models.query_result import QueryResult
+    from marmot.generated.models.query_run_input import QueryRunInput
+    from marmot.generated.models.query_source import QuerySource
+    from marmot.generated.models.query_source_table import QuerySourceTable
+    from marmot.generated.models.query_stats import QueryStats
+    from marmot.generated.models.query_stats_group import QueryStatsGroup
+    from marmot.generated.models.query_stats_point import QueryStatsPoint
+    from marmot.generated.models.query_stats_totals import QueryStatsTotals
+    from marmot.generated.models.query_status_response import QueryStatusResponse
     from marmot.generated.models.record_run_request import RecordRunRequest
     from marmot.generated.models.reindex_accepted_response import ReindexAcceptedResponse
     from marmot.generated.models.reindex_status_response import ReindexStatusResponse
@@ -136,6 +158,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.result import Result
     from marmot.generated.models.result_type import ResultType
     from marmot.generated.models.role import Role
+    from marmot.generated.models.role_document_problem import RoleDocumentProblem
     from marmot.generated.models.role_permission import RolePermission
     from marmot.generated.models.rule_preview import RulePreview
     from marmot.generated.models.rule_type import RuleType
@@ -154,6 +177,8 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.schedule import Schedule
     from marmot.generated.models.search_owners_response import SearchOwnersResponse
     from marmot.generated.models.search_response import SearchResponse
+    from marmot.generated.models.serve_key_generation import ServeKeyGeneration
+    from marmot.generated.models.serve_rotate_keys_request import ServeRotateKeysRequest
     from marmot.generated.models.service_account import ServiceAccount
     from marmot.generated.models.service_account_api_key import ServiceAccountAPIKey
     from marmot.generated.models.start_run_request import StartRunRequest
@@ -189,7 +214,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.v1_roles_update_role_request import V1RolesUpdateRoleRequest
     from marmot.generated.models.validate_config_request import ValidateConfigRequest
     from marmot.generated.models.validate_config_response import ValidateConfigResponse
+    from marmot.generated.models.validate_role_response import ValidateRoleResponse
     from marmot.generated.models.validation_error_detail import ValidationErrorDetail
+    from marmot.generated.models.validation_error_response import ValidationErrorResponse
 
 else:
     from lazy_imports import LazyModule, as_package, load
@@ -262,6 +289,8 @@ from marmot.generated.models.data_product_rule_type import DataProductRuleType
 from marmot.generated.models.data_product_rules_response import DataProductRulesResponse
 from marmot.generated.models.dataset import Dataset
 from marmot.generated.models.destroy_run_response import DestroyRunResponse
+from marmot.generated.models.document_error_response import DocumentErrorResponse
+from marmot.generated.models.document_field_error import DocumentFieldError
 from marmot.generated.models.documentation import Documentation
 from marmot.generated.models.documentation_create_request import DocumentationCreateRequest
 from marmot.generated.models.documentation_result import DocumentationResult
@@ -300,17 +329,37 @@ from marmot.generated.models.o_auth_error_response import OAuthErrorResponse
 from marmot.generated.models.o_auth_link_request import OAuthLinkRequest
 from marmot.generated.models.owner_request import OwnerRequest
 from marmot.generated.models.permission import Permission
+from marmot.generated.models.plugin_instance_status import PluginInstanceStatus
 from marmot.generated.models.plugin_run import PluginRun
+from marmot.generated.models.pluginsdk_asset_field import PluginsdkAssetField
+from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
 from marmot.generated.models.pluginsdk_field_option import PluginsdkFieldOption
 from marmot.generated.models.pluginsdk_field_type import PluginsdkFieldType
 from marmot.generated.models.pluginsdk_meta import PluginsdkMeta
 from marmot.generated.models.pluginsdk_show_when import PluginsdkShowWhen
 from marmot.generated.models.pluginsdk_validation import PluginsdkValidation
+from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInput
+from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
+from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
 from marmot.generated.models.preview_request import PreviewRequest
 from marmot.generated.models.preview_response import PreviewResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta
+from marmot.generated.models.query_asset_context import QueryAssetContext
+from marmot.generated.models.query_column import QueryColumn
 from marmot.generated.models.query_count import QueryCount
+from marmot.generated.models.query_history_response import QueryHistoryResponse
+from marmot.generated.models.query_list_sources_response import QueryListSourcesResponse
+from marmot.generated.models.query_record import QueryRecord
+from marmot.generated.models.query_result import QueryResult
+from marmot.generated.models.query_run_input import QueryRunInput
+from marmot.generated.models.query_source import QuerySource
+from marmot.generated.models.query_source_table import QuerySourceTable
+from marmot.generated.models.query_stats import QueryStats
+from marmot.generated.models.query_stats_group import QueryStatsGroup
+from marmot.generated.models.query_stats_point import QueryStatsPoint
+from marmot.generated.models.query_stats_totals import QueryStatsTotals
+from marmot.generated.models.query_status_response import QueryStatusResponse
 from marmot.generated.models.record_run_request import RecordRunRequest
 from marmot.generated.models.reindex_accepted_response import ReindexAcceptedResponse
 from marmot.generated.models.reindex_status_response import ReindexStatusResponse
@@ -318,6 +367,7 @@ from marmot.generated.models.remove_term_request import RemoveTermRequest
 from marmot.generated.models.result import Result
 from marmot.generated.models.result_type import ResultType
 from marmot.generated.models.role import Role
+from marmot.generated.models.role_document_problem import RoleDocumentProblem
 from marmot.generated.models.role_permission import RolePermission
 from marmot.generated.models.rule_preview import RulePreview
 from marmot.generated.models.rule_type import RuleType
@@ -336,6 +386,8 @@ from marmot.generated.models.sso_team_mapping import SSOTeamMapping
 from marmot.generated.models.schedule import Schedule
 from marmot.generated.models.search_owners_response import SearchOwnersResponse
 from marmot.generated.models.search_response import SearchResponse
+from marmot.generated.models.serve_key_generation import ServeKeyGeneration
+from marmot.generated.models.serve_rotate_keys_request import ServeRotateKeysRequest
 from marmot.generated.models.service_account import ServiceAccount
 from marmot.generated.models.service_account_api_key import ServiceAccountAPIKey
 from marmot.generated.models.start_run_request import StartRunRequest
@@ -369,7 +421,9 @@ from marmot.generated.models.v1_roles_replace_permissions_request import V1Roles
 from marmot.generated.models.v1_roles_update_role_request import V1RolesUpdateRoleRequest
 from marmot.generated.models.validate_config_request import ValidateConfigRequest
 from marmot.generated.models.validate_config_response import ValidateConfigResponse
+from marmot.generated.models.validate_role_response import ValidateRoleResponse
 from marmot.generated.models.validation_error_detail import ValidationErrorDetail
+from marmot.generated.models.validation_error_response import ValidationErrorResponse
 
 """,
             name=__name__,

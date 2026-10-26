@@ -25,16 +25,16 @@ type Config struct {
 	Host  string `json:"host" description:"Unity Catalog server URL, for example http://localhost:8080" validate:"required,url"`
 	Token string `json:"token" description:"Bearer token, when the server requires one" sensitive:"true"`
 
-	Catalogs        []string `json:"catalogs" description:"Catalogs to discover (all when empty)"`
-	ExcludeCatalogs []string `json:"exclude_catalogs" description:"Catalogs to skip" default:"[\"system\",\"__databricks_internal\"]"`
+	Catalogs        []string `json:"catalogs" group:"Discovery" description:"Catalogs to discover (all when empty)"`
+	ExcludeCatalogs []string `json:"exclude_catalogs" group:"Discovery" description:"Catalogs to skip" default:"[\"system\",\"__databricks_internal\"]"`
 
-	IncludeColumns   bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeVolumes   bool `json:"include_volumes" description:"Whether to discover volumes" default:"true"`
-	IncludeFunctions bool `json:"include_functions" description:"Whether to discover functions" default:"true"`
-	IncludeModels    bool `json:"include_models" description:"Whether to discover registered models" default:"true"`
+	IncludeColumns   bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeVolumes   bool `json:"include_volumes" group:"Discovery" description:"Whether to discover volumes" default:"true"`
+	IncludeFunctions bool `json:"include_functions" group:"Discovery" description:"Whether to discover functions" default:"true"`
+	IncludeModels    bool `json:"include_models" group:"Discovery" description:"Whether to discover registered models" default:"true"`
 
-	VerifySSL bool `json:"verify_ssl" label:"Verify SSL" description:"Whether to verify the server's TLS certificate" default:"true"`
-	PageSize  int  `json:"page_size" description:"Objects requested per API page" default:"100" validate:"omitempty,min=1,max=1000"`
+	VerifySSL bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Whether to verify the server's TLS certificate" default:"true"`
+	PageSize  int  `json:"page_size" group:"Advanced" description:"Objects requested per API page" default:"100" validate:"omitempty,min=1,max=1000"`
 }
 
 // Example configuration for the plugin

@@ -39,12 +39,12 @@ type Config struct {
 	// Connection options
 	Host            string `json:"host" description:"NATS server hostname or IP address" validate:"required"`
 	Port            int    `json:"port,omitempty" description:"NATS server port" default:"4222" validate:"omitempty,min=1,max=65535"`
-	Token           string `json:"token,omitempty" description:"Authentication token" sensitive:"true"`
+	Token           string `json:"token,omitempty" group:"Authentication" description:"Authentication token" sensitive:"true"`
 	Username        string `json:"username,omitempty" description:"Username for authentication"`
 	Password        string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
-	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to NATS credentials file (.creds)"`
-	TLS             bool   `json:"tls,omitempty" description:"Enable TLS connection"`
-	TLSInsecure     bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
+	CredentialsFile string `json:"credentials_file,omitempty" group:"Authentication" description:"Path to NATS credentials file (.creds)"`
+	TLS             bool   `json:"tls,omitempty" group:"Authentication" description:"Enable TLS connection" default:"true"`
+	TLSInsecure     bool   `json:"tls_insecure,omitempty" group:"Authentication" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 }
 
 // Example configuration for the plugin

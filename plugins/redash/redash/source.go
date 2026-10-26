@@ -37,16 +37,16 @@ type Config struct {
 	Host   string `json:"host" description:"Redash base URL, for example https://redash.example.com" validate:"required,url"`
 	APIKey string `json:"api_key" label:"API Key" description:"Redash user API key, found on the user profile page" validate:"required" sensitive:"true"`
 
-	VerifySSL bool `json:"verify_ssl" description:"Whether to verify the server TLS certificate" default:"true"`
+	VerifySSL bool `json:"verify_ssl" group:"Authentication" description:"Whether to verify the server TLS certificate" default:"true"`
 
-	IncludeQueries     bool `json:"include_queries" description:"Whether to catalogue saved queries" default:"true"`
-	IncludeDataSources bool `json:"include_data_sources" description:"Whether to catalogue data sources" default:"true"`
-	IncludeArchived    bool `json:"include_archived" description:"Whether to include archived dashboards and queries" default:"false"`
-	IncludeDrafts      bool `json:"include_drafts" description:"Whether to include unpublished dashboards and queries" default:"true"`
+	IncludeQueries     bool `json:"include_queries" group:"Discovery" description:"Whether to catalogue saved queries" default:"true"`
+	IncludeDataSources bool `json:"include_data_sources" group:"Discovery" description:"Whether to catalogue data sources" default:"true"`
+	IncludeArchived    bool `json:"include_archived" group:"Discovery" description:"Whether to include archived dashboards and queries" default:"false"`
+	IncludeDrafts      bool `json:"include_drafts" group:"Discovery" description:"Whether to include unpublished dashboards and queries" default:"true"`
 
-	DiscoverLineage bool `json:"discover_lineage" description:"Whether to link dashboards, charts, queries and the tables they read" default:"true"`
+	DiscoverLineage bool `json:"discover_lineage" group:"Discovery" description:"Whether to link dashboards, charts, queries and the tables they read" default:"true"`
 
-	PageSize int `json:"page_size" description:"Results to request per API page" default:"100" validate:"omitempty,min=1,max=250"`
+	PageSize int `json:"page_size" group:"Advanced" description:"Results to request per API page" default:"100" validate:"omitempty,min=1,max=250"`
 }
 
 // Meta describes the plugin to the Marmot host.

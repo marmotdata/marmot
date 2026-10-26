@@ -29,10 +29,9 @@ type Manifest struct {
 type ManifestPlugin struct {
 	Version string `json:"version"`
 	// Digest is the digest of the plugin's OCI image index for this
-	// version (sha256:...). When set, the plugin is resolved by digest
-	// so a re-tagged registry artifact cannot change what runs. When
-	// empty, the version tag is resolved instead and a warning is
-	// logged.
+	// version (sha256:...). The plugin is always resolved by it, so a
+	// re-tagged registry artifact cannot change what runs; a plugin
+	// without one is not installed.
 	Digest string `json:"digest"`
 }
 

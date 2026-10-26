@@ -125,6 +125,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				u, err := userService.ValidateAPIKey(r.Context(), apiKey)
 				if err == nil {
 					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialUserAPIKey, Lookup: user.APIKeyLookup(apiKey)})
 					next(w, r.WithContext(ctx))
 					return
 				}
@@ -138,6 +139,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				if errors.Is(err, user.ErrInvalidAPIKey) {
 					if principal, ok := serviceAccountPrincipal(r.Context(), apiKey); ok {
 						ctx := setPrincipalContext(r.Context(), principal)
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialServiceAccountAPIKey, Lookup: serviceaccount.APIKeyLookup(apiKey)})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -182,6 +184,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					}
 					ctx := setPrincipalContext(r.Context(), p)
 					ctx = context.WithValue(ctx, jwtSessionKey{}, claims.AuthMethod)
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialSession})
 					next(w, r.WithContext(ctx))
 					return
 				}
@@ -196,7 +199,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via K8s ServiceAccount token")
 						ctx := setPrincipalContext(r.Context(), auth.NewOperatorPrincipal())
-						ctx = context.WithValue(ctx, UserContextKey, GetOperatorUser())
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialKubernetes})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -214,6 +217,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via OIDC token exchange")
 						ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(exchUser))
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialOIDC})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -223,6 +227,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				u, err := userService.ValidateAPIKey(r.Context(), tokenString)
 				if err == nil {
 					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialUserAPIKey, Lookup: user.APIKeyLookup(tokenString)})
 					next(w, r.WithContext(ctx))
 					return
 				}
@@ -236,6 +241,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				if errors.Is(err, user.ErrInvalidAPIKey) {
 					if principal, ok := serviceAccountPrincipal(r.Context(), tokenString); ok {
 						ctx := setPrincipalContext(r.Context(), principal)
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialServiceAccountAPIKey, Lookup: serviceaccount.APIKeyLookup(tokenString)})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -288,6 +294,17 @@ func serviceAccountPrincipal(ctx context.Context, apiKey string) (auth.Principal
 		}
 	}
 	return auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys), true
+}
+
+// withCredential records which credential authenticated the request, for features that must end as soon as it is revoked.
+func withCredential(ctx context.Context, c auth.Credential) context.Context {
+	return context.WithValue(ctx, credentialContextKey, c)
+}
+
+// CredentialFromContext returns the credential that authenticated the request.
+func CredentialFromContext(ctx context.Context) (auth.Credential, bool) {
+	c, ok := ctx.Value(credentialContextKey).(auth.Credential)
+	return c, ok
 }
 
 func setPrincipalContext(ctx context.Context, p auth.Principal) context.Context {

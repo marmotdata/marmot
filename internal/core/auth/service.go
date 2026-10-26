@@ -30,6 +30,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// IssuedTime returns the token's iat, or the zero time when it has none so that it fails any revocation check
+func (c *Claims) IssuedTime() time.Time {
+	if c.IssuedAt == nil {
+		return time.Time{}
+	}
+	return c.IssuedAt.Time
+}
+
 type Service interface {
 	GenerateToken(ctx context.Context, user *user.User, preferencesClaims map[string]interface{}) (string, error)
 	GenerateTokenForPrincipal(ctx context.Context, p Principal, preferencesClaims map[string]interface{}) (string, error)

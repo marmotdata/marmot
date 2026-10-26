@@ -20,16 +20,16 @@ type Config struct {
 	Host     string `json:"host" description:"Airflow webserver URL (e.g., http://localhost:8080)" validate:"required,url"`
 	Username string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
-	APIToken string `json:"api_token,omitempty" label:"API Token" description:"API token for authentication (alternative to basic auth)" sensitive:"true"`
+	APIToken string `json:"api_token,omitempty" group:"Authentication" label:"API Token" description:"API token for authentication (alternative to basic auth)" sensitive:"true"`
 
-	DiscoverDAGs     bool `json:"discover_dags" label:"Discover DAGs" description:"Discover Airflow DAGs as Pipeline assets" default:"true"`
-	DiscoverTasks    bool `json:"discover_tasks" description:"Discover tasks within DAGs" default:"true"`
-	DiscoverDatasets bool `json:"discover_datasets" description:"Discover Airflow Datasets for lineage (requires Airflow 2.4+)" default:"true"`
+	DiscoverDAGs     bool `json:"discover_dags" group:"Discovery" label:"Discover DAGs" description:"Discover Airflow DAGs as Pipeline assets" default:"true"`
+	DiscoverTasks    bool `json:"discover_tasks" group:"Discovery" description:"Discover tasks within DAGs" default:"true"`
+	DiscoverDatasets bool `json:"discover_datasets" group:"Discovery" description:"Discover Airflow Datasets for lineage (requires Airflow 2.4+)" default:"true"`
 
-	IncludeRunHistory bool `json:"include_run_history" description:"Include DAG run history in metadata" default:"true"`
-	RunHistoryDays    int  `json:"run_history_days" description:"Number of days of run history to fetch" default:"7"`
+	IncludeRunHistory bool `json:"include_run_history" group:"Discovery" description:"Include DAG run history in metadata" default:"true"`
+	RunHistoryDays    int  `json:"run_history_days" group:"Advanced" description:"Number of days of run history to fetch" default:"7"`
 
-	OnlyActive bool `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
+	OnlyActive bool `json:"only_active" group:"Discovery" description:"Only discover active (unpaused) DAGs" default:"true"`
 }
 
 // Meta describes the plugin to the Marmot host.

@@ -193,6 +193,19 @@ The optional Elasticsearch backend is configured under `search.elasticsearch`. S
 | `operator.namespace`       | Namespace the operator manages pipeline resources in      | -               |
 | `operator.service_account` | Service account used for pipeline resources               | `marmot-ingest` |
 
+## Serving Plugins
+
+| Key                           | Description                                                                         | Default |
+| ----------------------------- | ----------------------------------------------------------------------------------- | ------- |
+| `query.serve.enabled`         | Accept plugins that serve queries from outside Marmot                                | `false` |
+| `query.serve.listen_address`  | Address the serve listener binds                                                     | `:8443` |
+| `query.serve.public_address`  | `host:port` serving plugins dial, when not the Marmot host on the listen port        | -       |
+| `query.serve.replica_address` | Host, or `host:port`, other replicas forward queries to; only needed with several    | -       |
+| `query.serve.ca_key_uri`      | KMS URI of the serving CA key (ECDSA P-256); stored in the database when unset        | -       |
+| `query.serve.signing_key_uri` | KMS URI of the query signing key (ECDSA P-256)                                        | -       |
+
+See [Serving Queries from Your Network](./serving-plugins.md).
+
 ## OpenLineage
 
 | Key                        | Description                                         | Default |

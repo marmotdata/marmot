@@ -25,16 +25,16 @@ type Config struct {
 
 	Host       string `json:"host" description:"Prefect API URL, for example http://localhost:4200/api" validate:"required,url"`
 	APIKey     string `json:"api_key" label:"API Key" description:"Prefect Cloud API key" sensitive:"true"`
-	AuthString string `json:"auth_string" description:"Self-hosted server credentials, as user:password" sensitive:"true"`
+	AuthString string `json:"auth_string" group:"Authentication" description:"Self-hosted server credentials, as user:password" sensitive:"true"`
 
-	VerifySSL bool `json:"verify_ssl" label:"Verify SSL" description:"Check the server's TLS certificate" default:"true"`
+	VerifySSL bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Check the server's TLS certificate" default:"true"`
 
-	IncludeTasks       bool `json:"include_tasks" description:"Discover the tasks of each flow's most recent run" default:"true"`
-	IncludeDeployments bool `json:"include_deployments" description:"Read deployments for schedules, tags and descriptions" default:"true"`
-	IncludeRunHistory  bool `json:"include_run_history" description:"Record recent flow runs as run history" default:"true"`
+	IncludeTasks       bool `json:"include_tasks" group:"Discovery" description:"Discover the tasks of each flow's most recent run" default:"true"`
+	IncludeDeployments bool `json:"include_deployments" group:"Discovery" description:"Read deployments for schedules, tags and descriptions" default:"true"`
+	IncludeRunHistory  bool `json:"include_run_history" group:"Discovery" description:"Record recent flow runs as run history" default:"true"`
 	// Not omitempty: Prefect answers a limit of 0 with an empty list, so an
 	// explicit 0 would quietly discover nothing instead of failing.
-	RunHistoryLimit int `json:"run_history_limit" description:"How many recent runs to read per flow" default:"10" validate:"min=1,max=100"`
+	RunHistoryLimit int `json:"run_history_limit" group:"Advanced" description:"How many recent runs to read per flow" default:"10" validate:"min=1,max=100"`
 }
 
 var _ = `

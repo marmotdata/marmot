@@ -121,10 +121,11 @@ func EnsurePlugin(ctx context.Context, opts Options, name string) (string, error
 	return dest, nil
 }
 
-// Install pulls a plugin from <registry>/<name> at the given version
-// tag (or digest, when set) and writes its binary for the current
-// platform to dest.
+// Install pulls a plugin from <registry>/<name> by the digest this release pins and writes its binary for the current platform to dest. A plugin with no pin is refused: resolving a tag would let whoever controls the registry, or a mirror, choose the code that runs.
 func Install(ctx context.Context, opts Options, registry, name, version, digest, dest string) error {
+	if digest == "" {
+		return fmt.Errorf("plugin %s@%s has no digest pin in this release; refusing to install it by tag", name, version)
+	}
 	repoRef := registry + "/" + name
 	repo, err := remote.NewRepository(repoRef)
 	if err != nil {
@@ -141,18 +142,10 @@ func Install(ctx context.Context, opts Options, registry, name, version, digest,
 		}
 	}
 
-	ref := version
-	if digest != "" {
-		ref = digest
-	} else {
-		log.Warn().Str("plugin", name).Str("version", version).
-			Msg("Installing plugin without a digest pin; resolving by tag")
-	}
-
 	log.Info().Str("plugin", name).Str("version", version).Str("repository", repoRef).
 		Msg("Installing plugin")
 
-	if err := installFromTarget(ctx, repo, ref, dest); err != nil {
+	if err := installFromTarget(ctx, repo, digest, dest); err != nil {
 		return fmt.Errorf("installing %s@%s from %s: %w", name, version, repoRef, err)
 	}
 	return nil

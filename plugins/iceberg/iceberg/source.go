@@ -57,16 +57,16 @@ type Config struct {
 	// REST catalog fields
 	URI        string            `json:"uri" description:"REST catalog URI (required for catalog_type=rest)" show_when:"catalog_type:rest"`
 	Warehouse  string            `json:"warehouse" description:"Warehouse identifier" show_when:"catalog_type:rest"`
-	Credential string            `json:"credential" description:"Credential for OAuth2 client credentials authentication" sensitive:"true" show_when:"catalog_type:rest"`
-	Token      string            `json:"token" description:"Bearer token for authentication" sensitive:"true" show_when:"catalog_type:rest"`
-	Properties map[string]string `json:"properties" description:"Additional catalog properties" show_when:"catalog_type:rest"`
-	Prefix     string            `json:"prefix" description:"Optional prefix for the REST catalog" show_when:"catalog_type:rest"`
+	Credential string            `json:"credential" group:"Authentication" description:"Credential for OAuth2 client credentials authentication" sensitive:"true" show_when:"catalog_type:rest"`
+	Token      string            `json:"token" group:"Authentication" description:"Bearer token for authentication" sensitive:"true" show_when:"catalog_type:rest"`
+	Properties map[string]string `json:"properties" group:"Advanced" description:"Additional catalog properties" show_when:"catalog_type:rest"`
+	Prefix     string            `json:"prefix" group:"Advanced" description:"Optional prefix for the REST catalog" show_when:"catalog_type:rest"`
 
 	// Glue catalog fields
-	GlueCatalogID string `json:"glue_catalog_id" description:"AWS Glue Data Catalog ID (defaults to caller's account)" show_when:"catalog_type:glue"`
+	GlueCatalogID string `json:"glue_catalog_id" group:"Discovery" description:"AWS Glue Data Catalog ID (defaults to caller's account)" show_when:"catalog_type:glue"`
 
-	IncludeNamespaces bool `json:"include_namespaces" description:"Whether to discover namespaces as assets" default:"true"`
-	IncludeViews      bool `json:"include_views" description:"Whether to discover views" default:"true"`
+	IncludeNamespaces bool `json:"include_namespaces" group:"Discovery" description:"Whether to discover namespaces as assets" default:"true"`
+	IncludeViews      bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
 }
 
 // Example configuration for the plugin

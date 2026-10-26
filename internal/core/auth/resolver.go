@@ -61,3 +61,14 @@ func sessionEpoch(u *user.User) string {
 	}
 	return u.SessionsInvalidatedAt.UTC().Format(time.RFC3339Nano)
 }
+
+// CheckUserSession reports whether a credential issued at issuedAt may still act for u, failing if the account is inactive or its sessions were revoked after issue; every path that turns a credential into a user must call it
+func CheckUserSession(u *user.User, issuedAt time.Time) error {
+	if !u.Active {
+		return ErrUserInactive
+	}
+	if u.SessionsInvalidatedAt != nil && issuedAt.Before(u.SessionsInvalidatedAt.Truncate(time.Second)) {
+		return ErrSessionRevoked
+	}
+	return nil
+}

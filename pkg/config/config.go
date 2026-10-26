@@ -167,6 +167,34 @@ type Config struct {
 		// startup. Defaults to true.
 		Autoinstall bool `mapstructure:"autoinstall"`
 	} `mapstructure:"plugins"`
+
+	// Query lets agents and users query queryable sources through Marmot.
+	Query struct {
+		Enabled        bool  `mapstructure:"enabled"`
+		QueryTimeout   int   `mapstructure:"query_timeout"` // seconds
+		MaxRowsDefault int64 `mapstructure:"max_rows_default"`
+		MaxRowsCap     int64 `mapstructure:"max_rows_cap"`
+		// InstanceIdleTTL is how long an unused plugin process is kept
+		// alive between queries, in seconds.
+		InstanceIdleTTL int `mapstructure:"instance_idle_ttl"`
+		// Ingest-on-query rate limits, in seconds: the minimum gap between
+		// query-triggered refreshes of one source, and between any two.
+		IngestOnQuerySourceInterval int `mapstructure:"ingest_on_query_source_interval"`
+		IngestOnQueryGlobalInterval int `mapstructure:"ingest_on_query_global_interval"`
+		// Serve accepts mutual TLS connections from plugins that run outside Marmot (`marmot ingest --serve`) so they can answer queries. Plugins always dial in; Marmot never connects out to them.
+		Serve struct {
+			Enabled bool `mapstructure:"enabled"`
+			// ListenAddress is where the serve listener binds.
+			ListenAddress string `mapstructure:"listen_address"`
+			// PublicAddress is the host:port serving plugins dial, when it differs from the API host on the listen port.
+			PublicAddress string `mapstructure:"public_address"`
+			// ReplicaAddress is the host, or host:port, other Marmot replicas reach this one on to forward queries for plugins connected here; without a port the listen port is used. Needed only with more than one replica.
+			ReplicaAddress string `mapstructure:"replica_address"`
+			// CAKeyURI and SigningKeyURI keep the serving CA key and query signing key in a KMS instead of the database, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://) naming ECDSA P-256 keys. They are used when serving first starts; later keys come from rotations.
+			CAKeyURI      string `mapstructure:"ca_key_uri"`
+			SigningKeyURI string `mapstructure:"signing_key_uri"`
+		} `mapstructure:"serve"`
+	} `mapstructure:"query"`
 }
 
 type BannerConfig struct {
@@ -376,6 +404,21 @@ func loadConfig(configPath string) error {
 	v.BindEnv("operator.namespace")
 	v.BindEnv("operator.service_account")
 
+	// Data query env vars
+	v.BindEnv("query.enabled")
+	v.BindEnv("query.query_timeout")
+	v.BindEnv("query.max_rows_default")
+	v.BindEnv("query.max_rows_cap")
+	v.BindEnv("query.instance_idle_ttl")
+	v.BindEnv("query.ingest_on_query_source_interval")
+	v.BindEnv("query.ingest_on_query_global_interval")
+	v.BindEnv("query.serve.enabled")
+	v.BindEnv("query.serve.listen_address")
+	v.BindEnv("query.serve.public_address")
+	v.BindEnv("query.serve.replica_address")
+	v.BindEnv("query.serve.ca_key_uri")
+	v.BindEnv("query.serve.signing_key_uri")
+
 	// Telemetry env vars
 	v.BindEnv("telemetry.enabled")
 	v.BindEnv("telemetry.endpoint")
@@ -515,6 +558,17 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pipelines.scheduler_interval", 60)
 	v.SetDefault("pipelines.lease_expiry", 300)
 	v.SetDefault("pipelines.claim_expiry", 30)
+
+	// Data query defaults
+	v.SetDefault("query.enabled", true)
+	v.SetDefault("query.query_timeout", 60)
+	v.SetDefault("query.max_rows_default", 1000)
+	v.SetDefault("query.max_rows_cap", 10000)
+	v.SetDefault("query.instance_idle_ttl", 300)
+	v.SetDefault("query.ingest_on_query_source_interval", 3600)
+	v.SetDefault("query.ingest_on_query_global_interval", 60)
+	v.SetDefault("query.serve.enabled", false)
+	v.SetDefault("query.serve.listen_address", ":8443")
 
 	// Operator defaults
 	v.SetDefault("operator.service_account", "marmot-ingest")

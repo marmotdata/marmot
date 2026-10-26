@@ -23,10 +23,10 @@ type Config struct {
 
 	Path string `json:"path" description:"Path to the DuckDB database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
-	IncludeColumns       bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics        bool `json:"enable_metrics" description:"Whether to include table metrics (row counts and sizes)" default:"true"`
-	DiscoverForeignKeys  bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemSchemas bool `json:"exclude_system_schemas" description:"Whether to exclude system schemas (information_schema, pg_catalog)" default:"true"`
+	IncludeColumns       bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics        bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics (row counts and sizes)" default:"true"`
+	DiscoverForeignKeys  bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemSchemas bool `json:"exclude_system_schemas" group:"Discovery" description:"Whether to exclude system schemas (information_schema, pg_catalog)" default:"true"`
 }
 
 // Meta describes the plugin to the Marmot host.

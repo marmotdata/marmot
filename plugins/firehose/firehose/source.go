@@ -53,8 +53,8 @@ type Config struct {
 	*pluginsdk.AWSConfig `json:",inline"`
 	pluginsdk.Federation `json:",inline"`
 
-	DiscoverLineage          bool `json:"discover_lineage" description:"Link each stream to the systems it reads from and writes to" default:"true"`
-	IncludeDestinationConfig bool `json:"include_destination_config" description:"Record the destination settings in metadata" default:"true"`
+	DiscoverLineage          bool `json:"discover_lineage" group:"Discovery" description:"Link each stream to the systems it reads from and writes to" default:"true"`
+	IncludeDestinationConfig bool `json:"include_destination_config" group:"Discovery" description:"Record the destination settings in metadata" default:"true"`
 }
 
 // Example configuration for the plugin

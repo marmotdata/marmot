@@ -37,6 +37,9 @@ class TestV1RolesCreateRoleRequest(unittest.TestCase):
                 name = '',
                 permission_ids = [
                     ''
+                    ],
+                permission_keys = [
+                    ''
                     ]
             )
         else:

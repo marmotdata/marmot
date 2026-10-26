@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -44,6 +45,7 @@ type RunReconciler struct {
 // +kubebuilder:rbac:groups=runs.marmotdata.io,resources=runs/finalizers,verbs=update
 // +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
@@ -87,9 +89,17 @@ func (r *RunReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 
 	var result ctrl.Result
 	var err error
-	if run.Spec.Schedule != "" {
+	if !run.Spec.Serve {
+		if err := r.deleteOwned(ctx, client.ObjectKeyFromObject(&run), &appsv1.Deployment{}); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	switch {
+	case run.Spec.Serve:
+		result, err = r.reconcileDeployment(ctx, &run)
+	case run.Spec.Schedule != "":
 		result, err = r.reconcileCronJob(ctx, &run)
-	} else {
+	default:
 		result, err = r.reconcileJob(ctx, &run)
 	}
 	if err != nil {
@@ -237,9 +247,51 @@ func (r *RunReconciler) reconcileJob(ctx context.Context, run *runsv1alpha1.Run)
 	return ctrl.Result{}, nil
 }
 
+// reconcileDeployment keeps a serving Run's Deployment in step with the Run and removes the Job or CronJob it had before it was switched to serving.
+func (r *RunReconciler) reconcileDeployment(ctx context.Context, run *runsv1alpha1.Run) (ctrl.Result, error) {
+	key := client.ObjectKey{Namespace: run.Namespace, Name: run.Name}
+	for _, stale := range []client.Object{&batchv1.CronJob{}, &batchv1.Job{}} {
+		if err := r.deleteOwned(ctx, key, stale); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	desired := buildDeployment(run, r.Config)
+	if err := ctrl.SetControllerReference(run, desired, r.Scheme); err != nil {
+		return ctrl.Result{}, fmt.Errorf("setting owner reference on deployment: %w", err)
+	}
+
+	existing := &appsv1.Deployment{}
+	err := r.Get(ctx, key, existing)
+	if apierrors.IsNotFound(err) {
+		return ctrl.Result{RequeueAfter: requeueIdle}, r.Create(ctx, desired)
+	}
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	existing.Spec.Replicas = desired.Spec.Replicas
+	existing.Spec.Template = desired.Spec.Template
+	return ctrl.Result{RequeueAfter: requeueIdle}, r.Update(ctx, existing)
+}
+
+// deleteOwned deletes the object of obj's kind at key when this Run owns it, so switching a Run between serving and running leaves nothing behind.
+func (r *RunReconciler) deleteOwned(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+	if err := r.Get(ctx, key, obj); err != nil {
+		return client.IgnoreNotFound(err)
+	}
+	if obj.GetLabels()["app.kubernetes.io/managed-by"] != "marmot-operator" {
+		return nil
+	}
+	return client.IgnoreNotFound(r.Delete(ctx, obj, client.PropagationPolicy(metav1.DeletePropagationBackground)))
+}
+
 func (r *RunReconciler) updateStatus(ctx context.Context, run *runsv1alpha1.Run) error {
 	run.Status.ObservedGeneration = run.Generation
 
+	if run.Spec.Serve {
+		return r.updateStatusFromDeployment(ctx, run)
+	}
 	if run.Spec.Schedule != "" {
 		return r.updateStatusFromCronJob(ctx, run)
 	}
@@ -280,6 +332,30 @@ func (r *RunReconciler) updateStatusFromCronJob(ctx context.Context, run *runsv1
 		ObservedGeneration: run.Generation,
 	})
 
+	return r.Status().Update(ctx, run)
+}
+
+func (r *RunReconciler) updateStatusFromDeployment(ctx context.Context, run *runsv1alpha1.Run) error {
+	var deployment appsv1.Deployment
+	if err := r.Get(ctx, client.ObjectKey{Namespace: run.Namespace, Name: run.Name}, &deployment); err != nil {
+		return client.IgnoreNotFound(err)
+	}
+
+	run.Status.Active = deployment.Status.AvailableReplicas
+	run.Status.Phase = runsv1alpha1.RunPhaseIdle
+	status, reason := metav1.ConditionFalse, "DeploymentUnavailable"
+	if deployment.Status.AvailableReplicas > 0 {
+		run.Status.Phase = runsv1alpha1.RunPhaseRunning
+		status, reason = metav1.ConditionTrue, "DeploymentAvailable"
+	}
+
+	meta.SetStatusCondition(&run.Status.Conditions, metav1.Condition{
+		Type:               conditionTypeReady,
+		Status:             status,
+		Reason:             reason,
+		Message:            fmt.Sprintf("Deployment %s has %d available replicas", run.Name, deployment.Status.AvailableReplicas),
+		ObservedGeneration: run.Generation,
+	})
 	return r.Status().Update(ctx, run)
 }
 
@@ -362,6 +438,7 @@ func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&runsv1alpha1.Run{}).
 		Owns(&batchv1.CronJob{}).
 		Owns(&batchv1.Job{}).
+		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }

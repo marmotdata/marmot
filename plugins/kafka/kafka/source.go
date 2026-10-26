@@ -17,16 +17,16 @@ type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 
 	BootstrapServers string            `json:"bootstrap_servers" description:"Comma-separated list of bootstrap servers" validate:"required"`
-	ClientID         string            `json:"client_id" label:"Client ID" description:"Client ID for the consumer"`
+	ClientID         string            `json:"client_id" group:"Advanced" label:"Client ID" description:"Client ID for the consumer"`
 	Authentication   *AuthConfig       `json:"authentication,omitempty" description:"Authentication configuration"`
-	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" description:"Additional consumer configuration"`
-	ClientTimeout    int               `json:"client_timeout_seconds" description:"Request timeout in seconds" validate:"omitempty,min=1,max=300"`
-	TLS              *TLSConfig        `json:"tls,omitempty" description:"TLS configuration"`
+	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" group:"Advanced" description:"Additional consumer configuration"`
+	ClientTimeout    int               `json:"client_timeout_seconds" group:"Advanced" description:"Request timeout in seconds" validate:"omitempty,min=1,max=300"`
+	TLS              *TLSConfig        `json:"tls,omitempty" group:"Authentication" description:"TLS configuration"`
 
-	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" description:"Schema Registry configuration"`
+	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" group:"Advanced" description:"Schema Registry configuration"`
 
-	IncludePartitionInfo bool `json:"include_partition_info" description:"Whether to include partition information in metadata" default:"true"`
-	IncludeTopicConfig   bool `json:"include_topic_config" description:"Whether to include topic configuration in metadata" default:"true"`
+	IncludePartitionInfo bool `json:"include_partition_info" group:"Discovery" description:"Whether to include partition information in metadata" default:"true"`
+	IncludeTopicConfig   bool `json:"include_topic_config" group:"Discovery" description:"Whether to include topic configuration in metadata" default:"true"`
 }
 
 // AuthConfig defines Kafka client authentication.

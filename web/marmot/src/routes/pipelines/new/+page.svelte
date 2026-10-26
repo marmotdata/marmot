@@ -1,19 +1,27 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { auth } from '$lib/stores/auth';
 	import { resolve } from '$app/paths';
 	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
-	import Button from '$components/ui/Button.svelte';
+	import PageHeader from '$components/ui/PageHeader.svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import { PANEL, BTN_PRIMARY, BTN_SECONDARY, INPUT } from '$lib/ui/classes';
 	import IconifyIcon from '@iconify/svelte';
+	import Disclosure from '$components/ui/Disclosure.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import Stepper from '$components/ui/Stepper.svelte';
 	import Step from '$components/ui/Step.svelte';
 	import cronstrue from 'cronstrue/i18n';
 	import { Cron } from 'croner';
 	import { m } from '$lib/paraglide/messages';
+	import QueryAccessSection from '$components/dataquery/QueryAccessSection.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatList } from '$lib/utils';
 
@@ -33,6 +41,8 @@
 		placeholder?: string;
 		fields?: ConfigField[];
 		is_array?: boolean;
+		// The plugin names the section a field belongs to; ungrouped fields come first
+		group?: string;
 		validation?: {
 			pattern?: string;
 			min?: number;
@@ -49,6 +59,7 @@
 		icon?: string;
 		category?: string;
 		config_spec?: ConfigField[];
+		supports_query?: boolean;
 	}
 
 	let plugins = $state<Plugin[]>([]);
@@ -59,6 +70,8 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(false);
 	type ConfigValue =
 		string | number | boolean | null | undefined | ConfigValue[] | { [key: string]: ConfigValue };
 	interface PipelineConfig {
@@ -77,6 +90,8 @@
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let pluginSearchQuery = $state('');
+	// Narrows the picker to plugins that can answer queries; arriving from the Query page turns it on
+	let queryOnly = $state(false);
 	let currentStep = $state(1);
 	const steps = [
 		{ title: m.pipelines_step_basic_info() },
@@ -111,6 +126,24 @@
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
 	let configSpec = $derived(selectedPlugin?.config_spec || null);
+	// The plugin's own fields, without the base tags, links and filter that have their own step
+	let pluginFields = $derived(
+		(configSpec ?? []).filter(
+			(f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden
+		)
+	);
+	// Groups in the order the plugin first uses them
+	let fieldGroups = $derived.by(() => {
+		const groups: { name: string; fields: ConfigField[] }[] = [];
+		for (const field of pluginFields) {
+			if (!field.group) continue;
+			let group = groups.find((g) => g.name === field.group);
+			if (!group) groups.push((group = { name: field.group, fields: [] }));
+			group.fields.push(field);
+		}
+		return groups;
+	});
+	let queryCapable = $derived(selectedPlugin?.supports_query === true);
 
 	let isAWSPlugin = $derived(
 		selectedPluginId && ['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(selectedPluginId)
@@ -146,8 +179,11 @@
 		}
 	});
 
+	let queryPluginCount = $derived(plugins.filter((p) => p.supports_query).length);
+
 	let filteredPlugins = $derived(
 		plugins
+			.filter((plugin) => !queryOnly || plugin.supports_query)
 			.filter((plugin) => {
 				const searchLower = pluginSearchQuery.toLowerCase();
 				return (
@@ -199,7 +235,9 @@
 				plugin_id: selectedPluginId,
 				config: cleanedConfig,
 				cron_expression: cronExpression,
-				enabled
+				enabled,
+				queryable: queryCapable && queryEnabled,
+				ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
 			};
 
 			const response = await fetchApi('/ingestion/schedules', {
@@ -211,6 +249,18 @@
 			if (!response.ok) {
 				const data = await response.json();
 				throw new Error(data.error || m.pipelines_error_create());
+			}
+
+			// A source that answers queries is only useful once its tables are cataloged, so its first run starts straight away
+			if (queryCapable && queryEnabled) {
+				const created: { id?: string } = await response.json().catch(() => ({}));
+				if (created.id) {
+					const trigger = await fetchApi(
+						`/ingestion/schedules/${encodeURIComponent(created.id)}/trigger`,
+						{ method: 'POST' }
+					).catch(() => null);
+					if (trigger?.ok) toasts.success(m.pipelines_first_run_started({ name: name.trim() }));
+				}
 			}
 
 			goto(resolve('/runs?tab=pipelines'));
@@ -286,6 +336,11 @@
 		if (plugin && plugin.config_spec) {
 			config = initializeConfigDefaults(plugin.config_spec);
 		}
+
+		// Querying is on by default for plugins that support it, for people allowed to turn it on
+		const canQuery = plugin?.supports_query === true && auth.hasPermission('access', 'manage');
+		queryEnabled = canQuery;
+		ingestOnQuery = canQuery;
 
 		// Restore base fields
 		config.tags = savedTags;
@@ -460,6 +515,12 @@
 		return 'text';
 	}
 
+	function hasFieldError(name: string): boolean {
+		return Object.keys(fieldErrors).some(
+			(path) => path === name || path.startsWith(`${name}.`) || path.startsWith(`${name}[`)
+		);
+	}
+
 	function toggleSection(sectionName: string) {
 		expandedSections[sectionName] = !expandedSections[sectionName];
 	}
@@ -529,7 +590,13 @@
 			goto(resolve('/runs'));
 			return;
 		}
-		fetchPlugins();
+		// Links such as the Query page's empty state can preselect a plugin and switch querying on
+		const params = page.url.searchParams;
+		if (params.get('query') === '1') queryOnly = true;
+		fetchPlugins().then(() => {
+			const preset = params.get('plugin');
+			if (preset && plugins.some((p) => p.id === preset)) handlePluginChange(preset);
+		});
 	});
 
 	onDestroy(() => {
@@ -537,39 +604,369 @@
 	});
 </script>
 
-<div class="min-h-screen">
-	<!-- Header -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-			<div class="flex items-center gap-4">
-				<button
-					onclick={() => goto(resolve('/runs?tab=pipelines'))}
-					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-				>
-					<IconifyIcon
-						icon="material-symbols:arrow-back"
-						class="h-6 w-6 text-gray-600 dark:text-gray-400"
-					/>
-				</button>
-				<div>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{m.pipelines_create_pipeline()}
-					</h1>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						{m.pipelines_step_indicator({
-							current: currentStep,
-							total: steps.length,
-							title: steps[currentStep - 1].title
-						})}
+{#snippet renderField(
+	field: ConfigField,
+	fieldPath: string,
+	configObj: Record<string, ConfigValue>,
+	depth: number = 0
+)}
+	{#if field.type === 'object' && field.is_array && field.fields}
+		<!-- Array of objects (e.g., external_links) -->
+		<div class="md:col-span-2">
+			<div class="block">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
 					</p>
-				</div>
+				{/if}
+				{#if true}
+					{@const arrayValue =
+						(configObj[field.name] as Record<string, ConfigValue>[] | undefined) || []}
+					<div class="space-y-3">
+						{#each arrayValue as item, index (index)}
+							<div
+								class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
+							>
+								<div class="flex items-end justify-end mb-3">
+									<button
+										type="button"
+										onclick={(e) => {
+											e.preventDefault();
+											arrayValue.splice(index, 1);
+											configObj[field.name] = [...arrayValue];
+											clearFieldError(fieldPath);
+										}}
+										class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+									>
+										<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+									</button>
+								</div>
+								<div class="grid grid-cols-1 gap-3">
+									{#each field.fields as nestedField (nestedField.name)}
+										{@const nestedItemPath = `${fieldPath}[${index}].${nestedField.name}`}
+										<div>
+											<label class="block">
+												<span
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
+												>
+													{nestedField.label}
+													{#if nestedField.required}
+														<span class="text-red-500">*</span>
+													{/if}
+												</span>
+												<input
+													type={getFieldType(nestedField)}
+													bind:value={item[nestedField.name]}
+													oninput={() => {
+														configObj[field.name] = [...arrayValue];
+														clearFieldError(nestedItemPath);
+													}}
+													placeholder={nestedField.placeholder}
+													required={nestedField.required}
+													data-field-path={nestedItemPath}
+													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
+														nestedItemPath
+													]
+														? 'border-red-500 dark:border-red-500'
+														: ''}"
+												/>
+												{#if fieldErrors[nestedItemPath]}
+													<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
+														<IconifyIcon
+															icon="material-symbols:error"
+															class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
+														/>
+														{fieldErrors[nestedItemPath]}
+													</p>
+												{/if}
+											</label>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/each}
+						<button
+							type="button"
+							onclick={(e) => {
+								e.preventDefault();
+								const newItem: Record<string, ConfigValue> = {};
+								// Initialize with default values
+								field.fields?.forEach((f) => {
+									newItem[f.name] = (f.default as ConfigValue) || '';
+								});
+								arrayValue.push(newItem);
+								configObj[field.name] = [...arrayValue];
+								clearFieldError(fieldPath);
+							}}
+							class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
+						>
+							<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+							{m.pipelines_add_field_item({ label: field.label })}
+						</button>
+					</div>
+				{/if}
+				{#if fieldErrors[fieldPath]}
+					<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
+						<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+						{fieldErrors[fieldPath]}
+					</p>
+				{/if}
 			</div>
 		</div>
-	</div>
+	{:else if field.type === 'object' && field.fields}
+		<div class="md:col-span-2">
+			<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+				<button
+					type="button"
+					onclick={() => toggleSection(fieldPath)}
+					class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+				>
+					<div class="flex items-center">
+						<IconifyIcon
+							icon={isExpanded(fieldPath)
+								? 'material-symbols:expand-more'
+								: 'material-symbols:chevron-right'}
+							class="h-5 w-5 text-gray-600 dark:text-gray-400 transition-transform"
+						/>
+						<span class="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+							{field.label}
+							{#if field.required}
+								<span class="text-red-500 ml-1">*</span>
+							{/if}
+						</span>
+					</div>
+					{#if field.description}
+						<span class="text-xs text-gray-600 dark:text-gray-400 ml-2 truncate"
+							>{field.description}</span
+						>
+					{/if}
+				</button>
+				{#if isExpanded(fieldPath)}
+					<div
+						class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
+					>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+							{#each field.fields as nestedField (nestedField.name)}
+								{@const nestedPath = `${fieldPath}.${nestedField.name}`}
+								{@const nestedConfigObj =
+									(configObj[field.name] as Record<string, ConfigValue> | undefined) || {}}
+								{#if !shouldHideField(nestedField, nestedConfigObj, config)}
+									{@render renderField(nestedField, nestedPath, nestedConfigObj, depth + 1)}
+								{/if}
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{:else if field.type === 'bool' || field.type === 'boolean'}
+		<div class="md:col-span-2">
+			<label class="flex items-start py-1 cursor-pointer" data-field-path={fieldPath}>
+				<input
+					type="checkbox"
+					checked={configObj[field.name] === true}
+					onchange={(e) => {
+						configObj[field.name] = (e.currentTarget as HTMLInputElement).checked;
+						clearFieldError(fieldPath);
+					}}
+					class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
+				/>
+				<div class="ml-3 flex-1">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+						{field.label}
+					</span>
+					{#if field.description}
+						<p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+							{field.description}
+						</p>
+					{/if}
+					{#if fieldErrors[fieldPath]}
+						<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
+							<IconifyIcon
+								icon="material-symbols:error"
+								class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
+							/>
+							{fieldErrors[fieldPath]}
+						</p>
+					{/if}
+				</div>
+			</label>
+		</div>
+	{:else if field.type === 'multiselect'}
+		<!-- Array/List field -->
+		<div class="md:col-span-2">
+			<div class="block" data-field-path={fieldPath}>
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
+					</p>
+				{/if}
+				{#if true}
+					{@const arrayValue = (configObj[field.name] as string[] | undefined) || []}
+					<div class="space-y-2">
+						{#each arrayValue as item, index (index)}
+							<div class="flex items-center gap-2">
+								<input
+									type="text"
+									value={item}
+									oninput={(e) => {
+										const target = e.target as HTMLInputElement;
+										arrayValue[index] = target.value;
+										configObj[field.name] = [...arrayValue];
+										clearFieldError(fieldPath);
+									}}
+									placeholder={field.placeholder}
+									class="flex-1 px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
+										fieldPath
+									]
+										? 'border-red-500 dark:border-red-500'
+										: 'border-gray-300 dark:border-gray-600'}"
+								/>
+								<button
+									type="button"
+									onclick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										arrayValue.splice(index, 1);
+										configObj[field.name] = [...arrayValue];
+										clearFieldError(fieldPath);
+									}}
+									class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+									aria-label={m.pipelines_remove_item_aria()}
+								>
+									<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
+								</button>
+							</div>
+						{/each}
+						<div class="flex items-center gap-2">
+							<input
+								type="text"
+								placeholder={m.pipelines_typeahead_placeholder()}
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										const target = e.target as HTMLInputElement;
+										const value = target.value.trim();
+										if (value) {
+											const newArray = [...arrayValue, value];
+											configObj[field.name] = newArray;
+											target.value = '';
+											clearFieldError(fieldPath);
+										}
+									}
+								}}
+								class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
+							/>
+						</div>
+						<p class="text-xs text-gray-600 dark:text-gray-400">
+							{m.pipelines_press_enter_hint()}
+						</p>
+					</div>
+				{/if}
+				{#if fieldErrors[fieldPath]}
+					<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
+						<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+						{fieldErrors[fieldPath]}
+					</p>
+				{/if}
+			</div>
+		</div>
+	{:else}
+		<div>
+			<label class="block">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+					{field.label}
+					{#if field.required}
+						<span class="text-red-500">*</span>
+					{/if}
+				</span>
+				{#if field.description}
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+						{field.description}
+					</p>
+				{/if}
+				{#if field.options && field.options.length > 0}
+					<select
+						value={configObj[field.name] || ''}
+						onchange={(e) => {
+							configObj[field.name] = (e.target as HTMLSelectElement).value;
+							clearFieldError(fieldPath);
+						}}
+						data-field-path={fieldPath}
+						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
+							fieldPath
+						]
+							? 'border-red-500 dark:border-red-500'
+							: 'border-gray-300 dark:border-gray-600'}"
+						required={field.required}
+					>
+						<option value="">{m.pipelines_select_placeholder()}</option>
+						{#each field.options as option (option.value)}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				{:else}
+					<input
+						type={getFieldType(field)}
+						value={configObj[field.name] || ''}
+						oninput={(e) => {
+							const target = e.target as HTMLInputElement;
+							configObj[field.name] =
+								field.type === 'int' || field.type === 'number'
+									? Number(target.value)
+									: target.value;
+							clearFieldError(fieldPath);
+							autoDetectSourceType();
+						}}
+						placeholder={field.placeholder || (field.default ? String(field.default) : '')}
+						data-field-path={fieldPath}
+						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {field.type ===
+						'password'
+							? 'font-mono'
+							: ''} {fieldErrors[fieldPath]
+							? 'border-red-500 dark:border-red-500'
+							: 'border-gray-300 dark:border-gray-600'}"
+						required={field.required}
+					/>
+				{/if}
+				{#if fieldErrors[fieldPath]}
+					<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
+						<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+						{fieldErrors[fieldPath]}
+					</p>
+				{/if}
+			</label>
+		</div>
+	{/if}
+{/snippet}
+
+<div class="w-full px-4 py-6 sm:px-6 lg:px-8">
+	<PageHeader
+		title={m.pipelines_create_pipeline()}
+		description={m.pipelines_step_indicator({
+			current: currentStep,
+			total: steps.length,
+			title: steps[currentStep - 1].title
+		})}
+		backHref={resolve('/runs')}
+		backLabel={m.nav_runs()}
+	/>
 
 	<!-- Step Indicator -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+	<div class="mb-6">
+		<div class="{PANEL} px-5 py-4">
 			<Stepper
 				{currentStep}
 				bind:totalSteps
@@ -585,35 +982,18 @@
 	</div>
 
 	<!-- Main Content -->
-	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<div>
 		{#if error}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:error"
-						class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0"
-					/>
-					<p class="ml-3 text-sm text-red-700 dark:text-red-300">{error}</p>
-				</div>
+			<div class="mb-6">
+				<Alert>{error}</Alert>
 			</div>
 		{/if}
 
 		<!-- Step 1: Basic Information -->
 		{#if currentStep === 1}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:info-outline"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_basic_info_heading()}
-				</h3>
+			<Panel title={m.pipelines_basic_info_heading()} icon="material-symbols:info-outline">
 				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_name_label()} <span class="text-red-500">*</span>
 					</label>
 					<input
@@ -626,17 +1006,17 @@
 								handleNextStep();
 							}
 						}}
-						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+						class={INPUT}
 						required
 					/>
 				</div>
 
 				<!-- Tags -->
 				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
 						{m.common_tags()}
 					</span>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_tags_hint()}
 					</p>
 					{#if true}
@@ -652,7 +1032,7 @@
 											tagsValue[index] = target.value;
 											config.tags = [...tagsValue];
 										}}
-										class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+										class="{INPUT} flex-1"
 									/>
 									<button
 										type="button"
@@ -686,7 +1066,7 @@
 									class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
 								/>
 							</div>
-							<p class="text-xs text-gray-500 dark:text-gray-400">
+							<p class="text-xs text-gray-600 dark:text-gray-400">
 								{m.pipelines_press_enter_hint()}
 							</p>
 						</div>
@@ -695,10 +1075,10 @@
 
 				<!-- External Links -->
 				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
 						{m.pipelines_external_links_label()}
 					</span>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
 						{m.pipelines_external_links_hint()}
 					</p>
 					{#if true}
@@ -725,7 +1105,7 @@
 										<div>
 											<label class="block">
 												<span
-													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
 												>
 													{m.common_name()}
 												</span>
@@ -736,14 +1116,14 @@
 														config.external_links = [...linksValue];
 													}}
 													placeholder={m.pipelines_link_name_placeholder()}
-													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+													class={INPUT}
 												/>
 											</label>
 										</div>
 										<div>
 											<label class="block">
 												<span
-													class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
 												>
 													{m.pipelines_url_label()}
 												</span>
@@ -754,7 +1134,7 @@
 														config.external_links = [...linksValue];
 													}}
 													placeholder="https://..."
-													class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+													class={INPUT}
 												/>
 											</label>
 										</div>
@@ -775,22 +1155,12 @@
 						</div>
 					{/if}
 				</div>
-			</div>
+			</Panel>
 		{/if}
 
 		<!-- Step 2: Plugin Selection -->
 		{#if currentStep === 2}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:extension"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_choose_data_source_heading()} <span class="text-red-500 ml-1">*</span>
-				</h3>
-
+			<Panel title={m.pipelines_choose_data_source_heading()} icon="material-symbols:extension">
 				{#if pluginsStillLoading}
 					<div
 						class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
@@ -802,11 +1172,13 @@
 				{/if}
 
 				{#if loadingPlugins}
-					<div class="flex items-center justify-center py-12">
-						<div
-							class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-						></div>
-						<span class="ml-3 text-sm text-gray-500">{m.pipelines_loading_plugins()}</span>
+					<div
+						class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+						aria-label={m.pipelines_loading_plugins()}
+					>
+						{#each [0, 1, 2, 3, 4, 5] as i (i)}
+							<Skeleton class="h-20" />
+						{/each}
 					</div>
 				{:else}
 					<!-- Search Bar -->
@@ -814,7 +1186,7 @@
 						<div class="relative">
 							<IconifyIcon
 								icon="material-symbols:search"
-								class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+								class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-gray-400"
 							/>
 							<input
 								type="text"
@@ -829,8 +1201,40 @@
 								class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							/>
 						</div>
+						{#if queryPluginCount > 0}
+							<div
+								class="mt-3 inline-flex rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-800"
+								role="group"
+							>
+								<button
+									type="button"
+									onclick={() => (queryOnly = false)}
+									aria-pressed={!queryOnly}
+									class="rounded-md px-3 py-1 text-xs font-medium transition {!queryOnly
+										? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+										: 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'}"
+									>{m.pipelines_filter_all({ count: plugins.length })}</button
+								>
+								<button
+									type="button"
+									onclick={() => (queryOnly = true)}
+									aria-pressed={queryOnly}
+									class="inline-flex items-center gap-1 rounded-md px-3 py-1 text-xs font-medium transition {queryOnly
+										? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+										: 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'}"
+								>
+									<IconifyIcon icon="material-symbols:bolt" class="h-3.5 w-3.5" />
+									{m.pipelines_filter_queryable({ count: queryPluginCount })}
+								</button>
+							</div>
+						{/if}
+						{#if queryOnly}
+							<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+								{m.pipelines_filter_queryable_hint()}
+							</p>
+						{/if}
 						{#if pluginSearchQuery && filteredPlugins.length === 0}
-							<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+							<p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
 								{m.pipelines_no_plugins_match({ query: pluginSearchQuery })}
 							</p>
 						{/if}
@@ -871,13 +1275,24 @@
 										<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
 											{plugin.name}
 										</h4>
-										{#if plugin.category}
-											<span
-												class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-											>
-												{plugin.category}
-											</span>
-										{/if}
+										<div class="mt-1 flex flex-wrap gap-1">
+											{#if plugin.category}
+												<span
+													class="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+												>
+													{plugin.category}
+												</span>
+											{/if}
+											{#if plugin.supports_query}
+												<span
+													class="inline-flex items-center gap-0.5 rounded-full bg-earthy-terracotta-100 px-2 py-0.5 text-xs font-medium text-earthy-terracotta-800 dark:bg-earthy-terracotta-900/40 dark:text-earthy-terracotta-200"
+													title={m.runs_queryable_title()}
+												>
+													<IconifyIcon icon="material-symbols:bolt" class="h-3 w-3" />
+													{m.runs_queryable_badge()}
+												</span>
+											{/if}
+										</div>
 									</div>
 								</div>
 								{#if plugin.description}
@@ -895,30 +1310,21 @@
 						{/each}
 					</div>
 				{/if}
-			</div>
+			</Panel>
 		{/if}
 
 		<!-- Step 3: Plugin Configuration -->
 		{#if currentStep === 3}
 			{#if configSpec && configSpec.length > 0}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-							<IconifyIcon
-								icon="material-symbols:settings"
-								class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-							/>
-							{m.pipelines_connection_config_heading()}
-						</h3>
+				<Panel title={m.pipelines_connection_config_heading()} icon="material-symbols:settings">
+					{#snippet action()}
 						{#if Object.keys(fieldErrors).length > 0}
 							<span class="text-sm text-red-600 dark:text-red-400 flex items-center">
 								<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1" />
 								{m.pipelines_error_count({ count: Object.keys(fieldErrors).length })}
 							</span>
 						{/if}
-					</div>
+					{/snippet}
 
 					<!-- AWS Credential Status Banner -->
 					{#if isAWSPlugin && awsCredentialStatus}
@@ -980,391 +1386,40 @@
 							</div>
 						</div>
 					{/if}
-					{#snippet renderField(
-						field: ConfigField,
-						fieldPath: string,
-						configObj: Record<string, ConfigValue>,
-						depth: number = 0
-					)}
-						{#if field.type === 'object' && field.is_array && field.fields}
-							<!-- Array of objects (e.g., external_links) -->
-							<div class="md:col-span-2">
-								<div class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if true}
-										{@const arrayValue =
-											(configObj[field.name] as Record<string, ConfigValue>[] | undefined) || []}
-										<div class="space-y-3">
-											{#each arrayValue as item, index (index)}
-												<div
-													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
-												>
-													<div class="flex items-end justify-end mb-3">
-														<button
-															type="button"
-															onclick={(e) => {
-																e.preventDefault();
-																arrayValue.splice(index, 1);
-																configObj[field.name] = [...arrayValue];
-																clearFieldError(fieldPath);
-															}}
-															class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-														>
-															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-														</button>
-													</div>
-													<div class="grid grid-cols-1 gap-3">
-														{#each field.fields as nestedField (nestedField.name)}
-															{@const nestedItemPath = `${fieldPath}[${index}].${nestedField.name}`}
-															<div>
-																<label class="block">
-																	<span
-																		class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
-																	>
-																		{nestedField.label}
-																		{#if nestedField.required}
-																			<span class="text-red-500">*</span>
-																		{/if}
-																	</span>
-																	<input
-																		type={getFieldType(nestedField)}
-																		bind:value={item[nestedField.name]}
-																		oninput={() => {
-																			configObj[field.name] = [...arrayValue];
-																			clearFieldError(nestedItemPath);
-																		}}
-																		placeholder={nestedField.placeholder}
-																		required={nestedField.required}
-																		data-field-path={nestedItemPath}
-																		class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
-																			nestedItemPath
-																		]
-																			? 'border-red-500 dark:border-red-500'
-																			: ''}"
-																	/>
-																	{#if fieldErrors[nestedItemPath]}
-																		<p
-																			class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start"
-																		>
-																			<IconifyIcon
-																				icon="material-symbols:error"
-																				class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
-																			/>
-																			{fieldErrors[nestedItemPath]}
-																		</p>
-																	{/if}
-																</label>
-															</div>
-														{/each}
-													</div>
-												</div>
-											{/each}
-											<button
-												type="button"
-												onclick={(e) => {
-													e.preventDefault();
-													const newItem: Record<string, ConfigValue> = {};
-													// Initialize with default values
-													field.fields?.forEach((f) => {
-														newItem[f.name] = (f.default as ConfigValue) || '';
-													});
-													arrayValue.push(newItem);
-													configObj[field.name] = [...arrayValue];
-													clearFieldError(fieldPath);
-												}}
-												class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
-											>
-												<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-												{m.pipelines_add_field_item({ label: field.label })}
-											</button>
-										</div>
-									{/if}
-									{#if fieldErrors[fieldPath]}
-										<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
-											<IconifyIcon
-												icon="material-symbols:error"
-												class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
-											/>
-											{fieldErrors[fieldPath]}
-										</p>
-									{/if}
-								</div>
-							</div>
-						{:else if field.type === 'object' && field.fields}
-							<div class="md:col-span-2">
-								<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-									<button
-										type="button"
-										onclick={() => toggleSection(fieldPath)}
-										class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-									>
-										<div class="flex items-center">
-											<IconifyIcon
-												icon={isExpanded(fieldPath)
-													? 'material-symbols:expand-more'
-													: 'material-symbols:chevron-right'}
-												class="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform"
-											/>
-											<span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-												{field.label}
-												{#if field.required}
-													<span class="text-red-500 ml-1">*</span>
-												{/if}
-											</span>
-										</div>
-										{#if field.description}
-											<span class="text-xs text-gray-500 dark:text-gray-400 ml-2 truncate"
-												>{field.description}</span
-											>
-										{/if}
-									</button>
-									{#if isExpanded(fieldPath)}
-										<div
-											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
-										>
-											<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-												{#each field.fields as nestedField (nestedField.name)}
-													{@const nestedPath = `${fieldPath}.${nestedField.name}`}
-													{@const nestedConfigObj =
-														(configObj[field.name] as Record<string, ConfigValue> | undefined) ||
-														{}}
-													{#if !shouldHideField(nestedField, nestedConfigObj, config)}
-														{@render renderField(
-															nestedField,
-															nestedPath,
-															nestedConfigObj,
-															depth + 1
-														)}
-													{/if}
-												{/each}
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{:else if field.type === 'bool' || field.type === 'boolean'}
-							<div class="md:col-span-2">
-								<label
-									class="flex items-start p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors {fieldErrors[
-										fieldPath
-									]
-										? 'border-red-500 dark:border-red-500'
-										: 'border-gray-200 dark:border-gray-700'}"
-									data-field-path={fieldPath}
-								>
-									<input
-										type="checkbox"
-										checked={configObj[field.name] === true}
-										onchange={(e) => {
-											configObj[field.name] = (e.currentTarget as HTMLInputElement).checked;
-											clearFieldError(fieldPath);
-										}}
-										class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-									/>
-									<div class="ml-3 flex-1">
-										<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-											{field.label}
-										</span>
-										{#if field.description}
-											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-												{field.description}
-											</p>
-										{/if}
-										{#if fieldErrors[fieldPath]}
-											<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
-												<IconifyIcon
-													icon="material-symbols:error"
-													class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
-												/>
-												{fieldErrors[fieldPath]}
-											</p>
-										{/if}
-									</div>
-								</label>
-							</div>
-						{:else if field.type === 'multiselect'}
-							<!-- Array/List field -->
-							<div class="md:col-span-2">
-								<div class="block" data-field-path={fieldPath}>
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if true}
-										{@const arrayValue = (configObj[field.name] as string[] | undefined) || []}
-										<div class="space-y-2">
-											{#each arrayValue as item, index (index)}
-												<div class="flex items-center gap-2">
-													<input
-														type="text"
-														value={item}
-														oninput={(e) => {
-															const target = e.target as HTMLInputElement;
-															arrayValue[index] = target.value;
-															configObj[field.name] = [...arrayValue];
-															clearFieldError(fieldPath);
-														}}
-														placeholder={field.placeholder}
-														class="flex-1 px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
-															fieldPath
-														]
-															? 'border-red-500 dark:border-red-500'
-															: 'border-gray-300 dark:border-gray-600'}"
-													/>
-													<button
-														type="button"
-														onclick={(e) => {
-															e.preventDefault();
-															e.stopPropagation();
-															arrayValue.splice(index, 1);
-															configObj[field.name] = [...arrayValue];
-															clearFieldError(fieldPath);
-														}}
-														class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-														aria-label={m.pipelines_remove_item_aria()}
-													>
-														<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
-													</button>
-												</div>
-											{/each}
-											<div class="flex items-center gap-2">
-												<input
-													type="text"
-													placeholder={m.pipelines_typeahead_placeholder()}
-													onkeydown={(e) => {
-														if (e.key === 'Enter') {
-															e.preventDefault();
-															const target = e.target as HTMLInputElement;
-															const value = target.value.trim();
-															if (value) {
-																const newArray = [...arrayValue, value];
-																configObj[field.name] = newArray;
-																target.value = '';
-																clearFieldError(fieldPath);
-															}
-														}
-													}}
-													class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
-												/>
-											</div>
-											<p class="text-xs text-gray-500 dark:text-gray-400">
-												{m.pipelines_press_enter_hint()}
-											</p>
-										</div>
-									{/if}
-									{#if fieldErrors[fieldPath]}
-										<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
-											<IconifyIcon
-												icon="material-symbols:error"
-												class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
-											/>
-											{fieldErrors[fieldPath]}
-										</p>
-									{/if}
-								</div>
-							</div>
-						{:else}
-							<div>
-								<label class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-										{field.label}
-										{#if field.required}
-											<span class="text-red-500">*</span>
-										{/if}
-									</span>
-									{#if field.description}
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-											{field.description}
-										</p>
-									{/if}
-									{#if field.options && field.options.length > 0}
-										<select
-											value={configObj[field.name] || ''}
-											onchange={(e) => {
-												configObj[field.name] = (e.target as HTMLSelectElement).value;
-												clearFieldError(fieldPath);
-											}}
-											data-field-path={fieldPath}
-											class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
-												fieldPath
-											]
-												? 'border-red-500 dark:border-red-500'
-												: 'border-gray-300 dark:border-gray-600'}"
-											required={field.required}
-										>
-											<option value="">{m.pipelines_select_placeholder()}</option>
-											{#each field.options as option (option.value)}
-												<option value={option.value}>{option.label}</option>
-											{/each}
-										</select>
-									{:else}
-										<input
-											type={getFieldType(field)}
-											value={configObj[field.name] || ''}
-											oninput={(e) => {
-												const target = e.target as HTMLInputElement;
-												configObj[field.name] =
-													field.type === 'int' || field.type === 'number'
-														? Number(target.value)
-														: target.value;
-												clearFieldError(fieldPath);
-												autoDetectSourceType();
-											}}
-											placeholder={field.placeholder ||
-												(field.default ? String(field.default) : '')}
-											data-field-path={fieldPath}
-											class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {field.type ===
-											'password'
-												? 'font-mono'
-												: ''} {fieldErrors[fieldPath]
-												? 'border-red-500 dark:border-red-500'
-												: 'border-gray-300 dark:border-gray-600'}"
-											required={field.required}
-										/>
-									{/if}
-									{#if fieldErrors[fieldPath]}
-										<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-start">
-											<IconifyIcon
-												icon="material-symbols:error"
-												class="h-4 w-4 mr-1 mt-0.5 flex-shrink-0"
-											/>
-											{fieldErrors[fieldPath]}
-										</p>
-									{/if}
-								</label>
-							</div>
-						{/if}
-					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field (field.name)}
+						{#each pluginFields.filter((f) => !f.group) as field (field.name)}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}
 						{/each}
 					</div>
-				</div>
+
+					<!-- Each group the plugin declares becomes a collapsed section, opened when it holds an error -->
+					{#if fieldGroups.length > 0}
+						<div
+							class="mt-6 divide-y divide-gray-100 border-y border-gray-100 dark:divide-gray-700 dark:border-gray-700"
+						>
+							{#each fieldGroups as group (group.name)}
+								<Disclosure
+									title={group.name}
+									hint={group.fields.map((f) => f.label).join(', ')}
+									open={group.fields.some((f) => hasFieldError(f.name))}
+								>
+									<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+										{#each group.fields as field (field.name)}
+											{#if !shouldHideField(field, config)}
+												{@render renderField(field, field.name, config, 0)}
+											{/if}
+										{/each}
+									</div>
+								</Disclosure>
+							{/each}
+						</div>
+					{/if}
+				</Panel>
 			{:else}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-center py-12"
-				>
+				<div class="{PANEL} px-6 py-12 text-center">
 					<IconifyIcon
 						icon="material-symbols:check-circle"
 						class="h-12 w-12 mx-auto text-green-600 mb-4"
@@ -1381,21 +1436,18 @@
 
 		<!-- Step 4: Schedule Configuration -->
 		{#if currentStep === totalSteps}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:schedule"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					{m.pipelines_schedule_heading()}
-				</h3>
+			{#if queryCapable}
+				<div class="mb-6">
+					<QueryAccessSection bind:queryEnabled bind:ingestOnQuery {hasSchedule} />
+				</div>
+			{/if}
+
+			<Panel title={m.pipelines_schedule_heading()} icon="material-symbols:schedule">
 				<div class="space-y-5">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
 							{m.pipelines_cron_label()}
-							<span class="text-xs font-normal text-gray-500 ml-1"
+							<span class="text-xs font-normal text-gray-600 dark:text-gray-400 ml-1"
 								>{m.pipelines_cron_optional()}</span
 							>
 						</label>
@@ -1409,14 +1461,14 @@
 									handleSave();
 								}
 							}}
-							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent font-mono text-sm transition-all"
+							class="{INPUT} font-mono"
 						/>
 						<div class="mt-2 flex items-start">
 							<IconifyIcon
 								icon="material-symbols:info-outline"
-								class="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0"
+								class="h-4 w-4 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0"
 							/>
-							<p class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+							<p class="ml-2 text-xs text-gray-600 dark:text-gray-400">
 								{m.pipelines_cron_hint()}
 							</p>
 						</div>
@@ -1513,12 +1565,12 @@
 							<div class="flex items-center gap-2">
 								<IconifyIcon
 									icon="material-symbols:filter-alt"
-									class="h-4 w-4 text-gray-500 dark:text-gray-400"
+									class="h-4 w-4 text-gray-600 dark:text-gray-400"
 								/>
-								<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+								<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400">
 									{m.pipelines_asset_filter_heading()}
 								</h4>
-								<span class="text-xs text-gray-400 dark:text-gray-500">
+								<span class="text-xs text-gray-600 dark:text-gray-400">
 									{m.pipelines_filter_optional_suffix()}
 								</span>
 							</div>
@@ -1526,7 +1578,7 @@
 								icon={isExpanded('asset_filter')
 									? 'material-symbols:expand-less'
 									: 'material-symbols:expand-more'}
-								class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+								class="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
 							/>
 						</button>
 
@@ -1534,7 +1586,7 @@
 							<div
 								class="px-4 py-4 rounded-b-lg border border-t-0 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
 							>
-								<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+								<p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
 									{m.pipelines_filter_description()}
 								</p>
 
@@ -1548,11 +1600,11 @@
 												icon="material-symbols:check-circle-outline"
 												class="h-4 w-4 text-green-600 dark:text-green-400"
 											/>
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 												{m.pipelines_filter_include_label()}
 											</span>
 										</div>
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
 											{m.pipelines_filter_include_hint()}
 										</p>
 										{#if true}
@@ -1561,7 +1613,7 @@
 												{#each includeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<input
@@ -1572,10 +1624,10 @@
 																includeValue[index] = target.value;
 																config.filter = { ...config.filter, include: [...includeValue] };
 															}}
-															class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-sm"
+															class="{INPUT} flex-1 font-mono"
 														/>
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<button
@@ -1585,7 +1637,7 @@
 																includeValue.splice(index, 1);
 																config.filter = { ...config.filter, include: [...includeValue] };
 															}}
-															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
 															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
@@ -1594,7 +1646,7 @@
 												{/each}
 												<div class="flex items-center gap-1.5">
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<input
@@ -1618,12 +1670,12 @@
 														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-mono text-sm"
 													/>
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<div class="w-[30px]"></div>
 												</div>
-												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
 													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
@@ -1639,11 +1691,11 @@
 												icon="material-symbols:block"
 												class="h-4 w-4 text-amber-600 dark:text-amber-400"
 											/>
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 												{m.pipelines_filter_exclude_label()}
 											</span>
 										</div>
-										<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
 											{m.pipelines_filter_exclude_hint()}
 										</p>
 										{#if true}
@@ -1652,7 +1704,7 @@
 												{#each excludeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<input
@@ -1663,10 +1715,10 @@
 																excludeValue[index] = target.value;
 																config.filter = { ...config.filter, exclude: [...excludeValue] };
 															}}
-															class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono text-sm"
+															class="{INPUT} flex-1 font-mono"
 														/>
 														<span
-															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 															>/</span
 														>
 														<button
@@ -1676,7 +1728,7 @@
 																excludeValue.splice(index, 1);
 																config.filter = { ...config.filter, exclude: [...excludeValue] };
 															}}
-															class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
 															aria-label={m.pipelines_remove_pattern_aria()}
 														>
 															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
@@ -1685,7 +1737,7 @@
 												{/each}
 												<div class="flex items-center gap-1.5">
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<input
@@ -1709,12 +1761,12 @@
 														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-mono text-sm"
 													/>
 													<span
-														class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
+														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
 														>/</span
 													>
 													<div class="w-[30px]"></div>
 												</div>
-												<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
 													{m.pipelines_press_enter_short_hint()}
 												</p>
 											</div>
@@ -1725,7 +1777,7 @@
 						{/if}
 					</div>
 				</div>
-			</div>
+			</Panel>
 		{/if}
 
 		<!-- Footer Actions -->
@@ -1734,33 +1786,35 @@
 		>
 			<div>
 				{#if currentStep > 1}
-					<Button
-						variant="clear"
-						click={() => currentStep--}
-						icon="material-symbols:arrow-back"
-						text={m.common_previous()}
-					/>
+					<button type="button" class={BTN_SECONDARY} onclick={() => currentStep--}>
+						<IconifyIcon icon="material-symbols:arrow-back" class="h-4 w-4" />
+						{m.common_previous()}
+					</button>
 				{:else}
-					<Button
-						variant="clear"
-						click={() => goto(resolve('/runs?tab=pipelines'))}
-						text={m.common_cancel()}
-					/>
+					<button
+						type="button"
+						class={BTN_SECONDARY}
+						onclick={() => goto(resolve('/runs?tab=pipelines'))}
+					>
+						{m.common_cancel()}
+					</button>
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">
 				{#if currentStep < totalSteps}
-					<Button
-						variant="filled"
-						click={handleNextStep}
-						text={currentStep === 3 && validating ? m.pipelines_validating() : m.common_next()}
-						icon="material-symbols:arrow-forward"
+					<button
+						type="button"
+						class={BTN_PRIMARY}
+						onclick={handleNextStep}
 						disabled={validating ||
 							(currentStep === 1 && !canProceedToStep2) ||
 							(currentStep === 2 && !canProceedToStep3)}
-					/>
+					>
+						<IconifyIcon icon="material-symbols:arrow-forward" class="h-4 w-4" />
+						{currentStep === 3 && validating ? m.pipelines_validating() : m.common_next()}
+					</button>
 				{:else}
-					<div class="text-sm text-gray-500 dark:text-gray-400 mr-4">
+					<div class="text-sm text-gray-600 dark:text-gray-400 mr-4">
 						{#if hasSchedule}
 							<IconifyIcon icon="material-symbols:schedule" class="inline h-4 w-4 mr-1" />
 							{m.pipelines_scheduled_pipeline()}
@@ -1772,13 +1826,15 @@
 							{m.pipelines_manual_only_pipeline()}
 						{/if}
 					</div>
-					<Button
-						variant="filled"
-						click={handleSave}
-						text={saving ? m.pipelines_creating() : m.pipelines_create_pipeline()}
+					<button
+						type="button"
+						class={BTN_PRIMARY}
+						onclick={handleSave}
 						disabled={saving || !name || !selectedPluginId}
-						icon="material-symbols:check"
-					/>
+					>
+						<IconifyIcon icon="material-symbols:check" class="h-4 w-4" />
+						{saving ? m.pipelines_creating() : m.pipelines_create_pipeline()}
+					</button>
 				{/if}
 			</div>
 		</div>

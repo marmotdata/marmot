@@ -22,7 +22,7 @@ const initializeRequest = `{"jsonrpc":"2.0","id":1,"method":"initialize","params
 // handshake never calls a tool, so nil services are fine for these tests.
 func newTestHandler() *Handler {
 	return &Handler{
-		mcpServer: mcp.NewServer(nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		mcpServer: mcp.NewServer(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		config:    &config.Config{},
 	}
 }

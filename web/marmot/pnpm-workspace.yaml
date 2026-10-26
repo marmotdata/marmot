@@ -25,3 +25,5 @@ overrides:
   bn.js: '>=5.2.3'
   picomatch: '>=4.0.4'
   uuid: '>=14.0.0'
+  postcss-selector-parser: ^7.1.6
+  katex: ^0.18.2

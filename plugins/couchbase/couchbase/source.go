@@ -50,16 +50,16 @@ type Config struct {
 	Username         string `json:"username" description:"Username for authentication" validate:"required"`
 	Password         string `json:"password" description:"Password for authentication" sensitive:"true" validate:"required"`
 
-	Bucket         string   `json:"bucket" description:"Only discover this bucket (all buckets when empty)"`
-	ExcludeBuckets []string `json:"exclude_buckets" description:"Bucket names to skip" default:"[]"`
+	Bucket         string   `json:"bucket" group:"Discovery" description:"Only discover this bucket (all buckets when empty)"`
+	ExcludeBuckets []string `json:"exclude_buckets" group:"Discovery" description:"Bucket names to skip" default:"[]"`
 
-	IncludeSystemScopes   bool `json:"include_system_scopes" description:"Whether to include the _system scope" default:"false"`
-	IncludeColumns        bool `json:"include_columns" description:"Whether to infer a document schema by sampling each collection" default:"true"`
-	SampleSize            int  `json:"sample_size" description:"Number of documents to sample per collection for schema inference" default:"100" validate:"min=1,max=10000"`
-	IncludeIndexes        bool `json:"include_indexes" description:"Whether to include query index information" default:"true"`
-	IncludeStatistics     bool `json:"include_statistics" description:"Whether to collect document counts and bucket sizes" default:"true"`
-	ConnectTimeoutSeconds int  `json:"connect_timeout_seconds" description:"Seconds to wait for the cluster connection" default:"10" validate:"min=1,max=300"`
-	SSLSkipVerify         bool `json:"ssl_skip_verify" label:"SSL Skip Verify" description:"Skip TLS certificate verification for couchbases:// connections" default:"false"`
+	IncludeSystemScopes   bool `json:"include_system_scopes" group:"Discovery" description:"Whether to include the _system scope" default:"false"`
+	IncludeColumns        bool `json:"include_columns" group:"Discovery" description:"Whether to infer a document schema by sampling each collection" default:"true"`
+	SampleSize            int  `json:"sample_size" group:"Advanced" description:"Number of documents to sample per collection for schema inference" default:"100" validate:"min=1,max=10000"`
+	IncludeIndexes        bool `json:"include_indexes" group:"Discovery" description:"Whether to include query index information" default:"true"`
+	IncludeStatistics     bool `json:"include_statistics" group:"Advanced" description:"Whether to collect document counts and bucket sizes" default:"true"`
+	ConnectTimeoutSeconds int  `json:"connect_timeout_seconds" group:"Advanced" description:"Seconds to wait for the cluster connection" default:"10" validate:"min=1,max=300"`
+	SSLSkipVerify         bool `json:"ssl_skip_verify" group:"Authentication" label:"SSL Skip Verify" description:"Skip TLS certificate verification for couchbases:// connections" default:"false"`
 }
 
 // Example configuration for the plugin

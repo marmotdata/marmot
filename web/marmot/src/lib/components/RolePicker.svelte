@@ -1,37 +1,44 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role, Permission } from '$lib/roles/types';
 	import { m } from '$lib/paraglide/messages';
+	import { INPUT } from '$lib/ui/classes';
+	import Pill from '$components/ui/Pill.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
 
-	export let selectedIds: string[] = [];
-	export let onChange: (ids: string[]) => void = () => {};
-	export let readonly = false;
+	let {
+		selectedIds = [],
+		onChange = () => {},
+		readonly = false
+	}: { selectedIds?: string[]; onChange?: (ids: string[]) => void; readonly?: boolean } = $props();
 
-	let allRoles: Role[] = [];
-	let loading = false;
-	let error: string | null = null;
-	let search = '';
+	let allRoles = $state<Role[]>([]);
+	let loading = $state(false);
+	let error = $state<string | null>(null);
+	let search = $state('');
 
-	$: filtered = search
-		? allRoles.filter(
-				(r) =>
-					r.name.toLowerCase().includes(search.toLowerCase()) ||
-					r.description?.toLowerCase().includes(search.toLowerCase())
-			)
-		: allRoles;
+	let filtered = $derived(
+		search
+			? allRoles.filter(
+					(r) =>
+						r.name.toLowerCase().includes(search.toLowerCase()) ||
+						r.description?.toLowerCase().includes(search.toLowerCase())
+				)
+			: allRoles
+	);
 
-	$: effectivePermissions = computeEffective(allRoles, selectedIds);
+	let effectivePermissions = $derived(computeEffective(allRoles, selectedIds));
 
 	function computeEffective(roles: Role[], ids: string[]): Permission[] {
-		const seen = new SvelteSet<string>();
+		const seen: Record<string, true> = {};
 		const perms: Permission[] = [];
 		for (const r of roles) {
 			if (!ids.includes(r.id)) continue;
 			for (const p of r.permissions ?? []) {
-				if (!seen.has(p.id)) {
-					seen.add(p.id);
+				if (!seen[p.id]) {
+					seen[p.id] = true;
 					perms.push(p);
 				}
 			}
@@ -47,9 +54,7 @@
 
 	function toggle(id: string) {
 		if (readonly) return;
-		const next = isSelected(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
-		selectedIds = next;
-		onChange(next);
+		onChange(isSelected(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
 	}
 
 	onMount(async () => {
@@ -70,58 +75,50 @@
 			type="text"
 			bind:value={search}
 			placeholder={m.ui_rolepicker_search_placeholder()}
-			class="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent"
+			class={INPUT}
 		/>
 	{/if}
 
 	{#if loading}
-		<div class="flex justify-center p-4">
-			<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
-		</div>
+		<Skeleton class="h-10" rows={3} />
 	{:else if error}
-		<div class="text-sm text-red-600 dark:text-red-400">{error}</div>
+		<Alert tone="error">{error}</Alert>
 	{:else}
 		<div
-			class="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-100 dark:divide-gray-700/50 max-h-60 overflow-y-auto"
+			class="max-h-60 divide-y divide-gray-100 overflow-y-auto rounded-lg border border-gray-200 bg-white dark:divide-gray-700/60 dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#each filtered as r (r.id)}
 				<div
-					class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 {isSelected(
-						r.id
-					)
-						? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/10'
-						: ''}"
+					class="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/40"
 				>
 					{#if !readonly}
 						<input
 							type="checkbox"
 							id="role-{r.id}"
 							checked={isSelected(r.id)}
-							on:change={() => toggle(r.id)}
-							class="h-4 w-4 text-earthy-terracotta-600 rounded border-gray-300 dark:border-gray-600 flex-shrink-0"
+							onchange={() => toggle(r.id)}
+							class="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-earthy-terracotta-600 dark:border-gray-600"
 						/>
 					{/if}
-					<label for="role-{r.id}" class="flex-1 min-w-0 {readonly ? '' : 'cursor-pointer'}">
-						<div class="flex items-center gap-2">
+					<label for="role-{r.id}" class="min-w-0 flex-1 {readonly ? '' : 'cursor-pointer'}">
+						<span class="flex items-center gap-2">
 							<span class="text-sm font-medium text-gray-900 dark:text-gray-100">{r.name}</span>
 							{#if r.is_system}
-								<span
-									class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded"
-								>
-									{m.ui_role_system_badge()}
-								</span>
+								<Pill>{m.ui_role_system_badge()}</Pill>
 							{/if}
-						</div>
+						</span>
 						{#if r.description}
-							<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{r.description}</p>
+							<span class="block truncate text-xs text-gray-500 dark:text-gray-400"
+								>{r.description}</span
+							>
 						{/if}
 					</label>
-					<span class="flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">
+					<span class="flex-shrink-0 text-xs tabular-nums text-gray-500 dark:text-gray-400">
 						{m.ui_rolepicker_perm_count({ count: (r.permissions ?? []).length })}
 					</span>
 				</div>
 			{:else}
-				<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+				<p class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
 					{m.ui_rolepicker_no_roles()}
 				</p>
 			{/each}
@@ -129,16 +126,12 @@
 
 		{#if selectedIds.length > 0 && effectivePermissions.length > 0}
 			<div class="mt-3">
-				<p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+				<p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
 					{m.ui_rolepicker_effective_permissions({ count: effectivePermissions.length })}
 				</p>
 				<div class="flex flex-wrap gap-1">
 					{#each effectivePermissions as perm (perm.id)}
-						<span
-							class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded"
-						>
-							{perm.name}
-						</span>
+						<Pill>{perm.name}</Pill>
 					{/each}
 				</div>
 			</div>

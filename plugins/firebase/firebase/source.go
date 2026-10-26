@@ -23,19 +23,19 @@ type Config struct {
 	pluginsdk.Federation `json:",inline"`
 
 	ProjectID                string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	Databases                []string `json:"databases,omitempty" description:"Firestore database IDs to scan. Every database is listed from the API when this is empty. The Firestore emulator has no such API, so name the databases here when pointing at one"`
+	Databases                []string `json:"databases,omitempty" group:"Discovery" description:"Firestore database IDs to scan. Every database is listed from the API when this is empty. The Firestore emulator has no such API, so name the databases here when pointing at one"`
 	CredentialsFile          string   `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
 	CredentialsJSON          string   `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
-	ServiceAccount           string   `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
-	Endpoint                 string   `json:"endpoint,omitempty" description:"Custom endpoint URL, for testing against a local server"`
-	DisableAuth              bool     `json:"disable_auth,omitempty" description:"Disable authentication, for local testing"`
+	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string   `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string   `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL, for testing against a local server"`
+	DisableAuth              bool     `json:"disable_auth,omitempty" group:"Authentication" description:"Disable authentication, for local testing"`
 
-	IncludeRealtimeDatabase bool `json:"include_realtime_database" description:"Whether to discover Realtime Database instances" default:"true"`
-	IncludeProjectDetails   bool `json:"include_project_details" description:"Whether to read the Firebase project name and number" default:"true"`
-	IncludeSubcollections   bool `json:"include_subcollections" description:"Whether to descend into subcollections" default:"true"`
-	MaxCollectionDepth      int  `json:"max_collection_depth" description:"How many levels of subcollection to descend" default:"2" validate:"omitempty,min=1,max=5"`
-	SampleDocuments         int  `json:"sample_documents" description:"How many documents to read per collection to infer its fields" default:"20" validate:"omitempty,min=1,max=500"`
+	IncludeRealtimeDatabase bool `json:"include_realtime_database" group:"Discovery" description:"Whether to discover Realtime Database instances" default:"true"`
+	IncludeProjectDetails   bool `json:"include_project_details" group:"Discovery" description:"Whether to read the Firebase project name and number" default:"true"`
+	IncludeSubcollections   bool `json:"include_subcollections" group:"Discovery" description:"Whether to descend into subcollections" default:"true"`
+	MaxCollectionDepth      int  `json:"max_collection_depth" group:"Advanced" description:"How many levels of subcollection to descend" default:"2" validate:"omitempty,min=1,max=5"`
+	SampleDocuments         int  `json:"sample_documents" group:"Advanced" description:"How many documents to read per collection to infer its fields" default:"20" validate:"omitempty,min=1,max=500"`
 }
 
 // Example configuration for the plugin

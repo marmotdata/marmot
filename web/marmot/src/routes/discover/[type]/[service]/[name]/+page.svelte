@@ -15,6 +15,7 @@
 	import RunHistory from '$components/runs/RunHistory.svelte';
 	import AgentSpecCard from '$components/asset/AgentSpecCard.svelte';
 	import AgentRunsView from '$components/asset/AgentRunsView.svelte';
+	import AssetQueryPanel from '$components/dataquery/AssetQueryPanel.svelte';
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
 	import DataPreviewTable from '$components/asset/DataPreviewTable.svelte';
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
@@ -58,6 +59,7 @@
 	let previewError: string | null = $state(null);
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
+	const canQueryData = auth.hasPermission('assets', 'query');
 
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'metadata');
 	let assetType = $derived($page.params.type);
@@ -255,6 +257,11 @@
 		{ id: 'query', label: m.discover_tab_query(), icon: 'material-symbols:code' },
 		{ id: 'preview', label: m.discover_tab_preview(), icon: 'material-symbols:preview' },
 		{
+			id: 'queries',
+			label: m.discover_tab_queries(),
+			icon: 'material-symbols:shield-lock-outline'
+		},
+		{
 			id: 'environments',
 			label: m.discover_tab_environments(),
 			icon: 'material-symbols:deployed-code'
@@ -282,6 +289,8 @@
 			if (tab.id === 'query' && !asset?.query) return false;
 			if (tab.id === 'preview' && (!isTableAsset(asset) || !$tablePreviewEnabled)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
+			if (tab.id === 'queries' && (!canQueryData || !isTableAsset(asset) || !asset?.mrn))
+				return false;
 			if (tab.id === 'runs' && !isAgent) return false;
 			// Contents is for drives, where a folder tree is how people
 			// navigate. Other providers nest too, but their structure is
@@ -584,6 +593,8 @@
 								loading={previewLoading}
 								error={previewError}
 							/>
+						{:else if activeTab === 'queries' && asset.mrn}
+							<AssetQueryPanel mrn={asset.mrn} name={asset.name ?? ''} />
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">
 								{#if asset.environments && Object.keys(asset.environments).length > 0}

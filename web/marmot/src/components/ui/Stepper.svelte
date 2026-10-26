@@ -20,7 +20,6 @@
 
 	let {
 		currentStep,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars -- write-only bindable read by the parent
 		totalSteps = $bindable(0),
 		onStepClick,
 		canNavigateToStep,
@@ -72,8 +71,8 @@
 					class="flex items-center justify-center w-10 h-10 rounded-full {currentStep === stepNumber
 						? 'bg-earthy-terracotta-600 text-white'
 						: currentStep > stepNumber
-							? 'bg-green-600 text-white'
-							: 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}"
+							? 'bg-earthy-green-600 text-white'
+							: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}"
 				>
 					{#if currentStep > stepNumber}
 						<IconifyIcon icon="material-symbols:check" class="h-5 w-5" />
@@ -88,7 +87,7 @@
 			{#if index < steps.length - 1}
 				<div
 					class="flex-1 h-0.5 mx-4 {currentStep > stepNumber
-						? 'bg-green-600'
+						? 'bg-earthy-green-600'
 						: 'bg-gray-200 dark:bg-gray-700'}"
 				></div>
 			{/if}

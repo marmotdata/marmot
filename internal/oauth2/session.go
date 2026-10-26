@@ -10,14 +10,17 @@ type MarmotSession struct {
 	UserID     string
 	Username   string
 	AuthMethod string
-	ExpiresAt  map[fosite.TokenType]time.Time
+	// AuthenticatedAt is when the user signed in to approve the request, checked against session revocation when the code is exchanged
+	AuthenticatedAt time.Time
+	ExpiresAt       map[fosite.TokenType]time.Time
 }
 
 func NewMarmotSession(userID, username string) *MarmotSession {
 	return &MarmotSession{
-		UserID:    userID,
-		Username:  username,
-		ExpiresAt: make(map[fosite.TokenType]time.Time),
+		UserID:          userID,
+		Username:        username,
+		AuthenticatedAt: time.Now(),
+		ExpiresAt:       make(map[fosite.TokenType]time.Time),
 	}
 }
 
@@ -50,6 +53,7 @@ func (s *MarmotSession) copyInto(dst *MarmotSession) {
 	dst.UserID = s.UserID
 	dst.Username = s.Username
 	dst.AuthMethod = s.AuthMethod
+	dst.AuthenticatedAt = s.AuthenticatedAt
 	dst.ExpiresAt = make(map[fosite.TokenType]time.Time, len(s.ExpiresAt))
 	for k, v := range s.ExpiresAt {
 		dst.ExpiresAt[k] = v
@@ -62,9 +66,10 @@ func (s *MarmotSession) Clone() fosite.Session {
 		expiresAt[k] = v
 	}
 	return &MarmotSession{
-		UserID:     s.UserID,
-		Username:   s.Username,
-		AuthMethod: s.AuthMethod,
-		ExpiresAt:  expiresAt,
+		UserID:          s.UserID,
+		Username:        s.Username,
+		AuthMethod:      s.AuthMethod,
+		AuthenticatedAt: s.AuthenticatedAt,
+		ExpiresAt:       expiresAt,
 	}
 }

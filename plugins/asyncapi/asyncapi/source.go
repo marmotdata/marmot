@@ -71,11 +71,11 @@ type Config struct {
 	*filesource.FileSourceConfig `json:",inline"`
 
 	SpecPath    string `json:"spec_path" validate:"required" description:"Path to AsyncAPI spec file or directory containing specs (local path, s3://bucket/prefix or git::url)"`
-	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
+	Environment string `json:"environment,omitempty" group:"Advanced" description:"Environment name (e.g., production, staging)" default:"production"`
 
-	DiscoverServices bool `json:"discover_services" description:"Create service assets from AsyncAPI info" default:"true"`
-	DiscoverChannels bool `json:"discover_channels" description:"Create channel/topic assets from channels and bindings" default:"true"`
-	DiscoverMessages bool `json:"discover_messages" description:"Attach message schemas to channel assets" default:"true"`
+	DiscoverServices bool `json:"discover_services" group:"Discovery" description:"Create service assets from AsyncAPI info" default:"true"`
+	DiscoverChannels bool `json:"discover_channels" group:"Discovery" description:"Create channel/topic assets from channels and bindings" default:"true"`
+	DiscoverMessages bool `json:"discover_messages" group:"Discovery" description:"Attach message schemas to channel assets" default:"true"`
 }
 
 // Example configuration for the plugin

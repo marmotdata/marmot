@@ -27,20 +27,20 @@ type Config struct {
 	Port       int      `json:"port" description:"Port for contact points given without one" default:"9042" validate:"omitempty,min=1,max=65535"`
 	Username   string   `json:"username" description:"Username for password authentication"`
 	Password   string   `json:"password" description:"Password for password authentication" sensitive:"true"`
-	Datacenter string   `json:"datacenter" description:"Local datacenter; only its nodes are queried when set"`
+	Datacenter string   `json:"datacenter" group:"Advanced" description:"Local datacenter; only its nodes are queried when set"`
 
-	SSL           bool   `json:"ssl" label:"SSL" description:"Connect over TLS" default:"false"`
-	SSLCACert     string `json:"ssl_ca_cert" label:"SSL CA Certificate" description:"Path to the CA certificate that signed the server certificate"`
-	SSLSkipVerify bool   `json:"ssl_skip_verify" label:"SSL Skip Verify" description:"Skip verification of the server certificate" default:"false"`
+	SSL           bool   `json:"ssl" group:"Authentication" label:"SSL" description:"Connect over TLS" default:"true"`
+	SSLCACert     string `json:"ssl_ca_cert" group:"Authentication" label:"SSL CA Certificate" description:"Path to the CA certificate that signed the server certificate"`
+	SSLSkipVerify bool   `json:"ssl_skip_verify" group:"Authentication" label:"SSL Skip Verify" description:"Skip verification of the server certificate" default:"false"`
 
-	ConnectTimeoutSeconds int `json:"connect_timeout_seconds" description:"Seconds to wait for a connection" default:"10" validate:"omitempty,min=1,max=300"`
+	ConnectTimeoutSeconds int `json:"connect_timeout_seconds" group:"Advanced" description:"Seconds to wait for a connection" default:"10" validate:"omitempty,min=1,max=300"`
 
-	Keyspaces              []string `json:"keyspaces" description:"Keyspaces to discover; all non-system keyspaces when empty"`
-	ExcludeSystemKeyspaces bool     `json:"exclude_system_keyspaces" description:"Whether to skip Cassandra's own keyspaces (system, system_schema, system_auth, ...)" default:"true"`
-	IncludeColumns         bool     `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeViews           bool     `json:"include_views" description:"Whether to include materialized views" default:"true"`
-	IncludeIndexes         bool     `json:"include_indexes" description:"Whether to include secondary index information" default:"true"`
-	IncludeStatistics      bool     `json:"include_statistics" description:"Whether to include column and index counts" default:"true"`
+	Keyspaces              []string `json:"keyspaces" group:"Discovery" description:"Keyspaces to discover; all non-system keyspaces when empty"`
+	ExcludeSystemKeyspaces bool     `json:"exclude_system_keyspaces" group:"Discovery" description:"Whether to skip Cassandra's own keyspaces (system, system_schema, system_auth, ...)" default:"true"`
+	IncludeColumns         bool     `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeViews           bool     `json:"include_views" group:"Discovery" description:"Whether to include materialized views" default:"true"`
+	IncludeIndexes         bool     `json:"include_indexes" group:"Discovery" description:"Whether to include secondary index information" default:"true"`
+	IncludeStatistics      bool     `json:"include_statistics" group:"Advanced" description:"Whether to include column and index counts" default:"true"`
 }
 
 // Example configuration for the plugin
