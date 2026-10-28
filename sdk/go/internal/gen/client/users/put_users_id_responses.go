@@ -39,6 +39,12 @@ func (o *PutUsersIDReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return nil, result
+	case 409:
+		result := NewPutUsersIDConflict()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[PUT /api/v1/users/{id}] putUsersID", response, response.Code())
 	}
@@ -121,7 +127,7 @@ func NewPutUsersIDBadRequest() *PutUsersIDBadRequest {
 //
 // Bad Request
 type PutUsersIDBadRequest struct {
-	Payload *models.ErrorResponse
+	Payload *models.ValidationErrorResponse
 }
 
 // IsSuccess returns true when this put users Id bad request response has a 2xx status code
@@ -164,13 +170,13 @@ func (o *PutUsersIDBadRequest) String() string {
 	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
 }
 
-func (o *PutUsersIDBadRequest) GetPayload() *models.ErrorResponse {
+func (o *PutUsersIDBadRequest) GetPayload() *models.ValidationErrorResponse {
 	return o.Payload
 }
 
 func (o *PutUsersIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.ValidationErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -237,6 +243,74 @@ func (o *PutUsersIDNotFound) GetPayload() *models.ErrorResponse {
 }
 
 func (o *PutUsersIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPutUsersIDConflict creates a PutUsersIDConflict with default headers values
+func NewPutUsersIDConflict() *PutUsersIDConflict {
+	return &PutUsersIDConflict{}
+}
+
+// PutUsersIDConflict describes a response with status code 409, with default header values.
+//
+// Conflict
+type PutUsersIDConflict struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this put users Id conflict response has a 2xx status code
+func (o *PutUsersIDConflict) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this put users Id conflict response has a 3xx status code
+func (o *PutUsersIDConflict) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this put users Id conflict response has a 4xx status code
+func (o *PutUsersIDConflict) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this put users Id conflict response has a 5xx status code
+func (o *PutUsersIDConflict) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this put users Id conflict response a status code equal to that given
+func (o *PutUsersIDConflict) IsCode(code int) bool {
+	return code == 409
+}
+
+// Code gets the status code for the put users Id conflict response
+func (o *PutUsersIDConflict) Code() int {
+	return 409
+}
+
+func (o *PutUsersIDConflict) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdConflict %s", 409, payload)
+}
+
+func (o *PutUsersIDConflict) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[PUT /api/v1/users/{id}][%d] putUsersIdConflict %s", 409, payload)
+}
+
+func (o *PutUsersIDConflict) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *PutUsersIDConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 

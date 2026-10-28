@@ -44,18 +44,18 @@ type Config struct {
 	Port          int    `json:"port" description:"MongoDB server port" default:"27017" validate:"omitempty,min=1,max=65535"`
 	User          string `json:"user" description:"Username for authentication"`
 	Password      string `json:"password" description:"Password for authentication" sensitive:"true"`
-	AuthSource    string `json:"auth_source" description:"Authentication database name" default:"admin"`
-	TLS           bool   `json:"tls" description:"Enable TLS/SSL for connection" default:"false"`
-	TLSInsecure   bool   `json:"tls_insecure" label:"TLS Insecure" description:"Skip verification of server certificate" default:"false"`
+	AuthSource    string `json:"auth_source" group:"Authentication" description:"Authentication database name" default:"admin"`
+	TLS           bool   `json:"tls" group:"Authentication" description:"Enable TLS/SSL for connection" default:"true"`
+	TLSInsecure   bool   `json:"tls_insecure" group:"Authentication" label:"TLS Insecure" description:"Skip verification of server certificate" default:"false"`
 
-	IncludeDatabases   bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeCollections bool `json:"include_collections" description:"Whether to discover collections" default:"true"`
-	IncludeViews       bool `json:"include_views" description:"Whether to include views" default:"true"`
-	IncludeIndexes     bool `json:"include_indexes" description:"Whether to include index information" default:"true"`
-	SampleSchema       bool `json:"sample_schema" description:"Sample documents to infer schema" default:"true"`
-	SampleSize         int  `json:"sample_size" description:"Number of documents to sample (-1 for entire collection)" default:"1000" validate:"omitempty,min=-1"`
-	UseRandomSampling  bool `json:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
-	ExcludeSystemDbs   bool `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
+	IncludeDatabases   bool `json:"include_databases" group:"Discovery" description:"Whether to discover databases" default:"true"`
+	IncludeCollections bool `json:"include_collections" group:"Discovery" description:"Whether to discover collections" default:"true"`
+	IncludeViews       bool `json:"include_views" group:"Discovery" description:"Whether to include views" default:"true"`
+	IncludeIndexes     bool `json:"include_indexes" group:"Discovery" description:"Whether to include index information" default:"true"`
+	SampleSchema       bool `json:"sample_schema" group:"Discovery" description:"Sample documents to infer schema" default:"true"`
+	SampleSize         int  `json:"sample_size" group:"Advanced" description:"Number of documents to sample (-1 for entire collection)" default:"1000" validate:"omitempty,min=-1"`
+	UseRandomSampling  bool `json:"use_random_sampling" group:"Advanced" description:"Use random sampling for schema inference" default:"true"`
+	ExcludeSystemDbs   bool `json:"exclude_system_dbs" group:"Discovery" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
 }
 
 // Example configuration for the plugin

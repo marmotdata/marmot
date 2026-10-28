@@ -14,6 +14,8 @@ type TableConfig struct {
 	ProviderColumn string // "providers" for both
 	NameColumn     string // "name" for both
 	MetadataColumn string // "metadata" for both
+	// IDColumn identifies the asset in the row, so @term can look up the asset's glossary links.
+	IDColumn string // "assets.id" for assets, "search_index.entity_id" for search_index
 }
 
 // DefaultAssetsConfig returns column config for the assets table
@@ -23,6 +25,7 @@ func DefaultAssetsConfig() TableConfig {
 		ProviderColumn: "providers",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
+		IDColumn:       "assets.id",
 	}
 }
 
@@ -33,6 +36,7 @@ func SearchIndexConfig() TableConfig {
 		ProviderColumn: "providers",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
+		IDColumn:       "search_index.entity_id",
 	}
 }
 
@@ -270,6 +274,10 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		return condition, params, paramCount, nil
 	}
 
+	if filter.FieldType == FieldTerm {
+		return b.termCondition(filter, paramCount)
+	}
+
 	// Build column reference based on field type
 	var columnRef string
 	switch filter.FieldType {
@@ -493,4 +501,27 @@ func parseJSONValue(s string) interface{} {
 	}
 	// Return as string
 	return s
+}
+
+// termCondition matches rows whose asset is linked to a glossary term with the given name, exactly or by wildcard, ignoring case and deleted terms. Rows that are not assets never match because they have no glossary links.
+func (b *Builder) termCondition(filter Filter, paramCount int) (string, []interface{}, int, error) {
+	if b.config.IDColumn == "" {
+		return "", nil, paramCount, fmt.Errorf("@term is not supported here")
+	}
+	value := fmt.Sprintf("%v", filter.Value)
+	var match string
+	switch filter.Operator {
+	case OpEquals:
+		match = fmt.Sprintf("lower(gt.name) = lower($%d)", paramCount)
+	case OpWildcard:
+		match = fmt.Sprintf("gt.name ILIKE $%d", paramCount)
+		value = strings.ReplaceAll(value, "*", "%")
+	default:
+		return "", nil, paramCount, fmt.Errorf("operator %s is not supported for @term", filter.Operator)
+	}
+	condition := fmt.Sprintf(
+		"EXISTS (SELECT 1 FROM asset_terms at JOIN glossary_terms gt ON gt.id = at.glossary_term_id WHERE at.asset_id::text = %s::text AND gt.deleted_at IS NULL AND %s)",
+		b.config.IDColumn, match,
+	)
+	return condition, []interface{}{value}, paramCount, nil
 }

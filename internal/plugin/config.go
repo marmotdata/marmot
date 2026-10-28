@@ -29,23 +29,30 @@ func (r RawPluginConfig) MaskSensitiveFields(configStruct interface{}) RawPlugin
 }
 
 func maskFieldInMap(m map[string]interface{}, path string) {
+	parent, key := writableParentMap(m, path)
+	if parent == nil {
+		return
+	}
+
+	if str, ok := parent[key].(string); ok && str != "" {
+		parent[key] = SensitiveMask
+	}
+}
+
+// parentMap walks a dotted path and returns the map holding its final key, or nil if any segment along the way is not a map
+func parentMap(m map[string]interface{}, path string) (map[string]interface{}, string) {
 	parts := strings.Split(path, ".")
 
 	current := m
-	for i := 0; i < len(parts)-1; i++ {
-		if next, ok := current[parts[i]].(map[string]interface{}); ok {
-			current = next
-		} else {
-			return
+	for _, part := range parts[:len(parts)-1] {
+		next, ok := current[part].(map[string]interface{})
+		if !ok {
+			return nil, ""
 		}
+		current = next
 	}
 
-	lastKey := parts[len(parts)-1]
-	if val, ok := current[lastKey]; ok {
-		if str, ok := val.(string); ok && str != "" {
-			current[lastKey] = SensitiveMask
-		}
-	}
+	return current, parts[len(parts)-1]
 }
 
 func extractSensitiveFields(v interface{}) []string {
@@ -113,6 +120,24 @@ func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []pluginsdk.
 	}
 
 	return result
+}
+
+// RestoreMaskedFieldsFromSpec swaps sensitive fields still holding SensitiveMask for their value in previous, so a config read back from the API can be saved without wiping its secrets; masked fields with no previous value are removed
+func RestoreMaskedFieldsFromSpec(config, previous map[string]interface{}, configSpec []pluginsdk.ConfigField) {
+	for _, path := range extractSensitiveFieldsFromSpec(configSpec, "") {
+		parent, key := parentMap(config, path)
+		if parent == nil || parent[key] != SensitiveMask {
+			continue
+		}
+
+		if prevParent, _ := parentMap(previous, path); prevParent != nil {
+			if value, ok := prevParent[key]; ok {
+				parent[key] = value
+				continue
+			}
+		}
+		delete(parent, key)
+	}
 }
 
 func extractSensitiveFieldsFromSpec(fields []pluginsdk.ConfigField, prefix string) []string {

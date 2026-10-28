@@ -39,6 +39,15 @@ service:
   port: 8080
   targetPort: 8080
 
+# Service for the serve port, created when config.query.serve.enabled is set.
+# The connection is mutual TLS from the plugin to Marmot, so anything in front
+# of it must pass TCP straight through (a layer 4 load balancer or TLS
+# passthrough), never terminate TLS.
+serveService:
+  type: ClusterIP
+  port: 8443
+  annotations: {}
+
 ingress:
   enabled: false
   className: ""
@@ -276,6 +285,23 @@ config:
   # Telemetry — anonymous usage data, disable with telemetry.enabled: false
   telemetry:
     enabled: true
+
+  # Plugins that run outside Marmot (`marmot ingest --serve`) and answer data
+  # queries. They dial in to this port over mutual TLS; Marmot never connects
+  # out to them. Requires the encryption key.
+  query:
+    serve:
+      enabled: false
+      listen_address: ":8443"
+      # host:port serving plugins dial, when that is not the Marmot host on
+      # the serve port, for example a dedicated load balancer
+      public_address: ""
+      # Keep the serving CA key and query signing key in a KMS rather than
+      # the database: sigstore KMS URIs (awskms://, gcpkms://, azurekms://,
+      # hashivault://) naming ECDSA P-256 keys. Give the pods access to the
+      # KMS, for example with IRSA annotations or env such as VAULT_ADDR.
+      ca_key_uri: ""
+      signing_key_uri: ""
 
   # Operator config (for Marmot server-side awareness of operator features)
   operator:

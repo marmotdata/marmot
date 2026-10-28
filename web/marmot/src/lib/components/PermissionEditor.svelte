@@ -3,30 +3,33 @@
 	import { listPermissions } from '$lib/roles/api';
 	import type { Permission } from '$lib/roles/types';
 	import { m } from '$lib/paraglide/messages';
+	import { LABEL } from '$lib/ui/classes';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
 
-	export let selectedIds: string[] = [];
-	export let onChange: (ids: string[]) => void = () => {};
-	export let readonly = false;
+	// Every permission grouped by resource type, as a checklist or, when readonly, just the granted ones
+	let {
+		selectedIds = [],
+		onChange = () => {},
+		readonly = false
+	}: { selectedIds?: string[]; onChange?: (ids: string[]) => void; readonly?: boolean } = $props();
 
-	let allPermissions: Permission[] = [];
-	let loading = false;
-	let error: string | null = null;
+	let allPermissions = $state<Permission[]>([]);
+	let loading = $state(false);
+	let error = $state<string | null>(null);
 
-	$: visiblePermissions = readonly
-		? allPermissions.filter((p) => selectedIds.includes(p.id))
-		: allPermissions;
-	$: grouped = groupByResourceType(visiblePermissions);
-
-	function groupByResourceType(perms: Permission[]): Record<string, Permission[]> {
-		return perms.reduce(
+	let visiblePermissions = $derived(
+		readonly ? allPermissions.filter((p) => selectedIds.includes(p.id)) : allPermissions
+	);
+	let grouped = $derived(
+		visiblePermissions.reduce(
 			(acc, p) => {
-				if (!acc[p.resource_type]) acc[p.resource_type] = [];
-				acc[p.resource_type].push(p);
+				(acc[p.resource_type] ??= []).push(p);
 				return acc;
 			},
 			{} as Record<string, Permission[]>
-		);
-	}
+		)
+	);
 
 	function isSelected(id: string): boolean {
 		return selectedIds.includes(id);
@@ -34,24 +37,17 @@
 
 	function toggle(id: string) {
 		if (readonly) return;
-		const next = isSelected(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
-		selectedIds = next;
-		onChange(next);
+		onChange(isSelected(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
 	}
 
 	function toggleGroup(perms: Permission[]) {
 		if (readonly) return;
-		const allSelected = perms.every((p) => isSelected(p.id));
-		let next: string[];
-		if (allSelected) {
+		if (perms.every((p) => isSelected(p.id))) {
 			const groupIds = new Set(perms.map((p) => p.id));
-			next = selectedIds.filter((id) => !groupIds.has(id));
+			onChange(selectedIds.filter((id) => !groupIds.has(id)));
 		} else {
-			const toAdd = perms.map((p) => p.id).filter((id) => !isSelected(id));
-			next = [...selectedIds, ...toAdd];
+			onChange([...selectedIds, ...perms.map((p) => p.id).filter((id) => !isSelected(id))]);
 		}
-		selectedIds = next;
-		onChange(next);
 	}
 
 	onMount(async () => {
@@ -67,19 +63,20 @@
 </script>
 
 {#if loading}
-	<div class="flex justify-center p-4">
-		<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
-	</div>
+	<Skeleton class="h-24" rows={2} />
 {:else if error}
-	<div class="text-sm text-red-600 dark:text-red-400 p-2">{error}</div>
+	<Alert tone="error">{error}</Alert>
 {:else}
 	<div class="space-y-3">
 		{#each Object.entries(grouped) as [resourceType, perms] (resourceType)}
 			<div
-				class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-white dark:bg-gray-900"
+				class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
 			>
-				<label
-					class="flex items-center gap-2 px-3 py-2 bg-earthy-brown-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-earthy-brown-200 dark:hover:bg-gray-700/50"
+				<svelte:element
+					this={readonly ? 'div' : 'label'}
+					class="flex items-center gap-2 border-b border-gray-100 px-3 py-2 dark:border-gray-700/60 {readonly
+						? ''
+						: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40'}"
 				>
 					{#if !readonly}
 						<input
@@ -87,49 +84,49 @@
 							checked={perms.every((p) => isSelected(p.id))}
 							indeterminate={perms.some((p) => isSelected(p.id)) &&
 								!perms.every((p) => isSelected(p.id))}
-							on:change={() => toggleGroup(perms)}
-							class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500"
+							onchange={() => toggleGroup(perms)}
+							class="rounded border-gray-300 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:border-gray-600"
 						/>
 					{/if}
-					<span
-						class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
-					>
-						{resourceType}
-					</span>
-					<span class="ml-auto text-xs text-gray-500 dark:text-gray-500">
-						{perms.filter((p) => isSelected(p.id)).length} / {perms.length}
-					</span>
-				</label>
-				<div class="divide-y divide-gray-100 dark:divide-gray-700/50">
+					<span class={LABEL}>{resourceType}</span>
+					{#if !readonly}
+						<!-- A selection counter, so it only belongs where there is a selection to make. -->
+						<span class="ml-auto text-xs tabular-nums text-gray-500 dark:text-gray-400">
+							{perms.filter((p) => isSelected(p.id)).length} / {perms.length}
+						</span>
+					{/if}
+				</svelte:element>
+				<div class="divide-y divide-gray-100 dark:divide-gray-700/60">
 					{#each perms as perm (perm.id)}
-						<label
-							class="flex items-start gap-3 px-3 py-2 hover:bg-earthy-brown-50 dark:hover:bg-gray-800/50 {readonly
+						<svelte:element
+							this={readonly ? 'div' : 'label'}
+							class="flex items-start gap-3 px-3 py-2 {readonly
 								? ''
-								: 'cursor-pointer'}"
+								: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40'}"
 						>
 							{#if !readonly}
 								<input
 									type="checkbox"
 									checked={isSelected(perm.id)}
-									on:change={() => toggle(perm.id)}
-									class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 flex-shrink-0"
+									onchange={() => toggle(perm.id)}
+									class="mt-0.5 flex-shrink-0 rounded border-gray-300 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:border-gray-600"
 								/>
 							{/if}
-							<div class="flex-1 min-w-0">
+							<div class="min-w-0 flex-1">
 								<span class="text-sm font-medium text-gray-900 dark:text-gray-100">{perm.name}</span
 								>
 								{#if perm.description}
-									<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{perm.description}</p>
+									<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{perm.description}</p>
 								{/if}
 							</div>
-						</label>
+						</svelte:element>
 					{/each}
 				</div>
 			</div>
 		{/each}
 
 		{#if allPermissions.length === 0}
-			<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+			<p class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
 				{m.ui_permissioneditor_empty()}
 			</p>
 		{/if}

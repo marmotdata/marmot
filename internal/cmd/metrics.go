@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/spf13/cobra"
 )
 

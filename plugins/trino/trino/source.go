@@ -135,25 +135,25 @@ type Config struct {
 	Port        int    `json:"port" default:"8080" validate:"omitempty,min=1,max=65535" description:"Trino coordinator port"`
 	User        string `json:"user" validate:"required" description:"Username for authentication"`
 	Password    string `json:"password,omitempty" sensitive:"true" description:"Password (requires HTTPS)"`
-	Secure      bool   `json:"secure,omitempty" default:"false" description:"Use HTTPS"`
-	SSLCertPath string `json:"ssl_cert_path,omitempty" label:"SSL Cert Path" description:"Path to TLS certificate file"`
-	AccessToken string `json:"access_token,omitempty" sensitive:"true" description:"JWT bearer token"`
+	Secure      bool   `json:"secure,omitempty" group:"Authentication" default:"true" description:"Use HTTPS"`
+	SSLCertPath string `json:"ssl_cert_path,omitempty" group:"Authentication" label:"SSL Cert Path" description:"Path to TLS certificate file"`
+	AccessToken string `json:"access_token,omitempty" group:"Authentication" sensitive:"true" description:"JWT bearer token"`
 
 	// Scope
-	Catalog         string   `json:"catalog,omitempty" description:"Specific catalog to discover (all if empty)"`
-	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
+	Catalog         string   `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
+	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
 
 	// Discovery options
-	IncludeCatalogs bool `json:"include_catalogs" default:"true" description:"Create catalog-level assets"`
-	IncludeColumns  bool `json:"include_columns" default:"true" description:"Include column info in table metadata"`
-	IncludeStats    bool `json:"include_stats,omitempty" default:"false" description:"Collect table statistics (can be slow)"`
+	IncludeCatalogs bool `json:"include_catalogs" group:"Discovery" default:"true" description:"Create catalog-level assets"`
+	IncludeColumns  bool `json:"include_columns" group:"Discovery" default:"true" description:"Include column info in table metadata"`
+	IncludeStats    bool `json:"include_stats,omitempty" group:"Advanced" default:"false" description:"Collect table statistics (can be slow)"`
 
 	// AI enrichment (requires Trino AI connector)
-	AICatalog              string   `json:"ai_catalog,omitempty" label:"AI Catalog" description:"Name of the AI connector catalog (empty = disabled)"`
-	AIGenerateDescriptions bool     `json:"ai_generate_descriptions,omitempty" label:"AI Generate Descriptions" default:"false" description:"Auto-generate descriptions for undocumented tables"`
-	AIClassifyTables       bool     `json:"ai_classify_tables,omitempty" label:"AI Classify Tables" default:"false" description:"Auto-classify tables into categories"`
-	AIClassifyLabels       []string `json:"ai_classify_labels,omitempty" label:"AI Classify Labels" description:"Custom classification labels" default:"[\"analytics\",\"operational\",\"pii\",\"financial\",\"logs\",\"reference\"]"`
-	AIMaxEnrichments       int      `json:"ai_max_enrichments,omitempty" label:"AI Max Enrichments" default:"0" description:"Max tables to enrich with AI (0 = unlimited)"`
+	AICatalog              string   `json:"ai_catalog,omitempty" group:"AI enrichment" label:"AI Catalog" description:"Name of the AI connector catalog (empty = disabled)"`
+	AIGenerateDescriptions bool     `json:"ai_generate_descriptions,omitempty" group:"AI enrichment" label:"AI Generate Descriptions" default:"false" description:"Auto-generate descriptions for undocumented tables"`
+	AIClassifyTables       bool     `json:"ai_classify_tables,omitempty" group:"AI enrichment" label:"AI Classify Tables" default:"false" description:"Auto-classify tables into categories"`
+	AIClassifyLabels       []string `json:"ai_classify_labels,omitempty" group:"AI enrichment" label:"AI Classify Labels" description:"Custom classification labels" default:"[\"analytics\",\"operational\",\"pii\",\"financial\",\"logs\",\"reference\"]"`
+	AIMaxEnrichments       int      `json:"ai_max_enrichments,omitempty" group:"AI enrichment" label:"AI Max Enrichments" default:"0" description:"Max tables to enrich with AI (0 = unlimited)"`
 }
 
 // Example configuration for the plugin
@@ -175,9 +175,24 @@ type Source struct {
 	config            *Config
 	db                *sql.DB
 	catalogConnectors map[string]string // catalog name → connector name
+
+	// query is the connection data queries share across calls.
+	query queryConns
 }
 
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent query calls can each work from their own copy.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
@@ -207,8 +222,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
@@ -302,25 +316,35 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 func (s *Source) initConnection(ctx context.Context) error {
 	s.closeConnection()
 
+	db, err := openDB(ctx, s.config)
+	if err != nil {
+		return err
+	}
+	s.db = db
+	return nil
+}
+
+// openDB opens and pings a Trino connection for the given config.
+func openDB(ctx context.Context, config *Config) (*sql.DB, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	scheme := "http"
-	if s.config.Secure {
+	if config.Secure {
 		scheme = "https"
 	}
 
-	dsn := fmt.Sprintf("%s://%s@%s:%d", scheme, s.config.User, s.config.Host, s.config.Port)
+	dsn := fmt.Sprintf("%s://%s@%s:%d", scheme, config.User, config.Host, config.Port)
 
 	params := []string{}
-	if s.config.SSLCertPath != "" {
-		params = append(params, "SSLCertPath="+s.config.SSLCertPath)
+	if config.SSLCertPath != "" {
+		params = append(params, "SSLCertPath="+config.SSLCertPath)
 	}
-	if s.config.AccessToken != "" {
-		params = append(params, "accessToken="+s.config.AccessToken)
+	if config.AccessToken != "" {
+		params = append(params, "accessToken="+config.AccessToken)
 	}
-	if s.config.Password != "" {
-		params = append(params, "custom_auth="+s.config.User+":"+s.config.Password)
+	if config.Password != "" {
+		params = append(params, "custom_auth="+config.User+":"+config.Password)
 	}
 	if len(params) > 0 {
 		dsn += "?" + strings.Join(params, "&")
@@ -328,7 +352,7 @@ func (s *Source) initConnection(ctx context.Context) error {
 
 	db, err := sql.Open("trino", dsn)
 	if err != nil {
-		return fmt.Errorf("opening connection: %w", err)
+		return nil, fmt.Errorf("opening connection: %w", err)
 	}
 
 	db.SetMaxOpenConns(5)
@@ -338,16 +362,15 @@ func (s *Source) initConnection(ctx context.Context) error {
 
 	if err := db.PingContext(timeoutCtx); err != nil {
 		db.Close()
-		return fmt.Errorf("pinging Trino: %w", err)
+		return nil, fmt.Errorf("pinging Trino: %w", err)
 	}
 
 	log.Debug().
-		Str("host", s.config.Host).
-		Int("port", s.config.Port).
+		Str("host", config.Host).
+		Int("port", config.Port).
 		Msg("Successfully connected to Trino")
 
-	s.db = db
-	return nil
+	return db, nil
 }
 
 func (s *Source) closeConnection() {

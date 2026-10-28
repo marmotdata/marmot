@@ -25,17 +25,17 @@ type Config struct {
 	Host     string `json:"host" description:"NiFi base URL (e.g. https://nifi.example.com:8443)" validate:"required,url"`
 	Username string `json:"username,omitempty" description:"Username for single-user or LDAP login. Leave all credentials empty for an unsecured HTTP install"`
 	Password string `json:"password,omitempty" description:"Password for the username" sensitive:"true"`
-	Token    string `json:"token,omitempty" description:"Bearer token to use instead of a username and password" sensitive:"true"`
+	Token    string `json:"token,omitempty" group:"Authentication" description:"Bearer token to use instead of a username and password" sensitive:"true"`
 
-	ClientCert string `json:"client_cert,omitempty" label:"Client Certificate" description:"Path to a PEM client certificate for mutual TLS (used instead of a login)"`
-	ClientKey  string `json:"client_key,omitempty" label:"Client Key" description:"Path to the PEM private key of the client certificate"`
-	CACert     string `json:"ca_cert,omitempty" label:"CA Certificate" description:"Path to a PEM CA certificate to trust"`
-	VerifySSL  bool   `json:"verify_ssl" label:"Verify SSL" description:"Verify the NiFi TLS certificate. Set to false for the self-signed certificate NiFi ships with" default:"true"`
+	ClientCert string `json:"client_cert,omitempty" group:"Authentication" label:"Client Certificate" description:"Path to a PEM client certificate for mutual TLS (used instead of a login)"`
+	ClientKey  string `json:"client_key,omitempty" group:"Authentication" label:"Client Key" description:"Path to the PEM private key of the client certificate"`
+	CACert     string `json:"ca_cert,omitempty" group:"Authentication" label:"CA Certificate" description:"Path to a PEM CA certificate to trust"`
+	VerifySSL  bool   `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the NiFi TLS certificate. Set to false for the self-signed certificate NiFi ships with" default:"true"`
 
-	IncludeProcessors bool   `json:"include_processors" description:"Discover processors as Task assets" default:"true"`
-	IncludePorts      bool   `json:"include_ports" description:"Discover input and output ports as Task assets" default:"false"`
-	DiscoverLineage   bool   `json:"discover_lineage" description:"Link well-known processors to the buckets, topics, tables and indexes they read or write" default:"true"`
-	RootProcessGroup  string `json:"root_process_group,omitempty" description:"Id of the process group to start from (defaults to the root group)"`
+	IncludeProcessors bool   `json:"include_processors" group:"Discovery" description:"Discover processors as Task assets" default:"true"`
+	IncludePorts      bool   `json:"include_ports" group:"Discovery" description:"Discover input and output ports as Task assets" default:"false"`
+	DiscoverLineage   bool   `json:"discover_lineage" group:"Discovery" description:"Link well-known processors to the buckets, topics, tables and indexes they read or write" default:"true"`
+	RootProcessGroup  string `json:"root_process_group,omitempty" group:"Discovery" description:"Id of the process group to start from (defaults to the root group)"`
 }
 
 // Example configuration for the plugin

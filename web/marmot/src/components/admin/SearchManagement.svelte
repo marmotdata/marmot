@@ -4,16 +4,39 @@
 	import { m } from '$lib/paraglide/messages';
 	import { formatNumber } from '$lib/utils';
 	import { websocketService, type SearchReindexEvent } from '$lib/websocket';
+	import IconifyIcon from '@iconify/svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Pill from '$components/ui/Pill.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import { BTN_SECONDARY, LABEL } from '$lib/ui/classes';
 
-	let running = false;
-	let esConfigured = false;
-	let loading = true;
-	let error: string | null = null;
+	type Status = 'idle' | 'running' | 'completed' | 'failed';
 
-	let indexed = 0;
-	let errors = 0;
-	let total = 0;
-	let status: 'idle' | 'running' | 'completed' | 'failed' = 'idle';
+	let running = $state(false);
+	let esConfigured = $state(false);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+
+	let indexed = $state(0);
+	let errors = $state(0);
+	let total = $state(0);
+	let status = $state<Status>('idle');
+
+	const STATUS_TONE: Record<Status, 'neutral' | 'info' | 'success' | 'danger'> = {
+		idle: 'neutral',
+		running: 'info',
+		completed: 'success',
+		failed: 'danger'
+	};
+	let statusLabel = $derived(
+		{
+			idle: m.admin_search_status_idle(),
+			running: m.admin_search_status_running(),
+			completed: m.admin_search_status_completed(),
+			failed: m.admin_search_status_failed()
+		}[status]
+	);
 
 	let unsubscribe: (() => void) | null = null;
 
@@ -61,7 +84,7 @@
 			if (running) {
 				status = 'running';
 			}
-		} catch (err) {
+		} catch {
 			// Non-critical - we'll still show the UI
 		} finally {
 			loading = false;
@@ -96,85 +119,98 @@
 		if (unsubscribe) unsubscribe();
 	});
 
-	$: progress = total > 0 ? Math.round((indexed / total) * 100) : 0;
+	let progress = $derived(total > 0 ? Math.round((indexed / total) * 100) : 0);
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+<Panel
+	title={m.admin_search_index_heading()}
+	description={esConfigured ? m.admin_reindex_description() : undefined}
+	icon="material-symbols:manage-search"
 >
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-			{m.admin_search_index_heading()}
-		</h3>
-
-		{#if loading}
-			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
-			</div>
-		{:else if !esConfigured}
-			<div
-				class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-yellow-700 dark:text-yellow-300"
-			>
-				{m.admin_es_not_configured()}
-			</div>
-		{:else}
-			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				{m.admin_reindex_description()}
-			</p>
-
-			<button
-				class="px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 disabled:opacity-50 disabled:cursor-not-allowed"
-				disabled={running}
-				on:click={startReindex}
-			>
+	{#snippet action()}
+		{#if !loading && esConfigured}
+			<button type="button" class={BTN_SECONDARY} disabled={running} onclick={startReindex}>
+				<IconifyIcon
+					icon="material-symbols:sync"
+					class="h-5 w-5 text-gray-400 {running ? 'animate-spin' : ''}"
+				/>
 				{running ? m.admin_reindexing_label() : m.admin_start_reindex()}
 			</button>
+		{/if}
+	{/snippet}
 
-			{#if status === 'running'}
-				<div class="mt-4">
-					<div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-						<span>{m.admin_indexing_documents()}</span>
-						<span>
-							{formatNumber(indexed)}{total > 0 ? ` / ${formatNumber(total)}` : ''}
-							{errors > 0 ? m.admin_reindex_errors_suffix({ count: errors }) : ''}
-						</span>
-					</div>
-					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-						<div
-							class="bg-earthy-terracotta-700 h-2.5 rounded-full transition-all duration-300"
-							style="width: {progress}%"
-						/>
-					</div>
-				</div>
-			{/if}
-
-			{#if status === 'completed'}
-				<div
-					class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-green-700 dark:text-green-300"
+	{#if loading}
+		<Skeleton class="h-16" />
+	{:else if !esConfigured}
+		<Alert tone="warning">{m.admin_es_not_configured()}</Alert>
+	{:else}
+		<dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+			<div>
+				<dt class={LABEL}>{m.common_status()}</dt>
+				<dd class="mt-1.5">
+					<Pill tone={STATUS_TONE[status]}>{statusLabel}</Pill>
+				</dd>
+			</div>
+			<div>
+				<dt class={LABEL}>{m.admin_search_indexed_label()}</dt>
+				<dd class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+					{formatNumber(indexed)}{#if total > 0}<span class="text-sm font-normal text-gray-400">
+							/ {formatNumber(total)}</span
+						>{/if}
+				</dd>
+			</div>
+			<div>
+				<dt class={LABEL}>{m.admin_search_errors_label()}</dt>
+				<dd
+					class="mt-1 text-2xl font-semibold tabular-nums {errors > 0
+						? 'text-red-600 dark:text-red-400'
+						: 'text-gray-900 dark:text-gray-100'}"
 				>
+					{formatNumber(errors)}
+				</dd>
+			</div>
+		</dl>
+
+		{#if status === 'running'}
+			<div class="mt-5">
+				<div class="mb-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+					<span>{m.admin_indexing_documents()}</span>
+					<span class="tabular-nums">{progress}%</span>
+				</div>
+				<div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700">
+					<div
+						class="h-1.5 rounded-full bg-earthy-terracotta-600 transition-all duration-300"
+						style="width: {progress}%"
+					></div>
+				</div>
+			</div>
+		{/if}
+
+		{#if status === 'completed'}
+			<div class="mt-5">
+				<Alert tone={errors > 0 ? 'warning' : 'success'}>
 					{errors > 0
 						? m.admin_reindex_complete_with_errors({ count: formatNumber(indexed), errors })
 						: m.admin_reindex_complete({ count: formatNumber(indexed) })}
-				</div>
-			{/if}
-
-			{#if status === 'failed'}
-				<div
-					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
-				>
-					{indexed > 0
-						? m.admin_reindex_failed_with_progress({ error, count: formatNumber(indexed) })
-						: m.admin_reindex_failed_message({ error })}
-				</div>
-			{/if}
-
-			{#if error && status !== 'failed'}
-				<div
-					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
-				>
-					{error}
-				</div>
-			{/if}
+				</Alert>
+			</div>
 		{/if}
-	</div>
-</div>
+
+		{#if status === 'failed'}
+			<div class="mt-5">
+				<Alert>
+					{indexed > 0
+						? m.admin_reindex_failed_with_progress({
+								error: error ?? '',
+								count: formatNumber(indexed)
+							})
+						: m.admin_reindex_failed_message({ error: error ?? '' })}
+				</Alert>
+			</div>
+		{/if}
+
+		{#if error && status !== 'failed'}
+			<div class="mt-5"><Alert>{error}</Alert></div>
+		{/if}
+	{/if}
+</Panel>

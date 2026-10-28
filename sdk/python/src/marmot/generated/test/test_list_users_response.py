@@ -70,6 +70,7 @@ class TestListUsersResponse(unittest.TestCase):
                                         resource_type = '', )
                                     ], )
                             ],
+                        sessions_invalidated_at = '',
                         updated_at = '',
                         username = '', )
                     ]

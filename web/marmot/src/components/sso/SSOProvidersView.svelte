@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Info } from 'lucide-svelte';
+	import IconifyIcon from '@iconify/svelte';
+	import Panel from '$components/ui/Panel.svelte';
+	import Pill from '$components/ui/Pill.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import Skeleton from '$components/ui/Skeleton.svelte';
+	import EmptyState from '$components/ui/EmptyState.svelte';
 	import { listSSOProviders } from '$lib/sso/api';
 	import { m } from '$lib/paraglide/messages';
 	import type { SSOProvider } from '$lib/sso/types';
 
-	let providers: SSOProvider[] = [];
-	let loading = false;
-	let error: string | null = null;
+	// The sign-in providers the server was started with, as read-only cards, since they are defined in the server config rather than here
+	let providers = $state<SSOProvider[]>([]);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
 
 	async function fetchAll() {
 		try {
@@ -24,86 +30,54 @@
 	onMount(fetchAll);
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+<Panel
+	title={m.sso_providers_heading()}
+	description={m.sso_config_note_body({ file: 'config.yaml', section: 'auth.*' })}
+	icon="material-symbols:login"
 >
-	<div class="p-6 space-y-4">
-		<div
-			class="flex gap-3 rounded-md border border-earthy-brown-200 dark:border-gray-700 bg-earthy-brown-100 dark:bg-gray-800 p-4"
-		>
-			<Info
-				class="h-5 w-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-500 shrink-0 mt-0.5"
-			/>
-			<div class="text-sm text-gray-700 dark:text-gray-300">
-				<p class="font-medium text-gray-900 dark:text-gray-100">{m.sso_config_note_title()}</p>
-				<p class="mt-1">
-					{m.sso_config_note_body({ file: 'config.yaml', section: 'auth.*' })}
-				</p>
-			</div>
-		</div>
+	{#snippet action()}
+		<Pill>
+			<IconifyIcon icon="material-symbols:description-outline" class="h-3.5 w-3.5" />
+			{m.sso_config_note_title()}
+		</Pill>
+	{/snippet}
 
-		{#if loading}
-			<div class="flex justify-center p-8">
-				<div
-					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-				></div>
-			</div>
-		{:else if error}
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-				{error}
-			</div>
-		{:else if providers.length === 0}
-			<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-				{m.sso_none_configured()}
-			</p>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="min-w-full">
-					<thead>
-						<tr>
-							<th
-								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>{m.common_name()}</th
+	{#if loading}
+		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+			<Skeleton class="h-20" />
+			<Skeleton class="h-20" />
+		</div>
+	{:else if error}
+		<Alert>{error}</Alert>
+	{:else if providers.length === 0}
+		<EmptyState icon="material-symbols:login" title={m.sso_none_configured()} />
+	{:else}
+		<ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+			{#each providers as provider (provider.name)}
+				<li
+					class="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+				>
+					<span
+						class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+					>
+						<IconifyIcon icon="material-symbols:passkey-outline" class="h-5 w-5 text-gray-500" />
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="flex items-center gap-2">
+							<span class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
+								>{provider.name}</span
 							>
-							<th
-								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>{m.common_type()}</th
-							>
-							<th
-								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
-								>{m.sso_column_issuer_url()}</th
-							>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
-						{#each providers as provider (provider.name)}
-							<tr>
-								<td class="px-6 py-4 whitespace-nowrap">
-									<span class="text-sm font-medium text-gray-900 dark:text-gray-100"
-										>{provider.name}</span
-									>
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap">
-									<span
-										class="inline-flex items-center rounded-full bg-earthy-brown-200 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-800 dark:text-gray-200"
-									>
-										{provider.type}
-									</span>
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap">
-									{#if provider.issuer_url}
-										<span class="text-sm text-gray-600 dark:text-gray-400 font-mono"
-											>{provider.issuer_url}</span
-										>
-									{:else}
-										<span class="text-sm text-gray-400 dark:text-gray-500">—</span>
-									{/if}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</div>
-</div>
+							<Pill>{provider.type}</Pill>
+						</span>
+						<span
+							class="mt-1 block truncate font-mono text-xs text-gray-500 dark:text-gray-400"
+							title={provider.issuer_url}
+						>
+							{provider.issuer_url || '-'}
+						</span>
+					</span>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</Panel>

@@ -1,109 +1,183 @@
 <script lang="ts">
+	import { onMount, untrack } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { updateRole, replacePermissions } from '$lib/roles/api';
+	import { updateRole, replacePermissions, listPermissions } from '$lib/roles/api';
+	import { documentFromForm, idsFromKeys, type RoleDocument } from '$lib/roles/document';
+	import { documentViewOptions, type DocumentView } from '$lib/document/format';
+	import { DocumentError } from '$lib/document/errors';
+	import { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
 	import PermissionEditor from '$lib/components/PermissionEditor.svelte';
-	import { Shield } from 'lucide-svelte';
-	import type { Role } from '$lib/roles/types';
+	import SegmentedControl from '$components/ui/SegmentedControl.svelte';
+	import Alert from '$components/ui/Alert.svelte';
+	import RoleDocumentEditor from './RoleDocumentEditor.svelte';
+	import type { Permission, Role } from '$lib/roles/types';
 
-	export let role: Role;
-	export let onCancel: () => void;
-	export let onUpdate: (updatedRole: Role) => void;
+	let {
+		role,
+		onCancel,
+		onUpdate
+	}: { role: Role; onCancel: () => void; onUpdate: (updatedRole: Role) => void } = $props();
 
-	let name = role.name;
-	let description = role.description ?? '';
-	let selectedPermIds = (role.permissions ?? []).map((p) => p.id);
-	let loading = false;
+	// The form edits a copy taken when it opens; the row is remounted for each role so it never needs to follow the prop
+	const initial = untrack(() => role);
+	let name = $state(initial.name);
+	let description = $state(initial.description ?? '');
+	let selectedPermIds = $state((initial.permissions ?? []).map((p) => p.id));
+	let loading = $state(false);
+	let error = $state<string | null>(null);
 
-	async function handleSave() {
+	let permissions = $state<Permission[]>([]);
+	let permissionsLoaded: Promise<Permission[]> = Promise.resolve([]);
+	let view = $state<DocumentView>('visual');
+	let doc = $state<RoleDocument>({ name: '', permission_keys: [] });
+	let documentEditor = $state<RoleDocumentEditor>();
+
+	onMount(() => {
+		permissionsLoaded = listPermissions()
+			.then((loaded) => (permissions = loaded))
+			.catch(() => []);
+	});
+
+	// Leaving a code view takes its document with it, and a document the visual form cannot show keeps the user where they are.
+	async function switchView(next: DocumentView) {
+		if (next === view) return;
+		error = null;
+		if (view === 'visual') {
+			const loaded = await permissionsLoaded;
+			doc = documentFromForm(name, description, selectedPermIds, loaded);
+		} else {
+			const result = await documentEditor?.exportDocument();
+			if (!result) return;
+			if (!result.ok) {
+				error = result.message;
+				return;
+			}
+			const { ids, unknown } = idsFromKeys(result.doc.permission_keys, permissions);
+			if (next === 'visual' && unknown.length > 0) {
+				error = m.roles_document_unknown_keys({ keys: unknown.join(', ') });
+				return;
+			}
+			name = result.doc.name;
+			description = result.doc.description ?? '';
+			if (unknown.length === 0) selectedPermIds = ids;
+			doc = result.doc;
+		}
+		view = next;
+	}
+
+	async function write(
+		nextName: string,
+		nextDescription: string,
+		permissionsInput: { permission_ids: string[] } | { permission_keys: string[] }
+	) {
 		try {
 			loading = true;
+			error = null;
 			let updated = role;
 
 			const patch: Record<string, string> = {};
-			if (name !== role.name) patch.name = name;
-			if (description !== (role.description ?? '')) patch.description = description;
+			if (nextName !== role.name) patch.name = nextName;
+			if (nextDescription !== (role.description ?? '')) patch.description = nextDescription;
 			if (Object.keys(patch).length > 0) {
 				updated = await updateRole(role.id, patch);
 			}
 
-			updated = await replacePermissions(role.id, { permission_ids: selectedPermIds });
+			updated = await replacePermissions(role.id, permissionsInput);
 			toasts.success(m.roles_update_success({ name: updated.name }));
 			onUpdate(updated);
 		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.roles_error_update());
+			if (err instanceof DocumentError && err.fields.length > 0) {
+				documentEditor?.showProblems(err.fields);
+			}
+			const message = err instanceof Error ? err.message : m.roles_error_update();
+			if (view === 'visual') toasts.error(message);
+			else error = message;
 		} finally {
 			loading = false;
 		}
 	}
+
+	async function handleSave() {
+		if (view === 'visual') {
+			await write(name, description, { permission_ids: selectedPermIds });
+			return;
+		}
+		error = null;
+		const result = await documentEditor?.exportDocument();
+		if (!result) return;
+		if (!result.ok) {
+			error = result.message;
+			return;
+		}
+		await write(result.doc.name, result.doc.description ?? '', {
+			permission_keys: result.doc.permission_keys
+		});
+	}
 </script>
 
-<div
-	class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 m-4"
->
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-		<Shield class="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
-		{m.roles_edit_heading()}
-	</h3>
-
-	<div class="space-y-6">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			<div>
-				<label
-					for="edit-role-name"
-					class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-				>
-					{m.common_name()}
-				</label>
-				<input
-					id="edit-role-name"
-					type="text"
-					bind:value={name}
-					class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent"
-				/>
-			</div>
-			<div>
-				<label
-					for="edit-role-description"
-					class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-				>
-					{m.common_description()}
-				</label>
-				<input
-					id="edit-role-description"
-					type="text"
-					bind:value={description}
-					class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent"
-				/>
-			</div>
-		</div>
-
-		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
-				{m.roles_header_permissions()}
-			</h4>
-			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
-		</div>
+<div class="px-5 py-5">
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+			<IconifyIcon icon="material-symbols:shield-outline" class="h-4 w-4 text-gray-400" />
+			{m.roles_edit_heading()}
+		</h3>
+		<SegmentedControl
+			options={documentViewOptions()}
+			value={view}
+			onChange={switchView}
+			size="sm"
+			label={m.ui_document_view_label()}
+		/>
 	</div>
 
-	<div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-		<button
-			type="button"
-			class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium"
-			on:click={onCancel}
-		>
-			{m.common_cancel()}
-		</button>
-		<button
-			type="button"
-			class="px-4 py-2 bg-earthy-terracotta-600 text-white rounded-md hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-			on:click={handleSave}
-			disabled={loading}
-		>
-			{#if loading}
-				<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-			{/if}
-			{m.roles_save_changes()}
+	{#if error}
+		<div class="mt-4"><Alert tone="error">{error}</Alert></div>
+	{/if}
+
+	{#if view === 'visual'}
+		<div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+			<div>
+				<label for="edit-role-name-{role.id}" class="{LABEL} mb-1.5 block">{m.common_name()}</label>
+				<input id="edit-role-name-{role.id}" type="text" bind:value={name} class={INPUT} />
+			</div>
+			<div>
+				<label for="edit-role-description-{role.id}" class="{LABEL} mb-1.5 block"
+					>{m.common_description()}</label
+				>
+				<input
+					id="edit-role-description-{role.id}"
+					type="text"
+					bind:value={description}
+					class={INPUT}
+				/>
+			</div>
+		</div>
+
+		<div class="mt-6">
+			<p class="{LABEL} mb-2">{m.roles_header_permissions()}</p>
+			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
+		</div>
+	{:else}
+		<div class="mt-5">
+			{#key view}
+				<RoleDocumentEditor
+					bind:this={documentEditor}
+					mode={view}
+					initial={doc}
+					{permissions}
+					roleId={role.id}
+					onSubmit={handleSave}
+				/>
+			{/key}
+		</div>
+	{/if}
+
+	<div class="mt-6 flex justify-end gap-2 border-t border-gray-200 pt-5 dark:border-gray-700">
+		<button type="button" class={BTN_SECONDARY} onclick={onCancel}>{m.common_cancel()}</button>
+		<button type="button" class={BTN_PRIMARY} onclick={handleSave} disabled={loading}>
+			{loading ? m.members_saving_label() : m.roles_save_changes()}
 		</button>
 	</div>
 </div>

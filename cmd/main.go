@@ -20,6 +20,6 @@ func main() {
 
 	// Cobra already printed the error.
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		os.Exit(cmd.ExitCode(err))
 	}
 }

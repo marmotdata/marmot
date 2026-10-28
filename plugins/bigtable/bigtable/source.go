@@ -30,14 +30,14 @@ type Config struct {
 	pluginsdk.Federation `json:",inline"`
 
 	ProjectID    string   `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
-	Instances    []string `json:"instances,omitempty" description:"Instance IDs to discover. Leave empty to discover every instance in the project"`
-	EmulatorHost string   `json:"emulator_host,omitempty" label:"Emulator Host" description:"host:port of a Bigtable emulator. Connects without credentials and requires instances to be listed"`
+	Instances    []string `json:"instances,omitempty" group:"Discovery" description:"Instance IDs to discover. Leave empty to discover every instance in the project"`
+	EmulatorHost string   `json:"emulator_host,omitempty" group:"Advanced" label:"Emulator Host" description:"host:port of a Bigtable emulator. Connects without credentials and requires instances to be listed"`
 
-	IncludeColumns    bool `json:"include_columns" description:"Read a sample of rows to find the columns each table holds" default:"true"`
-	SampleRows        int  `json:"sample_rows" description:"Rows to read per table when finding columns" default:"100" validate:"omitempty,min=1,max=10000"`
-	IncludeStatistics bool `json:"include_statistics" description:"Count the rows in each table. This reads the whole table" default:"false"`
-	MaxCountRows      int  `json:"max_count_rows" description:"Give up counting a table after this many rows" default:"100000" validate:"omitempty,min=1"`
-	IncludeBackups    bool `json:"include_backups" description:"Count the backups held by each instance" default:"false"`
+	IncludeColumns    bool `json:"include_columns" group:"Discovery" description:"Read a sample of rows to find the columns each table holds" default:"true"`
+	SampleRows        int  `json:"sample_rows" group:"Advanced" description:"Rows to read per table when finding columns" default:"100" validate:"omitempty,min=1,max=10000"`
+	IncludeStatistics bool `json:"include_statistics" group:"Advanced" description:"Count the rows in each table. This reads the whole table" default:"false"`
+	MaxCountRows      int  `json:"max_count_rows" group:"Advanced" description:"Give up counting a table after this many rows" default:"100000" validate:"omitempty,min=1"`
+	IncludeBackups    bool `json:"include_backups" group:"Advanced" description:"Count the backups held by each instance" default:"false"`
 }
 
 // Example configuration for the plugin

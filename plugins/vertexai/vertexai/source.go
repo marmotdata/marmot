@@ -60,16 +60,16 @@ type Config struct {
 	Locations                []string `json:"locations" description:"Regions to scan" validate:"required,min=1"`
 	CredentialsFile          string   `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
 	CredentialsJSON          string   `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
-	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
-	ServiceAccount           string   `json:"service_account,omitempty" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
-	Endpoint                 string   `json:"endpoint,omitempty" description:"Custom endpoint URL, for testing against a local server"`
-	DisableAuth              bool     `json:"disable_auth,omitempty" description:"Disable authentication, for local testing"`
+	WorkloadIdentityProvider string   `json:"workload_identity_provider,omitempty" group:"Authentication" label:"Workload Identity Provider" description:"Workload Identity Federation provider to exchange the Marmot identity token at, projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>. Setting it federates: no key is needed; bind the pipeline's subject on the Google Cloud side"`
+	ServiceAccount           string   `json:"service_account,omitempty" group:"Authentication" label:"Service Account" description:"Service account to impersonate after the exchange; empty acts as the federated principal directly"`
+	Endpoint                 string   `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL, for testing against a local server"`
+	DisableAuth              bool     `json:"disable_auth,omitempty" group:"Authentication" description:"Disable authentication, for local testing"`
 
-	IncludeEndpoints     bool `json:"include_endpoints" description:"Whether to discover prediction endpoints" default:"true"`
-	IncludeDatasets      bool `json:"include_datasets" description:"Whether to discover managed datasets" default:"true"`
-	IncludeFeatureGroups bool `json:"include_feature_groups" description:"Whether to discover feature groups from the feature store" default:"true"`
-	IncludePipelineJobs  bool `json:"include_pipeline_jobs" description:"Whether to discover pipeline jobs. Projects keep a long job history, so this is off by default" default:"false"`
-	MaxPipelineJobs      int  `json:"max_pipeline_jobs" description:"How many recent pipeline jobs to read" default:"50" validate:"omitempty,min=1,max=1000"`
+	IncludeEndpoints     bool `json:"include_endpoints" group:"Discovery" description:"Whether to discover prediction endpoints" default:"true"`
+	IncludeDatasets      bool `json:"include_datasets" group:"Discovery" description:"Whether to discover managed datasets" default:"true"`
+	IncludeFeatureGroups bool `json:"include_feature_groups" group:"Discovery" description:"Whether to discover feature groups from the feature store" default:"true"`
+	IncludePipelineJobs  bool `json:"include_pipeline_jobs" group:"Discovery" description:"Whether to discover pipeline jobs. Projects keep a long job history, so this is off by default" default:"false"`
+	MaxPipelineJobs      int  `json:"max_pipeline_jobs" group:"Advanced" description:"How many recent pipeline jobs to read" default:"50" validate:"omitempty,min=1,max=1000"`
 }
 
 // Example configuration for the plugin

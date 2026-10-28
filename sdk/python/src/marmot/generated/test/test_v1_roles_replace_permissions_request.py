@@ -37,6 +37,9 @@ class TestV1RolesReplacePermissionsRequest(unittest.TestCase):
             return V1RolesReplacePermissionsRequest(
                 permission_ids = [
                     ''
+                    ],
+                permission_keys = [
+                    ''
                     ]
             )
         else:

@@ -48,14 +48,17 @@ type Config struct {
 	Port     int    `json:"port" description:"PostgreSQL server port" default:"5432" validate:"omitempty,min=1,max=65535"`
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
-	SSLMode  string `json:"ssl_mode" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
+	SSLMode  string `json:"ssl_mode" group:"Authentication" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
 
 	// Discovery configuration
-	IncludeDatabases     bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeColumns       bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics        bool `json:"enable_metrics" description:"Whether to include table metrics" default:"true"`
-	DiscoverForeignKeys  bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemSchemas bool `json:"exclude_system_schemas" description:"Whether to exclude system schemas (pg_*)" default:"true"`
+	IncludeDatabases     bool `json:"include_databases" group:"Discovery" description:"Whether to discover databases" default:"true"`
+	IncludeColumns       bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics        bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics" default:"true"`
+	DiscoverForeignKeys  bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemSchemas bool `json:"exclude_system_schemas" group:"Discovery" description:"Whether to exclude system schemas (pg_*)" default:"true"`
+
+	// Data query configuration
+	QueryDatabase string `json:"query_database" label:"Query Database" description:"Database that data queries run against when this source answers queries" default:"postgres"`
 }
 
 // Example configuration for the plugin
@@ -74,9 +77,24 @@ tags:
 type Source struct {
 	config *Config
 	pool   *pgxpool.Pool
+
+	// query is the connection pool data queries share across calls.
+	query queryPools
 }
 
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent query calls can each work from their own copy.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
@@ -90,12 +108,29 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		config.SSLMode = "disable"
 	}
 
+	if config.QueryDatabase == "" {
+		config.QueryDatabase = "postgres"
+	}
+
+	// Go's zero value for a missing bool is false, so options documented as
+	// defaulting to true are switched on here unless the config sets them.
+	for key, field := range map[string]*bool{
+		"include_databases":      &config.IncludeDatabases,
+		"include_columns":        &config.IncludeColumns,
+		"enable_metrics":         &config.EnableMetrics,
+		"discover_foreign_keys":  &config.DiscoverForeignKeys,
+		"exclude_system_schemas": &config.ExcludeSystemSchemas,
+	} {
+		if _, ok := rawConfig[key]; !ok {
+			*field = true
+		}
+	}
+
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {

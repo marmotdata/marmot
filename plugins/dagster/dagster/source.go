@@ -31,14 +31,14 @@ type Config struct {
 	Host  string `json:"host" description:"Dagster webserver URL, for example http://localhost:3000" validate:"required,url"`
 	Token string `json:"token,omitempty" description:"Dagster+ API token" sensitive:"true"`
 
-	VerifySSL bool `json:"verify_ssl" label:"Verify SSL" description:"Check the server's TLS certificate" default:"true"`
+	VerifySSL bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Check the server's TLS certificate" default:"true"`
 
-	IncludeOps        bool `json:"include_ops" description:"Discover the ops inside each job as Task assets" default:"true"`
-	IncludeAssets     bool `json:"include_assets" description:"Discover software-defined assets as Dataset assets" default:"true"`
-	IncludeRunHistory bool `json:"include_run_history" description:"Collect recent runs of each job" default:"true"`
-	RunHistoryLimit   int  `json:"run_history_limit" description:"How many recent runs to read per job" default:"10" validate:"min=1,max=100"`
+	IncludeOps        bool `json:"include_ops" group:"Discovery" description:"Discover the ops inside each job as Task assets" default:"true"`
+	IncludeAssets     bool `json:"include_assets" group:"Discovery" description:"Discover software-defined assets as Dataset assets" default:"true"`
+	IncludeRunHistory bool `json:"include_run_history" group:"Discovery" description:"Collect recent runs of each job" default:"true"`
+	RunHistoryLimit   int  `json:"run_history_limit" group:"Advanced" description:"How many recent runs to read per job" default:"10" validate:"min=1,max=100"`
 
-	CodeLocations []string `json:"code_locations,omitempty" description:"Only discover these code locations. Empty means all of them"`
+	CodeLocations []string `json:"code_locations,omitempty" group:"Discovery" description:"Only discover these code locations. Empty means all of them"`
 }
 
 // Example configuration for the plugin

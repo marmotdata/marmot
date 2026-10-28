@@ -45,22 +45,22 @@ type Config struct {
 	pluginsdk.Federation `json:",inline"`
 
 	// Access
-	ImpersonateUser string `json:"impersonate_user,omitempty" description:"Workspace user to act as. Needed to read a whole organisation's Drive, and requires domain-wide delegation on the service account. Without it, only files shared with the service account are visible"`
-	DriveID         string `json:"drive_id,omitempty" label:"Drive ID" description:"Shared drive to read. Empty means the user's My Drive"`
-	FolderID        string `json:"folder_id,omitempty" label:"Folder ID" description:"Only discover this folder and everything under it"`
+	ImpersonateUser string `json:"impersonate_user,omitempty" group:"Authentication" description:"Workspace user to act as. Needed to read a whole organisation's Drive, and requires domain-wide delegation on the service account. Without it, only files shared with the service account are visible"`
+	DriveID         string `json:"drive_id,omitempty" group:"Discovery" label:"Drive ID" description:"Shared drive to read. Empty means the user's My Drive"`
+	FolderID        string `json:"folder_id,omitempty" group:"Discovery" label:"Folder ID" description:"Only discover this folder and everything under it"`
 
 	// What to discover
-	IncludeFiles        bool     `json:"include_files" description:"Discover files, not just folders" default:"true"`
-	IncludeSpreadsheets bool     `json:"include_spreadsheets" description:"Discover Google Sheets, including each of their sheets" default:"true"`
-	IncludeWorksheets   bool     `json:"include_worksheets" description:"Discover each sheet of a spreadsheet as a table, with its columns. Needs the Sheets read scope" default:"true"`
-	IncludeTrashed      bool     `json:"include_trashed" description:"Discover files in the trash" default:"false"`
-	ExcludeMimeTypes    []string `json:"exclude_mime_types,omitempty" description:"MIME types to skip, for example application/vnd.google-apps.shortcut"`
+	IncludeFiles        bool     `json:"include_files" group:"Discovery" description:"Discover files, not just folders" default:"true"`
+	IncludeSpreadsheets bool     `json:"include_spreadsheets" group:"Discovery" description:"Discover Google Sheets, including each of their sheets" default:"true"`
+	IncludeWorksheets   bool     `json:"include_worksheets" group:"Discovery" description:"Discover each sheet of a spreadsheet as a table, with its columns. Needs the Sheets read scope" default:"true"`
+	IncludeTrashed      bool     `json:"include_trashed" group:"Discovery" description:"Discover files in the trash" default:"false"`
+	ExcludeMimeTypes    []string `json:"exclude_mime_types,omitempty" group:"Discovery" description:"MIME types to skip, for example application/vnd.google-apps.shortcut"`
 
 	// Limits
-	MaxFiles    int `json:"max_files" description:"Stop after this many files. 0 means no limit" default:"0" validate:"omitempty,min=0"`
-	PageSize    int `json:"page_size" description:"Files per API request" default:"1000" validate:"min=1,max=1000"`
-	HeaderRow   int `json:"header_row" description:"Row of a sheet that holds the column names" default:"1" validate:"min=1"`
-	Concurrency int `json:"concurrency" description:"Parallel requests for the sheets of a spreadsheet" default:"8" validate:"min=1,max=64"`
+	MaxFiles    int `json:"max_files" group:"Advanced" description:"Stop after this many files. 0 means no limit" default:"0" validate:"omitempty,min=0"`
+	PageSize    int `json:"page_size" group:"Advanced" description:"Files per API request" default:"1000" validate:"min=1,max=1000"`
+	HeaderRow   int `json:"header_row" group:"Advanced" description:"Row of a sheet that holds the column names" default:"1" validate:"min=1"`
+	Concurrency int `json:"concurrency" group:"Advanced" description:"Parallel requests for the sheets of a spreadsheet" default:"8" validate:"min=1,max=64"`
 }
 
 // Example configuration for the plugin

@@ -33,13 +33,15 @@ func (s *ScheduleService) SetBroadcaster(broadcaster EventBroadcaster) {
 
 // Schedule operations
 
-func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, createdBy *string) (*Schedule, error) {
+func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool, createdBy *string) (*Schedule, error) {
 	schedule := &Schedule{
 		Name:           name,
 		PluginID:       pluginID,
 		Config:         config,
 		CronExpression: cronExpression,
 		Enabled:        enabled,
+		Queryable:      queryable,
+		IngestOnQuery:  ingestOnQuery,
 		CreatedBy:      createdBy,
 	}
 
@@ -66,7 +68,7 @@ func (s *ScheduleService) GetScheduleForAsset(ctx context.Context, assetID strin
 	return s.repo.GetScheduleForAsset(ctx, assetID)
 }
 
-func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool) (*Schedule, error) {
+func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool) (*Schedule, error) {
 	existing, err := s.repo.GetSchedule(ctx, id)
 	if err != nil {
 		return nil, err
@@ -77,6 +79,8 @@ func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, p
 	existing.Config = config
 	existing.CronExpression = cronExpression
 	existing.Enabled = enabled
+	existing.Queryable = queryable
+	existing.IngestOnQuery = ingestOnQuery
 
 	if err := s.repo.UpdateSchedule(ctx, existing); err != nil {
 		return nil, err
@@ -95,6 +99,16 @@ func (s *ScheduleService) ListSchedules(ctx context.Context, enabled *bool, limi
 
 func (s *ScheduleService) GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error) {
 	return s.repo.GetSchedulesDueForRun(ctx, limit)
+}
+
+// ClaimServedSources records, all or nothing, that a plugin running outside Marmot serves the queryable sources the schedules name; see ScheduleRepository.ClaimServedSources for the ownership rule.
+func (s *ScheduleService) ClaimServedSources(ctx context.Context, schedules []*Schedule) error {
+	return s.repo.ClaimServedSources(ctx, schedules)
+}
+
+// ListQueryableSchedules pages through the sources that answer data queries.
+func (s *ScheduleService) ListQueryableSchedules(ctx context.Context, search string, limit, offset int) ([]*Schedule, int, error) {
+	return s.repo.ListQueryableSchedules(ctx, search, limit, offset)
 }
 
 // CalculateNextRun calculates the next run time for a schedule

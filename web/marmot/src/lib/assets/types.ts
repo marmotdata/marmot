@@ -38,6 +38,7 @@ export interface Asset {
 	metadata: Record<string, unknown>;
 	schema: Record<string, unknown>;
 	parent_mrn?: string;
+	is_stub?: boolean; // Placeholder created from lineage before the asset was catalogued
 	last_sync_at?: string;
 	has_run_history: boolean;
 	environments?: Record<string, Environment>;

@@ -100,6 +100,7 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 			notification.TypeDownstreamSchemaChange: true,
 			notification.TypeLineageChange:          true,
 			notification.TypeAssetDeleted:           true,
+			notification.TypeAccessExpiry:           true,
 		}
 		for key, val := range notifPrefs {
 			if !validTypes[key] {

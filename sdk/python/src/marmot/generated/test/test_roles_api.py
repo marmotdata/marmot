@@ -71,6 +71,18 @@ class TestRolesApi(unittest.IsolatedAsyncioTestCase):
         Get a role
         """
 
+    async def test_get_roles_schema(self) -> None:
+        """Test case for get_roles_schema
+
+        Role document schema
+        """
+
+    def test_get_roles_schema_sync(self) -> None:
+        """Test case for get_roles_schema (synchronous)
+
+        Role document schema
+        """
+
     async def test_patch_roles_id(self) -> None:
         """Test case for patch_roles_id
 
@@ -105,6 +117,18 @@ class TestRolesApi(unittest.IsolatedAsyncioTestCase):
         """Test case for post_roles_id_permissions (synchronous)
 
         Replace role permissions
+        """
+
+    async def test_post_roles_validate(self) -> None:
+        """Test case for post_roles_validate
+
+        Validate a role document
+        """
+
+    def test_post_roles_validate_sync(self) -> None:
+        """Test case for post_roles_validate (synchronous)
+
+        Validate a role document
         """
 
 

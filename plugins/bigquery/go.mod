@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	cloud.google.com/go/bigquery v1.79.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260913214252-a0eb271320a7
+	github.com/marmotdata/plugin-sdk v0.0.0-20261022181949-e1e9cea1ad2e
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	google.golang.org/api v0.287.1
@@ -55,7 +55,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.8.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

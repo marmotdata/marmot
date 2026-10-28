@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/apache/iceberg-go v0.5.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260913214252-a0eb271320a7
+	github.com/marmotdata/plugin-sdk v0.0.0-20261022181949-e1e9cea1ad2e
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 )
@@ -62,7 +62,7 @@ require (
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

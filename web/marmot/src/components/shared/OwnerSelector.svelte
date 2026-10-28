@@ -149,7 +149,7 @@
 
 	function handleOwnerClick(owner: Owner) {
 		if (!disabled && owner.type === 'team') {
-			window.location.href = `/teams/${owner.id}`;
+			window.location.href = `/settings/teams/${owner.id}`;
 		}
 	}
 </script>

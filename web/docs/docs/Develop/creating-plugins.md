@@ -427,6 +427,12 @@ Marmot looks for `marmot-plugin-*` binaries in two places at startup:
 
 Local plugins load first, so a local binary shadows a downloaded core plugin with the same ID. That makes iterating on a core plugin easy: build it into `~/.marmot/plugins` and Marmot runs your build instead of the released one.
 
+### What Marmot Checks Before Running a Plugin
+
+A plugin runs with the same rights as Marmot, so Marmot refuses any binary another user could have written. The binary and every directory above it, up to the plugins directory, must be owned by you or by root and must not be writable by other users. Group write is accepted only for your own group. `go build` and `mkdir` produce these permissions by default; if Marmot refuses a plugin, the log names the file or directory to fix, usually with `chmod go-w`.
+
+Marmot records each binary's SHA-256 when it loads it and checks it again on every launch, so a binary replaced while Marmot is running is refused until the next restart. Each plugin process talks to Marmot over a Unix socket using mutual TLS with certificates generated for that process alone, and it inherits Marmot's environment without the `MARMOT_` variables, which hold Marmot's own secrets such as its encryption key.
+
 <CalloutCard
   title="Need Help Building a Plugin?"
   description="Join our Discord community to get help, share your plugins, and connect with other contributors."

@@ -133,7 +133,7 @@ func TestValidate_DefaultsConnectionFlags(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.False(t, s.config.UseDBAViews)
-	assert.False(t, s.config.SSL)
+	assert.True(t, s.config.SSL)
 	assert.True(t, s.config.SSLVerify)
 	assert.Empty(t, s.config.WalletPath)
 }

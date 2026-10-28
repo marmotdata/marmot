@@ -24,14 +24,14 @@ type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 
 	Host     string `json:"host" description:"JobManager REST URL, for example http://localhost:8081" validate:"required,url"`
-	Username string `json:"username,omitempty" description:"Username for basic auth, when a proxy in front of the JobManager requires it"`
-	Password string `json:"password,omitempty" description:"Password for basic auth" sensitive:"true"`
-	Token    string `json:"token,omitempty" description:"Bearer token, when a proxy in front of the JobManager requires it" sensitive:"true"`
+	Username string `json:"username,omitempty" group:"Authentication" description:"Username for basic auth, when a proxy in front of the JobManager requires it"`
+	Password string `json:"password,omitempty" group:"Authentication" description:"Password for basic auth" sensitive:"true"`
+	Token    string `json:"token,omitempty" group:"Authentication" description:"Bearer token, when a proxy in front of the JobManager requires it" sensitive:"true"`
 
-	VerifySSL         bool `json:"verify_ssl" label:"Verify SSL" description:"Verify the JobManager's TLS certificate" default:"true"`
-	IncludeTasks      bool `json:"include_tasks" description:"Discover each job vertex as a Task asset" default:"true"`
-	IncludeRunHistory bool `json:"include_run_history" description:"Record each job's state changes as run history" default:"true"`
-	IncludeCompleted  bool `json:"include_completed" description:"Include the finished, failed and cancelled jobs the JobManager still lists" default:"true"`
+	VerifySSL         bool `json:"verify_ssl" group:"Authentication" label:"Verify SSL" description:"Verify the JobManager's TLS certificate" default:"true"`
+	IncludeTasks      bool `json:"include_tasks" group:"Discovery" description:"Discover each job vertex as a Task asset" default:"true"`
+	IncludeRunHistory bool `json:"include_run_history" group:"Discovery" description:"Record each job's state changes as run history" default:"true"`
+	IncludeCompleted  bool `json:"include_completed" group:"Discovery" description:"Include the finished, failed and cancelled jobs the JobManager still lists" default:"true"`
 }
 
 // Example configuration for the plugin

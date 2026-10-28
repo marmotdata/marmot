@@ -48,13 +48,13 @@ type Config struct {
 	Username  string   `json:"username" description:"Username for basic authentication"`
 	Password  string   `json:"password" description:"Password for basic authentication" sensitive:"true"`
 
-	TLSSkipVerify bool   `json:"tls_skip_verify" label:"TLS Skip Verify" description:"Skip TLS certificate verification" default:"false"`
-	CACertPath    string `json:"ca_cert_path" label:"CA Certificate Path" description:"Path to a custom CA certificate file"`
+	TLSSkipVerify bool   `json:"tls_skip_verify" group:"Authentication" label:"TLS Skip Verify" description:"Skip TLS certificate verification" default:"false"`
+	CACertPath    string `json:"ca_cert_path" group:"Authentication" label:"CA Certificate Path" description:"Path to a custom CA certificate file"`
 
-	IncludeDataStreams   bool `json:"include_data_streams" description:"Discover data streams" default:"true"`
-	IncludeAliases       bool `json:"include_aliases" description:"Discover aliases" default:"true"`
-	IncludeIndexStats    bool `json:"include_index_stats" description:"Collect document count and store size metrics" default:"true"`
-	IncludeSystemIndices bool `json:"include_system_indices" description:"Include system indices (prefixed with .)" default:"false"`
+	IncludeDataStreams   bool `json:"include_data_streams" group:"Discovery" description:"Discover data streams" default:"true"`
+	IncludeAliases       bool `json:"include_aliases" group:"Discovery" description:"Discover aliases" default:"true"`
+	IncludeIndexStats    bool `json:"include_index_stats" group:"Advanced" description:"Collect document count and store size metrics" default:"true"`
+	IncludeSystemIndices bool `json:"include_system_indices" group:"Discovery" description:"Include system indices (prefixed with .)" default:"false"`
 }
 
 // Example configuration for the plugin

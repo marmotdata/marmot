@@ -5,7 +5,9 @@
 	import { m } from '$lib/paraglide/messages';
 	import { formatRelativeTime } from '$lib/utils';
 
-	let { data } = $props<{
+	let {
+		data
+	}: {
 		data: {
 			provider: string;
 			assetType: string;
@@ -19,7 +21,7 @@
 			originKind?: 'declared' | 'observed' | 'mixed';
 			onToggleExpand?: (clusterKey: string) => void;
 		};
-	}>();
+	} = $props();
 
 	let originLabel = $derived(
 		data.originKind === 'declared'

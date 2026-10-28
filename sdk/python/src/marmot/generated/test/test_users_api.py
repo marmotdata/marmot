@@ -131,6 +131,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Create API key
         """
 
+    async def test_post_users_id_sign_out_all(self) -> None:
+        """Test case for post_users_id_sign_out_all
+
+        Sign a user out of all sessions
+        """
+
+    def test_post_users_id_sign_out_all_sync(self) -> None:
+        """Test case for post_users_id_sign_out_all (synchronous)
+
+        Sign a user out of all sessions
+        """
+
     async def test_post_users_login(self) -> None:
         """Test case for post_users_login
 

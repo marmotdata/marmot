@@ -30,20 +30,20 @@ type Config struct {
 	ServiceName string `json:"service_name" description:"Service name to connect to, for example FREEPDB1 (required unless sid is set)"`
 	SID         string `json:"sid" label:"SID" description:"System identifier to connect to instead of a service name"`
 
-	Schemas        []string `json:"schemas" description:"Schemas to discover (every schema not maintained by Oracle when empty)"`
-	ExcludeSchemas []string `json:"exclude_schemas" description:"Schemas to skip" default:"[\"SYS\",\"SYSTEM\",\"CTXSYS\",\"DBSNMP\",\"OUTLN\",\"XDB\",\"MDSYS\",\"ORDSYS\",\"OLAPSYS\",\"WMSYS\",\"APEX_PUBLIC_USER\",\"AUDSYS\",\"DVSYS\",\"GSMADMIN_INTERNAL\",\"LBACSYS\",\"OJVMSYS\",\"DBSFWUSER\",\"GGSYS\",\"APPQOSSYS\",\"REMOTE_SCHEDULER_AGENT\",\"SYS$UMF\",\"DIP\",\"ORACLE_OCM\",\"ANONYMOUS\",\"XS$NULL\",\"FLOWS_FILES\"]"`
-	UseDBAViews    bool     `json:"use_dba_views" label:"Use DBA Views" description:"Read DBA_* dictionary views instead of ALL_* (needs SELECT ANY DICTIONARY)" default:"false"`
+	Schemas        []string `json:"schemas" group:"Discovery" description:"Schemas to discover (every schema not maintained by Oracle when empty)"`
+	ExcludeSchemas []string `json:"exclude_schemas" group:"Discovery" description:"Schemas to skip" default:"[\"SYS\",\"SYSTEM\",\"CTXSYS\",\"DBSNMP\",\"OUTLN\",\"XDB\",\"MDSYS\",\"ORDSYS\",\"OLAPSYS\",\"WMSYS\",\"APEX_PUBLIC_USER\",\"AUDSYS\",\"DVSYS\",\"GSMADMIN_INTERNAL\",\"LBACSYS\",\"OJVMSYS\",\"DBSFWUSER\",\"GGSYS\",\"APPQOSSYS\",\"REMOTE_SCHEDULER_AGENT\",\"SYS$UMF\",\"DIP\",\"ORACLE_OCM\",\"ANONYMOUS\",\"XS$NULL\",\"FLOWS_FILES\"]"`
+	UseDBAViews    bool     `json:"use_dba_views" group:"Advanced" label:"Use DBA Views" description:"Read DBA_* dictionary views instead of ALL_* (needs SELECT ANY DICTIONARY)" default:"false"`
 
-	IncludeColumns           bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeViews             bool `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeMaterializedViews bool `json:"include_materialized_views" description:"Whether to discover materialized views" default:"true"`
-	IncludeProcedures        bool `json:"include_procedures" description:"Whether to discover procedures, functions and packages" default:"true"`
-	DiscoverForeignKeys      bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	IncludeStatistics        bool `json:"include_statistics" description:"Whether to include row counts and sizes from optimizer statistics" default:"true"`
+	IncludeColumns           bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeViews             bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
+	IncludeMaterializedViews bool `json:"include_materialized_views" group:"Discovery" description:"Whether to discover materialized views" default:"true"`
+	IncludeProcedures        bool `json:"include_procedures" group:"Discovery" description:"Whether to discover procedures, functions and packages" default:"true"`
+	DiscoverForeignKeys      bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	IncludeStatistics        bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts and sizes from optimizer statistics" default:"true"`
 
-	SSL        bool   `json:"ssl" label:"SSL" description:"Connect over TCPS (TLS)" default:"false"`
-	SSLVerify  bool   `json:"ssl_verify" label:"SSL Verify" description:"Verify the server certificate when ssl is enabled" default:"true"`
-	WalletPath string `json:"wallet_path" description:"Path to an Oracle wallet directory (TCPS certificates or wallet authentication)"`
+	SSL        bool   `json:"ssl" group:"Authentication" label:"SSL" description:"Connect over TCPS (TLS)" default:"true"`
+	SSLVerify  bool   `json:"ssl_verify" group:"Authentication" label:"SSL Verify" description:"Verify the server certificate when ssl is enabled" default:"true"`
+	WalletPath string `json:"wallet_path" group:"Authentication" description:"Path to an Oracle wallet directory (TCPS certificates or wallet authentication)"`
 }
 
 // Example configuration for the plugin

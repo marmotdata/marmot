@@ -9,8 +9,9 @@ import (
 type ContextKey string
 
 const (
-	UserContextKey      ContextKey = "user"
-	PrincipalContextKey ContextKey = "principal"
+	UserContextKey       ContextKey = "user"
+	PrincipalContextKey  ContextKey = "principal"
+	credentialContextKey ContextKey = "credential"
 )
 
 // ErrorResponse represents an API error response

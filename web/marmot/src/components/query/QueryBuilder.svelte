@@ -128,6 +128,12 @@
 			label: '@provider',
 			description: m.query_field_provider_description(),
 			category: 'Simple Field'
+		},
+		{
+			value: 'term',
+			label: '@term',
+			description: m.query_field_term_description(),
+			category: 'Simple Field'
 		}
 	];
 
