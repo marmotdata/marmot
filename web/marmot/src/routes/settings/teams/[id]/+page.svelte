@@ -126,6 +126,51 @@
 	);
 	let canEditTeam = $derived(canManageTeams || isTeamOwner);
 
+	let editingDetails = $state(false);
+	let savingDetails = $state(false);
+	let detailsError = $state<string | null>(null);
+	let detailsForm = $state({ name: '', description: '' });
+
+	function startEditDetails() {
+		if (!team) return;
+		detailsForm = { name: team.name, description: team.description ?? '' };
+		detailsError = null;
+		editingDetails = true;
+	}
+
+	async function saveDetails() {
+		if (!team) return;
+		const name = detailsForm.name.trim();
+		const description = detailsForm.description.trim();
+		if (!name) {
+			detailsError = m.teams_error_name_required();
+			return;
+		}
+		if (name.length < 2) {
+			detailsError = m.teams_error_name_too_short();
+			return;
+		}
+		savingDetails = true;
+		detailsError = null;
+		try {
+			const response = await fetchApi(`/teams/${teamId}`, {
+				method: 'PUT',
+				body: JSON.stringify({ name, description })
+			});
+			if (response.ok) {
+				team = { ...team, name, description };
+				editingDetails = false;
+			} else {
+				detailsError =
+					response.status === 409 ? m.teams_error_name_exists() : m.teams_error_update();
+			}
+		} catch {
+			detailsError = m.teams_error_update();
+		} finally {
+			savingDetails = false;
+		}
+	}
+
 	async function deleteTeam() {
 		if (!team) return;
 		try {
@@ -583,6 +628,12 @@
 			>
 		{/snippet}
 		{#snippet actions()}
+			{#if canManageTeams && !team?.created_via_sso && !editingDetails}
+				<button type="button" class={BTN_SECONDARY} onclick={startEditDetails}>
+					<IconifyIcon icon="material-symbols:edit-outline" class="h-4 w-4" />
+					{m.common_edit()}
+				</button>
+			{/if}
 			{#if canManageTeams && !team?.created_via_sso}
 				<button type="button" class={BTN_SECONDARY} onclick={() => (showDeleteTeam = true)}>
 					<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
@@ -597,6 +648,60 @@
 			{/if}
 		{/snippet}
 	</PageHeader>
+
+	{#if editingDetails}
+		<div class="mb-6">
+			<Panel title={m.common_edit()} icon="material-symbols:edit-outline">
+				<form
+					class="space-y-4"
+					onsubmit={(event) => {
+						event.preventDefault();
+						saveDetails();
+					}}
+				>
+					<div>
+						<label for="team-name" class="{LABEL} mb-1.5 block">{m.teams_name_label()}</label>
+						<input
+							id="team-name"
+							type="text"
+							required
+							maxlength="255"
+							bind:value={detailsForm.name}
+							class={INPUT}
+						/>
+					</div>
+					<div>
+						<label for="team-description" class="{LABEL} mb-1.5 block"
+							>{m.teams_description_label()}</label
+						>
+						<textarea
+							id="team-description"
+							rows="3"
+							bind:value={detailsForm.description}
+							placeholder={m.teams_description_placeholder()}
+							class={INPUT}
+						></textarea>
+					</div>
+					{#if detailsError}
+						<Alert tone="error">{detailsError}</Alert>
+					{/if}
+					<div class="flex gap-2">
+						<button type="submit" class={BTN_PRIMARY} disabled={savingDetails}>
+							{m.common_save()}
+						</button>
+						<button
+							type="button"
+							class={BTN_SECONDARY}
+							disabled={savingDetails}
+							onclick={() => (editingDetails = false)}
+						>
+							{m.common_cancel()}
+						</button>
+					</div>
+				</form>
+			</Panel>
+		</div>
+	{/if}
 
 	{#if TABS.length > 1}
 		<div
