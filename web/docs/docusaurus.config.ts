@@ -2,6 +2,7 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import type * as Redocusaurus from "redocusaurus";
 import tailwindPlugin from "./plugins/tailwind-config.cjs";
+import designSystemFontsPlugin from "./plugins/design-system-fonts.cjs";
 import unpluginIconsPlugin from "./plugins/unplugin-icons.cjs";
 import { lightTheme, darkTheme } from "./src/theme/prismTheme";
 import * as fs from "fs";
@@ -45,22 +46,17 @@ const config: Config = {
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
+  clientModules: ["./src/clientModules/resize-observer-notice.ts"],
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
   },
-  stylesheets: [
-    {
-      href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&display=swap",
-      type: "text/css",
-    },
-  ],
   headTags: [
     {
       tagName: "meta",
       attributes: {
         name: "theme-color",
-        content: "#fefcfb",
+        content: "#fdfbfa",
         media: "(prefers-color-scheme: light)",
       },
     },
@@ -68,7 +64,7 @@ const config: Config = {
       tagName: "meta",
       attributes: {
         name: "theme-color",
-        content: "#1a1a1a",
+        content: "#151210",
         media: "(prefers-color-scheme: dark)",
       },
     },
@@ -153,7 +149,7 @@ const config: Config = {
                 "@type": "Offer",
                 name: "Enterprise",
                 priceCurrency: "USD",
-                url: "https://cloud.marmotdata.io/#pricing",
+                url: "https://marmotdata.io/pricing",
                 description:
                   "Custom priced. Unlimited instances, seats and assets, private networking and VPC peering, audit log export, 99.9% uptime SLA and priority support.",
               },
@@ -166,6 +162,7 @@ const config: Config = {
   ],
   plugins: [
     tailwindPlugin,
+    designSystemFontsPlugin,
     unpluginIconsPlugin,
     [
       "@docusaurus/plugin-content-docs",
@@ -231,7 +228,7 @@ const config: Config = {
           onUntruncatedBlogPosts: "warn",
         },
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: ["./src/css/marmot.css", "./src/css/custom.css"],
         },
         sitemap: {
           lastmod: "date",
@@ -269,12 +266,6 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     image: "img/social-card-dark.png",
-    announcementBar: {
-      id: "marmot-cloud-launch",
-      content:
-        '<span class="cloud-announcement"><span class="cloud-announcement-tag">New</span> Marmot Cloud is live.<span class="cloud-announcement-more"> Hosted Marmot, nothing to run.</span> <a href="https://cloud.marmotdata.io/signup">Start free</a></span>',
-      isCloseable: true,
-    },
     navbar: {
       title: "",
       logo: {
@@ -283,22 +274,13 @@ const config: Config = {
         srcDark: "img/marmot-text-light.svg",
       },
       items: [
-        {
-          href: "https://cloud.marmotdata.io",
-          label: "Cloud",
-          position: "left",
-        },
         { to: "/docs/introduction", label: "Docs", position: "left" },
         {
           href: "https://plugins.marmotdata.io",
           label: "Plugins",
           position: "left",
         },
-        {
-          href: "https://cloud.marmotdata.io/#pricing",
-          label: "Pricing",
-          position: "left",
-        },
+        { to: "/pricing", label: "Pricing", position: "left" },
         { to: "/resources", label: "Resources", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         {
@@ -312,10 +294,8 @@ const config: Config = {
           className: "header-github-link",
           "aria-label": "GitHub repository",
         },
-        // Sign in is a plain text link and Start free is the button, so the
-        // header has only one obvious action; signed-in Cloud users get Open
-        // console instead (src/components/CloudAuthNavbarItem.tsx). Styled in
-        // custom.css.
+        // The header itself is src/theme/Navbar; these items are what its
+        // narrow-screen sidebar lists, above the docs navigation.
         { type: "custom-cloudAuth", position: "right" },
       ],
     },
@@ -338,7 +318,7 @@ const config: Config = {
             },
             {
               label: "Cloud pricing",
-              href: "https://cloud.marmotdata.io/#pricing",
+              href: "https://marmotdata.io/pricing",
             },
           ],
         },
@@ -402,7 +382,7 @@ const config: Config = {
             },
             {
               label: "Pricing",
-              href: "https://cloud.marmotdata.io/#pricing",
+              href: "https://marmotdata.io/pricing",
             },
             {
               label: "API Reference",
