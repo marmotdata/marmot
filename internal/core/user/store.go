@@ -269,7 +269,7 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 	}
 
 	query := fmt.Sprintf(`
-		WITH user_roles AS (
+		WITH role_list AS (
 			SELECT ur.user_id,
 				   json_agg(json_build_object(
 					   'id', r.id,
@@ -283,7 +283,7 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.sessions_invalidated_at, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
-		LEFT JOIN user_roles ur ON ur.user_id = u.id
+		LEFT JOIN role_list ur ON ur.user_id = u.id
 		WHERE %s
 		ORDER BY u.created_at DESC
 		LIMIT $%d OFFSET $%d`, strings.Join(conditions, " AND "), argNum, argNum+1)
