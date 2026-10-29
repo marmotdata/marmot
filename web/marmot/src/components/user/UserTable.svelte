@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
+	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { toasts, handleApiError } from '$lib/stores/toast';
@@ -7,6 +8,7 @@
 	import { BTN_GHOST, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
 	import Pill from '$components/ui/Pill.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import EditUserForm from './EditUserForm.svelte';
 	import type { User } from '$lib/users/types';
 
@@ -31,6 +33,66 @@
 	let userToDelete = $state<User | null>(null);
 
 	const currentUserId = auth.getCurrentUserId();
+	const canManageUsers = auth.hasRole('admin') || auth.hasPermission('users', 'manage');
+
+	let totpStatus = $state<'loading' | 'disabled' | 'ready' | 'error'>('loading');
+	let totpUsers = $state(new Set<string>());
+	let resetUser = $state<{ id: string; username: string } | null>(null);
+	let passwordResetUser = $state<{ id: string; username: string } | null>(null);
+	let resetting = $state(false);
+
+	onMount(async () => {
+		try {
+			const response = await fetch('/auth-providers');
+			if (!response.ok) throw new Error('Auth configuration unavailable');
+			if (!(await response.json()).totp_enabled) {
+				totpStatus = 'disabled';
+				return;
+			}
+			const enrolled = await fetchApi('/users/totp/enrolled');
+			if (!enrolled.ok) throw new Error('TOTP enrollment unavailable');
+			totpUsers = new Set((await enrolled.json()).user_ids);
+			totpStatus = 'ready';
+		} catch {
+			totpStatus = 'error';
+		}
+	});
+
+	async function resetTOTP() {
+		if (!resetUser || resetting) return;
+		resetting = true;
+		try {
+			const response = await fetchApi(`/users/totp/reset/${encodeURIComponent(resetUser.id)}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) throw new Error(m.totp_error());
+			toasts.success(m.totp_reset_done());
+			totpUsers = new Set([...totpUsers].filter((id) => id !== resetUser?.id));
+			resetUser = null;
+		} catch {
+			toasts.error(m.totp_error());
+		} finally {
+			resetting = false;
+		}
+	}
+
+	async function requirePasswordChange() {
+		if (!passwordResetUser) return;
+		const target = passwordResetUser;
+		try {
+			const response = await fetchApi(
+				`/users/password/require-change/${encodeURIComponent(target.id)}`,
+				{ method: 'POST' }
+			);
+			if (!response.ok) throw new Error(m.users_password_reset_error());
+			const updated = users.find((item) => item.id === target.id);
+			if (updated) onUpdate({ ...updated, must_change_password: true });
+			toasts.success(m.users_password_reset_done());
+			passwordResetUser = null;
+		} catch {
+			toasts.error(m.users_password_reset_error());
+		}
+	}
 
 	function providerDisplayName(provider: string): string {
 		const providerMap: Record<string, string> = {
@@ -125,6 +187,17 @@
 									<IconifyIcon icon="material-symbols:mail-outline" class="h-3 w-3" />
 									{m.users_auth_password_badge()}
 								</Pill>
+								<Pill
+									tone={totpStatus === 'ready' && totpUsers.has(user.id) ? 'success' : 'neutral'}
+								>
+									{totpStatus === 'ready'
+										? totpUsers.has(user.id)
+											? m.totp_badge()
+											: m.totp_not_enabled()
+										: totpStatus === 'disabled'
+											? m.totp_server_disabled()
+											: m.totp_status_unavailable()}
+								</Pill>
 							{/if}
 						</span>
 					</td>
@@ -141,8 +214,35 @@
 						<Pill tone={user.active ? 'success' : 'neutral'}>
 							{user.active ? m.common_active() : m.common_inactive()}
 						</Pill>
+						{#if user.must_change_password}
+							<span class="ml-2 text-xs text-amber-700 dark:text-amber-300"
+								>{m.users_password_reset_pending()}</span
+							>
+						{/if}
 					</td>
 					<td class="{TD} whitespace-nowrap pr-5 text-right">
+						{#if canManageUsers && currentUserId !== user.id && totpStatus === 'ready' && totpUsers.has(user.id)}
+							<button
+								type="button"
+								class={BTN_GHOST}
+								onclick={() => (resetUser = user)}
+								aria-label={`${m.totp_reset()}: ${user.username}`}
+								title={m.totp_reset()}
+							>
+								<IconifyIcon icon="material-symbols:lock-reset" class="h-4 w-4" />
+							</button>
+						{/if}
+						{#if canManageUsers && currentUserId !== user.id && !user.identities?.length}
+							<button
+								type="button"
+								class={BTN_GHOST}
+								onclick={() => (passwordResetUser = user)}
+								aria-label={`${m.users_require_password_change()}: ${user.username}`}
+								title={m.users_require_password_change()}
+							>
+								<IconifyIcon icon="material-symbols:key-outline" class="h-4 w-4" />
+							</button>
+						{/if}
 						{#if canManage && currentUserId !== user.id}
 							<button
 								type="button"
@@ -195,4 +295,23 @@
 		showDeleteModal = false;
 		userToDelete = null;
 	}}
+/>
+
+<ConfirmModal
+	show={!!resetUser}
+	title={m.totp_reset()}
+	message={m.totp_reset_help({ name: resetUser?.username || '' })}
+	confirmText={m.totp_reset()}
+	onConfirm={resetTOTP}
+	onCancel={() => {
+		if (!resetting) resetUser = null;
+	}}
+/>
+<ConfirmModal
+	show={!!passwordResetUser}
+	title={m.users_require_password_change()}
+	message={m.users_password_reset_confirm({ name: passwordResetUser?.username || '' })}
+	confirmText={m.users_require_password_change()}
+	onConfirm={requirePasswordChange}
+	onCancel={() => (passwordResetUser = null)}
 />

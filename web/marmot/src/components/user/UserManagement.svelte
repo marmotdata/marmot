@@ -36,6 +36,7 @@
 	let users = $state<User[]>([]);
 	let totalUsers = $state(0);
 	let roles = $state<Role[]>([]);
+	let totpPolicy = $state<'loading' | 'off' | 'optional' | 'required' | 'error'>('loading');
 	let userQuery = $state('');
 	let roleFilter = $state('');
 	let statusFilter = $state<StatusFilter>('all');
@@ -110,6 +111,17 @@
 		users = users.filter((u) => u.id !== userId);
 		await fetchUsers();
 	}
+
+	onMount(async () => {
+		try {
+			const response = await fetch('/auth-providers');
+			if (!response.ok) throw new Error('Auth configuration unavailable');
+			const config = await response.json();
+			totpPolicy = !config.totp_enabled ? 'off' : config.totp_required ? 'required' : 'optional';
+		} catch {
+			totpPolicy = 'error';
+		}
+	});
 
 	onMount(() => {
 		fetchUsers();
@@ -211,6 +223,26 @@
 		</div>
 	</Panel>
 {/if}
+
+<div
+	class="mt-3 flex items-center justify-end gap-2 px-1 text-xs text-gray-500 dark:text-gray-400"
+	aria-live="polite"
+>
+	<span>{m.users_totp_policy_label()}</span>
+	<span
+		class="rounded-full border border-gray-200/70 bg-gray-100/50 px-2.5 py-1 font-medium text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300"
+	>
+		{totpPolicy === 'required'
+			? m.users_totp_policy_required()
+			: totpPolicy === 'optional'
+				? m.users_totp_policy_optional()
+				: totpPolicy === 'off'
+					? m.users_totp_policy_off()
+					: totpPolicy === 'loading'
+						? m.common_loading()
+						: m.totp_status_unavailable()}
+	</span>
+</div>
 
 {#if createOpen}
 	<CreateUserBlade onClose={() => (createOpen = false)} onCreated={handleCreated} />

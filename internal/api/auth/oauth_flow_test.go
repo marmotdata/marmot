@@ -526,6 +526,7 @@ func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[s
 func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error) {
 	return nil, nil
 }
+func (m *mockUserService) RequirePasswordChange(_ context.Context, _ string) error { return nil }
 
 // A code issued before sign-out-all must not mint a token after it, or the code becomes a way back in for whoever holds it.
 func TestTokenEndpointRejectsCodeAfterSignOutAll(t *testing.T) {

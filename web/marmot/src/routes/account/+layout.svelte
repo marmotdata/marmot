@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
@@ -12,11 +12,18 @@
 		SUBNAV_ITEM_ON,
 		SUBNAV_TITLE
 	} from '$lib/ui/classes';
+	import { accountCapabilities, type AccountCapabilities } from '$lib/account/capabilities';
 
 	let { children }: { children: Snippet } = $props();
 
 	// The same shell as Settings, so personal and workspace settings read as one system with two owners.
-	const sections = [
+	let capabilities = $state<AccountCapabilities>({ localAccount: false, totpAvailable: false });
+
+	onMount(async () => {
+		capabilities = await accountCapabilities();
+	});
+
+	let sections = $derived([
 		{
 			href: '/account' as const,
 			label: m.account_profile(),
@@ -31,8 +38,26 @@
 			href: '/account/api-keys' as const,
 			label: m.account_api_keys(),
 			icon: 'material-symbols:key-outline'
-		}
-	];
+		},
+		...(capabilities.localAccount
+			? [
+					{
+						href: '/account/password' as const,
+						label: m.profile_change_password(),
+						icon: 'material-symbols:password'
+					}
+				]
+			: []),
+		...(capabilities.totpAvailable
+			? [
+					{
+						href: '/account/totp' as const,
+						label: m.totp_title(),
+						icon: 'material-symbols:phonelink-lock-outline'
+					}
+				]
+			: [])
+	]);
 
 	function active(href: string): boolean {
 		const path = $page.url.pathname;

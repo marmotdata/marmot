@@ -13,6 +13,8 @@ These pages cover signing users in to Marmot through an external identity provid
 
 import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
+Local username/password accounts can optionally use [two-factor authentication with an authenticator app](./totp.md). It is disabled by default and does not add a second challenge to SSO.
+
 ## Supported Providers
 
 <DocCardGrid>

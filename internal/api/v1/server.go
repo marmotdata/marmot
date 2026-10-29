@@ -52,6 +52,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/mfa"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
@@ -457,6 +458,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	common.SetOAuthManager(oauthManager)
 	common.SetServiceAccountService(serviceAccountSvc)
+	totpService := mfa.NewService(db, scheduleEncryptor, config.Auth.TOTP.Issuer)
+	common.SetTOTPService(totpService)
 
 	signingKey, signingKeyErr := authSvc.GetSigningKey(context.Background())
 	if signingKeyErr != nil {
@@ -599,7 +602,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
-		users.NewHandler(userSvc, authSvc, config),
+		users.NewHandler(userSvc, authSvc, config, totpService),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder),

@@ -35,13 +35,31 @@ func (r *userResolver) Resolve(ctx context.Context, claims *Claims) (Principal, 
 		if err != nil {
 			return nil, fmt.Errorf("resolving user: %w", err)
 		}
-		if err := CheckUserSession(u, claims.IssuedTime()); err != nil {
-			return nil, err
+		if !u.Active {
+			return nil, ErrUserInactive
+		}
+		if claims.SessionEpoch != "" {
+			if claims.SessionEpoch != sessionEpoch(u) {
+				return nil, ErrSessionRevoked
+			}
+		} else if u.SessionsInvalidatedAt != nil {
+			// Legacy JWTs cannot distinguish issuance and revocation within the same second.
+			cutoff := u.SessionsInvalidatedAt.Truncate(time.Second)
+			if claims.IssuedAt == nil || !claims.IssuedAt.Time.After(cutoff) {
+				return nil, ErrSessionRevoked
+			}
 		}
 		return NewUserPrincipal(u), nil
 	default:
 		return nil, fmt.Errorf("unknown principal_type %q", claims.PrincipalType)
 	}
+}
+
+func sessionEpoch(u *user.User) string {
+	if u.SessionsInvalidatedAt == nil {
+		return "0"
+	}
+	return u.SessionsInvalidatedAt.UTC().Format(time.RFC3339Nano)
 }
 
 // CheckUserSession reports whether a credential issued at issuedAt may still act for u, failing if the account is inactive or its sessions were revoked after issue; every path that turns a credential into a user must call it
