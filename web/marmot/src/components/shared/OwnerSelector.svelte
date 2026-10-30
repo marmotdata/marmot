@@ -2,7 +2,6 @@
 	import { fetchApi } from '$lib/api';
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
-	import { Users } from 'lucide-svelte';
 	import Avatar from '$components/user/Avatar.svelte';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
 	import { m } from '$lib/paraglide/messages';
@@ -175,7 +174,7 @@
 						<div
 							class="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs font-medium flex-shrink-0"
 						>
-							<Users class="h-3 w-3" />
+							<Icon icon="material-symbols:group" class="h-3 w-3" />
 						</div>
 					{:else}
 						<div class="flex-shrink-0">
@@ -265,7 +264,7 @@
 									<div
 										class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium flex-shrink-0"
 									>
-										<Users class="h-4 w-4" />
+										<Icon icon="material-symbols:group" class="h-4 w-4" />
 									</div>
 								{:else}
 									<div class="flex-shrink-0">
