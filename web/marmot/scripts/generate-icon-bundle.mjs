@@ -59,7 +59,7 @@ export function generateIconBundle(rootDir) {
 		try {
 			fullSet = JSON.parse(readFileSync(jsonFile, 'utf-8'));
 		} catch {
-			console.warn(`[icon-bundle] Warning: icon set "${prefix}" not found, skipping`);
+			// Permission strings ('users:manage') and single Tailwind classes ("sm:block") match the pattern too.
 			continue;
 		}
 
