@@ -4,46 +4,44 @@
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
 
-	let { asset, editable = true }: { asset: Asset; editable?: boolean } = $props();
+	// The "About" blade section: the plugin's description and, unless the page header already shows them, the notes people wrote.
+	let {
+		asset,
+		editable = true,
+		showNotes = true
+	}: { asset: Asset; editable?: boolean; showNotes?: boolean } = $props();
 
 	let canManageAssets = $derived(editable && auth.hasPermission('assets', 'manage'));
 
-	let userDescription = $state(asset?.user_description || '');
+	let userDescription = $state('');
 	let isEditingUserDesc = $state(false);
 	let savingUserDesc = $state(false);
 
 	$effect(() => {
-		if (asset?.user_description !== undefined) {
-			userDescription = asset.user_description || '';
-		}
+		userDescription = asset?.user_description || '';
 	});
+
+	let hasNotes = $derived(showNotes && (!!asset.user_description || canManageAssets));
 
 	async function saveUserDescription(valueToSave?: string) {
 		if (!asset?.id) return;
-
-		const finalValue = valueToSave !== undefined ? valueToSave : userDescription;
+		const finalValue = (valueToSave !== undefined ? valueToSave : userDescription).trim();
 
 		savingUserDesc = true;
 		try {
 			const response = await fetchApi(`/assets/${asset.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					user_description: finalValue.trim()
-				})
+				body: JSON.stringify({ user_description: finalValue })
 			});
-
 			if (response.ok) {
-				const trimmedValue = finalValue.trim();
-				if (trimmedValue) {
-					asset.user_description = trimmedValue;
+				if (finalValue) {
+					asset.user_description = finalValue;
 				} else {
 					delete asset.user_description;
 				}
-				userDescription = trimmedValue;
+				userDescription = finalValue;
 				isEditingUserDesc = false;
-			} else {
-				console.error('Failed to save user description');
 			}
 		} catch (error) {
 			console.error('Error saving user description:', error);
@@ -58,120 +56,69 @@
 	}
 </script>
 
-<div class="space-y-5">
-	<!-- Technical Description (from plugins) -->
-	{#if asset.description}
-		<div>
-			<div class="flex items-center gap-2 mb-2">
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-					{m.asset_technical_description()}
-				</h3>
-				<div
-					class="flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30"
-					title={m.asset_generated_by_plugin_title()}
-				>
-					<svg
-						class="w-3 h-3 text-purple-700 dark:text-purple-300"
-						fill="currentColor"
-						viewBox="0 0 20 20"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				</div>
-			</div>
-			<p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-				{asset.description}
-			</p>
-		</div>
-	{/if}
-
-	<!-- User Description (manual notes) -->
-	{#if asset.user_description || canManageAssets}
-		<div>
-			<div class="flex items-center justify-between mb-2">
-				<div class="flex items-center gap-2">
-					<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-						{m.asset_user_notes_heading()}
-					</h3>
-					<div
-						class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30"
-						title={m.asset_user_notes_manual_title()}
-					>
-						<svg
-							class="w-3 h-3 text-blue-700 dark:text-blue-300"
-							fill="currentColor"
-							viewBox="0 0 20 20"
+{#if asset.description || hasNotes}
+	<mm-blade-section heading={m.asset_page_about_heading()}>
+		{#if showNotes && canManageAssets && !isEditingUserDesc}
+			<mm-button
+				slot="actions"
+				variant="ghost"
+				size="sm"
+				icon="edit"
+				label={m.discover_edit_notes_title()}
+				onclick={() => (isEditingUserDesc = true)}
+			></mm-button>
+		{/if}
+		<div class="mm-stack" style="--mm-gap: var(--space-3)">
+			{#if showNotes}
+				{#if isEditingUserDesc}
+					<mm-textarea
+						label={m.asset_page_notes_label()}
+						hide-label
+						rows={4}
+						autosize
+						value={userDescription}
+						placeholder={m.asset_page_notes_placeholder()}
+						onmm-input={(e: CustomEvent<{ value: string }>) => (userDescription = e.detail.value)}
+					></mm-textarea>
+					<div class="mm-cluster">
+						<mm-button
+							variant="primary"
+							size="sm"
+							loading={savingUserDesc}
+							onclick={() => saveUserDescription()}>{m.asset_page_save_notes()}</mm-button
 						>
-							<path
-								fill-rule="evenodd"
-								d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-								clip-rule="evenodd"
-							/>
-						</svg>
+						<mm-button variant="ghost" size="sm" disabled={savingUserDesc} onclick={cancelEdit}
+							>{m.common_cancel()}</mm-button
+						>
+						{#if asset.user_description}
+							<mm-button
+								class="mm-push"
+								variant="ghost"
+								size="sm"
+								disabled={savingUserDesc}
+								onclick={() => saveUserDescription('')}>{m.asset_page_remove_notes()}</mm-button
+							>
+						{/if}
 					</div>
-				</div>
-				{#if canManageAssets && !isEditingUserDesc}
-					<button
-						onclick={() => (isEditingUserDesc = true)}
-						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
+				{:else if asset.user_description}
+					<mm-text variant="dense" block style="white-space: pre-wrap"
+						>{asset.user_description}</mm-text
 					>
-						{asset.user_description ? m.common_edit() : m.asset_add_button()}
-					</button>
+				{:else if canManageAssets}
+					<mm-text variant="dense" tone="secondary" block>{m.asset_page_no_notes()}</mm-text>
 				{/if}
-			</div>
-
-			{#if isEditingUserDesc}
-				<div class="space-y-2.5">
-					<textarea
-						bind:value={userDescription}
-						placeholder={m.asset_notes_placeholder()}
-						rows="4"
-						class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
-					></textarea>
-					<div class="flex justify-between gap-2">
-						<div>
-							{#if asset.user_description}
-								<button
-									onclick={() => saveUserDescription('')}
-									disabled={savingUserDesc}
-									class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-								>
-									{m.common_delete()}
-								</button>
-							{/if}
-						</div>
-						<div class="flex gap-2">
-							<button
-								onclick={cancelEdit}
-								disabled={savingUserDesc}
-								class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
-							>
-								{m.common_cancel()}
-							</button>
-							<button
-								onclick={() => saveUserDescription()}
-								disabled={savingUserDesc}
-								class="px-3 py-1.5 text-sm bg-earthy-terracotta-700 text-white rounded hover:bg-earthy-terracotta-800 disabled:opacity-50 flex items-center gap-1.5"
-							>
-								{#if savingUserDesc}
-									<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-								{/if}
-								{m.common_save()}
-							</button>
-						</div>
-					</div>
+			{/if}
+			{#if asset.description}
+				<div class="mm-stack" style="--mm-gap: var(--space-1); align-items: flex-start">
+					<mm-tag variant="plugin"></mm-tag>
+					<mm-text
+						variant="dense"
+						tone={showNotes && asset.user_description ? 'secondary' : 'default'}
+						block
+						style="white-space: pre-wrap">{asset.description}</mm-text
+					>
 				</div>
-			{:else if asset.user_description}
-				<p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-					{asset.user_description}
-				</p>
-			{:else}
-				<p class="text-sm text-gray-500 dark:text-gray-400 italic">{m.asset_no_notes_yet()}</p>
 			{/if}
 		</div>
-	{/if}
-</div>
+	</mm-blade-section>
+{/if}

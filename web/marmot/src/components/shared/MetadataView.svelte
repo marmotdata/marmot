@@ -1,11 +1,12 @@
 <script lang="ts">
+	// Free-form metadata: read-only views are an mm-metadata-viewer (keys in mono, values in the text face, nested values folded), and the editable view is a table of key and value rows with Add field, saving each change straight to the endpoint.
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import type { Asset } from '$lib/assets/types';
-	import IconifyIcon from '@iconify/svelte';
-	import Arrow from '$components/ui/Arrow.svelte';
+	import '@marmotdata/elements/metadata-viewer.js';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { INPUT, TH, TD, TBODY } from '$lib/ui/classes';
 
 	let {
 		asset = undefined,
@@ -94,17 +95,11 @@
 		return value.some((item) => isObject(item));
 	}
 
-	function getValueClass(value: unknown): string {
-		if (typeof value === 'boolean') {
-			return value
-				? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-				: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
-		}
-		if (typeof value === 'number')
-			return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
-		if (typeof value === 'string')
-			return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
-		return '';
+	// Values read as plain text in ink: booleans as Yes and No, empty values as Not set, never coloured by type.
+	function plainValue(value: unknown): string {
+		if (value === null || value === undefined || value === '') return m.shared_metadata_not_set();
+		if (typeof value === 'boolean') return value ? m.common_yes() : m.common_no();
+		return formatDisplayValue(value);
 	}
 
 	async function saveMetadata(updatedMetadata: Record<string, unknown>) {
@@ -262,312 +257,193 @@
 	const metadataEntries = $derived(Object.entries(metadata));
 </script>
 
-{#snippet metadataDisclosure(
-	key: string,
-	label: string,
-	preview: string,
-	content: string,
-	compact = false
-)}
+{#snippet metadataDisclosure(key: string, label: string, preview: string, content: string)}
 	<details
 		class="group/details"
 		open={expandedDetails[key]}
 		ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
 	>
-		<summary
-			class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-start {compact
-				? 'text-sm'
-				: ''}"
-		>
-			<Arrow expanded={expandedDetails[key]} />
-			<span class="ml-1 min-w-0">
-				<span class="block">{label}</span>
+		<summary class="flex cursor-pointer list-none items-start gap-space-1 text-mm-text">
+			<mm-icon
+				name="chevron-right"
+				class="mt-[3px] flex-none text-mm-text-2 transition-transform group-open/details:rotate-90"
+				aria-hidden="true"
+			></mm-icon>
+			<span class="min-w-0">
+				<span class="block hover:underline">{label}</span>
 				<span
 					class="metadata-preview block max-w-full {preview.includes('\n')
 						? 'line-clamp-2 whitespace-pre-line'
-						: 'truncate'} break-all font-mono text-xs text-gray-500 dark:text-gray-400"
+						: 'truncate'} break-all text-caption text-mm-text-2"
 				>
 					{preview}
 				</span>
 			</span>
 		</summary>
-		<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded {compact ? 'text-xs' : ''}">
-			<pre class="font-mono whitespace-pre-wrap break-all">{content}</pre>
-		</div>
+		<pre
+			class="mt-space-2 whitespace-pre-wrap break-all rounded-sm bg-mm-sunken p-space-2 font-mono text-mono-dense text-mm-text">{content}</pre>
 	</details>
 {/snippet}
 
 {#if isReadOnly}
-	<!-- Read-Only Mode -->
-	<div class="space-y-2">
-		{#if metadataEntries.length === 0}
-			<div class="text-center py-6">
-				<p class="text-sm text-gray-500 dark:text-gray-400">{m.shared_metadata_no_config()}</p>
-			</div>
-		{:else}
-			{#each metadataEntries as [key, value] (key)}
-				<div class="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-2 last:pb-0">
-					<div class="flex items-start gap-2">
-						<dt
-							class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px] flex-shrink-0"
-						>
-							{key}
-						</dt>
-						<dd class="text-sm text-gray-900 dark:text-gray-100 flex-1 min-w-0">
-							{#if isObject(value)}
-								{@render metadataDisclosure(
-									key,
-									m.shared_metadata_view_details(),
-									getObjectPreview(value),
-									formatJson(value)
-								)}
-							{:else if isArray(value) && containsObject(value)}
-								{@render metadataDisclosure(
-									key,
-									m.shared_metadata_view_array(),
-									getArrayPreview(value),
-									formatJson(value)
-								)}
-							{:else if isArray(value)}
-								<div class="flex flex-wrap gap-1">
-									{#each value as item, i (i)}
-										{#if i < 5}
-											<span
-												class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded whitespace-pre-wrap break-all"
-											>
-												{truncateValue(formatDisplayValue(item))}
-											</span>
-										{/if}
-									{/each}
-									{#if value.length > 5}
-										<span class="text-xs text-gray-500 dark:text-gray-400">
-											{m.shared_metadata_more_count({ count: value.length - 5 })}
-										</span>
-									{/if}
-								</div>
-							{:else if isExpandableString(value)}
-								{@render metadataDisclosure(
-									key,
-									m.shared_metadata_view_text(),
-									getStringPreview(value),
-									formatDisplayValue(value)
-								)}
-							{:else}
-								<span class="font-mono break-all">{truncateValue(formatDisplayValue(value))}</span>
-							{/if}
-						</dd>
-					</div>
-				</div>
-			{/each}
-		{/if}
-	</div>
+	<mm-metadata-viewer
+		class="block"
+		{metadata}
+		label={m.shared_metadata_label()}
+		empty-text={m.shared_metadata_no_config()}
+		hide-toolbar={metadataEntries.length < 8}
+	></mm-metadata-viewer>
 {:else}
-	<!-- Editable Mode -->
-	<div class="space-y-4">
-		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-			<div class="overflow-x-auto">
-				{#if metadataEntries.length === 0 && !showAddRow}
-					<div class="px-6 py-12 text-center">
-						<div class="flex flex-col items-center gap-3">
-							<IconifyIcon
-								icon="material-symbols:database-outline"
-								class="w-12 h-12 text-gray-300 dark:text-gray-600"
-							/>
-							<p class="text-sm text-gray-500 dark:text-gray-400">{m.shared_metadata_none_yet()}</p>
-						</div>
-					</div>
-				{:else}
-					<table class="min-w-full">
-						<thead>
-							<tr class="border-b border-gray-200 dark:border-gray-700">
-								<th
-									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+	<div class="rounded-md border border-mm-rule bg-mm-surface">
+		{#if metadataEntries.length === 0 && !showAddRow}
+			<p class="px-space-5 py-space-6 text-center text-caption text-mm-text-2">
+				{m.shared_metadata_none_yet()}
+			</p>
+		{:else}
+			<div class="overflow-x-auto" tabindex="-1">
+				<table class="min-w-full text-dense">
+					<thead>
+						<tr class="border-b border-mm-rule">
+							<th scope="col" class="{TH} w-1/3">{m.shared_metadata_key_header()}</th>
+							<th scope="col" class={TH}>{m.shared_metadata_value_header()}</th>
+							{#if canEdit()}
+								<th scope="col" class="{TH} w-10"
+									><span class="mm-visually-hidden">{m.common_edit()}</span></th
 								>
-									{m.shared_metadata_key_header()}
-								</th>
-								<th
-									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
-								>
-									{m.shared_metadata_value_header()}
-								</th>
+							{/if}
+						</tr>
+					</thead>
+					<tbody class={TBODY}>
+						{#each metadataEntries as [key, value] (key)}
+							<tr class="group">
+								<td class="{TD} align-top font-mono text-mono-dense text-mm-text-2">{key}</td>
+								<td class="{TD} align-top">
+									{#if editingKey === key}
+										<div class="flex flex-wrap items-center gap-space-2">
+											<input
+												type="text"
+												bind:value={editingValue}
+												onkeydown={(e) => {
+													if (e.key === 'Enter') updateMetadata(key);
+													if (e.key === 'Escape') cancelEditing();
+												}}
+												aria-label={m.shared_metadata_value_header()}
+												class="{INPUT} min-w-0 flex-1"
+												autofocus
+											/>
+											<mm-button
+												size="sm"
+												variant="primary"
+												disabled={saving}
+												onclick={() => updateMetadata(key)}>{m.common_save()}</mm-button
+											>
+											<mm-button size="sm" variant="ghost" disabled={saving} onclick={cancelEditing}
+												>{m.common_cancel()}</mm-button
+											>
+											<mm-button
+												size="sm"
+												variant="ghost"
+												icon="delete"
+												label={m.shared_metadata_delete_field()}
+												disabled={saving}
+												onclick={() => promptDeleteMetadata(key)}
+											></mm-button>
+										</div>
+									{:else if isObject(value)}
+										{@render metadataDisclosure(
+											key,
+											m.shared_metadata_view_object(),
+											getObjectPreview(value),
+											formatJson(value)
+										)}
+									{:else if isArray(value) && containsObject(value)}
+										{@render metadataDisclosure(
+											key,
+											m.shared_metadata_view_array(),
+											getArrayPreview(value),
+											formatJson(value)
+										)}
+									{:else if isArray(value)}
+										<span class="break-words text-mm-text"
+											>{value.map((item) => formatDisplayValue(item)).join(', ')}</span
+										>
+									{:else if isExpandableString(value)}
+										{@render metadataDisclosure(
+											key,
+											m.shared_metadata_view_text(),
+											getStringPreview(value),
+											formatDisplayValue(value)
+										)}
+									{:else}
+										<span class="break-words text-mm-text">{truncateValue(plainValue(value))}</span>
+									{/if}
+								</td>
 								{#if canEdit()}
-									<th class="px-4 py-2 w-10"></th>
+									<td class="{TD} align-top">
+										{#if editingKey !== key}
+											<mm-button
+												size="sm"
+												variant="ghost"
+												icon="edit"
+												label={m.shared_metadata_edit_field({ key })}
+												onclick={() => startEditing(key, value)}
+											></mm-button>
+										{/if}
+									</td>
 								{/if}
 							</tr>
-						</thead>
-						<tbody>
-							{#each metadataEntries as [key, value] (key)}
-								<tr
-									class="group border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
-								>
-									<td
-										class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 align-top"
-									>
-										{key}
-									</td>
-									<td class="px-4 py-2.5 text-sm align-top">
-										{#if editingKey === key}
-											<div class="flex items-start gap-2">
-												<input
-													type="text"
-													bind:value={editingValue}
-													onkeydown={(e) => {
-														if (e.key === 'Enter') updateMetadata(key);
-														if (e.key === 'Escape') cancelEditing();
-													}}
-													class="flex-1 px-2 py-1.5 text-sm border border-earthy-terracotta-500 dark:border-earthy-terracotta-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600"
-													autofocus
-												/>
-												<div class="flex items-center gap-1 flex-shrink-0">
-													<button
-														onclick={() => updateMetadata(key)}
-														disabled={saving}
-														class="p-1.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 transition-colors"
-														title={m.common_save()}
-													>
-														<IconifyIcon icon="material-symbols:check-rounded" class="w-5 h-5" />
-													</button>
-													<button
-														onclick={cancelEditing}
-														disabled={saving}
-														class="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-														title={m.common_cancel()}
-													>
-														<IconifyIcon icon="material-symbols:close-rounded" class="w-5 h-5" />
-													</button>
-													<button
-														onclick={() => promptDeleteMetadata(key)}
-														disabled={saving}
-														class="p-1.5 text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-														title={m.common_delete()}
-													>
-														<IconifyIcon
-															icon="material-symbols:delete-outline-rounded"
-															class="w-5 h-5"
-														/>
-													</button>
-												</div>
-											</div>
-										{:else if isObject(value)}
-											{@render metadataDisclosure(
-												key,
-												m.shared_metadata_view_object(),
-												getObjectPreview(value),
-												formatJson(value),
-												true
-											)}
-										{:else if isArray(value) && containsObject(value)}
-											{@render metadataDisclosure(
-												key,
-												m.shared_metadata_view_array(),
-												getArrayPreview(value),
-												formatJson(value),
-												true
-											)}
-										{:else if isArray(value)}
-											<div class="flex flex-wrap gap-1.5">
-												{#each value as item, i (i)}
-													<span
-														class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded whitespace-pre-wrap break-all"
-													>
-														{formatDisplayValue(item)}
-													</span>
-												{/each}
-											</div>
-										{:else if isExpandableString(value)}
-											{@render metadataDisclosure(
-												key,
-												m.shared_metadata_view_text(),
-												getStringPreview(value),
-												formatDisplayValue(value),
-												true
-											)}
-										{:else}
-											<span class="px-2 py-1 text-sm rounded-full {getValueClass(value)}">
-												{formatDisplayValue(value)}
-											</span>
-										{/if}
-									</td>
-									{#if canEdit()}
-										<td class="px-4 py-2.5 align-top">
-											{#if editingKey !== key}
-												<button
-													onclick={() => startEditing(key, value)}
-													class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
-													title={m.common_edit()}
-												>
-													<IconifyIcon
-														icon="material-symbols:edit-outline-rounded"
-														class="w-4 h-4"
-													/>
-												</button>
-											{/if}
-										</td>
-									{/if}
-								</tr>
-							{/each}
+						{/each}
 
-							{#if showAddRow}
-								<tr
-									class="group border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
-								>
-									<td class="px-4 py-2">
-										<input
-											type="text"
-											bind:value={newKey}
-											placeholder={m.shared_metadata_key_placeholder()}
-											class="w-full px-2 py-1.5 text-sm border-0 bg-transparent text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 rounded"
-											autofocus
-										/>
-									</td>
-									<td class="px-4 py-2">
+						{#if showAddRow}
+							<tr>
+								<td class="{TD} align-top">
+									<input
+										type="text"
+										bind:value={newKey}
+										placeholder={m.shared_metadata_key_placeholder()}
+										aria-label={m.shared_metadata_key_header()}
+										class="{INPUT} font-mono"
+										autofocus
+									/>
+								</td>
+								<td class="{TD} align-top" colspan={canEdit() ? 2 : 1}>
+									<div class="flex flex-wrap items-center gap-space-2">
 										<input
 											type="text"
 											bind:value={newValue}
-											onkeydown={(e) => e.key === 'Enter' && addMetadata()}
+											onkeydown={(e) => {
+												if (e.key === 'Enter') addMetadata();
+												if (e.key === 'Escape') cancelAdding();
+											}}
 											placeholder={m.shared_metadata_value_placeholder()}
-											class="w-full px-2 py-1.5 text-sm border-0 bg-transparent text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 rounded"
+											aria-label={m.shared_metadata_value_header()}
+											class="{INPUT} min-w-0 flex-1"
 										/>
-									</td>
-									<td class="px-4 py-2">
-										<div class="flex items-center gap-1">
-											<button
-												onclick={addMetadata}
-												disabled={saving || !newKey.trim()}
-												class="p-1.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 transition-colors"
-												title={m.common_save()}
-											>
-												<IconifyIcon icon="material-symbols:check-rounded" class="w-5 h-5" />
-											</button>
-											<button
-												onclick={cancelAdding}
-												disabled={saving}
-												class="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-												title={m.common_cancel()}
-											>
-												<IconifyIcon icon="material-symbols:close-rounded" class="w-5 h-5" />
-											</button>
-										</div>
-									</td>
-								</tr>
-							{/if}
-						</tbody>
-					</table>
-				{/if}
+										<mm-button
+											size="sm"
+											variant="primary"
+											disabled={saving || !newKey.trim()}
+											onclick={addMetadata}>{m.shared_metadata_add_field()}</mm-button
+										>
+										<mm-button size="sm" variant="ghost" disabled={saving} onclick={cancelAdding}
+											>{m.common_cancel()}</mm-button
+										>
+									</div>
+								</td>
+							</tr>
+						{/if}
+					</tbody>
+				</table>
 			</div>
+		{/if}
 
-			{#if canEdit() && !showAddRow}
-				<div class="border-t border-gray-200 dark:border-gray-700 p-2">
-					<button
-						onclick={() => (showAddRow = true)}
-						class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded transition-colors"
-					>
-						<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" />
-						<span>{m.shared_metadata_add_field()}</span>
-					</button>
-				</div>
-			{/if}
-		</div>
+		{#if canEdit() && !showAddRow}
+			<div class="border-t border-mm-rule p-space-2">
+				<mm-button size="sm" variant="ghost" icon="add" onclick={() => (showAddRow = true)}
+					>{m.shared_metadata_add_field()}</mm-button
+				>
+			</div>
+		{/if}
 	</div>
 {/if}
 
@@ -575,7 +451,7 @@
 	show={showDeleteModal}
 	title={m.shared_metadata_delete_title()}
 	message={m.shared_metadata_delete_confirm({ key: keyToDelete ?? '' })}
-	confirmText={m.common_delete()}
+	confirmText={m.shared_metadata_delete_field()}
 	requireConfirmation={false}
 	onConfirm={confirmDeleteMetadata}
 	onCancel={cancelDeleteMetadata}

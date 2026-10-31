@@ -1,6 +1,7 @@
 <script lang="ts">
+	// Tags on an asset, product or term as mm-tag chips, saved straight to the endpoint when one is given or kept in the bound array otherwise.
 	import { fetchApi } from '$lib/api';
-	import IconifyIcon from '@iconify/svelte';
+	import { INPUT } from '$lib/ui/classes';
 	import { m } from '$lib/paraglide/messages';
 
 	let {
@@ -101,32 +102,20 @@
 	}
 </script>
 
-<div class="space-y-2">
-	<div class="flex flex-wrap gap-1.5">
+<div class="mm-stack" style="--mm-gap: var(--space-2)">
+	<div class="mm-cluster" style="--mm-gap: var(--space-1)">
 		{#each tags as tag (tag)}
-			<span
-				class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
+			<mm-tag
+				removable={canEdit && !saving}
+				onmm-remove={(e: Event) => {
+					e.preventDefault();
+					removeTag(tag);
+				}}>{tag}</mm-tag
 			>
-				{tag}
-				{#if canEdit}
-					<button
-						onclick={() => removeTag(tag)}
-						disabled={saving}
-						class="hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
-						aria-label={m.tags_remove_tag_aria({ tag })}
-					>
-						<IconifyIcon
-							icon="material-symbols:close-small-rounded"
-							class="w-4 h-4"
-							aria-hidden="true"
-						/>
-					</button>
-				{/if}
-			</span>
 		{/each}
 
 		{#if showTagInput}
-			<div class="inline-flex items-center gap-1 bg-gray-50 dark:bg-gray-700 rounded-md px-2 py-1">
+			<span class="inline-flex items-center gap-space-1">
 				<input
 					type="text"
 					bind:value={newTag}
@@ -136,43 +125,40 @@
 					}}
 					placeholder={m.tags_new_tag_placeholder()}
 					aria-label={m.tags_enter_new_tag_aria()}
-					class="w-24 text-xs bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+					class="{INPUT} h-[var(--control-h-sm)] !w-32 py-0"
 					autofocus
 				/>
-				<button
-					onclick={addTag}
+				<mm-button
+					size="sm"
+					variant="ghost"
+					icon="check"
+					label={m.tags_add_tag()}
 					disabled={saving || !newTag.trim()}
-					class="p-0.5 text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50"
-					title={m.common_add()}
-					aria-label={m.tags_add_tag()}
-				>
-					<IconifyIcon icon="material-symbols:check-rounded" class="w-4 h-4" aria-hidden="true" />
-				</button>
-				<button
-					onclick={cancelAdding}
+					onclick={addTag}
+				></mm-button>
+				<mm-button
+					size="sm"
+					variant="ghost"
+					icon="close"
+					label={m.tags_cancel_adding_aria()}
 					disabled={saving}
-					class="p-0.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-					title={m.common_cancel()}
-					aria-label={m.tags_cancel_adding_aria()}
-				>
-					<IconifyIcon icon="material-symbols:close-rounded" class="w-4 h-4" aria-hidden="true" />
-				</button>
-			</div>
+					onclick={cancelAdding}
+				></mm-button>
+			</span>
 		{/if}
 
 		{#if canEdit && !showTagInput}
-			<button
-				onclick={() => (showTagInput = true)}
+			<mm-button
+				size="sm"
+				variant="ghost"
+				icon="add"
 				disabled={saving}
-				class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 disabled:opacity-50 transition-colors"
+				onclick={() => (showTagInput = true)}>{m.tags_add_tag()}</mm-button
 			>
-				<IconifyIcon icon="material-symbols:add-rounded" class="w-3.5 h-3.5" aria-hidden="true" />
-				{m.tags_add_tag()}
-			</button>
 		{/if}
 	</div>
 
 	{#if tags.length === 0 && !canEdit}
-		<p class="text-sm text-gray-400 dark:text-gray-500 italic">{m.tags_none()}</p>
+		<p class="text-caption text-mm-text-2">{m.tags_none()}</p>
 	{/if}
 </div>

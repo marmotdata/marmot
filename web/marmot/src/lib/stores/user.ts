@@ -10,6 +10,8 @@ export interface UserProfile {
 	email?: string;
 	display_name?: string;
 	profile_picture?: string;
+	job_title?: string;
+	teams?: { id: string; name: string }[];
 }
 
 const CACHE_KEY = 'user-profile';
@@ -55,6 +57,12 @@ function createUserProfileStore() {
 				})
 				.catch(() => null);
 			return request;
+		},
+		// Applies a change the caller has already saved, so the header reflects it without another request
+		patch: (changes: Partial<UserProfile>) => {
+			let current: UserProfile | null = null;
+			subscribe((value) => (current = value))();
+			if (current) store({ ...(current as UserProfile), ...changes });
 		},
 		clear: () => {
 			request = null;

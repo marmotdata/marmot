@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
-	import IconifyIcon from '@iconify/svelte';
-	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import { toast } from '@marmotdata/elements/toast.js';
 	import type { ProductImageMeta } from '$lib/dataproducts/types';
+	import ProductIcon from './ProductIcon.svelte';
 
 	interface Props {
 		productId: string;
@@ -21,213 +21,163 @@
 		size = 'lg'
 	}: Props = $props();
 
-	let showModal = $state(false);
+	const OUTPUT_SIZE = 256;
+	const KEY_STEP = 8;
+
+	let trigger = $state<HTMLButtonElement | null>(null);
+	let fileInput = $state<HTMLInputElement | null>(null);
+	let canvas = $state<HTMLCanvasElement | null>(null);
+	let menuOpen = $state(false);
+	let dialogOpen = $state(false);
 	let uploading = $state(false);
 	let error = $state('');
-	let fileInput: HTMLInputElement;
 
-	// Cropper state
 	let imageSrc = $state<string | null>(null);
-	let imageElement = $state<HTMLImageElement | null>(null);
-	let cropArea = $state({ x: 0, y: 0, size: 100 });
-	let isDragging = $state(false);
-	let dragStartPos = $state({ x: 0, y: 0 });
-	let cropStartPos = $state({ x: 0, y: 0 });
-	let imageOffset = $state({ x: 0, y: 0 });
-	let canvasRef: HTMLCanvasElement;
+	let image = $state<HTMLImageElement | null>(null);
+	let crop = $state({ x: 0, y: 0, size: 100 });
+	let offset = $state({ x: 0, y: 0 });
+	let dragging = false;
+	let dragStart = { x: 0, y: 0 };
+	let cropStart = { x: 0, y: 0 };
 
-	// Size classes
-	const sizeClasses = {
-		sm: 'w-10 h-10',
-		md: 'w-12 h-12',
-		lg: 'w-14 h-14'
-	};
-
-	const iconSizeClasses = {
-		sm: 'w-5 h-5',
-		md: 'w-6 h-6',
-		lg: 'w-7 h-7'
-	};
-
-	function validateImage(file: File): Promise<boolean> {
+	function validate(file: File): Promise<string | null> {
 		return new Promise((resolve) => {
-			// Check file type
 			if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-				error = m.products_icon_invalid_type();
-				resolve(false);
+				resolve(m.products_icon_invalid_type());
 				return;
 			}
-
-			// Check file size (5MB max)
 			if (file.size > 5 * 1024 * 1024) {
-				error = m.products_icon_too_large();
-				resolve(false);
+				resolve(m.products_icon_too_large());
 				return;
 			}
-
-			// Validate it's actually an image by trying to load it
 			const img = new Image();
 			img.onload = () => {
 				URL.revokeObjectURL(img.src);
-				// Check minimum dimensions
-				if (img.width < 32 || img.height < 32) {
-					error = m.products_icon_too_small();
-					resolve(false);
-					return;
-				}
-				resolve(true);
+				resolve(img.width < 32 || img.height < 32 ? m.products_icon_too_small() : null);
 			};
 			img.onerror = () => {
 				URL.revokeObjectURL(img.src);
-				error = m.products_icon_invalid_file();
-				resolve(false);
+				resolve(m.products_icon_invalid_file());
 			};
 			img.src = URL.createObjectURL(file);
 		});
 	}
 
-	async function handleFileSelect(event: Event) {
+	async function handleFile(event: Event) {
 		const input = event.target as HTMLInputElement;
 		const file = input.files?.[0];
 		if (!file) return;
-
-		error = '';
-
-		const isValid = await validateImage(file);
-		if (!isValid) {
+		const problem = await validate(file);
+		if (problem) {
 			input.value = '';
+			toast({ tone: 'danger', message: problem });
 			return;
 		}
-
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			imageSrc = e.target?.result as string;
-			showModal = true;
+			error = '';
+			dialogOpen = true;
 		};
 		reader.readAsDataURL(file);
 	}
 
 	function handleImageLoad(event: Event) {
 		const img = event.target as HTMLImageElement;
-		imageElement = img;
-
-		// Get the image's position relative to container
+		image = img;
 		const imgRect = img.getBoundingClientRect();
-		const containerRect = img.parentElement?.getBoundingClientRect();
+		const box = img.parentElement?.getBoundingClientRect();
+		if (box) offset = { x: imgRect.left - box.left, y: imgRect.top - box.top };
+		const sizePx = Math.min(img.clientWidth, img.clientHeight, 200);
+		crop = { x: (img.clientWidth - sizePx) / 2, y: (img.clientHeight - sizePx) / 2, size: sizePx };
+	}
 
-		if (containerRect) {
-			imageOffset = {
-				x: imgRect.left - containerRect.left,
-				y: imgRect.top - containerRect.top
-			};
-		}
-
-		// Calculate initial crop area - fit largest square centered on image
-		const displayWidth = img.clientWidth;
-		const displayHeight = img.clientHeight;
-		const cropSize = Math.min(displayWidth, displayHeight, 200);
-
-		cropArea = {
-			x: (displayWidth - cropSize) / 2,
-			y: (displayHeight - cropSize) / 2,
-			size: cropSize
+	function moveTo(x: number, y: number) {
+		if (!image) return;
+		crop = {
+			...crop,
+			x: Math.max(0, Math.min(x, image.clientWidth - crop.size)),
+			y: Math.max(0, Math.min(y, image.clientHeight - crop.size))
 		};
 	}
 
-	function handleMouseDown(event: MouseEvent) {
-		if (disabled) return;
+	function handlePointerDown(event: PointerEvent) {
 		event.preventDefault();
-		isDragging = true;
-		dragStartPos = { x: event.clientX, y: event.clientY };
-		cropStartPos = { x: cropArea.x, y: cropArea.y };
+		dragging = true;
+		dragStart = { x: event.clientX, y: event.clientY };
+		cropStart = { x: crop.x, y: crop.y };
+		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
 	}
 
-	function handleMouseMove(event: MouseEvent) {
-		if (!isDragging || !imageElement) return;
-
-		const deltaX = event.clientX - dragStartPos.x;
-		const deltaY = event.clientY - dragStartPos.y;
-
-		let newX = cropStartPos.x + deltaX;
-		let newY = cropStartPos.y + deltaY;
-
-		// Constrain within image bounds
-		const maxX = imageElement.clientWidth - cropArea.size;
-		const maxY = imageElement.clientHeight - cropArea.size;
-
-		newX = Math.max(0, Math.min(newX, maxX));
-		newY = Math.max(0, Math.min(newY, maxY));
-
-		cropArea = { ...cropArea, x: newX, y: newY };
+	function handlePointerMove(event: PointerEvent) {
+		if (!dragging) return;
+		moveTo(cropStart.x + event.clientX - dragStart.x, cropStart.y + event.clientY - dragStart.y);
 	}
 
-	function handleMouseUp() {
-		isDragging = false;
+	// Arrow keys move the selection too, so cropping works without a pointer.
+	function handleCropKey(event: KeyboardEvent) {
+		const moves: Record<string, [number, number]> = {
+			ArrowLeft: [-KEY_STEP, 0],
+			ArrowRight: [KEY_STEP, 0],
+			ArrowUp: [0, -KEY_STEP],
+			ArrowDown: [0, KEY_STEP]
+		};
+		const move = moves[event.key];
+		if (!move) return;
+		event.preventDefault();
+		moveTo(crop.x + move[0], crop.y + move[1]);
 	}
 
-	async function handleCropAndUpload() {
-		if (!imageElement || !canvasRef) return;
+	function authHeaders(): Record<string, string> {
+		const token = auth.getToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	}
 
+	async function upload() {
+		if (!image || !canvas) return;
 		uploading = true;
 		error = '';
-
 		try {
-			// Calculate the scale between display and natural image size
-			const scaleX = imageElement.naturalWidth / imageElement.clientWidth;
-			const scaleY = imageElement.naturalHeight / imageElement.clientHeight;
-
-			// Crop coordinates in natural image pixels
-			const srcX = cropArea.x * scaleX;
-			const srcY = cropArea.y * scaleY;
-			const srcWidth = cropArea.size * scaleX;
-			const srcHeight = cropArea.size * scaleY;
-
-			// Draw cropped image to canvas (output 256x256 for icons)
-			const outputSize = 256;
-			canvasRef.width = outputSize;
-			canvasRef.height = outputSize;
-			const ctx = canvasRef.getContext('2d')!;
-
-			ctx.drawImage(imageElement, srcX, srcY, srcWidth, srcHeight, 0, 0, outputSize, outputSize);
-
-			// Convert canvas to blob
+			const scaleX = image.naturalWidth / image.clientWidth;
+			const scaleY = image.naturalHeight / image.clientHeight;
+			canvas.width = OUTPUT_SIZE;
+			canvas.height = OUTPUT_SIZE;
+			canvas
+				.getContext('2d')!
+				.drawImage(
+					image,
+					crop.x * scaleX,
+					crop.y * scaleY,
+					crop.size * scaleX,
+					crop.size * scaleY,
+					0,
+					0,
+					OUTPUT_SIZE,
+					OUTPUT_SIZE
+				);
+			const target = canvas;
 			const blob = await new Promise<Blob>((resolve, reject) => {
-				canvasRef.toBlob(
-					(b) => {
-						if (b) resolve(b);
-						else reject(new Error(m.products_icon_blob_error()));
-					},
+				target.toBlob(
+					(b) => (b ? resolve(b) : reject(new Error(m.products_icon_blob_error()))),
 					'image/png',
 					0.9
 				);
 			});
-
-			// Upload replaces any existing icon (backend handles upsert)
-			const formData = new FormData();
-			formData.append('file', blob, 'icon.png');
-
-			const token = auth.getToken();
-			const headers: Record<string, string> = {};
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
-			}
-
+			const form = new FormData();
+			form.append('file', blob, 'icon.png');
 			const response = await fetch(`/api/v1/products/images/${productId}/icon`, {
 				method: 'POST',
-				body: formData,
-				headers
+				body: form,
+				headers: authHeaders()
 			});
-
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || m.products_icon_upload_error());
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || m.products_icon_upload_error());
 			}
-
 			const meta: ProductImageMeta = await response.json();
-			// Add cache-busting timestamp to force browser to fetch new image
-			const cacheBustUrl = `${meta.url}?t=${Date.now()}`;
-			onIconChange?.(cacheBustUrl);
-			closeModal();
+			// The URL stays the same after a replace, so a timestamp makes the browser fetch the new image.
+			onIconChange?.(`${meta.url}?t=${Date.now()}`);
+			closeDialog();
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.products_icon_upload_error();
 		} finally {
@@ -235,263 +185,198 @@
 		}
 	}
 
-	async function handleDeleteIcon() {
+	async function removeIcon() {
 		if (!currentIconUrl) return;
-
 		uploading = true;
-		error = '';
-
 		try {
-			const token = auth.getToken();
-			const headers: Record<string, string> = {
-				'Content-Type': 'application/json'
-			};
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
-			}
-
 			const response = await fetch(`/api/v1/products/images/${productId}/icon`, {
 				method: 'DELETE',
-				headers
+				headers: { 'Content-Type': 'application/json', ...authHeaders() }
 			});
-
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || m.products_icon_delete_error());
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || m.products_icon_delete_error());
 			}
-
 			onIconChange?.(null);
 		} catch (err) {
-			error = err instanceof Error ? err.message : m.products_icon_delete_error();
+			toast({
+				tone: 'danger',
+				message: err instanceof Error ? err.message : m.products_icon_delete_error()
+			});
 		} finally {
 			uploading = false;
 		}
 	}
 
-	function closeModal() {
-		showModal = false;
+	function closeDialog() {
+		dialogOpen = false;
 		imageSrc = null;
-		imageElement = null;
+		image = null;
 		error = '';
 		if (fileInput) fileInput.value = '';
 	}
 
-	function openFileDialog() {
-		fileInput?.click();
+	function handleTrigger() {
+		if (currentIconUrl) menuOpen = true;
+		else fileInput?.click();
+	}
+
+	function handleMenu(event: CustomEvent<{ value: string }>) {
+		menuOpen = false;
+		if (event.detail.value === 'upload') fileInput?.click();
+		else if (event.detail.value === 'remove') removeIcon();
 	}
 </script>
 
-<svelte:window onmousemove={handleMouseMove} onmouseup={handleMouseUp} />
-
-{#snippet defaultIcon()}
-	<IconifyIcon
-		icon="mdi:package-variant-closed"
-		class="{iconSizeClasses[size]} text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-	/>
-{/snippet}
-
-<!-- Single icon with hover controls -->
-<div class="relative group inline-block">
-	<div
-		class="{sizeClasses[
-			size
-		]} rounded-xl bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center overflow-hidden"
+{#if disabled}
+	<ProductIcon iconUrl={currentIconUrl} {size} />
+{:else}
+	<button
+		bind:this={trigger}
+		type="button"
+		class="trigger"
+		aria-label={currentIconUrl ? m.products_icon_change_title() : m.products_icon_upload_title()}
+		aria-haspopup={currentIconUrl ? 'menu' : undefined}
+		aria-expanded={currentIconUrl ? menuOpen : undefined}
+		disabled={uploading}
+		onclick={handleTrigger}
 	>
-		{#if currentIconUrl}
-			<AuthenticatedImage
-				src={currentIconUrl}
-				alt={m.products_icon_upload_alt()}
-				class="w-full h-full object-cover"
-				fallback={defaultIcon}
-			/>
-		{:else}
-			{@render defaultIcon()}
-		{/if}
-	</div>
-
-	<!-- Hover overlay with edit/remove buttons -->
-	{#if !disabled}
-		<div
-			class="absolute inset-0 rounded-xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1"
+		<ProductIcon iconUrl={currentIconUrl} {size} />
+		<span class="badge" aria-hidden="true"><mm-icon name="edit" size={12}></mm-icon></span>
+	</button>
+	<input
+		bind:this={fileInput}
+		type="file"
+		accept="image/jpeg,image/png,image/gif,image/webp"
+		class="mm-visually-hidden"
+		tabindex="-1"
+		aria-hidden="true"
+		onchange={handleFile}
+	/>
+	{#if currentIconUrl && trigger}
+		<mm-menu
+			anchor={trigger}
+			open={menuOpen}
+			label={m.products_icon_change_title()}
+			onmm-select={handleMenu}
+			onmm-close={() => (menuOpen = false)}
 		>
-			<input
-				type="file"
-				accept="image/jpeg,image/png,image/gif,image/webp"
-				class="hidden"
-				bind:this={fileInput}
-				onchange={handleFileSelect}
-				{disabled}
-			/>
-			<button
-				type="button"
-				onclick={openFileDialog}
-				disabled={disabled || uploading}
-				class="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors disabled:opacity-50"
-				title={currentIconUrl ? m.products_icon_change_title() : m.products_icon_upload_title()}
+			<mm-menu-item value="upload" icon="upload">{m.products_icon_upload_new()}</mm-menu-item>
+			<mm-menu-separator></mm-menu-separator>
+			<mm-menu-item value="remove" icon="delete" danger
+				>{m.products_icon_remove_title()}</mm-menu-item
 			>
-				<IconifyIcon icon="material-symbols:edit" class="w-4 h-4" />
-			</button>
-			{#if currentIconUrl}
-				<button
-					type="button"
-					onclick={handleDeleteIcon}
-					disabled={disabled || uploading}
-					class="p-1.5 rounded-lg bg-white/20 hover:bg-red-500/80 text-white transition-colors disabled:opacity-50"
-					title={m.products_icon_remove_title()}
-				>
-					<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
-				</button>
+		</mm-menu>
+	{/if}
+{/if}
+
+<mm-dialog
+	open={dialogOpen}
+	heading={m.products_icon_crop_heading()}
+	description={m.products_icon_crop_hint()}
+	onmm-close={closeDialog}
+>
+	{#if imageSrc}
+		<div class="stage">
+			<img
+				src={imageSrc}
+				alt={m.products_icon_preview_alt()}
+				class="source"
+				onload={handleImageLoad}
+				draggable="false"
+			/>
+			{#if image}
+				<div
+					class="shade"
+					style:left={`${offset.x}px`}
+					style:top={`${offset.y}px`}
+					style:width={`${image.clientWidth}px`}
+					style:height={`${image.clientHeight}px`}
+					style:clip-path={`polygon(0% 0%, 0% 100%, ${crop.x}px 100%, ${crop.x}px ${crop.y}px, ${crop.x + crop.size}px ${crop.y}px, ${crop.x + crop.size}px ${crop.y + crop.size}px, ${crop.x}px ${crop.y + crop.size}px, ${crop.x}px 100%, 100% 100%, 100% 0%)`}
+				></div>
+				<div
+					class="selection"
+					style:left={`${offset.x + crop.x}px`}
+					style:top={`${offset.y + crop.y}px`}
+					style:width={`${crop.size}px`}
+					style:height={`${crop.size}px`}
+					onpointerdown={handlePointerDown}
+					onpointermove={handlePointerMove}
+					onpointerup={() => (dragging = false)}
+					onkeydown={handleCropKey}
+					role="slider"
+					aria-label={m.products_icon_crop_selection_aria()}
+					aria-valuenow={Math.round(crop.x)}
+					aria-valuetext={`${Math.round(crop.x)}, ${Math.round(crop.y)}`}
+					tabindex="0"
+				></div>
 			{/if}
 		</div>
+		<canvas bind:this={canvas} hidden></canvas>
+		{#if error}
+			<mm-callout tone="danger" compact heading={error}></mm-callout>
+		{/if}
 	{/if}
-
-	{#if error && !showModal}
-		<div class="absolute top-full left-0 mt-1 z-10">
-			<span
-				class="text-xs text-red-600 dark:text-red-400 whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-lg"
-			>
-				{error}
-			</span>
-		</div>
-	{/if}
-</div>
-
-<!-- Crop Modal -->
-{#if showModal && imageSrc}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<div
-		class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-		onclick={(e) => e.target === e.currentTarget && closeModal()}
-		onkeydown={(e) => e.key === 'Escape' && closeModal()}
-		role="dialog"
-		tabindex="-1"
+	<mm-button slot="footer" onclick={closeDialog} disabled={uploading}>{m.common_cancel()}</mm-button
 	>
-		<div
-			class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full border border-gray-200 dark:border-gray-700"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={() => {}}
-			role="document"
-		>
-			<div class="p-4 border-b border-gray-200 dark:border-gray-700">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					{m.products_icon_crop_heading()}
-				</h3>
-				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					{m.products_icon_crop_hint()}
-				</p>
-			</div>
+	<mm-button slot="footer" variant="primary" icon="check" loading={uploading} onclick={upload}>
+		{m.products_icon_save()}
+	</mm-button>
+</mm-dialog>
 
-			<div class="p-4">
-				<!-- Image with crop overlay -->
-				<div
-					class="relative bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center select-none"
-					style="max-height: 400px;"
-				>
-					<img
-						src={imageSrc}
-						alt={m.products_icon_preview_alt()}
-						class="max-w-full max-h-[400px] object-contain pointer-events-none"
-						onload={handleImageLoad}
-						draggable="false"
-					/>
-
-					{#if imageElement}
-						<!-- Dark overlay with transparent crop window -->
-						<div
-							class="absolute pointer-events-none"
-							style="
-								left: {imageOffset.x}px;
-								top: {imageOffset.y}px;
-								width: {imageElement.clientWidth}px;
-								height: {imageElement.clientHeight}px;
-								background: rgba(0, 0, 0, 0.5);
-								clip-path: polygon(
-									0% 0%,
-									0% 100%,
-									{cropArea.x}px 100%,
-									{cropArea.x}px {cropArea.y}px,
-									{cropArea.x + cropArea.size}px {cropArea.y}px,
-									{cropArea.x + cropArea.size}px {cropArea.y + cropArea.size}px,
-									{cropArea.x}px {cropArea.y + cropArea.size}px,
-									{cropArea.x}px 100%,
-									100% 100%,
-									100% 0%
-								);
-							"
-						></div>
-
-						<!-- Crop selection box -->
-						<div
-							class="absolute border-2 border-white shadow-lg cursor-move"
-							style="
-								left: {imageOffset.x + cropArea.x}px;
-								top: {imageOffset.y + cropArea.y}px;
-								width: {cropArea.size}px;
-								height: {cropArea.size}px;
-								box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0);
-							"
-							onmousedown={handleMouseDown}
-							role="slider"
-							aria-label={m.products_icon_crop_selection_aria()}
-							aria-valuenow={cropArea.x}
-							tabindex="0"
-						>
-							<!-- Corner indicators -->
-							<div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full shadow"></div>
-							<div class="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full shadow"></div>
-							<div class="absolute -bottom-1 -left-1 w-3 h-3 bg-white rounded-full shadow"></div>
-							<div class="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full shadow"></div>
-
-							<!-- Grid lines for visual aid -->
-							<div
-								class="absolute inset-0 pointer-events-none"
-								style="
-									background-image:
-										linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
-										linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
-									background-size: 33.33% 33.33%;
-								"
-							></div>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Hidden canvas for cropping -->
-				<canvas bind:this={canvasRef} class="hidden"></canvas>
-
-				{#if error}
-					<div
-						class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-800 dark:text-red-200"
-					>
-						{error}
-					</div>
-				{/if}
-			</div>
-
-			<div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
-				<button
-					type="button"
-					onclick={closeModal}
-					disabled={uploading}
-					class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
-				>
-					{m.common_cancel()}
-				</button>
-				<button
-					type="button"
-					onclick={handleCropAndUpload}
-					disabled={uploading}
-					class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 rounded-lg disabled:opacity-50"
-				>
-					{#if uploading}
-						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-						{m.products_icon_uploading()}
-					{:else}
-						<IconifyIcon icon="material-symbols:check" class="w-4 h-4" />
-						{m.products_icon_save()}
-					{/if}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<style>
+	.trigger {
+		position: relative;
+		display: inline-flex;
+		padding: 0;
+		border: 0;
+		background: none;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+	}
+	.trigger:hover :global(.tile) {
+		border-color: var(--mm-control-border);
+	}
+	.badge {
+		position: absolute;
+		inset-block-end: calc(var(--space-1) * -1);
+		inset-inline-end: calc(var(--space-1) * -1);
+		display: grid;
+		place-items: center;
+		width: 20px;
+		height: 20px;
+		border: 1px solid var(--mm-control-border);
+		border-radius: var(--radius-sm);
+		background: var(--mm-surface);
+		color: var(--mm-text-2);
+	}
+	.stage {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		max-height: 400px;
+		overflow: hidden;
+		border-radius: var(--radius-sm);
+		background: var(--mm-sunken);
+		user-select: none;
+	}
+	.source {
+		max-width: 100%;
+		max-height: 400px;
+		object-fit: contain;
+		pointer-events: none;
+	}
+	.shade {
+		position: absolute;
+		pointer-events: none;
+		background: color-mix(in srgb, var(--mm-code-bg) 55%, transparent);
+	}
+	.selection {
+		position: absolute;
+		border: 2px solid var(--mm-paper);
+		outline-offset: 2px;
+		cursor: move;
+		touch-action: none;
+	}
+</style>

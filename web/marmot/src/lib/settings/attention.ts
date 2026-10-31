@@ -6,7 +6,7 @@ import { holdsAtRoot, type MyAccess } from '$lib/iam/myAccess';
 import { visibleItems } from '$lib/settings/sections';
 import { listServiceAccounts, listAPIKeys } from '$lib/serviceaccounts/api';
 import type { ServiceAccount } from '$lib/serviceaccounts/types';
-import { listSSOProviders } from '$lib/sso/api';
+import { getSignInSettings, listGroupMappings, listSSOProviders } from '$lib/sso/api';
 
 // The things an administrator should look at: what has already broken and what is about to. The Settings overview lists them and the gear in the top bar counts them, so both read from these checks and cannot disagree.
 
@@ -16,15 +16,17 @@ const KEY_CHECK_LIMIT = 20;
 // The gear re-checks at most this often, rather than on every navigation
 const COUNT_TTL_MS = 5 * 60_000;
 
-export type AttentionTone = 'warning' | 'danger';
+/** danger has broken, warning is about to, info is worth setting up but breaks nothing. */
+export type AttentionTone = 'warning' | 'danger' | 'info';
 
 export interface Attention {
 	id: string;
-	icon: string;
 	tone: AttentionTone;
 	title: string;
 	detail?: string;
 	pill: string;
+	/** The button that fixes it, a verb and an object such as "Rotate key". */
+	action: string;
 	href: string;
 }
 
@@ -53,13 +55,15 @@ async function keyRows(accounts: ServiceAccount[], now: number): Promise<Attenti
 			const expired = left <= 0;
 			rows.push({
 				id: `key-${key.id}`,
-				icon: 'material-symbols:vpn-key-outline',
 				tone: expired ? 'danger' : 'warning',
 				title: expired
 					? m.settings_attention_key_expired({ key: key.name, account: account.name })
 					: m.settings_attention_key_expiring({ key: key.name, account: account.name }),
-				detail: relative(key.expires_at),
+				detail: expired
+					? m.settings_attention_key_expired_detail({ when: relative(key.expires_at) })
+					: m.settings_attention_key_expiring_detail({ when: relative(key.expires_at) }),
 				pill: expired ? m.settings_attention_pill_expired() : m.settings_attention_pill_expiring(),
+				action: m.settings_attention_action_rotate_key(),
 				href: `/settings/service-accounts/${account.id}`
 			});
 		}
@@ -82,14 +86,14 @@ async function pipelineRows(): Promise<Attention[]> {
 		.filter((p) => p.last_run_status === 'failed')
 		.map((p): Attention => ({
 			id: `pipeline-${p.id}`,
-			icon: 'material-symbols:error-outline',
 			tone: 'danger',
 			title: m.settings_attention_pipeline_failed({ name: p.name }),
 			detail: p.last_run_at
 				? m.settings_attention_pipeline_failed_detail({ when: relative(p.last_run_at) })
 				: undefined,
 			pill: m.settings_attention_pill_failed(),
-			href: '/runs'
+			action: m.settings_attention_action_open_pipeline(),
+			href: `/runs/${encodeURIComponent(p.id)}`
 		}));
 }
 
@@ -99,11 +103,30 @@ async function ssoRows(): Promise<Attention[]> {
 	return [
 		{
 			id: 'sso',
-			icon: 'material-symbols:login',
 			tone: 'warning',
 			title: m.settings_attention_sso_missing(),
 			detail: m.settings_attention_sso_missing_detail(),
 			pill: m.settings_attention_pill_setup(),
+			action: m.settings_attention_action_open_authentication(),
+			href: '/settings/authentication'
+		}
+	];
+}
+
+// Members who join through single sign-on land in no team unless a group mapping or the default team puts them in one, and then they get no team notifications
+async function unmappedTeamRows(): Promise<Attention[]> {
+	const providers = (await listSSOProviders()).filter((p) => p.enabled !== false);
+	if (providers.length === 0) return [];
+	const [settings, mappings] = await Promise.all([getSignInSettings(), listGroupMappings()]);
+	if (settings.default_team_id || mappings.some((g) => g.team_id)) return [];
+	return [
+		{
+			id: 'sso-unmapped-teams',
+			tone: 'info',
+			title: m.settings_attention_unmapped_teams(),
+			detail: m.settings_attention_unmapped_teams_detail(),
+			pill: m.settings_attention_pill_not_set(),
+			action: m.settings_attention_action_add_mapping(),
 			href: '/settings/authentication'
 		}
 	];
@@ -125,7 +148,7 @@ export function attentionChecks(
 		checks.push(pipelineRows);
 	}
 	if (visible.has('authentication')) {
-		checks.push(ssoRows);
+		checks.push(ssoRows, unmappedTeamRows);
 	}
 	return checks;
 }
@@ -138,6 +161,15 @@ export function attentionCount(rows: Attention[]): number {
 /** The count behind the dot on the Settings gear; 0 until checked and when nothing needs attention. */
 export const settingsAttention = writable(0);
 
+/** Every row the last full check found, so the Settings sub-navigation can count what each section needs without running the checks again. */
+export const settingsAttentionRows = writable<Attention[]>([]);
+
+/** Publishes a finished set of rows to the gear and the sub-navigation together, so they never disagree. */
+export function publishAttention(rows: Attention[]): void {
+	settingsAttentionRows.set(rows);
+	settingsAttention.set(attentionCount(rows));
+}
+
 let checkedAt = 0;
 let checkedFor = '';
 
@@ -148,6 +180,5 @@ export async function refreshSettingsAttention(access: MyAccess, force = false):
 	checkedFor = key;
 	checkedAt = Date.now();
 	const results = await Promise.allSettled(attentionChecks(access).map((run) => run()));
-	const rows = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
-	settingsAttention.set(attentionCount(rows));
+	publishAttention(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])));
 }

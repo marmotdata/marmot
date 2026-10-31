@@ -367,7 +367,7 @@
 				Link.configure({
 					openOnClick: false,
 					HTMLAttributes: {
-						class: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 underline'
+						class: 'mm-link'
 					}
 				}),
 				Typography,
@@ -378,7 +378,7 @@
 					inline: false,
 					allowBase64: true,
 					HTMLAttributes: {
-						class: 'max-w-full h-auto rounded-lg my-4'
+						class: 'max-w-full h-auto rounded-md my-4'
 					}
 				}),
 				// Code block with syntax highlighting and markdown input rules
@@ -459,8 +459,7 @@
 			},
 			editorProps: {
 				attributes: {
-					class:
-						'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[200px] px-3 py-2'
+					class: 'max-w-none focus:outline-none min-h-[200px] px-3 py-2'
 				},
 				handlePaste: (view, event) => {
 					const items = event.clipboardData?.items;
@@ -813,18 +812,20 @@
 	on:change={handleFileSelect}
 />
 
-<div class="border border-gray-300 dark:border-gray-600 rounded-md {disabled ? 'opacity-50' : ''}">
+<div
+	class="doc-editor border border-mm-control-border rounded-sm bg-mm-surface {disabled
+		? 'opacity-50'
+		: ''}"
+>
 	<!-- Toolbar -->
-	<div
-		class="flex flex-wrap items-center gap-1 p-2 border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50"
-	>
+	<div class="flex flex-wrap items-center gap-1 p-2 border-b border-mm-rule bg-mm-sunken">
 		<button
 			type="button"
 			on:click={toggleBold}
 			{disabled}
-			class="p-1.5 rounded {isBoldActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isBoldActive}
+			aria-pressed={isBoldActive}
 			title={m.docs_editor_bold_title()}
 		>
 			<Icon icon="material-symbols:format-bold" class="h-4 w-4" />
@@ -834,9 +835,9 @@
 			type="button"
 			on:click={toggleItalic}
 			{disabled}
-			class="p-1.5 rounded {isItalicActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isItalicActive}
+			aria-pressed={isItalicActive}
 			title={m.docs_editor_italic_title()}
 		>
 			<Icon icon="material-symbols:format-italic" class="h-4 w-4" />
@@ -846,23 +847,23 @@
 			type="button"
 			on:click={toggleCode}
 			{disabled}
-			class="p-1.5 rounded {isCodeActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isCodeActive}
+			aria-pressed={isCodeActive}
 			title={m.docs_editor_inline_code_title()}
 		>
 			<Icon icon="material-symbols:code" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={() => toggleHeading(1)}
 			{disabled}
-			class="p-1.5 rounded {isHeading1Active
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isHeading1Active}
+			aria-pressed={isHeading1Active}
 			title={m.docs_editor_heading_title({ level: 1 })}
 		>
 			H1
@@ -872,9 +873,9 @@
 			type="button"
 			on:click={() => toggleHeading(2)}
 			{disabled}
-			class="p-1.5 rounded {isHeading2Active
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isHeading2Active}
+			aria-pressed={isHeading2Active}
 			title={m.docs_editor_heading_title({ level: 2 })}
 		>
 			H2
@@ -884,23 +885,23 @@
 			type="button"
 			on:click={() => toggleHeading(3)}
 			{disabled}
-			class="p-1.5 rounded {isHeading3Active
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isHeading3Active}
+			aria-pressed={isHeading3Active}
 			title={m.docs_editor_heading_title({ level: 3 })}
 		>
 			H3
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={() => setTextAlign('left')}
 			{disabled}
-			class="p-1.5 rounded {isAlignLeft
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isAlignLeft}
+			aria-pressed={isAlignLeft}
 			title={m.docs_editor_align_left_title()}
 		>
 			<Icon icon="material-symbols:format-align-left" class="h-4 w-4" />
@@ -910,9 +911,9 @@
 			type="button"
 			on:click={() => setTextAlign('center')}
 			{disabled}
-			class="p-1.5 rounded {isAlignCenter
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isAlignCenter}
+			aria-pressed={isAlignCenter}
 			title={m.docs_editor_align_center_title()}
 		>
 			<Icon icon="material-symbols:format-align-center" class="h-4 w-4" />
@@ -922,23 +923,23 @@
 			type="button"
 			on:click={() => setTextAlign('right')}
 			{disabled}
-			class="p-1.5 rounded {isAlignRight
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isAlignRight}
+			aria-pressed={isAlignRight}
 			title={m.docs_editor_align_right_title()}
 		>
 			<Icon icon="material-symbols:format-align-right" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={toggleBulletList}
 			{disabled}
-			class="p-1.5 rounded {isBulletListActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isBulletListActive}
+			aria-pressed={isBulletListActive}
 			title={m.docs_editor_bullet_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-bulleted" class="h-4 w-4" />
@@ -948,23 +949,23 @@
 			type="button"
 			on:click={toggleOrderedList}
 			{disabled}
-			class="p-1.5 rounded {isOrderedListActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isOrderedListActive}
+			aria-pressed={isOrderedListActive}
 			title={m.docs_editor_numbered_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-numbered" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={toggleBlockquote}
 			{disabled}
-			class="p-1.5 rounded {isBlockquoteActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isBlockquoteActive}
+			aria-pressed={isBlockquoteActive}
 			title={m.docs_editor_quote_title()}
 		>
 			<Icon icon="material-symbols:format-quote" class="h-4 w-4" />
@@ -974,15 +975,15 @@
 			type="button"
 			on:click={toggleCodeBlock}
 			{disabled}
-			class="p-1.5 rounded {isCodeBlockActive
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isCodeBlockActive}
+			aria-pressed={isCodeBlockActive}
 			title={m.docs_editor_code_block_title()}
 		>
 			<Icon icon="material-symbols:code-blocks" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<!-- Table controls -->
 		{#if isInTable}
@@ -991,7 +992,7 @@
 					type="button"
 					on:click={addColumnBefore}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_add_column_before_title()}
 				>
 					<Icon icon="mdi:table-column-plus-before" class="h-4 w-4" />
@@ -1000,7 +1001,7 @@
 					type="button"
 					on:click={addColumnAfter}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_add_column_after_title()}
 				>
 					<Icon icon="mdi:table-column-plus-after" class="h-4 w-4" />
@@ -1009,7 +1010,7 @@
 					type="button"
 					on:click={deleteColumn}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_delete_column_title()}
 				>
 					<Icon icon="mdi:table-column-remove" class="h-4 w-4" />
@@ -1018,7 +1019,7 @@
 					type="button"
 					on:click={addRowBefore}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_add_row_above_title()}
 				>
 					<Icon icon="mdi:table-row-plus-before" class="h-4 w-4" />
@@ -1027,7 +1028,7 @@
 					type="button"
 					on:click={addRowAfter}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_add_row_below_title()}
 				>
 					<Icon icon="mdi:table-row-plus-after" class="h-4 w-4" />
@@ -1036,7 +1037,7 @@
 					type="button"
 					on:click={deleteRow}
 					{disabled}
-					class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn"
 					title={m.docs_editor_delete_row_title()}
 				>
 					<Icon icon="mdi:table-row-remove" class="h-4 w-4" />
@@ -1045,7 +1046,7 @@
 					type="button"
 					on:click={deleteTable}
 					{disabled}
-					class="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+					class="tb-btn tb-btn--danger"
 					title={m.docs_editor_delete_table_title()}
 				>
 					<Icon icon="mdi:table-remove" class="h-4 w-4" />
@@ -1056,21 +1057,21 @@
 				type="button"
 				on:click={insertTable}
 				{disabled}
-				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="tb-btn"
 				title={m.docs_editor_insert_table_title()}
 			>
 				<Icon icon="material-symbols:table" class="h-4 w-4" />
 			</button>
 		{/if}
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		{#if isLinkActive}
 			<button
 				type="button"
 				on:click={unsetLink}
 				{disabled}
-				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="tb-btn is-active"
 				title={m.docs_editor_remove_link_title()}
 			>
 				<Icon icon="material-symbols:link-off" class="h-4 w-4" />
@@ -1080,7 +1081,7 @@
 				type="button"
 				on:click={setLink}
 				{disabled}
-				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="tb-btn"
 				title={m.docs_editor_add_link_title()}
 			>
 				<Icon icon="material-symbols:link" class="h-4 w-4" />
@@ -1091,7 +1092,7 @@
 			type="button"
 			on:click={openFileDialog}
 			disabled={disabled || isUploading}
-			class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
 			title={m.docs_editor_insert_image_title()}
 		>
 			{#if isUploading}
@@ -1102,305 +1103,250 @@
 		</button>
 
 		{#if uploadError}
-			<span class="text-xs text-red-500 ml-2">{uploadError}</span>
+			<span class="text-caption text-mm-danger ml-2" role="alert">{uploadError}</span>
 		{/if}
 	</div>
 
 	<!-- Editor -->
-	<div
-		bind:this={element}
-		class="bg-white dark:bg-gray-700 rounded-b-md text-gray-900 dark:text-gray-100"
-	></div>
+	<div bind:this={element} class="bg-mm-surface rounded-b-sm text-mm-text"></div>
 </div>
 
 <style>
-	:global(.ProseMirror) {
-		outline: none;
+	.tb-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 28px;
+		height: 28px;
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		color: var(--mm-text-2);
+		background: transparent;
+		transition: background-color var(--mm-dur-press) var(--mm-ease);
+	}
+	.tb-btn--text {
+		font: var(--text-label);
+	}
+	.tb-btn--danger {
+		color: var(--mm-danger);
+	}
+	.tb-btn:hover:not(:disabled) {
+		background: var(--mm-selected);
+		color: var(--mm-text);
+	}
+	.tb-btn--danger:hover:not(:disabled) {
+		background: var(--mm-danger-soft);
+		color: var(--mm-danger);
+	}
+	.tb-btn.is-active {
+		background: var(--mm-selected);
+		color: var(--mm-text);
+	}
+	.tb-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.tb-btn:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
 	}
 
-	:global(.ProseMirror p.is-editor-empty:first-child::before) {
+	.doc-editor :global(.ProseMirror) {
+		outline: none;
+		font: var(--text-body);
+		color: var(--mm-text);
+	}
+
+	.doc-editor :global(.ProseMirror p.is-editor-empty:first-child::before) {
 		content: attr(data-placeholder);
 		float: left;
-		color: rgb(156 163 175);
+		color: var(--mm-text-3);
 		pointer-events: none;
 		height: 0;
 	}
 
-	:global(.ProseMirror h1) {
-		@apply text-2xl font-bold mt-4 mb-2;
+	.doc-editor :global(.ProseMirror > * + *) {
+		margin-block-start: var(--space-3);
 	}
 
-	:global(.ProseMirror h2) {
-		@apply text-xl font-bold mt-3 mb-2;
+	.doc-editor :global(.ProseMirror h1) {
+		font: var(--text-heading);
+		margin-block: var(--space-6) var(--space-2);
 	}
 
-	:global(.ProseMirror h3) {
-		@apply text-lg font-bold mt-2 mb-1;
+	.doc-editor :global(.ProseMirror h2) {
+		font: var(--text-heading-sm);
+		margin-block: var(--space-5) var(--space-2);
 	}
 
-	:global(.ProseMirror ul) {
-		@apply list-disc list-inside my-2;
+	.doc-editor :global(.ProseMirror h3) {
+		font: var(--text-panel-title);
+		margin-block: var(--space-4) var(--space-1);
 	}
 
-	:global(.ProseMirror ol) {
-		@apply list-decimal list-inside my-2;
+	.doc-editor :global(.ProseMirror ul) {
+		list-style: disc;
+		padding-inline-start: var(--space-5);
 	}
 
-	:global(.ProseMirror blockquote) {
-		@apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2;
+	.doc-editor :global(.ProseMirror ol) {
+		list-style: decimal;
+		padding-inline-start: var(--space-5);
 	}
 
-	:global(.ProseMirror code) {
-		@apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+	.doc-editor :global(.ProseMirror blockquote) {
+		border-inline-start: 1px solid var(--mm-control-border);
+		padding-inline-start: var(--space-4);
+		color: var(--mm-text-2);
 	}
 
-	:global(.ProseMirror pre) {
-		@apply bg-gray-50 dark:bg-gray-800 p-6 rounded-lg my-3 overflow-x-auto;
-		margin: 0;
+	.doc-editor :global(.ProseMirror a) {
+		color: var(--mm-primary);
 	}
 
-	:global(.ProseMirror pre code) {
-		@apply bg-transparent p-0;
-		font-family:
-			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-			monospace;
-		font-size: 0.875rem;
+	.doc-editor :global(.ProseMirror code) {
+		background: var(--mm-sunken);
+		padding: 1px var(--space-1);
+		border-radius: var(--radius-sm);
+		font: var(--text-mono);
+	}
+
+	.doc-editor :global(.ProseMirror pre) {
+		background: var(--mm-code-bg);
+		color: var(--mm-code-text);
+		padding: var(--space-4) var(--space-5);
+		border-radius: var(--radius-md);
+		overflow-x: auto;
+	}
+
+	.doc-editor :global(.ProseMirror pre code) {
+		background: transparent;
+		padding: 0;
+		color: inherit;
+		font: var(--text-mono-editor);
 		display: block;
 		white-space: pre;
 		width: max-content;
 		min-width: 100%;
 	}
 
-	:global(.ProseMirror strong) {
-		@apply font-bold;
+	.doc-editor :global(.ProseMirror strong) {
+		font-weight: 600;
 	}
 
-	:global(.ProseMirror em) {
-		@apply italic;
+	.doc-editor :global(.ProseMirror em) {
+		font-style: italic;
 	}
 
-	:global(.ProseMirror img) {
-		@apply max-w-full h-auto rounded-lg my-4 cursor-pointer;
+	.doc-editor :global(.ProseMirror img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--mm-rule);
+		cursor: pointer;
 	}
 
-	:global(.ProseMirror img:hover) {
-		@apply ring-2 ring-earthy-terracotta-500;
+	.doc-editor :global(.ProseMirror img:hover),
+	.doc-editor :global(.ProseMirror img.ProseMirror-selectednode) {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
 	}
 
-	:global(.ProseMirror img.ProseMirror-selectednode) {
-		@apply ring-2 ring-earthy-terracotta-500;
-	}
-
-	/* Table styles */
-	:global(.ProseMirror table) {
-		@apply w-full my-4 text-sm border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden;
+	.doc-editor :global(.ProseMirror table) {
+		width: 100%;
 		border-collapse: collapse;
+		font: var(--text-dense);
+		border: 1px solid var(--mm-rule);
 	}
 
-	:global(.ProseMirror th) {
-		@apply bg-gray-100 dark:bg-gray-800 font-semibold text-left px-3 py-2.5 text-gray-900 dark:text-gray-100;
-		border: 1px solid;
-		@apply border-gray-300 dark:border-gray-600;
-		border-right-width: 2px;
-		@apply border-r-gray-400 dark:border-r-gray-500;
+	.doc-editor :global(.ProseMirror th),
+	.doc-editor :global(.ProseMirror td) {
+		position: relative;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--mm-rule);
+		text-align: start;
 	}
 
-	:global(.ProseMirror th:last-child) {
-		border-right-width: 1px;
-		@apply border-r-gray-300 dark:border-r-gray-600;
+	.doc-editor :global(.ProseMirror th) {
+		font: var(--text-label);
+		color: var(--mm-text-2);
+		background: var(--mm-sunken);
 	}
 
-	:global(.ProseMirror td) {
-		@apply px-3 py-2.5 text-gray-700 dark:text-gray-300;
-		border: 1px solid;
-		@apply border-gray-300 dark:border-gray-600;
-		border-right-width: 2px;
-		@apply border-r-gray-400 dark:border-r-gray-500;
+	.doc-editor :global(.ProseMirror .selectedCell) {
+		background: var(--mm-selected);
 	}
 
-	:global(.ProseMirror td:last-child) {
-		border-right-width: 1px;
-		@apply border-r-gray-300 dark:border-r-gray-600;
-	}
-
-	:global(.ProseMirror tr:nth-child(even) td) {
-		@apply bg-gray-50 dark:bg-gray-800/30;
-	}
-
-	:global(.ProseMirror tr:hover td) {
-		@apply bg-blue-50 dark:bg-blue-900/20;
-	}
-
-	:global(.ProseMirror .selectedCell) {
-		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30;
-		box-shadow: inset 0 0 0 2px rgb(var(--color-earthy-terracotta-500) / 0.5);
-	}
-
-	/* Column resize handle - more visible */
-	:global(.ProseMirror .column-resize-handle) {
-		@apply absolute top-0 bottom-0 right-0 pointer-events-none;
+	.doc-editor :global(.ProseMirror .column-resize-handle) {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-end: 0;
 		width: 4px;
-		background: #c9601c;
+		background: var(--mm-control-border);
+		pointer-events: none;
 	}
 
-	:global(.ProseMirror.resize-cursor) {
+	.doc-editor :global(.ProseMirror.resize-cursor) {
 		cursor: col-resize;
 	}
 
-	/* Cells need position relative for resize handle */
-	:global(.ProseMirror th),
-	:global(.ProseMirror td) {
-		position: relative;
-	}
-
-	/* Light theme - Earthy colors matching CodeBlock/Docusaurus */
-	:global(.ProseMirror pre code) {
-		color: #1f2937;
-	}
-
-	:global(.ProseMirror .hljs-comment),
-	:global(.ProseMirror .hljs-quote) {
-		color: #4a674a;
+	.doc-editor :global(.ProseMirror .hljs-comment),
+	.doc-editor :global(.ProseMirror .hljs-quote) {
+		color: var(--mm-syn-comment);
 		font-style: italic;
 	}
 
-	:global(.ProseMirror .hljs-keyword),
-	:global(.ProseMirror .hljs-selector-tag),
-	:global(.ProseMirror .hljs-addition) {
-		color: #8d3718;
+	.doc-editor :global(.ProseMirror .hljs-keyword),
+	.doc-editor :global(.ProseMirror .hljs-selector-tag),
+	.doc-editor :global(.ProseMirror .hljs-addition),
+	.doc-editor :global(.ProseMirror .hljs-built_in),
+	.doc-editor :global(.ProseMirror .hljs-deletion) {
+		color: var(--mm-syn-keyword);
 	}
 
-	:global(.ProseMirror .hljs-number),
-	:global(.ProseMirror .hljs-string),
-	:global(.ProseMirror .hljs-meta .hljs-meta-string),
-	:global(.ProseMirror .hljs-literal),
-	:global(.ProseMirror .hljs-doctag),
-	:global(.ProseMirror .hljs-regexp) {
-		color: #35593b;
+	.doc-editor :global(.ProseMirror .hljs-string),
+	.doc-editor :global(.ProseMirror .hljs-meta .hljs-meta-string),
+	.doc-editor :global(.ProseMirror .hljs-doctag),
+	.doc-editor :global(.ProseMirror .hljs-regexp) {
+		color: var(--mm-syn-string);
 	}
 
-	:global(.ProseMirror .hljs-title),
-	:global(.ProseMirror .hljs-section),
-	:global(.ProseMirror .hljs-name),
-	:global(.ProseMirror .hljs-selector-id),
-	:global(.ProseMirror .hljs-selector-class) {
-		color: #b34822;
+	.doc-editor :global(.ProseMirror .hljs-number),
+	.doc-editor :global(.ProseMirror .hljs-literal),
+	.doc-editor :global(.ProseMirror .hljs-attribute),
+	.doc-editor :global(.ProseMirror .hljs-attr),
+	.doc-editor :global(.ProseMirror .hljs-variable),
+	.doc-editor :global(.ProseMirror .hljs-template-variable),
+	.doc-editor :global(.ProseMirror .hljs-type),
+	.doc-editor :global(.ProseMirror .hljs-symbol),
+	.doc-editor :global(.ProseMirror .hljs-bullet),
+	.doc-editor :global(.ProseMirror .hljs-link) {
+		color: var(--mm-syn-number);
 	}
 
-	:global(.ProseMirror .hljs-attribute),
-	:global(.ProseMirror .hljs-attr),
-	:global(.ProseMirror .hljs-variable),
-	:global(.ProseMirror .hljs-template-variable),
-	:global(.ProseMirror .hljs-class .hljs-title),
-	:global(.ProseMirror .hljs-type) {
-		color: #7b5935;
+	.doc-editor :global(.ProseMirror .hljs-title),
+	.doc-editor :global(.ProseMirror .hljs-section),
+	.doc-editor :global(.ProseMirror .hljs-name),
+	.doc-editor :global(.ProseMirror .hljs-selector-id),
+	.doc-editor :global(.ProseMirror .hljs-selector-class),
+	.doc-editor :global(.ProseMirror .hljs-class .hljs-title) {
+		color: var(--mm-syn-function);
 	}
 
-	:global(.ProseMirror .hljs-symbol),
-	:global(.ProseMirror .hljs-bullet),
-	:global(.ProseMirror .hljs-subst),
-	:global(.ProseMirror .hljs-meta),
-	:global(.ProseMirror .hljs-meta .hljs-keyword),
-	:global(.ProseMirror .hljs-selector-attr),
-	:global(.ProseMirror .hljs-selector-pseudo),
-	:global(.ProseMirror .hljs-link) {
-		color: #7b5935;
-	}
-
-	:global(.ProseMirror .hljs-built_in),
-	:global(.ProseMirror .hljs-deletion) {
-		color: #b34822;
-	}
-
-	:global(.ProseMirror .hljs-punctuation),
-	:global(.ProseMirror .hljs-operator) {
-		color: #4a674a;
-	}
-
-	:global(.ProseMirror .hljs-emphasis) {
+	.doc-editor :global(.ProseMirror .hljs-emphasis) {
 		font-style: italic;
 	}
 
-	:global(.ProseMirror .hljs-strong) {
-		font-weight: bold;
+	.doc-editor :global(.ProseMirror .hljs-strong) {
+		font-weight: 600;
 	}
 
-	/* Dark theme - Brighter earthy tones matching CodeBlock/Docusaurus */
-	:global(.dark .ProseMirror pre code) {
-		color: #f3f4f6;
-	}
-
-	:global(.dark .ProseMirror .hljs-comment),
-	:global(.dark .ProseMirror .hljs-quote) {
-		color: #a8c5a8;
-		font-style: italic;
-	}
-
-	:global(.dark .ProseMirror .hljs-keyword),
-	:global(.dark .ProseMirror .hljs-selector-tag),
-	:global(.dark .ProseMirror .hljs-addition) {
-		color: #ffa77d;
-	}
-
-	:global(.dark .ProseMirror .hljs-number),
-	:global(.dark .ProseMirror .hljs-string),
-	:global(.dark .ProseMirror .hljs-meta .hljs-meta-string),
-	:global(.dark .ProseMirror .hljs-literal),
-	:global(.dark .ProseMirror .hljs-doctag),
-	:global(.dark .ProseMirror .hljs-regexp) {
-		color: #b9d9b9;
-	}
-
-	:global(.dark .ProseMirror .hljs-title),
-	:global(.dark .ProseMirror .hljs-section),
-	:global(.dark .ProseMirror .hljs-name),
-	:global(.dark .ProseMirror .hljs-selector-id),
-	:global(.dark .ProseMirror .hljs-selector-class) {
-		color: #ffb899;
-	}
-
-	:global(.dark .ProseMirror .hljs-attribute),
-	:global(.dark .ProseMirror .hljs-attr),
-	:global(.dark .ProseMirror .hljs-variable),
-	:global(.dark .ProseMirror .hljs-template-variable),
-	:global(.dark .ProseMirror .hljs-class .hljs-title),
-	:global(.dark .ProseMirror .hljs-type) {
-		color: #f0d97e;
-	}
-
-	:global(.dark .ProseMirror .hljs-symbol),
-	:global(.dark .ProseMirror .hljs-bullet),
-	:global(.dark .ProseMirror .hljs-subst),
-	:global(.dark .ProseMirror .hljs-meta),
-	:global(.dark .ProseMirror .hljs-meta .hljs-keyword),
-	:global(.dark .ProseMirror .hljs-selector-attr),
-	:global(.dark .ProseMirror .hljs-selector-pseudo),
-	:global(.dark .ProseMirror .hljs-link) {
-		color: #f0d97e;
-	}
-
-	:global(.dark .ProseMirror .hljs-built_in),
-	:global(.dark .ProseMirror .hljs-deletion) {
-		color: #ffb899;
-	}
-
-	:global(.dark .ProseMirror .hljs-punctuation),
-	:global(.dark .ProseMirror .hljs-operator) {
-		color: #d1e5d1;
-	}
-
-	/* Mention styles - shared */
-	:global(.ProseMirror .mention) {
-		@apply px-1.5 py-0.5 rounded font-medium;
-	}
-
-	/* User mentions - terracotta/orange */
-	:global(.ProseMirror .mention-user) {
-		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
-	}
-
-	/* Team mentions - blue */
-	:global(.ProseMirror .mention-team) {
-		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
+	/* People and teams share one neutral mention style; the accent stays reserved for links and the primary button. */
+	.doc-editor :global(.ProseMirror .mention) {
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		font-weight: 600;
+		background: var(--mm-info-soft);
+		color: var(--mm-text);
 	}
 </style>

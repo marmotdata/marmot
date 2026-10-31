@@ -20,6 +20,9 @@ export interface AssetRule {
 	priority: number;
 	is_enabled: boolean;
 	created_by?: string;
+	created_by_name?: string;
+	updated_by?: string;
+	updated_by_name?: string;
 	created_at: string;
 	updated_at: string;
 	membership_count: number;
@@ -65,8 +68,18 @@ export interface RulePreviewResponse {
 	errors?: string[];
 }
 
+/** An asset a rule applies to, as the matched assets list shows it. */
+export interface RuleAsset {
+	id: string;
+	name: string;
+	mrn: string;
+	type: string;
+	providers: string[];
+}
+
 export interface RuleAssetsResponse {
 	asset_ids: string[];
+	assets: RuleAsset[];
 	total: number;
 }
 

@@ -2,8 +2,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
-	import Icon from '@iconify/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import '@marmotdata/elements/banner.js';
 
 	export let enabled: boolean = false;
 	export let dismissible: boolean = true;
@@ -13,32 +12,8 @@
 
 	let visible = false;
 
-	const variantClasses = {
-		info: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-50',
-		warning:
-			'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/40 dark:to-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-50',
-		error:
-			'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/40 dark:to-red-900/40 border-red-300 dark:border-red-700 text-red-900 dark:text-red-50',
-		success:
-			'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-50'
-	};
 
-	const iconMap = {
-		info: 'material-symbols:info-outline',
-		warning: 'material-symbols:warning-outline',
-		error: 'material-symbols:error-outline',
-		success: 'material-symbols:check-circle-outline'
-	};
 
-	const linkColorClasses = {
-		info: 'text-blue-800 dark:text-blue-200 hover:text-blue-950 dark:hover:text-blue-100 font-semibold',
-		warning:
-			'text-yellow-800 dark:text-yellow-200 hover:text-yellow-950 dark:hover:text-yellow-100 font-semibold',
-		error:
-			'text-red-800 dark:text-red-200 hover:text-red-950 dark:hover:text-red-100 font-semibold',
-		success:
-			'text-green-800 dark:text-green-200 hover:text-green-950 dark:hover:text-green-100 font-semibold'
-	};
 
 	onMount(() => {
 		if (!enabled || !browser) {
@@ -99,53 +74,26 @@
 </script>
 
 {#if visible && enabled}
-	<div class="border-b shadow-sm {variantClasses[variant]}">
-		<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-			<div class="flex items-center justify-center gap-4">
-				<div class="flex items-center justify-center gap-3 flex-1">
-					<div class="flex-shrink-0">
-						<Icon icon={iconMap[variant]} class="w-5 h-5" />
-					</div>
-					<div class="text-sm font-medium text-center">
-						{#each messageParts as part, i (i)}
-							{#if part.type === 'link'}
-								{#if part.url?.startsWith('http')}
-									<a
-										href={part.url}
-										class="underline underline-offset-2 transition-colors {linkColorClasses[
-											variant
-										]}"
-										target="_blank"
-										rel="external noopener noreferrer"
-									>
-										{part.content}
-									</a>
-								{:else}
-									<a
-										href={resolve(part.url ?? '/')}
-										class="underline underline-offset-2 transition-colors {linkColorClasses[
-											variant
-										]}"
-									>
-										{part.content}
-									</a>
-								{/if}
-							{:else}
-								<span>{part.content}</span>
-							{/if}
-						{/each}
-					</div>
-				</div>
-				{#if dismissible}
-					<button
-						onclick={dismiss}
-						class="flex-shrink-0 p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-all hover:scale-110"
-						aria-label={m.ui_banner_dismiss_aria()}
+	<mm-banner
+		tone={variant === 'error' ? 'danger' : variant === 'success' ? 'info' : variant}
+		{dismissible}
+		onmm-dismiss={dismiss}
+	>
+		{#each messageParts as part, i (i)}
+			{#if part.type === 'link'}
+				{#if part.url?.startsWith('http')}
+					<a
+						href={part.url}
+						class="mm-link"
+						target="_blank"
+						rel="external noopener noreferrer">{part.content}</a
 					>
-						<Icon icon="material-symbols:close" class="w-4 h-4" />
-					</button>
+				{:else}
+					<a href={resolve((part.url ?? '/') as '/')} class="mm-link">{part.content}</a>
 				{/if}
-			</div>
-		</div>
-	</div>
+			{:else}
+				<span>{part.content}</span>
+			{/if}
+		{/each}
+	</mm-banner>
 {/if}

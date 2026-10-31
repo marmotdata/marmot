@@ -1,66 +1,100 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import IconifyIcon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { setCrumbs } from '$lib/mm';
+	import { auth } from '$lib/stores/auth';
+	import { userProfile } from '$lib/stores/user';
 	import {
-		SUBNAV_ASIDE,
-		SUBNAV_CONTENT,
-		SUBNAV_ITEM,
-		SUBNAV_ITEM_OFF,
-		SUBNAV_ITEM_ON,
-		SUBNAV_TITLE
-	} from '$lib/ui/classes';
+		apiKeys,
+		subscriptions,
+		connectedApps,
+		loadApiKeys,
+		loadSubscriptions,
+		loadConnectedApps
+	} from '$components/auth/accountData';
 
 	let { children }: { children: Snippet } = $props();
 
-	// The same shell as Settings, so personal and workspace settings read as one system with two owners.
-	const sections = [
-		{
-			href: '/account' as const,
-			label: m.account_profile(),
-			icon: 'material-symbols:person-outline'
-		},
-		{
-			href: '/account/subscriptions' as const,
-			label: m.account_subscriptions(),
-			icon: 'material-symbols:notifications-outline'
-		},
-		{
-			href: '/account/api-keys' as const,
-			label: m.account_api_keys(),
-			icon: 'material-symbols:key-outline'
-		}
-	];
+	// Crumbs belong to a path, so they are set again as the tabs change the URL
+	$effect(() => {
+		void page.url.pathname;
+		setCrumbs([{ label: m.account_title() }]);
+	});
 
-	function active(href: string): boolean {
-		const path = $page.url.pathname;
-		return href === '/account' ? path === '/account' : path.startsWith(href);
+	onMount(() => {
+		userProfile.load();
+		loadSubscriptions();
+		loadApiKeys();
+		loadConnectedApps();
+	});
+
+	const tab = $derived.by(() => {
+		const path = page.url.pathname;
+		if (path.startsWith('/account/notifications')) return 'notifications';
+		if (path.startsWith('/account/subscriptions')) return 'subscriptions';
+		if (path.startsWith('/account/api-keys')) return 'keys';
+		if (path.startsWith('/account/connected-apps')) return 'apps';
+		return 'profile';
+	});
+
+	const name = $derived($userProfile?.name || $userProfile?.username || '');
+	// Job title and teams under the name, as people introduce themselves
+	const summary = $derived(
+		[$userProfile?.job_title, ($userProfile?.teams ?? []).map((t) => t.name).join(', ')]
+			.filter(Boolean)
+			.join(', ')
+	);
+
+	function signOut() {
+		auth.clearToken();
+		userProfile.clear();
+		window.location.href = '/';
 	}
 </script>
 
-<div class="flex w-full flex-col lg:flex-row">
-	<aside class={SUBNAV_ASIDE}>
-		<p class={SUBNAV_TITLE}>{m.account_title()}</p>
-		<nav
-			aria-label={m.account_nav_aria()}
-			class="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5 lg:overflow-visible"
-		>
-			{#each sections as section (section.href)}
-				<a
-					href={resolve(section.href)}
-					class="{SUBNAV_ITEM} {active(section.href) ? SUBNAV_ITEM_ON : SUBNAV_ITEM_OFF}"
-					aria-current={active(section.href) ? 'page' : undefined}
-				>
-					<IconifyIcon icon={section.icon} class="h-4 w-4 flex-shrink-0 text-gray-400" />
-					{section.label}
-				</a>
-			{/each}
-		</nav>
-	</aside>
+<div class="mm-stack">
+	<mm-page-header heading={name || m.account_title()} description={summary}>
+		{#if name}
+			<mm-avatar
+				slot="leading"
+				{name}
+				src={$userProfile?.profile_picture ?? ''}
+				size={40}
+				decorative
+			></mm-avatar>
+		{/if}
+		<mm-button slot="actions" icon="logout" onclick={signOut}>{m.account_sign_out()}</mm-button>
+	</mm-page-header>
 
-	<div class={SUBNAV_CONTENT}>
-		{@render children()}
-	</div>
+	<mm-tabs label={m.account_nav_aria()} value={tab}>
+		<mm-tab value="profile" icon="account-circle" href={resolve('/account')}
+			>{m.account_profile()}</mm-tab
+		>
+		<mm-tab value="notifications" icon="notifications" href={resolve('/account/notifications')}
+			>{m.account_notifications()}</mm-tab
+		>
+		<mm-tab
+			value="subscriptions"
+			icon="bookmark"
+			href={resolve('/account/subscriptions')}
+			count={$subscriptions.items?.length}>{m.account_subscriptions()}</mm-tab
+		>
+		<mm-tab
+			value="keys"
+			icon="key"
+			href={resolve('/account/api-keys')}
+			count={$apiKeys.items?.length}>{m.account_api_keys()}</mm-tab
+		>
+		<mm-tab
+			value="apps"
+			icon="link"
+			href={resolve('/account/connected-apps')}
+			count={$connectedApps.items?.length}>{m.account_connected_apps()}</mm-tab
+		>
+	</mm-tabs>
+
+	{@render children()}
 </div>

@@ -1,566 +1,517 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import IconifyIcon from '@iconify/svelte';
+	import '@marmotdata/elements/combobox.js';
+	import '@marmotdata/elements/key-value-editor.js';
+	import { objectToPairs, pairsToObject } from '@marmotdata/elements/key-value-editor.js';
+	import type { KeyValuePair } from '@marmotdata/elements/classes/key-value-editor.js';
+	import type { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
+	import type { MmDialog } from '@marmotdata/elements/classes/dialog.js';
+	import { toast } from '@marmotdata/elements/toast.js';
 	import { resolve } from '$app/paths';
-	import Icon from '$components/ui/Icon.svelte';
+	import { page } from '$app/state';
 	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
-	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
-	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
-	import Tags from '$components/shared/Tags.svelte';
-	import MetadataView from '$components/shared/MetadataView.svelte';
-	import LinkAssetsModal from './LinkAssetsModal.svelte';
+	import TermForm from './TermForm.svelte';
+	import LinkAssetsDrawer from './LinkAssetsDrawer.svelte';
 	import { auth } from '$lib/stores/auth';
-	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import { formatDate } from '$lib/utils';
-	import type { GlossaryTerm, UpdateTermInput } from '$lib/glossary/types';
-
-	interface LinkedAsset {
-		id: string;
-		name: string;
-		type: string;
-		mrn?: string;
-		providers?: string[];
-		description?: string;
-	}
+	import { deleteTerm, getTerm, updateTerm } from '$lib/glossary/api';
+	import {
+		assetRouteParams,
+		getLinkedAssets,
+		groupLink,
+		type LinkedAsset,
+		type LinkGroup
+	} from '$lib/glossary/assets';
+	import { possibleParents } from '$lib/glossary/tree';
+	import type { CreateTermInput, GlossaryTerm, UpdateTermInput } from '$lib/glossary/types';
 
 	let {
 		term,
+		allTerms,
 		canManage,
 		onUpdated,
-		onDelete
+		onDeleted
 	}: {
 		term: GlossaryTerm;
+		allTerms: GlossaryTerm[];
 		canManage: boolean;
 		onUpdated: (term: GlossaryTerm) => void;
-		onDelete: () => void;
+		onDeleted: () => void;
 	} = $props();
-
-	// Each part of the term has its own Edit button with Save and Cancel; the name and definition edit together because they are the term's heading
-	type Section = 'heading' | 'description';
-	let editing = $state<Section | null>(null);
-	let draft = $state('');
-	let draftName = $state('');
-	let draftDefinition = $state('');
-	let saving = $state(false);
-	let error = $state('');
-	let menuOpen = $state(false);
-	let showMetadata = $state(false);
-	let input = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
-
-	let linked = $state<LinkedAsset[]>([]);
-	let linkedTotal = $state(0);
-	let linkedLoading = $state(true);
-	let linking = $state(false);
 
 	// Linking a term to an asset changes the asset, so it needs asset rights rather than glossary rights
 	const canLink = auth.hasPermission('assets', 'manage');
+	const LINKED_LIMIT = 12;
 
-	let hasMetadata = $derived(Object.keys(term.metadata ?? {}).length > 0);
+	let editing = $state(false);
+	let editingMetadata = $state(false);
+	let metadataDraft = $state<KeyValuePair[]>([]);
+	let savingMetadata = $state(false);
+	let linking = $state(false);
+
+	interface LinkedSection {
+		group: LinkGroup;
+		assets: LinkedAsset[];
+	}
+
+	let sections = $state<LinkedSection[]>([]);
+	let linkedTotal = $derived(sections.reduce((n, sec) => n + sec.group.count, 0));
+	let truncated = $derived(sections.some((sec) => sec.group.count > sec.assets.length));
+	let linkedLoading = $state(true);
+	let linkedError = $state(false);
+
+	let moveDialog = $state<MmDialog | null>(null);
+	let moveParent = $state('');
+	let moving = $state(false);
+	let deleteDialog = $state<MmConfirmDialog | null>(null);
+	let deleting = $state(false);
+
+	let fetchedParent = $state<GlossaryTerm | null>(null);
+
+	let parent = $derived(
+		term.parent_term_id
+			? (allTerms.find((t) => t.id === term.parent_term_id) ??
+					(fetchedParent?.id === term.parent_term_id ? fetchedParent : null))
+			: null
+	);
+	let children = $derived(allTerms.filter((t) => t.parent_term_id === term.id));
+	let metadataEntries = $derived(Object.entries(term.metadata ?? {}));
+
+	// Terms the move dialog may offer: never the term itself or anything beneath it
+	let moveOptions = $derived(possibleParents(allTerms, term.id));
+
+	// Keyed on the id alone so saving the term does not reset the page or reload its assets
+	let termId = $derived(term.id);
 
 	$effect(() => {
-		const id = term.id;
-		editing = null;
-		error = '';
-		showMetadata = false;
+		const id = termId;
+		editing = false;
+		editingMetadata = false;
 		loadLinked(id);
 	});
 
+	// The parent may be outside the loaded list (a very large glossary), so fetch it when it is missing
+	$effect(() => {
+		const parentId = term.parent_term_id;
+		if (!parentId || allTerms.some((t) => t.id === parentId) || fetchedParent?.id === parentId)
+			return;
+		getTerm(parentId)
+			.then((p) => (fetchedParent = p))
+			.catch(() => (fetchedParent = null));
+	});
+
+	// Linked assets are grouped by how they got here: linked manually first, then each asset rule that links them
 	async function loadLinked(id: string) {
 		linkedLoading = true;
+		linkedError = false;
 		try {
-			const res = await fetchApi(`/assets/by-glossary-term/${encodeURIComponent(id)}?limit=12`);
-			if (res.ok) {
-				const data = await res.json();
-				linked = data.assets ?? [];
-				linkedTotal = data.total ?? linked.length;
-			} else {
-				linked = [];
-				linkedTotal = 0;
-			}
+			const manual = await getLinkedAssets(id, LINKED_LIMIT, 'manual');
+			const ruled = await Promise.all(
+				manual.groups
+					.filter((g) => g.source === 'rule')
+					.map(async (group) => ({
+						group,
+						assets: (await getLinkedAssets(id, LINKED_LIMIT, groupLink(group))).assets
+					}))
+			);
+			if (id !== term.id) return;
+			const manualGroup = manual.groups.find((g) => g.source === 'manual');
+			sections = [
+				...(manualGroup ? [{ group: manualGroup, assets: manual.assets }] : []),
+				...ruled
+			];
 		} catch {
-			linked = [];
-			linkedTotal = 0;
+			sections = [];
+			linkedError = true;
 		} finally {
 			linkedLoading = false;
 		}
 	}
 
-	async function save(update: UpdateTermInput) {
-		saving = true;
-		error = '';
+	function normalise(t: GlossaryTerm): GlossaryTerm {
+		return { ...t, tags: t.tags ?? [], metadata: t.metadata ?? {}, owners: t.owners ?? [] };
+	}
+
+	async function saveEdit(input: CreateTermInput): Promise<string | void> {
 		try {
-			const res = await fetchApi(`/glossary/${term.id}`, {
-				method: 'PUT',
-				body: JSON.stringify(update)
-			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error(data.error || m.glossary_update_error());
-			}
-			const updated: GlossaryTerm = await res.json();
-			updated.tags = updated.tags ?? [];
-			updated.metadata = updated.metadata ?? {};
-			onUpdated(updated);
-			return true;
+			const updated = await updateTerm(term.id, input as UpdateTermInput);
+			onUpdated(normalise(updated));
+			editing = false;
 		} catch (e) {
-			error = e instanceof Error ? e.message : m.glossary_update_error();
-			return false;
-		} finally {
-			saving = false;
+			return e instanceof Error ? e.message : m.glossary_update_error();
 		}
 	}
 
-	async function startEdit(section: Section) {
-		if (!canManage) return;
-		error = '';
-		editing = section;
-		if (section === 'heading') {
-			draftName = term.name;
-			draftDefinition = term.definition;
-		} else {
-			draft = term.description ?? '';
-		}
+	async function startMetadataEdit() {
+		metadataDraft = objectToPairs(term.metadata ?? {});
+		editingMetadata = true;
 		await tick();
-		input?.focus();
 	}
 
-	function cancelEdit() {
-		editing = null;
-		error = '';
-	}
-
-	async function saveHeading() {
-		const name = draftName.trim();
-		const definition = draftDefinition.trim();
-		if (!name || !definition) {
-			error = m.glossary_error_name_definition_required();
-			return;
-		}
-		const update: UpdateTermInput = {};
-		if (name !== term.name) update.name = name;
-		if (definition !== term.definition) update.definition = definition;
-		if (Object.keys(update).length === 0 || (await save(update))) editing = null;
-	}
-
-	async function saveDescription() {
-		if (draft === (term.description ?? '') || (await save({ description: draft || null }))) {
-			editing = null;
-		}
-	}
-
-	function onHeadingKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			cancelEdit();
-		} else if (
-			e.key === 'Enter' &&
-			(e.metaKey || e.ctrlKey || e.currentTarget instanceof HTMLInputElement)
-		) {
-			e.preventDefault();
-			saveHeading();
-		}
-	}
-
-	async function unlink(asset: LinkedAsset) {
+	async function saveMetadata() {
+		savingMetadata = true;
 		try {
-			const res = await fetchApi(`/assets/terms/${encodeURIComponent(asset.id)}`, {
-				method: 'DELETE',
-				body: JSON.stringify({ term_id: term.id })
-			});
-			if (!res.ok) throw new Error(m.glossary_unlink_error());
-			loadLinked(term.id);
+			const updated = await updateTerm(term.id, { metadata: pairsToObject(metadataDraft) });
+			onUpdated(normalise(updated));
+			editingMetadata = false;
 		} catch (e) {
-			error = e instanceof Error ? e.message : m.glossary_unlink_error();
+			toast({
+				tone: 'danger',
+				message: e instanceof Error ? e.message : m.glossary_update_error()
+			});
+		} finally {
+			savingMetadata = false;
 		}
 	}
 
-	let discoverQuery = $derived(
-		`q=${encodeURIComponent(`@term: "${term.name.replaceAll('"', '\\"')}"`)}`
+	function onMenuSelect(e: CustomEvent<{ value: string }>) {
+		switch (e.detail.value) {
+			case 'copy':
+				copyLink();
+				break;
+			case 'move':
+				moveParent = term.parent_term_id ?? '';
+				moveDialog?.show();
+				break;
+			case 'delete':
+				deleteDialog?.show();
+				break;
+		}
+	}
+
+	async function copyLink() {
+		const url = new URL(resolve('/glossary/[[id]]', { id: term.id }), page.url.origin);
+		try {
+			await navigator.clipboard.writeText(url.toString());
+			toast({ tone: 'success', message: m.glossary_link_copied() });
+		} catch {
+			toast({ tone: 'danger', message: m.glossary_link_copy_error() });
+		}
+	}
+
+	async function move() {
+		moving = true;
+		try {
+			const updated = await updateTerm(term.id, { parent_term_id: moveParent });
+			onUpdated(normalise(updated));
+			moveDialog?.close('moved');
+		} catch (e) {
+			toast({
+				tone: 'danger',
+				message: e instanceof Error ? e.message : m.glossary_update_error()
+			});
+		} finally {
+			moving = false;
+		}
+	}
+
+	async function confirmDelete(e: Event) {
+		// Keep the dialog open while the request runs so a failure can be shown in place
+		e.preventDefault();
+		deleting = true;
+		try {
+			await deleteTerm(term.id);
+			deleteDialog?.close('confirm');
+			toast({ tone: 'success', message: m.glossary_deleted() });
+			onDeleted();
+		} catch {
+			toast({ tone: 'danger', message: m.glossary_delete_error() });
+		} finally {
+			deleting = false;
+		}
+	}
+
+	function formatValue(v: unknown): string {
+		if (v === null || v === undefined || v === '') return '';
+		if (typeof v === 'boolean') return v ? m.common_yes() : m.common_no();
+		if (Array.isArray(v)) return v.map((x) => formatValue(x)).join(', ');
+		if (typeof v === 'object') return JSON.stringify(v);
+		return String(v);
+	}
+
+	const discoverHref = $derived(
+		resolve(
+			`/discover?q=${encodeURIComponent(`@term: "${term.name.replaceAll('"', '\\"')}"`)}` as '/discover'
+		)
 	);
-
-	function saveOwners(owners: { id: string; type: 'user' | 'team' }[]) {
-		save({ owners: owners.map((o) => ({ id: o.id, type: o.type })) });
-	}
-
-	function assetParams(a: LinkedAsset) {
-		const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
-		if (parts.length >= 3) {
-			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
-		}
-		return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
-	}
 </script>
 
-<svelte:window onclick={() => (menuOpen = false)} />
-
-{#snippet propertyLabel(text: string)}
-	<h3
-		class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-	>
-		{text}
-	</h3>
-{/snippet}
-
-<article class="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
-	<div class="min-w-0">
-		<!-- What this page is, the term and its definition -->
-		<header>
-			<div class="flex items-start justify-between gap-4">
-				{#if editing === 'heading'}
-					<input
-						bind:this={input}
-						bind:value={draftName}
-						onkeydown={onHeadingKeydown}
-						disabled={saving}
-						aria-label={m.common_name()}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-earthy-terracotta-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-2xl font-semibold tracking-tight"
-					/>
-				{:else}
-					<h1 class="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-						{term.name}
-					</h1>
-				{/if}
-				{#if canManage}
-					<div class="relative -my-1 flex-shrink-0">
-						<button
-							type="button"
-							onclick={(e) => {
-								e.stopPropagation();
-								menuOpen = !menuOpen;
-							}}
-							aria-label={m.glossary_more_actions()}
-							aria-expanded={menuOpen}
-							class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-						>
-							<IconifyIcon icon="material-symbols:more-horiz" class="h-5 w-5" />
-						</button>
-						{#if menuOpen}
-							<div
-								class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-								role="menu"
-							>
-								<button
-									type="button"
-									role="menuitem"
-									onclick={onDelete}
-									class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-								>
-									<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
-									{m.common_delete()}
-								</button>
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</div>
-
-			<div class="mt-5 border-l-2 border-earthy-terracotta-400 pl-4">
-				<div class="mb-1 flex items-center justify-between">
-					<p
-						class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-					>
-						{m.glossary_definition_label()}
-					</p>
-					{#if canManage && editing !== 'heading'}
-						<button
-							type="button"
-							onclick={() => startEdit('heading')}
-							class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-						>
-							<IconifyIcon icon="material-symbols:edit-outline" class="h-3.5 w-3.5" />
-							{m.common_edit()}
-						</button>
-					{/if}
-				</div>
-				{#if editing === 'heading'}
-					<textarea
-						bind:value={draftDefinition}
-						onkeydown={onHeadingKeydown}
-						disabled={saving}
-						rows="3"
-						aria-label={m.glossary_definition_label()}
-						class="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-earthy-terracotta-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-base"
-					></textarea>
-					<div class="mt-3 flex justify-end gap-2">
-						<button
-							type="button"
-							onclick={cancelEdit}
-							class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-							>{m.common_cancel()}</button
-						>
-						<button
-							type="button"
-							onclick={saveHeading}
-							disabled={saving}
-							class="rounded-lg bg-earthy-terracotta-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-earthy-terracotta-500 disabled:opacity-50"
-							>{m.common_save()}</button
-						>
-					</div>
-				{:else}
-					<p class="max-w-3xl text-lg leading-relaxed text-gray-800 dark:text-gray-200">
-						{term.definition}
-					</p>
-				{/if}
-			</div>
-			{#if error}
-				<p class="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+{#if editing}
+	<TermForm {term} {allTerms} onCancel={() => (editing = false)} onSubmit={saveEdit} />
+{:else}
+	<article class="mm-page mm-stack">
+		<mm-page-header heading={term.name}>
+			{#each term.tags ?? [] as tag (tag)}
+				<mm-tag
+					slot="tags"
+					variant={tag === 'pii' ? 'pii' : tag === 'certified' ? 'certified' : 'plain'}
+					>{tag === 'pii' ? '' : tag}</mm-tag
+				>
+			{/each}
+			{#if term.owners?.length}
+				<span slot="owners" class="mm-cluster">
+					{#each term.owners as o (`${o.type}:${o.id}`)}
+						<mm-owner-chip
+							name={o.name || o.username || o.id}
+							kind={o.type === 'team' ? 'team' : 'person'}
+							src={o.profile_picture ?? ''}
+							email={o.email ?? ''}
+							href={o.type === 'team' ? resolve('/teams/[id]', { id: o.id }) : ''}
+						></mm-owner-chip>
+					{/each}
+				</span>
 			{/if}
-			{#if saving}
-				<p class="mt-3 text-xs text-gray-400">{m.glossary_saving()}</p>
+			<mm-menu-button
+				slot="actions"
+				variant="ghost"
+				icon="more-horiz"
+				icon-only
+				label={m.glossary_more_actions({ name: term.name })}
+			>
+				<mm-menu onmm-select={onMenuSelect}>
+					<mm-menu-item icon="link" value="copy">{m.glossary_copy_link()}</mm-menu-item>
+					{#if canManage}
+						<mm-menu-item icon="account-tree" value="move">{m.glossary_move_term()}</mm-menu-item>
+						<mm-menu-separator></mm-menu-separator>
+						<mm-menu-item icon="delete" value="delete" danger
+							>{m.glossary_delete_term()}</mm-menu-item
+						>
+					{/if}
+				</mm-menu>
+			</mm-menu-button>
+			{#if canManage}
+				<mm-button slot="actions" icon="edit" onclick={() => (editing = true)}
+					>{m.glossary_edit_term()}</mm-button
+				>
 			{/if}
-		</header>
+		</mm-page-header>
 
-		<div class="mt-10 space-y-10">
-			<!-- Description -->
-			<section>
-				<div class="mb-2 flex items-center justify-between">
-					<h2
-						class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-					>
-						{m.common_description()}
-					</h2>
-					{#if canManage && editing !== 'description' && term.description}
-						<button
-							type="button"
-							onclick={() => startEdit('description')}
-							class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-						>
-							<IconifyIcon icon="material-symbols:edit-outline" class="h-3.5 w-3.5" />
-							{m.common_edit()}
-						</button>
-					{/if}
-				</div>
-				{#if editing === 'description'}
-					<RichTextEditor bind:value={draft} disabled={saving} />
-					<div class="mt-3 flex justify-end gap-2">
-						<button
-							type="button"
-							onclick={cancelEdit}
-							class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-							>{m.common_cancel()}</button
-						>
-						<button
-							type="button"
-							onclick={saveDescription}
-							disabled={saving}
-							class="rounded-lg bg-earthy-terracotta-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-earthy-terracotta-500 disabled:opacity-50"
-							>{m.common_save()}</button
-						>
-					</div>
-				{:else if term.description}
-					<div class="prose prose-sm max-w-none dark:prose-invert">
-						<MarkdownRenderer content={term.description} />
-					</div>
-				{:else if canManage}
-					<button
-						type="button"
-						onclick={() => startEdit('description')}
-						class="w-full rounded-xl border border-dashed border-gray-300 px-4 py-6 text-left text-sm text-gray-500 transition hover:border-earthy-terracotta-300 hover:text-gray-700 dark:border-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
-					>
-						<IconifyIcon
-							icon="material-symbols:add"
-							class="mr-1 inline h-4 w-4 align-text-bottom"
-						/>
-						{m.glossary_description_prompt()}
-					</button>
-				{:else}
-					<p class="text-sm text-gray-500 dark:text-gray-400">{m.glossary_no_description()}</p>
-				{/if}
-			</section>
-
-			<!-- Assets that use this term -->
-			<section>
-				<div class="mb-2 flex items-center justify-between">
-					<h2
-						class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-					>
-						{m.glossary_linked_heading()}
-						{#if linkedTotal > 0}
-							<span
-								class="ml-1 rounded-full bg-gray-100 px-1.5 text-xs font-medium tabular-nums text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-								>{linkedTotal}</span
-							>
-						{/if}
-					</h2>
-					{#if canLink && linked.length > 0}
-						<button
-							type="button"
-							onclick={() => (linking = true)}
-							class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-						>
-							<IconifyIcon icon="material-symbols:add-link" class="h-3.5 w-3.5" />
-							{m.glossary_link_title()}
-						</button>
-					{/if}
-				</div>
-				{#if linkedLoading}
-					<div class="space-y-2">
-						{#each Array(3) as _, i (i)}
-							<div class="h-12 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						{/each}
-					</div>
-				{:else if linked.length === 0}
-					<div
-						class="rounded-xl border border-dashed border-gray-300 px-5 py-6 text-center dark:border-gray-600"
-					>
-						<IconifyIcon
-							icon="material-symbols:link"
-							class="mx-auto h-6 w-6 text-gray-400 dark:text-gray-500"
-						/>
-						<p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-							{m.glossary_linked_empty_title()}
-						</p>
-						<p class="mx-auto mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
-							{m.glossary_linked_empty()}
-						</p>
-						{#if canLink}
-							<div class="mt-4 flex flex-wrap justify-center gap-2">
-								<button
-									type="button"
-									onclick={() => (linking = true)}
-									class="inline-flex items-center gap-1.5 rounded-lg bg-earthy-terracotta-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500"
-								>
-									<IconifyIcon icon="material-symbols:add-link" class="h-4 w-4" />
-									{m.glossary_link_title()}
-								</button>
-								<a
-									href={resolve('/asset-rules/new')}
-									class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-								>
-									<IconifyIcon icon="material-symbols:rule-settings" class="h-4 w-4" />
-									{m.glossary_linked_rule()}
-								</a>
-							</div>
+		<div class="mm-split">
+			<div class="mm-stack" style="--mm-gap: 0">
+				<mm-section heading={m.glossary_definition_label()}>
+					<div class="mm-prose">
+						<p>{term.definition}</p>
+						{#if term.description}
+							<MarkdownRenderer content={term.description} />
 						{/if}
 					</div>
-				{:else}
-					<ul
-						class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-700/60 dark:border-gray-700 dark:bg-gray-800"
+				</mm-section>
+
+				<mm-section>
+					<span slot="heading"
+						>{m.glossary_linked_heading()}
+						{#if linkedTotal > 0}<mm-count value={linkedTotal}></mm-count>{/if}</span
 					>
-						{#each linked as a (a.id)}
-							<li class="group flex items-center">
-								<a
-									href={resolve('/discover/[type]/[service]/[name]', assetParams(a))}
-									class="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 transition hover:bg-gray-50 dark:hover:bg-gray-700/30"
-								>
-									<Icon name={a.providers?.[0] ?? a.type} size="xs" showLabel={false} />
-									<span class="min-w-0 flex-1">
-										<span
-											class="block truncate text-sm font-medium text-gray-900 group-hover:text-earthy-terracotta-700 dark:text-gray-100 dark:group-hover:text-earthy-terracotta-400"
-											>{a.name}</span
-										>
-										{#if a.description}
-											<span class="block truncate text-xs text-gray-500 dark:text-gray-400"
-												>{a.description}</span
+					{#if canLink}
+						<mm-button slot="actions" size="sm" icon="link" onclick={() => (linking = true)}
+							>{m.glossary_link_title()}</mm-button
+						>
+					{/if}
+					{#if linkedLoading}
+						<mm-skeleton loading shape="text" count={3}></mm-skeleton>
+					{:else if linkedError}
+						<mm-callout tone="danger" compact>{m.glossary_linked_error()}</mm-callout>
+					{:else if sections.length === 0}
+						<mm-empty-state
+							compact
+							heading={m.glossary_linked_empty_title()}
+							description={m.glossary_linked_empty()}
+						></mm-empty-state>
+					{:else}
+						<div class="mm-stack" style="--mm-gap: var(--space-5)">
+							{#each sections as sec (groupLink(sec.group))}
+								{@const label =
+									sec.group.source !== 'rule'
+										? m.glossary_linked_manually()
+										: sec.group.rule_name
+											? m.glossary_linked_from_rule({ rule: sec.group.rule_name })
+											: m.glossary_linked_from_deleted_rule()}
+								<div class="mm-stack" style="--mm-gap: var(--space-1)">
+									<div class="mm-cluster mm-cluster--between">
+										<mm-text variant="label" tone="secondary">{label}</mm-text>
+										{#if sec.group.source === 'rule' && sec.group.rule_id && sec.group.rule_name}
+											<mm-link href={resolve('/asset-rules/[id]', { id: sec.group.rule_id })}
+												>{m.glossary_linked_edit_rule()}</mm-link
 											>
 										{/if}
-									</span>
-									<span class="text-xs text-gray-400">{a.type}</span>
-								</a>
-								{#if canLink}
-									<button
-										type="button"
-										onclick={() => unlink(a)}
-										class="mr-2 rounded-md p-1.5 text-gray-400 opacity-0 transition hover:bg-gray-100 hover:text-red-600 focus:opacity-100 group-hover:opacity-100 dark:hover:bg-gray-700"
-										title={m.glossary_unlink()}
-										aria-label={m.glossary_unlink()}
-									>
-										<IconifyIcon icon="material-symbols:link-off" class="h-4 w-4" />
-									</button>
-								{/if}
-							</li>
-						{/each}
-						<li>
-							<a
-								href={resolve(`/discover?${discoverQuery}`)}
-								class="flex items-center justify-center gap-1 bg-gray-50 px-4 py-2.5 text-sm font-medium text-earthy-terracotta-700 transition hover:bg-gray-100 dark:bg-gray-800/60 dark:text-earthy-terracotta-400 dark:hover:bg-gray-700/50"
-							>
-								{linkedTotal > linked.length
-									? m.glossary_linked_view_all({ count: linkedTotal })
-									: m.glossary_linked_view_discover()}
-								<IconifyIcon icon="material-symbols:arrow-forward" class="h-4 w-4" />
-							</a>
-						</li>
-					</ul>
-					{#if canLink}
-						<div
-							class="mt-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center dark:border-gray-700 dark:bg-gray-800/60"
-						>
-							<span
-								class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-gray-500 shadow-sm dark:bg-gray-700 dark:text-gray-300"
-							>
-								<IconifyIcon icon="material-symbols:rule-settings" class="h-4 w-4" />
-							</span>
-							<span class="min-w-0 flex-1">
-								<span class="block text-sm font-medium text-gray-900 dark:text-gray-100"
-									>{m.glossary_linked_rule_nudge_title()}</span
+									</div>
+									<mm-list aria-label={label}>
+										{#each sec.assets as a (a.id)}
+											<mm-list-item
+												href={resolve('/discover/[type]/[service]/[name]', assetRouteParams(a))}
+											>
+												<mm-provider-logo
+													slot="start"
+													provider={a.providers?.[0] ?? a.type}
+													size={16}
+													decorative
+												></mm-provider-logo>
+												{a.name}
+												<span slot="secondary"
+													>{[a.type, a.providers?.[0]].filter(Boolean).join(' · ')}</span
+												>
+											</mm-list-item>
+										{/each}
+									</mm-list>
+								</div>
+							{/each}
+							<div>
+								<mm-link href={discoverHref}
+									>{truncated
+										? m.glossary_linked_view_all()
+										: m.glossary_linked_view_discover()}</mm-link
 								>
-								<span class="block text-xs text-gray-500 dark:text-gray-400"
-									>{m.glossary_linked_rule_nudge()}</span
-								>
-							</span>
-							<a
-								href={resolve('/asset-rules/new')}
-								class="inline-flex flex-shrink-0 items-center gap-1.5 self-start rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:self-auto dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-							>
-								{m.glossary_linked_rule_nudge_link()}
-							</a>
+							</div>
 						</div>
 					{/if}
-				{/if}
-			</section>
-		</div>
-	</div>
+					{#if canLink && !linkedLoading}
+						<p class="mm-muted glossary-rule-hint">
+							{m.glossary_linked_rule_hint()}
+							<a class="mm-link" href={resolve('/asset-rules/new')}
+								>{m.glossary_linked_rule_link()}</a
+							>
+						</p>
+					{/if}
+				</mm-section>
+			</div>
 
-	<!-- Properties sit beside the content without a card, divided by a rule -->
-	<aside
-		class="h-fit space-y-6 border-t border-gray-200 pt-6 lg:sticky lg:top-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-1 dark:border-gray-700"
-	>
-		<div>
-			{@render propertyLabel(m.common_owners())}
-			<OwnerSelector selectedOwners={term.owners} onChange={saveOwners} disabled={!canManage} />
-		</div>
-		<div>
-			{@render propertyLabel(m.common_tags())}
-			<Tags tags={term.tags ?? []} endpoint="/glossary" id={term.id} canEdit={canManage} />
-		</div>
-		<div>
-			{@render propertyLabel(m.glossary_metadata_heading())}
-			{#if hasMetadata || showMetadata}
-				<MetadataView metadata={term.metadata} endpoint="/glossary" id={term.id} maxDepth={2} />
-			{:else if canManage}
-				<button
-					type="button"
-					onclick={() => (showMetadata = true)}
-					class="inline-flex items-center gap-1 text-sm font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-				>
-					<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-					{m.glossary_add_field()}
-				</button>
-			{:else}
-				<p class="text-sm text-gray-400">{m.glossary_none()}</p>
-			{/if}
-		</div>
-		<dl class="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4 text-xs dark:border-gray-700">
-			<div>
-				<dt class="text-gray-500 dark:text-gray-400">{m.glossary_created_label()}</dt>
-				<dd class="mt-0.5 text-gray-900 dark:text-gray-100">{formatDate(term.created_at)}</dd>
+			<div class="mm-stack" style="--mm-gap: 0">
+				<mm-section heading={m.glossary_hierarchy_heading()}>
+					<mm-description-list layout="stacked">
+						<mm-description term={m.glossary_parent_label()}>
+							{#if parent}
+								<a
+									class="mm-link mm-link--quiet"
+									href={resolve('/glossary/[[id]]', { id: parent.id })}>{parent.name}</a
+								>
+							{/if}
+						</mm-description>
+						<mm-description term={m.glossary_child_terms()}>
+							{#if children.length}
+								{#each children as c, i (c.id)}{i ? ', ' : ''}<a
+										class="mm-link mm-link--quiet"
+										href={resolve('/glossary/[[id]]', { id: c.id })}>{c.name}</a
+									>{/each}
+							{:else}
+								{m.glossary_none()}
+							{/if}
+						</mm-description>
+						<mm-description term={m.glossary_related_terms_label()}>
+							{#if term.related_terms?.length}
+								{#each term.related_terms as r, i (r.id)}{i ? ', ' : ''}<a
+										class="mm-link mm-link--quiet"
+										href={resolve('/glossary/[[id]]', { id: r.id })}>{r.name}</a
+									>{/each}
+							{:else}
+								{m.glossary_none()}
+							{/if}
+						</mm-description>
+					</mm-description-list>
+				</mm-section>
+
+				<mm-section heading={m.glossary_metadata_heading()}>
+					{#if canManage && !editingMetadata}
+						<mm-button
+							slot="actions"
+							size="sm"
+							variant="ghost"
+							icon="edit"
+							label={m.glossary_edit_metadata()}
+							onclick={startMetadataEdit}>{m.common_edit()}</mm-button
+						>
+					{/if}
+					{#if editingMetadata}
+						<div class="mm-stack" style="--mm-gap: var(--space-3)">
+							<mm-key-value-editor
+								label={m.glossary_metadata_heading()}
+								json
+								value={metadataDraft}
+								onmm-change={(e: CustomEvent<{ value: KeyValuePair[] }>) =>
+									(metadataDraft = e.detail.value)}
+							></mm-key-value-editor>
+							<div class="mm-cluster">
+								<mm-button
+									size="sm"
+									disabled={savingMetadata}
+									onclick={() => (editingMetadata = false)}>{m.common_cancel()}</mm-button
+								>
+								<mm-button
+									size="sm"
+									variant="primary"
+									loading={savingMetadata}
+									onclick={saveMetadata}>{m.common_save()}</mm-button
+								>
+							</div>
+						</div>
+					{:else}
+						<mm-description-list layout="stacked">
+							{#each metadataEntries as [key, value] (key)}
+								<mm-description term={key}>{formatValue(value)}</mm-description>
+							{/each}
+							<mm-description term={m.glossary_created_label()}
+								>{term.created_by_name
+									? m.glossary_created_by({
+											date: formatDate(term.created_at),
+											name: term.created_by_name
+										})
+									: formatDate(term.created_at)}</mm-description
+							>
+							<mm-description term={m.glossary_last_updated_label()}
+								>{formatDate(term.updated_at)}</mm-description
+							>
+						</mm-description-list>
+					{/if}
+				</mm-section>
 			</div>
-			<div>
-				<dt class="text-gray-500 dark:text-gray-400">{m.glossary_last_updated_label()}</dt>
-				<dd class="mt-0.5 text-gray-900 dark:text-gray-100">{formatDate(term.updated_at)}</dd>
-			</div>
-		</dl>
-	</aside>
-</article>
+		</div>
+	</article>
+{/if}
 
 {#if linking}
-	<LinkAssetsModal
+	<LinkAssetsDrawer
 		termId={term.id}
 		termName={term.name}
-		linkedIds={linked.map((a) => a.id)}
-		onClose={() => (linking = false)}
-		onLinked={() => loadLinked(term.id)}
+		onClose={() => {
+			linking = false;
+			loadLinked(term.id);
+		}}
 	/>
 {/if}
+
+<mm-dialog
+	bind:this={moveDialog}
+	heading={m.glossary_move_heading()}
+	description={m.glossary_move_description()}
+>
+	<mm-combobox
+		label={m.glossary_parent_label()}
+		value={moveParent}
+		onmm-change={(e: CustomEvent<{ value: string }>) => (moveParent = e.detail.value)}
+	>
+		{#each moveOptions as t (t.id)}
+			<mm-option value={t.id} label={t.name}></mm-option>
+		{/each}
+	</mm-combobox>
+	<mm-button slot="footer" data-close="cancel" disabled={moving}>{m.common_cancel()}</mm-button>
+	<mm-button slot="footer" variant="primary" loading={moving} onclick={move}
+		>{m.glossary_move_button()}</mm-button
+	>
+</mm-dialog>
+
+<mm-confirm-dialog
+	bind:this={deleteDialog}
+	heading={m.glossary_delete_heading()}
+	body={m.glossary_delete_confirm({ name: term.name })}
+	confirm-label={m.glossary_delete_term()}
+	confirm-icon="delete"
+	loading={deleting}
+	onmm-confirm={confirmDelete}
+></mm-confirm-dialog>
+
+<style>
+	.glossary-rule-hint {
+		margin: var(--space-4) 0 0;
+		font: var(--text-caption);
+	}
+</style>

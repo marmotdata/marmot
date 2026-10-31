@@ -1,20 +1,18 @@
 <script lang="ts">
+	import '@marmotdata/elements/run-strip.js';
+	import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { onMount } from 'svelte';
-	import { resolve } from '$app/paths';
-	import IconifyIcon from '@iconify/svelte';
-	import RunHistoryHistogram from './RunHistoryHistogram.svelte';
+	import { formatDateTime } from '$lib/utils/format';
+	import { formatRunDuration } from './pipeline';
 
 	interface AssetRef {
 		type?: string;
 		name?: string;
+		mrn?: string;
+		providers?: string[];
 	}
-
-	export let assetId: string;
-	export let minimal = false;
-	export let asset: AssetRef | null = null;
 
 	interface RunHistoryEntry {
 		id: string;
@@ -29,272 +27,161 @@
 		event_time: string;
 	}
 
-	interface RunHistoryResponse {
-		run_history: RunHistoryEntry[];
-		total: number;
-		limit: number;
-		offset: number;
+	interface Props {
+		assetId: string;
+		minimal?: boolean;
+		asset?: AssetRef | null;
 	}
 
-	let runHistory: RunHistoryEntry[] = [];
-	let loading = true;
-	let error: string | null = null;
-	let total = 0;
-	let currentPage = 1;
+	let { assetId, minimal = false, asset = null }: Props = $props();
 
-	$: pageSize = minimal ? 5 : 10;
-	$: totalPages = Math.ceil(total / pageSize);
+	// An asset's job runs from OpenLineage: a strip of recent outcomes on the full page, then the runs themselves; the blade shows only the last few
+	const STRIP = 30;
 
-	function statusKind(status: string): 'success' | 'error' | 'running' | 'other' {
+	let runs = $state<RunHistoryEntry[]>([]);
+	let strip = $state<StripRun[]>([]);
+	let loading = $state(true);
+	let error = $state('');
+	let total = $state(0);
+	let pageNumber = $state(1);
+
+	let pageSize = $derived(minimal ? 5 : 10);
+
+	let assetHref = $derived.by(() => {
+		if (!asset) return undefined;
+		const parts = (asset.mrn ?? '').replace('mrn://', '').split('/');
+		const params =
+			parts.length >= 3
+				? { type: parts[0], service: parts[1], name: parts.slice(2).join('/') }
+				: { type: asset.type ?? '', service: asset.providers?.[0] ?? '', name: asset.name ?? '' };
+		if (!params.type || !params.service || !params.name) return undefined;
+		return `${resolve('/discover/[type]/[service]/[name]', params)}?tab=run-history`;
+	});
+
+	function stripStatus(status: string): StripRun['status'] {
 		switch (status.toUpperCase()) {
 			case 'COMPLETE':
-				return 'success';
+				return 'succeeded';
 			case 'FAIL':
-				return 'error';
+				return 'failed';
 			case 'RUNNING':
+			case 'START':
 				return 'running';
 			default:
-				return 'other';
+				return 'skipped';
 		}
 	}
 
-	function getTypeColor(type: string): string {
-		switch (type.toUpperCase()) {
-			case 'BATCH':
-				return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-			case 'STREAMING':
-				return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+	function pill(status: string): 'failed' | 'running' | 'cancelled' | null {
+		switch (status.toUpperCase()) {
+			case 'FAIL':
+				return 'failed';
+			case 'RUNNING':
+			case 'START':
+				return 'running';
+			case 'ABORT':
+				return 'cancelled';
 			default:
-				return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+				return null;
 		}
 	}
 
-	function formatDateTime(dateString: string): string {
-		if (minimal) {
-			return new Date(dateString).toLocaleDateString(getLocale());
-		}
-		return new Date(dateString).toLocaleString(getLocale());
-	}
-
-	function formatDurationMs(ms: number): string {
-		if (ms <= 0) return '—';
-		if (ms < 1000) return `${ms}ms`;
-		const seconds = ms / 1000;
-		if (seconds < 60) return `${seconds.toFixed(2)}s`;
-		const minutes = Math.floor(seconds / 60);
-		const hours = Math.floor(minutes / 60);
-		if (hours > 0) return `${hours}h ${minutes % 60}m`;
-		return `${minutes}m ${Math.floor(seconds) % 60}s`;
-	}
-
-	async function fetchRunHistory() {
+	async function fetchRuns(id: string, pageNo: number, size: number) {
+		loading = true;
+		error = '';
 		try {
-			loading = true;
-			error = null;
-
-			const offset = (currentPage - 1) * pageSize;
-			const response = await fetchApi(
-				`/assets/run-history/${assetId}?limit=${pageSize}&offset=${offset}`
-			);
-
-			if (!response.ok) {
-				throw new Error(m.runs_history_fetch_error());
-			}
-
-			const data: RunHistoryResponse = await response.json();
-			runHistory = data.run_history;
-			total = data.total;
-		} catch (err) {
-			console.error('Error fetching run history:', err);
-			error = err instanceof Error ? err.message : m.runs_history_load_error();
+			const offset = (pageNo - 1) * size;
+			const res = await fetchApi(`/assets/run-history/${id}?limit=${size}&offset=${offset}`);
+			if (!res.ok) throw new Error(m.runs_history_fetch_error());
+			const data = await res.json();
+			runs = data.run_history ?? [];
+			total = data.total ?? 0;
+		} catch (e) {
+			error = e instanceof Error ? e.message : m.runs_history_load_error();
 		} finally {
 			loading = false;
 		}
 	}
 
-	function goToPage(page: number) {
-		if (page >= 1 && page <= totalPages) {
-			currentPage = page;
-			fetchRunHistory();
+	async function fetchStrip(id: string) {
+		try {
+			const res = await fetchApi(`/assets/run-history/${id}?limit=${STRIP}&offset=0`);
+			if (!res.ok) return;
+			const list: RunHistoryEntry[] = (await res.json()).run_history ?? [];
+			strip = list
+				.map((r) => ({
+					id: r.run_id || r.id,
+					status: stripStatus(r.status),
+					startedAt: r.start_time ?? r.event_time,
+					durationMs: r.duration_ms || undefined
+				}))
+				.reverse();
+		} catch {
+			// The strip is a summary; the list still shows
 		}
 	}
 
-	let lastAssetId = '';
-
-	onMount(() => {
-		if (assetId) {
-			lastAssetId = assetId;
-			fetchRunHistory();
-		}
+	$effect(() => {
+		if (!assetId) return;
+		pageNumber = 1;
+		fetchRuns(assetId, 1, pageSize);
+		if (!minimal) fetchStrip(assetId);
 	});
-
-	$: if (assetId && assetId !== lastAssetId) {
-		lastAssetId = assetId;
-		currentPage = 1;
-		fetchRunHistory();
-	}
 </script>
 
-<div class="space-y-4">
-	<RunHistoryHistogram {assetId} period="30d" minimal={true} />
+<div class="mm-stack" style="--mm-gap: var(--space-4)">
+	{#if !minimal && strip.length > 0}
+		<mm-run-strip runs={strip} label={m.runs_history_strip_label()}></mm-run-strip>
+	{/if}
 
-	{#if loading}
-		<div class="flex items-center justify-center {minimal ? 'py-6' : 'py-12'}">
-			<div
-				class="animate-spin rounded-full {minimal
-					? 'h-6 w-6'
-					: 'h-8 w-8'} border-b-2 border-earthy-terracotta-700"
-			></div>
-		</div>
-	{:else if error}
-		<div
-			class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-		>
-			<p class="text-red-600 dark:text-red-400 {minimal ? 'text-sm' : ''}">{error}</p>
-		</div>
-	{:else if runHistory.length === 0}
-		<div
-			class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-10 text-center"
-		>
-			<IconifyIcon
-				icon="material-symbols:history"
-				class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
-			/>
-			<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-				{m.runs_history_empty_heading()}
-			</h3>
-			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-				{m.runs_history_empty_hint()}
-			</p>
-		</div>
+	{#if error}
+		<mm-callout tone="danger" compact heading={error}></mm-callout>
+	{:else if loading && runs.length === 0}
+		<mm-skeleton count={minimal ? 3 : 5}></mm-skeleton>
+	{:else if runs.length === 0}
+		<mm-empty-state
+			compact
+			heading={m.runs_history_empty_heading()}
+			description={m.runs_history_empty_hint()}
+		></mm-empty-state>
 	{:else}
-		<div
-			class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
-		>
-			<div
-				class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
-			>
-				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-					{m.runs_history_recent_heading()}
-				</div>
-				{#if !minimal}
-					<div class="text-xs text-gray-500 dark:text-gray-400">
-						{m.runs_history_range({
-							from: (currentPage - 1) * pageSize + 1,
-							to: Math.min(currentPage * pageSize, total),
-							total
-						})}
-					</div>
-				{:else if asset}
-					<a
-						href={resolve(
-							`/discover/${asset?.type?.toLowerCase()}/${encodeURIComponent(asset?.name || '')}?tab=run-history`
-						)}
-						class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800"
-					>
-						{m.runs_history_view_all()}
-					</a>
-				{/if}
-			</div>
-
-			<ul class="divide-y divide-gray-200 dark:divide-gray-700">
-				{#each runHistory as run (run.id)}
-					{@const kind = statusKind(run.status)}
-					<li class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-						<div class="flex items-center justify-between gap-4">
-							<div class="flex items-center gap-3 min-w-0">
-								{#if kind === 'success'}
-									<div
-										class="w-7 h-7 rounded-full bg-earthy-green-100 dark:bg-earthy-green-900/30 flex items-center justify-center flex-shrink-0"
-									>
-										<IconifyIcon
-											icon="material-symbols:check-rounded"
-											class="w-4 h-4 text-earthy-green-700 dark:text-earthy-green-500"
-										/>
-									</div>
-								{:else if kind === 'error'}
-									<div
-										class="w-7 h-7 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0"
-									>
-										<IconifyIcon
-											icon="material-symbols:close-rounded"
-											class="w-4 h-4 text-red-600 dark:text-red-400"
-										/>
-									</div>
-								{:else if kind === 'running'}
-									<div
-										class="w-7 h-7 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0"
-									>
-										<div
-											class="animate-spin h-3 w-3 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full"
-										></div>
-									</div>
-								{:else}
-									<div
-										class="w-7 h-7 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"
-									>
-										<IconifyIcon
-											icon="material-symbols:radio-button-unchecked"
-											class="w-4 h-4 text-gray-400"
-										/>
-									</div>
-								{/if}
-								<div class="min-w-0">
-									<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-										{run.job_name}
-									</div>
-									<div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-										{run.start_time ? formatDateTime(run.start_time) : '—'}
-										{#if run.job_namespace}
-											· <span class="font-mono">{run.job_namespace}</span>
-										{/if}
-									</div>
-								</div>
-							</div>
-							<div
-								class="flex items-center gap-4 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
-							>
-								{#if run.type}
-									<span
-										class="inline-flex px-2 py-0.5 text-[10px] font-medium rounded-full {getTypeColor(
-											run.type
-										)}"
-									>
-										{run.type}
-									</span>
-								{/if}
-								<div>
-									<span class="text-gray-400">{m.runs_history_duration_label()} </span>
-									<span class="text-gray-900 dark:text-gray-100 font-mono">
-										{run.duration_ms ? formatDurationMs(run.duration_ms) : '—'}
-									</span>
-								</div>
-							</div>
-						</div>
-					</li>
-				{/each}
-			</ul>
-
-			{#if !minimal && totalPages > 1}
-				<div
-					class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2"
+		<mm-list dense={minimal} aria-label={m.runs_history_recent_heading()}>
+			{#each runs as run (run.id)}
+				{@const state = pill(run.status)}
+				<mm-list-item
+					secondary={[run.start_time ? formatDateTime(run.start_time) : '', run.job_namespace]
+						.filter(Boolean)
+						.join(' · ')}
 				>
-					<button
-						onclick={() => goToPage(currentPage - 1)}
-						disabled={currentPage === 1}
-						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
-					>
-						{m.common_previous()}
-					</button>
-					<button
-						onclick={() => goToPage(currentPage + 1)}
-						disabled={currentPage === totalPages}
-						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
-					>
-						{m.common_next()}
-					</button>
-				</div>
-			{/if}
-		</div>
+					{run.job_name}
+					<span slot="end" class="mm-cluster" style="--mm-gap: var(--space-2); flex-wrap: nowrap">
+						{#if state}
+							<mm-status-pill {state} live={state === 'running'}></mm-status-pill>
+						{/if}
+						{#if run.duration_ms}
+							<mm-text variant="caption" tone="secondary" numeric
+								>{formatRunDuration(run.duration_ms)}</mm-text
+							>
+						{/if}
+					</span>
+				</mm-list-item>
+			{/each}
+		</mm-list>
+		{#if minimal && assetHref && total > pageSize}
+			<mm-link href={assetHref}>{m.runs_history_view_all()}</mm-link>
+		{:else if !minimal && total > pageSize}
+			<mm-pagination
+				page={pageNumber}
+				page-size={pageSize}
+				{total}
+				page-sizes=""
+				label={m.runs_history_pages()}
+				disabled={loading}
+				onmm-page-change={(e: CustomEvent<{ page: number }>) => {
+					pageNumber = e.detail.page;
+					fetchRuns(assetId, pageNumber, pageSize);
+				}}
+			></mm-pagination>
+		{/if}
 	{/if}
 </div>

@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
-import Icons from 'unplugin-icons/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { generateIconBundle } from './scripts/generate-icon-bundle.mjs';
 import { dirname } from 'path';
@@ -33,10 +32,6 @@ export default defineConfig(({ command }) => ({
 			outputStructure: command === 'build' ? 'message-modules' : 'locale-modules'
 		}),
 		sveltekit(),
-		Icons({
-			compiler: 'svelte',
-			autoInstall: true
-		}),
 		nodePolyfills({
 			protocolImports: true
 		})

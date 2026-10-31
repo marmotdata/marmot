@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Icon from '@iconify/svelte';
-	import DocPageTree from './DocPageTree.svelte';
 	import DocEditor from './DocEditor.svelte';
-	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
@@ -14,102 +11,111 @@
 	import { toHtml } from 'hast-util-to-html';
 	import { sanitizeHtml } from '$lib/sanitize';
 	import { deferDocImages, docImages } from '$lib/docs/images';
+	import '@marmotdata/elements/tree.js';
+	import type {
+		MmTreeActionDetail,
+		MmTreeSelectDetail,
+		TreeNode
+	} from '@marmotdata/elements/classes/tree.js';
+	import type { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
 
-	// Create lowlight instance for syntax highlighting
 	const lowlight = createLowlight(common);
 
-	export let entityType: EntityType;
-	export let entityId: string;
+	// Documentation pages for an asset or a data product: a page tree beside the selected page, edited in place.
+	let { entityType, entityId }: { entityType: EntityType; entityId: string } = $props();
 
-	// State
-	let pageTree: PageTree | null = null;
-	let selectedPage: Page | null = null;
-	let isLoading = true;
-	let loadError: string | null = null;
-	let isSaving = false;
-	let isEditing = false;
-	let editedContent = '';
-	let editedTitle = '';
-	let editedEmoji: string | null = null;
+	let pageTree = $state<PageTree | null>(null);
+	let selectedPage = $state<Page | null>(null);
+	let isLoading = $state(true);
+	let loadError = $state<string | null>(null);
+	let isSaving = $state(false);
+	let isEditing = $state(false);
+	let editedContent = $state('');
+	let editedTitle = $state('');
+	let editedEmoji = $state<string | null>(null);
 
-	// Modal state
-	let showDeleteModal = false;
-	let pageToDelete: Page | null = null;
-	let showEmojiPicker = false;
-
-	// Sidebar collapse state
-	let sidebarCollapsed = false;
-
-	// Emoji picker - load dynamically on client side
-	let emojiPickerElement: HTMLElement | null = null;
-
-	function handleRemoveEmoji() {
-		editedEmoji = null;
-		showEmojiPicker = false;
-	}
-
-	// Attach emoji picker event listener when element is available
-	$: if (emojiPickerElement) {
-		const handler = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			editedEmoji = customEvent.detail.unicode;
-			showEmojiPicker = false;
-		};
-		emojiPickerElement.addEventListener('emoji-click', handler);
-	}
-
-	$: if (showEmojiPicker && typeof window !== 'undefined') {
-		import('emoji-picker-element');
-	}
+	let pageToDelete = $state<Page | null>(null);
+	let deleteDialog = $state<MmConfirmDialog>();
+	let showEmojiPicker = $state(false);
+	let emojiPickerElement = $state<HTMLElement | null>(null);
+	let expandedIds = $state<string[]>([]);
 
 	const canEdit = auth.hasPermission('assets', 'manage');
+
+	$effect(() => {
+		const el = emojiPickerElement;
+		if (!el) return;
+		const handler = (event: Event) => {
+			editedEmoji = (event as CustomEvent).detail.unicode;
+			showEmojiPicker = false;
+		};
+		el.addEventListener('emoji-click', handler);
+		return () => el.removeEventListener('emoji-click', handler);
+	});
+
+	$effect(() => {
+		if (showEmojiPicker) import('emoji-picker-element');
+	});
 
 	onMount(() => {
 		loadPageTree();
 	});
 
-	// Find a page by ID recursively in the page tree
 	function findPageById(pages: Page[], id: string): Page | null {
-		for (const page of pages) {
-			if (page.id === id) {
-				return page;
-			}
-			if (page.children && page.children.length > 0) {
-				const found = findPageById(page.children, id);
+		for (const p of pages) {
+			if (p.id === id) return p;
+			if (p.children?.length) {
+				const found = findPageById(p.children, id);
 				if (found) return found;
 			}
 		}
 		return null;
 	}
 
+	function parentIds(pages: Page[]): string[] {
+		return pages.flatMap((p) => (p.children?.length ? [p.id, ...parentIds(p.children)] : []));
+	}
+
+	function toNodes(pages: Page[]): TreeNode[] {
+		return pages.map((p) => ({
+			id: p.id,
+			label: p.emoji ? `${p.emoji} ${p.title}` : p.title,
+			icon: 'article',
+			data: p,
+			children: p.children?.length ? toNodes(p.children) : undefined
+		}));
+	}
+
+	let nodes = $derived(pageTree ? toNodes(pageTree.pages) : []);
+	let treeActions = $derived(
+		canEdit
+			? [
+					{ id: 'add', label: m.docs_add_subpage_title(), icon: 'note-add' },
+					{ id: 'delete', label: m.asset_page_docs_delete_page(), icon: 'delete' }
+				]
+			: []
+	);
+
 	async function loadPageTree() {
 		isLoading = true;
 		loadError = null;
-
 		try {
 			const response = await fetchApi(
 				`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`
 			);
-			if (!response.ok) {
-				throw new Error(m.docs_load_error());
-			}
+			if (!response.ok) throw new Error(m.docs_load_error());
 			const tree: PageTree = await response.json();
 			pageTree = tree;
+			expandedIds = [...new Set([...expandedIds, ...parentIds(tree.pages)])];
 
-			// Check for page query parameter
-			const urlParams = new URLSearchParams(window.location.search);
-			const pageId = urlParams.get('page');
-
+			const pageId = new URLSearchParams(window.location.search).get('page');
 			if (pageId && tree.pages.length > 0) {
-				// Try to find and select the specified page
-				const targetPage = findPageById(tree.pages, pageId);
-				if (targetPage) {
-					await selectPage(targetPage);
+				const target = findPageById(tree.pages, pageId);
+				if (target) {
+					await selectPage(target);
 					return;
 				}
 			}
-
-			// Auto-select first page if none selected and no page param
 			if (!selectedPage && tree.pages.length > 0) {
 				await selectPage(tree.pages[0]);
 			}
@@ -120,32 +126,22 @@
 		}
 	}
 
-	async function selectPage(page: Page) {
-		// If editing current page, prompt to save
-		if (isEditing && selectedPage) {
-			const shouldSave = confirm(m.docs_unsaved_changes_confirm());
-			if (shouldSave) {
-				await saveContent();
-			}
+	async function selectPage(target: Page) {
+		if (isEditing && selectedPage && selectedPage.id !== target.id) {
+			if (confirm(m.docs_unsaved_changes_confirm())) await saveContent();
 		}
-
-		// Load full page content
 		try {
-			const response = await fetchApi(`/docs/pages/${page.id}`);
-			if (!response.ok) {
-				throw new Error('Failed to load page');
-			}
-			const loadedPage: Page = await response.json();
-			selectedPage = loadedPage;
+			const response = await fetchApi(`/docs/pages/${target.id}`);
+			if (!response.ok) throw new Error('Failed to load page');
+			const loaded: Page = await response.json();
+			selectedPage = loaded;
 			isEditing = false;
-			editedContent = loadedPage.content || '';
-			editedTitle = loadedPage.title;
-			editedEmoji = loadedPage.emoji;
-
-			// Update URL with page query parameter
+			editedContent = loaded.content || '';
+			editedTitle = loaded.title;
+			editedEmoji = loaded.emoji;
 			const url = new URL(window.location.href);
-			url.searchParams.set('page', page.id);
-			window.history.replaceState({}, '', url.toString());
+			url.searchParams.set('page', target.id);
+			window.history.replaceState(history.state, '', url.toString());
 		} catch (err) {
 			console.error('Failed to load page:', err);
 		}
@@ -157,19 +153,12 @@
 				`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`,
 				{
 					method: 'POST',
-					body: JSON.stringify({
-						parent_id: parentId,
-						title: m.docs_untitled_page(),
-						content: ''
-					})
+					body: JSON.stringify({ parent_id: parentId, title: m.docs_untitled_page(), content: '' })
 				}
 			);
-
-			if (!response.ok) {
-				throw new Error('Failed to create page');
-			}
-
+			if (!response.ok) throw new Error('Failed to create page');
 			const newPage = await response.json();
+			if (parentId) expandedIds = [...new Set([...expandedIds, parentId])];
 			await loadPageTree();
 			await selectPage(newPage);
 			isEditing = true;
@@ -186,16 +175,13 @@
 	}
 
 	function cancelEditing() {
-		editedContent = selectedPage?.content || '';
-		editedTitle = selectedPage?.title || '';
-		editedEmoji = selectedPage?.emoji || null;
+		startEditing();
 		isEditing = false;
 		showEmojiPicker = false;
 	}
 
 	async function saveContent() {
 		if (!selectedPage) return;
-
 		isSaving = true;
 		try {
 			const response = await fetchApi(`/docs/pages/${selectedPage.id}`, {
@@ -206,13 +192,8 @@
 					content: editedContent
 				})
 			});
-
-			if (!response.ok) {
-				throw new Error('Failed to save page');
-			}
-
-			const savedPage: Page = await response.json();
-			selectedPage = savedPage;
+			if (!response.ok) throw new Error('Failed to save page');
+			selectedPage = await response.json();
 			isEditing = false;
 			showEmojiPicker = false;
 			await loadPageTree();
@@ -223,33 +204,16 @@
 		}
 	}
 
-	function confirmDeletePage(page: Page) {
-		pageToDelete = page;
-		showDeleteModal = true;
-	}
-
 	async function deletePage() {
-		if (!pageToDelete) return;
-
+		const target = pageToDelete;
+		if (!target) return;
 		try {
-			const response = await fetchApi(`/docs/pages/${pageToDelete.id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete page');
-			}
-
-			if (selectedPage?.id === pageToDelete.id) {
-				selectedPage = null;
-			}
-
-			showDeleteModal = false;
+			const response = await fetchApi(`/docs/pages/${target.id}`, { method: 'DELETE' });
+			if (!response.ok) throw new Error('Failed to delete page');
+			if (selectedPage?.id === target.id) selectedPage = null;
 			pageToDelete = null;
 			await loadPageTree();
-
-			// Select first page if available
-			if (pageTree && pageTree.pages.length > 0) {
+			if (!selectedPage && pageTree && pageTree.pages.length > 0) {
 				await selectPage(pageTree.pages[0]);
 			}
 		} catch (err) {
@@ -257,533 +221,272 @@
 		}
 	}
 
+	function onTreeSelect(e: CustomEvent<MmTreeSelectDetail>) {
+		const p = e.detail.node.data as Page | undefined;
+		if (p && p.id !== selectedPage?.id) selectPage(p);
+	}
+
+	function onTreeAction(e: CustomEvent<MmTreeActionDetail>) {
+		const p = e.detail.node.data as Page | undefined;
+		if (!p) return;
+		if (e.detail.action === 'add') createPage(p.id);
+		if (e.detail.action === 'delete') {
+			pageToDelete = p;
+			deleteDialog?.show();
+		}
+	}
+
 	function preprocessMentions(markdown: string): string {
-		// Match markdown link format: [@Label](mention:type:id)
+		// Mentions are stored as markdown links: [@Label](mention:type:id)
 		return markdown.replace(
 			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
 			(_match, label, mentionType, id) => {
-				const mentionClass =
-					mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
-
-				// Make team mentions clickable links
+				const cls = mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
 				if (mentionType === 'team' && id) {
-					return `<a href="/settings/teams/${id}" class="${mentionClass}">@${label}</a>`;
+					return `<a href="/settings/teams/${id}" class="${cls}">@${label}</a>`;
 				}
-
-				return `<span class="${mentionClass}">@${label}</span>`;
+				return `<span class="${cls}">@${label}</span>`;
 			}
 		);
 	}
 
 	function renderMarkdown(content: string): string {
-		// Configure marked with syntax highlighting
 		const renderer = new marked.Renderer();
-
 		renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
 			const language = lang && lowlight.registered(lang) ? lang : 'plaintext';
 			try {
-				const highlighted = lowlight.highlight(language, text);
-				const html = toHtml(highlighted);
-				return `<pre><code class="hljs language-${language}">${html}</code></pre>`;
+				const highlighted = toHtml(lowlight.highlight(language, text));
+				return `<pre><code class="hljs language-${language}">${highlighted}</code></pre>`;
 			} catch {
-				// Fallback to non-highlighted
 				return `<pre><code class="language-${language}">${text}</code></pre>`;
 			}
 		};
-
 		return deferDocImages(
 			sanitizeHtml(marked(preprocessMentions(content), { renderer }) as string)
 		);
 	}
 </script>
 
-<div class="flex h-full">
-	<!-- Sidebar: Page Tree (minimal style) -->
-	<div
-		class="flex-shrink-0 flex flex-col transition-all duration-200 {sidebarCollapsed
-			? 'w-10'
-			: 'w-56'}"
+{#if isLoading && !pageTree}
+	<mm-skeleton count={6}></mm-skeleton>
+{:else if loadError}
+	<mm-callout tone="danger" heading={loadError}>
+		<mm-button slot="actions" size="sm" variant="secondary" icon="refresh" onclick={loadPageTree}
+			>{m.common_retry()}</mm-button
+		>
+	</mm-callout>
+{:else if pageTree && pageTree.pages.length === 0}
+	<mm-empty-state
+		heading={m.docs_no_documentation_yet()}
+		description={canEdit ? m.asset_page_docs_empty_body_manage() : m.asset_page_docs_empty_body()}
+		seed={4}
 	>
-		<!-- Collapse toggle -->
-		<div class="flex items-center justify-between p-2">
-			{#if !sidebarCollapsed}
-				<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-					>{m.docs_pages_heading()}</span
+		{#if canEdit}
+			<mm-button slot="action" variant="secondary" icon="note-add" onclick={() => createPage(null)}
+				>{m.asset_page_docs_write_first()}</mm-button
+			>
+		{/if}
+	</mm-empty-state>
+{:else}
+	<div class="docs">
+		<div class="mm-stack" style="--mm-gap: var(--space-2); align-items: flex-start">
+			<mm-tree
+				label={m.asset_page_docs_tree_label()}
+				selection="single"
+				style="--mm-tree-height: 60vh; inline-size: 100%"
+				{nodes}
+				{expandedIds}
+				selectedIds={selectedPage ? [selectedPage.id] : []}
+				actions={treeActions}
+				onmm-select={onTreeSelect}
+				onmm-action={onTreeAction}
+				onmm-expand={(e: CustomEvent<{ node: TreeNode; expanded: boolean }>) =>
+					(expandedIds = e.detail.expanded
+						? [...expandedIds, e.detail.node.id]
+						: expandedIds.filter((id) => id !== e.detail.node.id))}
+			></mm-tree>
+			{#if canEdit}
+				<mm-button variant="ghost" size="sm" icon="note-add" onclick={() => createPage(null)}
+					>{m.docs_add_page()}</mm-button
 				>
 			{/if}
-			<button
-				type="button"
-				onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
-				class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-				title={sidebarCollapsed ? m.docs_expand_sidebar_title() : m.docs_collapse_sidebar_title()}
-			>
-				<Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} class="h-4 w-4" />
-			</button>
 		</div>
 
-		{#if !sidebarCollapsed}
-			<div class="flex-1 overflow-y-auto px-1">
-				{#if isLoading}
-					<div class="flex items-center justify-center py-8">
-						<Icon icon="mdi:loading" class="h-5 w-5 animate-spin text-gray-400" />
-					</div>
-				{:else if loadError}
-					<div class="text-center py-6">
-						<Icon icon="mdi:alert-circle-outline" class="h-6 w-6 text-red-400 mx-auto mb-2" />
-						<p class="text-xs text-red-500">{loadError}</p>
-						<button
-							type="button"
-							onclick={loadPageTree}
-							class="text-xs text-earthy-terracotta-600 hover:underline mt-2"
+		<article class="mm-stack" style="--mm-gap: var(--space-4); min-width: 0">
+			{#if !selectedPage}
+				<mm-text variant="dense" tone="secondary">{m.docs_select_page_hint()}</mm-text>
+			{:else if isEditing}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2); align-items: flex-end">
+					<div class="emoji">
+						<mm-button
+							variant="ghost"
+							icon={editedEmoji ? undefined : 'add'}
+							label={editedEmoji ? m.docs_change_emoji_title() : undefined}
+							expanded={showEmojiPicker}
+							onclick={() => (showEmojiPicker = !showEmojiPicker)}
+							>{editedEmoji || m.asset_page_docs_add_emoji()}</mm-button
 						>
-							{m.common_retry()}
-						</button>
-					</div>
-				{:else if pageTree}
-					<DocPageTree
-						pages={pageTree.pages}
-						selectedPageId={selectedPage?.id || null}
-						{canEdit}
-						on:select={(e) => selectPage(e.detail.page)}
-						on:create={(e) => createPage(e.detail.parentId)}
-						on:delete={(e) => confirmDeletePage(e.detail.page)}
-					/>
-				{/if}
-			</div>
-		{/if}
-	</div>
-
-	<!-- Main content area -->
-	<div class="flex-1 flex flex-col overflow-y-auto min-w-0 max-w-5xl">
-		{#if !selectedPage}
-			<div class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
-				{#if pageTree && pageTree.pages.length === 0}
-					<div class="text-center">
-						<Icon icon="mdi:file-document-plus-outline" class="h-12 w-12 mx-auto mb-3 opacity-30" />
-						<p class="text-sm mb-3">{m.docs_no_documentation_yet()}</p>
-						{#if canEdit}
-							<button
-								type="button"
-								onclick={() => createPage(null)}
-								class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-earthy-terracotta-600 hover:text-earthy-terracotta-700 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 rounded-lg transition-colors"
-							>
-								<Icon icon="mdi:plus" class="h-4 w-4" />
-								{m.docs_create_first_page()}
-							</button>
-						{/if}
-					</div>
-				{:else}
-					<p class="text-sm">{m.docs_select_page_hint()}</p>
-				{/if}
-			</div>
-		{:else}
-			<!-- Page header with H1 title and emoji -->
-			<div class="px-4 pt-6 pb-4">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex-1 min-w-0">
-						{#if isEditing}
-							<div class="flex items-center gap-2">
-								<!-- Emoji picker button -->
-								<div class="relative">
-									<button
-										type="button"
-										onclick={() => (showEmojiPicker = !showEmojiPicker)}
-										class="text-4xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors"
-										title={m.docs_change_emoji_title()}
+						{#if showEmojiPicker}
+							<div class="emoji-panel">
+								<emoji-picker bind:this={emojiPickerElement}></emoji-picker>
+								<div class="mm-cluster mm-cluster--between" style="padding: var(--space-2)">
+									<mm-button
+										variant="ghost"
+										size="sm"
+										onclick={() => {
+											editedEmoji = null;
+											showEmojiPicker = false;
+										}}>{m.docs_remove_emoji()}</mm-button
 									>
-										{editedEmoji || '📄'}
-									</button>
-									{#if showEmojiPicker}
-										<div
-											class="absolute top-full left-0 mt-1 z-50 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700"
-										>
-											<emoji-picker bind:this={emojiPickerElement}></emoji-picker>
-											<div
-												class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between rounded-b-lg"
-											>
-												<button
-													type="button"
-													onclick={handleRemoveEmoji}
-													class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-												>
-													{m.docs_remove_emoji()}
-												</button>
-												<button
-													type="button"
-													onclick={() => (showEmojiPicker = false)}
-													class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-												>
-													{m.common_close()}
-												</button>
-											</div>
-										</div>
-									{/if}
+									<mm-button variant="ghost" size="sm" onclick={() => (showEmojiPicker = false)}
+										>{m.common_close()}</mm-button
+									>
 								</div>
-								<input
-									type="text"
-									bind:value={editedTitle}
-									class="text-3xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 focus:border-earthy-terracotta-500 focus:outline-none text-gray-900 dark:text-gray-100 w-full"
-									placeholder={m.docs_page_title_placeholder()}
-								/>
 							</div>
-						{:else}
-							<!-- H1 with emoji and title combined -->
-							<h1
-								class="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3"
-							>
-								{#if selectedPage.emoji}
-									<span>{selectedPage.emoji}</span>
-								{/if}
-								<span class="truncate">{selectedPage.title}</span>
-							</h1>
 						{/if}
 					</div>
-
-					<div class="flex items-center gap-1 flex-shrink-0 pt-2">
-						{#if isEditing}
-							<button
-								type="button"
-								onclick={cancelEditing}
-								disabled={isSaving}
-								class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50"
-							>
-								{m.common_cancel()}
-							</button>
-							<button
-								type="button"
-								onclick={saveContent}
-								disabled={isSaving}
-								class="px-3 py-1.5 text-sm text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded disabled:opacity-50"
-							>
-								{isSaving ? m.docs_saving() : m.common_save()}
-							</button>
-						{:else if canEdit}
-							<button
-								type="button"
-								onclick={startEditing}
-								class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-								title={m.common_edit()}
-							>
-								<Icon icon="mdi:pencil-outline" class="h-4 w-4" />
-							</button>
-						{/if}
-					</div>
-				</div>
-			</div>
-
-			<!-- Page content -->
-			<div class="px-4 pb-4">
-				{#if isEditing}
-					<DocEditor
-						bind:value={editedContent}
-						pageId={selectedPage.id}
-						placeholder={m.docs_start_writing_placeholder()}
-						disabled={isSaving}
-					/>
-				{:else if selectedPage.content}
-					<div
-						class="doc-content prose prose-sm prose-gray dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-earthy-terracotta-600 dark:prose-a:text-earthy-terracotta-400 prose-img:rounded-lg"
-						use:docImages
+					<mm-text-field
+						label={m.docs_page_title_placeholder()}
+						hide-label
+						value={editedTitle}
+						placeholder={m.docs_page_title_placeholder()}
+						style="flex: 1; min-inline-size: 12rem"
+						onmm-input={(e: CustomEvent<{ value: string }>) => (editedTitle = e.detail.value)}
+					></mm-text-field>
+					<mm-button variant="ghost" disabled={isSaving} onclick={cancelEditing}
+						>{m.common_cancel()}</mm-button
 					>
+					<mm-button variant="primary" loading={isSaving} onclick={saveContent}
+						>{m.asset_page_docs_save_page()}</mm-button
+					>
+				</div>
+				<DocEditor
+					bind:value={editedContent}
+					pageId={selectedPage.id}
+					placeholder={m.docs_start_writing_placeholder()}
+					disabled={isSaving}
+				/>
+			{:else}
+				<div class="mm-cluster mm-cluster--between">
+					<mm-text variant="caption" tone="secondary"
+						>{m.docs_updated_at({ date: formatDate(selectedPage.updated_at) })}</mm-text
+					>
+					{#if canEdit}
+						<mm-button variant="secondary" size="sm" icon="edit" onclick={startEditing}
+							>{m.asset_page_docs_edit_page()}</mm-button
+						>
+					{/if}
+				</div>
+				<div class="mm-prose doc-content" use:docImages>
+					<h1>
+						{#if selectedPage.emoji}<span aria-hidden="true">{selectedPage.emoji}</span>
+						{/if}{selectedPage.title}
+					</h1>
+					{#if selectedPage.content}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 						{@html renderMarkdown(selectedPage.content)}
-					</div>
-				{:else}
-					<div class="text-center py-8 text-gray-400 dark:text-gray-500">
-						<Icon icon="mdi:file-document-outline" class="h-10 w-10 mx-auto mb-2 opacity-30" />
-						<p class="text-sm">{m.docs_page_empty()}</p>
-						{#if canEdit}
-							<button
-								type="button"
-								onclick={startEditing}
-								class="text-sm text-earthy-terracotta-600 hover:underline mt-2"
-							>
-								{m.docs_add_content()}
-							</button>
-						{/if}
-					</div>
-				{/if}
-			</div>
-
-			<!-- Page metadata footer (minimal) -->
-			<div class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-3">
-				<span>{m.docs_updated_at({ date: formatDate(selectedPage.updated_at) })}</span>
-				{#if selectedPage.image_count && selectedPage.image_count > 0}
-					<span class="flex items-center gap-1">
-						<Icon icon="mdi:image-outline" class="h-3 w-3" />
-						{selectedPage.image_count}
-					</span>
-				{/if}
-			</div>
-		{/if}
+					{:else}
+						<p class="empty">{m.docs_page_empty()}</p>
+					{/if}
+				</div>
+			{/if}
+		</article>
 	</div>
-</div>
+{/if}
 
-<!-- Delete confirmation modal -->
-<ConfirmModal
-	bind:show={showDeleteModal}
-	title={m.docs_delete_page_title()}
-	message={pageToDelete ? m.docs_delete_page_confirm({ title: pageToDelete.title }) : ''}
-	confirmText={m.common_delete()}
-	cancelText={m.common_cancel()}
-	variant="danger"
-	onConfirm={deletePage}
-	onCancel={() => {
-		showDeleteModal = false;
-		pageToDelete = null;
-	}}
-/>
+<mm-confirm-dialog
+	bind:this={deleteDialog}
+	heading={m.asset_page_docs_delete_heading({ title: pageToDelete?.title ?? '' })}
+	body={m.asset_page_docs_delete_body()}
+	confirm-label={m.asset_page_docs_delete_page()}
+	onmm-confirm={deletePage}
+	onmm-close={() => (pageToDelete = null)}
+></mm-confirm-dialog>
 
 <style>
-	/* Emoji picker dark mode support */
-	:global(.dark emoji-picker) {
-		--background: #1f2937;
-		--border-color: #374151;
-		--indicator-color: #c9601c;
-		--input-border-color: #4b5563;
-		--input-font-color: #f3f4f6;
-		--input-placeholder-color: #9ca3af;
-		--outline-color: #c9601c;
-		--category-font-color: #9ca3af;
-		--button-active-background: #374151;
-		--button-hover-background: #374151;
+	.docs {
+		display: grid;
+		grid-template-columns: 13rem minmax(0, 1fr);
+		gap: var(--space-6);
+		align-items: start;
 	}
-
-	/* Code block styles - matching DocEditor */
-	:global(.doc-content pre) {
-		@apply bg-gray-50 dark:bg-gray-800 p-6 rounded-lg my-3 overflow-x-auto;
-		margin: 0;
+	@media (max-width: 720px) {
+		.docs {
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
-
-	:global(.doc-content pre code) {
-		@apply bg-transparent p-0;
-		font-family:
-			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-			monospace;
-		font-size: 0.875rem;
-		display: block;
-		white-space: pre;
-		width: max-content;
-		min-width: 100%;
-		color: #1f2937;
+	.emoji {
+		position: relative;
 	}
-
-	:global(.dark .doc-content pre code) {
-		color: #f3f4f6;
+	.emoji-panel {
+		position: absolute;
+		inset-block-start: calc(100% + var(--space-1));
+		inset-inline-start: 0;
+		z-index: var(--mm-z-popover, 50);
+		background: var(--mm-raised);
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-float);
+		overflow: hidden;
 	}
-
-	/* Inline code */
-	:global(.doc-content code:not(pre code)) {
-		@apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+	.emoji-panel :global(emoji-picker) {
+		--background: var(--mm-raised);
+		--border-color: var(--mm-rule);
+		--indicator-color: var(--mm-text);
+		--input-border-color: var(--mm-control-border);
+		--input-font-color: var(--mm-text);
+		--input-placeholder-color: var(--mm-text-2);
+		--outline-color: var(--mm-text);
+		--category-font-color: var(--mm-text-2);
+		--button-active-background: var(--mm-selected);
+		--button-hover-background: var(--mm-selected);
 	}
-
-	/* Syntax highlighting - Light theme (Earthy colors) */
-	:global(.doc-content .hljs-comment),
-	:global(.doc-content .hljs-quote) {
-		color: #4a674a;
+	.doc-content .empty {
+		color: var(--mm-text-2);
+	}
+	.doc-content :global(code:not(pre code)) {
+		background: var(--mm-sunken);
+		font: var(--text-mono);
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+	}
+	.doc-content :global(.hljs-comment),
+	.doc-content :global(.hljs-quote) {
+		color: var(--mm-syn-comment);
 		font-style: italic;
 	}
-
-	:global(.doc-content .hljs-keyword),
-	:global(.doc-content .hljs-selector-tag),
-	:global(.doc-content .hljs-addition) {
-		color: #8d3718;
+	.doc-content :global(.hljs-keyword),
+	.doc-content :global(.hljs-selector-tag),
+	.doc-content :global(.hljs-built_in),
+	.doc-content :global(.hljs-meta) {
+		color: var(--mm-syn-keyword);
 	}
-
-	:global(.doc-content .hljs-number),
-	:global(.doc-content .hljs-string),
-	:global(.doc-content .hljs-meta .hljs-meta-string),
-	:global(.doc-content .hljs-literal),
-	:global(.doc-content .hljs-doctag),
-	:global(.doc-content .hljs-regexp) {
-		color: #35593b;
+	.doc-content :global(.hljs-string),
+	.doc-content :global(.hljs-regexp),
+	.doc-content :global(.hljs-addition) {
+		color: var(--mm-syn-string);
 	}
-
-	:global(.doc-content .hljs-title),
-	:global(.doc-content .hljs-section),
-	:global(.doc-content .hljs-name),
-	:global(.doc-content .hljs-selector-id),
-	:global(.doc-content .hljs-selector-class) {
-		color: #b34822;
+	.doc-content :global(.hljs-number),
+	.doc-content :global(.hljs-literal),
+	.doc-content :global(.hljs-symbol) {
+		color: var(--mm-syn-number);
 	}
-
-	:global(.doc-content .hljs-attribute),
-	:global(.doc-content .hljs-attr),
-	:global(.doc-content .hljs-variable),
-	:global(.doc-content .hljs-template-variable),
-	:global(.doc-content .hljs-class .hljs-title),
-	:global(.doc-content .hljs-type) {
-		color: #7b5935;
+	.doc-content :global(.hljs-title),
+	.doc-content :global(.hljs-section),
+	.doc-content :global(.hljs-name),
+	.doc-content :global(.hljs-attr),
+	.doc-content :global(.hljs-attribute),
+	.doc-content :global(.hljs-type) {
+		color: var(--mm-syn-function);
 	}
-
-	:global(.doc-content .hljs-symbol),
-	:global(.doc-content .hljs-bullet),
-	:global(.doc-content .hljs-subst),
-	:global(.doc-content .hljs-meta),
-	:global(.doc-content .hljs-meta .hljs-keyword),
-	:global(.doc-content .hljs-selector-attr),
-	:global(.doc-content .hljs-selector-pseudo),
-	:global(.doc-content .hljs-link) {
-		color: #7b5935;
+	.doc-content :global(.mention) {
+		background: var(--mm-info-soft);
+		color: var(--mm-text);
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		text-decoration: none;
 	}
-
-	:global(.doc-content .hljs-built_in),
-	:global(.doc-content .hljs-deletion) {
-		color: #b34822;
-	}
-
-	:global(.doc-content .hljs-punctuation),
-	:global(.doc-content .hljs-operator) {
-		color: #4a674a;
-	}
-
-	:global(.doc-content .hljs-emphasis) {
-		font-style: italic;
-	}
-
-	:global(.doc-content .hljs-strong) {
-		font-weight: bold;
-	}
-
-	/* Syntax highlighting - Dark theme (Brighter earthy tones) */
-	:global(.dark .doc-content .hljs-comment),
-	:global(.dark .doc-content .hljs-quote) {
-		color: #a8c5a8;
-		font-style: italic;
-	}
-
-	:global(.dark .doc-content .hljs-keyword),
-	:global(.dark .doc-content .hljs-selector-tag),
-	:global(.dark .doc-content .hljs-addition) {
-		color: #ffa77d;
-	}
-
-	:global(.dark .doc-content .hljs-number),
-	:global(.dark .doc-content .hljs-string),
-	:global(.dark .doc-content .hljs-meta .hljs-meta-string),
-	:global(.dark .doc-content .hljs-literal),
-	:global(.dark .doc-content .hljs-doctag),
-	:global(.dark .doc-content .hljs-regexp) {
-		color: #b9d9b9;
-	}
-
-	:global(.dark .doc-content .hljs-title),
-	:global(.dark .doc-content .hljs-section),
-	:global(.dark .doc-content .hljs-name),
-	:global(.dark .doc-content .hljs-selector-id),
-	:global(.dark .doc-content .hljs-selector-class) {
-		color: #ffb899;
-	}
-
-	:global(.dark .doc-content .hljs-attribute),
-	:global(.dark .doc-content .hljs-attr),
-	:global(.dark .doc-content .hljs-variable),
-	:global(.dark .doc-content .hljs-template-variable),
-	:global(.dark .doc-content .hljs-class .hljs-title),
-	:global(.dark .doc-content .hljs-type) {
-		color: #f0d97e;
-	}
-
-	:global(.dark .doc-content .hljs-symbol),
-	:global(.dark .doc-content .hljs-bullet),
-	:global(.dark .doc-content .hljs-subst),
-	:global(.dark .doc-content .hljs-meta),
-	:global(.dark .doc-content .hljs-meta .hljs-keyword),
-	:global(.dark .doc-content .hljs-selector-attr),
-	:global(.dark .doc-content .hljs-selector-pseudo),
-	:global(.dark .doc-content .hljs-link) {
-		color: #f0d97e;
-	}
-
-	:global(.dark .doc-content .hljs-built_in),
-	:global(.dark .doc-content .hljs-deletion) {
-		color: #ffb899;
-	}
-
-	:global(.dark .doc-content .hljs-punctuation),
-	:global(.dark .doc-content .hljs-operator) {
-		color: #d1e5d1;
-	}
-
-	/* Table styles - matching editor */
-	:global(.doc-content table) {
-		@apply w-full my-4 text-sm border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden;
-		border-collapse: collapse;
-	}
-
-	:global(.doc-content th) {
-		@apply bg-gray-100 dark:bg-gray-800 font-semibold text-left px-3 py-2.5 text-gray-900 dark:text-gray-100;
-		border: 1px solid;
-		@apply border-gray-300 dark:border-gray-600;
-		border-right-width: 2px;
-		@apply border-r-gray-400 dark:border-r-gray-500;
-	}
-
-	:global(.doc-content th:last-child) {
-		border-right-width: 1px;
-		@apply border-r-gray-300 dark:border-r-gray-600;
-	}
-
-	:global(.doc-content td) {
-		@apply px-3 py-2.5 text-gray-700 dark:text-gray-300;
-		border: 1px solid;
-		@apply border-gray-300 dark:border-gray-600;
-		border-right-width: 2px;
-		@apply border-r-gray-400 dark:border-r-gray-500;
-	}
-
-	:global(.doc-content td:last-child) {
-		border-right-width: 1px;
-		@apply border-r-gray-300 dark:border-r-gray-600;
-	}
-
-	:global(.doc-content tr:nth-child(even) td) {
-		@apply bg-gray-50 dark:bg-gray-800/30;
-	}
-
-	:global(.doc-content tr:hover td) {
-		@apply bg-blue-50 dark:bg-blue-900/20;
-	}
-
-	/* Blockquote */
-	:global(.doc-content blockquote) {
-		@apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2;
-	}
-
-	/* Lists */
-	:global(.doc-content ul) {
-		@apply list-disc list-inside my-2;
-	}
-
-	:global(.doc-content ol) {
-		@apply list-decimal list-inside my-2;
-	}
-
-	/* Images */
-	:global(.doc-content img) {
-		@apply max-w-full h-auto rounded-lg my-4;
-	}
-
-	/* Mentions - shared styles */
-	:global(.doc-content .mention) {
-		@apply px-1.5 py-0.5 rounded font-medium no-underline;
-	}
-
-	/* User mentions - terracotta/orange */
-	:global(.doc-content .mention-user) {
-		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
-	}
-
-	/* Team mentions - blue */
-	:global(.doc-content .mention-team) {
-		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
-	}
-
-	/* Clickable mention links */
-	:global(.doc-content a.mention) {
-		@apply cursor-pointer transition-colors;
-	}
-	:global(.doc-content a.mention:hover) {
-		@apply bg-blue-200 dark:bg-blue-800/50;
+	.doc-content :global(a.mention:hover) {
+		text-decoration: underline;
 	}
 </style>

@@ -1,13 +1,30 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import Button from '$components/ui/Button.svelte';
+	import { page } from '$app/state';
+	import { onMount, tick } from 'svelte';
 	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
-	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
-	import Icon from '@iconify/svelte';
+	import { userProfile } from '$lib/stores/user';
 	import { m } from '$lib/paraglide/messages';
+	import type { MmTextField } from '@marmotdata/elements/text-field.js';
+
+	// The page is public, so it shows no hostname, version or build details: those help an attacker
+
+	interface LoginResponse {
+		access_token?: string;
+		requires_password_change?: boolean;
+	}
+
+	interface PendingConsent {
+		redirect_uri: string;
+		client_id: string;
+		client_name?: string;
+		scopes: string[];
+		scope_descriptions?: { scope: string; summary: string }[];
+	}
+
+	// Known scopes get translated copy; anything else falls back to the server's own description
+	const scopeCopy: Record<string, () => string> = { openid: () => m.login_consent_scope_openid() };
 
 	let username = $state('');
 	let password = $state('');
@@ -16,36 +33,31 @@
 	let error = $state('');
 	let loading = $state(false);
 	let showPasswordChangeForm = $state(false);
-	interface LoginResponse {
-		access_token?: string;
-		requires_password_change?: boolean;
-	}
 	let loginData: LoginResponse | null = $state(null);
-	let usernameInput = $state<HTMLInputElement>();
-	let passwordInput = $state<HTMLInputElement>();
-	let newPasswordInput = $state<HTMLInputElement>();
-	let confirmPasswordInput = $state<HTMLInputElement>();
-	let pendingConsent = $state<{ redirect_uri: string; client_id: string; scopes: string[] } | null>(
-		null
-	);
+	let pendingConsent = $state<PendingConsent | null>(null);
+	let denied = $state(false);
+	// The registered name is a claim the app makes about itself, so the id stays on screen beside it
+	const consentClient = $derived(pendingConsent?.client_name || pendingConsent?.client_id || '');
+	let usernameInput = $state<MmTextField>();
+	let newPasswordInput = $state<MmTextField>();
+
+	// The OAuth callback sends people here with ?error when the identity provider sign-in failed; the text is fixed so the URL cannot put words on the page
+	const ssoFailed = page.url.searchParams.has('error');
 
 	onMount(async () => {
-		if ($page.url.searchParams.has('oauth_pending')) {
+		if (page.url.searchParams.has('oauth_pending')) {
 			await loadPendingConsent();
 		}
 		if (!pendingConsent) {
+			await customElements.whenDefined('mm-text-field');
 			usernameInput?.focus();
 		}
 	});
 
 	async function loadPendingConsent() {
 		const token = auth.getToken();
-		if (!token) {
-			return;
-		}
-		// Verify the stored token still works on the server — a stale token
-		// (expired, signing key rotated, server restarted) would otherwise let us
-		// show the consent screen, then fail at /oauth/authorize/complete with 401.
+		if (!token) return;
+		// A stale token (expired, signing key rotated, server restarted) would show the consent screen and then fail at /oauth/authorize/complete with 401, so check it first
 		try {
 			const meRes = await fetch('/api/v1/users/me', {
 				headers: { Authorization: `Bearer ${token}` }
@@ -61,9 +73,10 @@
 			const response = await fetch('/oauth/authorize/pending', { credentials: 'same-origin' });
 			if (response.ok) {
 				pendingConsent = await response.json();
+				userProfile.load();
 			}
 		} catch {
-			/* pending consent fetch failed; remain on login screen */
+			/* pending consent fetch failed; remain on the sign-in screen */
 		}
 	}
 
@@ -77,9 +90,7 @@
 				headers: { Authorization: `Bearer ${token}` },
 				credentials: 'same-origin'
 			});
-			if (!response.ok) {
-				throw new Error(m.login_error_complete_authorization());
-			}
+			if (!response.ok) throw new Error(m.login_error_complete_authorization());
 			const data = await response.json();
 			if (data.oauth_redirect) {
 				window.location.href = data.oauth_redirect;
@@ -94,84 +105,58 @@
 
 	async function handleConsentCancel() {
 		try {
-			await fetch('/oauth/authorize/cancel', {
-				method: 'POST',
-				credentials: 'same-origin'
-			});
+			await fetch('/oauth/authorize/cancel', { method: 'POST', credentials: 'same-origin' });
 		} catch {
 			/* best-effort cancel */
 		}
-		pendingConsent = null;
-		goto(resolve('/'));
+		denied = true;
 	}
 
-	function handleUsernameKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && username) {
-			passwordInput?.focus();
+	// Full document navigation so the account language preference in the token applies from the first render; only in-app paths are accepted so the redirect cannot leave Marmot
+	function finishSignIn(token: string) {
+		auth.setToken(token);
+		const redirectParam = page.url.searchParams.get('redirect');
+		const redirectTo =
+			redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+				? redirectParam
+				: '/';
+		window.location.assign(resolve(redirectTo as '/'));
+	}
+
+	// Both a normal sign-in and a forced password change end here, so an OAuth client waiting for consent is asked either way rather than skipped after a password change
+	async function completeSignIn(token: string) {
+		if (page.url.searchParams.has('oauth_pending')) {
+			auth.setToken(token);
+			await loadPendingConsent();
+			if (pendingConsent) return;
 		}
+		finishSignIn(token);
 	}
 
-	function handlePasswordKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && password) {
-			handleSubmit();
-		}
-	}
-
-	function handleNewPasswordKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && newPassword) {
-			confirmPasswordInput?.focus();
-		}
-	}
-
-	function handleConfirmPasswordKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && confirmPassword) {
-			handlePasswordChange();
-		}
-	}
-
-	async function handleSubmit() {
+	async function handleSubmit(e?: Event) {
+		e?.preventDefault();
+		if (loading) return;
 		error = '';
 		loading = true;
-
 		try {
 			const response = await fetch('/api/v1/users/login', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ username, password })
 			});
+			if (!response.ok) throw new Error(m.login_error_invalid_credentials());
 
-			if (!response.ok) {
-				throw new Error(m.login_error_invalid_credentials());
-			}
-
-			const data = await response.json();
+			const data: LoginResponse = await response.json();
 			loginData = data;
 
 			if (data.requires_password_change) {
 				showPasswordChangeForm = true;
-				setTimeout(() => newPasswordInput?.focus(), 100);
+				await tick();
+				newPasswordInput?.focus();
 				return;
 			}
-
-			if (data.access_token) {
-				auth.setToken(data.access_token);
-				if ($page.url.searchParams.has('oauth_pending')) {
-					await loadPendingConsent();
-					if (pendingConsent) {
-						return;
-					}
-				}
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
-			} else {
-				throw new Error(m.login_error_no_token());
-			}
+			if (!data.access_token) throw new Error(m.login_error_no_token());
+			await completeSignIn(data.access_token);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.login_error_login_failed();
 		} finally {
@@ -179,21 +164,19 @@
 		}
 	}
 
-	async function handlePasswordChange() {
+	async function handlePasswordChange(e?: Event) {
+		e?.preventDefault();
+		if (loading) return;
 		error = '';
-
 		if (newPassword !== confirmPassword) {
 			error = m.login_error_password_mismatch();
 			return;
 		}
-
 		if (newPassword.length < 8) {
 			error = m.login_error_password_too_short();
 			return;
 		}
-
 		loading = true;
-
 		try {
 			const response = await fetch('/api/v1/users/update-password', {
 				method: 'POST',
@@ -203,24 +186,10 @@
 				},
 				body: JSON.stringify({ new_password: newPassword })
 			});
-
-			if (!response.ok) {
-				throw new Error(m.login_error_update_password());
-			}
-
+			if (!response.ok) throw new Error(m.login_error_update_password());
 			const passwordData = await response.json();
-
-			if (passwordData.access_token) {
-				auth.setToken(passwordData.access_token);
-				// Constrain redirect targets to in-app paths to keep open-redirect
-				// vectors closed and to satisfy resolve()'s internal-route contract.
-				// Full document navigation so the account language preference in the token applies from the first render
-				const redirectParam = $page.url.searchParams.get('redirect');
-				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
-				window.location.assign(resolve(redirectTo));
-			} else {
-				throw new Error(m.login_error_no_token());
-			}
+			if (!passwordData.access_token) throw new Error(m.login_error_no_token());
+			await completeSignIn(passwordData.access_token);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.login_error_password_change_failed();
 		} finally {
@@ -228,200 +197,207 @@
 		}
 	}
 
-	function goBackToLogin() {
+	async function goBackToLogin() {
 		showPasswordChangeForm = false;
 		newPassword = '';
 		confirmPassword = '';
 		error = '';
-		setTimeout(() => usernameInput?.focus(), 100);
+		await tick();
+		usernameInput?.focus();
+	}
+
+	function valueOf(e: Event): string {
+		return (e.target as HTMLInputElement).value;
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-earthy-brown-50 dark:bg-gray-900 px-4">
-	<div class="max-w-md w-full space-y-6">
-		<!-- Logo and Title -->
-		<div class="text-center">
-			<div class="flex justify-center mb-6">
-				<img src="/images/marmot.svg" alt="Marmot" class="h-20 w-20" />
-			</div>
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				{pendingConsent
-					? m.login_authorize_heading()
-					: showPasswordChangeForm
-						? m.login_change_password_heading()
-						: m.login_signin_heading()}
-			</h1>
-			{#if showPasswordChangeForm && !pendingConsent}
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					{m.login_change_password_hint()}
-				</p>
-			{/if}
-		</div>
+<div class="sheet">
+	<section class="brand" aria-label="Marmot">
+		<mm-topography seed={5} fade="end"></mm-topography>
+		<mm-logo size={36} clear-space></mm-logo>
+	</section>
 
-		<!-- Main Card -->
-		<div
-			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg p-8"
-		>
-			{#if error}
-				<div
-					class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg flex items-start gap-3"
+	<main class="side">
+		<div class="mm-stack form">
+			{#if pendingConsent && denied}
+				<mm-heading level={1} variant="display-title">{m.login_denied_heading()}</mm-heading>
+				<mm-text variant="body" tone="secondary" block
+					>{m.login_denied_body({ client: consentClient })}</mm-text
 				>
-					<Icon icon="material-symbols:error-outline" class="w-5 h-5 flex-shrink-0 mt-0.5" />
-					<p class="text-sm">{error}</p>
-				</div>
-			{/if}
-
-			{#if pendingConsent}
-				<div class="space-y-5">
-					<p class="text-sm text-gray-700 dark:text-gray-300">
-						{m.login_consent_intro()}
-					</p>
-					<div
-						class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 font-mono text-sm break-all text-gray-900 dark:text-gray-100"
+				<mm-button href={resolve('/')} icon="home">{m.login_go_home()}</mm-button>
+			{:else if pendingConsent}
+				<mm-heading level={1} variant="display-title">{m.login_authorize_heading()}</mm-heading>
+				<mm-text variant="body" block>{m.login_consent_asking({ client: consentClient })}</mm-text>
+				{#if $userProfile}
+					<mm-owner-chip
+						name={$userProfile.name || $userProfile.username}
+						email={$userProfile.email ?? ''}
+						avatar-size={24}
+					></mm-owner-chip>
+				{/if}
+				{#if error}
+					<mm-callout tone="danger" compact urgent>{error}</mm-callout>
+				{/if}
+				{#if pendingConsent.scope_descriptions?.length}
+					<div class="mm-stack" style="--mm-gap: var(--space-2)">
+						<mm-text variant="label" block>{m.login_consent_can({ client: consentClient })}</mm-text
+						>
+						<mm-list dense style="--mm-list-inset: 0">
+							{#each pendingConsent.scope_descriptions as d (d.scope)}
+								<mm-list-item
+									><mm-icon slot="start" name="account-circle"></mm-icon>{scopeCopy[d.scope]?.() ??
+										d.summary}</mm-list-item
+								>
+							{/each}
+						</mm-list>
+					</div>
+				{/if}
+				<mm-description-list layout="stacked">
+					<mm-description term={m.login_consent_client()} mono
+						>{pendingConsent.client_id}</mm-description
 					>
-						{pendingConsent.redirect_uri}
-					</div>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
-						{m.login_consent_warning({ command: 'marmot login' })}
-					</p>
-					<div class="space-y-3">
-						<Button
-							class="w-full justify-center"
-							{loading}
-							text={m.login_authorize_button()}
-							variant="filled"
-							click={handleConsentAllow}
-						/>
-						<Button
-							class="w-full justify-center"
-							text={m.common_cancel()}
-							variant="clear"
-							click={handleConsentCancel}
-						/>
-					</div>
+					<mm-description term={m.login_consent_returns_to()} mono
+						>{pendingConsent.redirect_uri}</mm-description
+					>
+				</mm-description-list>
+				<mm-text variant="caption" tone="secondary" block
+					>{m.login_consent_warning({ command: 'marmot login' })}</mm-text
+				>
+				<div class="mm-cluster" style="--mm-gap: var(--space-3)">
+					<mm-button disabled={loading} onclick={handleConsentCancel}
+						>{m.login_deny_button()}</mm-button
+					>
+					<mm-button variant="primary" disabled={loading} onclick={handleConsentAllow}
+						>{m.login_authorize_button()}</mm-button
+					>
 				</div>
-			{:else if !showPasswordChangeForm}
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						handleSubmit();
-					}}
-					class="space-y-5"
+				<mm-text variant="caption" tone="secondary" block>{m.login_consent_revoke_hint()}</mm-text>
+			{:else if showPasswordChangeForm}
+				<mm-heading level={1} variant="display-title"
+					>{m.login_change_password_heading()}</mm-heading
 				>
-					<div class="space-y-4">
-						<div>
-							<label
-								for="username"
-								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>
-								{m.login_username_label()}
-							</label>
-							<input
-								bind:this={usernameInput}
-								id="username"
-								bind:value={username}
-								type="text"
-								required
-								onkeydown={handleUsernameKeydown}
-								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder={m.login_username_placeholder()}
-							/>
-						</div>
-						<div>
-							<label
-								for="password"
-								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>
-								{m.login_password_label()}
-							</label>
-							<input
-								bind:this={passwordInput}
-								id="password"
-								bind:value={password}
-								type="password"
-								required
-								onkeydown={handlePasswordKeydown}
-								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder={m.login_password_placeholder()}
-							/>
-						</div>
-					</div>
-
-					<Button
-						class="w-full justify-center"
-						type="submit"
-						{loading}
-						text={m.login_signin_button()}
-						variant="filled"
-					/>
+				<mm-text variant="body" tone="secondary" block>{m.login_change_password_hint()}</mm-text>
+				<form class="mm-stack fields" onsubmit={handlePasswordChange}>
+					{#if error}
+						<mm-callout tone="danger" compact urgent>{error}</mm-callout>
+					{/if}
+					<mm-text-field
+						bind:this={newPasswordInput}
+						name="new-password"
+						type="password"
+						label={m.login_new_password_label()}
+						autocomplete="new-password"
+						help={m.login_new_password_help()}
+						value={newPassword}
+						required
+						oninput={(e: Event) => (newPassword = valueOf(e))}
+					></mm-text-field>
+					<mm-text-field
+						name="confirm-password"
+						type="password"
+						label={m.login_confirm_password_label()}
+						autocomplete="new-password"
+						value={confirmPassword}
+						required
+						oninput={(e: Event) => (confirmPassword = valueOf(e))}
+					></mm-text-field>
+					<mm-button class="block" variant="primary" type="submit" disabled={loading}
+						>{m.login_change_password_button()}</mm-button
+					>
 				</form>
-
-				<OAuthButtons />
+				<mm-button variant="ghost" icon="arrow-back" onclick={goBackToLogin}
+					>{m.login_back_to_login_button()}</mm-button
+				>
 			{:else}
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						handlePasswordChange();
-					}}
-					class="space-y-5"
-				>
-					<div class="space-y-4">
-						<div>
-							<label
-								for="new-password"
-								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>
-								{m.login_new_password_label()}
-							</label>
-							<input
-								bind:this={newPasswordInput}
-								id="new-password"
-								bind:value={newPassword}
-								type="password"
-								required
-								onkeydown={handleNewPasswordKeydown}
-								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder={m.login_new_password_placeholder()}
-							/>
-						</div>
-						<div>
-							<label
-								for="confirm-password"
-								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-							>
-								{m.login_confirm_password_label()}
-							</label>
-							<input
-								bind:this={confirmPasswordInput}
-								id="confirm-password"
-								bind:value={confirmPassword}
-								type="password"
-								required
-								onkeydown={handleConfirmPasswordKeydown}
-								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
-								placeholder={m.login_confirm_password_placeholder()}
-							/>
-						</div>
-					</div>
-
-					<div class="space-y-3">
-						<Button
-							class="w-full justify-center"
-							type="submit"
-							{loading}
-							text={m.login_change_password_button()}
-							variant="filled"
-						/>
-						<Button
-							class="w-full justify-center"
-							text={m.login_back_to_login_button()}
-							variant="clear"
-							icon="material-symbols:arrow-back"
-							click={goBackToLogin}
-						/>
-					</div>
+				<mm-heading level={1} variant="display-title">{m.login_signin_heading()}</mm-heading>
+				{#if ssoFailed}
+					<mm-callout tone="danger" heading={m.login_sso_failed_heading()}
+						>{m.login_sso_failed_body()}</mm-callout
+					>
+				{/if}
+				<OAuthButtons />
+				<form class="mm-stack fields" onsubmit={handleSubmit}>
+					{#if error}
+						<mm-callout tone="danger" compact urgent>{error}</mm-callout>
+					{/if}
+					<mm-text-field
+						bind:this={usernameInput}
+						name="username"
+						label={m.login_username_label()}
+						autocomplete="username"
+						value={username}
+						required
+						oninput={(e: Event) => (username = valueOf(e))}
+					></mm-text-field>
+					<mm-text-field
+						name="password"
+						type="password"
+						label={m.login_password_label()}
+						autocomplete="current-password"
+						value={password}
+						required
+						oninput={(e: Event) => (password = valueOf(e))}
+					></mm-text-field>
+					<mm-button class="block" variant="primary" type="submit" disabled={loading}
+						>{m.login_signin_button()}</mm-button
+					>
 				</form>
+				<mm-text variant="caption" tone="secondary" block>{m.login_forgotten_password()}</mm-text>
 			{/if}
 		</div>
-	</div>
+	</main>
 </div>
+
+<style>
+	.sheet {
+		min-height: 100vh;
+		background: var(--mm-paper);
+		color: var(--mm-text);
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+	}
+	.brand {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: var(--space-6);
+		padding: var(--space-8);
+		background: var(--mm-sunken);
+		border-inline-end: 1px solid var(--mm-rule);
+	}
+	.side {
+		display: grid;
+		align-items: center;
+		justify-items: start;
+		padding: var(--space-8) var(--space-12);
+	}
+	.form {
+		--mm-gap: var(--space-5);
+		inline-size: min(100%, 24rem);
+	}
+	.fields {
+		--mm-gap: var(--space-4);
+	}
+	.block {
+		display: flex;
+	}
+	@media (max-width: 768px) {
+		.sheet {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto 1fr;
+		}
+		.brand {
+			min-height: 220px;
+			padding: var(--space-5) var(--space-4);
+			border-inline-end: 0;
+			border-block-end: 1px solid var(--mm-rule);
+		}
+		.side {
+			align-items: start;
+			padding: var(--space-6) var(--space-4) var(--space-8);
+		}
+	}
+</style>

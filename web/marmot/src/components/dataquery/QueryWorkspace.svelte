@@ -1,70 +1,222 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import IconifyIcon from '@iconify/svelte';
+	import '@marmotdata/elements/split-pane.js';
+	import '@marmotdata/elements/toolbar.js';
+	import '@marmotdata/elements/sql-editor.js';
+	import '@marmotdata/elements/results-grid.js';
+	import '@marmotdata/elements/query-history.js';
+	import '@marmotdata/elements/progress.js';
+	import '@marmotdata/elements/visually-hidden.js';
+	import type { MmSqlEditor, SqlError, SqlSchema } from '@marmotdata/elements/classes/sql-editor';
+	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
+	import type { QueryHistoryItem } from '@marmotdata/elements/classes/query-history';
 	import { m } from '$lib/paraglide/messages';
-	import { ApiError, getErrorMessage } from '$lib/stores/toast';
-	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
-	import { listQueryHistory, listQuerySourceTables, runQuery } from '$lib/dataquery/api';
-	import type { QueryRecord, QueryResult, QuerySourceTable } from '$lib/dataquery/types';
-	import Blade from '$components/ui/Blade.svelte';
+	import { ApiError, getErrorMessage, toasts } from '$lib/stores/toast';
+	import { formatDateTime, formatNumber } from '$lib/utils/format';
+	import { html } from 'lit';
+	import '@marmotdata/elements/tag.js';
+	import { holdsAtRoot, loadMyAccess, myAccess } from '$lib/iam/myAccess';
+	import {
+		cancelQuery,
+		listQueryHistory,
+		listQuerySources,
+		listQuerySourceTables,
+		QueryRefusedError,
+		requestQueryAccess,
+		runQuery
+	} from '$lib/dataquery/api';
+	import {
+		assetRouteParams,
+		durationMs,
+		isRealTime,
+		outcomeReason,
+		qualifiedName
+	} from '$lib/dataquery/format';
+	import type {
+		QueryAssetContext,
+		QueryRecord,
+		QueryRefusal,
+		QueryResult,
+		QuerySource,
+		QuerySourceTable
+	} from '$lib/dataquery/types';
+	import { resolve } from '$app/paths';
 	import QueryDetail from './QueryDetail.svelte';
-	import QueryLog from './QueryLog.svelte';
 	import QueryEmptyState from './QueryEmptyState.svelte';
+	import SavedQueries from './SavedQueries.svelte';
 	import SourceExplorer from './SourceExplorer.svelte';
-	import SourcePicker from './SourcePicker.svelte';
-	import SqlEditor from './SqlEditor.svelte';
-	import QueryResultsTable from './QueryResultsTable.svelte';
-	import QueryResultContext from './QueryResultContext.svelte';
-	import QueryResultsHistory from './QueryResultsHistory.svelte';
 
 	let {
-		hasSources,
 		initialSource = '',
 		initialStatement = '',
 		autoRun = false
 	}: {
-		hasSources: boolean;
 		initialSource?: string;
 		initialStatement?: string;
 		autoRun?: boolean;
 	} = $props();
 
-	type ResultsTab = 'results' | 'context' | 'history';
-	type Drawer = 'history' | null;
+	type Tab = 'results' | 'tables' | 'history';
 
-	const ROW_LIMITS = [100, 1000, 10000];
-	const EDITOR_KEY = 'marmot.query.editorHeight';
+	// The server defaults to 1,000 rows and caps every query at 10,000, so there is no "No limit"
+	const ROW_LIMITS = [10, 100, 1000, 10000];
+	const SOURCE_PAGE = 200;
+	const HISTORY_PAGE = 25;
 	const EXPLORER_KEY = 'marmot.query.explorer';
+	const PROGRESS_POLL_MS = 1000;
+
+	let sources = $state<QuerySource[]>([]);
+	let sourcesTotal = $state(0);
+	let sourcesLoading = $state(true);
+	let sourcesLoaded = $state(false);
+	let sourcesError = $state('');
 
 	let source = $state('');
 	let statement = $state('');
-	let maxRows = $state(100);
+	let maxRows = $state(1000);
 	let running = $state(false);
 	let result = $state<QueryResult | null>(null);
 	let denied = $state('');
+	let refusal = $state<QueryRefusal | null>(null);
+	let accessRequested = $state(false);
+	let requestingAccess = $state(false);
+	let cancelled = $state(false);
+	// The running query's audit record, found by polling the caller's running queries, so Cancel can name it and progress can count its rows
+	let runningId = $state('');
+	let rowsReceived = $state<number | null>(null);
+	let runController: AbortController | null = null;
+	let progressTimer: ReturnType<typeof setInterval> | undefined;
 	let failure = $state('');
+	let unreachable = $state('');
+	let sqlError = $state<SqlError | null>(null);
 	let elapsedMs = $state(0);
-	let liveMs = $state(0);
+	// The audit record of the last run, found from history when the run itself returned an error
+	let recordId = $state('');
+	let lastRun = '';
 	let detailId = $state<string | null>(null);
-	let editor = $state<HTMLTextAreaElement | null>(null);
-	let workspace = $state<HTMLElement | null>(null);
+	let editor = $state<MmSqlEditor>();
 
 	let explorerOpen = $state(true);
-	let editorHeight = $state(260);
-	let resultsTab = $state<ResultsTab>('results');
-	let drawer = $state<Drawer>(null);
+	let wide = $state(true);
+	let tab = $state<Tab>('results');
+	let outputHeight = $state(0);
 
 	let recent = $state<QueryRecord[]>([]);
+	let recentTotal = $state(0);
 	let starters = $state<QuerySourceTable[]>([]);
 	let startersRequest = 0;
 	// A statement the workspace filled in itself, which it may replace when the source changes; anything typed is left alone
-	let autoFilled = $state('');
+	let autoFilled = '';
 
+	// Completion metadata per source, filled as the explorer loads tables and columns
+	let schemas = $state<Record<string, SqlSchema>>({});
+
+	let current = $derived(sources.find((s) => s.name === source));
+	let editorSchema = $derived(schemas[source] ?? {});
+	let defaultSchema = $derived(mostCommonPrefix(Object.keys(editorSchema)));
+	let canViewAudit = $derived(holdsAtRoot($myAccess, 'access:view'));
 	let canRun = $derived(!!source && statement.trim().length > 0 && !running);
-	let isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform);
-	let runShortcut = $derived(isMac ? '⌘↵' : 'Ctrl ↵');
-	let explorerShortcut = $derived(isMac ? '⌘B' : 'Ctrl B');
-	let contextCount = $derived(result?.context?.length ?? 0);
+	let context = $derived(result?.context ?? []);
+	let gridHeight = $derived(Math.max(200, outputHeight - 128));
+	let providers = $derived(new Map(sources.map((s) => [s.name, s.plugin_id])));
+	let history = $derived<QueryHistoryItem[]>(
+		recent.map((q) => ({
+			id: q.id,
+			sql: q.statement,
+			status:
+				q.decision === 'denied'
+					? 'denied'
+					: q.status === 'completed'
+						? 'succeeded'
+						: q.status === 'failed'
+							? 'failed'
+							: q.status === 'cancelled'
+								? 'cancelled'
+								: 'running',
+			source: { name: q.source_name, provider: providers.get(q.source_name) ?? '' },
+			rows: q.rows_returned ?? null,
+			durationMs: durationMs(q) ?? null,
+			startedAt: q.started_at,
+			reason: outcomeReason(q) || undefined
+		}))
+	);
+
+	const tableColumns: DataTableColumn<QueryAssetContext>[] = [
+		{
+			key: 'name',
+			header: m.dataquery_tables_col_table(),
+			width: 260,
+			value: (r) => r.name || r.mrn,
+			href: (r) => {
+				const route = r.asset_id ? assetRouteParams(r.mrn) : null;
+				return route ? resolve('/discover/[type]/[service]/[name]', route) : undefined;
+			}
+		},
+		{
+			key: 'owners',
+			header: m.dataquery_tables_col_owner(),
+			width: 190,
+			value: (r) => (r.owners ?? []).join(', '),
+			empty: m.dataquery_tables_no_owner()
+		},
+		{ key: 'row_count', header: m.dataquery_tables_col_rows(), type: 'number', width: 110 },
+		{
+			key: 'columns_read',
+			header: m.dataquery_tables_col_columns_read(),
+			type: 'number',
+			width: 120
+		},
+		{
+			key: 'personal_data',
+			header: m.dataquery_tables_col_personal_data(),
+			minWidth: 200,
+			value: (r) => (r.personal_data?.length ? r.personal_data : null),
+			empty: m.dataquery_tables_none(),
+			// Columns the query returned come first; the rest are named as not read, so the cell says what left the source
+			render: (r) => {
+				const read = (r.personal_data ?? []).filter((c) => c.read).map((c) => c.name);
+				const unread = (r.personal_data ?? []).filter((c) => !c.read).map((c) => c.name);
+				const parts = [
+					read.join(', '),
+					unread.length ? m.dataquery_tables_not_read({ columns: unread.join(', ') }) : ''
+				]
+					.filter(Boolean)
+					.join(', ');
+				return html`<span class="mm-cluster" style="flex-wrap:nowrap"
+					><mm-tag variant="pii"></mm-tag
+					><mm-text variant="dense" tone="secondary">${parts}</mm-text></span
+				>`;
+			}
+		},
+		{
+			key: 'certified',
+			header: m.dataquery_tables_col_certified(),
+			width: 120,
+			render: (r) =>
+				r.certified
+					? html`<mm-tag variant="certified"></mm-tag>`
+					: html`<mm-text variant="dense" tone="secondary"
+							>${m.dataquery_tables_not_certified()}</mm-text
+						>`
+		},
+		{
+			key: 'last_sync_at',
+			header: m.dataquery_tables_col_refreshed(),
+			type: 'date',
+			width: 170,
+			value: (r) => (isRealTime(r.last_sync_at) ? r.last_sync_at : null),
+			empty: m.dataquery_query_never_synced()
+		}
+	];
+
+	function mostCommonPrefix(names: string[]): string {
+		const counts: Record<string, number> = {};
+		for (const name of names) {
+			const prefix = name.split('.').slice(0, -1).join('.');
+			if (prefix) counts[prefix] = (counts[prefix] ?? 0) + 1;
+		}
+		return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+	}
 
 	function readStored(key: string): string | null {
 		try {
@@ -82,9 +234,29 @@
 		}
 	}
 
-	async function loadRecent() {
+	async function loadSources(append = false) {
+		sourcesLoading = true;
+		sourcesError = '';
 		try {
-			recent = (await listQueryHistory({ mine: true, limit: 25 })).queries;
+			const data = await listQuerySources({
+				limit: SOURCE_PAGE,
+				offset: append ? sources.length : 0
+			});
+			sources = append ? [...sources, ...data.sources] : data.sources;
+			sourcesTotal = data.total;
+		} catch (e) {
+			sourcesError = getErrorMessage(e);
+		} finally {
+			sourcesLoading = false;
+			sourcesLoaded = true;
+		}
+	}
+
+	async function loadRecent(limit = Math.max(recent.length, HISTORY_PAGE)) {
+		try {
+			const data = await listQueryHistory({ mine: true, limit });
+			recent = data.queries;
+			recentTotal = data.total;
 		} catch {
 			recent = [];
 		}
@@ -97,12 +269,26 @@
 		try {
 			const tables = await listQuerySourceTables(name, { limit: 6 });
 			if (id !== startersRequest) return;
+			addTables(name, tables);
 			starters = tables.filter((t) => t.sample_statement);
 			const preview = starters[0]?.sample_statement ?? '';
 			if (preview && (statement.trim() === '' || statement === autoFilled)) setStatement(preview);
 		} catch {
 			// Starters are a convenience; the workspace works without them
 		}
+	}
+
+	function addTables(name: string, tables: QuerySourceTable[]) {
+		const next = { ...schemas[name] };
+		for (const t of tables) next[qualifiedName(t)] ??= [];
+		schemas = { ...schemas, [name]: next };
+	}
+
+	function addColumns(name: string, table: QuerySourceTable, columns: { name: string }[]) {
+		schemas = {
+			...schemas,
+			[name]: { ...schemas[name], [qualifiedName(table)]: columns.map((c) => c.name) }
+		};
 	}
 
 	function selectSource(name: string) {
@@ -114,64 +300,152 @@
 	function setStatement(text: string) {
 		statement = text;
 		autoFilled = text;
+		sqlError = null;
 	}
 
 	function clearOutcome() {
 		result = null;
 		denied = '';
+		refusal = null;
+		accessRequested = false;
+		cancelled = false;
 		failure = '';
+		unreachable = '';
+		sqlError = null;
+		recordId = '';
 	}
 
-	// Explorer clicks drop the name at the caret, the way schema trees in desktop SQL tools do
+	// Explorer picks drop the name at the caret, the way schema trees in desktop SQL tools do
 	function insertAtCaret(text: string) {
-		if (!editor) {
+		const view = editor?.view;
+		if (!view) {
 			statement += text;
 			return;
 		}
-		const { selectionStart, selectionEnd } = editor;
-		statement = statement.slice(0, selectionStart) + text + statement.slice(selectionEnd);
-		const caret = selectionStart + text.length;
-		queueMicrotask(() => {
-			editor?.focus();
-			editor?.setSelectionRange(caret, caret);
-		});
+		view.dispatch(view.state.replaceSelection(text));
+		view.focus();
 	}
 
-	// Clicking a table only writes its sample query into the editor; nothing runs until the Run button or the shortcut is used
-	function preview(name: string, text: string) {
-		openStatement(name, text, false);
-	}
-
-	function openRecord(query: QueryRecord, andRun = false) {
-		openStatement(query.source_name, query.statement, andRun);
-	}
-
-	function openStatement(name: string, text: string, andRun: boolean) {
+	// A sample query only fills the editor; nothing runs until Run query or the shortcut
+	function openStatement(name: string, text: string, andRun = false) {
 		selectSource(name);
 		setStatement(text);
-		drawer = null;
+		tab = 'results';
 		editor?.focus();
-		if (andRun) run();
-		else resultsTab = 'results';
+		if (andRun) run(text);
 	}
 
-	async function run() {
-		if (!source || statement.trim().length === 0 || running) return;
+	// The error names the failing position when the source reports one, so the editor can underline it
+	function errorPosition(message: string, text: string): SqlError | null {
+		const lineCol = message.match(/line (\d+),? (?:column|col) (\d+)/i);
+		if (lineCol) return { line: +lineCol[1], column: +lineCol[2], message };
+		const offset = message.match(/(?:at character|position) (\d+)/i);
+		if (!offset) return null;
+		const before = text.slice(0, Math.max(0, +offset[1] - 1)).split('\n');
+		return { line: before.length, column: before[before.length - 1].length + 1, message };
+	}
+
+	// The API prefixes refusals and failures with the error kind, which the callout heading already says
+	function stripKind(message: string): string {
+		return message.replace(/^(query denied by policy|query failed|invalid input):\s*/i, '');
+	}
+
+	// Denial reasons name tables by MRN; the last segment is the name people know
+	function readableReason(message: string): string {
+		return stripKind(message).replace(/mrn:\/\/\S+/g, (mrn) => mrn.split('/').pop() ?? mrn);
+	}
+
+	async function run(text = statement) {
+		if (!source || text.trim().length === 0 || running) return;
 		running = true;
 		clearOutcome();
-		resultsTab = 'results';
+		tab = 'results';
+		lastRun = text;
 		const started = performance.now();
-		const ticker = setInterval(() => (liveMs = Math.round(performance.now() - started)), 100);
+		const controller = new AbortController();
+		runController = controller;
+		watchProgress(source, text);
 		try {
-			result = await runQuery({ source, statement, max_rows: maxRows });
+			result = await runQuery({ source, statement: text, max_rows: maxRows }, controller.signal);
+			recordId = result.query_id;
 		} catch (e) {
-			if (e instanceof ApiError && e.status === 403) denied = e.message;
-			else failure = getErrorMessage(e);
+			const message = getErrorMessage(e);
+			if (e instanceof QueryRefusedError) {
+				refusal = e.refusal;
+				denied = readableReason(e.refusal.reason || message);
+				recordId = e.refusal.query_id ?? '';
+			} else if (controller.signal.aborted || (e instanceof ApiError && e.status === 409))
+				cancelled = true;
+			else if (e instanceof ApiError && e.status === 403) denied = readableReason(message);
+			else if (e instanceof ApiError && e.status === 400) {
+				failure = stripKind(message);
+				sqlError = errorPosition(failure, text);
+			} else unreachable = message;
 		} finally {
-			clearInterval(ticker);
+			stopProgress();
+			runController = null;
 			elapsedMs = Math.round(performance.now() - started);
 			running = false;
-			loadRecent();
+		}
+		if (cancelled && runningId) recordId = runningId;
+		runningId = '';
+		// The cancelled record is only marked once the server notices the hang-up, so history waits a moment for it
+		if (cancelled) await new Promise((r) => setTimeout(r, 300));
+		await loadRecent();
+		if (!result && !recordId && recent[0]?.statement === lastRun) recordId = recent[0].id;
+	}
+
+	// The run request only answers when the query ends, so its record is found among the caller's running queries to count rows and to cancel by id
+	function watchProgress(name: string, text: string) {
+		stopProgress();
+		runningId = '';
+		rowsReceived = null;
+		progressTimer = setInterval(async () => {
+			try {
+				const data = await listQueryHistory({
+					mine: true,
+					status: 'running',
+					source: name,
+					limit: 5
+				});
+				if (!running) return;
+				const q = data.queries.find((r) => r.statement === text);
+				if (!q) return;
+				runningId = q.id;
+				if (q.rows_returned != null) rowsReceived = q.rows_returned;
+			} catch {
+				// Progress is a nicety; the run itself reports how it ended
+			}
+		}, PROGRESS_POLL_MS);
+	}
+
+	function stopProgress() {
+		clearInterval(progressTimer);
+		progressTimer = undefined;
+	}
+
+	// Cancelling asks the replica running the query to stop it and hangs up, which stops it wherever it runs
+	async function cancel() {
+		const id = runningId;
+		if (id) await cancelQuery(id).catch(() => {});
+		runController?.abort();
+	}
+
+	async function requestAccess() {
+		if (!refusal) return;
+		requestingAccess = true;
+		try {
+			const req = await requestQueryAccess(
+				refusal.query_id ? { query_id: refusal.query_id } : { source: refusal.source }
+			);
+			accessRequested = true;
+			if (req.repeat) toasts.info(m.dataquery_access_request_repeat());
+			else if (req.notified > 0) toasts.success(m.dataquery_access_request_sent());
+			else toasts.info(m.dataquery_access_request_recorded());
+		} catch (e) {
+			toasts.error(getErrorMessage(e));
+		} finally {
+			requestingAccess = false;
 		}
 	}
 
@@ -187,411 +461,405 @@
 		store(EXPLORER_KEY, explorerOpen ? '1' : '0');
 	}
 
-	// Dragging the bar between editor and results trades height between them, and the split is remembered
-	function startResize(e: PointerEvent) {
-		if (!workspace) return;
-		e.preventDefault();
-		const startY = e.clientY;
-		const startHeight = editorHeight;
-		const maxHeight = workspace.clientHeight - 180;
-		const move = (ev: PointerEvent) => {
-			editorHeight = Math.min(maxHeight, Math.max(120, startHeight + ev.clientY - startY));
-		};
-		const up = () => {
-			window.removeEventListener('pointermove', move);
-			window.removeEventListener('pointerup', up);
-			store(EDITOR_KEY, String(editorHeight));
-		};
-		window.addEventListener('pointermove', move);
-		window.addEventListener('pointerup', up);
-	}
-
-	function nudgeResize(e: KeyboardEvent) {
-		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-		e.preventDefault();
-		editorHeight = Math.max(120, editorHeight + (e.key === 'ArrowDown' ? 24 : -24));
-		store(EDITOR_KEY, String(editorHeight));
-	}
-
-	function deniedTable(message: string): string {
-		const match = message.match(/mrn:\/\/\S+/);
-		return match ? match[0] : '';
-	}
-
-	// The Results tab can show the rows as a table or as CSV or JSON text, so a result can be copied straight into a chat or a doc and only saved as a file when that is wanted
-	let resultView = $state<'table' | 'csv' | 'json'>('table');
-
-	function oneLine(text: string): string {
-		return text.replace(/\s+/g, ' ').trim();
-	}
-
 	onMount(() => {
-		const height = Number(readStored(EDITOR_KEY));
-		if (height >= 120) editorHeight = height;
 		explorerOpen = readStored(EXPLORER_KEY) !== '0';
+		const mq = window.matchMedia('(min-width: 768px)');
+		wide = mq.matches;
+		const onChange = () => (wide = mq.matches);
+		mq.addEventListener('change', onChange);
 		if (initialStatement) setStatement(initialStatement);
+		loadMyAccess();
+		loadSources();
 		loadRecent().then(() => {
 			const name = initialSource || recent.find((q) => q.decision === 'allowed')?.source_name || '';
 			if (name) selectSource(name);
-			if (autoRun && initialStatement) run();
+			if (autoRun && initialStatement) run(initialStatement);
 		});
+		return () => {
+			mq.removeEventListener('change', onChange);
+			stopProgress();
+		};
 	});
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-{#snippet toolbarButton(label: string, icon: string, onclick: () => void, pressed = false)}
-	<button
-		type="button"
-		{onclick}
-		aria-pressed={pressed}
-		class="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition {pressed
-			? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-			: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'}"
-	>
-		<IconifyIcon {icon} class="h-4 w-4" />
-		<span class="hidden lg:inline">{label}</span>
-	</button>
-{/snippet}
-
-{#snippet emptyState()}
-	<div class="mx-auto max-w-2xl px-6 py-10">
-		<p class="text-center text-sm text-gray-500 dark:text-gray-400">
-			{m.dataquery_workspace_empty({ shortcut: runShortcut })}
-		</p>
-		{#if starters.length > 0}
-			<h4
-				class="mt-8 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-			>
-				{m.dataquery_workspace_starters({ source })}
-			</h4>
-			<div class="mt-2 grid gap-2 sm:grid-cols-2">
-				{#each starters as table (table.mrn)}
-					<button
-						type="button"
-						onclick={() => preview(source, table.sample_statement ?? '')}
-						class="group flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
-					>
-						<IconifyIcon
-							icon={table.type === 'View'
-								? 'material-symbols:visibility-outline'
-								: 'material-symbols:table-outline'}
-							class="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400"
-						/>
-						<span class="min-w-0">
-							<span class="block truncate font-mono text-sm text-gray-900 dark:text-gray-100"
-								>{table.name}</span
-							>
-							<span class="line-clamp-1 text-xs text-gray-500 dark:text-gray-400"
-								>{table.description || m.dataquery_workspace_preview_rows()}</span
-							>
-						</span>
-						<IconifyIcon
-							icon="material-symbols:play-arrow-rounded"
-							class="ml-auto h-5 w-5 flex-shrink-0 text-gray-300 group-hover:text-earthy-terracotta-600"
-						/>
-					</button>
-				{/each}
-			</div>
-		{/if}
-		{#if recent.length > 0}
-			<h4
-				class="mt-8 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-			>
-				{m.dataquery_workspace_recent()}
-			</h4>
-			<ul class="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-				{#each recent.slice(0, 4) as query (query.id)}
-					<li>
-						<button
-							type="button"
-							onclick={() => openRecord(query)}
-							class="flex w-full items-center gap-3 py-2 text-left text-sm hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400"
-						>
-							<IconifyIcon
-								icon="material-symbols:history"
-								class="h-4 w-4 flex-shrink-0 text-gray-400"
-							/>
-							<span class="truncate font-mono text-xs text-gray-700 dark:text-gray-300"
-								>{oneLine(query.statement)}</span
-							>
-							<span class="ml-auto whitespace-nowrap text-xs text-gray-400"
-								>{formatRelativeTime(query.started_at)}</span
-							>
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+{#snippet callout(heading: string, body: string, next: string, retry: boolean, urgent: boolean)}
+	<div class="pad mm-stack">
+		<mm-callout tone="danger" {heading} {urgent}>
+			<span class="reason">{body}</span>
+			{next}
+			{#if retry}
+				<mm-button
+					slot="actions"
+					size="sm"
+					variant="secondary"
+					icon="refresh"
+					onclick={() => run(lastRun)}>{m.dataquery_workspace_run_again()}</mm-button
+				>
+			{/if}
+			{#if recordId}
+				<mm-button
+					slot="actions"
+					size="sm"
+					variant="ghost"
+					icon="receipt-long"
+					onclick={() => (detailId = recordId)}>{m.dataquery_workspace_open_details()}</mm-button
+				>
+			{/if}
+		</mm-callout>
 	</div>
 {/snippet}
 
-{#if !hasSources}
-	<QueryEmptyState />
-{:else}
-	<div class="flex min-h-0 flex-1">
-		{#if explorerOpen}
-			<aside
-				class="hidden w-72 flex-shrink-0 border-r border-gray-200 bg-gray-50/60 md:block dark:border-gray-800 dark:bg-gray-900/40"
-				aria-label={m.dataquery_explorer_heading()}
+{#snippet resultsPanel()}
+	{#if running}
+		<div class="pad">
+			{#if rowsReceived !== null && rowsReceived > 0}
+				<mm-progress
+					label={m.dataquery_workspace_rows_received()}
+					value={rowsReceived}
+					max={maxRows}
+					unit={m.dataquery_workspace_rows_unit()}
+					class="progress"
+				></mm-progress>
+			{:else}
+				<mm-progress label={m.dataquery_workspace_running_label()} indeterminate class="progress"
+				></mm-progress>
+			{/if}
+		</div>
+	{:else if refusal}
+		<div class="pad mm-stack">
+			<mm-callout
+				tone="danger"
+				urgent
+				heading={refusal.rule === 'permission' && refusal.permission
+					? m.dataquery_workspace_denied_permission_heading({ permission: refusal.permission })
+					: m.dataquery_workspace_denied_heading()}
 			>
-				<SourceExplorer
-					active={source}
-					onSelect={selectSource}
-					onInsert={insertAtCaret}
-					onPreview={preview}
-				/>
-			</aside>
-		{/if}
+				<span class="reason">{denied}</span>
+				{refusal.needed
+					? m.dataquery_workspace_denied_ask({ needed: refusal.needed })
+					: m.dataquery_workspace_denied_next()}
+				<mm-button
+					slot="actions"
+					size="sm"
+					variant="secondary"
+					icon="vpn-key"
+					loading={requestingAccess}
+					disabled={accessRequested}
+					onclick={requestAccess}
+					>{accessRequested
+						? m.dataquery_workspace_access_requested()
+						: m.dataquery_workspace_request_access()}</mm-button
+				>
+				{#if refusal.query_id && canViewAudit}
+					<mm-button
+						slot="actions"
+						size="sm"
+						variant="ghost"
+						icon="policy"
+						href={`${resolve('/query-audit')}?id=${encodeURIComponent(refusal.query_id)}`}
+						>{m.dataquery_workspace_view_in_audit()}</mm-button
+					>
+				{:else if recordId}
+					<mm-button
+						slot="actions"
+						size="sm"
+						variant="ghost"
+						icon="receipt-long"
+						onclick={() => (detailId = recordId)}>{m.dataquery_workspace_open_details()}</mm-button
+					>
+				{/if}
+			</mm-callout>
+			<!-- The callout already says why; the details add only what it does not -->
+			<mm-description-list layout="inline-grid" columns={3}>
+				{#if refusal.policy}
+					<mm-description term={m.dataquery_refusal_policy()}>{refusal.policy}</mm-description>
+				{/if}
+				{#if refusal.permission}
+					<mm-description term={m.dataquery_refusal_permission()}
+						>{refusal.permission}</mm-description
+					>
+				{/if}
+				<mm-description term={m.dataquery_refusal_roles()}
+					>{refusal.roles.length > 0
+						? refusal.roles.join(', ')
+						: m.dataquery_refusal_no_roles()}</mm-description
+				>
+				{#if refusal.query_id}
+					<mm-description term={m.dataquery_detail_query_id()} mono
+						>{refusal.query_id}</mm-description
+					>
+				{/if}
+				<mm-description term={m.dataquery_refusal_decided()}
+					>{formatDateTime(refusal.decided_at)}</mm-description
+				>
+			</mm-description-list>
+		</div>
+	{:else if cancelled}
+		<div class="pad">
+			<mm-callout tone="info" heading={m.dataquery_workspace_cancelled_heading()}>
+				{m.dataquery_workspace_cancelled_body()}
+				<mm-button
+					slot="actions"
+					size="sm"
+					variant="secondary"
+					icon="refresh"
+					onclick={() => run(lastRun)}>{m.dataquery_workspace_run_again()}</mm-button
+				>
+			</mm-callout>
+		</div>
+	{:else if denied}
+		{@render callout(
+			m.dataquery_workspace_denied_heading(),
+			denied,
+			m.dataquery_workspace_denied_next(),
+			false,
+			true
+		)}
+	{:else if failure}
+		{@render callout(
+			m.dataquery_workspace_failed_heading({ source }),
+			failure,
+			m.dataquery_workspace_failed_next(),
+			false,
+			false
+		)}
+	{:else if unreachable}
+		{@render callout(
+			m.dataquery_workspace_error_heading({ source }),
+			unreachable,
+			m.dataquery_workspace_error_next(),
+			true,
+			false
+		)}
+	{:else if result && result.columns.length === 0}
+		<div class="pad">
+			<mm-empty-state compact heading={m.dataquery_console_no_columns()}></mm-empty-state>
+		</div>
+	{:else if result}
+		<mm-results-grid
+			label={m.dataquery_workspace_tab_results()}
+			filename="{source}-{result.query_id.slice(0, 8)}"
+			columns={result.columns}
+			rows={result.rows}
+			duration={elapsedMs}
+			truncated={result.truncated}
+			style="--mm-results-grid-height: {gridHeight}px"
+		>
+			<mm-button
+				slot="actions"
+				size="sm"
+				variant="ghost"
+				icon="receipt-long"
+				onclick={() => (detailId = result?.query_id ?? null)}
+				>{m.dataquery_workspace_open_details()}</mm-button
+			>
+		</mm-results-grid>
+	{:else}
+		<div class="pad mm-stack">
+			<mm-empty-state
+				compact
+				heading={m.dataquery_workspace_results_empty_heading()}
+				description={m.dataquery_workspace_results_empty_body()}
+			></mm-empty-state>
+			{#if starters.length > 0}
+				<section class="mm-stack starters">
+					<mm-heading level={2} variant="panel-title"
+						>{m.dataquery_workspace_starters({ source })}</mm-heading
+					>
+					<mm-list dense aria-label={m.dataquery_workspace_starters({ source })}>
+						{#each starters as table (table.mrn)}
+							<mm-list-item
+								interactive
+								secondary={table.description || m.dataquery_workspace_preview_rows()}
+								onmm-activate={() => openStatement(source, table.sample_statement ?? '')}
+							>
+								<mm-icon slot="start" name={table.type === 'View' ? 'visibility' : 'table'}
+								></mm-icon>
+								{table.name}
+							</mm-list-item>
+						{/each}
+					</mm-list>
+				</section>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
 
-		<section bind:this={workspace} class="flex min-w-0 flex-1 flex-col">
-			<!-- Toolbar -->
-			<div
-				class="flex h-12 flex-shrink-0 items-center gap-2 border-b border-gray-200 px-3 dark:border-gray-800"
-			>
-				<button
-					type="button"
+{#snippet workspace()}
+	<div class="main">
+		<mm-visually-hidden><mm-heading level={1}>{m.nav_query()}</mm-heading></mm-visually-hidden>
+		<mm-toolbar label={m.dataquery_workspace_toolbar_label()} class="toolbar">
+			{#if wide}
+				<mm-button
+					variant="ghost"
+					icon={explorerOpen ? 'left-panel-close' : 'left-panel-open'}
+					label={m.dataquery_workspace_toggle_explorer()}
+					pressed={explorerOpen ? 'true' : 'false'}
 					onclick={toggleExplorer}
-					class="hidden h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 md:inline-flex dark:hover:bg-gray-800 dark:hover:text-gray-100"
-					title="{m.dataquery_workspace_toggle_explorer()} ({explorerShortcut})"
-					aria-label={m.dataquery_workspace_toggle_explorer()}
-					aria-pressed={explorerOpen}
-				>
-					<IconifyIcon icon="material-symbols:side-navigation" class="h-[18px] w-[18px]" />
-				</button>
-				<SourcePicker bind:value={source} onchange={loadStarters} />
-				<span
-					class="hidden items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-500 xl:inline-flex dark:border-gray-700 dark:text-gray-400"
-					title={m.dataquery_workspace_read_only_hint()}
-				>
-					<IconifyIcon icon="material-symbols:lock-outline" class="h-3 w-3" />
-					{m.dataquery_console_read_only()}
-				</span>
-
-				<div class="ml-auto flex items-center gap-1">
-					{@render toolbarButton(
-						m.dataquery_tab_history(),
-						'material-symbols:history',
-						() => (drawer = drawer === 'history' ? null : 'history'),
-						drawer === 'history'
-					)}
-					<label
-						class="ml-1 hidden items-center gap-1.5 text-xs text-gray-500 sm:flex dark:text-gray-400"
-					>
-						{m.dataquery_console_row_limit()}
-						<select
-							bind:value={maxRows}
-							class="h-8 rounded-md border-gray-200 py-0 pl-2 pr-7 text-xs text-gray-700 focus:border-earthy-terracotta-500 focus:ring-earthy-terracotta-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
-						>
-							{#each ROW_LIMITS as limit (limit)}
-								<option value={limit}>{formatNumber(limit)}</option>
-							{/each}
-						</select>
-					</label>
-					<button
-						type="button"
-						onclick={run}
-						disabled={!canRun}
-						title="{m.dataquery_console_run()} ({runShortcut})"
-						class="ml-1 inline-flex h-8 items-center gap-1.5 rounded-md bg-earthy-terracotta-600 pl-2.5 pr-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500 disabled:cursor-not-allowed disabled:opacity-40"
-					>
-						{#if running}
-							<IconifyIcon icon="material-symbols:progress-activity" class="h-4 w-4 animate-spin" />
-							{m.dataquery_console_running()}
-						{:else}
-							<IconifyIcon icon="material-symbols:play-arrow-rounded" class="h-5 w-5" />
-							{m.dataquery_console_run()}
-							<kbd class="ml-1 rounded bg-white/20 px-1 font-sans text-[10px] font-medium leading-4"
-								>{runShortcut}</kbd
-							>
-						{/if}
-					</button>
-				</div>
-			</div>
-
-			<!-- Editor -->
-			<SqlEditor bind:value={statement} height={editorHeight} bind:editorEl={editor} onRun={run} />
-
-			<!-- Splitter -->
-			<button
-				type="button"
-				aria-label={m.dataquery_workspace_resize()}
-				onpointerdown={startResize}
-				onkeydown={nudgeResize}
-				class="group relative h-2 w-full flex-shrink-0 cursor-row-resize border-y border-gray-200 bg-gray-50 focus:outline-none focus-visible:bg-earthy-terracotta-100 dark:border-gray-800 dark:bg-gray-900"
+				></mm-button>
+			{/if}
+			<mm-select
+				label={m.dataquery_query_col_source()}
+				hide-label
+				value={source}
+				onmm-change={(e: CustomEvent<{ value: string }>) => selectSource(e.detail.value)}
+				class="source-select"
 			>
-				<span
-					class="absolute left-1/2 top-1/2 h-0.5 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-300 group-hover:bg-earthy-terracotta-400 dark:bg-gray-700"
-				></span>
-			</button>
-
-			<!-- Results -->
-			<div class="flex min-h-0 flex-1 flex-col">
-				<div
-					class="flex h-10 flex-shrink-0 items-center gap-1 border-b border-gray-200 px-3 dark:border-gray-800"
-					role="tablist"
+				{#if source && !current}
+					<mm-option value={source}>{source}</mm-option>
+				{/if}
+				{#each sources as s (s.id)}
+					<mm-option value={s.name} provider={s.plugin_id}>{s.name}</mm-option>
+				{/each}
+			</mm-select>
+			<mm-status-pill status="neutral" icon="lock" title={m.dataquery_workspace_read_only_hint()}
+				>{m.dataquery_console_read_only()}</mm-status-pill
+			>
+			<mm-toolbar-separator></mm-toolbar-separator>
+			<mm-select
+				label={m.dataquery_console_row_limit()}
+				hide-label
+				value={String(maxRows)}
+				onmm-change={(e: CustomEvent<{ value: string }>) => (maxRows = Number(e.detail.value))}
+				class="limit-select"
+			>
+				{#each ROW_LIMITS as limit (limit)}
+					<mm-option value={String(limit)}
+						>{m.dataquery_console_rows({ count: formatNumber(limit) })}</mm-option
+					>
+				{/each}
+			</mm-select>
+			<span slot="end" class="mm-cluster">
+				{#if running}
+					<mm-button variant="secondary" icon="stop" onclick={cancel}
+						>{m.dataquery_workspace_cancel()}</mm-button
+					>
+					<mm-button variant="primary" loading>{m.dataquery_workspace_running()}</mm-button>
+				{:else}
+					<mm-button variant="ghost" icon="data-object" onclick={() => editor?.format()}
+						>{m.dataquery_workspace_format()}</mm-button
+					>
+					<mm-kbd keys="mod+enter" label={m.dataquery_workspace_run_shortcut()}></mm-kbd>
+					<mm-button
+						variant="primary"
+						icon="play-arrow"
+						disabled={!canRun}
+						onclick={() => editor?.run()}>{m.dataquery_workspace_run()}</mm-button
+					>
+				{/if}
+			</span>
+		</mm-toolbar>
+		<mm-sql-editor
+			bind:this={editor}
+			label={m.dataquery_console_editor_label()}
+			placeholder={m.dataquery_console_placeholder()}
+			dialect={current?.plugin_id || 'postgresql'}
+			default-schema={defaultSchema}
+			hide-shortcut
+			schema={editorSchema}
+			value={statement}
+			error={sqlError}
+			onmm-input={(e: CustomEvent<{ value: string }>) => {
+				statement = e.detail.value;
+				sqlError = null;
+			}}
+			onmm-run={(e: CustomEvent<{ sql: string }>) => run(e.detail.sql)}
+			style="--mm-code-editor-height: 300px"
+		></mm-sql-editor>
+		<div class="output" bind:clientHeight={outputHeight}>
+			<mm-tabs
+				label={m.dataquery_workspace_output_label()}
+				value={tab}
+				onmm-tab-change={(e: CustomEvent<{ value: string }>) => (tab = e.detail.value as Tab)}
+			>
+				<mm-tab value="results" icon="table-rows">{m.dataquery_workspace_tab_results()}</mm-tab>
+				<mm-tab value="tables" icon="table" count={result ? context.length : undefined}
+					>{m.dataquery_workspace_tab_context()}</mm-tab
 				>
-					{#each [{ id: 'results', label: m.dataquery_workspace_tab_results(), count: result ? result.row_count : null }, { id: 'context', label: m.dataquery_workspace_tab_context(), count: result ? contextCount : null }, { id: 'history', label: m.dataquery_workspace_tab_history(), count: null }] as tab (tab.id)}
-						<button
-							type="button"
-							role="tab"
-							aria-selected={resultsTab === tab.id}
-							onclick={() => (resultsTab = tab.id as ResultsTab)}
-							class="relative inline-flex h-10 items-center gap-1.5 px-2.5 text-sm font-medium transition {resultsTab ===
-							tab.id
-								? 'text-gray-900 dark:text-gray-100'
-								: 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}"
-						>
-							{tab.label}
-							{#if tab.count !== null}
-								<span
-									class="rounded-full bg-gray-100 px-1.5 text-[11px] tabular-nums text-gray-600 dark:bg-gray-800 dark:text-gray-300"
-									>{formatNumber(tab.count)}</span
+				<mm-tab value="history" icon="history" count={recentTotal || undefined}
+					>{m.dataquery_workspace_tab_history()}</mm-tab
+				>
+				<mm-tab-panel value="results">{@render resultsPanel()}</mm-tab-panel>
+				<mm-tab-panel value="tables">
+					<div class="pad">
+						<mm-data-table
+							label={m.dataquery_workspace_tab_context()}
+							density="compact"
+							columns={tableColumns}
+							rows={context}
+							empty-heading={m.dataquery_workspace_tables_empty_heading()}
+							empty-text={result
+								? m.dataquery_console_context_empty()
+								: m.dataquery_workspace_tables_empty_body()}
+						></mm-data-table>
+					</div>
+				</mm-tab-panel>
+				<mm-tab-panel value="history">
+					<div class="pad mm-stack">
+						<SavedQueries {source} {statement} {providers} onOpen={openStatement} />
+						<mm-query-history
+							label={m.dataquery_workspace_recent()}
+							queries={history}
+							onmm-open-query={(e: CustomEvent<{ query: QueryHistoryItem }>) => {
+								const q = recent.find((r) => r.id === e.detail.query.id);
+								if (q) openStatement(q.source_name, q.statement);
+							}}
+							onmm-run={(e: CustomEvent<{ query: QueryHistoryItem }>) => {
+								const q = recent.find((r) => r.id === e.detail.query.id);
+								if (q) openStatement(q.source_name, q.statement, true);
+							}}
+						></mm-query-history>
+						{#if recent.length < recentTotal}
+							<div>
+								<mm-button
+									size="sm"
+									variant="secondary"
+									onclick={() => loadRecent(recent.length + HISTORY_PAGE)}
+									>{m.dataquery_workspace_history_more()}</mm-button
 								>
-							{/if}
-							{#if resultsTab === tab.id}
-								<span
-									class="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-earthy-terracotta-500"
-								></span>
-							{/if}
-						</button>
-					{/each}
-
-					<div class="ml-auto flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-						{#if running}
-							<span class="inline-flex items-center gap-1.5">
-								<IconifyIcon
-									icon="material-symbols:progress-activity"
-									class="h-3.5 w-3.5 animate-spin"
-								/>
-								{m.dataquery_console_elapsed({ ms: formatNumber(liveMs) })}
-							</span>
-						{:else if result}
-							{#if result.truncated}
-								<span
-									class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-									>{m.dataquery_console_truncated()}</span
-								>
-							{/if}
-							<span class="hidden sm:inline"
-								>{m.dataquery_console_elapsed({ ms: formatNumber(elapsedMs) })}</span
-							>
-							<button
-								type="button"
-								onclick={() => (detailId = result?.query_id ?? null)}
-								class="inline-flex items-center gap-1 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400"
-								title={m.dataquery_workspace_audit_hint()}
-							>
-								<IconifyIcon icon="material-symbols:receipt-long-outline" class="h-4 w-4" />
-								{m.dataquery_console_recorded({ id: result.query_id.slice(0, 8) })}
-							</button>
-							{#if result.columns.length > 0}
-								<span class="h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
-								<div
-									class="inline-flex rounded-md border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-800"
-									role="group"
-									aria-label={m.dataquery_workspace_view()}
-								>
-									{#each [{ id: 'table', label: m.dataquery_workspace_view_table() }, { id: 'csv', label: m.dataquery_workspace_export_csv() }, { id: 'json', label: m.dataquery_workspace_export_json() }] as v (v.id)}
-										<button
-											type="button"
-											onclick={() => {
-												resultView = v.id as 'table' | 'csv' | 'json';
-												resultsTab = 'results';
-											}}
-											aria-pressed={resultView === v.id}
-											class="rounded px-2 py-0.5 text-xs font-medium transition {resultView === v.id
-												? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-												: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'}"
-											>{v.label}</button
-										>
-									{/each}
-								</div>
-							{/if}
+							</div>
 						{/if}
 					</div>
-				</div>
-
-				<div class="min-h-0 flex-1 overflow-auto">
-					{#if resultsTab === 'history'}
-						<QueryResultsHistory
-							{recent}
-							onOpen={openRecord}
-							onViewAll={() => (drawer = 'history')}
-						/>
-					{:else if running && !result}
-						<div class="space-y-2 p-4">
-							{#each Array(6) as _, i (i)}
-								<div class="h-7 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
-							{/each}
-						</div>
-					{:else if denied}
-						{@const table = deniedTable(denied)}
-						<div
-							class="result-in m-4 flex gap-4 rounded-xl border border-red-200 bg-red-50 p-5 dark:border-red-900/60 dark:bg-red-950/30"
-						>
-							<div
-								class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50"
-							>
-								<IconifyIcon
-									icon="material-symbols:lock-outline"
-									class="h-5 w-5 text-red-600 dark:text-red-300"
-								/>
-							</div>
-							<div class="min-w-0">
-								<h3 class="font-semibold text-red-900 dark:text-red-200">
-									{m.dataquery_console_denied_title()}
-								</h3>
-								<p class="mt-1 text-sm text-red-800 dark:text-red-300">
-									{#if table}
-										{m.dataquery_console_denied_table()}
-										<code
-											class="rounded bg-red-100 px-1.5 py-0.5 font-mono text-xs dark:bg-red-900/50"
-											>{table}</code
-										>
-									{:else}
-										{denied}
-									{/if}
-								</p>
-								<p class="mt-2 text-sm text-red-700/80 dark:text-red-300/80">
-									{m.dataquery_console_denied_help()}
-								</p>
-							</div>
-						</div>
-					{:else if failure}
-						<div
-							class="result-in m-4 flex gap-4 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-950/30"
-						>
-							<IconifyIcon
-								icon="material-symbols:error-outline"
-								class="h-6 w-6 flex-shrink-0 text-amber-600 dark:text-amber-300"
-							/>
-							<div class="min-w-0">
-								<h3 class="font-semibold text-amber-900 dark:text-amber-200">
-									{m.dataquery_console_failed_title()}
-								</h3>
-								<p class="mt-1 break-words font-mono text-sm text-amber-800 dark:text-amber-300">
-									{failure}
-								</p>
-							</div>
-						</div>
-					{:else if !result}
-						{@render emptyState()}
-					{:else if resultsTab === 'context'}
-						<QueryResultContext context={result.context ?? []} />
-					{:else}
-						<QueryResultsTable {result} {resultView} {source} />
-					{/if}
-				</div>
-			</div>
-		</section>
+				</mm-tab-panel>
+			</mm-tabs>
+		</div>
 	</div>
-{/if}
+{/snippet}
 
-{#if drawer}
-	<Blade title={m.dataquery_tab_history()} onClose={() => (drawer = null)}>
-		<QueryLog mine heading={false} />
-	</Blade>
+{#if sourcesLoaded && !sourcesError && sourcesTotal === 0}
+	<QueryEmptyState />
+{:else if sourcesLoaded}
+	{#if wide && explorerOpen}
+		<mm-split-pane
+			label={m.dataquery_workspace_resize_explorer()}
+			default-position={336}
+			min-start={240}
+			storage-key="marmot.query.explorer-width"
+			class="fill"
+		>
+			<div slot="start" class="fill">
+				<SourceExplorer
+					{sources}
+					total={sourcesTotal}
+					loading={sourcesLoading && sources.length === 0}
+					error={sourcesError}
+					active={source}
+					onMore={() => loadSources(true)}
+					onRetry={() => loadSources()}
+					onSelect={selectSource}
+					onInsert={insertAtCaret}
+					onSample={(name, text) => openStatement(name, text)}
+					onTables={addTables}
+					onColumns={addColumns}
+				/>
+			</div>
+			<div slot="end" class="fill">{@render workspace()}</div>
+		</mm-split-pane>
+	{:else}
+		{@render workspace()}
+	{/if}
 {/if}
 
 {#if detailId}
@@ -599,20 +867,64 @@
 {/if}
 
 <style>
-	.result-in {
-		animation: result-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	.fill {
+		display: block;
+		block-size: 100%;
+		min-block-size: 0;
 	}
 
-	@keyframes result-in {
-		from {
-			opacity: 0;
-			transform: translateY(6px);
+	.main {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto auto auto minmax(0, 1fr);
+		block-size: 100%;
+		min-inline-size: 0;
+	}
+
+	.toolbar {
+		padding: var(--space-3) var(--space-5);
+	}
+
+	.source-select {
+		inline-size: 14rem;
+	}
+
+	.limit-select {
+		inline-size: 8.5rem;
+	}
+
+	.output {
+		min-block-size: 0;
+		overflow: auto;
+	}
+
+	.pad {
+		--mm-gap: var(--space-4);
+		padding: var(--space-4) var(--space-5);
+	}
+
+	.progress {
+		max-inline-size: 28rem;
+	}
+
+	.reason {
+		display: block;
+		margin-block-end: var(--space-1);
+		overflow-wrap: anywhere;
+	}
+
+	.starters {
+		--mm-gap: var(--space-2);
+		max-inline-size: 40rem;
+	}
+
+	@media (max-width: 767px) {
+		.toolbar {
+			padding: var(--space-3) var(--space-4);
 		}
-	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.result-in {
-			animation: none;
+		.source-select {
+			inline-size: 10rem;
 		}
 	}
 </style>

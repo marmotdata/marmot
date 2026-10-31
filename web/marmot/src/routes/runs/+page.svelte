@@ -1,102 +1,208 @@
 <script lang="ts">
+	import '@marmotdata/elements/run-strip.js';
+	import '@marmotdata/elements/toolbar.js';
 	import { onMount, onDestroy } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { html, nothing } from 'lit';
+	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
+	import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
-	import PageHeader from '$components/ui/PageHeader.svelte';
-	import Alert from '$components/ui/Alert.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
-	import { PANEL, BTN_PRIMARY, BTN_SECONDARY } from '$lib/ui/classes';
-	import IconifyIcon from '@iconify/svelte';
-	import IngestionRunModal, { type IngestionRun } from '$components/runs/IngestionRunModal.svelte';
-	import PipelineRow from '$components/runs/PipelineRow.svelte';
+	import { setCrumbs } from '$lib/mm';
+	import { formatRelativeTime } from '$lib/utils/format';
 	import PluginGallery from '$components/runs/PluginGallery.svelte';
-	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
+	import RunDrawer from '$components/runs/RunDrawer.svelte';
+	import {
+		describeCron,
+		isRunning,
+		pillState,
+		toStripRun,
+		type JobRun,
+		type Pipeline,
+		type PluginInfo
+	} from '$components/runs/pipeline';
 
-	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
+	// Plugins: the pipelines already connected first, then the gallery of every plugin that could be connected
+	const PAGE_SIZE = 25;
+	const STRIP = 7;
+	const canManage = auth.hasPermission('ingestion', 'manage');
 
-	// Shell commands are technical tokens, so they live outside the message catalog
-	const installCliCommand = 'curl -fsSL get.marmotdata.io | sh';
-	const generateKeyCommand = 'marmot generate-encryption-key';
+	type StatusFilter = 'all' | 'failed' | 'running' | 'succeeded' | 'never';
 
-	let unsubscribe: (() => void) | null = null;
-	let wsConnected = $state(false);
-	let wsCheckInterval: ReturnType<typeof setInterval> | null = null;
-
-	interface IngestionRunsResponse {
-		runs: IngestionRun[];
-		total: number;
-		limit: number;
-		offset: number;
+	interface Row extends Pipeline {
+		pluginName: string;
+		running: boolean;
+		strip: StripRun[];
 	}
 
-	interface Pipeline {
-		id: string;
-		name: string;
-		plugin_id: string;
-		config: Record<string, unknown>;
-		cron_expression: string;
-		enabled: boolean;
-		queryable?: boolean;
-		ingest_on_query?: boolean;
-		last_run_at?: string;
-		last_run_status?: string;
-		next_run_at?: string;
-		created_by?: string;
-		created_at: string;
-		updated_at: string;
-	}
-
-	interface PipelinesResponse {
-		schedules: Pipeline[]; // API still uses 'schedules' key
-		total: number;
-		limit: number;
-		offset: number;
-	}
-
-	let selectedRun = $state<IngestionRun | null>(null);
-	let showRunModal = $state(false);
+	setCrumbs([{ label: m.runs_heading() }]);
 
 	let pipelines = $state<Pipeline[]>([]);
-	let pipelinesLoading = $state(false);
-	let pipelinesError = $state<string | null>(null);
-	let pipelinesTotal = $state(0);
-	let pipelinesPage = $state(1);
-	let pipelinesPageSize = $state(25);
-
-	let showConfirmModal = $state(false);
-	let confirmModalTitle = $state('');
-	let confirmModalMessage = $state('');
-	let confirmModalCheckboxLabel = $state('');
-	let confirmModalCheckboxChecked = $state(false);
-	let confirmModalAction = $state<((checkboxValue?: boolean) => void) | null>(null);
-
-	let runningPipelines: SvelteSet<string> = new SvelteSet();
-
-	interface PluginInfo {
-		id: string;
-		name: string;
-		description?: string;
-		icon?: string;
-		category?: string;
-		supports_query?: boolean;
-	}
-
-	// Every installed plugin, for the gallery and for showing each pipeline's plugin by its proper name
+	let total = $state(0);
+	let pageNumber = $state(1);
+	let loading = $state(true);
+	let loadError = $state('');
+	let search = $state('');
+	let status = $state<StatusFilter>('all');
 	let plugins = $state<PluginInfo[]>([]);
+	let strips = $state<Record<string, StripRun[]>>({});
+	let queryOnly = $state(page.url.searchParams.get('query') === '1');
+	const runningPipelines = new SvelteSet<string>();
+
+	let selectedRun = $state<JobRun | null>(null);
+	let drawerOpen = $state(false);
+	let deleteTarget = $state<Pipeline | null>(null);
+	let deleteOpen = $state(false);
+	let teardown = $state(false);
+	let deleting = $state(false);
+
+	let unsubscribe: (() => void) | null = null;
+
+	// Every pipeline counted by plugin across all pages, so the gallery's connected counts ignore the filters
+	let connectedCounts = $state<Record<string, number>>({});
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+	let filtered = $derived(search.trim() !== '' || status !== 'all');
+
 	let pluginNames = $derived(Object.fromEntries(plugins.map((p) => [p.id, p.name])));
-	let connectedCounts = $derived(
-		pipelines.reduce<Record<string, number>>((acc, p) => {
-			acc[p.plugin_id] = (acc[p.plugin_id] ?? 0) + 1;
-			return acc;
-		}, {})
+
+	// The server searches and filters by status, so the rows are the page it returned
+	let rows = $derived.by<Row[]>(() =>
+		pipelines.map((p) => ({
+			...p,
+			pluginName: pluginNames[p.plugin_id] ?? p.plugin_id,
+			running: runningPipelines.has(p.id) || isRunning(p.last_run_status),
+			strip: strips[p.id] ?? []
+		}))
 	);
+
+	const lastRunCell = (r: Row) => {
+		if (r.running) return html`<mm-status-pill state="running" live></mm-status-pill>`;
+		if (!r.last_run_at)
+			return html`<mm-text variant="dense" tone="tertiary">${m.plugins_never_run()}</mm-text>`;
+		const state = pillState(r.last_run_status);
+		return html`<span class="mm-cluster" style="--mm-gap:var(--space-2);flex-wrap:nowrap"
+			>${state === 'succeeded' ? nothing : html`<mm-status-pill state=${state}></mm-status-pill>`}<mm-text
+				variant="dense"
+				tone=${state === 'succeeded' ? 'default' : 'secondary'}
+				>${formatRelativeTime(r.last_run_at)}</mm-text
+			></span
+		>`;
+	};
+
+	const actionsCell = (r: Row) => {
+		if (r.managed_by)
+			return html`<mm-text variant="caption" tone="secondary"
+				>${m.runs_operator_managed_title()}</mm-text
+			>`;
+		if (!canManage) return nothing;
+		return html`<span
+			class="mm-cluster"
+			style="--mm-gap:var(--space-1);justify-content:flex-end;flex-wrap:nowrap"
+		>
+			<mm-button
+				size="sm"
+				variant="ghost"
+				icon="play-arrow"
+				?disabled=${r.running || !$encryptionConfigured}
+				@click=${() => triggerPipeline(r)}
+				>${m.plugins_run_now()}</mm-button
+			>
+			<mm-menu-button
+				size="sm"
+				variant="ghost"
+				icon="more-horiz"
+				icon-only
+				label=${m.plugins_more_actions_for({ name: r.name })}
+			>
+				<mm-menu
+					label=${m.plugins_actions_for({ name: r.name })}
+					@mm-select=${(e: CustomEvent<{ value: string }>) => rowAction(r, e.detail.value)}
+				>
+					<mm-menu-item icon="edit" value="edit" ?disabled=${!$encryptionConfigured}
+						>${m.pipelines_edit_pipeline()}</mm-menu-item
+					>
+					<mm-menu-item icon="history" value="runs">${m.plugins_view_runs()}</mm-menu-item>
+					<mm-menu-separator></mm-menu-separator>
+					<mm-menu-item icon="delete" value="delete" danger
+						>${m.runs_delete_pipeline_title()}</mm-menu-item
+					>
+				</mm-menu>
+			</mm-menu-button>
+		</span>`;
+	};
+
+	let columns = $derived<DataTableColumn<Row>[]>([
+		{
+			key: 'name',
+			header: m.plugins_col_pipeline(),
+			width: 240,
+			sortable: true,
+			href: (r) => resolve('/runs/[id]', { id: r.id }),
+			render: (r) =>
+				html`<mm-provider-logo provider=${r.plugin_id} size="16" decorative></mm-provider-logo
+					>&nbsp;&nbsp;${r.name}`
+		},
+		{
+			key: 'last_run_at',
+			header: m.plugins_stat_last_run(),
+			width: 180,
+			sortable: true,
+			render: lastRunCell
+		},
+		{
+			key: 'strip',
+			header: m.plugins_recent_runs(),
+			width: 140,
+			render: (r) =>
+				r.strip.length
+					? html`<mm-run-strip
+							.runs=${r.strip}
+							label=${m.plugins_strip_label({ name: r.name })}
+							?live=${r.running}
+							selectable
+							@mm-select=${(e: CustomEvent<{ run: StripRun }>) => openRun(e.detail.run.id)}
+						></mm-run-strip>`
+					: nothing
+		},
+		{
+			key: 'cron_expression',
+			header: m.plugins_col_schedule(),
+			minWidth: 160,
+			render: (r) =>
+				html`<span class="mm-cluster" style="--mm-gap:var(--space-2);flex-wrap:nowrap"
+					>${describeCron(r.cron_expression)}${
+						r.cron_expression && !r.enabled
+							? html`<mm-status-pill status="neutral"
+									>${m.plugins_schedule_paused()}</mm-status-pill
+								>`
+							: nothing
+					}</span
+				>`
+		},
+		{
+			key: 'asset_count',
+			header: m.plugins_col_assets(),
+			type: 'number',
+			width: 96,
+			sortable: true,
+			value: (r) => r.asset_count ?? 0
+		},
+		{
+			key: 'actions',
+			header: m.plugins_col_actions(),
+			width: 170,
+			minWidth: 170,
+			align: 'end',
+			render: actionsCell
+		}
+	]);
 
 	async function fetchPlugins() {
 		try {
@@ -107,424 +213,330 @@
 		}
 	}
 
-	// A bar in a pipeline's run strip opens that run in the same modal as the history tab
+	async function fetchPipelines() {
+		loading = true;
+		loadError = '';
+		try {
+			const params = new SvelteURLSearchParams({
+				limit: String(PAGE_SIZE),
+				offset: String((pageNumber - 1) * PAGE_SIZE)
+			});
+			if (search.trim()) params.set('search', search.trim());
+			if (status !== 'all') params.set('status', status);
+			const res = await fetchApi(`/ingestion/schedules?${params}`);
+			if (!res.ok) throw new Error(m.runs_pipelines_fetch_error());
+			const data = await res.json();
+			// The API still names pipelines schedules
+			pipelines = data.schedules ?? [];
+			total = data.total ?? 0;
+			connectedCounts = data.plugin_counts ?? {};
+			loadStrips(pipelines);
+		} catch (err) {
+			loadError = err instanceof Error ? err.message : m.runs_pipelines_load_error();
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Each pipeline's last few runs, oldest first, for its run strip
+	async function loadStrip(id: string) {
+		try {
+			const res = await fetchApi(
+				`/ingestion/runs?schedule_id=${encodeURIComponent(id)}&limit=${STRIP}`
+			);
+			if (!res.ok) return;
+			const runs: JobRun[] = (await res.json()).runs ?? [];
+			strips = { ...strips, [id]: runs.map(toStripRun).reverse() };
+		} catch {
+			// The strip is a summary; the row still works without it
+		}
+	}
+
+	function loadStrips(list: Pipeline[]) {
+		for (const p of list) loadStrip(p.id);
+	}
+
 	async function openRun(runId: string) {
 		try {
 			const res = await fetchApi(`/ingestion/runs/${encodeURIComponent(runId)}`);
-			if (res.ok) handleRunClick(await res.json());
+			if (!res.ok) throw new Error();
+			selectedRun = await res.json();
+			drawerOpen = true;
 		} catch {
 			toasts.error(m.plugins_run_load_error());
 		}
 	}
 
-	function showAvailable() {
-		requestAnimationFrame(() =>
-			document.getElementById('available')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-		);
-	}
-
-	let pipelinesTotalPages = $derived(Math.ceil(pipelinesTotal / pipelinesPageSize));
-	let pipelinesOffset = $derived((pipelinesPage - 1) * pipelinesPageSize);
-
-	function handleRunClick(run: IngestionRun) {
-		selectedRun = run;
-		showRunModal = true;
-	}
-
-	function handleModalClose() {
-		showRunModal = false;
-	}
-
-	async function fetchPipelines() {
-		try {
-			pipelinesLoading = true;
-			pipelinesError = null;
-
-			const params = new URLSearchParams({
-				limit: pipelinesPageSize.toString(),
-				offset: pipelinesOffset.toString()
-			});
-
-			const response = await fetchApi(`/ingestion/schedules?${params}`);
-			if (!response.ok) {
-				throw new Error(m.runs_pipelines_fetch_error());
-			}
-
-			const data: PipelinesResponse = await response.json();
-			pipelines = data.schedules || [];
-			pipelinesTotal = data.total || 0;
-		} catch (err) {
-			console.error('Error fetching pipelines:', err);
-			pipelinesError = err instanceof Error ? err.message : m.runs_pipelines_load_error();
-		} finally {
-			pipelinesLoading = false;
-		}
-	}
-
-	function goToPipelinesPage(page: number) {
-		if (page >= 1 && page <= pipelinesTotalPages) {
-			pipelinesPage = page;
+	// Typing waits a moment before asking the server, so a search is one request rather than one per key
+	function onSearch(value: string) {
+		search = value;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			pageNumber = 1;
 			fetchPipelines();
+		}, 250);
+	}
+
+	function onStatus(value: StatusFilter) {
+		status = value;
+		pageNumber = 1;
+		fetchPipelines();
+	}
+
+	function rowAction(p: Pipeline, action: string) {
+		if (action === 'edit') goto(resolve('/pipelines/[id]/edit', { id: p.id }));
+		else if (action === 'runs') goto(resolve('/runs/[id]', { id: p.id }));
+		else if (action === 'delete') {
+			deleteTarget = p;
+			teardown = false;
+			deleteOpen = true;
 		}
 	}
 
-	async function handleTriggerPipeline(pipeline: Pipeline) {
+	async function triggerPipeline(p: Pipeline) {
+		runningPipelines.add(p.id);
 		try {
-			// Add to running set immediately - SvelteSet is reactive on mutation
-			runningPipelines.add(pipeline.id);
-
-			const response = await fetchApi(`/ingestion/schedules/${pipeline.id}/trigger`, {
+			const res = await fetchApi(`/ingestion/schedules/${encodeURIComponent(p.id)}/trigger`, {
 				method: 'POST'
 			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				// Remove from running set on error
-				runningPipelines.delete(pipeline.id);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
 				throw new Error(data.error || m.runs_trigger_error());
 			}
-
-			// Poll for running status
-			pollPipelineStatus(pipeline.id);
+			watchRun(p.id);
 		} catch (err) {
-			const errorMsg = err instanceof Error ? err.message : m.runs_trigger_error();
-			toasts.error(errorMsg);
+			runningPipelines.delete(p.id);
+			toasts.error(err instanceof Error ? err.message : m.runs_trigger_error());
 		}
 	}
 
-	async function pollPipelineStatus(pipelineId: string) {
-		// Poll every 2 seconds for up to 30 seconds
-		let attempts = 0;
-		const maxAttempts = 15;
-		const pollInterval = 2000;
+	// Without the websocket a triggered run would look busy forever, so its newest run is checked for a while too
+	async function watchRun(id: string, attempt = 0) {
+		await loadStrip(id);
+		const latest = strips[id]?.at(-1);
+		if (latest && latest.status !== 'running' && latest.status !== 'queued' && attempt > 0) {
+			runningPipelines.delete(id);
+			fetchPipelines();
+			return;
+		}
+		if (attempt < 20 && runningPipelines.has(id)) setTimeout(() => watchRun(id, attempt + 1), 3000);
+	}
 
-		const poll = async () => {
-			try {
-				// Fetch latest runs to check status
-				const params = new URLSearchParams({
-					limit: '1',
-					offset: '0',
-					pipelines: pipelineId
-				});
-
-				const response = await fetchApi(`/runs?${params}`);
-				if (!response.ok) {
-					throw new Error('Failed to fetch run status');
-				}
-
-				const data: IngestionRunsResponse = await response.json();
-				const latestRun = data.runs?.[0];
-
-				// If run is no longer running or we've exceeded max attempts, stop polling
-				if (latestRun && latestRun.status !== 'running') {
-					runningPipelines.delete(pipelineId);
-
-					// Show completion toast
-					if (latestRun.status === 'succeeded') {
-						toasts.success(m.runs_pipeline_completed_success());
-					} else if (latestRun.status === 'failed') {
-						toasts.error(
-							m.runs_pipeline_failed_error({
-								error: latestRun.error_message || m.runs_unknown_error()
-							})
-						);
-					}
-
-					// Refresh pipelines list to update last_run_at
-					fetchPipelines();
-					return;
-				}
-
-				attempts++;
-				if (attempts < maxAttempts && runningPipelines.has(pipelineId)) {
-					setTimeout(poll, pollInterval);
-				} else {
-					// Max attempts reached or pipeline removed from running set
-					runningPipelines.delete(pipelineId);
-				}
-			} catch (err) {
-				console.error('Error polling pipeline status:', err);
-				// Stop polling on error
-				runningPipelines.delete(pipelineId);
+	async function deletePipeline(e: CustomEvent) {
+		const p = deleteTarget;
+		if (!p) return;
+		e.preventDefault();
+		deleting = true;
+		try {
+			const url = `/ingestion/schedules/${encodeURIComponent(p.id)}${teardown ? '?teardown=true' : ''}`;
+			const res = await fetchApi(url, { method: 'DELETE' });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || m.runs_delete_pipeline_error());
 			}
-		};
-
-		// Start polling after initial delay
-		setTimeout(poll, pollInterval);
+			toasts.success(
+				teardown
+					? m.runs_delete_teardown_success({ name: p.name })
+					: m.runs_delete_success({ name: p.name })
+			);
+			deleteOpen = false;
+			fetchPipelines();
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.runs_delete_pipeline_error());
+		} finally {
+			deleting = false;
+		}
 	}
 
-	async function handleDeletePipeline(pipeline: Pipeline) {
-		confirmModalTitle = m.runs_delete_pipeline_title();
-		confirmModalMessage = m.pipelines_delete_confirm({ name: pipeline.name });
-		confirmModalCheckboxLabel = m.runs_delete_teardown_checkbox_label();
-		confirmModalCheckboxChecked = false;
-		confirmModalAction = async (teardown?: boolean) => {
-			showConfirmModal = false;
-			try {
-				const url = teardown
-					? `/ingestion/schedules/${pipeline.id}?teardown=true`
-					: `/ingestion/schedules/${pipeline.id}`;
-
-				const response = await fetchApi(url, {
-					method: 'DELETE'
-				});
-
-				if (!response.ok) {
-					const data = await response.json();
-					throw new Error(data.error || m.runs_delete_pipeline_error());
-				}
-
-				const successMsg = teardown
-					? m.runs_delete_teardown_success({ name: pipeline.name })
-					: m.runs_delete_success({ name: pipeline.name });
-				toasts.success(successMsg);
-
-				// Refresh the list
-				fetchPipelines();
-			} catch (err) {
-				const errorMsg = err instanceof Error ? err.message : m.runs_delete_pipeline_error();
-				toasts.error(errorMsg);
-			}
-		};
-		showConfirmModal = true;
-	}
-
-	const RUN_STATUSES = [
-		'pending',
-		'claimed',
-		'running',
-		'succeeded',
-		'failed',
-		'cancelled'
-	] as const;
-	type RunStatus = (typeof RUN_STATUSES)[number];
-	function isRunStatus(value: unknown): value is RunStatus {
-		return typeof value === 'string' && (RUN_STATUSES as readonly string[]).includes(value);
-	}
-
-	interface JobRunPatch {
-		id?: string;
-		schedule_id?: string;
-		status?: RunStatus;
-		finished_at?: string;
-		updated_at?: string;
-	}
-
-	// The websocket only carries a plain payload bag; narrow the fields this page reads instead of casting it to IngestionRun
-	function toIngestionRunPatch(payload: Record<string, unknown>): JobRunPatch {
-		return {
-			id: typeof payload.id === 'string' ? payload.id : undefined,
-			schedule_id: typeof payload.schedule_id === 'string' ? payload.schedule_id : undefined,
-			status: isRunStatus(payload.status) ? payload.status : undefined,
-			finished_at: typeof payload.finished_at === 'string' ? payload.finished_at : undefined,
-			updated_at: typeof payload.updated_at === 'string' ? payload.updated_at : undefined
-		};
-	}
-
+	// Run events arrive over the websocket, so rows, strips and an open run update without a reload
 	function handleJobRunEvent(event: JobRunEvent) {
-		const jobRun = toIngestionRunPatch(event.payload);
+		const payload = event.payload;
+		const scheduleId = typeof payload.schedule_id === 'string' ? payload.schedule_id : undefined;
+		const runStatus = typeof payload.status === 'string' ? payload.status : undefined;
+		const runId = typeof payload.id === 'string' ? payload.id : undefined;
 
-		// Update running pipelines status for pipelines tab
-		if (jobRun.schedule_id) {
-			if (
+		if (scheduleId) {
+			const started =
 				event.type === 'job_run_started' ||
 				event.type === 'job_run_claimed' ||
-				(event.type === 'job_run_created' && jobRun.status === 'running')
-			) {
-				// Add to running set - SvelteSet is reactive on mutation
-				runningPipelines.add(jobRun.schedule_id);
-			} else if (
+				(event.type === 'job_run_created' && runStatus === 'running');
+			const ended =
 				event.type === 'job_run_completed' ||
 				event.type === 'job_run_cancelled' ||
-				jobRun.status === 'succeeded' ||
-				jobRun.status === 'failed' ||
-				jobRun.status === 'cancelled'
-			) {
-				// Remove from running set - SvelteSet is reactive on mutation
-				runningPipelines.delete(jobRun.schedule_id);
-
-				// Update the pipeline's last_run_status and last_run_at
+				runStatus === 'succeeded' ||
+				runStatus === 'failed' ||
+				runStatus === 'cancelled';
+			if (started) runningPipelines.add(scheduleId);
+			if (ended) {
+				const watched = runningPipelines.has(scheduleId);
+				runningPipelines.delete(scheduleId);
+				const finished =
+					(typeof payload.finished_at === 'string' && payload.finished_at) ||
+					(typeof payload.updated_at === 'string' && payload.updated_at) ||
+					undefined;
 				pipelines = pipelines.map((p) =>
-					p.id === jobRun.schedule_id
-						? {
-								...p,
-								last_run_status: jobRun.status,
-								last_run_at: jobRun.finished_at || jobRun.updated_at
-							}
+					p.id === scheduleId
+						? { ...p, last_run_status: runStatus, last_run_at: finished ?? p.last_run_at }
 						: p
 				);
+				const name = pipelines.find((p) => p.id === scheduleId)?.name;
+				if (name && watched) {
+					if (runStatus === 'succeeded') toasts.success(m.plugins_run_finished({ name }));
+					else if (runStatus === 'failed') toasts.error(m.plugins_run_failed({ name }));
+				}
 			}
+			if (started || ended) loadStrip(scheduleId);
 		}
 
-		// Update selected run if it's the one being shown
-		if (selectedRun && jobRun.id && selectedRun.id === jobRun.id) {
-			selectedRun = {
-				...selectedRun,
-				status: jobRun.status ?? selectedRun.status,
-				finished_at: jobRun.finished_at ?? selectedRun.finished_at
-			};
-		}
+		if (selectedRun && runId === selectedRun.id) openRun(runId);
 	}
 
 	onMount(() => {
 		fetchPipelines();
 		fetchPlugins();
-
-		// Subscribe to websocket events
 		unsubscribe = websocketService.subscribe(handleJobRunEvent);
-
-		// Check websocket connection status
-		wsConnected = websocketService.connected();
-
-		// Poll for connection status
-		wsCheckInterval = setInterval(() => {
-			const newStatus = websocketService.connected();
-			if (newStatus !== wsConnected) {
-				wsConnected = newStatus;
-			}
-		}, 2000);
 	});
 
 	onDestroy(() => {
-		// Unsubscribe from websocket events
-		if (unsubscribe) {
-			unsubscribe();
-		}
-		// Clear websocket status check interval
-		if (wsCheckInterval) {
-			clearInterval(wsCheckInterval);
-		}
+		unsubscribe?.();
+		clearTimeout(searchTimer);
 	});
+
+	function showGallery() {
+		document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
 </script>
 
-<div class="w-full px-4 py-6 sm:px-6 lg:px-8">
-	<PageHeader title={m.runs_heading()} description={m.runs_subheading()}>
-		{#snippet actions()}
-			{#if canManageIngestion}
-				<button
-					type="button"
-					onclick={showAvailable}
-					disabled={!$encryptionConfigured}
-					class={BTN_PRIMARY}
-				>
-					<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-					{m.plugins_add()}
-				</button>
-			{/if}
-		{/snippet}
-	</PageHeader>
+<svelte:head>
+	<title>{m.pagetitle_runs()}</title>
+</svelte:head>
 
-	{#if pipelinesLoading}
-		<Skeleton class="h-16" rows={5} />
-	{:else if pipelinesError}
-		<Alert title={m.common_error()}>{pipelinesError}</Alert>
-	{:else}
-		<!-- Unencrypted Mode Warning -->
-		{#if $allowUnencrypted}
-			<div class="mb-6">
-				<Alert title={m.runs_unencrypted_mode_heading()}>{m.runs_unencrypted_mode_hint()}</Alert>
-			</div>
-		{:else if !$encryptionConfigured}
-			<!-- Encryption Key Not Configured Warning -->
-			<div class="mb-6">
-				<Alert tone="warning" title={m.runs_encryption_not_configured_heading()}>
-					<p>{m.runs_encryption_not_configured_hint()}</p>
-					<div class="mt-3 space-y-2">
-						<p>{m.runs_encryption_get_started_hint()}</p>
-						<div
-							class="bg-amber-100 dark:bg-amber-900/40 rounded-md px-3 py-2 font-mono text-xs space-y-1"
-						>
-							<p>{installCliCommand}</p>
-							<p>{generateKeyCommand}</p>
-						</div>
-						<p>
-							{m.runs_encryption_set_env_hint({ variable: 'MARMOT_SERVER_ENCRYPTION_KEY' })}
-							<a
-								href="https://marmotdata.io/docs/Deploy/"
-								target="_blank"
-								rel="noopener noreferrer"
-								class="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
-								>{m.runs_deploy_docs_link()}</a
-							>
-						</p>
-					</div>
-				</Alert>
-			</div>
-		{/if}
-
-		<!-- Connected sources, then everything that could be connected -->
-		{#if pipelines.length === 0}
-			<div
-				class="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 px-5 py-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400"
+<div class="mm-stack">
+	<mm-page-header heading={m.runs_heading()}>
+		{#if canManage}
+			<mm-button
+				slot="actions"
+				variant="primary"
+				icon="add"
+				disabled={!$encryptionConfigured}
+				onclick={showGallery}>{m.plugins_add()}</mm-button
 			>
-				<IconifyIcon icon="material-symbols:extension-outline" class="h-5 w-5 text-gray-400" />
-				{canManageIngestion ? m.plugins_none_connected() : m.runs_no_pipelines_hint_readonly()}
-			</div>
-		{:else}
-			<ul class="{PANEL} divide-y divide-gray-100 dark:divide-gray-700/60">
-				{#each pipelines as pipeline (pipeline.id)}
-					<PipelineRow
-						{pipeline}
-						pluginName={pluginNames[pipeline.plugin_id]}
-						running={runningPipelines.has(pipeline.id)}
-						canRun={$encryptionConfigured}
-						canEdit={$encryptionConfigured}
-						onRun={() => handleTriggerPipeline(pipeline)}
-						onEdit={() => goto(resolve(`/pipelines/${pipeline.id}/edit`))}
-						onDelete={() => handleDeletePipeline(pipeline)}
-						onOpenRun={openRun}
-					/>
-				{/each}
-			</ul>
+		{/if}
+	</mm-page-header>
 
-			{#if pipelinesTotalPages > 1}
-				<div class="mt-3 flex items-center justify-between">
-					<div class="text-sm text-gray-600 dark:text-gray-400">
-						{m.runs_page_of({ current: pipelinesPage, total: pipelinesTotalPages })}
-					</div>
-					<div class="flex items-center gap-2">
-						<button
-							type="button"
-							class={BTN_SECONDARY}
-							onclick={() => goToPipelinesPage(pipelinesPage - 1)}
-							disabled={pipelinesPage === 1}
+	{#if !$encryptionConfigured}
+		<mm-callout tone="warning" heading={m.plugins_encryption_missing_heading()}>
+			{m.plugins_encryption_missing_body()}
+			<mm-button
+				slot="actions"
+				size="sm"
+				variant="secondary"
+				href="https://marmotdata.io/docs/Configure#server"
+				external>{m.plugins_encryption_guide()}</mm-button
+			>
+		</mm-callout>
+	{:else if $allowUnencrypted && total > 0}
+		<mm-callout tone="warning" heading={m.runs_unencrypted_mode_heading()}>
+			{m.runs_unencrypted_mode_hint()}
+		</mm-callout>
+	{/if}
+
+	<div class="mm-stack" style="--mm-gap: var(--space-8)">
+		<mm-section heading={m.plugins_pipelines_heading()}>
+			{#if !loading && !loadError && total === 0 && !filtered}
+				<mm-empty-state
+					compact
+					heading={m.plugins_none_connected_heading()}
+					description={canManage ? m.plugins_none_connected() : m.runs_no_pipelines_hint_readonly()}
+				></mm-empty-state>
+			{:else}
+				<div class="mm-stack" style="--mm-gap: var(--space-3)">
+					<mm-toolbar label={m.plugins_filter_pipelines_label()}>
+						<mm-search-field
+							label={m.plugins_search_pipelines()}
+							hide-label
+							placeholder={m.plugins_search_pipelines()}
+							shortcut="/"
+							value={search}
+							style="inline-size: min(18rem, 100%)"
+							oninput={(e: Event) => onSearch((e.currentTarget as HTMLInputElement).value)}
+						></mm-search-field>
+						<mm-select
+							label={m.common_status()}
+							hide-label
+							value={status}
+							style="inline-size: 11rem"
+							onmm-change={(e: CustomEvent<{ value: string }>) =>
+								onStatus(e.detail.value as StatusFilter)}
 						>
-							<IconifyIcon icon="material-symbols:chevron-left" class="h-4 w-4" />
-							{m.common_previous()}
-						</button>
-						<button
-							type="button"
-							class={BTN_SECONDARY}
-							onclick={() => goToPipelinesPage(pipelinesPage + 1)}
-							disabled={pipelinesPage === pipelinesTotalPages}
-						>
-							{m.common_next()}
-							<IconifyIcon icon="material-symbols:chevron-right" class="h-4 w-4" />
-						</button>
-					</div>
+							<mm-option value="all">{m.plugins_all_statuses()}</mm-option>
+							<mm-option value="failed">{m.runs_status_failed()}</mm-option>
+							<mm-option value="running">{m.runs_status_running()}</mm-option>
+							<mm-option value="succeeded">{m.runs_status_succeeded()}</mm-option>
+							<mm-option value="never">{m.plugins_never_run()}</mm-option>
+						</mm-select>
+					</mm-toolbar>
+					<mm-data-table
+						label={m.plugins_pipelines_table_label()}
+						row-key="id"
+						{columns}
+						{rows}
+						{loading}
+						error={loadError}
+						sort={{ key: 'name', direction: 'ascending' }}
+						empty-heading={m.plugins_no_match_heading()}
+						empty-text={m.plugins_no_match_body()}
+						onmm-retry={fetchPipelines}
+					></mm-data-table>
+					{#if total > PAGE_SIZE}
+						<mm-pagination
+							page={pageNumber}
+							page-size={PAGE_SIZE}
+							{total}
+							page-sizes=""
+							label={m.plugins_pipelines_pages()}
+							onmm-page-change={(e: CustomEvent<{ page: number }>) => {
+								pageNumber = e.detail.page;
+								fetchPipelines();
+							}}
+						></mm-pagination>
+					{/if}
 				</div>
 			{/if}
-		{/if}
+		</mm-section>
 
-		<div class="mt-10">
-			<PluginGallery
-				{plugins}
-				connected={connectedCounts}
-				canAdd={canManageIngestion && $encryptionConfigured}
-			/>
-		</div>
-	{/if}
+		<PluginGallery
+			{plugins}
+			connected={connectedCounts}
+			canAdd={canManage && $encryptionConfigured}
+			bind:queryOnly
+		/>
+	</div>
 </div>
 
-{#if selectedRun}
-	<IngestionRunModal bind:show={showRunModal} run={selectedRun} onClose={handleModalClose} />
-{/if}
-
-<ConfirmModal
-	bind:show={showConfirmModal}
-	title={confirmModalTitle}
-	message={confirmModalMessage}
-	checkboxLabel={confirmModalCheckboxLabel}
-	bind:checkboxChecked={confirmModalCheckboxChecked}
-	onConfirm={(checkboxValue) => confirmModalAction?.(checkboxValue)}
+<RunDrawer
+	run={selectedRun}
+	open={drawerOpen}
+	pluginName={selectedRun
+		? pluginNames[pipelines.find((p) => p.id === selectedRun?.schedule_id)?.plugin_id ?? '']
+		: undefined}
+	onclose={() => (drawerOpen = false)}
 />
+
+<mm-confirm-dialog
+	open={deleteOpen}
+	heading={m.plugins_delete_heading({ name: deleteTarget?.name ?? '' })}
+	confirm-label={m.runs_delete_pipeline_title()}
+	loading={deleting}
+	onmm-confirm={deletePipeline}
+	onmm-close={() => (deleteOpen = false)}
+>
+	<div class="mm-stack" style="--mm-gap: var(--space-4)">
+		<mm-text block variant="dense">{m.plugins_delete_body()}</mm-text>
+		<mm-checkbox
+			label={m.runs_delete_teardown_checkbox_label()}
+			checked={teardown}
+			onmm-change={(e: CustomEvent<{ checked: boolean }>) => (teardown = e.detail.checked)}
+		></mm-checkbox>
+	</div>
+</mm-confirm-dialog>

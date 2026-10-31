@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import { m } from '$lib/paraglide/messages';
 
 	interface MentionItem {
@@ -56,48 +55,38 @@
 </script>
 
 <div
-	class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
+	class="bg-mm-raised border border-mm-rule rounded-md shadow-float overflow-hidden max-h-64 overflow-y-auto py-space-1"
+	role="listbox"
 >
 	{#if items.length === 0}
-		<div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{m.common_no_results()}</div>
+		<div class="px-space-3 py-space-2 text-dense text-mm-text-2">{m.common_no_results()}</div>
 	{:else}
 		{#each items as item, index (item.id)}
 			<button
 				type="button"
-				class="w-full px-3 py-2 flex items-center gap-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 {index ===
-				selectedIndex
-					? 'bg-gray-100 dark:bg-gray-700'
-					: ''}"
+				role="option"
+				aria-selected={index === selectedIndex}
+				class="mention-option w-full px-space-3 py-space-2 flex items-center gap-space-2 text-left text-mm-text"
+				class:is-selected={index === selectedIndex}
 				onclick={() => selectItem(index)}
 			>
 				{#if item.profile_picture}
-					<img
-						src={item.profile_picture}
-						alt={item.name}
-						class="w-6 h-6 rounded-full object-cover"
-					/>
+					<img src={item.profile_picture} alt="" class="w-6 h-6 rounded-full object-cover" />
 				{:else}
-					<div
-						class="w-6 h-6 rounded-full {item.type === 'team'
-							? 'bg-blue-100 dark:bg-blue-900/30'
-							: 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30'} flex items-center justify-center"
-					>
-						<Icon
-							icon={item.type === 'team' ? 'mdi:account-group' : 'mdi:account'}
-							class="w-4 h-4 {item.type === 'team'
-								? 'text-blue-600'
-								: 'text-earthy-terracotta-600'}"
-						/>
-					</div>
+					<mm-icon
+						name={item.type === 'team' ? 'groups' : 'person'}
+						aria-hidden="true"
+						class="w-6 h-6 flex items-center justify-center text-mm-text-2"
+					></mm-icon>
 				{/if}
 				<div class="flex-1 min-w-0">
-					<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+					<div class="text-dense font-semibold truncate">
 						{item.name}
 					</div>
 					{#if item.type === 'user' && item.username}
-						<div class="text-xs text-gray-500 dark:text-gray-400 truncate">@{item.username}</div>
+						<div class="text-caption text-mm-text-2 truncate">@{item.username}</div>
 					{:else if item.type === 'team'}
-						<div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+						<div class="text-caption text-mm-text-2 truncate">
 							{m.editor_mention_team_label()}
 						</div>
 					{/if}
@@ -106,3 +95,17 @@
 		{/each}
 	{/if}
 </div>
+
+<style>
+	.mention-option {
+		transition: background-color var(--mm-dur-press) var(--mm-ease);
+	}
+	.mention-option:hover,
+	.mention-option.is-selected {
+		background: var(--mm-selected);
+	}
+	.mention-option:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: -2px;
+	}
+</style>

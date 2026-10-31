@@ -126,11 +126,11 @@
 		onclick={toggle}
 		aria-haspopup="dialog"
 		aria-expanded={open}
-		class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent {selectedLabel
-			? 'text-gray-900 dark:text-gray-100'
-			: 'text-gray-400 dark:text-gray-500'}"
+		class="flex h-[var(--mm-control)] items-center gap-2 rounded-sm border border-mm-control-border bg-mm-surface px-[10px] text-dense hover:border-mm-text {selectedLabel
+			? 'text-mm-text'
+			: 'text-mm-text-3'}"
 	>
-		<span class="w-4 h-4 text-gray-500 dark:text-gray-400">
+		<span class="w-4 h-4 text-mm-text-2">
 			<Icon icon="material-symbols:calendar-month-outline" />
 		</span>
 		{selectedLabel || placeholder}
@@ -138,7 +138,7 @@
 
 	{#if open}
 		<div
-			class="absolute left-0 top-full mt-2 z-20 w-64 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+			class="absolute left-0 top-full mt-2 z-20 w-64 p-3 bg-mm-raised border border-mm-rule rounded-md shadow-float"
 			role="dialog"
 			aria-label={m.ui_datepicker_choose_date_aria()}
 		>
@@ -147,16 +147,16 @@
 					type="button"
 					onclick={previousMonth}
 					aria-label={m.ui_datepicker_previous_month_aria()}
-					class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+					class="p-1 rounded-md text-mm-text-2 hover:bg-mm-sunken hover:text-mm-text"
 				>
 					<span class="block w-4 h-4"><Icon icon="material-symbols:chevron-left" /></span>
 				</button>
-				<span class="text-sm font-medium text-gray-900 dark:text-gray-100">{monthLabel}</span>
+				<span class="text-dense font-semibold text-mm-text">{monthLabel}</span>
 				<button
 					type="button"
 					onclick={nextMonth}
 					aria-label={m.ui_datepicker_next_month_aria()}
-					class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-earthy-brown-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+					class="p-1 rounded-md text-mm-text-2 hover:bg-mm-sunken hover:text-mm-text"
 				>
 					<span class="block w-4 h-4"><Icon icon="material-symbols:chevron-right" /></span>
 				</button>
@@ -164,7 +164,7 @@
 
 			<div class="grid grid-cols-7 gap-y-1 text-center">
 				{#each weekdays as weekday (weekday)}
-					<span class="text-xs font-medium text-gray-500 dark:text-gray-400 py-1">{weekday}</span>
+					<span class="text-caption font-semibold text-mm-text-2 py-1">{weekday}</span>
 				{/each}
 				{#each Array(leadingBlanks) as _, i (i)}
 					<span></span>
@@ -175,15 +175,13 @@
 						type="button"
 						onclick={() => select(day)}
 						disabled={isDisabled(day)}
-						class="w-8 h-8 mx-auto flex items-center justify-center rounded-full text-sm transition-colors
+						class="w-8 h-8 mx-auto flex items-center justify-center rounded-sm text-dense tabular-nums transition-colors
 							{isSelected(day)
-							? 'bg-earthy-terracotta-600 text-white font-medium'
+							? 'bg-mm-text text-mm-on-inverse font-semibold'
 							: isToday(day)
-								? 'text-earthy-terracotta-600 dark:text-earthy-terracotta-500 font-semibold hover:bg-earthy-brown-100 dark:hover:bg-gray-700'
-								: 'text-gray-700 dark:text-gray-300 hover:bg-earthy-brown-100 dark:hover:bg-gray-700'}
-							{isDisabled(day)
-							? 'opacity-40 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent'
-							: ''}"
+								? 'text-mm-text font-semibold underline underline-offset-4 hover:bg-mm-sunken'
+								: 'text-mm-text hover:bg-mm-sunken'}
+							{isDisabled(day) ? 'opacity-40 cursor-not-allowed hover:bg-transparent' : ''}"
 					>
 						{day}
 					</button>

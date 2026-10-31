@@ -81,6 +81,8 @@ export interface ApiErrorInfo {
 	resource?: string;
 	current?: number;
 	limit?: number;
+	/** The server's reference for this request, which its log line carries too */
+	requestId?: string;
 }
 
 export async function parseApiError(response: Response): Promise<ApiErrorInfo> {
@@ -96,8 +98,14 @@ export async function parseApiError(response: Response): Promise<ApiErrorInfo> {
 		if (typeof data.resource === 'string') info.resource = data.resource;
 		if (typeof data.current === 'number') info.current = data.current;
 		if (typeof data.limit === 'number') info.limit = data.limit;
+		if (typeof data.request_id === 'string') info.requestId = data.request_id;
 	} catch {
 		// non-JSON body; keep default message
+	}
+	info.requestId ??= response.headers.get('X-Request-Id') ?? undefined;
+	// A server failure is only worth reporting with the reference an admin can look up, so it rides along in the message
+	if (response.status >= 500 && info.requestId) {
+		info.message = m.errors_with_reference({ message: info.message, reference: info.requestId });
 	}
 	return info;
 }

@@ -1,67 +1,59 @@
-// The class strings behind the shared visual language of the Plugins, Insights, Query and home pages, so every page reaches for the same surface, control and table instead of re-spelling them.
+// Token-based class strings for markup that cannot use an mm-* element directly (a native button inside a form, a table that is not an mm-data-table), so it still matches the design system in both themes without dark: variants.
 
-/** A white panel on the page background: the one surface every module sits on. */
-export const PANEL =
-	'rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800';
+/** A panel on the page background: surface, one hairline and the panel radius, never a shadow. */
+export const PANEL = 'rounded-md border border-mm-rule bg-mm-surface';
 
-/** The primary action: one per view, top right of the page header or the panel it acts on. */
-export const BTN_PRIMARY =
-	'inline-flex items-center justify-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-earthy-terracotta-500/40 disabled:cursor-not-allowed disabled:opacity-50';
+const BTN_BASE =
+	'inline-flex h-[var(--mm-control)] items-center justify-center gap-space-2 whitespace-nowrap rounded-md border px-[14px] text-button no-underline transition-colors duration-[var(--mm-dur-press)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50';
 
-/** The quieter action beside a primary one, and the default for row actions. */
-export const BTN_SECONDARY =
-	'inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-earthy-terracotta-500/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
+/** The primary action: one per view region, burnt sienna, as mm-button variant="primary". */
+export const BTN_PRIMARY = `${BTN_BASE} border-transparent bg-mm-primary-fill text-mm-on-primary hover:bg-mm-primary-hover`;
 
-/** A borderless action for toolbars and tight rows. */
+/** The quieter action beside a primary one, as mm-button variant="secondary". */
+export const BTN_SECONDARY = `${BTN_BASE} border-mm-control-border bg-mm-surface text-mm-text hover:border-mm-text`;
+
+/** A borderless action for toolbars and tight rows, as mm-button variant="ghost". */
 export const BTN_GHOST =
-	'inline-flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-earthy-terracotta-500/40 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100';
+	'inline-flex h-[var(--control-h-sm)] items-center justify-center gap-space-2 whitespace-nowrap rounded-md border border-transparent bg-transparent px-[10px] text-button text-mm-text-2 transition-colors duration-[var(--mm-dur-press)] hover:bg-mm-sunken hover:text-mm-text disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50';
 
-/** A destructive action. Red is reserved for this and for errors. */
-export const BTN_DANGER =
-	'inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:cursor-not-allowed disabled:opacity-50';
+/** A destructive action in crimson; the label always says what it destroys, as mm-button variant="danger". */
+export const BTN_DANGER = `${BTN_BASE} border-transparent bg-mm-danger-fill text-mm-on-primary hover:brightness-90`;
 
-/** Text inputs, selects and textareas. */
+/** Text inputs, selects and textareas, matching mm-text-field. */
 export const INPUT =
-	'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-earthy-terracotta-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/30 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+	'w-full rounded-sm border border-mm-control-border bg-mm-surface px-[10px] py-[6px] text-dense text-mm-text placeholder:text-mm-text-3 focus:border-mm-text focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-mm-text';
 
-/** The search field above a list, with a leading icon inside a label. */
+/** The search field above a list, with a leading icon inside a label, matching mm-search-field. */
 export const SEARCH_FIELD =
-	'flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-earthy-terracotta-500/30 dark:border-gray-700 dark:bg-gray-800';
+	'flex h-[var(--mm-control)] items-center gap-space-2 rounded-sm border border-mm-control-border bg-mm-surface px-[10px] text-dense text-mm-text focus-within:border-mm-text focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-mm-text';
 
-/** The small uppercase label over a field group, KPI or column. */
-export const LABEL =
-	'text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
+/** A field or column label: sentence case, never uppercase. */
+export const LABEL = 'text-label text-mm-text-2';
 
-/** Data tables: a quiet header, comfortable rows and a hover state, never a filled header band. */
-export const TABLE = 'min-w-full text-sm';
-export const TH =
-	'px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400';
-export const TD = 'px-4 py-3 text-gray-700 dark:text-gray-300';
-export const TR = 'transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/40';
-export const TBODY = 'divide-y divide-gray-100 dark:divide-gray-700/60';
+/** Data tables: a sunken header band, hairline rows and a neutral hover. */
+export const TABLE = 'min-w-full text-dense';
+export const TH = 'bg-mm-sunken px-space-4 py-space-2 text-left text-label text-mm-text-2';
+export const TD = 'px-space-4 py-space-2 text-mm-text';
+export const TR = 'transition-colors hover:bg-[var(--mm-selected)]';
+export const TBODY = 'divide-y divide-mm-rule';
 
-/** A link inside running text or a module header. */
-export const LINK =
-	'font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400';
+/** A link inside running text: burnt sienna, underlined. Links in lists and rows use ink instead. */
+export const LINK = 'text-mm-primary underline underline-offset-2 hover:text-mm-primary-hover';
 
-/** Filter pills above a list. The selected pill is inverted, like a segmented control. */
+/** Filter pills above a short fixed list. The selected pill is inverted ink, never the accent. */
 export const FILTER_PILL =
-	'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition';
-export const FILTER_PILL_ON =
-	'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900';
+	'inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors';
+export const FILTER_PILL_ON = 'border-mm-text bg-mm-text text-mm-on-inverse';
 export const FILTER_PILL_OFF =
-	'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200';
+	'border-mm-rule bg-mm-surface text-mm-text hover:border-mm-control-border';
 
-/** The left sub-navigation of a multi-section area such as Settings or Account: quieter than the content, with no panel of its own. */
+/** The sub-navigation of a multi-section area such as Settings or Account: quieter than the content, with no panel of its own. */
 export const SUBNAV_ASIDE =
-	'flex-shrink-0 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100dvh-4rem)] lg:w-60 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-3 lg:py-6';
-export const SUBNAV_TITLE =
-	'mb-3 hidden px-2.5 text-sm font-semibold text-gray-900 dark:text-gray-100 lg:block';
+	'flex-shrink-0 border-b border-mm-rule py-space-4 lg:sticky lg:top-0 lg:w-60 lg:self-start lg:border-b-0 lg:border-r lg:pr-space-4';
+export const SUBNAV_TITLE = 'mb-space-3 hidden px-2.5 text-panel-title text-mm-text lg:block';
 export const SUBNAV_ITEM =
-	'flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors whitespace-nowrap';
-export const SUBNAV_ITEM_ON =
-	'bg-white font-medium text-gray-900 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700';
-export const SUBNAV_ITEM_OFF =
-	'text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-100';
+	'flex items-center gap-2.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-dense transition-colors';
+export const SUBNAV_ITEM_ON = 'bg-[var(--mm-selected)] font-semibold text-mm-text';
+export const SUBNAV_ITEM_OFF = 'text-mm-text-2 hover:bg-mm-sunken hover:text-mm-text';
 /** The content column beside a sub-navigation. */
-export const SUBNAV_CONTENT = 'min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8';
+export const SUBNAV_CONTENT = 'min-w-0 flex-1 lg:pl-space-8';

@@ -1,101 +1,185 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { writable, type Writable } from 'svelte/store';
+	import { untrack } from 'svelte';
+	import '@marmotdata/elements/multiselect.js';
+	import '@marmotdata/elements/popularity.js';
+	import '@marmotdata/elements/toolbar.js';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
-	import type { DataProduct } from '$lib/dataproducts/types';
-	import ProductBlade from '$components/product/ProductBlade.svelte';
-	import IconifyIcon from '@iconify/svelte';
-	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import { fetchApi } from '$lib/api';
+	import { setCrumbs } from '$lib/mm';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
-	import { formatDate, formatRelativeTime } from '$lib/utils';
+	import type { DataProduct, ProductFacets, ProductSort } from '$lib/dataproducts/types';
+	import { getProductFacets, queryDataProducts } from '$lib/dataproducts/api';
+	import { normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
+	import ProductBlade from '$components/product/ProductBlade.svelte';
+	import ProductIcon from '$components/product/ProductIcon.svelte';
 
-	const allProducts: Writable<DataProduct[]> = writable([]);
-	const totalProducts: Writable<number> = writable(0);
-	const isLoading: Writable<boolean> = writable(true);
-	const error: Writable<{ status: number; message: string } | null> = writable(null);
+	const PAGE = 25;
+	const YOURS_MAX = 5;
 
-	let selectedProduct = $state<DataProduct | null>(null);
+	setCrumbs([{ label: m.products_heading() }]);
+
+	// Searching, filtering, sorting and paging all happen on the server, so the page never reads the whole catalog
+	let yours = $state<DataProduct[]>([]);
+	let yoursTotal = $state(0);
+	let rows = $state<DataProduct[]>([]);
+	let rowsTotal = $state(0);
+	let catalogTotal = $state<number | null>(null);
+	let facets = $state<ProductFacets>({ owners: [], tags: [] });
+	let loading = $state(true);
+	let failed = $state<string | null>(null);
+	let selected = $state<DataProduct | null>(null);
+
 	let search = $state('');
+	let query = $state('');
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+	let ownerFilter = $state<string[]>([]);
+	let tagFilter = $state<string[]>([]);
+	let mineOnly = $state(false);
+	let sort = $state<ProductSort>('popular');
+	let page = $state(1);
+	let seq = 0;
 
-	// The whole list is loaded at once, so search filters it in place without another request
-	let shown = $derived.by(() => {
-		const q = search.trim().toLowerCase();
-		if (!q) return $allProducts;
-		return $allProducts.filter(
-			(p) =>
-				p.name.toLowerCase().includes(q) ||
-				(p.description ?? '').toLowerCase().includes(q) ||
-				(p.tags ?? []).some((t) => t.toLowerCase().includes(q))
-		);
-	});
-	let canManageProducts = $derived(auth.hasPermission('assets', 'manage'));
+	const canManage = auth.hasPermission('assets', 'manage');
+	const me = auth.getCurrentUserId();
+
+	let filtering = $derived(!!query || ownerFilter.length > 0 || tagFilter.length > 0 || mineOnly);
 
 	$effect(() => {
-		if (browser) {
-			fetchProducts();
-		}
+		if (!browser) return;
+		getProductFacets()
+			.then((f) => (facets = f))
+			.catch(() => {});
 	});
 
-	async function fetchProducts() {
-		$isLoading = true;
-		$error = null;
+	$effect(() => {
+		if (!browser) return;
+		const params = {
+			q: query,
+			owners: [...ownerFilter],
+			tags: [...tagFilter],
+			mine: mineOnly,
+			sort,
+			page
+		};
+		untrack(() => load(params));
+	});
 
+	async function load(p: {
+		q: string;
+		owners: string[];
+		tags: string[];
+		mine: boolean;
+		sort: ProductSort;
+		page: number;
+	}) {
+		const mine = ++seq;
+		loading = true;
+		failed = null;
+		const offset = (p.page - 1) * PAGE;
 		try {
-			const response = await fetchApi('/products/list?limit=100');
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw {
-					status: response.status,
-					message: errorData.error || m.products_error_generic()
-				};
+			if (p.q || p.owners.length || p.tags.length || p.mine) {
+				const res = await queryDataProducts({
+					q: p.q,
+					owners: p.owners,
+					tags: p.tags,
+					mine: p.mine ? 'only' : undefined,
+					sort: p.sort,
+					offset,
+					limit: PAGE
+				});
+				if (mine !== seq) return;
+				rows = (res.data_products ?? []).map(normaliseProduct);
+				rowsTotal = res.total ?? rows.length;
+			} else if (me) {
+				// Products the person's teams own come first, so each product appears once
+				const [own, rest] = await Promise.all([
+					queryDataProducts({ mine: 'only', sort: p.sort, limit: YOURS_MAX }),
+					queryDataProducts({ mine: 'exclude', sort: p.sort, offset, limit: PAGE })
+				]);
+				if (mine !== seq) return;
+				yours = (own.data_products ?? []).map(normaliseProduct);
+				yoursTotal = own.total ?? yours.length;
+				rows = (rest.data_products ?? []).map(normaliseProduct);
+				rowsTotal = rest.total ?? rows.length;
+				catalogTotal = yoursTotal + rowsTotal;
+			} else {
+				const res = await queryDataProducts({ sort: p.sort, offset, limit: PAGE });
+				if (mine !== seq) return;
+				yours = [];
+				yoursTotal = 0;
+				rows = (res.data_products ?? []).map(normaliseProduct);
+				rowsTotal = res.total ?? rows.length;
+				catalogTotal = rowsTotal;
 			}
-
-			const data = await response.json();
-
-			const products = (data.data_products || []).map((product: DataProduct) => ({
-				...product,
-				tags: product.tags || [],
-				metadata: product.metadata || {},
-				owners: product.owners || [],
-				rules: product.rules || []
-			}));
-
-			$totalProducts = data.total || 0;
-
-			// Sort by updated_at for recent products (most recent first)
-			const sortedByRecent = [...products].sort(
-				(a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-			);
-
-			$allProducts = sortedByRecent;
-		} catch (e: unknown) {
-			const err = e as { status?: number; message?: string };
-			const errorStatus = err.status || 500;
-			$error = { status: errorStatus, message: err.message || m.products_error_unknown() };
-			console.error('Error fetching products:', e);
+		} catch (e) {
+			if (mine !== seq) return;
+			const status = (e as { status?: number }).status ?? 0;
+			failed =
+				status >= 500
+					? m.products_error_server()
+					: e instanceof Error
+						? e.message
+						: m.products_error_unknown();
 		} finally {
-			$isLoading = false;
+			if (mine === seq) loading = false;
 		}
 	}
 
-	async function handleProductClick(productId: string) {
+	function retry() {
+		load({
+			q: query,
+			owners: ownerFilter,
+			tags: tagFilter,
+			mine: mineOnly,
+			sort,
+			page
+		});
+	}
+
+	function onSearch(value: string) {
+		search = value;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			query = search.trim();
+			page = 1;
+		}, 250);
+	}
+
+	function plain(text?: string): string {
+		return (text ?? '').replace(/<[^>]*>/g, '');
+	}
+
+	function ownerNames(p: DataProduct): string[] {
+		return p.owners.map((o) => o.name || o.username || o.id);
+	}
+
+	async function preview(event: MouseEvent, product: DataProduct) {
+		// Modified clicks keep the browser's own behaviour, so the page can still open in a new tab.
+		if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+		event.preventDefault();
+		selected = product;
 		try {
-			const response = await fetchApi(`/products/${productId}`);
-			if (response.ok) {
-				const product: DataProduct = await response.json();
-				product.tags = product.tags || [];
-				product.owners = product.owners || [];
-				product.rules = product.rules || [];
-				selectedProduct = product;
-			} else {
-				console.error('Failed to load product');
-			}
-		} catch (err) {
-			console.error('Error loading product:', err);
+			const res = await fetchApi(`/products/${product.id}`);
+			if (res.ok && selected?.id === product.id) selected = normaliseProduct(await res.json());
+		} catch {
+			// The list entry is enough to preview while the full record is unavailable.
 		}
+	}
+
+	function clearFilters() {
+		search = '';
+		query = '';
+		ownerFilter = [];
+		tagFilter = [];
+		mineOnly = false;
+		page = 1;
+	}
+
+	function showAllYours() {
+		mineOnly = true;
+		page = 1;
 	}
 </script>
 
@@ -103,167 +187,255 @@
 	<title>{m.products_page_title()}</title>
 </svelte:head>
 
-<div class="w-full px-4 py-6 sm:px-6 lg:px-8">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-		<div>
-			<h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-				{m.products_heading()}
-			</h1>
-			<p class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-				{m.products_subheading()}
-			</p>
-		</div>
-		{#if canManageProducts}
+{#snippet row(p: DataProduct)}
+	<li aria-current={selected?.id === p.id ? 'true' : undefined}>
+		<ProductIcon iconUrl={p.icon_url} />
+		<div class="mm-stack body">
 			<a
-				href={resolve('/products/new')}
-				class="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500"
+				class="mm-link mm-link--quiet name"
+				href={resolve('/products/[id]', { id: p.id })}
+				onclick={(e) => preview(e, p)}>{p.name}</a
 			>
-				<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-				{m.products_new_product()}
-			</a>
-		{/if}
-	</div>
+			{#if p.description}
+				<mm-text variant="dense" tone="secondary" block class="truncate"
+					>{plain(p.description)}</mm-text
+				>
+			{/if}
+			{#if p.owners.length > 0 || p.tags.length > 0}
+				<mm-text variant="caption" tone="secondary" block class="truncate"
+					>{[...ownerNames(p), ...p.tags].join(' · ')}</mm-text
+				>
+			{/if}
+		</div>
+		<div class="mm-stack side">
+			{#if popularityLevel(p.popularity)}
+				<mm-popularity level={popularityLevel(p.popularity)}></mm-popularity>
+			{/if}
+			<mm-text variant="caption" tone="secondary" numeric
+				>{m.products_assets_count({ count: p.asset_count ?? 0 })}</mm-text
+			>
+		</div>
+	</li>
+{/snippet}
 
-	<div class="mt-6">
-		{#if $error}
-			<div
-				class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
+{#snippet list(label: string, rows: DataProduct[])}
+	<ul class="mm-list products" aria-label={label}>
+		{#each rows as p (p.id)}
+			{@render row(p)}
+		{/each}
+	</ul>
+{/snippet}
+
+{#snippet allRows()}
+	<div class="mm-stack" style="--mm-gap: var(--space-3)">
+		{@render list(m.products_all(), rows)}
+		{@render pager(rowsTotal)}
+	</div>
+{/snippet}
+
+{#snippet pager(count: number)}
+	{#if count > PAGE}
+		<mm-pagination
+			total={count}
+			page-size={PAGE}
+			{page}
+			label={m.products_pages_label()}
+			onmm-page-change={(e: CustomEvent<{ page: number }>) => (page = e.detail.page)}
+		></mm-pagination>
+	{/if}
+{/snippet}
+
+<div class="mm-stack" style="--mm-gap: var(--space-5)">
+	<mm-page-header
+		heading={m.products_heading()}
+		compact
+		count={failed || catalogTotal === null ? undefined : catalogTotal}
+	>
+		{#if canManage && catalogTotal !== 0}
+			<mm-button slot="actions" variant="primary" icon="add" href={resolve('/products/new')}
+				>{m.products_create()}</mm-button
 			>
-				{String($error.status).startsWith('5') ? m.products_error_server() : $error.message}
-			</div>
-		{:else if $isLoading}
-			<div class="space-y-2">
-				{#each Array(5) as _, i (i)}
-					<div class="h-14 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
+		{/if}
+	</mm-page-header>
+
+	{#if !loading && !failed && catalogTotal === 0 && !filtering}
+		<mm-empty-state
+			heading={m.products_empty_title()}
+			description={m.products_empty_description()}
+			seed={5}
+		>
+			{#if canManage}
+				<mm-button slot="action" variant="primary" icon="add" href={resolve('/products/new')}
+					>{m.products_create()}</mm-button
+				>
+			{/if}
+		</mm-empty-state>
+	{:else}
+		<mm-toolbar label={m.products_filter_label()}>
+			<mm-search-field
+				class="search"
+				label={m.products_search_placeholder()}
+				hide-label
+				placeholder={m.products_search_hint()}
+				shortcut="/"
+				value={search}
+				onmm-input={(e: CustomEvent<{ value: string }>) => onSearch(e.detail.value)}
+			></mm-search-field>
+			<mm-multiselect
+				class="filter"
+				label={m.common_owners()}
+				hide-label
+				placeholder={m.products_any_owner()}
+				max-tags={1}
+				value={ownerFilter}
+				onmm-change={(e: CustomEvent<{ value: string[] }>) => {
+					ownerFilter = e.detail.value;
+					page = 1;
+				}}
+			>
+				{#each facets.owners as o (o.id)}
+					<mm-option
+						value={o.id}
+						label={o.name || o.id}
+						icon={o.type === 'team' ? 'groups' : 'person'}
+					></mm-option>
 				{/each}
-			</div>
-		{:else if $allProducts.length === 0}
-			<div class="mx-auto max-w-lg py-16 text-center">
-				<span
-					class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-				>
-					<IconifyIcon icon="material-symbols:inventory-2-outline" class="h-6 w-6" />
-				</span>
-				<h2 class="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-					{m.products_empty_title()}
-				</h2>
-				<p class="mx-auto mt-2 max-w-md text-sm text-gray-600 dark:text-gray-400">
-					{m.products_empty_description()}
-				</p>
-				{#if canManageProducts}
-					<a
-						href={resolve('/products/new')}
-						class="mt-6 inline-flex items-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500"
-					>
-						<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-						{m.products_create_first()}
-					</a>
-				{/if}
-			</div>
-		{:else}
-			<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<label
-					class="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 focus-within:border-earthy-terracotta-500 focus-within:ring-2 focus-within:ring-earthy-terracotta-500/30 sm:w-80 dark:border-gray-600 dark:bg-gray-800"
-				>
-					<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
-					<input
-						bind:value={search}
-						placeholder={m.products_search_placeholder()}
-						aria-label={m.products_search_placeholder()}
-						class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100"
-					/>
-				</label>
-				<span class="text-sm text-gray-500 dark:text-gray-400">
-					{m.products_product_count({ count: $totalProducts })}
-				</span>
-			</div>
-
-			<div
-				class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+			</mm-multiselect>
+			<mm-multiselect
+				class="filter"
+				label={m.common_tags()}
+				hide-label
+				placeholder={m.products_any_tag()}
+				max-tags={1}
+				value={tagFilter}
+				onmm-change={(e: CustomEvent<{ value: string[] }>) => {
+					tagFilter = e.detail.value;
+					page = 1;
+				}}
 			>
-				<div
-					class="hidden items-center gap-4 border-b border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:flex dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400"
-					aria-hidden="true"
+				{#each facets.tags as t (t.tag)}
+					<mm-option value={t.tag} label={t.tag}></mm-option>
+				{/each}
+			</mm-multiselect>
+			<mm-select
+				slot="end"
+				class="sort"
+				label={m.products_sort_label()}
+				hide-label
+				value={sort}
+				onmm-change={(e: CustomEvent<{ value: string }>) => {
+					sort =
+						(['popular', 'updated', 'name'] as const).find((v) => v === e.detail.value) ??
+						'popular';
+					page = 1;
+				}}
+			>
+				<mm-option value="popular">{m.products_sort_popular()}</mm-option>
+				<mm-option value="updated">{m.products_sort_updated()}</mm-option>
+				<mm-option value="name">{m.products_sort_name()}</mm-option>
+			</mm-select>
+		</mm-toolbar>
+
+		<div>
+			{#if failed}
+				<mm-callout tone="danger" heading={m.products_load_failed()}>
+					{failed}
+					<mm-button slot="actions" size="sm" icon="refresh" onclick={retry}
+						>{m.products_try_again()}</mm-button
+					>
+				</mm-callout>
+			{:else if loading && rows.length === 0 && yours.length === 0}
+				<mm-skeleton loading count={6}></mm-skeleton>
+			{:else if filtering && rowsTotal === 0}
+				<mm-empty-state
+					heading={m.products_no_match_title()}
+					description={m.products_no_match_description()}
+					seed={3}
 				>
-					<span class="min-w-0 flex-1">{m.products_col_product()}</span>
-					<span class="w-20 text-right">{m.products_assets()}</span>
-					<span class="w-20 text-right">{m.products_col_owners()}</span>
-					<span class="hidden w-48 lg:block">{m.common_tags()}</span>
-					<span class="w-24 text-right">{m.products_col_updated()}</span>
-				</div>
-				{#if shown.length === 0}
-					<p class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-						{m.products_no_match()}
-					</p>
-				{/if}
-				<ul class="divide-y divide-gray-100 dark:divide-gray-700/60">
-					{#each shown as product (product.id)}
-						<li>
-							<button
-								type="button"
-								onclick={() => handleProductClick(product.id)}
-								class="group flex w-full items-center gap-4 px-4 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-700/30"
+					<mm-button slot="action" onclick={clearFilters}>{m.products_clear_search()}</mm-button>
+				</mm-empty-state>
+			{:else if filtering}
+				<!-- Searching or filtering shows one ranked list, so results are not split across sections. -->
+				<div class="mm-stack" style="--mm-gap: var(--space-3)">
+					<div class="mm-cluster mm-cluster--between">
+						<mm-text variant="dense" tone="secondary" role="status"
+							>{mineOnly
+								? m.products_results_yours({ count: rowsTotal })
+								: m.products_results({ count: rowsTotal })}</mm-text
+						>
+						{#if mineOnly}
+							<mm-button size="sm" variant="ghost" onclick={clearFilters}
+								>{m.products_show_every_product()}</mm-button
 							>
-								<span class="flex min-w-0 flex-1 items-center gap-3">
-									<span
-										class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30"
-									>
-										{#if product.icon_url}
-											<AuthenticatedImage
-												src={product.icon_url}
-												alt={m.products_icon_alt({ name: product.name })}
-												class="h-full w-full object-cover"
-											/>
-										{:else}
-											<IconifyIcon
-												icon="material-symbols:inventory-2-outline"
-												class="h-5 w-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-300"
-											/>
-										{/if}
-									</span>
-									<span class="min-w-0">
-										<span
-											class="block truncate font-medium text-gray-900 group-hover:text-earthy-terracotta-700 dark:text-gray-100 dark:group-hover:text-earthy-terracotta-400"
-											>{product.name}</span
-										>
-										<span class="block truncate text-xs text-gray-500 dark:text-gray-400">
-											{product.description
-												? product.description.replace(/<[^>]*>/g, '')
-												: m.products_no_description()}
-										</span>
-									</span>
-								</span>
-								<span class="w-20 text-right text-sm tabular-nums text-gray-700 dark:text-gray-300"
-									>{product.asset_count || 0}</span
-								>
-								<span class="w-20 text-right text-sm tabular-nums text-gray-700 dark:text-gray-300"
-									>{product.owners?.length || 0}</span
-								>
-								<span class="hidden w-48 items-center gap-1 overflow-hidden lg:flex">
-									{#each (product.tags ?? []).slice(0, 2) as tag (tag)}
-										<span
-											class="truncate rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-											>{tag}</span
-										>
-									{/each}
-									{#if (product.tags ?? []).length > 2}
-										<span class="text-xs text-gray-400">+{(product.tags ?? []).length - 2}</span>
-									{/if}
-								</span>
-								<span
-									class="w-24 text-right text-xs text-gray-500 dark:text-gray-400"
-									title={formatDate(product.updated_at)}
-									>{formatRelativeTime(product.updated_at)}</span
-								>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/if}
-	</div>
+						{/if}
+					</div>
+					{@render list(m.products_search_results(), rows)}
+					{@render pager(rowsTotal)}
+				</div>
+			{:else}
+				{#if yours.length > 0}
+					<mm-section heading={m.products_yours()}>
+						{#if yoursTotal > YOURS_MAX}
+							<mm-button slot="actions" variant="ghost" size="sm" onclick={showAllYours}
+								>{m.products_show_all_count({ count: yoursTotal })}</mm-button
+							>
+						{/if}
+						{@render list(m.products_yours(), yours)}
+					</mm-section>
+				{/if}
+				{#if yours.length > 0}
+					<mm-section heading={m.products_all()}>
+						{@render allRows()}
+					</mm-section>
+				{:else}
+					{@render allRows()}
+				{/if}
+			{/if}
+		</div>
+	{/if}
 </div>
 
-{#if selectedProduct}
-	<ProductBlade bind:product={selectedProduct} onClose={() => (selectedProduct = null)} />
+{#if selected}
+	<ProductBlade bind:product={selected} onClose={() => (selected = null)} />
 {/if}
+
+<style>
+	.search {
+		width: 20rem;
+		max-width: 100%;
+	}
+	.filter {
+		width: 14rem;
+	}
+	.sort {
+		width: 12rem;
+	}
+	.products {
+		border-block: 1px solid var(--mm-rule);
+	}
+	.products > li {
+		gap: var(--space-4);
+		padding-block: var(--space-4);
+	}
+	.products > li[aria-current='true'] {
+		background: var(--mm-selected);
+	}
+	.body {
+		--mm-gap: var(--space-1);
+		flex: 1;
+		min-width: 0;
+	}
+	.name {
+		font: var(--text-heading-sm);
+	}
+	.truncate {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.side {
+		--mm-gap: var(--space-2);
+		align-items: flex-end;
+		flex: none;
+	}
+</style>

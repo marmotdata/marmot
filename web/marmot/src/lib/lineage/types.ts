@@ -5,6 +5,8 @@ export interface LineageNode {
 	type: string;
 	asset: Asset;
 	depth: number;
+	/** Outcome of the latest run recorded against the asset. */
+	last_run_status?: 'succeeded' | 'failed' | 'running';
 }
 
 export interface LineageEdge {
@@ -16,6 +18,8 @@ export interface LineageEdge {
 	observation_count?: number;
 	last_seen_at?: string;
 	job_mrn?: string;
+	/** The pipeline, person or service account that declared the edge. */
+	declared_by?: string;
 }
 
 export interface LineageResponse {

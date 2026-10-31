@@ -1,90 +1,71 @@
+@import '@marmotdata/tokens/index.css';
+@import '@marmotdata/css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+html {
+	color-scheme: light;
+}
+html[data-theme='dark'] {
+	color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+	html:not([data-theme='light']) {
+		color-scheme: dark;
+	}
+}
+
+body {
+	background: var(--mm-paper);
+	color: var(--mm-text);
+	font: var(--text-body);
+	-webkit-font-smoothing: antialiased;
+}
+
+::selection {
+	background: var(--mm-selected);
+	color: var(--mm-text);
+}
+
+/* Web components are undefined for a frame before their module runs; hiding them avoids a flash of slotted text. */
+:not(:defined):is(mm-app-shell, mm-sidebar-nav, mm-top-bar, mm-command-palette, mm-page-header, mm-panel) {
+	visibility: hidden;
+}
+
 @layer components {
-	/* General translucent surface */
-	.glass {
-		background: rgba(255, 255, 255, 0.6);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-	}
-	.dark .glass {
-		background: rgba(30, 41, 59, 0.6);
-		border-color: rgba(255, 255, 255, 0.08);
-	}
-
-	.glass-card {
-		background: rgba(255, 255, 255, 0.7);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-	}
-	.dark .glass-card {
-		background: rgba(30, 41, 59, 0.7);
-		border-color: rgba(255, 255, 255, 0.08);
-	}
-
-	/* Interactive glass card with hover lift */
+	/* The old translucent surfaces now resolve to flat token surfaces: the design system has no glass or blur. Remove these classes as screens are rebuilt. */
+	.glass,
+	.glass-card,
 	.glass-card-interactive {
-		background: rgba(255, 255, 255, 0.7);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		transition:
-			transform 0.2s ease,
-			box-shadow 0.2s ease;
+		background: var(--mm-surface);
+		border: 1px solid var(--mm-rule);
+	}
+	.glass-card-interactive {
+		transition: border-color var(--mm-dur-press) var(--mm-ease);
 	}
 	.glass-card-interactive:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 24px rgba(210, 90, 48, 0.1);
+		border-color: var(--mm-control-border);
 	}
-	.dark .glass-card-interactive {
-		background: rgba(30, 41, 59, 0.7);
-		border-color: rgba(255, 255, 255, 0.08);
-	}
-	.dark .glass-card-interactive:hover {
-		box-shadow: 0 8px 24px rgba(210, 90, 48, 0.15);
-	}
-
-	/* Navbar */
 	.glass-navbar {
-		background: rgba(254, 252, 251, 0.8);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+		background: var(--mm-paper);
+		border-bottom: 1px solid var(--mm-rule);
 	}
-	.dark .glass-navbar {
-		background: rgba(26, 26, 26, 0.8);
-		border-bottom-color: rgba(255, 255, 255, 0.08);
-	}
-
-	/* Dropdown menus */
 	.glass-dropdown {
-		background: #fefcfb;
-		border: 1px solid rgba(0, 0, 0, 0.06);
+		background: var(--mm-raised);
+		border: 1px solid var(--mm-rule);
+		box-shadow: var(--shadow-float);
 	}
-	.dark .glass-dropdown {
-		background: #1a1a1a;
-		border-color: rgba(255, 255, 255, 0.08);
-	}
-
-	/* Dialogs / modals */
 	.glass-modal {
-		background: rgba(255, 255, 255, 0.85);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-	}
-	.dark .glass-modal {
-		background: rgba(30, 41, 59, 0.85);
-		border-color: rgba(255, 255, 255, 0.08);
+		background: var(--mm-raised);
+		border: 1px solid var(--mm-rule);
+		box-shadow: var(--shadow-dialog);
 	}
 }
 
 @layer base {
-	/* Shared checkbox chrome — native inputs keep working; no @tailwindcss/forms. */
+	/* Native checkboxes not yet moved to mm-checkbox share its look: control border, ink when checked, ink focus ring. */
 	input[type='checkbox'] {
 		appearance: none;
 		-webkit-appearance: none;
@@ -92,56 +73,52 @@
 		height: 1rem;
 		flex-shrink: 0;
 		margin: 0;
-		border: 1.5px solid theme('colors.gray.300');
-		border-radius: 0.25rem;
-		background-color: theme('colors.white');
+		border: 1px solid var(--mm-control-border);
+		border-radius: var(--radius-sm);
+		background-color: var(--mm-surface);
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: 0.65rem 0.65rem;
 		vertical-align: middle;
 		cursor: pointer;
 		transition:
-			background-color 0.12s ease,
-			border-color 0.12s ease,
-			box-shadow 0.12s ease;
-	}
-
-	.dark input[type='checkbox'] {
-		border-color: theme('colors.gray.600');
-		background-color: theme('colors.gray.800');
+			background-color var(--mm-dur-press) var(--mm-ease),
+			border-color var(--mm-dur-press) var(--mm-ease);
 	}
 
 	input[type='checkbox']:hover:not(:disabled) {
-		border-color: theme('colors.earthy-terracotta.500');
+		border-color: var(--mm-text-2);
+	}
+
+	input[type='checkbox']:checked,
+	input[type='checkbox']:indeterminate {
+		border-color: var(--mm-text);
+		background-color: var(--mm-text);
 	}
 
 	input[type='checkbox']:checked {
-		border-color: theme('colors.earthy-terracotta.700');
-		background-color: theme('colors.earthy-terracotta.700');
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' stroke='%23fdfbfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 	}
 
 	input[type='checkbox']:indeterminate {
-		border-color: theme('colors.earthy-terracotta.700');
-		background-color: theme('colors.earthy-terracotta.700');
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8h8' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8h8' stroke='%23fdfbfa' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
 	}
 
-	input[type='checkbox']:focus-visible {
-		outline: none;
-		box-shadow:
-			0 0 0 2px theme('colors.white'),
-			0 0 0 4px theme('colors.earthy-terracotta.600');
-	}
-
-	.dark input[type='checkbox']:focus-visible {
-		box-shadow:
-			0 0 0 2px theme('colors.gray.900'),
-			0 0 0 4px theme('colors.earthy-terracotta.600');
+	:focus-visible {
+		outline: var(--mm-focus-ring-width, 2px) solid var(--mm-text);
+		outline-offset: var(--mm-focus-ring-offset, 2px);
 	}
 
 	input[type='checkbox']:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
+}
+
+/* In Peat the checked fill is light ink, so the tick switches to the dark paper colour. */
+html.dark input[type='checkbox']:checked {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' stroke='%23151210' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+html.dark input[type='checkbox']:indeterminate {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8h8' stroke='%23151210' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
 }

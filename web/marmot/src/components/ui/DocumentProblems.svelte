@@ -18,14 +18,12 @@
 	let warnings = $derived(diagnostics.length - errors);
 </script>
 
-<div class="rounded-lg border border-gray-200 dark:border-gray-700" aria-live="polite">
-	<div
-		class="flex items-center justify-between gap-3 border-b border-gray-100 px-3 py-2 dark:border-gray-700/60"
-	>
-		<h4 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+<div class="rounded-md border border-mm-rule" aria-live="polite">
+	<div class="flex items-center justify-between gap-3 border-b border-mm-rule px-3 py-2">
+		<h4 class="text-label text-mm-text-2">
 			{m.ui_document_problems_heading()}
 		</h4>
-		<span class="flex items-center gap-3 text-xs tabular-nums text-gray-500 dark:text-gray-400">
+		<span class="flex items-center gap-3 text-caption tabular-nums text-mm-text-2">
 			{#if checking}
 				<span class="flex items-center gap-1">
 					<IconifyIcon icon="material-symbols:progress-activity" class="h-3.5 w-3.5 animate-spin" />
@@ -33,13 +31,13 @@
 				</span>
 			{/if}
 			{#if errors > 0}
-				<span class="flex items-center gap-1 text-red-600 dark:text-red-400">
+				<span class="flex items-center gap-1 text-mm-danger">
 					<IconifyIcon icon="material-symbols:error-outline" class="h-3.5 w-3.5" />
 					{m.ui_document_error_count({ count: errors })}
 				</span>
 			{/if}
 			{#if warnings > 0}
-				<span class="flex items-center gap-1 text-amber-700 dark:text-amber-400">
+				<span class="flex items-center gap-1 text-mm-warning-text">
 					<IconifyIcon icon="material-symbols:warning-outline" class="h-3.5 w-3.5" />
 					{m.ui_document_warning_count({ count: warnings })}
 				</span>
@@ -47,20 +45,20 @@
 		</span>
 	</div>
 	{#if diagnostics.length === 0}
-		<p class="flex items-center gap-1.5 px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400">
+		<p class="flex items-center gap-1.5 px-3 py-2.5 text-caption text-mm-text-2">
 			<IconifyIcon
 				icon="material-symbols:check-circle-outline"
-				class="h-3.5 w-3.5 text-earthy-green-700 dark:text-earthy-green-400"
+				class="h-3.5 w-3.5 text-mm-success"
 			/>
 			{m.ui_document_no_problems()}
 		</p>
 	{:else}
-		<ul class="max-h-48 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700/60">
+		<ul class="max-h-48 divide-y divide-mm-rule overflow-y-auto">
 			{#each diagnostics as diagnostic, index (index)}
 				<li>
 					<button
 						type="button"
-						class="flex w-full items-start gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-50 dark:hover:bg-gray-700/40 dark:focus-visible:bg-gray-700/40"
+						class="flex w-full items-start gap-2 px-3 py-2 text-left text-caption transition-colors hover:bg-mm-sunken focus-visible:bg-mm-sunken"
 						onclick={() => onSelect?.(diagnostic)}
 					>
 						<IconifyIcon
@@ -68,19 +66,17 @@
 								? 'material-symbols:error-outline'
 								: 'material-symbols:warning-outline'}
 							class="mt-0.5 h-3.5 w-3.5 shrink-0 {diagnostic.severity === 'error'
-								? 'text-red-600 dark:text-red-400'
-								: 'text-amber-600 dark:text-amber-400'}"
+								? 'text-mm-danger'
+								: 'text-mm-warning'}"
 						/>
-						<span class="min-w-0 flex-1 text-gray-700 dark:text-gray-300">
+						<span class="min-w-0 flex-1 text-mm-text">
 							{diagnostic.message}
 							{#if diagnostic.path}
-								<code class="ml-1 font-mono text-[11px] text-gray-500 dark:text-gray-400"
-									>{diagnostic.path}</code
-								>
+								<code class="ml-1 font-mono text-mono-dense text-mm-text-2">{diagnostic.path}</code>
 							{/if}
 						</span>
 						{#if diagnostic.line}
-							<span class="shrink-0 tabular-nums text-gray-400 dark:text-gray-500">
+							<span class="shrink-0 tabular-nums text-mm-text-3">
 								{m.ui_document_line({ line: diagnostic.line })}
 							</span>
 						{/if}
