@@ -182,6 +182,12 @@ type ClientService interface {
 	// PostUsersOauthLinkContext link o auth account.
 	PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
 
+	// PostUsersSignOut sign out.
+	PostUsersSignOut(params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error)
+
+	// PostUsersSignOutContext sign out.
+	PostUsersSignOutContext(ctx context.Context, params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error)
+
 	// PostUsersUpdatePassword update user password.
 	PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
 
@@ -1616,6 +1622,73 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postUsersOauthLink: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostUsersSignOut signs out.
+//
+// Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersSignOutContext] instead.
+func (a *Client) PostUsersSignOut(params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersSignOutContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersSignOutContext signs out.
+//
+// Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too..
+//
+// Do not use the deprecated [PostUsersSignOutParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersSignOutContext(ctx context.Context, params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersSignOutParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersSignOut",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/sign-out",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersSignOutReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersSignOutNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersSignOut: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

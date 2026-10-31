@@ -275,6 +275,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Link OAuth account
         """
 
+    async def test_post_users_sign_out(self) -> None:
+        """Test case for post_users_sign_out
+
+        Sign out
+        """
+
+    def test_post_users_sign_out_sync(self) -> None:
+        """Test case for post_users_sign_out (synchronous)
+
+        Sign out
+        """
+
     async def test_post_users_update_password(self) -> None:
         """Test case for post_users_update_password
 
