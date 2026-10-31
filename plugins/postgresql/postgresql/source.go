@@ -7,6 +7,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -227,17 +230,17 @@ func (s *Source) initConnection(ctx context.Context, database string) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		s.config.User,
-		s.config.Password,
-		s.config.Host,
-		s.config.Port,
-		database,
-		s.config.SSLMode,
-	)
+	// Built as a URL rather than formatted, so a password with %, @ or /
+	// in it is escaped instead of breaking the parse.
+	connURL := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(s.config.User, s.config.Password),
+		Host:     net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port)),
+		Path:     "/" + database,
+		RawQuery: url.Values{"sslmode": {s.config.SSLMode}}.Encode(),
+	}
 
-	config, err := pgxpool.ParseConfig(connStr)
+	config, err := pgxpool.ParseConfig(connURL.String())
 	if err != nil {
 		return fmt.Errorf("parsing connection string: %w", err)
 	}

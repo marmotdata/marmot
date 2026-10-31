@@ -9,6 +9,12 @@ ignoredBuiltDependencies:
   - core-js
   - core-js-pure
 
+minimumReleaseAgeExclude:
+  - '@marmotdata/css@0.1.2'
+  - '@marmotdata/elements@0.1.2'
+  - '@marmotdata/icons@0.1.2'
+  - '@marmotdata/tokens@0.1.2'
+
 overrides:
   node-forge: ">=1.4.0"
   image-size: "^2.0.3"

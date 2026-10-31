@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Icon } from "@iconify/react";
+import React, { useId, useState } from "react";
 import CodeBlock from "@theme/CodeBlock";
+import ExpandMore from "~icons/material-symbols/expand-more";
 
 interface CollapsibleProps {
   title: string;
+  /** Kept for existing content; not drawn. */
   icon?: string;
   children?: React.ReactNode;
   defaultOpen?: boolean;
@@ -12,9 +13,9 @@ interface CollapsibleProps {
   minimalPolicyJson?: object;
 }
 
+/** A section that folds away: one ruled panel with the title as its button. */
 export function Collapsible({
   title,
-  icon,
   children,
   defaultOpen = false,
   policyJson,
@@ -22,67 +23,40 @@ export function Collapsible({
 }: CollapsibleProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showMinimal, setShowMinimal] = useState(false);
+  const panelId = useId();
 
   const currentPolicy = showMinimal && minimalPolicyJson ? minimalPolicyJson : policyJson;
 
   return (
-    <div className="my-4 border-2 border-earthy-terracotta-200 dark:border-earthy-terracotta-800 rounded-lg overflow-hidden">
+    <div className="doc-collapsible">
       <button
+        type="button"
+        className="doc-collapsible__toggle"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-4 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-800 cursor-pointer border-none transition-colors"
       >
-        <div className="flex items-center gap-3">
-          {icon && (
-            <Icon
-              icon={icon}
-              className="w-6 h-6 text-earthy-terracotta-500"
-            />
-          )}
-          <span className="font-semibold text-base text-earthy-terracotta-800 dark:text-earthy-terracotta-100">
-            {title}
-          </span>
-        </div>
-        <Icon
-          icon="mdi:chevron-down"
-          className={`w-5 h-5 text-earthy-terracotta-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
+        <span>{title}</span>
+        <ExpandMore aria-hidden="true" className="doc-collapsible__caret" />
       </button>
       {isOpen && (
-        <div className="border-t border-earthy-terracotta-200 dark:border-earthy-terracotta-800">
+        <div className="doc-collapsible__body" id={panelId}>
           {policyJson ? (
-            <div className="p-4">
+            <>
               {minimalPolicyJson && (
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setShowMinimal(false)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${
-                      !showMinimal
-                        ? "bg-earthy-green-100 border-earthy-green-300 text-earthy-green-800"
-                        : "bg-transparent border-gray-300 text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    Full Permissions
+                <div className="mm-seg doc-collapsible__seg" role="group" aria-label="Policy">
+                  <button type="button" aria-pressed={!showMinimal} onClick={() => setShowMinimal(false)}>
+                    Full permissions
                   </button>
-                  <button
-                    onClick={() => setShowMinimal(true)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${
-                      showMinimal
-                        ? "bg-earthy-blue-100 border-earthy-blue-300 text-earthy-blue-800"
-                        : "bg-transparent border-gray-300 text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
+                  <button type="button" aria-pressed={showMinimal} onClick={() => setShowMinimal(true)}>
                     Minimal
                   </button>
                 </div>
               )}
-              <CodeBlock language="json">
-                {JSON.stringify(currentPolicy, null, 2)}
-              </CodeBlock>
-            </div>
+              <CodeBlock language="json">{JSON.stringify(currentPolicy, null, 2)}</CodeBlock>
+            </>
           ) : (
-            <div className="p-5 space-y-4 text-gray-700 dark:text-gray-300 [&>p]:m-0 [&>pre]:m-0">
-              {children}
-            </div>
+            children
           )}
         </div>
       )}

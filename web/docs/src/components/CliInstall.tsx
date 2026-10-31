@@ -10,22 +10,18 @@ export function CliInstall(): JSX.Element {
   return (
     <Tabs
       items={[
-        { label: "Automatic", value: "auto", icon: "mdi:download" },
-        { label: "Manual", value: "manual", icon: "mdi:folder-download" },
+        { label: "Automatic", value: "auto" },
+        { label: "Manual", value: "manual" },
       ]}
     >
       <TabPanel>
-        <h4 className="text-base font-semibold text-gray-900 dark:text-white m-0 mb-2 mt-1">
-          Homebrew
-        </h4>
+        <h4 className="doc-subhead">Homebrew</h4>
         <CodeBlock language="bash">brew install marmot</CodeBlock>
 
-        <h4 className="text-base font-semibold text-gray-900 dark:text-white m-0 mb-2 mt-4">
-          Install script
-        </h4>
+        <h4 className="doc-subhead">Install script</h4>
         <CodeBlock language="bash">curl -fsSL get.marmotdata.io | sh</CodeBlock>
 
-        <TipBox variant="info" title="Verify Scripts">
+        <TipBox variant="info" title="Verify scripts">
           It&apos;s good practice to inspect the contents of any script before
           piping it into bash.
         </TipBox>

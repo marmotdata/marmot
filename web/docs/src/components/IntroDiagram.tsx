@@ -1,134 +1,102 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Person from "~icons/material-symbols/person-outline";
+import SmartToy from "~icons/material-symbols/smart-toy-outline";
+import Code from "~icons/material-symbols/code";
+import Inventory from "~icons/material-symbols/inventory-2-outline";
+import MenuBook from "~icons/material-symbols/menu-book-outline";
+import AccountTree from "~icons/material-symbols/account-tree-outline";
+import Shield from "~icons/material-symbols/shield-outline";
+import { ThemedImg } from "@site/src/components/ThemedImg";
 
-/* A small, quiet picture of the shape: sources on the left, one catalog in
- * the middle, people and agents on the right. Inline SVG so it stays crisp
- * and takes its colours from the theme. */
+/*
+ * The shape of Marmot, with as few words as possible: the systems you run as their own marks, the
+ * catalog in the middle as a panel with the mascot lying on its top edge, and the people, agents and
+ * code that read it.
+ * Provider marks are the only full-colour artwork, as in the product; people and agents take the
+ * design system's tints for them (slate and burnt sienna). Stacks top to bottom on a phone.
+ */
 
-const W = 720;
-const H = 200;
-const BOX_W = 160;
-const BOX_H = 34;
-const GAP = 12;
-const LEFT_X = 20;
-const RIGHT_X = W - 20 - BOX_W;
-const HUB_X = W / 2 - 90;
-const HUB_W = 180;
-const HUB_H = 128;
-const MID = H / 2;
+const sources: { provider: string; name: string }[] = [
+  { provider: "postgresql", name: "PostgreSQL" },
+  { provider: "snowflake", name: "Snowflake" },
+  { provider: "bigquery", name: "BigQuery" },
+  { provider: "kafka", name: "Kafka" },
+  { provider: "dbt", name: "dbt" },
+  { provider: "airflow", name: "Airflow" },
+  { provider: "s3", name: "S3" },
+  { provider: "looker", name: "Looker" },
+];
 
-const sources = ["Plugins", "Terraform and Pulumi", "CLI, SDK and API"];
-const consumers = ["Web UI", "REST API and CLI", "MCP for agents"];
+// What the catalog holds, one word each.
+const holds = [
+  { Icon: Inventory, name: "Catalog" },
+  { Icon: MenuBook, name: "Glossary" },
+  { Icon: AccountTree, name: "Lineage" },
+  { Icon: Shield, name: "Access" },
+];
 
-function rowY(i: number, n: number): number {
-  const total = n * BOX_H + (n - 1) * GAP;
-  return MID - total / 2 + i * (BOX_H + GAP) + BOX_H / 2;
-}
+const readers = [
+  { Icon: Person, name: "People", tone: "people" },
+  { Icon: SmartToy, name: "Agents", tone: "agents" },
+  { Icon: Code, name: "Your code", tone: "code" },
+];
 
-function Box({ x, y, label }: { x: number; y: number; label: string }) {
-  return (
-    <g>
-      <rect
-        x={x}
-        y={y - BOX_H / 2}
-        width={BOX_W}
-        height={BOX_H}
-        rx={8}
-        fill="var(--ifm-background-surface-color)"
-        stroke="var(--ifm-color-emphasis-300)"
-      />
-      <text
-        x={x + BOX_W / 2}
-        y={y}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={12.5}
-        fill="var(--ifm-font-color-base)"
-      >
-        {label}
-      </text>
-    </g>
-  );
-}
-
-function wire(x1: number, y1: number, x2: number, y2: number): string {
-  const c = (x1 + x2) / 2;
-  return `M${x1},${y1} C${c},${y1} ${c},${y2} ${x2},${y2}`;
+// A dotted line with an arrowhead, joining one column to the next.
+function Flow(): JSX.Element {
+  return <div className="intro-map__flow" />;
 }
 
 export default function IntroDiagram(): JSX.Element {
-  const inX = LEFT_X + BOX_W;
-  const outX = RIGHT_X;
-  const hubL = HUB_X;
-  const hubR = HUB_X + HUB_W;
-  const stroke = "var(--ifm-color-primary)";
+  useEffect(() => {
+    void import("@marmotdata/icons/define.js");
+    void import("@marmotdata/elements/topography.js");
+  }, []);
+
   return (
-    <figure style={{ margin: "1.5rem auto", maxWidth: `${W}px` }}>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        width="100%"
-        role="img"
-        aria-label="Sources feed the Marmot catalog; people and agents query it through the UI, the API and MCP"
-        fontFamily="var(--ifm-font-family-base)"
-      >
-        <defs>
-          <marker id="intro-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M0,0 L8,4 L0,8 z" fill={stroke} />
-          </marker>
-        </defs>
-
-        <text x={LEFT_X + BOX_W / 2} y={16} textAnchor="middle" fontSize={11} fontWeight={600} letterSpacing="0.08em" fill="var(--ifm-color-emphasis-600)">
-          POPULATE
-        </text>
-        <text x={RIGHT_X + BOX_W / 2} y={16} textAnchor="middle" fontSize={11} fontWeight={600} letterSpacing="0.08em" fill="var(--ifm-color-emphasis-600)">
-          QUERY
-        </text>
-
-        {sources.map((s, i) => {
-          const y = rowY(i, sources.length);
-          return (
-            <g key={s}>
-              <Box x={LEFT_X} y={y} label={s} />
-              <path d={wire(inX, y, hubL - 2, MID + (i - 1) * 18)} fill="none" stroke={stroke} strokeWidth={1.25} opacity={0.7} markerEnd="url(#intro-arrow)" />
-            </g>
-          );
-        })}
-
-        {consumers.map((c, i) => {
-          const y = rowY(i, consumers.length);
-          return (
-            <g key={c}>
-              <path d={wire(hubR, MID + (i - 1) * 18, outX - 2, y)} fill="none" stroke={stroke} strokeWidth={1.25} opacity={0.7} markerEnd="url(#intro-arrow)" />
-              <Box x={RIGHT_X} y={y} label={c} />
-            </g>
-          );
-        })}
-
-        <g>
-          <rect
-            x={HUB_X}
-            y={MID - HUB_H / 2}
-            width={HUB_W}
-            height={HUB_H}
-            rx={12}
-            fill="var(--ifm-background-surface-color)"
-            stroke={stroke}
-            strokeWidth={1.5}
-          />
-          <text x={W / 2} y={MID - HUB_H / 2 + 26} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--ifm-font-color-base)">
-            Marmot
-          </text>
-          <line x1={HUB_X + 16} x2={HUB_X + HUB_W - 16} y1={MID - HUB_H / 2 + 40} y2={MID - HUB_H / 2 + 40} stroke="var(--ifm-color-emphasis-300)" />
-          {["Assets and schemas", "Ownership and glossary", "Lineage", "Tags and custom fields"].map((t, i) => (
-            <text key={t} x={W / 2} y={MID - HUB_H / 2 + 60 + i * 18} textAnchor="middle" fontSize={12} fill="var(--ifm-color-emphasis-800)">
-              {t}
-            </text>
+    <figure className="intro-map">
+      <div className="intro-map__grid" aria-hidden="true">
+        <ul className="intro-map__sources">
+          {sources.map((s) => (
+            <li key={s.provider} title={s.name}>
+              <mm-provider-logo provider={s.provider} decorative></mm-provider-logo>
+            </li>
           ))}
-        </g>
+          <li className="intro-map__more">+60</li>
+        </ul>
 
-        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize={11} fill="var(--ifm-color-emphasis-600)">
-          One Go binary, backed by PostgreSQL
-        </text>
-      </svg>
+        <Flow />
+
+        <div className="intro-map__hub">
+          <ThemedImg lightSrc="/img/marmot.svg" darkSrc="/img/dark-marmot.svg" alt="" className="intro-map__mascot" />
+          <div className="intro-map__panel">
+            <mm-topography seed="7" density="sparse" fade="edges"></mm-topography>
+            <p className="intro-map__name">Marmot</p>
+            <ul className="intro-map__holds">
+              {holds.map(({ Icon, name }) => (
+                <li key={name}>
+                  <Icon />
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <Flow />
+
+        <ul className="intro-map__readers">
+          {readers.map(({ Icon, name, tone }) => (
+            <li key={name} className={`intro-map__reader intro-map__reader--${tone}`}>
+              <Icon />
+              {name}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <figcaption className="mm-visually-hidden">
+        Plugins read metadata from PostgreSQL, Snowflake, BigQuery, Kafka, dbt, Airflow, S3, Looker and more than 60 other systems into
+        Marmot's catalog, glossary, lineage and access rules. People read it in the web UI, agents through the MCP server, and your code through the API, CLI and SDKs.
+      </figcaption>
     </figure>
   );
 }

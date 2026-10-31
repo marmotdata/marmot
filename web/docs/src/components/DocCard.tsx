@@ -1,7 +1,10 @@
-import React from "react";
-import { Icon } from "@iconify/react";
+import React, { useId } from "react";
+import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import { useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
+import { Icon } from "@iconify/react";
+import OpenInNew from "~icons/material-symbols/open-in-new";
+import ChevronRight from "~icons/material-symbols/chevron-right";
 
 function useDocHref(docId: string | undefined, href: string | undefined): string {
   // Always call the hook (rules of hooks); ignore the result if docId is unset.
@@ -16,51 +19,79 @@ function useDocHref(docId: string | undefined, href: string | undefined): string
   return href ?? "#";
 }
 
+const isExternal = (to: string) => /^https?:\/\//.test(to);
+
+/*
+ * Links to other pages are the design system's link list (.mm-link-list from @marmotdata/css, no
+ * JavaScript needed): each entry is one link over the whole row, with the page's icon, the title,
+ * one quiet line and a chevron, or open-in-new for another site. No cards, no tinted icon tiles.
+ */
+
 interface DocCardProps {
   title: string;
   description: string;
-  icon: string;
+  /** An Iconify name, e.g. "mdi:rocket-launch". Drawn at 16px in ink-2. */
+  icon?: string;
   /** Doc ID (preferred): version-aware, e.g. "Deploy/Docker-Compose" or "Plugins/index". */
   docId?: string;
   /** Escape hatch for external URLs or deliberate cross-version links. */
   href?: string;
 }
 
-export function DocCard({
+function LinkListItem({
   title,
   description,
-  docId,
-  href,
   icon,
-}: DocCardProps): JSX.Element {
-  const to = useDocHref(docId, href);
+  to,
+}: {
+  title: string;
+  description: string;
+  icon?: string;
+  to?: string;
+}): JSX.Element {
+  const descriptionId = useId();
+  const lead = icon ? <Icon icon={icon} width={16} height={16} className="mm-link-list__icon" aria-hidden="true" /> : null;
+  if (!to) {
+    return (
+      <li>
+        <div className="mm-link-list__item">
+          {lead}
+          <span className="mm-link-list__text">
+            <span className="mm-link-list__title">{title}</span>
+            <span className="mm-link-list__description">{description}</span>
+          </span>
+        </div>
+      </li>
+    );
+  }
+  const external = isExternal(to);
   return (
-    <Link
-      to={to}
-      className="group block p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[var(--ifm-color-primary)] dark:hover:border-[var(--ifm-color-primary)] hover:shadow-lg transition-all no-underline"
-    >
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 group-hover:border-[var(--ifm-color-primary)] transition-colors">
-          <Icon
-            icon={icon}
-            className="w-6 h-6 text-[var(--ifm-color-primary)]"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0 group-hover:text-[var(--ifm-color-primary)] transition-colors">
+    <li>
+      {/* The description is the link's accessible description, hidden from its name so it is read once. */}
+      <Link to={to} className="mm-link-list__item" aria-describedby={descriptionId}>
+        {lead}
+        <span className="mm-link-list__text">
+          <span className="mm-link-list__title">
             {title}
-          </h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 m-0">
+            {external && <span className="mm-visually-hidden"> (opens in a new tab)</span>}
+          </span>
+          <span className="mm-link-list__description" id={descriptionId} aria-hidden="true">
             {description}
-          </p>
-        </div>
-        <Icon
-          icon="mdi:arrow-right"
-          className="w-5 h-5 text-gray-400 group-hover:text-[var(--ifm-color-primary)] group-hover:translate-x-1 transition-all"
-        />
-      </div>
-    </Link>
+          </span>
+        </span>
+        {external ? (
+          <OpenInNew aria-hidden="true" className="mm-link-list__indicator" />
+        ) : (
+          <ChevronRight aria-hidden="true" className="mm-link-list__indicator" />
+        )}
+      </Link>
+    </li>
   );
+}
+
+export function DocCard({ title, description, icon, docId, href }: DocCardProps): JSX.Element {
+  const to = useDocHref(docId, href);
+  return <LinkListItem title={title} description={description} icon={icon} to={to} />;
 }
 
 interface DocCardGridProps {
@@ -68,11 +99,7 @@ interface DocCardGridProps {
 }
 
 export function DocCardGrid({ children }: DocCardGridProps): JSX.Element {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 mb-6">
-      {children}
-    </div>
-  );
+  return <ul className="mm-link-list mm-link-list--2">{children}</ul>;
 }
 
 interface CalloutCardProps {
@@ -87,6 +114,10 @@ interface CalloutCardProps {
   href?: string;
 }
 
+/**
+ * A next step: a quiet panel with a title, one sentence and one button. Only the primary variant
+ * uses the burnt-sienna button; the others are secondary, so a page never has two loud actions.
+ */
 export function CalloutCard({
   title,
   description,
@@ -94,67 +125,27 @@ export function CalloutCard({
   href,
   buttonText,
   variant = "primary",
-  icon,
 }: CalloutCardProps): JSX.Element {
-  const isPrimary = variant === "primary";
-  const isExternal = variant === "external";
   const to = useDocHref(docId, href);
-
-  const containerClasses = isPrimary
-    ? "bg-gradient-to-br from-[var(--ifm-color-primary)] to-[#b34822] text-white"
-    : isExternal
-      ? "bg-gradient-to-br from-[var(--ifm-color-primary)]/10 to-[#b34822]/10 border border-[var(--ifm-color-primary)]/20 dark:from-[var(--ifm-color-primary)]/20 dark:to-[#b34822]/20 dark:border-[var(--ifm-color-primary)]/30"
-      : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700";
-
-  const iconClasses = isPrimary
-    ? "text-white/90"
-    : "text-[var(--ifm-color-primary)]";
-
-  const titleClasses = isPrimary
-    ? "text-white"
-    : "text-gray-900 dark:text-white";
-
-  const descriptionClasses = isPrimary
-    ? "text-white/90"
-    : "text-gray-600 dark:text-gray-400";
-
-  const buttonClasses = isPrimary
-    ? "bg-white text-[var(--ifm-color-primary)] hover:bg-gray-100"
-    : "bg-[var(--ifm-color-primary)] text-white hover:text-white";
-
+  const external = variant === "external" || isExternal(to);
   return (
-    <div
-      className={`relative overflow-hidden rounded-xl p-6 mt-6 mb-6 ${containerClasses}`}
-    >
-      <div className="relative z-10">
-        <div className="flex items-start gap-3">
-          {icon && (
-            <Icon
-              icon={icon}
-              className={`w-8 h-8 flex-shrink-0 ${iconClasses}`}
-            />
-          )}
-          <div>
-            <h3 className={`text-lg font-bold m-0 ${titleClasses}`}>{title}</h3>
-            <p className={`mt-2 mb-4 text-sm ${descriptionClasses}`}>
-              {description}
-            </p>
-            <Link
-              to={to}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all no-underline ${buttonClasses}`}
-            >
-              {buttonText}
-              <Icon
-                icon={isExternal ? "mdi:open-in-new" : "mdi:arrow-right"}
-                className="w-4 h-4"
-              />
-            </Link>
-          </div>
-        </div>
+    <div className="doc-next">
+      <div className="doc-next__text">
+        <p className="doc-next__title">{title}</p>
+        <p className="doc-next__desc">{description}</p>
       </div>
-      {isPrimary && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-      )}
+      <Link
+        to={to}
+        className={clsx("mm-btn", variant === "primary" ? "mm-btn--primary" : "mm-btn--secondary")}
+      >
+        {buttonText}
+        {external && (
+          <>
+            <OpenInNew aria-hidden="true" />
+            <span className="mm-visually-hidden">(opens in a new tab)</span>
+          </>
+        )}
+      </Link>
     </div>
   );
 }
@@ -162,65 +153,18 @@ export function CalloutCard({
 interface FeatureCardProps {
   title: string;
   description: string;
-  icon: string;
+  icon?: string;
   docId?: string;
   href?: string;
 }
 
-export function FeatureCard({
-  title,
-  description,
-  icon,
-  docId,
-  href,
-}: FeatureCardProps): JSX.Element {
+/** With `docId` or `href` it is a DocCard; without, plain text (title and one line) with no indicator. */
+export function FeatureCard({ title, description, icon, docId, href }: FeatureCardProps): JSX.Element {
   const to = useDocHref(docId, href);
   const linked = Boolean(docId || href);
-
-  const inner = (
-    <div className="flex items-start gap-4">
-      <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <Icon icon={icon} className="w-6 h-6 text-[var(--ifm-color-primary)]" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0 flex items-center gap-1.5">
-          {title}
-          {linked && (
-            <Icon
-              icon="mdi:arrow-right"
-              className="w-4 h-4 text-[var(--ifm-color-primary)] transition-transform duration-200 group-hover:translate-x-0.5"
-            />
-          )}
-        </h3>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 m-0">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-
-  if (!linked) {
-    return (
-      <div className="p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-        {inner}
-      </div>
-    );
-  }
-
-  return (
-    <a
-      href={to}
-      className="group block p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 no-underline hover:no-underline hover:border-[var(--ifm-color-primary)] hover:shadow-sm transition-all duration-200"
-    >
-      {inner}
-    </a>
-  );
+  return <LinkListItem title={title} description={description} icon={icon} to={linked ? to : undefined} />;
 }
 
 export function FeatureGrid({ children }: DocCardGridProps): JSX.Element {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 mb-6">
-      {children}
-    </div>
-  );
+  return <ul className="mm-link-list mm-link-list--2">{children}</ul>;
 }
