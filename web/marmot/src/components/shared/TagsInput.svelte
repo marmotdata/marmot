@@ -1,5 +1,6 @@
 <script lang="ts">
-	import IconifyIcon from '@iconify/svelte';
+	// A free-text tag field for create forms: Enter adds the typed tag as an mm-tag chip below.
+	import { INPUT } from '$lib/ui/classes';
 	import { m } from '$lib/paraglide/messages';
 
 	let {
@@ -25,35 +26,26 @@
 	}
 </script>
 
-<div class="space-y-3">
-	<label for="tags-input" class="sr-only">{m.tags_add_tags_label()}</label>
+<div class="mm-stack" style="--mm-gap: var(--space-2)">
 	<input
-		id="tags-input"
 		type="text"
 		bind:value={tagInput}
 		onkeydown={handleKeydown}
 		{disabled}
 		{placeholder}
 		aria-label={m.tags_add_tags_label()}
-		class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 transition-all"
+		class="{INPUT} disabled:opacity-50"
 	/>
 	{#if tags.length > 0}
-		<div class="flex flex-wrap gap-2">
+		<div class="mm-cluster" style="--mm-gap: var(--space-1)">
 			{#each tags as tag (tag)}
-				<span
-					class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg"
+				<mm-tag
+					removable={!disabled}
+					onmm-remove={(e: Event) => {
+						e.preventDefault();
+						removeTag(tag);
+					}}>{tag}</mm-tag
 				>
-					{tag}
-					<button
-						type="button"
-						onclick={() => removeTag(tag)}
-						{disabled}
-						aria-label={m.tags_remove_tag_aria({ tag })}
-						class="text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-					>
-						<IconifyIcon icon="material-symbols:close" class="w-4 h-4" aria-hidden="true" />
-					</button>
-				</span>
 			{/each}
 		</div>
 	{/if}

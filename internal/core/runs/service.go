@@ -494,7 +494,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		// alone used to be taken as proof the edge was already there, so
 		// the edge was never written again under that pipeline name.
 		// Writing an edge that exists returns the existing one.
-		if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
+		if _, err := s.lineageService.CreateDeclaredLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN, pipelineName); err != nil {
 			log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
 			status = StatusFailed
 		}

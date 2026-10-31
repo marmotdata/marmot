@@ -11,6 +11,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
@@ -287,29 +288,74 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary List data products
-// @Description Retrieve a paginated list of data products
+// @Description Retrieve a paginated list of data products, optionally searched, filtered and sorted on the server. Each product carries its popularity, a level from 0 to 4.
 // @Tags products
 // @Produce json
-// @Param limit query int false "Maximum number of data products to return" default(20)
+// @Param q query string false "Search name, description and tags"
+// @Param owners query string false "Comma-separated user or team ids; keeps products any of them own"
+// @Param tags query string false "Comma-separated tags; keeps products carrying any of them"
+// @Param mine query string false "only: products you or your teams own; exclude: everything else"
+// @Param sort query string false "name (default), updated or popular"
+// @Param limit query int false "Maximum number of data products to return" default(50)
 // @Param offset query int false "Number of data products to skip" default(0)
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} dataproduct.ListResult
+// @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
 // @ID getProductsList
 // @Router /api/v1/products/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	params := r.URL.Query()
+	limit, _ := strconv.Atoi(params.Get("limit"))
+	offset, _ := strconv.Atoi(params.Get("offset"))
 
-	result, err := h.dataProductService.List(r.Context(), offset, limit)
+	filter := dataproduct.ListFilter{
+		Query:    params.Get("q"),
+		OwnerIDs: splitList(params.Get("owners")),
+		Tags:     splitList(params.Get("tags")),
+		Mine:     params.Get("mine"),
+		Sort:     params.Get("sort"),
+		Limit:    limit,
+		Offset:   offset,
+	}
+	if filter.Mine != "" {
+		var usr *user.User
+		if principal, ok := common.PrincipalFromContext(r.Context()); ok {
+			usr = principal.AsUser()
+		}
+		if usr == nil {
+			common.RespondError(w, http.StatusBadRequest, "mine needs a signed-in user")
+			return
+		}
+		filter.UserID = usr.ID
+	}
+
+	result, err := h.dataProductService.ListFiltered(r.Context(), filter)
 	if err != nil {
+		if errors.Is(err, dataproduct.ErrInvalidInput) {
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		log.Error().Err(err).Msg("Failed to list data products")
 		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	common.RespondJSON(w, http.StatusOK, result)
+}
+
+func splitList(v string) []string {
+	if v == "" {
+		return nil
+	}
+	out := []string{}
+	for _, part := range strings.Split(v, ",") {
+		if part = strings.TrimSpace(part); part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }
 
 // @Summary Search data products

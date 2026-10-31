@@ -212,7 +212,7 @@
 			Link.configure({
 				openOnClick: false,
 				HTMLAttributes: {
-					class: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 underline'
+					class: 'mm-link'
 				}
 			}),
 			Typography
@@ -280,8 +280,7 @@
 			},
 			editorProps: {
 				attributes: {
-					class:
-						'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[100px] px-3 py-2'
+					class: 'max-w-none focus:outline-none min-h-[100px] px-3 py-2'
 				}
 			}
 		});
@@ -357,18 +356,20 @@
 	}
 </script>
 
-<div class="border border-gray-300 dark:border-gray-600 rounded-md {disabled ? 'opacity-50' : ''}">
+<div
+	class="rte border border-mm-control-border rounded-sm bg-mm-surface {disabled
+		? 'opacity-50'
+		: ''}"
+>
 	<!-- Toolbar -->
-	<div
-		class="flex flex-wrap gap-1 p-2 border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50"
-	>
+	<div class="flex flex-wrap items-center gap-1 p-2 border-b border-mm-rule bg-mm-sunken">
 		<button
 			type="button"
 			on:click={toggleBold}
 			{disabled}
-			class="p-1.5 rounded {isActive('bold')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('bold')}
+			aria-pressed={isActive('bold')}
 			title={m.docs_editor_bold_title()}
 		>
 			<Icon icon="material-symbols:format-bold" class="h-4 w-4" />
@@ -378,9 +379,9 @@
 			type="button"
 			on:click={toggleItalic}
 			{disabled}
-			class="p-1.5 rounded {isActive('italic')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('italic')}
+			aria-pressed={isActive('italic')}
 			title={m.docs_editor_italic_title()}
 		>
 			<Icon icon="material-symbols:format-italic" class="h-4 w-4" />
@@ -390,23 +391,23 @@
 			type="button"
 			on:click={toggleCode}
 			{disabled}
-			class="p-1.5 rounded {isActive('code')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('code')}
+			aria-pressed={isActive('code')}
 			title={m.docs_editor_inline_code_title()}
 		>
 			<Icon icon="material-symbols:code" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={() => toggleHeading(1)}
 			{disabled}
-			class="p-1.5 rounded {isActive('heading', { level: 1 })
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isActive('heading', { level: 1 })}
+			aria-pressed={isActive('heading', { level: 1 })}
 			title={m.docs_editor_heading_title({ level: 1 })}
 		>
 			H1
@@ -416,9 +417,9 @@
 			type="button"
 			on:click={() => toggleHeading(2)}
 			{disabled}
-			class="p-1.5 rounded {isActive('heading', { level: 2 })
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isActive('heading', { level: 2 })}
+			aria-pressed={isActive('heading', { level: 2 })}
 			title={m.docs_editor_heading_title({ level: 2 })}
 		>
 			H2
@@ -428,23 +429,23 @@
 			type="button"
 			on:click={() => toggleHeading(3)}
 			{disabled}
-			class="p-1.5 rounded {isActive('heading', { level: 3 })
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+			class="tb-btn tb-btn--text"
+			class:is-active={isActive('heading', { level: 3 })}
+			aria-pressed={isActive('heading', { level: 3 })}
 			title={m.docs_editor_heading_title({ level: 3 })}
 		>
 			H3
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={toggleBulletList}
 			{disabled}
-			class="p-1.5 rounded {isActive('bulletList')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('bulletList')}
+			aria-pressed={isActive('bulletList')}
 			title={m.docs_editor_bullet_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-bulleted" class="h-4 w-4" />
@@ -454,23 +455,23 @@
 			type="button"
 			on:click={toggleOrderedList}
 			{disabled}
-			class="p-1.5 rounded {isActive('orderedList')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('orderedList')}
+			aria-pressed={isActive('orderedList')}
 			title={m.docs_editor_numbered_list_title()}
 		>
 			<Icon icon="material-symbols:format-list-numbered" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		<button
 			type="button"
 			on:click={toggleBlockquote}
 			{disabled}
-			class="p-1.5 rounded {isActive('blockquote')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('blockquote')}
+			aria-pressed={isActive('blockquote')}
 			title={m.docs_editor_quote_title()}
 		>
 			<Icon icon="material-symbols:format-quote" class="h-4 w-4" />
@@ -480,22 +481,22 @@
 			type="button"
 			on:click={toggleCodeBlock}
 			{disabled}
-			class="p-1.5 rounded {isActive('codeBlock')
-				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
+			class="tb-btn"
+			class:is-active={isActive('codeBlock')}
+			aria-pressed={isActive('codeBlock')}
 			title={m.docs_editor_code_block_title()}
 		>
 			<Icon icon="material-symbols:code-blocks" class="h-4 w-4" />
 		</button>
 
-		<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+		<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
 
 		{#if isActive('link')}
 			<button
 				type="button"
 				on:click={unsetLink}
 				{disabled}
-				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="tb-btn is-active"
 				title={m.docs_editor_remove_link_title()}
 			>
 				<Icon icon="material-symbols:link-off" class="h-4 w-4" />
@@ -505,7 +506,7 @@
 				type="button"
 				on:click={setLink}
 				{disabled}
-				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="tb-btn"
 				title={m.docs_editor_add_link_title()}
 			>
 				<Icon icon="material-symbols:link" class="h-4 w-4" />
@@ -513,89 +514,134 @@
 		{/if}
 
 		{#if enableMentions}
-			<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-			<span class="px-2 py-1 text-xs text-gray-500 dark:text-gray-400"
-				>{m.editor_mention_hint()}</span
-			>
+			<div class="w-px h-6 bg-mm-rule mx-1" aria-hidden="true"></div>
+			<span class="px-2 py-1 text-caption text-mm-text-2">{m.editor_mention_hint()}</span>
 		{/if}
 	</div>
 
 	<!-- Editor -->
-	<div
-		bind:this={element}
-		class="bg-white dark:bg-gray-700 rounded-b-md text-gray-900 dark:text-gray-100"
-	></div>
+	<div bind:this={element} class="bg-mm-surface rounded-b-sm text-mm-text"></div>
 </div>
 
 <style>
-	:global(.ProseMirror) {
+	.tb-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 28px;
+		height: 28px;
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		color: var(--mm-text-2);
+		background: transparent;
+		transition: background-color var(--mm-dur-press) var(--mm-ease);
+	}
+	.tb-btn--text {
+		font: var(--text-label);
+	}
+	.tb-btn:hover:not(:disabled) {
+		background: var(--mm-selected);
+		color: var(--mm-text);
+	}
+	.tb-btn.is-active {
+		background: var(--mm-selected);
+		color: var(--mm-text);
+	}
+	.tb-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.tb-btn:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
+	}
+
+	.rte :global(.ProseMirror) {
 		outline: none;
 	}
 
-	:global(.ProseMirror p.is-editor-empty:first-child::before) {
+	.rte :global(.ProseMirror p.is-editor-empty:first-child::before) {
 		content: attr(data-placeholder);
 		float: left;
-		color: rgb(156 163 175);
+		color: var(--mm-text-3);
 		pointer-events: none;
 		height: 0;
 	}
 
-	:global(.ProseMirror h1) {
-		@apply text-2xl font-bold mt-4 mb-2;
+	.rte :global(.ProseMirror h1) {
+		font: var(--text-heading);
+		margin-block: var(--space-4) var(--space-2);
 	}
 
-	:global(.ProseMirror h2) {
-		@apply text-xl font-bold mt-3 mb-2;
+	.rte :global(.ProseMirror h2) {
+		font: var(--text-heading-sm);
+		margin-block: var(--space-3) var(--space-2);
 	}
 
-	:global(.ProseMirror h3) {
-		@apply text-lg font-bold mt-2 mb-1;
+	.rte :global(.ProseMirror h3) {
+		font: var(--text-panel-title);
+		margin-block: var(--space-2) var(--space-1);
 	}
 
-	:global(.ProseMirror ul) {
-		@apply list-disc list-inside my-2;
+	.rte :global(.ProseMirror ul) {
+		list-style: disc;
+		padding-inline-start: var(--space-5);
+		margin-block: var(--space-2);
 	}
 
-	:global(.ProseMirror ol) {
-		@apply list-decimal list-inside my-2;
+	.rte :global(.ProseMirror ol) {
+		list-style: decimal;
+		padding-inline-start: var(--space-5);
+		margin-block: var(--space-2);
 	}
 
-	:global(.ProseMirror blockquote) {
-		@apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2;
+	.rte :global(.ProseMirror blockquote) {
+		border-inline-start: 1px solid var(--mm-control-border);
+		padding-inline-start: var(--space-4);
+		color: var(--mm-text-2);
+		margin-block: var(--space-2);
 	}
 
-	:global(.ProseMirror code) {
-		@apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+	.rte :global(.ProseMirror code) {
+		background: var(--mm-sunken);
+		padding: 1px var(--space-1);
+		border-radius: var(--radius-sm);
+		font: var(--text-mono);
 	}
 
-	:global(.ProseMirror pre) {
-		@apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-2 overflow-x-auto;
+	.rte :global(.ProseMirror pre) {
+		background: var(--mm-code-bg);
+		color: var(--mm-code-text);
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		margin-block: var(--space-2);
+		overflow-x: auto;
 	}
 
-	:global(.ProseMirror pre code) {
-		@apply bg-transparent p-0;
+	.rte :global(.ProseMirror pre code) {
+		background: transparent;
+		padding: 0;
+		color: inherit;
 	}
 
-	:global(.ProseMirror strong) {
-		@apply font-bold;
+	.rte :global(.ProseMirror a) {
+		color: var(--mm-primary);
 	}
 
-	:global(.ProseMirror em) {
-		@apply italic;
+	.rte :global(.ProseMirror strong) {
+		font-weight: 600;
 	}
 
-	/* Mention styles - shared */
-	:global(.ProseMirror .mention) {
-		@apply px-1 py-0.5 rounded font-medium;
+	.rte :global(.ProseMirror em) {
+		font-style: italic;
 	}
 
-	/* User mentions - terracotta/orange */
-	:global(.ProseMirror .mention-user) {
-		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
-	}
-
-	/* Team mentions - blue */
-	:global(.ProseMirror .mention-team) {
-		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
+	/* People and teams share one neutral mention style; the accent stays reserved for links and the primary button. */
+	.rte :global(.ProseMirror .mention) {
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		font-weight: 600;
+		background: var(--mm-info-soft);
+		color: var(--mm-text);
 	}
 </style>

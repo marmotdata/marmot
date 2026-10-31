@@ -4,6 +4,7 @@ import { resolve } from '$app/paths';
 // Profile became Account, with one page per former tab.
 const sections: Record<string, string> = {
 	profile: '/account',
+	notifications: '/account/notifications',
 	subscriptions: '/account/subscriptions',
 	'api-keys': '/account/api-keys'
 };

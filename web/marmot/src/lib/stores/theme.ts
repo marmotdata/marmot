@@ -23,9 +23,13 @@ function createThemeStore() {
 
 	function applyTheme(theme: Theme) {
 		if (!browser) return;
+		const root = document.documentElement;
 		const dark = isDarkTheme(theme);
-		document.documentElement.classList.toggle('dark', dark);
-		document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+		// The design tokens read data-theme (none means follow the system); the .dark class stays for Tailwind dark: variants on screens not yet rebuilt.
+		if (theme === 'auto') delete root.dataset.theme;
+		else root.dataset.theme = theme;
+		root.classList.toggle('dark', dark);
+		root.style.colorScheme = dark ? 'dark' : 'light';
 	}
 
 	if (browser) {

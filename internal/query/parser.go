@@ -120,9 +120,10 @@ func (p *Parser) Parse(queryStr string) (*Query, error) {
 	for i < len(tokens) {
 		token := tokens[i]
 
-		// Check if token is a structured query field (@metadata, @kind, @type, @provider, @name, @term)
+		// Check if token is a structured query field (@metadata, @kind, @type, @provider, @name, @term, @tag)
 		isStructuredField := strings.HasPrefix(token, "@metadata.") ||
 			strings.HasPrefix(token, "@term") ||
+			strings.HasPrefix(token, "@tag") ||
 			strings.HasPrefix(token, "@kind") ||
 			strings.HasPrefix(token, "@type") ||
 			strings.HasPrefix(token, "@provider") ||
@@ -215,6 +216,9 @@ func (p *Parser) parseFilter(tokens []string) (Filter, int, error) {
 	case strings.HasPrefix(token, "@term"):
 		fieldType = FieldTerm
 		fieldPath = []string{"term"}
+	case strings.HasPrefix(token, "@tag"):
+		fieldType = FieldTag
+		fieldPath = []string{"tag"}
 	default:
 		return Filter{}, 0, fmt.Errorf("unsupported field prefix: %s", token)
 	}

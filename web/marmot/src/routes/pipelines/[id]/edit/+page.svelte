@@ -1,389 +1,263 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import { auth } from '$lib/stores/auth';
+	import { page } from '$app/state';
 	import { get } from 'svelte/store';
+	import { Cron } from 'croner';
 	import { fetchApi } from '$lib/api';
+	import { auth } from '$lib/stores/auth';
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
-	import PageHeader from '$components/ui/PageHeader.svelte';
-	import Panel from '$components/ui/Panel.svelte';
-	import Alert from '$components/ui/Alert.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
-	import { BTN_PRIMARY, BTN_SECONDARY, INPUT } from '$lib/ui/classes';
-	import IconifyIcon from '@iconify/svelte';
-	import Disclosure from '$components/ui/Disclosure.svelte';
-	import Icon from '$components/ui/Icon.svelte';
-	import cronstrue from 'cronstrue/i18n';
-	import { Cron } from 'croner';
+	import { setCrumbs } from '$lib/mm';
 	import { m } from '$lib/paraglide/messages';
 	import QueryAccessSection from '$components/dataquery/QueryAccessSection.svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { formatList } from '$lib/utils';
+	import ConfigFields from '$components/runs/ConfigFields.svelte';
+	import ConnectionTestCallout from '$components/runs/ConnectionTestCallout.svelte';
+	import PipelineDetailsFields from '$components/runs/PipelineDetailsFields.svelte';
+	import PluginSummary from '$components/runs/PluginSummary.svelte';
+	import type { Owner } from '$lib/dataproducts/types';
+	import ScheduleFields from '$components/runs/ScheduleFields.svelte';
+	import {
+		AWS_PLUGINS,
+		cleanConfigForSubmit,
+		detectSourceType,
+		fillMissingDefaults,
+		testConnection,
+		type ConfigObject,
+		type ConnectionTestResult,
+		type Pipeline,
+		type PluginInfo
+	} from '$components/runs/pipeline';
 
-	// Example filter patterns are regexes, so they are technical tokens rather than copy
-	const includePatternExample = '^public_.*';
-	const excludePatternExample = '^_tmp_.*';
-
-	const pipelineId = $page.params.id;
-
-	interface ConfigField {
-		name: string;
-		type: string;
-		label: string;
-		description: string;
-		required: boolean;
-		default?: unknown;
-		options?: { label: string; value: string }[];
-		sensitive: boolean;
-		placeholder?: string;
-		fields?: ConfigField[];
-		is_array?: boolean;
-		// The plugin names the section a field belongs to; ungrouped fields come first
-		group?: string;
-		validation?: {
-			pattern?: string;
-			min?: number;
-			max?: number;
-		};
-		show_when?: { field: string; value: string };
-		hidden?: boolean;
-	}
-
-	interface Plugin {
-		id: string;
-		name: string;
-		description?: string;
-		icon?: string;
-		category?: string;
-		config_spec?: ConfigField[];
-		supports_query?: boolean;
-	}
-
-	let plugins = $state<Plugin[]>([]);
-	let loadingPlugins = $state(true);
-	let loadingPipeline = $state(true);
-	let pluginsStillLoading = $state(false);
-	let pluginPollTimer: ReturnType<typeof setTimeout> | null = null;
-	let selectedPluginId = $state('');
-	let name = $state('');
-	let cronExpression = $state('');
-	let disableSchedule = $state(false);
-	let queryEnabled = $state(false);
-	let ingestOnQuery = $state(false);
-	interface PipelineConfig {
+	interface EditConfig extends ConfigObject {
 		tags?: string[];
 		external_links?: { name: string; url: string }[];
 		filter?: { include?: string[]; exclude?: string[] };
-		source_type?: string;
-		use_default?: boolean;
-		[key: string]: unknown;
 	}
 
-	let config = $state<PipelineConfig>({});
+	const pipelineId = page.params.id ?? '';
+
+	// Editing uses the create flow's sections on one page, in the same order, since everything already has a value
+	let plugins = $state<PluginInfo[]>([]);
+	let pluginsStillLoading = $state(false);
+	let pluginPollTimer: ReturnType<typeof setTimeout> | null = null;
+	let loading = $state(true);
+	let loadError = $state('');
+	let pluginId = $state('');
+	let originalName = $state('');
+	let name = $state('');
+	let nameError = $state('');
+	let description = $state('');
+	let owner = $state<Owner | null>(null);
+	let connectionTest = $state<ConnectionTestResult | null>(null);
+	let testError = $state('');
+	let testing = $state(false);
+	let config = $state<EditConfig>({});
+	let queryEnabled = $state(false);
+	let ingestOnQuery = $state(false);
+	let scheduled = $state(false);
+	let cronExpression = $state('');
+	let cronError = $state('');
+	let disableSchedule = $state(false);
+	let fieldErrors = $state<Record<string, string>>({});
 	let saving = $state(false);
-	let error = $state<string | null>(null);
-	let expandedSections = $state<Record<string, boolean>>({});
-	let awsCredentialStatus = $state<{
-		available: boolean;
-		sources: string[];
-		error?: string;
-	} | null>(null);
-	let loadingAwsStatus = $state(false);
+	let error = $state('');
+	let awsStatus = $state<{ available: boolean; sources: string[]; error?: string } | null>(null);
 
-	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
+	let plugin = $derived(plugins.find((p) => p.id === pluginId) ?? null);
+	let queryCapable = $derived(plugin?.supports_query === true);
 
-	let configSpec = $derived(selectedPlugin?.config_spec || null);
-	// The plugin's own fields, without the base tags, links and filter that have their own step
-	let pluginFields = $derived(
-		(configSpec ?? []).filter(
-			(f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden
-		)
-	);
-	// Groups in the order the plugin first uses them
-	let fieldGroups = $derived.by(() => {
-		const groups: { name: string; fields: ConfigField[] }[] = [];
-		for (const field of pluginFields) {
-			if (!field.group) continue;
-			let group = groups.find((g) => g.name === field.group);
-			if (!group) groups.push((group = { name: field.group, fields: [] }));
-			group.fields.push(field);
-		}
-		return groups;
+	$effect(() => {
+		setCrumbs([
+			{ label: m.runs_heading(), href: resolve('/runs') },
+			{ label: originalName || pipelineId, href: resolve('/runs/[id]', { id: pipelineId }) },
+			{ label: m.common_edit() }
+		]);
 	});
-	let queryCapable = $derived(selectedPlugin?.supports_query === true);
-	let hasSchedule = $derived(cronExpression.trim() !== '');
-
-	let cronDescription = $derived.by(() => {
-		if (!cronExpression.trim()) return null;
-		try {
-			return cronstrue.toString(cronExpression, { verbose: true, locale: getLocale() });
-		} catch (e) {
-			try {
-				return cronstrue.toString(cronExpression, { verbose: true });
-			} catch {
-				return null;
-			}
-		}
-	});
-
-	let cronNextRuns = $derived.by(() => {
-		if (!cronExpression.trim()) return [];
-		try {
-			const cron = new Cron(cronExpression);
-			const runs: Date[] = [];
-			const now = new Date();
-			for (let i = 0; i < 5; i++) {
-				const next = cron.nextRun(i === 0 ? now : runs[i - 1]);
-				if (next) runs.push(next);
-			}
-			return runs;
-		} catch (e) {
-			return [];
-		}
-	});
-
-	let isAWSPlugin = $derived(
-		selectedPluginId && ['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(selectedPluginId)
-	);
 
 	async function fetchPlugins() {
 		try {
-			loadingPlugins = true;
-			const response = await fetchApi('/plugins');
-			if (!response.ok) throw new Error('Failed to fetch plugins');
-			const data = await response.json();
+			const res = await fetchApi('/plugins');
+			if (!res.ok) throw new Error(m.pipelines_error_load_plugins());
+			const data = await res.json();
 			plugins = Array.isArray(data?.plugins) ? data.plugins : [];
 			pluginsStillLoading = Boolean(data?.loading);
-		} catch (err) {
-			console.error('Error fetching plugins:', err);
+		} catch {
 			error = m.pipelines_error_load_plugins();
 		} finally {
-			loadingPlugins = false;
-			if (pluginPollTimer) {
-				clearTimeout(pluginPollTimer);
-				pluginPollTimer = null;
-			}
-			if (pluginsStillLoading) {
-				pluginPollTimer = setTimeout(fetchPlugins, 2000);
-			}
-		}
-	}
-
-	async function fetchAWSCredentialStatus() {
-		try {
-			loadingAwsStatus = true;
-			const response = await fetchApi('/plugins/aws/credentials/status');
-			if (response.ok) {
-				awsCredentialStatus = await response.json();
-			}
-		} catch (err) {
-			console.error('Error fetching AWS credential status:', err);
-		} finally {
-			loadingAwsStatus = false;
-		}
-	}
-
-	function fillMissingDefaults(fields: ConfigField[], configObj: Record<string, unknown>) {
-		for (const field of fields) {
-			if (field.type === 'object' && field.is_array) {
-				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
-					configObj[field.name] = [];
-				}
-			} else if (field.type === 'object' && field.fields) {
-				if (!configObj[field.name]) {
-					configObj[field.name] = {};
-				}
-				fillMissingDefaults(field.fields, configObj[field.name] as Record<string, unknown>);
-			} else if (field.type === 'multiselect') {
-				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
-					configObj[field.name] = [];
-				}
-			} else if (
-				field.default !== undefined &&
-				field.default !== null &&
-				configObj[field.name] === undefined
-			) {
-				configObj[field.name] = field.default;
-			}
+			if (pluginPollTimer) clearTimeout(pluginPollTimer);
+			pluginPollTimer = pluginsStillLoading ? setTimeout(fetchPlugins, 2000) : null;
 		}
 	}
 
 	async function fetchPipeline() {
 		try {
-			loadingPipeline = true;
-			const response = await fetchApi(`/ingestion/schedules/${pipelineId}`);
-			if (!response.ok) throw new Error('Failed to fetch pipeline');
-			const pipeline = await response.json();
-
+			const res = await fetchApi(`/ingestion/schedules/${encodeURIComponent(pipelineId)}`);
+			if (!res.ok) throw new Error(m.pipelines_error_load_pipeline());
+			const pipeline: Pipeline = await res.json();
+			originalName = pipeline.name;
 			name = pipeline.name;
-			selectedPluginId = pipeline.plugin_id;
+			description = pipeline.description ?? '';
+			owner =
+				pipeline.owner_type && pipeline.owner_id
+					? { id: pipeline.owner_id, type: pipeline.owner_type, name: pipeline.owner_name ?? '' }
+					: null;
+			pluginId = pipeline.plugin_id;
 			cronExpression = pipeline.cron_expression || '';
+			scheduled = !!pipeline.cron_expression;
 			disableSchedule = !pipeline.enabled && !!pipeline.cron_expression;
 			queryEnabled = pipeline.queryable === true;
 			ingestOnQuery = pipeline.ingest_on_query === true;
+
+			const next: EditConfig = { ...(pipeline.config ?? {}) };
+			next.tags = next.tags ?? [];
+			next.external_links = next.external_links ?? [];
+			next.filter = { include: next.filter?.include ?? [], exclude: next.filter?.exclude ?? [] };
+			const spec = plugins.find((p) => p.id === pipeline.plugin_id)?.config_spec;
+			if (spec) fillMissingDefaults(spec, next);
+			config = next;
+			detectSourceType(spec, config);
+
 			// The Query page's "Turn on" link arrives with ?query=1, so the switch is flipped and shown, ready to save
-			if ($page.url.searchParams.get('query') === '1' && auth.hasPermission('access', 'manage')) {
+			if (page.url.searchParams.get('query') === '1' && auth.hasPermission('access', 'manage')) {
 				queryEnabled = true;
 				ingestOnQuery = true;
-				requestAnimationFrame(() =>
-					document.getElementById('query-access')?.scrollIntoView({ behavior: 'smooth' })
-				);
+				await tick();
+				document.getElementById('query-access')?.scrollIntoView({ behavior: 'smooth' });
 			}
-			config = pipeline.config || {};
-
-			// Ensure base fields have proper defaults
-			if (!config.tags) config.tags = [];
-			if (!config.external_links) config.external_links = [];
-			if (!config.filter) config.filter = { include: [], exclude: [] };
-			if (!config.filter.include) config.filter.include = [];
-			if (!config.filter.exclude) config.filter.exclude = [];
-
-			// Auto-expand filter section if patterns exist
-			if (config.filter.include.length > 0 || config.filter.exclude.length > 0) {
-				expandedSections['asset_filter'] = true;
-			}
-
-			const plugin = plugins.find((p) => p.id === pipeline.plugin_id);
-			if (plugin && plugin.config_spec) {
-				fillMissingDefaults(plugin.config_spec, config);
-			}
-		} catch (err) {
-			console.error('Error fetching pipeline:', err);
-			error = m.pipelines_error_load_pipeline();
-		} finally {
-			loadingPipeline = false;
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : m.pipelines_error_load_pipeline();
 		}
 	}
 
-	function cleanConfigForSubmit(
-		configObj: Record<string, unknown>,
-		fields: ConfigField[]
-	): Record<string, unknown> {
-		const cleaned: Record<string, unknown> = { ...configObj };
-		for (const field of fields) {
-			if (field.show_when) {
-				const currentValue = cleaned[field.show_when.field];
-				if (currentValue !== field.show_when.value) {
-					delete cleaned[field.name];
-				}
-			}
-		}
-		return cleaned;
-	}
-
-	async function handleSave() {
+	async function fetchAwsStatus() {
 		try {
-			saving = true;
-			error = null;
+			const res = await fetchApi('/plugins/aws/credentials/status');
+			if (res.ok) awsStatus = await res.json();
+		} catch {
+			// Without the status the fields simply show
+		}
+	}
 
-			// If no schedule, pipeline is manual-only and always enabled
-			// If schedule is provided, enabled depends on disableSchedule checkbox
-			const enabled = cronExpression.trim() === '' ? true : !disableSchedule;
-			const cleanedConfig = selectedPlugin?.config_spec
-				? cleanConfigForSubmit(config, selectedPlugin.config_spec)
-				: config;
+	function onConfigEdit(path: string) {
+		if (fieldErrors[path]) {
+			const next = { ...fieldErrors };
+			delete next[path];
+			fieldErrors = next;
+		}
+		connectionTest = null;
+		testError = '';
+		detectSourceType(plugin?.config_spec, config);
+	}
 
-			const body = {
-				name,
-				plugin_id: selectedPluginId,
-				config: cleanedConfig,
-				cron_expression: cronExpression,
-				enabled,
-				queryable: queryCapable && queryEnabled,
-				ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
-			};
-
-			const response = await fetchApi(`/ingestion/schedules/${pipelineId}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || m.pipelines_error_update());
+	// The pipeline's id goes with the test so secrets shown masked are tried with their stored values
+	async function runConnectionTest() {
+		if (!plugin) return;
+		testing = true;
+		connectionTest = null;
+		testError = '';
+		error = '';
+		try {
+			const res = await testConnection(
+				pluginId,
+				cleanConfigForSubmit(config, plugin.config_spec ?? []),
+				pipelineId
+			);
+			if (!res.valid && res.errors?.length) {
+				const errors: Record<string, string> = {};
+				for (const e of res.errors) errors[e.field] = e.message;
+				fieldErrors = errors;
+				testError = m.pipelines_test_invalid();
+				focusField(res.errors[0].field);
+				return;
 			}
-
-			// Navigate back to runs page with pipelines tab
-			goto(resolve('/runs?tab=pipelines'));
-		} catch (err) {
-			error = err instanceof Error ? err.message : m.pipelines_error_update();
+			connectionTest = res.result ?? null;
+		} catch (e) {
+			testError = e instanceof Error ? e.message : m.pipelines_test_error();
 		} finally {
-			saving = false;
+			testing = false;
 		}
 	}
 
-	function getFieldType(field: ConfigField): string {
-		if (field.type === 'bool' || field.type === 'boolean') return 'checkbox';
-		if (field.type === 'int' || field.type === 'number' || field.type === 'integer')
-			return 'number';
-		if (field.type === 'password' || field.sensitive) return 'password';
-		// Check if field name is 'url' to use URL input type for validation
-		if (field.name.toLowerCase() === 'url') return 'url';
-		return 'text';
+	async function focusField(path: string) {
+		await tick();
+		const el = document.querySelector<HTMLElement>(`[data-field-path="${CSS.escape(path)}"]`);
+		el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		el?.focus();
 	}
 
-	function toggleSection(sectionName: string) {
-		expandedSections[sectionName] = !expandedSections[sectionName];
-	}
-
-	function isExpanded(sectionName: string): boolean {
-		// If the section has been explicitly toggled, use that state
-		if (expandedSections[sectionName] !== undefined) {
-			return expandedSections[sectionName];
+	async function validateConfig(): Promise<boolean> {
+		if (!plugin) return true;
+		const res = await fetchApi('/ingestion/validate', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				plugin_id: pluginId,
+				config: cleanConfigForSubmit(config, plugin.config_spec ?? [])
+			})
+		});
+		if (!res.ok) throw new Error(m.pipelines_error_validate());
+		const result = await res.json();
+		if (!result.valid && result.errors?.length > 0) {
+			const errors: Record<string, string> = {};
+			for (const e of result.errors) errors[e.field] = e.message;
+			fieldErrors = errors;
+			error = m.pipelines_error_check_fields();
+			focusField(result.errors[0].field);
+			return false;
 		}
-
-		// Default collapsed for asset filter
-		if (sectionName === 'asset_filter') return false;
-
-		// Default to expanded for all other sections
 		return true;
 	}
 
-	function shouldHideField(
-		field: ConfigField,
-		configObj: Record<string, unknown>,
-		rootConfig?: Record<string, unknown>
-	): boolean {
-		// If there's a sibling "use_default" field that's checked, hide all other fields
-		if (configObj.use_default === true && field.name !== 'use_default') {
-			return true;
+	async function save() {
+		error = '';
+		fieldErrors = {};
+		if (!name.trim()) {
+			nameError = m.pipelines_error_name_required();
+			focusField('name');
+			return;
 		}
-		// Check show_when condition against the root config (for top-level sibling fields)
-		if (field.show_when) {
-			const checkObj = rootConfig || configObj;
-			const currentValue = checkObj[field.show_when.field];
-			if (currentValue !== field.show_when.value) {
-				return true;
+		if (scheduled) {
+			try {
+				new Cron(cronExpression);
+				cronError = '';
+			} catch {
+				cronError = m.pipelines_cron_invalid();
+				return;
 			}
 		}
-		return false;
-	}
-
-	function autoDetectSourceType() {
-		if (!configSpec) return;
-		const hasSourceType = configSpec.some((f) => f.name === 'source_type');
-		if (!hasSourceType) return;
-		// Scan all string values in config for s3:// or git:: prefixes
-		let detected = 'local';
-		for (const field of configSpec) {
-			if (field.hidden || field.type !== 'string') continue;
-			const val = config[field.name];
-			if (typeof val === 'string') {
-				if (val.startsWith('s3://')) {
-					detected = 's3';
-					break;
-				}
-				if (val.startsWith('git::')) {
-					detected = 'git';
-					break;
-				}
+		saving = true;
+		try {
+			if (!(await validateConfig())) return;
+			const res = await fetchApi(`/ingestion/schedules/${encodeURIComponent(pipelineId)}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: name.trim(),
+					description: description.trim(),
+					owner_type: owner?.type ?? '',
+					owner_id: owner?.id ?? '',
+					plugin_id: pluginId,
+					config: plugin?.config_spec ? cleanConfigForSubmit(config, plugin.config_spec) : config,
+					cron_expression: scheduled ? cronExpression.trim() : '',
+					// A pipeline without a schedule only runs when started, so it is always enabled
+					enabled: scheduled ? !disableSchedule : true,
+					queryable: queryCapable && queryEnabled,
+					ingest_on_query: queryCapable && queryEnabled && ingestOnQuery
+				})
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || m.pipelines_error_update());
 			}
+			toasts.success(m.pipelines_saved({ name: name.trim() }));
+			goto(resolve('/runs/[id]', { id: pipelineId }));
+		} catch (e) {
+			error = e instanceof Error ? e.message : m.pipelines_error_update();
+		} finally {
+			saving = false;
 		}
-		config.source_type = detected;
 	}
 
 	onMount(async () => {
@@ -394,14 +268,8 @@
 		}
 		await fetchPlugins();
 		await fetchPipeline();
-		autoDetectSourceType();
-		// Check if this is an AWS plugin and fetch credential status
-		if (
-			selectedPluginId &&
-			['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(selectedPluginId)
-		) {
-			fetchAWSCredentialStatus();
-		}
+		loading = false;
+		if (AWS_PLUGINS.includes(pluginId)) fetchAwsStatus();
 	});
 
 	onDestroy(() => {
@@ -409,991 +277,130 @@
 	});
 </script>
 
-{#snippet renderField(
-	field: ConfigField,
-	fieldPath: string,
-	configObj: Record<string, unknown>,
-	depth: number = 0
-)}
-	{#if field.type === 'object' && field.is_array && field.fields}
-		<!-- Array of objects (e.g., external_links) -->
-		<div class="md:col-span-2">
-			<div class="block">
-				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-					{field.label}
-					{#if field.required}
-						<span class="text-red-500">*</span>
+<svelte:head>
+	<title>{m.pipelines_edit_pipeline()}</title>
+</svelte:head>
+
+{#if loadError}
+	<mm-callout tone="danger" heading={loadError}>
+		<mm-button slot="actions" size="sm" variant="secondary" href={resolve('/runs')}
+			>{m.plugins_back_to_plugins()}</mm-button
+		>
+	</mm-callout>
+{:else}
+	<div class="mm-stack" style="max-inline-size: 72rem">
+		<mm-page-header heading={m.pipelines_edit_pipeline()}></mm-page-header>
+
+		{#if loading}
+			<mm-skeleton count={6}></mm-skeleton>
+		{:else}
+			<form
+				class="mm-split"
+				style="gap: var(--space-12)"
+				aria-label={m.pipelines_edit_pipeline()}
+				novalidate
+				onsubmit={(e) => {
+					e.preventDefault();
+					save();
+				}}
+			>
+				<div class="mm-stack" style="--mm-gap: var(--space-8)">
+					{#if error}
+						<mm-callout tone="danger" compact heading={error}></mm-callout>
 					{/if}
-				</span>
-				{#if field.description}
-					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-						{field.description}
-					</p>
-				{/if}
-				{#if true}
-					{@const arrayValue = (configObj[field.name] as Record<string, unknown>[]) || []}
-					<div class="space-y-3">
-						{#each arrayValue as item, index (index)}
-							<div
-								class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
-							>
-								<div class="flex items-end justify-end mb-3">
-									<button
-										type="button"
-										onclick={(e) => {
-											e.preventDefault();
-											arrayValue.splice(index, 1);
-											configObj[field.name] = [...arrayValue];
-										}}
-										class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-									>
-										<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-									</button>
-								</div>
-								<div class="grid grid-cols-1 gap-3">
-									{#each field.fields as nestedField (nestedField.name)}
-										<div>
-											<label class="block">
-												<span
-													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
-												>
-													{nestedField.label}
-													{#if nestedField.required}
-														<span class="text-red-500">*</span>
-													{/if}
-												</span>
-												<input
-													type={getFieldType(nestedField)}
-													bind:value={item[nestedField.name]}
-													oninput={(e) => {
-														configObj[field.name] = [...arrayValue];
-														// Validate URL fields
-														const input = e.target as HTMLInputElement;
-														if (
-															getFieldType(nestedField) === 'url' &&
-															input.value &&
-															!input.checkValidity()
-														) {
-															input.setCustomValidity(
-																m.pipelines_url_invalid({ label: nestedField.label })
-															);
-														} else {
-															input.setCustomValidity('');
-														}
-													}}
-													placeholder={nestedField.placeholder}
-													required={nestedField.required}
-													class={INPUT}
-												/>
-											</label>
-										</div>
-									{/each}
-								</div>
-							</div>
-						{/each}
-						<button
-							type="button"
-							onclick={(e) => {
-								e.preventDefault();
-								const newItem: Record<string, unknown> = {};
-								// Initialize with default values
-								field.fields?.forEach((f) => {
-									newItem[f.name] = f.default || '';
-								});
-								arrayValue.push(newItem);
-								configObj[field.name] = [...arrayValue];
-							}}
-							class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
-						>
-							<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-							{m.pipelines_add_field_item({ label: field.label })}
-						</button>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{:else if field.type === 'object' && field.fields}
-		<div class="md:col-span-2">
-			<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-				<button
-					type="button"
-					onclick={() => toggleSection(fieldPath)}
-					class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-				>
-					<div class="flex items-center">
-						<IconifyIcon
-							icon={isExpanded(fieldPath)
-								? 'material-symbols:expand-more'
-								: 'material-symbols:chevron-right'}
-							class="h-5 w-5 text-gray-600 dark:text-gray-400 transition-transform"
-						/>
-						<span class="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-							{field.label}
-							{#if field.required}
-								<span class="text-red-500 ml-1">*</span>
-							{/if}
-						</span>
-					</div>
-					{#if field.description}
-						<span class="text-xs text-gray-600 dark:text-gray-400 ml-2 truncate"
-							>{field.description}</span
-						>
+					{#if pluginsStillLoading}
+						<mm-callout tone="info" compact heading={m.pipelines_plugins_still_loading_view()}
+						></mm-callout>
 					{/if}
-				</button>
-				{#if isExpanded(fieldPath)}
-					<div
-						class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"
-					>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-							{#each field.fields as nestedField (nestedField.name)}
-								{@const nestedPath = `${fieldPath}.${nestedField.name}`}
-								{@const nestedConfigObj = (configObj[field.name] as Record<string, unknown>) || {}}
-								{#if !shouldHideField(nestedField, nestedConfigObj, config)}
-									{@render renderField(nestedField, nestedPath, nestedConfigObj, depth + 1)}
-								{/if}
-							{/each}
-						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{:else if field.type === 'bool' || field.type === 'boolean'}
-		<div class="md:col-span-2">
-			<label class="flex items-start py-1 cursor-pointer">
-				<input
-					type="checkbox"
-					bind:checked={configObj[field.name]}
-					class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-				/>
-				<div class="ml-3 flex-1">
-					<span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-						{field.label}
-					</span>
-					{#if field.description}
-						<p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-							{field.description}
-						</p>
+
+					{#if queryCapable}
+						<QueryAccessSection bind:queryEnabled bind:ingestOnQuery />
 					{/if}
-				</div>
-			</label>
-		</div>
-	{:else if field.type === 'multiselect'}
-		<!-- Array/List field -->
-		<div class="md:col-span-2">
-			<div class="block">
-				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-					{field.label}
-					{#if field.required}
-						<span class="text-red-500">*</span>
-					{/if}
-				</span>
-				{#if field.description}
-					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-						{field.description}
-					</p>
-				{/if}
-				{#if true}
-					{@const arrayValue = (configObj[field.name] as string[]) || []}
-					<div class="space-y-2">
-						{#each arrayValue as item, index (index)}
-							<div class="flex items-center gap-2">
-								<input
-									type="text"
-									value={item}
-									oninput={(e) => {
-										const target = e.target as HTMLInputElement;
-										arrayValue[index] = target.value;
-										configObj[field.name] = [...arrayValue];
-									}}
-									placeholder={field.placeholder}
-									class="{INPUT} flex-1"
-								/>
-								<button
-									type="button"
-									onclick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										arrayValue.splice(index, 1);
-										configObj[field.name] = [...arrayValue];
-									}}
-									class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-									aria-label={m.pipelines_remove_item_aria()}
-								>
-									<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
-								</button>
-							</div>
-						{/each}
-						<div class="flex items-center gap-2">
-							<input
-								type="text"
-								placeholder={m.pipelines_typeahead_placeholder()}
-								onkeydown={(e) => {
-									if (e.key === 'Enter') {
-										e.preventDefault();
-										const target = e.target as HTMLInputElement;
-										const value = target.value.trim();
-										if (value) {
-											const newArray = [...arrayValue, value];
-											configObj[field.name] = newArray;
-											target.value = '';
-										}
-									}
+
+					<mm-section heading={m.pipelines_step_basic_info()}>
+						<div class="mm-stack" style="--mm-gap: var(--space-5)">
+							<mm-text-field
+								label={m.pipelines_name_label()}
+								name="name"
+								mono
+								required
+								maxlength={63}
+								autocomplete="off"
+								help={m.pipelines_name_help()}
+								error={nameError}
+								value={name}
+								data-field-path="name"
+								onmm-input={(e: CustomEvent<{ value: string }>) => {
+									name = e.detail.value;
+									if (nameError && name.trim()) nameError = '';
 								}}
-								class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
-							/>
+							></mm-text-field>
+							<PipelineDetailsFields bind:description bind:owner />
 						</div>
-						<p class="text-xs text-gray-600 dark:text-gray-400">
-							{m.pipelines_press_enter_hint()}
-						</p>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{:else}
-		<div>
-			<label class="block">
-				<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-					{field.label}
-					{#if field.required}
-						<span class="text-red-500">*</span>
+					</mm-section>
+
+					{#if plugin?.config_spec && plugin.config_spec.length > 0}
+						<mm-section heading={m.pipelines_step_configure()}>
+							<div class="mm-stack" style="--mm-gap: var(--space-6)">
+								<ConnectionTestCallout result={connectionTest} error={testError} />
+								<ConfigFields
+									{pluginId}
+									spec={plugin.config_spec}
+									bind:config
+									{fieldErrors}
+									{awsStatus}
+									onedit={onConfigEdit}
+								/>
+							</div>
+						</mm-section>
 					{/if}
-				</span>
-				{#if field.description}
-					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-						{field.description}
-					</p>
-				{/if}
-				{#if field.options && field.options.length > 0}
-					<select
-						value={configObj[field.name] || ''}
-						onchange={(e) => {
-							configObj[field.name] = (e.target as HTMLSelectElement).value;
-						}}
-						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all border-gray-300 dark:border-gray-600"
-						required={field.required}
-					>
-						<option value="">{m.pipelines_select_placeholder()}</option>
-						{#each field.options as option (option.value)}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
-				{:else}
-					<input
-						type={getFieldType(field)}
-						value={configObj[field.name] || ''}
-						oninput={(e) => {
-							const target = e.target as HTMLInputElement;
-							configObj[field.name] =
-								field.type === 'int' || field.type === 'number'
-									? Number(target.value)
-									: target.value;
-							autoDetectSourceType();
-						}}
-						placeholder={field.placeholder || (field.default ? String(field.default) : '')}
-						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {field.type ===
-						'password'
-							? 'font-mono'
-							: ''} border-gray-300 dark:border-gray-600"
-						required={field.required}
-					/>
-				{/if}
-			</label>
-		</div>
-	{/if}
-{/snippet}
 
-<div class="w-full px-4 py-6 sm:px-6 lg:px-8">
-	<PageHeader
-		title={m.pipelines_edit_pipeline()}
-		description={m.pipelines_edit_subtitle()}
-		backHref={resolve('/runs')}
-		backLabel={m.nav_runs()}
-	/>
+					<mm-section heading={m.pipelines_step_schedule_filter()}>
+						<ScheduleFields
+							bind:cronExpression
+							bind:scheduled
+							bind:config
+							bind:disableSchedule
+							showPause
+							{cronError}
+						/>
+					</mm-section>
 
-	<div>
-		{#if error}
-			<div class="mb-6">
-				<Alert>{error}</Alert>
-			</div>
+					<hr class="mm-rule" />
+					<div class="mm-cluster">
+						<mm-button variant="ghost" href={resolve('/runs/[id]', { id: pipelineId })}
+							>{m.common_cancel()}</mm-button
+						>
+						<span class="mm-push"></span>
+						<mm-button variant="primary" type="submit" loading={saving} disabled={saving}
+							>{m.pipelines_save_changes()}</mm-button
+						>
+					</div>
+				</div>
+
+				<aside
+					class="mm-stack"
+					style="--mm-gap: var(--space-4)"
+					aria-label={m.pipelines_help_label()}
+				>
+					{#if plugin}
+						<PluginSummary {plugin} />
+						<mm-text block variant="caption" tone="secondary"
+							>{m.pipelines_plugin_locked_hint()}</mm-text
+						>
+						<mm-text block variant="dense" tone="secondary">{m.pipelines_test_hint()}</mm-text>
+						<div>
+							<mm-button
+								variant="secondary"
+								icon="cable"
+								loading={testing}
+								disabled={testing || saving}
+								onclick={runConnectionTest}>{m.pipelines_test_connection()}</mm-button
+							>
+						</div>
+					{/if}
+				</aside>
+			</form>
 		{/if}
-
-		<div class="space-y-6">
-			<!-- Basic Information -->
-			<Panel title={m.pipelines_basic_info_heading()} icon="material-symbols:info-outline">
-				<div>
-					<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-						{m.pipelines_name_label()} <span class="text-red-500">*</span>
-					</label>
-					<input
-						type="text"
-						bind:value={name}
-						placeholder={m.pipelines_name_placeholder()}
-						class={INPUT}
-						required
-					/>
-				</div>
-
-				<!-- Tags -->
-				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-						{m.common_tags()}
-					</span>
-					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-						{m.pipelines_tags_hint()}
-					</p>
-					{#if true}
-						{@const tagsValue = config.tags || []}
-						<div class="space-y-2">
-							{#each tagsValue as item, index (index)}
-								<div class="flex items-center gap-2">
-									<input
-										type="text"
-										value={item}
-										oninput={(e) => {
-											const target = e.target as HTMLInputElement;
-											tagsValue[index] = target.value;
-											config.tags = [...tagsValue];
-										}}
-										class="{INPUT} flex-1"
-									/>
-									<button
-										type="button"
-										onclick={(e) => {
-											e.preventDefault();
-											tagsValue.splice(index, 1);
-											config.tags = [...tagsValue];
-										}}
-										class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-										aria-label={m.pipelines_remove_tag_aria()}
-									>
-										<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
-									</button>
-								</div>
-							{/each}
-							<div class="flex items-center gap-2">
-								<input
-									type="text"
-									placeholder={m.pipelines_tags_typeahead_placeholder()}
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											const target = e.target as HTMLInputElement;
-											const value = target.value.trim();
-											if (value) {
-												config.tags = [...(config.tags || []), value];
-												target.value = '';
-											}
-										}
-									}}
-									class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
-								/>
-							</div>
-							<p class="text-xs text-gray-600 dark:text-gray-400">
-								{m.pipelines_press_enter_hint()}
-							</p>
-						</div>
-					{/if}
-				</div>
-
-				<!-- External Links -->
-				<div class="mt-6">
-					<span class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-						{m.pipelines_external_links_label()}
-					</span>
-					<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-						{m.pipelines_external_links_hint()}
-					</p>
-					{#if true}
-						{@const linksValue = config.external_links || []}
-						<div class="space-y-3">
-							{#each linksValue as item, index (index)}
-								<div
-									class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50"
-								>
-									<div class="flex items-end justify-end mb-3">
-										<button
-											type="button"
-											onclick={(e) => {
-												e.preventDefault();
-												linksValue.splice(index, 1);
-												config.external_links = [...linksValue];
-											}}
-											class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-										>
-											<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-										</button>
-									</div>
-									<div class="grid grid-cols-1 gap-3">
-										<div>
-											<label class="block">
-												<span
-													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
-												>
-													{m.common_name()}
-												</span>
-												<input
-													type="text"
-													bind:value={item.name}
-													oninput={() => {
-														config.external_links = [...linksValue];
-													}}
-													placeholder={m.pipelines_link_name_placeholder()}
-													class={INPUT}
-												/>
-											</label>
-										</div>
-										<div>
-											<label class="block">
-												<span
-													class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block"
-												>
-													{m.pipelines_url_label()}
-												</span>
-												<input
-													type="url"
-													bind:value={item.url}
-													oninput={() => {
-														config.external_links = [...linksValue];
-													}}
-													placeholder="https://..."
-													class={INPUT}
-												/>
-											</label>
-										</div>
-									</div>
-								</div>
-							{/each}
-							<button
-								type="button"
-								onclick={(e) => {
-									e.preventDefault();
-									config.external_links = [...(config.external_links || []), { name: '', url: '' }];
-								}}
-								class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
-							>
-								<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-								{m.pipelines_add_external_link()}
-							</button>
-						</div>
-					{/if}
-				</div>
-			</Panel>
-
-			<!-- Plugin Selection (Read-only in edit mode) -->
-			<Panel title={m.pipelines_data_source_heading()} icon="material-symbols:extension">
-				{#if pluginsStillLoading}
-					<div
-						class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
-						role="status"
-					>
-						<IconifyIcon icon="material-symbols:info-outline" class="h-5 w-5 flex-shrink-0" />
-						<span>{m.pipelines_plugins_still_loading_view()}</span>
-					</div>
-				{/if}
-
-				{#if loadingPlugins || loadingPipeline}
-					<Skeleton class="h-32" />
-				{:else if selectedPlugin}
-					<div
-						class="border-2 border-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 rounded-lg p-5"
-					>
-						<div class="flex items-center gap-4 mb-3">
-							{#if selectedPlugin.icon}
-								<div
-									class="h-14 w-14 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 flex-shrink-0"
-								>
-									<Icon name={selectedPlugin.icon} size="md" showLabel={false} />
-								</div>
-							{/if}
-							<div class="flex-1 min-w-0">
-								<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-									{selectedPlugin.name}
-								</h4>
-								{#if selectedPlugin.category}
-									<span
-										class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-									>
-										{selectedPlugin.category}
-									</span>
-								{/if}
-							</div>
-						</div>
-						{#if selectedPlugin.description}
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-								{selectedPlugin.description}
-							</p>
-						{/if}
-						<div
-							class="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800/50 rounded px-3 py-2"
-						>
-							<IconifyIcon icon="material-symbols:lock" class="h-4 w-4 mt-0.5 flex-shrink-0" />
-							<p>
-								{m.pipelines_plugin_locked_hint()}
-							</p>
-						</div>
-					</div>
-				{/if}
-			</Panel>
-
-			<!-- Plugin Configuration -->
-			{#if configSpec && configSpec.length > 0}
-				<Panel title={m.pipelines_connection_config_heading()} icon="material-symbols:settings">
-					<!-- AWS Credential Status Banner -->
-					{#if isAWSPlugin && awsCredentialStatus}
-						{#if awsCredentialStatus.available}
-							<div
-								class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-lg p-4"
-							>
-								<div class="flex items-start">
-									<IconifyIcon
-										icon="material-symbols:check-circle"
-										class="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"
-									/>
-									<div class="ml-3 flex-1">
-										<h4 class="text-sm font-semibold text-green-900 dark:text-green-100">
-											{m.pipelines_aws_creds_detected_heading()}
-										</h4>
-										<p class="text-sm text-green-700 dark:text-green-300 mt-1">
-											{m.pipelines_aws_creds_sources({
-												sources: formatList(awsCredentialStatus.sources)
-											})}
-										</p>
-										<p class="text-xs text-green-600 dark:text-green-400 mt-2">
-											{m.pipelines_aws_creds_detected_hint()}
-										</p>
-									</div>
-								</div>
-							</div>
-						{:else if awsCredentialStatus.error}
-							<div
-								class="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4"
-							>
-								<div class="flex items-start">
-									<IconifyIcon
-										icon="material-symbols:warning"
-										class="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0"
-									/>
-									<div class="ml-3 flex-1">
-										<h4 class="text-sm font-semibold text-amber-900 dark:text-amber-100">
-											{m.pipelines_aws_creds_not_detected_heading()}
-										</h4>
-										<p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
-											{m.pipelines_aws_creds_not_detected_hint()}
-										</p>
-									</div>
-								</div>
-							</div>
-						{/if}
-					{:else if isAWSPlugin && loadingAwsStatus}
-						<div
-							class="mb-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-						>
-							<div class="flex items-center">
-								<div
-									class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
-								></div>
-								<span class="ml-3 text-sm text-gray-600 dark:text-gray-400"
-									>{m.pipelines_aws_creds_checking()}</span
-								>
-							</div>
-						</div>
-					{/if}
-
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each pluginFields.filter((f) => !f.group) as field (field.name)}
-							{#if !shouldHideField(field, config)}
-								{@render renderField(field, field.name, config, 0)}
-							{/if}
-						{/each}
-					</div>
-
-					<!-- Each group the plugin declares becomes a collapsed section -->
-					{#if fieldGroups.length > 0}
-						<div
-							class="mt-6 divide-y divide-gray-100 border-y border-gray-100 dark:divide-gray-700 dark:border-gray-700"
-						>
-							{#each fieldGroups as group (group.name)}
-								<Disclosure title={group.name} hint={group.fields.map((f) => f.label).join(', ')}>
-									<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-										{#each group.fields as field (field.name)}
-											{#if !shouldHideField(field, config)}
-												{@render renderField(field, field.name, config, 0)}
-											{/if}
-										{/each}
-									</div>
-								</Disclosure>
-							{/each}
-						</div>
-					{/if}
-				</Panel>
-			{/if}
-
-			{#if queryCapable}
-				<QueryAccessSection bind:queryEnabled bind:ingestOnQuery {hasSchedule} />
-			{/if}
-
-			<!-- Schedule & Filtering -->
-			<Panel title={m.pipelines_schedule_heading()} icon="material-symbols:schedule">
-				<div class="space-y-5">
-					<div>
-						<label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-							{m.pipelines_cron_label()}
-							<span class="text-xs font-normal text-gray-600 dark:text-gray-400 ml-1"
-								>{m.pipelines_cron_optional()}</span
-							>
-						</label>
-						<input
-							type="text"
-							bind:value={cronExpression}
-							placeholder="0 2 * * *"
-							class="{INPUT} font-mono"
-						/>
-						<div class="mt-2 flex items-start">
-							<IconifyIcon
-								icon="material-symbols:info-outline"
-								class="h-4 w-4 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0"
-							/>
-							<p class="ml-2 text-xs text-gray-600 dark:text-gray-400">
-								{m.pipelines_cron_hint()}
-							</p>
-						</div>
-
-						{#if cronDescription}
-							<div
-								class="mt-3 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg"
-							>
-								<div class="flex items-start">
-									<IconifyIcon
-										icon="material-symbols:check-circle"
-										class="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"
-									/>
-									<div class="ml-2 flex-1">
-										<p class="text-sm font-medium text-green-800 dark:text-green-300">
-											{cronDescription}
-										</p>
-										{#if cronNextRuns.length > 0}
-											<div class="mt-2">
-												<p class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">
-													{m.pipelines_cron_next_runs_heading()}
-												</p>
-												<ul class="text-xs text-green-700 dark:text-green-400 space-y-0.5">
-													{#each cronNextRuns as run (run.getTime())}
-														<li class="font-mono">
-															{run.toLocaleString(getLocale(), {
-																weekday: 'short',
-																year: 'numeric',
-																month: 'short',
-																day: 'numeric',
-																hour: '2-digit',
-																minute: '2-digit',
-																second: '2-digit',
-																hour12: false
-															})}
-														</li>
-													{/each}
-												</ul>
-											</div>
-										{/if}
-									</div>
-								</div>
-							</div>
-						{:else if cronExpression.trim()}
-							<div
-								class="mt-3 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg"
-							>
-								<div class="flex items-start">
-									<IconifyIcon
-										icon="material-symbols:error"
-										class="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
-									/>
-									<p class="ml-2 text-sm text-red-800 dark:text-red-300">
-										{m.pipelines_cron_invalid()}
-									</p>
-								</div>
-							</div>
-						{/if}
-					</div>
-
-					{#if hasSchedule}
-						<div
-							class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4"
-						>
-							<label class="flex items-start cursor-pointer">
-								<input
-									type="checkbox"
-									bind:checked={disableSchedule}
-									class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-								/>
-								<div class="ml-3">
-									<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-										{m.pipelines_disable_schedule_label()}
-									</span>
-									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-										{m.pipelines_disable_schedule_hint()}
-									</p>
-								</div>
-							</label>
-						</div>
-					{/if}
-
-					<!-- Filter -->
-					<div class="border-t border-gray-200 dark:border-gray-700 pt-5">
-						<button
-							type="button"
-							onclick={() => toggleSection('asset_filter')}
-							class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {isExpanded(
-								'asset_filter'
-							)
-								? 'rounded-b-none border-b-0'
-								: ''}"
-						>
-							<div class="flex items-center gap-2">
-								<IconifyIcon
-									icon="material-symbols:filter-alt"
-									class="h-4 w-4 text-gray-600 dark:text-gray-400"
-								/>
-								<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400">
-									{m.pipelines_asset_filter_heading()}
-								</h4>
-								<span class="text-xs text-gray-600 dark:text-gray-400"
-									>{m.pipelines_filter_optional_suffix()}</span
-								>
-							</div>
-							<IconifyIcon
-								icon={isExpanded('asset_filter')
-									? 'material-symbols:expand-less'
-									: 'material-symbols:expand-more'}
-								class="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-							/>
-						</button>
-
-						{#if isExpanded('asset_filter')}
-							<div
-								class="px-4 py-4 rounded-b-lg border border-t-0 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-							>
-								<p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
-									{m.pipelines_filter_description()}
-								</p>
-
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<!-- Include patterns -->
-									<div
-										class="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 p-4"
-									>
-										<div class="flex items-center gap-2 mb-3">
-											<IconifyIcon
-												icon="material-symbols:check-circle-outline"
-												class="h-4 w-4 text-green-600 dark:text-green-400"
-											/>
-											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												{m.pipelines_filter_include_label()}
-											</span>
-										</div>
-										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
-											{m.pipelines_filter_include_hint()}
-										</p>
-										{#if true}
-											{@const includeValue = config.filter?.include || []}
-											<div class="space-y-2">
-												{#each includeValue as item, index (index)}
-													<div class="flex items-center gap-1.5">
-														<span
-															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-															>/</span
-														>
-														<input
-															type="text"
-															value={item}
-															oninput={(e) => {
-																const target = e.target as HTMLInputElement;
-																includeValue[index] = target.value;
-																config.filter = { ...config.filter, include: [...includeValue] };
-															}}
-															class="{INPUT} flex-1 font-mono"
-														/>
-														<span
-															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-															>/</span
-														>
-														<button
-															type="button"
-															onclick={(e) => {
-																e.preventDefault();
-																includeValue.splice(index, 1);
-																config.filter = { ...config.filter, include: [...includeValue] };
-															}}
-															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-															aria-label={m.pipelines_remove_pattern_aria()}
-														>
-															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-														</button>
-													</div>
-												{/each}
-												<div class="flex items-center gap-1.5">
-													<span
-														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-														>/</span
-													>
-													<input
-														type="text"
-														placeholder={includePatternExample}
-														onkeydown={(e) => {
-															if (e.key === 'Enter') {
-																e.preventDefault();
-																const target = e.target as HTMLInputElement;
-																const value = target.value.trim();
-																if (value) {
-																	if (!config.filter) config.filter = {};
-																	config.filter = {
-																		...config.filter,
-																		include: [...(config.filter.include || []), value]
-																	};
-																	target.value = '';
-																}
-															}
-														}}
-														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-mono text-sm"
-													/>
-													<span
-														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-														>/</span
-													>
-													<div class="w-[30px]"></div>
-												</div>
-												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
-													{m.pipelines_press_enter_short_hint()}
-												</p>
-											</div>
-										{/if}
-									</div>
-
-									<!-- Exclude patterns -->
-									<div
-										class="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-4"
-									>
-										<div class="flex items-center gap-2 mb-3">
-											<IconifyIcon
-												icon="material-symbols:block"
-												class="h-4 w-4 text-amber-600 dark:text-amber-400"
-											/>
-											<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												{m.pipelines_filter_exclude_label()}
-											</span>
-										</div>
-										<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
-											{m.pipelines_filter_exclude_hint()}
-										</p>
-										{#if true}
-											{@const excludeValue = config.filter?.exclude || []}
-											<div class="space-y-2">
-												{#each excludeValue as item, index (index)}
-													<div class="flex items-center gap-1.5">
-														<span
-															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-															>/</span
-														>
-														<input
-															type="text"
-															value={item}
-															oninput={(e) => {
-																const target = e.target as HTMLInputElement;
-																excludeValue[index] = target.value;
-																config.filter = { ...config.filter, exclude: [...excludeValue] };
-															}}
-															class="{INPUT} flex-1 font-mono"
-														/>
-														<span
-															class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-															>/</span
-														>
-														<button
-															type="button"
-															onclick={(e) => {
-																e.preventDefault();
-																excludeValue.splice(index, 1);
-																config.filter = { ...config.filter, exclude: [...excludeValue] };
-															}}
-															class="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-															aria-label={m.pipelines_remove_pattern_aria()}
-														>
-															<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-														</button>
-													</div>
-												{/each}
-												<div class="flex items-center gap-1.5">
-													<span
-														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-														>/</span
-													>
-													<input
-														type="text"
-														placeholder={excludePatternExample}
-														onkeydown={(e) => {
-															if (e.key === 'Enter') {
-																e.preventDefault();
-																const target = e.target as HTMLInputElement;
-																const value = target.value.trim();
-																if (value) {
-																	if (!config.filter) config.filter = {};
-																	config.filter = {
-																		...config.filter,
-																		exclude: [...(config.filter.exclude || []), value]
-																	};
-																	target.value = '';
-																}
-															}
-														}}
-														class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-mono text-sm"
-													/>
-													<span
-														class="text-gray-600 dark:text-gray-400 font-mono text-sm select-none"
-														>/</span
-													>
-													<div class="w-[30px]"></div>
-												</div>
-												<p class="text-xs text-gray-600 dark:text-gray-400 pl-3">
-													{m.pipelines_press_enter_short_hint()}
-												</p>
-											</div>
-										{/if}
-									</div>
-								</div>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</Panel>
-		</div>
-
-		<!-- Footer Actions -->
-		<div class="mt-8 flex items-center justify-between">
-			<div class="text-sm text-gray-600 dark:text-gray-400">
-				{#if hasSchedule}
-					<IconifyIcon icon="material-symbols:schedule" class="inline h-4 w-4 mr-1" />
-					{m.pipelines_scheduled_pipeline()}
-				{:else}
-					<IconifyIcon icon="material-symbols:play-circle-outline" class="inline h-4 w-4 mr-1" />
-					{m.pipelines_manual_only_pipeline()}
-				{/if}
-			</div>
-			<div class="flex items-center gap-3">
-				<button
-					type="button"
-					class={BTN_SECONDARY}
-					onclick={() => goto(resolve('/runs?tab=pipelines'))}
-					disabled={saving}
-				>
-					{m.common_cancel()}
-				</button>
-				<button
-					type="button"
-					class={BTN_PRIMARY}
-					onclick={handleSave}
-					disabled={saving || !name || !selectedPluginId}
-				>
-					{saving ? m.pipelines_saving() : m.pipelines_save_changes()}
-				</button>
-			</div>
-		</div>
 	</div>
-</div>
+{/if}

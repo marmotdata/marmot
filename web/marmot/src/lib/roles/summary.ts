@@ -1,29 +1,23 @@
 import { m } from '$lib/paraglide/messages';
 import type { Permission } from './types';
 
-// Turns a role's permission keys into what a person needs to see: which parts of Marmot it reaches and how far, in words rather than resource_type:action pairs. OSS and Cloud spell resource types differently (assets and asset, service_accounts and serviceAccount), so both are matched by one normalised name.
+// Turns the instance's permissions into the grid the role editor shows: one row per part of Marmot, in words rather than resource_type, and one column per action. OSS and Cloud spell resource types differently (assets and asset, service_accounts and serviceAccount), so both are matched by one normalised name.
 
-export type AccessLevel = 'full' | 'read' | 'partial' | 'none';
-
-export interface AreaAction {
-	key: string;
-	label: string;
-	description: string;
-	granted: boolean;
-}
-
-export interface AreaSummary {
+/** One cell of the grid: the permission it toggles, or none when the area does not offer that action. */
+export interface MatrixRow {
 	id: string;
 	label: string;
-	icon: string;
-	level: AccessLevel;
-	actions: AreaAction[];
+	cells: Record<string, Permission | undefined>;
 }
 
-export interface CategorySummary {
+export interface MatrixColumn {
 	id: string;
 	label: string;
-	areas: AreaSummary[];
+}
+
+export interface PermissionMatrix {
+	columns: MatrixColumn[];
+	rows: MatrixRow[];
 }
 
 /** assets, Asset and asset are one area; so are service_accounts and serviceAccount. */
@@ -36,74 +30,60 @@ export function normaliseResource(resourceType: string): string {
 
 interface AreaDef {
 	label: () => string;
-	icon: string;
 	category: string;
 }
 
 const areas: Record<string, AreaDef> = {
 	asset: {
 		label: m.roles_area_asset,
-		icon: 'material-symbols:database-outline',
 		category: 'catalog'
 	},
 	dataproduct: {
 		label: m.roles_area_data_product,
-		icon: 'material-symbols:inventory-2-outline',
 		category: 'catalog'
 	},
 	glossary: {
 		label: m.roles_area_glossary,
-		icon: 'material-symbols:book-outline',
 		category: 'catalog'
 	},
 	lineage: {
 		label: m.roles_area_lineage,
-		icon: 'material-symbols:account-tree-outline',
 		category: 'catalog'
 	},
-	access: { label: m.roles_area_access, icon: 'material-symbols:key-outline', category: 'catalog' },
-	user: { label: m.roles_area_user, icon: 'material-symbols:person-outline', category: 'identity' },
-	team: { label: m.roles_area_team, icon: 'material-symbols:groups-outline', category: 'identity' },
+	access: { label: m.roles_area_access, category: 'catalog' },
+	user: { label: m.roles_area_user, category: 'identity' },
+	team: { label: m.roles_area_team, category: 'identity' },
 	serviceaccount: {
 		label: m.roles_area_service_account,
-		icon: 'material-symbols:smart-toy-outline',
 		category: 'identity'
 	},
-	role: { label: m.roles_area_role, icon: 'material-symbols:badge-outline', category: 'identity' },
+	role: { label: m.roles_area_role, category: 'identity' },
 	iam: {
 		label: m.roles_area_iam,
-		icon: 'material-symbols:shield-person-outline',
 		category: 'identity'
 	},
-	sso: { label: m.roles_area_sso, icon: 'material-symbols:login', category: 'identity' },
+	sso: { label: m.roles_area_sso, category: 'identity' },
 	ingestion: {
 		label: m.roles_area_ingestion,
-		icon: 'material-symbols:play-circle-outline',
 		category: 'platform'
 	},
 	plugin: {
 		label: m.roles_area_plugin,
-		icon: 'material-symbols:extension-outline',
 		category: 'platform'
 	},
 	agent: {
 		label: m.roles_area_agent,
-		icon: 'material-symbols:smart-toy-outline',
 		category: 'platform'
 	},
 	secretstore: {
 		label: m.roles_area_secret_store,
-		icon: 'material-symbols:lock-outline',
 		category: 'platform'
 	},
-	metrics: { label: m.roles_area_metrics, icon: 'material-symbols:insights', category: 'platform' }
+	metrics: { label: m.roles_area_metrics, category: 'platform' }
 };
 
-const categories: { id: string; label: () => string }[] = [
-	{ id: 'catalog', label: m.roles_category_catalog },
-	{ id: 'identity', label: m.roles_category_identity },
-	{ id: 'platform', label: m.roles_category_platform }
-];
+// Rows run from the catalog to who can use it to the platform underneath
+const categories = ['catalog', 'identity', 'platform'];
 
 const actionLabels: Record<string, () => string> = {
 	view: m.roles_action_view,
@@ -136,51 +116,28 @@ function actionLabel(action: string): string {
 	return actionLabels[action.toLowerCase()]?.() ?? action;
 }
 
-function levelOf(actions: AreaAction[]): AccessLevel {
-	const granted = actions.filter((a) => a.granted);
-	if (granted.length === 0) return 'none';
-	if (granted.length === actions.length) return 'full';
-	if (
-		granted.every((a) => a.key.endsWith(':view') || a.key.toLowerCase().endsWith(':viewneighbors'))
-	)
-		return 'read';
-	return 'partial';
-}
-
-/** Every area the instance defines permissions for, with what the role grants in each. */
-export function summariseRole(all: Permission[], grantedKeys: string[]): CategorySummary[] {
-	const granted = new Set(grantedKeys);
-	const byArea: Record<string, AreaAction[]> = {};
+/** Every area the instance defines permissions for against every action any area offers, reading first and managing last. */
+export function permissionMatrix(all: Permission[]): PermissionMatrix {
+	const rows: Record<string, MatrixRow> = {};
+	const actions = new Set<string>();
 	for (const p of all) {
-		const key = `${p.resource_type}:${p.action}`;
-		(byArea[normaliseResource(p.resource_type)] ??= []).push({
-			key,
-			label: actionLabel(p.action),
-			description: p.description,
-			granted: granted.has(key)
-		});
+		const id = normaliseResource(p.resource_type);
+		const action = p.action.toLowerCase();
+		actions.add(action);
+		rows[id] ??= { id, label: areas[id]?.label() ?? p.resource_type, cells: {} };
+		rows[id].cells[action] = p;
 	}
-	const summaries: Record<string, AreaSummary[]> = {};
-	for (const [id, actions] of Object.entries(byArea)) {
-		const def = areas[id];
-		actions.sort((a, b) => {
-			const ai = actionOrder.indexOf(a.key.split(':')[1].toLowerCase());
-			const bi = actionOrder.indexOf(b.key.split(':')[1].toLowerCase());
-			return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-		});
-		(summaries[def?.category ?? 'platform'] ??= []).push({
-			id,
-			label: def?.label() ?? id,
-			icon: def?.icon ?? 'material-symbols:tune',
-			level: levelOf(actions),
-			actions
-		});
-	}
-	return categories
-		.map((c) => ({
-			id: c.id,
-			label: c.label(),
-			areas: (summaries[c.id] ?? []).sort((a, b) => a.label.localeCompare(b.label))
-		}))
-		.filter((c) => c.areas.length > 0);
+	const rank = (action: string) => {
+		const i = actionOrder.indexOf(action);
+		return i < 0 ? 99 : i;
+	};
+	const categoryRank = (id: string) => categories.indexOf(areas[id]?.category ?? 'platform');
+	return {
+		columns: [...actions]
+			.sort((a, b) => rank(a) - rank(b))
+			.map((id) => ({ id, label: actionLabel(id) })),
+		rows: Object.values(rows).sort(
+			(a, b) => categoryRank(a.id) - categoryRank(b.id) || a.label.localeCompare(b.label)
+		)
+	};
 }

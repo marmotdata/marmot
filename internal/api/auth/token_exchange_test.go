@@ -45,15 +45,21 @@ func (m *mockAuthService) GetSigningKey(ctx context.Context) ([]byte, error) {
 	return nil, nil
 }
 
+func (m *mockAuthService) GenerateTokenForClient(ctx context.Context, u *user.User, clientID, grantID string) (string, error) {
+	return m.GenerateToken(ctx, u, nil)
+}
+
 type mockOAuthProvider struct {
 	name string
 	typ  string
 }
 
-func (m *mockOAuthProvider) GetAuthURL(state string) string                                      { return "" }
-func (m *mockOAuthProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) { return nil, nil }
-func (m *mockOAuthProvider) Name() string                                                        { return m.name }
-func (m *mockOAuthProvider) Type() string                                                        { return m.typ }
+func (m *mockOAuthProvider) GetAuthURL(state string) string { return "" }
+func (m *mockOAuthProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockOAuthProvider) Name() string { return m.name }
+func (m *mockOAuthProvider) Type() string { return m.typ }
 
 type mockTokenExchangerProvider struct {
 	mockOAuthProvider

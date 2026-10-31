@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import type { Asset } from '$lib/assets/types';
-	import IconifyIcon from '@iconify/svelte';
-	import RunsActivityChart, { type Bucket } from './RunsActivityChart.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatRelativeTime } from '$lib/utils';
+	import { formatMs } from './assetFormat';
+	import '@marmotdata/elements/run-strip.js';
+	import '@marmotdata/elements/code-sample.js';
+	import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
 
+	// An agent's runs as a list on the left and the selected run read as a story on the right, as the guidelines ask for runs and traces.
 	let { asset }: { asset: Asset } = $props();
 
 	interface ToolCall {
@@ -15,11 +19,20 @@
 		started_at: string;
 		duration_ms?: number;
 		status: string;
+		/** The call's argument in readable form, such as the SQL of a query. */
+		detail?: string;
+		/** What came back, such as "5 rows". */
+		result?: string;
+		/** Why a refused or failed call did not go through, and the rule that refused it. */
+		reason?: string;
+		rule?: string;
 	}
 
 	interface Run {
 		id: string;
 		run_id: string;
+		/** What the run was asked. */
+		prompt?: string;
 		started_at: string;
 		ended_at?: string;
 		duration_ms?: number;
@@ -41,34 +54,27 @@
 	}
 
 	let stats: Stats | null = $state(null);
-	let buckets: Bucket[] = $state([]);
 	let runs: Run[] = $state([]);
 	let loading = $state(true);
 	let error: string | null = $state(null);
+	let selectedId = $state<string | null>(null);
+	let filter = $state('');
+	let outcome = $state<'all' | 'succeeded' | 'failed'>('all');
 
 	async function load() {
 		loading = true;
 		error = null;
 		try {
-			const [statsRes, activityRes, runsRes] = await Promise.all([
+			const [statsRes, runsRes] = await Promise.all([
 				fetchApi(`/agents/${asset.id}/stats?period=24h`),
-				fetchApi(`/agents/${asset.id}/activity?period=24h`),
 				fetchApi(`/agents/${asset.id}/runs?period=24h&limit=25`)
 			]);
-			if (!statsRes.ok || !activityRes.ok || !runsRes.ok) {
+			if (!statsRes.ok || !runsRes.ok) {
 				throw new Error(m.asset_agent_runs_load_error());
 			}
 			stats = await statsRes.json();
-			const activity = await activityRes.json();
-			buckets = (activity.buckets ?? []).map(
-				(b: { hour: string; success: number; error: number }) => ({
-					hour: new Date(b.hour),
-					success: b.success,
-					error: b.error
-				})
-			);
-			const runsBody = await runsRes.json();
-			runs = runsBody.runs ?? [];
+			const body = await runsRes.json();
+			runs = body.runs ?? [];
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -82,220 +88,362 @@
 		}
 	});
 
-	function formatDuration(ms?: number): string {
-		if (ms == null) return '—';
-		if (ms < 1000) return `${ms}ms`;
-		return `${(ms / 1000).toFixed(2)}s`;
+	const failed = (r: Run) => r.status !== 'success';
+
+	let visible = $derived(
+		runs.filter((r) => {
+			if (outcome === 'succeeded' && failed(r)) return false;
+			if (outcome === 'failed' && !failed(r)) return false;
+			const q = filter.trim().toLowerCase();
+			if (!q) return true;
+			return (
+				r.run_id.toLowerCase().includes(q) ||
+				(r.prompt ?? '').toLowerCase().includes(q) ||
+				(r.tool_calls ?? []).some(
+					(c) =>
+						c.tool_name.toLowerCase().includes(q) || (c.target_mrn ?? '').toLowerCase().includes(q)
+				)
+			);
+		})
+	);
+
+	let selected = $derived(visible.find((r) => r.run_id === selectedId) ?? visible[0] ?? null);
+
+	let strip = $derived<StripRun[]>(
+		[...runs].reverse().map((r) => ({
+			id: r.run_id.slice(0, 8),
+			status: failed(r) ? 'failed' : 'succeeded',
+			startedAt: r.started_at,
+			durationMs: r.duration_ms
+		}))
+	);
+
+	function when(iso: string): string {
+		return new Date(iso).toLocaleString(getLocale(), {
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 
-	function formatTokens(n: number): string {
-		if (n < 1000) return String(n);
-		return `${(n / 1000).toFixed(1)}k`;
+	function words(tool: string): string {
+		return tool.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 	}
 
-	function fmtPercent(rate: number): string {
-		return `${Math.round(rate * 100)}%`;
+	function shortTarget(mrn?: string): string {
+		if (!mrn) return '';
+		return mrn.split('/').pop() ?? mrn;
 	}
 
-	let totalActivity = $derived(buckets.reduce((sum, b) => sum + b.success + b.error, 0));
+	// Each tool call as a plain step: what the agent did and what it touched, never the raw function-call syntax.
+	function stepLabel(c: ToolCall): string {
+		const target = shortTarget(c.target_mrn);
+		const tool = c.tool_name.toLowerCase();
+		if (/search|discover|find/.test(tool)) return m.asset_page_step_searched();
+		if (/query|sql/.test(tool))
+			return target ? m.asset_page_step_queried({ target }) : m.asset_page_step_ran_query();
+		if (/get|read|lookup|fetch/.test(tool) && target) return m.asset_page_step_read({ target });
+		return target
+			? m.asset_page_step_called_on({ tool: words(c.tool_name), target })
+			: words(c.tool_name);
+	}
+
+	// A step the policy turned away reads as refused, apart from one that broke.
+	const refused = (c: ToolCall) => ['denied', 'refused'].includes(c.status) || !!c.rule;
+	const broke = (c: ToolCall) => !refused(c) && ['error', 'failed'].includes(c.status);
+	const isQuery = (c: ToolCall) => /query|sql/.test(c.tool_name.toLowerCase());
+
+	function stepIcon(c: ToolCall): string {
+		if (refused(c) || broke(c)) return 'block';
+		const tool = c.tool_name.toLowerCase();
+		if (/search|discover|find/.test(tool)) return 'search';
+		if (/query|sql/.test(tool)) return 'terminal';
+		if (/get|read|lookup|fetch/.test(tool)) return 'table';
+		return 'build';
+	}
+
+	function steps(run: Run) {
+		const calls = [...(run.tool_calls ?? [])].sort((a, b) => a.ordinal - b.ordinal);
+		const t0 = new Date(run.started_at).getTime();
+		const ends = calls.map(
+			(c) => new Date(c.started_at).getTime() - t0 + Math.max(c.duration_ms ?? 0, 0)
+		);
+		const total = Math.max(run.duration_ms ?? 0, ...ends, 1);
+		return calls.map((c) => {
+			const start = Math.max(new Date(c.started_at).getTime() - t0, 0);
+			return {
+				c,
+				left: (start / total) * 100,
+				width: Math.max(((c.duration_ms ?? 0) / total) * 100, 0.5)
+			};
+		});
+	}
+
+	function caption(r: Run): string {
+		const parts = [formatRelativeTime(r.started_at)];
+		if (r.duration_ms != null) parts.push(formatMs(r.duration_ms));
+		parts.push(m.asset_page_run_steps({ count: r.tool_calls?.length ?? 0 }));
+		return parts.join(' · ');
+	}
 </script>
 
-<div class="space-y-4">
-	{#if loading}
-		<div class="flex items-center justify-center py-12">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
-		</div>
-	{:else if error}
-		<div
-			class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
+{#if loading}
+	<mm-loading active caption={m.asset_page_runs_loading()}></mm-loading>
+{:else if error}
+	<mm-callout tone="danger" heading={m.asset_agent_runs_load_error()}>
+		{error}
+		<mm-button slot="actions" size="sm" variant="secondary" icon="refresh" onclick={load}
+			>{m.common_retry()}</mm-button
 		>
-			<p class="text-sm text-red-600 dark:text-red-400">{error}</p>
-		</div>
-	{:else}
-		<!-- Activity chart -->
-		<div
-			class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
-		>
-			<div class="flex items-center justify-between mb-2">
-				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					{m.asset_agent_runs_activity_heading()}
-				</div>
-				<div class="flex items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400">
-					<span class="inline-flex items-center gap-1.5">
-						<span class="inline-block w-2.5 h-2.5 rounded-sm bg-earthy-green-700"></span>
-						{m.asset_agent_runs_legend_success()}
-					</span>
-					<span class="inline-flex items-center gap-1.5">
-						<span class="inline-block w-2.5 h-2.5 rounded-sm bg-red-600"></span>
-						{m.asset_agent_runs_legend_error()}
-					</span>
-				</div>
-			</div>
-			{#if totalActivity === 0}
-				<div class="flex items-center justify-center h-[120px]">
-					<p class="text-xs text-gray-400 dark:text-gray-500">
-						{m.asset_agent_runs_none_in_window()}
-					</p>
-				</div>
-			{:else}
-				<RunsActivityChart {buckets} />
-			{/if}
-		</div>
-
-		<!-- Stats -->
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-			<div
-				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
-			>
-				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					{m.asset_agent_runs_stat_runs_24h()}
-				</div>
-				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-					{stats?.run_count ?? 0}
-				</div>
-			</div>
-			<div
-				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
-			>
-				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					{m.asset_agent_runs_stat_median_latency()}
-				</div>
-				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-					{stats && stats.run_count > 0 ? formatDuration(stats.median_latency_ms) : '—'}
-				</div>
-			</div>
-			<div
-				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
-			>
-				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					{m.asset_agent_runs_stat_tokens_24h()}
-				</div>
-				<div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-					{stats ? formatTokens(stats.tokens_in + stats.tokens_out) : '0'}
-				</div>
-			</div>
-			<div
-				class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
-			>
-				<div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-					{m.asset_agent_runs_stat_success_rate()}
-				</div>
-				<div
-					class="mt-1 text-2xl font-semibold {stats && stats.run_count > 0
-						? 'text-earthy-green-700 dark:text-earthy-green-500'
-						: 'text-gray-400'}"
+	</mm-callout>
+{:else if runs.length === 0}
+	<mm-empty-state
+		heading={m.asset_page_agent_runs_empty_heading()}
+		description={m.asset_agent_runs_empty_hint()}
+		seed={3}
+	></mm-empty-state>
+{:else}
+	<div class="mm-stack" style="--mm-gap: var(--space-5)">
+		{#if stats}
+			<mm-description-list layout="inline-grid" columns={4}>
+				<mm-description term={m.asset_agent_runs_stat_runs_24h()}
+					><mm-text numeric>{stats.run_count}</mm-text></mm-description
 				>
-					{stats && stats.run_count > 0 ? fmtPercent(stats.success_rate) : '—'}
-				</div>
-			</div>
-		</div>
+				<mm-description term={m.asset_agent_runs_stat_success_rate()}
+					><mm-text numeric
+						>{stats.run_count > 0 ? `${Math.round(stats.success_rate * 100)}%` : ''}</mm-text
+					></mm-description
+				>
+				<mm-description term={m.asset_agent_runs_stat_median_latency()}
+					><mm-text numeric>{stats.run_count > 0 ? formatMs(stats.median_latency_ms) : ''}</mm-text
+					></mm-description
+				>
+				<mm-description term={m.asset_agent_runs_stat_tokens_24h()}
+					><mm-text numeric
+						>{(stats.tokens_in + stats.tokens_out).toLocaleString(getLocale())}</mm-text
+					></mm-description
+				>
+			</mm-description-list>
+		{/if}
 
-		<!-- Run list -->
-		<div
-			class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
-		>
-			<div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-					{m.asset_agent_runs_recent_heading()}
-				</div>
-			</div>
+		<mm-toolbar label={m.asset_page_filter_runs()}>
+			<mm-search-field
+				label={m.asset_page_find_run()}
+				hide-label
+				placeholder={m.asset_page_find_run()}
+				value={filter}
+				style="inline-size: 18rem"
+				onmm-input={(e: CustomEvent<{ value: string }>) => (filter = e.detail.value)}
+			></mm-search-field>
+			<mm-select
+				label={m.asset_page_outcome()}
+				hide-label
+				value={outcome}
+				style="inline-size: 11rem"
+				onmm-change={(e: CustomEvent<{ value: string }>) =>
+					(outcome = e.detail.value as typeof outcome)}
+			>
+				<mm-option value="all">{m.asset_page_outcome_all()}</mm-option>
+				<mm-option value="succeeded">{m.asset_page_run_succeeded()}</mm-option>
+				<mm-option value="failed">{m.asset_page_run_failed()}</mm-option>
+			</mm-select>
+			<mm-run-strip
+				slot="end"
+				label={m.asset_page_runs_strip_label({ name: asset.name })}
+				runs={strip}
+				selectable
+				onmm-select={(e: CustomEvent<{ index: number }>) => {
+					const r = [...runs].reverse()[e.detail.index];
+					if (r) selectedId = r.run_id;
+				}}
+			></mm-run-strip>
+		</mm-toolbar>
 
-			{#if runs.length === 0}
-				<div class="px-5 py-12 text-center">
-					<IconifyIcon
-						icon="material-symbols:bolt-outline"
-						class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
-					/>
-					<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-						{m.asset_agent_runs_empty_hint()}
-					</p>
-				</div>
-			{:else}
-				<ul class="divide-y divide-gray-200 dark:divide-gray-700">
-					{#each runs as run (run.run_id)}
-						<li class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-							<div class="flex items-center justify-between gap-4">
-								<div class="flex items-center gap-3 min-w-0">
-									{#if run.status === 'success'}
-										<div
-											class="w-7 h-7 rounded-full bg-earthy-green-100 dark:bg-earthy-green-900/30 flex items-center justify-center flex-shrink-0"
+		<div class="split">
+			<mm-list aria-label={m.asset_page_runs_list_label({ name: asset.name })} class="runs">
+				{#each visible as r (r.run_id)}
+					<mm-list-item
+						interactive
+						selected={selected?.run_id === r.run_id}
+						secondary={caption(r)}
+						onmm-activate={() => (selectedId = r.run_id)}
+					>
+						{r.prompt || when(r.started_at)}
+						{#if failed(r)}
+							<mm-status-pill slot="end" state="failed"></mm-status-pill>
+						{/if}
+					</mm-list-item>
+				{:else}
+					<mm-list-item>{m.asset_page_no_matching_runs()}</mm-list-item>
+				{/each}
+			</mm-list>
+
+			{#if selected}
+				{@const story = steps(selected)}
+				{@const refusedSteps = (selected.tool_calls ?? []).filter(refused).length}
+				<section
+					class="mm-stack"
+					style="--mm-gap: var(--space-5); min-width: 0"
+					aria-label={m.asset_page_run_aria({ id: selected.run_id })}
+				>
+					<div class="mm-stack" style="--mm-gap: var(--space-1)">
+						<mm-heading level={2} variant="heading"
+							>{selected.prompt || when(selected.started_at)}</mm-heading
+						>
+						<mm-text variant="caption" tone="secondary" block>{caption(selected)}</mm-text>
+						{#if failed(selected) || refusedSteps}
+							<span class="mm-cluster" style="--mm-gap: var(--space-2)">
+								{#if failed(selected)}
+									<mm-status-pill state="failed"></mm-status-pill>
+								{/if}
+								{#if refusedSteps}
+									<mm-status-pill state="denied"
+										>{m.asset_page_run_refused_steps({
+											count: refusedSteps,
+											formatted: refusedSteps.toLocaleString(getLocale())
+										})}</mm-status-pill
+									>
+								{/if}
+							</span>
+						{/if}
+					</div>
+					{#if selected.error}
+						<mm-callout tone="danger" heading={m.asset_page_run_failed_heading()} compact>
+							{selected.error}
+						</mm-callout>
+					{/if}
+					{#if story.length > 0}
+						<ol class="steps" aria-label={m.asset_page_run_steps_label()}>
+							{#each story as { c, left, width } (c.ordinal)}
+								{@const bad = refused(c) || broke(c)}
+								<li>
+									<mm-icon
+										name={stepIcon(c)}
+										aria-hidden="true"
+										style="color: {bad ? 'var(--mm-danger)' : 'var(--mm-text-2)'}"
+									></mm-icon>
+									<div class="mm-stack" style="--mm-gap: var(--space-2); min-width: 0">
+										<mm-text variant="dense" block
+											>{stepLabel(c)}{#if c.result}
+												<mm-text variant="dense" tone="secondary"> → {c.result}</mm-text>
+											{/if}</mm-text
 										>
-											<IconifyIcon
-												icon="material-symbols:check-rounded"
-												class="w-4 h-4 text-earthy-green-700 dark:text-earthy-green-500"
-											/>
-										</div>
-									{:else}
-										<div
-											class="w-7 h-7 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0"
-										>
-											<IconifyIcon
-												icon="material-symbols:close-rounded"
-												class="w-4 h-4 text-red-600 dark:text-red-400"
-											/>
-										</div>
-									{/if}
-									<div class="min-w-0">
-										<div class="text-sm font-mono text-gray-900 dark:text-gray-100 truncate">
-											{run.run_id.slice(0, 8)}
-										</div>
-										<div class="text-xs text-gray-500 dark:text-gray-400">
-											{formatRelativeTime(run.started_at)}
-										</div>
-									</div>
-								</div>
-								<div
-									class="flex items-center gap-6 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
-								>
-									<div>
-										<span class="text-gray-400">{m.asset_agent_runs_duration_label()} </span>
-										<span class="text-gray-900 dark:text-gray-100 font-mono">
-											{formatDuration(run.duration_ms)}
-										</span>
-									</div>
-									{#if run.tokens_in || run.tokens_out}
-										<div>
-											<span class="text-gray-400">{m.asset_agent_runs_tokens_label()} </span>
-											<span class="text-gray-900 dark:text-gray-100 font-mono">
-												{run.tokens_in}↓ {run.tokens_out}↑
-											</span>
-										</div>
-									{/if}
-								</div>
-							</div>
-							{#if run.tool_calls && run.tool_calls.length > 0}
-								<div class="mt-3 pl-10 flex items-center gap-1 flex-wrap">
-									{#each run.tool_calls as call, i (call.ordinal)}
-										<span
-											class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono {call.status ===
-											'error'
-												? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-												: 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-300'}"
-											title={call.target_mrn || ''}
-										>
-											{call.tool_name}
-										</span>
-										{#if i < run.tool_calls.length - 1}
-											<IconifyIcon
-												icon="material-symbols:arrow-right-alt"
-												class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600"
-											/>
+										{#if c.target_mrn}
+											<mm-text variant="mono-dense" tone="secondary" block class="wrap"
+												>{c.target_mrn}</mm-text
+											>
 										{/if}
-									{/each}
-								</div>
-							{/if}
-							{#if run.error}
-								<div
-									class="mt-2 pl-10 text-xs font-mono text-red-600 dark:text-red-400 truncate"
-									title={run.error}
+										{#if c.reason || c.rule}
+											<mm-text variant="dense" tone="secondary" block
+												>{[c.reason, c.rule ? m.asset_page_step_rule({ rule: c.rule }) : '']
+													.filter(Boolean)
+													.join(' ')}</mm-text
+											>
+										{/if}
+										<div class="bar" aria-hidden="true">
+											<div
+												style="inset-inline-start: {left}%; width: {width}%; background: {bad
+													? 'var(--mm-danger)'
+													: 'var(--mm-text-3)'}"
+											></div>
+										</div>
+										{#if c.detail && isQuery(c)}
+											<mm-disclosure summary={m.asset_page_step_show_query()}>
+												<mm-code-sample
+													language="sql"
+													wrap
+													label={m.asset_page_step_query_label({ n: c.ordinal + 1 })}
+													code={c.detail}
+												></mm-code-sample>
+											</mm-disclosure>
+										{:else if c.detail}
+											<mm-text variant="mono-dense" tone="secondary" block class="wrap"
+												>{c.detail}</mm-text
+											>
+										{/if}
+									</div>
+									{#if refused(c)}
+										<mm-status-pill state="denied"></mm-status-pill>
+									{:else if bad}
+										<mm-status-pill state="failed"></mm-status-pill>
+									{:else}
+										<mm-text variant="caption" tone="secondary" numeric
+											>{formatMs(c.duration_ms)}</mm-text
+										>
+									{/if}
+								</li>
+							{/each}
+						</ol>
+					{:else}
+						<mm-text variant="dense" tone="secondary" block>{m.asset_page_run_no_steps()}</mm-text>
+					{/if}
+					<mm-blade-section heading={m.asset_page_more_details()} collapsible style="padding: 0">
+						<mm-description-list>
+							<mm-description term={m.asset_page_tokens_in()}
+								>{selected.tokens_in.toLocaleString(getLocale())}</mm-description
+							>
+							<mm-description term={m.asset_page_tokens_out()}
+								>{selected.tokens_out.toLocaleString(getLocale())}</mm-description
+							>
+							{#if selected.model}
+								<mm-description term={m.asset_agent_spec_model()} mono
+									>{selected.model}</mm-description
 								>
-									{run.error}
-								</div>
 							{/if}
-						</li>
-					{/each}
-				</ul>
+							<mm-description term={m.asset_page_run_id()} mono>{selected.run_id}</mm-description>
+						</mm-description-list>
+					</mm-blade-section>
+				</section>
 			{/if}
 		</div>
-	{/if}
-</div>
+	</div>
+{/if}
+
+<style>
+	.split {
+		display: grid;
+		grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+		gap: var(--space-6);
+		align-items: start;
+	}
+	@media (max-width: 900px) {
+		.split {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	.runs {
+		--mm-list-inset: var(--space-2);
+		border-block: 1px solid var(--mm-rule);
+	}
+	.steps {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-block: 1px solid var(--mm-rule);
+	}
+	.steps > li {
+		display: grid;
+		grid-template-columns: 24px minmax(0, 1fr) auto;
+		gap: var(--space-1) var(--space-3);
+		padding: var(--space-3) var(--space-2);
+	}
+	.steps > li + li {
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	.bar {
+		position: relative;
+		height: 4px;
+		background: var(--mm-sunken);
+		border-radius: 2px;
+	}
+	.bar > div {
+		position: absolute;
+		inset-block: 0;
+		min-width: 2px;
+		border-radius: 2px;
+	}
+	.wrap {
+		overflow-wrap: anywhere;
+	}
+</style>

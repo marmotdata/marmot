@@ -5,16 +5,24 @@
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
 
+	// The "What it means" blade section: glossary terms linked to the asset, grouped by how they got there so only manual links can be removed here.
 	let { asset, editable = true }: { asset: Asset; editable?: boolean } = $props();
 
 	let canManageAssets = $derived(editable && auth.hasPermission('assets', 'manage'));
 
 	let terms: AssetTerm[] = $state([]);
-	let showTermPicker = $state(false);
+	let pickerOpen = $state(false);
 	let availableTerms: GlossaryTerm[] = $state([]);
 	let termSearchQuery = $state('');
 	let loadingTerms = $state(false);
 	let savingTerm = $state(false);
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+	let manualTerms = $derived(terms.filter((t) => t.source === 'user'));
+	let ruleTerms = $derived(terms.filter((t) => t.source.startsWith('rule:')));
+	let pluginTerms = $derived(
+		terms.filter((t) => t.source !== 'user' && !t.source.startsWith('rule:'))
+	);
 
 	$effect(() => {
 		if (asset?.id) {
@@ -34,12 +42,17 @@
 		}
 	}
 
+	function onSearch(value: string) {
+		termSearchQuery = value;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(fetchAvailableTerms, 200);
+	}
+
 	async function fetchAvailableTerms() {
 		if (!termSearchQuery.trim()) {
 			availableTerms = [];
 			return;
 		}
-
 		loadingTerms = true;
 		try {
 			const response = await fetchApi(`/glossary/search?q=${encodeURIComponent(termSearchQuery)}`);
@@ -56,25 +69,16 @@
 
 	async function addTerm(termId: string) {
 		if (!asset?.id) return;
-
 		savingTerm = true;
 		try {
 			const response = await fetchApi(`/assets/terms/${asset.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					term_ids: [termId]
-				})
+				body: JSON.stringify({ term_ids: [termId] })
 			});
-
 			if (response.ok) {
 				const data = await response.json();
 				terms = Array.isArray(data) ? data : [];
-				showTermPicker = false;
-				termSearchQuery = '';
-				availableTerms = [];
-			} else {
-				console.error('Failed to add term');
 			}
 		} catch (error) {
 			console.error('Error adding term:', error);
@@ -85,224 +89,117 @@
 
 	async function removeTerm(termId: string) {
 		if (!asset?.id) return;
-
 		try {
 			const response = await fetchApi(`/assets/terms/${asset.id}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					term_id: termId
-				})
+				body: JSON.stringify({ term_id: termId })
 			});
-
 			if (response.ok) {
 				const data = await response.json();
 				terms = Array.isArray(data) ? data : [];
-			} else {
-				console.error('Failed to remove term');
 			}
 		} catch (error) {
 			console.error('Error removing term:', error);
 		}
 	}
 
-	function getSourceTooltip(source: string): string {
-		if (source === 'user') return m.asset_user_notes_manual_title();
-		if (source.startsWith('rule:')) return m.asset_term_source_rule_title();
-		return m.asset_term_source_plugin_title({ plugin: source.replace('plugin:', '') });
-	}
-
-	function isRuleManaged(source: string): boolean {
-		return source.startsWith('rule:');
+	function closePicker() {
+		pickerOpen = false;
+		termSearchQuery = '';
+		availableTerms = [];
 	}
 </script>
 
 {#if terms.length > 0 || canManageAssets}
-	<div>
-		<div class="flex items-center justify-between mb-2">
-			<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-				{m.asset_glossary_terms_heading()}
-			</h3>
-			{#if canManageAssets && !showTermPicker}
-				<button
-					onclick={() => (showTermPicker = true)}
-					class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
-				>
-					{m.asset_add_button()}
-				</button>
+	<mm-blade-section heading={m.asset_page_terms_heading()}>
+		{#if canManageAssets}
+			<mm-button
+				slot="actions"
+				variant="ghost"
+				size="sm"
+				icon="add"
+				label={m.asset_page_link_term()}
+				pressed={pickerOpen}
+				onclick={() => (pickerOpen ? closePicker() : (pickerOpen = true))}
+			></mm-button>
+		{/if}
+		<div class="mm-stack" style="--mm-gap: var(--space-3)">
+			{#if pickerOpen}
+				<div class="mm-stack" style="--mm-gap: var(--space-2)">
+					<mm-search-field
+						label={m.asset_page_find_term()}
+						hide-label
+						placeholder={m.asset_page_find_term()}
+						value={termSearchQuery}
+						autofocus
+						onmm-input={(e: CustomEvent<{ value: string }>) => onSearch(e.detail.value)}
+						onkeydown={(e: KeyboardEvent) => e.key === 'Escape' && closePicker()}
+					></mm-search-field>
+					{#if loadingTerms}
+						<mm-skeleton count={2}></mm-skeleton>
+					{:else if availableTerms.length > 0}
+						<mm-list dense aria-label={m.asset_page_term_results()}>
+							{#each availableTerms as t (t.id)}
+								{@const added = terms.some((x) => x.term_id === t.id)}
+								<mm-list-item secondary={t.definition}>
+									{t.name}
+									{#if added}
+										<mm-text slot="end" variant="caption" tone="secondary"
+											>{m.asset_page_term_linked()}</mm-text
+										>
+									{:else}
+										<mm-button
+											slot="end"
+											size="sm"
+											disabled={savingTerm}
+											onclick={() => addTerm(t.id)}>{m.asset_page_link_button()}</mm-button
+										>
+									{/if}
+								</mm-list-item>
+							{/each}
+						</mm-list>
+					{:else if termSearchQuery.trim()}
+						<mm-text variant="dense" tone="secondary" block>{m.asset_no_matching_terms()}</mm-text>
+					{/if}
+				</div>
+			{/if}
+
+			{#if terms.length === 0 && !pickerOpen}
+				<mm-text variant="dense" tone="secondary" block>{m.asset_page_no_terms()}</mm-text>
+			{/if}
+
+			{#if manualTerms.length > 0}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+					{#each manualTerms as t (t.term_id)}
+						<mm-tag
+							href={resolve(`/glossary/${t.term_id}`)}
+							removable={canManageAssets}
+							onmm-remove={() => removeTerm(t.term_id)}>{t.term_name}</mm-tag
+						>
+					{/each}
+				</div>
+			{/if}
+			{#if ruleTerms.length > 0}
+				<div class="mm-stack" style="--mm-gap: var(--space-1)">
+					<mm-text variant="caption" tone="secondary">{m.asset_page_from_rules()}</mm-text>
+					<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+						{#each ruleTerms as t (t.term_id)}
+							<mm-tag href={resolve(`/glossary/${t.term_id}`)}>{t.term_name}</mm-tag>
+						{/each}
+					</div>
+				</div>
+			{/if}
+			{#if pluginTerms.length > 0}
+				<div class="mm-stack" style="--mm-gap: var(--space-1)">
+					<mm-text variant="caption" tone="secondary">{m.asset_page_from_plugins()}</mm-text>
+					<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+						{#each pluginTerms as t (t.term_id)}
+							<mm-tag href={resolve(`/glossary/${t.term_id}`)}>{t.term_name}</mm-tag>
+						{/each}
+					</div>
+				</div>
 			{/if}
 		</div>
-
-		{#if terms.length > 0 || showTermPicker}
-			<div class="space-y-2.5">
-				{#each terms as term (term.term_id)}
-					<div class="rounded border border-gray-200 dark:border-gray-700">
-						<a
-							href={resolve(`/glossary/${term.term_id}`)}
-							class="flex items-start gap-2 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
-						>
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 mb-1">
-									<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-										{term.term_name}
-									</h4>
-									<div
-										class="flex items-center justify-center w-5 h-5 rounded-full {term.source ===
-										'user'
-											? 'bg-blue-100 dark:bg-blue-900/30'
-											: isRuleManaged(term.source)
-												? 'bg-teal-100 dark:bg-teal-900/30'
-												: 'bg-purple-100 dark:bg-purple-900/30'}"
-										title={getSourceTooltip(term.source)}
-									>
-										{#if term.source === 'user'}
-											<svg
-												class="w-3 h-3 text-blue-700 dark:text-blue-300"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fill-rule="evenodd"
-													d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else if isRuleManaged(term.source)}
-											<svg
-												class="w-3 h-3 text-teal-700 dark:text-teal-300"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fill-rule="evenodd"
-													d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{:else}
-											<svg
-												class="w-3 h-3 text-purple-700 dark:text-purple-300"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fill-rule="evenodd"
-													d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{/if}
-									</div>
-								</div>
-								<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-									{term.definition}
-								</p>
-							</div>
-							<div class="flex items-center gap-1.5 flex-shrink-0">
-								<svg
-									class="w-3.5 h-3.5 text-gray-400 group-hover:text-earthy-terracotta-700"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-									/>
-								</svg>
-								{#if canManageAssets && term.source === 'user'}
-									<button
-										onclick={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											removeTerm(term.term_id);
-										}}
-										class="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-										aria-label={m.asset_remove_term_aria()}
-									>
-										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-											<path
-												fill-rule="evenodd"
-												d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-												clip-rule="evenodd"
-											/>
-										</svg>
-									</button>
-								{/if}
-							</div>
-						</a>
-					</div>
-				{/each}
-
-				{#if showTermPicker}
-					<div
-						class="p-3 rounded bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600"
-					>
-						<input
-							type="text"
-							bind:value={termSearchQuery}
-							oninput={fetchAvailableTerms}
-							placeholder={m.asset_term_search_placeholder()}
-							class="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-transparent mb-2"
-							autofocus
-						/>
-
-						{#if loadingTerms}
-							<div class="flex items-center justify-center py-4">
-								<div
-									class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
-								></div>
-							</div>
-						{:else if availableTerms.length > 0}
-							<div class="space-y-1.5 max-h-48 overflow-y-auto">
-								{#each availableTerms as availableTerm (availableTerm.id)}
-									{@const alreadyAdded = terms.some((t) => t.term_id === availableTerm.id)}
-									<button
-										onclick={() => !alreadyAdded && addTerm(availableTerm.id)}
-										disabled={alreadyAdded || savingTerm}
-										class="w-full text-left p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-									>
-										<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-											{availableTerm.name}
-											{#if alreadyAdded}
-												<span class="text-xs text-gray-500 ml-1.5"
-													>{m.asset_term_already_added()}</span
-												>
-											{/if}
-										</div>
-										<div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
-											{availableTerm.definition}
-										</div>
-									</button>
-								{/each}
-							</div>
-						{:else if termSearchQuery.trim()}
-							<p class="text-xs text-gray-500 dark:text-gray-400 text-center py-3">
-								{m.asset_no_matching_terms()}
-							</p>
-						{/if}
-
-						<div class="flex justify-end gap-1.5 mt-2">
-							<button
-								onclick={() => {
-									showTermPicker = false;
-									termSearchQuery = '';
-									availableTerms = [];
-								}}
-								class="px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-							>
-								{m.common_cancel()}
-							</button>
-						</div>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<p class="text-sm text-gray-500 dark:text-gray-400 italic">
-				{m.asset_no_glossary_terms_yet()}
-			</p>
-		{/if}
-	</div>
+	</mm-blade-section>
 {/if}

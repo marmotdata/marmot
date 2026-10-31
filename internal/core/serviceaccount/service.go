@@ -26,6 +26,7 @@ type Service interface {
 	CreateAPIKey(ctx context.Context, saID string, name string, expiresIn *time.Duration) (*APIKey, error)
 	ListAPIKeys(ctx context.Context, saID string) ([]*APIKey, error)
 	DeleteAPIKey(ctx context.Context, saID string, keyID string) error
+	RotateAPIKey(ctx context.Context, saID string, keyID string) (*APIKey, error)
 
 	ValidateAPIKey(ctx context.Context, apiKey string) (*ServiceAccount, error)
 }
@@ -99,6 +100,32 @@ func (s *service) Delete(ctx context.Context, id string) error {
 
 const APIKeyPrefix = "mrmt_s_"
 
+// visibleKeyChars is how many random characters after the scheme prefix stay readable: enough to tell keys apart, a negligible part of the 256 random bits.
+const visibleKeyChars = 4
+
+func displayPrefix(key string) string {
+	n := len(APIKeyPrefix) + visibleKeyChars
+	if len(key) < n {
+		return ""
+	}
+	return key[:n]
+}
+
+// newAPIKeySecret mints a key and its bcrypt hash, shared by create and rotate so both issue keys the same way.
+func newAPIKeySecret() (string, string, error) {
+	keyBytes := make([]byte, 32)
+	if _, err := rand.Read(keyBytes); err != nil {
+		return "", "", fmt.Errorf("generating api key: %w", err)
+	}
+
+	key := APIKeyPrefix + base64.URLEncoding.EncodeToString(keyBytes)
+	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
+	if err != nil {
+		return "", "", fmt.Errorf("hashing api key: %w", err)
+	}
+	return key, string(keyHash), nil
+}
+
 func (s *service) CreateAPIKey(ctx context.Context, saID string, name string, expiresIn *time.Duration) (*APIKey, error) {
 	count, err := s.repo.CountAPIKeys(ctx, saID)
 	if err != nil {
@@ -108,15 +135,9 @@ func (s *service) CreateAPIKey(ctx context.Context, saID string, name string, ex
 		return nil, fmt.Errorf("%w: limit is %d", ErrAPIKeyLimitReached, s.maxAPIKeys)
 	}
 
-	keyBytes := make([]byte, 32)
-	if _, err := rand.Read(keyBytes); err != nil {
-		return nil, fmt.Errorf("generating api key: %w", err)
-	}
-
-	key := APIKeyPrefix + base64.URLEncoding.EncodeToString(keyBytes)
-	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
+	key, keyHash, err := newAPIKeySecret()
 	if err != nil {
-		return nil, fmt.Errorf("hashing api key: %w", err)
+		return nil, err
 	}
 
 	var expiresAt *time.Time
@@ -129,11 +150,12 @@ func (s *service) CreateAPIKey(ctx context.Context, saID string, name string, ex
 		ServiceAccountID: saID,
 		Name:             name,
 		Key:              key,
+		Prefix:           displayPrefix(key),
 		ExpiresAt:        expiresAt,
 		CreatedAt:        time.Now(),
 	}
 
-	if err := s.repo.CreateAPIKey(ctx, saID, apiKey, string(keyHash)); err != nil {
+	if err := s.repo.CreateAPIKey(ctx, saID, apiKey, keyHash); err != nil {
 		return nil, err
 	}
 
@@ -158,6 +180,31 @@ func (s *service) DeleteAPIKey(ctx context.Context, saID string, keyID string) e
 	}
 
 	return s.repo.DeleteAPIKey(ctx, keyID)
+}
+
+// RotateAPIKey replaces a key's secret in place, keeping its name and expiry, so the old secret stops at once and the key count limit is not consumed by a replacement.
+func (s *service) RotateAPIKey(ctx context.Context, saID string, keyID string) (*APIKey, error) {
+	existing, err := s.repo.GetAPIKey(ctx, keyID)
+	if err != nil {
+		return nil, err
+	}
+	if existing.ServiceAccountID != saID {
+		return nil, ErrKeyNotFound
+	}
+
+	key, keyHash, err := newAPIKeySecret()
+	if err != nil {
+		return nil, err
+	}
+	prefix := displayPrefix(key)
+	if err := s.repo.RotateAPIKey(ctx, keyID, keyHash, APIKeyLookup(key), prefix); err != nil {
+		return nil, err
+	}
+
+	existing.Key = key
+	existing.Prefix = prefix
+	existing.LastUsedAt = nil
+	return existing, nil
 }
 
 func (s *service) ValidateAPIKey(ctx context.Context, apiKey string) (*ServiceAccount, error) {

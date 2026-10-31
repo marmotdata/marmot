@@ -13,6 +13,13 @@ import (
 type Decision struct {
 	Allowed bool   `json:"allowed"`
 	Reason  string `json:"reason,omitempty"`
+	// Rule is the outcome reason recorded with the query (see ReasonRole); it defaults to role when allowed and permission when denied.
+	Rule string `json:"rule,omitempty"`
+	// Permission and Policy name what refused the query, Needed what would allow it, and Resources the MRNs that were refused, so a caller can ask for exactly that.
+	Permission string   `json:"permission,omitempty"`
+	Policy     string   `json:"policy,omitempty"`
+	Needed     string   `json:"needed,omitempty"`
+	Resources  []string `json:"resources,omitempty"`
 } // @name QueryDecision
 
 // Authorizer decides who may query and what. OSS Marmot admits anyone holding assets:query to every queryable source; the cloud distribution supplies one backed by its IAM, which decides table by table.
@@ -47,11 +54,29 @@ func (permissionAuthorizer) Admits(_ context.Context, principal auth.Principal) 
 	return principal != nil && (principal.IsAdmin() || principal.HasPermission("assets", "query"))
 }
 
-func (a permissionAuthorizer) Authorize(ctx context.Context, principal auth.Principal, _ *Source, _ []string) (Decision, error) {
+// queryPermission is the permission OSS checks, as it is spelled in a role.
+const queryPermission = "assets:query"
+
+func (a permissionAuthorizer) Authorize(ctx context.Context, principal auth.Principal, source *Source, _ []string) (Decision, error) {
 	if a.Admits(ctx, principal) {
-		return Decision{Allowed: true}, nil
+		return Decision{Allowed: true, Rule: ReasonRole}, nil
 	}
-	return Decision{Allowed: false, Reason: "querying data needs the assets:query permission"}, nil
+	return permissionRefusal(source), nil
+}
+
+// permissionRefusal is the decision for a caller without assets:query, which covers every queryable source.
+func permissionRefusal(source *Source) Decision {
+	needed := queryPermission
+	if source != nil && source.Name != "" {
+		needed += " on " + source.Name
+	}
+	return Decision{
+		Allowed:    false,
+		Reason:     "querying data needs the assets:query permission",
+		Rule:       ReasonPermission,
+		Permission: queryPermission,
+		Needed:     needed,
+	}
 }
 
 func (a permissionAuthorizer) Visible(ctx context.Context, principal auth.Principal) (Visibility, error) {

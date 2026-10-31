@@ -43,6 +43,8 @@ type UpdateInput struct {
 	PatternValue    *string              `json:"pattern_value,omitempty"`
 	Priority        *int                 `json:"priority,omitempty"`
 	IsEnabled       *bool                `json:"is_enabled,omitempty"`
+	// UpdatedBy is the user making the change, left empty for machine identities since the column refers to users.
+	UpdatedBy *string `json:"-"`
 }
 
 // RulePreviewInput is the input for previewing a rule.
@@ -73,6 +75,8 @@ type Service interface {
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	PreviewRule(ctx context.Context, input RulePreviewInput, limit int) (*RulePreview, error)
 	GetRuleAssets(ctx context.Context, ruleID string, limit, offset int) ([]string, int, error)
+	// SearchRuleAssets pages through a rule's matched assets with their names, optionally only those whose name or MRN contains query.
+	SearchRuleAssets(ctx context.Context, ruleID, query string, limit, offset int) ([]RuleAsset, int, error)
 	GetEnrichedLinks(ctx context.Context, assetID string) ([]EnrichedExternalLink, error)
 }
 
@@ -213,6 +217,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 	}
 
 	existing.UpdatedAt = time.Now().UTC()
+	existing.UpdatedBy = input.UpdatedBy
 
 	if err := s.repo.Update(ctx, existing); err != nil {
 		return nil, err
@@ -312,6 +317,23 @@ func (s *service) GetRuleAssets(ctx context.Context, ruleID string, limit, offse
 	}
 
 	return s.memberRepo.GetMembershipAssetIDs(ctx, ruleID, limit, offset)
+}
+
+func (s *service) SearchRuleAssets(ctx context.Context, ruleID, query string, limit, offset int) ([]RuleAsset, int, error) {
+	if _, err := s.repo.Get(ctx, ruleID); err != nil {
+		return nil, 0, err
+	}
+
+	if limit <= 0 {
+		limit = DefaultLimit
+	} else if limit > MaxLimit {
+		limit = MaxLimit
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	return s.memberRepo.SearchMembershipAssets(ctx, ruleID, query, limit, offset)
 }
 
 func (s *service) GetEnrichedLinks(ctx context.Context, assetID string) ([]EnrichedExternalLink, error) {

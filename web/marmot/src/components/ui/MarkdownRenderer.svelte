@@ -42,67 +42,69 @@
 	});
 </script>
 
-<div bind:this={containerElement} class="prose prose-sm dark:prose-invert max-w-none {className}">
+<div bind:this={containerElement} class="prose max-w-none {className}">
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in the reactive block above -->
 	{@html renderedHtml}
 </div>
 
 <style>
+	/* Prose follows the tokens so it switches with the theme on its own; links in running text are the one place burnt sienna is underlined. */
 	:global(.prose) {
-		color: #4d4d4d;
+		--tw-prose-body: var(--mm-text);
+		--tw-prose-headings: var(--mm-text);
+		--tw-prose-bold: var(--mm-text);
+		--tw-prose-links: var(--mm-primary);
+		--tw-prose-bullets: var(--mm-text-3);
+		--tw-prose-counters: var(--mm-text-2);
+		--tw-prose-quotes: var(--mm-text-2);
+		--tw-prose-quote-borders: var(--mm-rule);
+		--tw-prose-hr: var(--mm-rule);
+		--tw-prose-th-borders: var(--mm-rule);
+		--tw-prose-td-borders: var(--mm-rule);
+		--tw-prose-code: var(--mm-text);
+		--tw-prose-captions: var(--mm-text-2);
+		color: var(--mm-text);
+		font: var(--text-body);
 	}
-	:global(.dark .prose),
-	:global(.dark .prose p),
-	:global(.dark .prose li),
-	:global(.dark .prose span) {
-		color: #dfdfdf !important;
-	}
-	:global(.prose h1),
-	:global(.prose h2),
-	:global(.prose h3) {
-		@apply text-gray-900;
-	}
-	:global(.dark .prose h1),
-	:global(.dark .prose h2),
-	:global(.dark .prose h3) {
-		color: #f9f9f9 !important;
-	}
-	:global(.prose strong) {
-		@apply text-gray-900 font-semibold;
-	}
-	:global(.dark .prose strong) {
-		color: #f9f9f9 !important;
+	:global(.prose :where(h1, h2, h3, h4)) {
+		color: var(--mm-text);
+		letter-spacing: 0;
 	}
 	:global(.prose code) {
-		@apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-900;
+		background: var(--mm-sunken);
+		color: var(--mm-text);
+		padding: 0.1em 0.3em;
+		border-radius: var(--radius-sm);
+		font: var(--text-mono-dense);
 	}
-	:global(.dark .prose code) {
-		@apply bg-gray-800;
-		color: #f9f9f9 !important;
+	:global(.prose code::before),
+	:global(.prose code::after) {
+		content: none;
 	}
 	:global(.prose pre) {
-		@apply bg-gray-50 p-6 rounded-lg overflow-x-auto;
+		background: var(--mm-code-bg);
+		color: var(--mm-code-text);
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		overflow-x: auto;
 		margin: 1rem 0 !important;
 	}
-	:global(.dark .prose pre) {
-		@apply bg-gray-800;
-	}
 	:global(.prose pre code) {
-		@apply bg-transparent px-0 py-0;
-		font-family:
-			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-			monospace;
-		font-size: 0.875rem;
 		background: transparent !important;
+		color: inherit;
+		padding: 0;
+		font: var(--text-mono-dense);
 		display: block;
 		white-space: pre;
 		width: max-content;
 		min-width: 100%;
 	}
 	:global(.prose a) {
-		@apply text-earthy-terracotta-700 no-underline hover:underline;
+		color: var(--mm-primary);
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
-	:global(.dark .prose a) {
-		@apply text-earthy-terracotta-400;
+	:global(.prose a:hover) {
+		color: var(--mm-primary-hover);
 	}
 </style>

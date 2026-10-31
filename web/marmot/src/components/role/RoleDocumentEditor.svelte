@@ -3,7 +3,6 @@
 	import { m } from '$lib/paraglide/messages';
 	import DocumentEditor from '$components/ui/DocumentEditor.svelte';
 	import DocumentProblems from '$components/ui/DocumentProblems.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
 	import { parseDocument, stringifyDocument, type DocumentMode } from '$lib/document/format';
 	import { checkDocument, omitProperties } from '$lib/document/check';
 	import { pathMatches } from '$lib/document/paths';
@@ -115,9 +114,9 @@
 </script>
 
 {#if !ready}
-	<Skeleton class="h-64" />
+	<mm-skeleton loading shape="rect" style="--mm-skeleton-height: 16rem"></mm-skeleton>
 {:else}
-	<div class="space-y-3">
+	<div class="mm-stack" style="--mm-gap: var(--space-3)">
 		<DocumentEditor
 			bind:this={editor}
 			bind:value={text}

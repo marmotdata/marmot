@@ -1,1436 +1,500 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
-	import { SvelteMap, SvelteURLSearchParams } from 'svelte/reactivity';
+	import { page } from '$app/state';
+	import '@marmotdata/elements/popularity.js';
+	import '@marmotdata/elements/proportion-bar.js';
+	import { toast } from '@marmotdata/elements/toast.js';
 	import { fetchApi } from '$lib/api';
-	import type {
-		DataProduct,
-		ResolvedAssetsResponse,
-		Owner,
-		Rule,
-		RuleInput
-	} from '$lib/dataproducts/types';
-	import type { Asset } from '$lib/assets/types';
-	import ProductBlade from '$components/product/ProductBlade.svelte';
-	import Button from '$components/ui/Button.svelte';
-	import IconifyIcon from '@iconify/svelte';
-	import MetadataView from '$components/shared/MetadataView.svelte';
-	import AssetIcon from '$components/ui/Icon.svelte';
-	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
-	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
-	import QueryBuilder from '$components/query/QueryBuilder.svelte';
-	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
-	import IconUploader from '$components/product/IconUploader.svelte';
+	import { setCrumbs } from '$lib/mm';
 	import { auth } from '$lib/stores/auth';
-	import { createKeyboardNavigationState } from '$lib/keyboard';
-	import Tags from '$components/shared/Tags.svelte';
-	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import { formatList } from '$lib/utils';
+	import type { DataProduct, Member, Owner, Rule } from '$lib/dataproducts/types';
+	import { getProductMembers } from '$lib/dataproducts/api';
+	import { assetRouteParams, normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
+	import { plainQuery } from '$lib/dataproducts/plain';
+	import MetadataView from '$components/shared/MetadataView.svelte';
+	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
+	import IconUploader from '$components/product/IconUploader.svelte';
+	import OwnerField from '$components/product/OwnerField.svelte';
+	import TagField from '$components/product/TagField.svelte';
+	import ProductAssets from '$components/product/ProductAssets.svelte';
+	import ProductRules from '$components/product/ProductRules.svelte';
 
-	let productId = $derived($page.params.id);
-	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
+	type Tab = 'overview' | 'assets' | 'rules' | 'documentation' | 'metadata';
+	const TABS: Tab[] = ['overview', 'assets', 'rules', 'documentation', 'metadata'];
+	const MOST_USED = 5;
+
+	let productId = $derived(page.params.id ?? '');
+	let tab = $state<Tab>(readTab());
 
 	let product = $state<DataProduct | null>(null);
-	let resolvedAssets = $state<ResolvedAssetsResponse | null>(null);
-	let assetDetails: SvelteMap<string, Asset> = new SvelteMap();
-
-	let isLoading = $state(true);
+	let loading = $state(true);
 	let loadError = $state<string | null>(null);
-	let isLoadingAssets = $state(false);
+	let editingRule = $state<string | null>(null);
 
-	let bladeCollapsed = $state(false);
+	let editing = $state(false);
+	let draft = $state({ name: '', description: '', owners: [] as Owner[], tags: [] as string[] });
+	let nameError = $state('');
+	let saving = $state(false);
+	let saveError = $state('');
 
-	let showRuleForm = $state(false);
-	let editingRule = $state<Rule | null>(null);
-	let ruleForm = $state<RuleInput>({
-		name: '',
-		rule_type: 'query',
-		query_expression: '',
-		is_enabled: true
+	let confirmDelete = $state(false);
+	let deleting = $state(false);
+
+	let mostUsed = $state<Member[]>([]);
+
+	const canManage = auth.hasPermission('assets', 'manage');
+
+	$effect(() => {
+		setCrumbs([
+			{ label: m.products_heading(), href: resolve('/products') },
+			{ label: product?.name ?? '' }
+		]);
 	});
-	let savingRule = $state(false);
-	let ruleError = $state<string | null>(null);
-	let deletingRuleId = $state<string | null>(null);
-	let isPreviewLoading = $state(false);
 
-	interface PreviewResultMetadata {
-		mrn?: string;
-		type?: string;
-		providers?: string[];
-		[key: string]: unknown;
-	}
-
-	interface PreviewResult {
-		id: string;
-		type: string;
-		name: string;
-		description?: string;
-		url?: string;
-		metadata?: PreviewResultMetadata;
-	}
-
-	let rulePreviewResults = $state<PreviewResult[]>([]);
-	let rulePreviewTotal = $state(0);
-
-	let showDeleteRuleModal = $state(false);
-	let ruleToDelete = $state<Rule | null>(null);
-
-	let assetSearchQuery = $state('');
-	let assetSearchResults = $state<Asset[]>([]);
-	let isSearchingAssets = $state(false);
-	let isAddingAsset = $state(false);
-	let removingAssetId = $state<string | null>(null);
-	let selectedAssetIndex = $state(-1);
-
-	// Assets pagination
-	const ASSETS_PER_PAGE = 12;
-	let currentAssetPage = $state(1);
-
-	let canManage = $derived(auth.hasPermission('assets', 'manage'));
-
-	// Description editing state
-	let editedDescription = $state('');
-	let isEditingDescription = $state(false);
-	let savingDescription = $state(false);
-
-	// Derived pagination state
-	let paginatedAssetIds = $derived.by(() => {
-		if (!resolvedAssets) return [];
-		const start = (currentAssetPage - 1) * ASSETS_PER_PAGE;
-		return resolvedAssets.all_assets.slice(start, start + ASSETS_PER_PAGE);
+	$effect(() => {
+		if (productId) load(productId);
 	});
-	let totalAssetPages = $derived(
-		resolvedAssets ? Math.ceil(resolvedAssets.all_assets.length / ASSETS_PER_PAGE) : 0
-	);
 
-	const tabs: Tab[] = [
-		{ id: 'documentation', label: m.common_documentation(), icon: 'material-symbols:description' },
-		{ id: 'assets', label: m.products_assets(), icon: 'material-symbols:database' },
-		{ id: 'metadata', label: m.products_tab_metadata(), icon: 'material-symbols:data-object' },
-		{ id: 'rules', label: m.products_tab_rules(), icon: 'material-symbols:filter-list' }
-	];
-
-	// All tabs are always visible
-	let visibleTabs = $derived(tabs);
-
-	function setActiveTab(tab: string) {
-		const url = new URL(window.location.href);
-		url.searchParams.set('tab', tab);
-		goto(resolve((url.pathname + url.search) as `/${string}`), { replaceState: true });
+	function readTab(): Tab {
+		const value = page.url.searchParams.get('tab') as Tab | null;
+		return value && TABS.includes(value) ? value : 'overview';
 	}
 
-	function handleBack() {
-		window.history.back();
+	function selectTab(value: string) {
+		if (!TABS.includes(value as Tab)) return;
+		tab = value as Tab;
+		// The tab lives in the URL so it survives a reload and can be shared; the path is resolved and only the query string is added.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/products/[id]', { id: productId })}?tab=${tab}`, {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
 	}
 
-	async function loadDataProduct(showLoading = true) {
-		if (showLoading) {
-			isLoading = true;
-		}
+	async function load(id: string, quiet = false) {
+		if (!quiet) loading = true;
 		loadError = null;
-
 		try {
-			const response = await fetchApi(`/products/${productId}`);
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || m.products_error_load());
+			const res = await fetchApi(`/products/${id}`);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || m.products_error_load());
 			}
-
-			const data = await response.json();
-			// Ensure fields have default values for binding
-			data.tags = data.tags || [];
-			data.owners = data.owners || [];
-			data.rules = data.rules || [];
-			product = data;
-
-			// Load resolved assets
-			await loadResolvedAssets();
-		} catch (err) {
-			loadError = err instanceof Error ? err.message : m.products_error_load();
+			product = normaliseProduct(await res.json());
+			loadMostUsed(id);
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : m.products_error_load();
 		} finally {
-			if (showLoading) {
-				isLoading = false;
-			}
+			loading = false;
 		}
 	}
 
-	async function loadResolvedAssets() {
-		isLoadingAssets = true;
-		currentAssetPage = 1;
+	async function loadMostUsed(id: string) {
 		try {
-			const response = await fetchApi(`/products/resolved-assets/${productId}?limit=1000`);
-			if (response.ok) {
-				resolvedAssets = await response.json();
-
-				// Load asset details for first page only
-				if (resolvedAssets && resolvedAssets.all_assets.length > 0) {
-					await loadAssetDetails(resolvedAssets.all_assets.slice(0, ASSETS_PER_PAGE));
-				}
-			}
-		} catch (err) {
-			console.error('Failed to load resolved assets:', err);
-		} finally {
-			isLoadingAssets = false;
+			const res = await getProductMembers(id, { sort: 'popular', limit: MOST_USED });
+			mostUsed = res.members;
+		} catch {
+			mostUsed = [];
 		}
 	}
 
-	async function loadAssetDetails(assetIds: string[]) {
-		for (const assetId of assetIds) {
-			if (assetDetails.has(assetId)) continue; // Skip already loaded
-			try {
-				const response = await fetchApi(`/assets/${assetId}`);
-				if (response.ok) {
-					const asset = await response.json();
-					assetDetails.set(assetId, asset);
-				}
-			} catch (err) {
-				console.error(`Failed to load asset ${assetId}:`, err);
-			}
-		}
+	function memberCaption(member: Member): string {
+		const type = member.type.replace(/_/g, ' ');
+		const kind = type.charAt(0).toUpperCase() + type.slice(1);
+		return [kind, member.rule_name ?? m.products_member_manual()].join(' · ');
 	}
 
-	async function handleAssetPageChange(page: number) {
-		currentAssetPage = page;
-		// Load details for new page's assets if not already cached
-		if (resolvedAssets) {
-			const start = (page - 1) * ASSETS_PER_PAGE;
-			const pageAssets = resolvedAssets.all_assets.slice(start, start + ASSETS_PER_PAGE);
-			const missingAssets = pageAssets.filter((id) => !assetDetails.has(id));
-			if (missingAssets.length > 0) {
-				isLoadingAssets = true;
-				await loadAssetDetails(missingAssets);
-				isLoadingAssets = false;
-			}
-		}
-	}
+	const reload = () => load(productId, true);
 
-	function getAssetUrl(asset: Asset): `/${string}` {
-		if (!asset.mrn) return '/discover';
-		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '/discover';
-		const type = mrnParts[0];
-		const service = mrnParts[1];
-		const fullName = mrnParts.slice(2).join('/');
-		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
-	}
-
-	function getIconType(asset: Asset): string {
-		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
-			return asset.providers[0];
-		}
-		return asset.type || 'unknown';
-	}
-
-	function openAddRuleForm() {
-		editingRule = null;
-		ruleForm = { name: '', rule_type: 'query', query_expression: '', is_enabled: true };
-		ruleError = null;
-		showRuleForm = true;
-	}
-
-	function openEditRuleForm(rule: Rule) {
-		editingRule = rule;
-		ruleForm = {
-			name: rule.name,
-			description: rule.description,
-			rule_type: rule.rule_type,
-			query_expression: rule.query_expression,
-			is_enabled: rule.is_enabled
+	function startEditing() {
+		if (!product) return;
+		draft = {
+			name: product.name,
+			description: product.description ?? '',
+			owners: [...product.owners],
+			tags: [...product.tags]
 		};
-		ruleError = null;
-		showRuleForm = true;
+		nameError = '';
+		saveError = '';
+		editing = true;
 	}
 
-	function cancelRuleForm() {
-		showRuleForm = false;
-		editingRule = null;
-		ruleError = null;
-		rulePreviewResults = [];
-		rulePreviewTotal = 0;
-	}
-
-	async function previewRule(queryExpression?: string) {
-		isPreviewLoading = true;
-		rulePreviewResults = [];
-		rulePreviewTotal = 0;
-
-		const query = queryExpression || ruleForm.query_expression || '';
-		if (!query.trim()) {
-			isPreviewLoading = false;
+	async function saveEdits(event: Event) {
+		event.preventDefault();
+		if (!product) return;
+		if (!draft.name.trim()) {
+			nameError = m.products_name_required();
 			return;
 		}
-
+		saving = true;
+		saveError = '';
 		try {
-			const params = new SvelteURLSearchParams({
-				q: query,
-				limit: '10'
-			});
-			params.append('types[]', 'asset');
-
-			const response = await fetchApi(`/search?${params}`);
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to preview rule');
-			}
-
-			const data = await response.json();
-			rulePreviewResults = ((data.results as PreviewResult[]) || []).filter(
-				(r) => r.type === 'asset'
-			);
-			rulePreviewTotal = data.total || rulePreviewResults.length;
-		} catch (err) {
-			console.error('Failed to preview rule:', err);
-		} finally {
-			isPreviewLoading = false;
-		}
-	}
-
-	function getPreviewIconType(result: PreviewResult): string {
-		const metadata = result.metadata;
-		if (
-			metadata?.providers &&
-			Array.isArray(metadata.providers) &&
-			metadata.providers.length === 1
-		) {
-			return metadata.providers[0];
-		}
-		return metadata?.type || 'unknown';
-	}
-
-	function getPreviewAssetUrl(result: PreviewResult): `/${string}` {
-		const mrn = result.metadata?.mrn || '';
-		if (!mrn) return '/discover';
-		const mrnParts = mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '/discover';
-		const type = mrnParts[0];
-		const service = mrnParts[1];
-		const fullName = mrnParts.slice(2).join('/');
-		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
-	}
-
-	async function saveRule() {
-		if (!ruleForm.name.trim()) {
-			ruleError = m.products_rule_name_required();
-			return;
-		}
-		if (!ruleForm.query_expression?.trim()) {
-			ruleError = m.products_rule_query_required();
-			return;
-		}
-
-		savingRule = true;
-		ruleError = null;
-
-		try {
-			const payload = {
-				name: ruleForm.name.trim(),
-				description: ruleForm.description?.trim() || undefined,
-				rule_type: ruleForm.rule_type,
-				query_expression: ruleForm.query_expression.trim(),
-				is_enabled: ruleForm.is_enabled
-			};
-
-			let response: Response;
-			if (editingRule) {
-				response = await fetchApi(`/products/rules/${productId}/${editingRule.id}`, {
-					method: 'PUT',
-					body: JSON.stringify(payload)
-				});
-			} else {
-				response = await fetchApi(`/products/rules/${productId}`, {
-					method: 'POST',
-					body: JSON.stringify(payload)
-				});
-			}
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || m.products_error_save_rule());
-			}
-
-			// Reload product to get updated rules and resolved assets (without full page spinner)
-			await loadDataProduct(false);
-			showRuleForm = false;
-			editingRule = null;
-			rulePreviewResults = [];
-			rulePreviewTotal = 0;
-		} catch (err) {
-			ruleError = err instanceof Error ? err.message : m.products_error_save_rule();
-		} finally {
-			savingRule = false;
-		}
-	}
-
-	function confirmDeleteRule(rule: Rule) {
-		ruleToDelete = rule;
-		showDeleteRuleModal = true;
-	}
-
-	async function deleteRule() {
-		if (!ruleToDelete) return;
-
-		const ruleId = ruleToDelete.id;
-		showDeleteRuleModal = false;
-		deletingRuleId = ruleId;
-
-		try {
-			const response = await fetchApi(`/products/rules/${productId}/${ruleId}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to delete rule');
-			}
-
-			// Reload product to get updated rules and resolved assets (without full page spinner)
-			await loadDataProduct(false);
-		} catch (err) {
-			console.error('Failed to delete rule:', err);
-		} finally {
-			deletingRuleId = null;
-			ruleToDelete = null;
-		}
-	}
-
-	async function toggleRuleEnabled(rule: Rule) {
-		try {
-			const response = await fetchApi(`/products/rules/${productId}/${rule.id}`, {
+			const res = await fetchApi(`/products/${product.id}`, {
 				method: 'PUT',
 				body: JSON.stringify({
-					name: rule.name,
-					description: rule.description,
-					rule_type: rule.rule_type,
-					query_expression: rule.query_expression,
-					is_enabled: !rule.is_enabled
+					name: draft.name.trim(),
+					description: draft.description.trim() || null,
+					owners: draft.owners.map((o) => ({ id: o.id, type: o.type })),
+					tags: draft.tags
 				})
 			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to update rule');
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || m.products_error_update());
 			}
-
-			// Reload product to get updated rules and resolved assets (without full page spinner)
-			await loadDataProduct(false);
-		} catch (err) {
-			console.error('Failed to toggle rule:', err);
-		}
-	}
-
-	// Asset management functions
-	let searchTimeout: ReturnType<typeof setTimeout>;
-
-	function handleAssetSearch(query: string) {
-		assetSearchQuery = query;
-		selectedAssetIndex = -1;
-		if (searchTimeout) clearTimeout(searchTimeout);
-
-		if (!query.trim()) {
-			assetSearchResults = [];
-			return;
-		}
-
-		searchTimeout = setTimeout(async () => {
-			isSearchingAssets = true;
-			try {
-				const response = await fetchApi(
-					`/search?q=${encodeURIComponent(query)}&kinds=asset&limit=10`
-				);
-				if (response.ok) {
-					const data = await response.json();
-					// Filter out assets already in the product
-					const existingIds = new Set(resolvedAssets?.all_assets || []);
-					assetSearchResults = ((data.results as PreviewResult[]) || [])
-						.filter((r) => r.type === 'asset' && !existingIds.has(r.id))
-						.map(
-							(r) =>
-								({
-									id: r.id,
-									name: r.name,
-									mrn:
-										r.metadata?.mrn ||
-										r.url?.replace('/discover/', 'mrn://').replace(/\//g, '/') ||
-										'',
-									type: r.metadata?.type || 'unknown',
-									providers: r.metadata?.providers || [],
-									description: r.description
-								}) as Asset
-						);
-				}
-			} catch (err) {
-				console.error('Failed to search assets:', err);
-			} finally {
-				isSearchingAssets = false;
-			}
-		}, 300);
-	}
-
-	const { handleKeydown: handleAssetSearchKeydown } = createKeyboardNavigationState(
-		() => assetSearchResults,
-		() => selectedAssetIndex,
-		(i) => (selectedAssetIndex = i),
-		{
-			onSelect: (asset) => addAssetToProduct(asset.id),
-			onEscape: () => {
-				assetSearchQuery = '';
-				assetSearchResults = [];
-				selectedAssetIndex = -1;
-			}
-		}
-	);
-
-	async function addAssetToProduct(assetId: string) {
-		isAddingAsset = true;
-		try {
-			const response = await fetchApi(`/products/assets/${productId}`, {
-				method: 'POST',
-				body: JSON.stringify({ asset_ids: [assetId] })
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to add asset');
-			}
-
-			// Clear search and reload
-			assetSearchQuery = '';
-			assetSearchResults = [];
-			selectedAssetIndex = -1;
-			await loadDataProduct();
-		} catch (err) {
-			console.error('Failed to add asset:', err);
+			product = normaliseProduct({ ...(await res.json()), icon_url: product.icon_url });
+			editing = false;
+		} catch (e) {
+			saveError = e instanceof Error ? e.message : m.products_error_update();
 		} finally {
-			isAddingAsset = false;
+			saving = false;
 		}
 	}
 
-	async function removeAssetFromProduct(assetId: string) {
-		removingAssetId = assetId;
+	async function copyLink() {
 		try {
-			const response = await fetchApi(`/products/assets/${productId}/${assetId}`, {
-				method: 'DELETE'
-			});
+			await navigator.clipboard.writeText(window.location.href);
+			toast({ tone: 'success', message: m.products_link_copied() });
+		} catch {
+			toast({ tone: 'danger', message: m.products_link_copy_failed() });
+		}
+	}
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to remove asset');
+	function handleMore(event: CustomEvent<{ value: string }>) {
+		if (event.detail.value === 'copy') copyLink();
+		else if (event.detail.value === 'delete') confirmDelete = true;
+	}
+
+	async function deleteProduct(event: Event) {
+		if (!product) return;
+		event.preventDefault();
+		deleting = true;
+		try {
+			const res = await fetchApi(`/products/${product.id}`, { method: 'DELETE' });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || m.products_error_delete());
 			}
-
-			await loadDataProduct();
-		} catch (err) {
-			console.error('Failed to remove asset:', err);
+			toast({ tone: 'success', message: m.products_deleted({ name: product.name }) });
+			confirmDelete = false;
+			goto(resolve('/products'));
+		} catch (e) {
+			toast({
+				tone: 'danger',
+				message: e instanceof Error ? e.message : m.products_error_delete()
+			});
 		} finally {
-			removingAssetId = null;
+			deleting = false;
 		}
 	}
 
-	// Description editing functions
-	function startEditingDescription() {
-		editedDescription = product?.description || '';
-		isEditingDescription = true;
+	function editRule(rule: Rule) {
+		editingRule = rule.id;
+		selectTab('rules');
 	}
-
-	function cancelEditingDescription() {
-		editedDescription = product?.description || '';
-		isEditingDescription = false;
-	}
-
-	async function saveDescription(valueToSave?: string) {
-		if (!product?.id) return;
-
-		const finalValue = valueToSave !== undefined ? valueToSave : editedDescription;
-
-		savingDescription = true;
-		try {
-			const response = await fetchApi(`/products/${product.id}`, {
-				method: 'PUT',
-				body: JSON.stringify({
-					description: finalValue.trim() || null
-				})
-			});
-
-			if (response.ok) {
-				const updated = await response.json();
-				updated.tags = updated.tags || [];
-				updated.owners = updated.owners || [];
-				updated.rules = updated.rules || [];
-				product = updated;
-				editedDescription = updated.description || '';
-				isEditingDescription = false;
-			}
-		} catch (error) {
-			console.error('Error saving description:', error);
-		} finally {
-			savingDescription = false;
-		}
-	}
-
-	async function handleOwnersChange(newOwners: Owner[]) {
-		if (!product || !canManage) return;
-
-		try {
-			const response = await fetchApi(`/products/${product.id}`, {
-				method: 'PUT',
-				body: JSON.stringify({
-					owners: newOwners.map((o) => ({ id: o.id, type: o.type }))
-				})
-			});
-
-			if (response.ok) {
-				const updated = await response.json();
-				updated.tags = updated.tags || [];
-				updated.owners = updated.owners || [];
-				updated.rules = updated.rules || [];
-				product = updated;
-			}
-		} catch (err) {
-			console.error('Failed to update owners:', err);
-		}
-	}
-
-	onMount(() => {
-		loadDataProduct();
-	});
 </script>
 
-<div class="h-full flex">
-	{#if isLoading}
-		<div class="flex items-center justify-center w-full">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
-		</div>
-	{:else if loadError}
-		<div class="flex items-center justify-center w-full">
-			<div
-				class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-6 text-center max-w-md"
-			>
-				<IconifyIcon icon="material-symbols:error" class="h-12 w-12 text-red-400 mx-auto mb-3" />
-				<h3 class="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
-					{m.products_load_failed_title()}
-				</h3>
-				<p class="text-sm text-red-600 dark:text-red-300 mb-4">{loadError}</p>
-				<Button
-					click={() => goto(resolve('/products'))}
-					text={m.products_back_to_products()}
-					variant="clear"
-				/>
-			</div>
-		</div>
-	{:else if product}
-		<div class="flex-1 flex flex-col min-w-0">
-			<div class="flex-none p-8">
-				<div class="mb-6">
-					<button
-						onclick={handleBack}
-						class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-					>
-						<svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 19l-7-7m0 0l7-7m-7 7h18"
-							/>
-						</svg>
-						{m.common_back()}
-					</button>
-				</div>
+<svelte:head>
+	<title>{product ? `${product.name} - Marmot` : m.products_page_title()}</title>
+</svelte:head>
 
-				<div class="mb-4 flex items-start gap-4">
-					<!-- Product Icon -->
+{#if loading}
+	<mm-skeleton loading count={6}></mm-skeleton>
+{:else if loadError || !product}
+	<mm-callout tone="danger" heading={m.products_load_failed_title()}>
+		{loadError}
+		<mm-button slot="actions" size="sm" icon="refresh" onclick={() => load(productId)}
+			>{m.products_try_again()}</mm-button
+		>
+		<mm-button slot="actions" size="sm" variant="ghost" href={resolve('/products')}
+			>{m.products_back_to_products()}</mm-button
+		>
+	</mm-callout>
+{:else}
+	{@const p = product}
+	<div class="mm-stack" style="--mm-gap: var(--space-6)">
+		{#if editing}
+			<form class="mm-stack edit" style="--mm-gap: var(--space-5)" onsubmit={saveEdits} novalidate>
+				<mm-heading level={1} variant="heading">{m.products_edit_product()}</mm-heading>
+				<!-- svelte-ignore a11y_autofocus -->
+				<mm-text-field
+					label={m.common_name()}
+					required
+					value={draft.name}
+					error={nameError}
+					autofocus
+					oninput={(e: Event) => {
+						draft.name = (e.target as HTMLInputElement).value;
+						if (draft.name.trim()) nameError = '';
+					}}
+				></mm-text-field>
+				<OwnerField bind:owners={draft.owners} label={m.common_owners()} />
+				<mm-textarea
+					label={m.common_description()}
+					optional
+					rows={3}
+					value={draft.description}
+					placeholder={m.products_description_placeholder()}
+					oninput={(e: Event) => (draft.description = (e.target as HTMLTextAreaElement).value)}
+				></mm-textarea>
+				<TagField bind:tags={draft.tags} label={m.common_tags()} />
+				{#if saveError}
+					<mm-callout tone="danger" compact heading={saveError}></mm-callout>
+				{/if}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2); justify-content: flex-end">
+					<mm-button onclick={() => (editing = false)} disabled={saving}
+						>{m.common_cancel()}</mm-button
+					>
+					<mm-button variant="primary" type="submit" loading={saving}
+						>{m.products_save_changes()}</mm-button
+					>
+				</div>
+			</form>
+		{:else}
+			<mm-page-header heading={p.name} description={p.description ?? ''}>
+				<span slot="leading">
 					<IconUploader
-						productId={product.id}
-						currentIconUrl={product.icon_url}
+						productId={p.id}
+						currentIconUrl={p.icon_url}
+						disabled={!canManage}
+						size="lg"
 						onIconChange={(url) => {
 							if (product) product.icon_url = url ?? undefined;
 						}}
-						disabled={!canManage}
-						size="lg"
 					/>
-
-					<!-- Title, description, and metadata -->
-					<div class="flex-1 min-w-0 space-y-1">
-						<div class="flex items-center gap-3">
-							<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-								{product.name}
-							</h1>
-							<span class="text-sm text-gray-400 dark:text-gray-500">
-								{product.rules && product.rules.length > 0
-									? formatList([
-											m.products_asset_count({ count: product.asset_count || 0 }),
-											m.products_rule_count({ count: product.rules.length })
-										])
-									: m.products_asset_count({ count: product.asset_count || 0 })}
-							</span>
-						</div>
-
-						<!-- Description -->
-						{#if isEditingDescription}
-							<div class="space-y-2 max-w-2xl">
-								<textarea
-									bind:value={editedDescription}
-									placeholder={m.products_add_description_placeholder()}
-									rows="2"
-									class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
-								></textarea>
-								<div class="flex justify-between gap-2">
-									<div>
-										{#if product.description}
-											<button
-												onclick={() => saveDescription('')}
-												disabled={savingDescription}
-												class="px-2 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-											>
-												{m.common_delete()}
-											</button>
-										{/if}
-									</div>
-									<div class="flex gap-2">
-										<button
-											onclick={cancelEditingDescription}
-											disabled={savingDescription}
-											class="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
-										>
-											{m.common_cancel()}
-										</button>
-										<button
-											onclick={() => saveDescription()}
-											disabled={savingDescription}
-											class="px-2 py-1 text-sm bg-earthy-terracotta-700 text-white rounded hover:bg-earthy-terracotta-800 disabled:opacity-50 flex items-center gap-1"
-										>
-											{#if savingDescription}
-												<div
-													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-												></div>
-											{/if}
-											{m.common_save()}
-										</button>
-									</div>
-								</div>
-							</div>
-						{:else}
-							<div class="flex items-start gap-2 max-w-2xl group">
-								{#if product.description}
-									<p class="text-sm text-gray-500 dark:text-gray-400">{product.description}</p>
-								{:else if canManage}
-									<span class="text-sm text-gray-400 dark:text-gray-500 italic"
-										>{m.products_no_description()}</span
-									>
-								{/if}
-								{#if canManage}
-									<button
-										onclick={startEditingDescription}
-										class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-										title={m.products_edit_description_title()}
-									>
-										<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
-									</button>
-								{/if}
-							</div>
+				</span>
+				{#each p.tags as tag (tag)}
+					<mm-tag slot="tags">{tag}</mm-tag>
+				{/each}
+				{#if p.owners.length > 0}
+					<span slot="owners" class="mm-cluster">
+						{#each p.owners as owner (owner.type + owner.id)}
+							<mm-owner-chip
+								name={owner.name || owner.username || owner.id}
+								kind={owner.type === 'team' ? 'team' : 'person'}
+								src={owner.profile_picture ?? ''}
+							></mm-owner-chip>
+						{/each}
+					</span>
+				{/if}
+				<mm-menu-button
+					slot="actions"
+					variant="ghost"
+					icon="more-horiz"
+					icon-only
+					label={m.products_more_for({ name: p.name })}
+				>
+					<mm-menu onmm-select={handleMore}>
+						<mm-menu-item value="copy" icon="link">{m.products_copy_link()}</mm-menu-item>
+						{#if canManage}
+							<mm-menu-separator></mm-menu-separator>
+							<mm-menu-item value="delete" icon="delete" danger
+								>{m.products_delete_product()}</mm-menu-item
+							>
 						{/if}
+					</mm-menu>
+				</mm-menu-button>
+				{#if canManage}
+					<mm-button slot="actions" icon="edit" onclick={startEditing}
+						>{m.products_edit_product()}</mm-button
+					>
+				{/if}
+			</mm-page-header>
+		{/if}
 
-						<!-- Tags and Owners -->
-						<div class="flex items-start gap-6 pt-2">
-							<div>
-								<div class="flex items-center gap-1.5 mb-1">
-									<IconifyIcon
-										icon="material-symbols:label-outline"
-										class="w-3.5 h-3.5 text-gray-400"
-									/>
-									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-										>{m.common_tags()}</span
-									>
-								</div>
-								<Tags
-									tags={product.tags ?? []}
-									endpoint="/products"
-									id={product.id}
-									canEdit={canManage}
-								/>
-							</div>
-							<div>
-								<div class="flex items-center gap-1.5 mb-1">
-									<IconifyIcon
-										icon="material-symbols:person-outline"
-										class="w-3.5 h-3.5 text-gray-400"
-									/>
-									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
-										>{m.common_owners()}</span
-									>
-								</div>
-								<OwnerSelector
-									selectedOwners={product.owners || []}
-									onChange={handleOwnersChange}
-									disabled={!canManage}
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<Tabs tabs={visibleTabs} bind:activeTab onTabChange={setActiveTab} />
-			</div>
-
-			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
-				<div class="pb-16 max-w-7xl mx-auto">
-					<div class="rounded-lg max-w-full overflow-x-auto">
-						<!-- Metadata Tab -->
-						{#if activeTab === 'metadata'}
-							<div class="mt-6">
-								<MetadataView
-									metadata={product.metadata || {}}
-									endpoint="/products"
-									id={productId}
-									readOnly={!canManage}
-									permissionResource="assets"
-									permissionAction="manage"
-								/>
-							</div>
-						{/if}
-
-						<!-- Documentation Tab -->
-						{#if activeTab === 'documentation'}
-							<div class="mt-6" style="height: calc(100vh - 320px); min-height: 400px;">
-								<DocumentationSystem entityType="data_product" entityId={product.id} />
-							</div>
-						{/if}
-
-						<!-- Assets Tab -->
-						{#if activeTab === 'assets'}
-							<div class="mt-6 space-y-6">
-								<!-- Manual Asset Search -->
-								{#if canManage}
-									<div class="mb-6">
-										<div class="flex items-center gap-2 mb-3">
-											<span
-												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium"
-											>
-												<IconifyIcon icon="material-symbols:person" class="w-3.5 h-3.5" />
-												{m.products_manual_badge()}
-											</span>
-											<span class="text-sm text-gray-600 dark:text-gray-400">
-												{m.products_manual_search_hint()}
-											</span>
-										</div>
-										<div class="relative">
-											<IconifyIcon
-												icon="material-symbols:search"
-												class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-											/>
-											<input
-												type="text"
-												value={assetSearchQuery}
-												oninput={(e) => handleAssetSearch(e.currentTarget.value)}
-												onkeydown={handleAssetSearchKeydown}
-												placeholder={m.products_asset_search_placeholder()}
-												class="w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
-											/>
-											{#if isSearchingAssets}
-												<div class="absolute right-3 top-1/2 -translate-y-1/2">
-													<div
-														class="h-4 w-4 border-2 border-earthy-terracotta-500 border-t-transparent rounded-full animate-spin"
-													></div>
-												</div>
-											{/if}
-										</div>
-
-										<!-- Search Results -->
-										{#if assetSearchResults.length > 0}
-											<div
-												class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm"
-												role="listbox"
-											>
-												{#each assetSearchResults as asset, index (asset.id)}
-													<div
-														class="flex items-center gap-3 p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors cursor-pointer {index ===
-														selectedAssetIndex
-															? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
-															: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
-														role="option"
-														aria-selected={index === selectedAssetIndex}
-														onclick={() => addAssetToProduct(asset.id)}
-													>
-														<div
-															class="p-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0"
-														>
-															<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
-														</div>
-														<div class="flex-1 min-w-0">
-															<div
-																class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"
-															>
-																{asset.name}
-															</div>
-															<div
-																class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono"
-															>
-																{asset.mrn}
-															</div>
-														</div>
-														<button
-															onclick={(e) => {
-																e.stopPropagation();
-																addAssetToProduct(asset.id);
-															}}
-															disabled={isAddingAsset}
-															class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded-lg disabled:opacity-50 transition-colors"
-														>
-															<IconifyIcon icon="material-symbols:add" class="w-3.5 h-3.5" />
-															{isAddingAsset ? m.products_adding() : m.common_add()}
-														</button>
-													</div>
-												{/each}
-											</div>
-										{:else if assetSearchQuery && !isSearchingAssets}
-											<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-												{m.products_no_assets_found({ query: assetSearchQuery })}
-											</p>
-										{/if}
-									</div>
-								{/if}
-
-								{#if isLoadingAssets && !resolvedAssets}
-									<!-- Skeleton loading grid -->
-									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{#each Array(6) as _, i (i)}
-											<div
-												class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 p-4 animate-pulse"
-											>
-												<div class="flex items-start gap-3 mb-3">
-													<div class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-													<div class="flex-1 space-y-2">
-														<div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-														<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
-													</div>
-												</div>
-												<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-2/3 mb-3"></div>
-												<div class="flex gap-2">
-													<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-12"></div>
-													<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
-												</div>
-											</div>
-										{/each}
-									</div>
-								{:else if resolvedAssets && resolvedAssets.all_assets.length > 0}
-									<!-- Asset counts by type -->
-									<div class="flex flex-wrap gap-3 mb-4">
-										{#if resolvedAssets.manual_assets.length > 0}
-											<span
-												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium"
-											>
-												<IconifyIcon icon="material-symbols:person" class="w-4 h-4" />
-												{m.products_manual_count({ count: resolvedAssets.manual_assets.length })}
-											</span>
-										{/if}
-										{#if resolvedAssets.dynamic_assets.length > 0}
-											<span
-												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-sm font-medium"
-											>
-												<IconifyIcon icon="material-symbols:filter-list" class="w-4 h-4" />
-												{m.products_from_rules_count({
-													count: resolvedAssets.dynamic_assets.length
-												})}
-											</span>
-										{/if}
-									</div>
-
-									<!-- Assets Grid -->
-									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{#each paginatedAssetIds as assetId (assetId)}
-											{@const asset = assetDetails.get(assetId)}
-											{@const isManual = resolvedAssets.manual_assets.includes(assetId)}
-											<div
-												class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 hover:shadow-md transition-all overflow-hidden"
-											>
-												{#if asset}
-													<a href={resolve(getAssetUrl(asset))} class="flex-1 p-4">
-														<!-- Header with icon and name -->
-														<div class="flex items-start gap-3">
-															<div
-																class="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg group-hover:bg-earthy-terracotta-50 dark:group-hover:bg-earthy-terracotta-900/20 transition-colors"
-															>
-																<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
-															</div>
-															<div class="flex-1 min-w-0">
-																<h4
-																	class="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors"
-																>
-																	{asset.name}
-																</h4>
-																<p
-																	class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5"
-																>
-																	{asset.mrn}
-																</p>
-															</div>
-														</div>
-													</a>
-
-													<!-- Footer with badge and actions -->
-													<div
-														class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-auto"
-													>
-														<span
-															class="text-xs px-2 py-1 rounded-md font-medium {isManual
-																? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-																: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'}"
-														>
-															{isManual ? m.products_manual_badge() : m.products_rule_badge()}
-														</span>
-														{#if canManage && isManual}
-															<button
-																onclick={(e) => {
-																	e.preventDefault();
-																	removeAssetFromProduct(assetId);
-																}}
-																disabled={removingAssetId === assetId}
-																class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
-																title={m.products_remove_from_product()}
-															>
-																{#if removingAssetId === assetId}
-																	<div
-																		class="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"
-																	></div>
-																{:else}
-																	<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-																{/if}
-															</button>
-														{/if}
-													</div>
-												{:else}
-													<!-- Loading placeholder for individual asset -->
-													<div class="p-4 animate-pulse">
-														<div class="flex items-start gap-3 mb-3">
-															<div class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-															<div class="flex-1 space-y-2">
-																<div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-																<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
-															</div>
-														</div>
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-
-									<!-- Pagination Controls -->
-									{#if totalAssetPages > 1}
-										<div
-											class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
-										>
-											<p class="text-sm text-gray-600 dark:text-gray-400">
-												{m.products_showing_assets({
-													start: (currentAssetPage - 1) * ASSETS_PER_PAGE + 1,
-													end: Math.min(
-														currentAssetPage * ASSETS_PER_PAGE,
-														resolvedAssets.all_assets.length
-													),
-													total: resolvedAssets.all_assets.length
-												})}
-											</p>
-											<div class="flex gap-2">
-												<button
-													onclick={() => handleAssetPageChange(currentAssetPage - 1)}
-													disabled={currentAssetPage === 1 || isLoadingAssets}
-													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-												>
-													{m.common_previous()}
-												</button>
-												<button
-													onclick={() => handleAssetPageChange(currentAssetPage + 1)}
-													disabled={currentAssetPage >= totalAssetPages || isLoadingAssets}
-													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-												>
-													{m.common_next()}
-												</button>
-											</div>
-										</div>
-									{/if}
-								{:else}
-									<div class="text-center py-12 text-gray-500 dark:text-gray-400">
-										<IconifyIcon
-											icon="material-symbols:database"
-											class="h-12 w-12 mx-auto mb-3 opacity-50"
-										/>
-										<p>{m.products_no_assets_title()}</p>
-										<p class="text-sm mt-1">
-											{#if canManage}
-												{m.products_no_assets_hint_manage()}
-											{:else}
-												{m.products_no_assets_hint_readonly()}
-											{/if}
-										</p>
-									</div>
-								{/if}
-							</div>
-						{/if}
-
-						<!-- Rules Tab -->
-						{#if activeTab === 'rules'}
-							<div class="mt-6">
-								<div
-									class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-								>
-									<div class="flex items-center justify-between mb-4">
-										<h3
-											class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-										>
-											<IconifyIcon icon="material-symbols:filter-list" class="h-5 w-5" />
-											{m.products_dynamic_rules()}
-											{#if product.rules}
-												<span class="text-sm font-normal text-gray-500">
-													({product.rules.length})
-												</span>
-											{/if}
-										</h3>
-										{#if canManage && !showRuleForm}
-											<Button
-												click={openAddRuleForm}
-												icon="material-symbols:add"
-												text={m.products_add_rule()}
-												variant="filled"
-											/>
-										{/if}
-									</div>
-
-									<!-- Rule Form -->
-									{#if showRuleForm && canManage}
-										<div
-											class="mb-6 p-4 rounded-lg border border-earthy-terracotta-200 dark:border-earthy-terracotta-800 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20"
-										>
-											<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
-												{editingRule ? m.products_edit_rule() : m.products_add_new_rule()}
-											</h4>
-
-											{#if ruleError}
-												<div
-													class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-												>
-													<p class="text-sm text-red-800 dark:text-red-200">{ruleError}</p>
-												</div>
-											{/if}
-
-											<div class="space-y-4">
-												<div>
-													<label
-														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-													>
-														{m.products_rule_name_label()}
-													</label>
-													<input
-														type="text"
-														bind:value={ruleForm.name}
-														placeholder={m.products_rule_name_placeholder()}
-														class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
-													/>
-												</div>
-
-												<div>
-													<label
-														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-													>
-														{m.common_description()}
-													</label>
-													<input
-														type="text"
-														bind:value={ruleForm.description}
-														placeholder={m.products_rule_description_placeholder()}
-														class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
-													/>
-												</div>
-
-												<div>
-													<label
-														class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-													>
-														{m.products_query_expression_label()}
-													</label>
-													<QueryBuilder
-														query={ruleForm.query_expression || ''}
-														onQueryChange={(q) => (ruleForm.query_expression = q)}
-														initiallyExpanded={true}
-														showRunButton={true}
-														runButtonText={isPreviewLoading
-															? m.products_searching()
-															: m.products_preview()}
-														runButtonIcon={isPreviewLoading
-															? 'mdi:loading'
-															: 'material-symbols:visibility'}
-														onRunClick={(q) => previewRule(q)}
-													/>
-												</div>
-
-												<!-- Preview Results -->
-												{#if isPreviewLoading}
-													<div class="space-y-2">
-														{#each Array(3) as _, i (i)}
-															<div
-																class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-3 animate-pulse"
-															>
-																<div class="flex items-center gap-2">
-																	<div class="h-6 w-6 bg-gray-200 dark:bg-gray-600 rounded"></div>
-																	<div class="space-y-1.5 flex-1">
-																		<div
-																			class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-48"
-																		></div>
-																		<div
-																			class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-64"
-																		></div>
-																	</div>
-																</div>
-															</div>
-														{/each}
-													</div>
-												{:else if rulePreviewResults.length > 0}
-													<div class="space-y-3">
-														<div class="flex items-center justify-between">
-															<div
-																class="flex items-center gap-2 text-sm text-green-700 dark:text-green-400"
-															>
-																<IconifyIcon icon="material-symbols:check-circle" class="h-4 w-4" />
-																<span class="font-medium"
-																	>{m.products_asset_matched_count({
-																		count: rulePreviewTotal
-																	})}</span
-																>
-															</div>
-															{#if rulePreviewTotal > rulePreviewResults.length}
-																<span class="text-xs text-gray-500 dark:text-gray-400">
-																	{m.products_showing_first({ count: rulePreviewResults.length })}
-																</span>
-															{/if}
-														</div>
-														<div class="space-y-2 max-h-64 overflow-y-auto">
-															{#each rulePreviewResults as result (result.id)}
-																<a
-																	href={resolve(getPreviewAssetUrl(result))}
-																	target="_blank"
-																	class="block bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
-																>
-																	<div class="flex items-start gap-3">
-																		<div class="flex-shrink-0">
-																			<AssetIcon
-																				name={getPreviewIconType(result)}
-																				showLabel={false}
-																				size="sm"
-																			/>
-																		</div>
-																		<div class="flex-1 min-w-0">
-																			<div class="flex items-center justify-between gap-2">
-																				<h4
-																					class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors"
-																				>
-																					{result.name}
-																				</h4>
-																				<span
-																					class="flex-shrink-0 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded"
-																				>
-																					{result.metadata?.type?.replace(/_/g, ' ')}
-																				</span>
-																			</div>
-																			<p
-																				class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5"
-																			>
-																				{result.metadata?.mrn}
-																			</p>
-																			{#if result.description}
-																				<p
-																					class="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-1"
-																				>
-																					{result.description}
-																				</p>
-																			{/if}
-																		</div>
-																	</div>
-																</a>
-															{/each}
-														</div>
-													</div>
-												{:else if ruleForm.query_expression}
-													<div class="text-center py-6 text-gray-500 dark:text-gray-400">
-														<IconifyIcon
-															icon="material-symbols:search"
-															class="h-8 w-8 mx-auto mb-2 opacity-40"
-														/>
-														<p class="text-sm">
-															{m.products_preview_hint()}
-														</p>
-													</div>
-												{/if}
-
-												<div class="flex items-center gap-2">
-													<input
-														type="checkbox"
-														id="rule-enabled"
-														bind:checked={ruleForm.is_enabled}
-														class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500"
-													/>
-													<label
-														for="rule-enabled"
-														class="text-sm text-gray-700 dark:text-gray-300"
-													>
-														{m.products_enable_rule_label()}
-													</label>
-												</div>
-
-												<div class="flex gap-2 pt-2">
-													<Button
-														click={saveRule}
-														icon={savingRule ? '' : 'material-symbols:save'}
-														text={savingRule ? m.products_saving() : m.products_save_rule()}
-														variant="filled"
-														disabled={savingRule}
-													/>
-													<Button
-														click={cancelRuleForm}
-														text={m.common_cancel()}
-														variant="clear"
-														disabled={savingRule}
-													/>
-												</div>
-											</div>
-										</div>
-									{/if}
-
-									{#if product.rules && product.rules.length > 0}
-										<div class="space-y-3">
-											{#each product.rules as rule (rule.id)}
-												<div
-													class="p-4 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
-												>
-													<div class="flex items-start justify-between">
-														<div class="flex items-center gap-3">
-															<div
-																class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-															>
-																<IconifyIcon icon="mdi:database-search" class="h-4 w-4" />
-															</div>
-															<div>
-																<div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-																	{rule.name}
-																</div>
-																{#if rule.description}
-																	<div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-																		{rule.description}
-																	</div>
-																{/if}
-															</div>
-														</div>
-														<div class="flex items-center gap-2">
-															{#if rule.matched_asset_count !== undefined}
-																<span
-																	class="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-																>
-																	{m.products_matched_count({ count: rule.matched_asset_count })}
-																</span>
-															{/if}
-															<button
-																onclick={() => toggleRuleEnabled(rule)}
-																class="text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors {rule.is_enabled
-																	? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
-																	: 'bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-																title={rule.is_enabled
-																	? m.products_click_to_disable()
-																	: m.products_click_to_enable()}
-															>
-																{rule.is_enabled ? m.common_active() : m.common_disabled()}
-															</button>
-															{#if canManage}
-																<button
-																	onclick={() => openEditRuleForm(rule)}
-																	class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-																	title={m.products_edit_rule_tooltip()}
-																>
-																	<IconifyIcon icon="material-symbols:edit" class="h-4 w-4" />
-																</button>
-																<button
-																	onclick={() => confirmDeleteRule(rule)}
-																	disabled={deletingRuleId === rule.id}
-																	class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-																	title={m.products_delete_rule_tooltip()}
-																>
-																	{#if deletingRuleId === rule.id}
-																		<div
-																			class="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"
-																		></div>
-																	{:else}
-																		<IconifyIcon icon="material-symbols:delete" class="h-4 w-4" />
-																	{/if}
-																</button>
-															{/if}
-														</div>
-													</div>
-													{#if rule.query_expression}
-														<div
-															class="mt-3 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg font-mono text-xs text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
-														>
-															{rule.query_expression}
-														</div>
-													{/if}
-												</div>
-											{/each}
-										</div>
-									{:else if !showRuleForm}
-										<div class="text-center py-8 text-gray-500 dark:text-gray-400">
-											<IconifyIcon
-												icon="material-symbols:filter-list"
-												class="h-12 w-12 mx-auto mb-3 opacity-50"
-											/>
-											<p>{m.products_no_rules_title()}</p>
-											<p class="text-sm mt-1">
-												{m.products_no_rules_hint()}
-											</p>
-											{#if canManage}
-												<div class="mt-4">
-													<Button
-														click={openAddRuleForm}
-														icon="material-symbols:add"
-														text={m.products_add_first_rule()}
-														variant="filled"
-													/>
-												</div>
-											{/if}
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div
-			class="border-l border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 {bladeCollapsed
-				? 'w-12'
-				: 'w-[36rem]'}"
+		<mm-tabs
+			label={m.products_tabs_label()}
+			value={tab}
+			onmm-tab-change={(e: CustomEvent<{ value: string }>) => selectTab(e.detail.value)}
 		>
-			<ProductBlade
-				{product}
-				staticPlacement={true}
-				collapsed={bladeCollapsed}
-				onToggleCollapse={() => (bladeCollapsed = !bladeCollapsed)}
-				onClose={() => {}}
-			/>
-		</div>
-	{/if}
-</div>
+			<mm-tab value="overview" icon="space-dashboard">{m.common_overview()}</mm-tab>
+			<mm-tab value="assets" icon="dataset" count={p.asset_count ?? 0}>{m.products_assets()}</mm-tab
+			>
+			<mm-tab value="rules" icon="rule" count={p.rules.length}>{m.products_tab_rules()}</mm-tab>
+			<mm-tab value="documentation" icon="description">{m.common_documentation()}</mm-tab>
+			<mm-tab value="metadata" icon="data-object">{m.products_tab_metadata()}</mm-tab>
 
-<!-- Delete Rule Confirmation Modal -->
-<ConfirmModal
-	bind:show={showDeleteRuleModal}
-	title={m.products_delete_rule_title()}
-	message={ruleToDelete ? m.products_delete_rule_confirm({ name: ruleToDelete.name }) : ''}
-	confirmText={m.common_delete()}
-	cancelText={m.common_cancel()}
-	variant="danger"
-	onConfirm={deleteRule}
-	onCancel={() => {
-		showDeleteRuleModal = false;
-		ruleToDelete = null;
-	}}
-/>
+			<mm-tab-panel value="overview">
+				{#if tab === 'overview'}
+					<div class="mm-split overview">
+						<div class="mm-stack" style="--mm-gap: 0">
+							<mm-section heading={m.products_blade_inside()}>
+								{#if (p.asset_types ?? []).length > 0}
+									<mm-proportion-bar
+										label={m.products_assets_by_type()}
+										data={(p.asset_types ?? []).map((t) => ({
+											label: t.type.replace(/_/g, ' '),
+											value: t.count
+										}))}
+										highlight={(p.asset_types ?? [])[0]?.type.replace(/_/g, ' ') ?? ''}
+										category-label={m.common_type()}
+										unit={m.products_assets_unit()}
+									></mm-proportion-bar>
+								{:else}
+									<mm-text variant="dense" tone="secondary">{m.products_no_assets_title()}</mm-text>
+								{/if}
+							</mm-section>
+							{#if mostUsed.length > 0}
+								<mm-section heading={m.products_most_used()}>
+									<mm-button
+										slot="actions"
+										size="sm"
+										variant="ghost"
+										onclick={() => selectTab('assets')}>{m.products_all_assets()}</mm-button
+									>
+									<mm-list
+										aria-label={m.products_most_used_label({ name: p.name })}
+										style="--mm-list-inset: 0"
+									>
+										{#each mostUsed as member (member.asset_id)}
+											{@const params = assetRouteParams(member)}
+											{@const level = popularityLevel(member.popularity)}
+											<mm-list-item
+												href={params
+													? resolve('/discover/[type]/[service]/[name]', params)
+													: undefined}
+												secondary={memberCaption(member)}
+											>
+												<mm-provider-logo
+													slot="start"
+													provider={member.providers.length === 1
+														? member.providers[0].toLowerCase()
+														: member.type}
+													size={20}
+													decorative
+												></mm-provider-logo>
+												{member.name}
+												{#if level}<mm-popularity slot="end" {level}></mm-popularity>{/if}
+											</mm-list-item>
+										{/each}
+									</mm-list>
+								</mm-section>
+							{/if}
+							{#if p.description}
+								<mm-section heading={m.products_blade_about()}>
+									<mm-button
+										slot="actions"
+										size="sm"
+										variant="ghost"
+										onclick={() => selectTab('documentation')}>{m.products_read_docs()}</mm-button
+									>
+									<p class="mm-dense mm-measure about">{p.description}</p>
+								</mm-section>
+							{/if}
+						</div>
+						<div class="mm-stack" style="--mm-gap: 0">
+							{#if p.owners.length > 0}
+								<mm-section heading={m.common_owners()}>
+									<div class="mm-stack" style="--mm-gap: var(--space-3)">
+										{#each p.owners as owner (owner.type + owner.id)}
+											<mm-owner-chip
+												name={owner.name || owner.username || owner.id}
+												kind={owner.type === 'team' ? 'team' : 'person'}
+												src={owner.profile_picture ?? ''}
+												href={owner.type === 'team' ? resolve('/teams/[id]', { id: owner.id }) : ''}
+											></mm-owner-chip>
+										{/each}
+									</div>
+								</mm-section>
+							{/if}
+							<mm-section heading={m.products_tab_rules()}>
+								{#if canManage}
+									<mm-button
+										slot="actions"
+										size="sm"
+										variant="ghost"
+										onclick={() => selectTab('rules')}>{m.products_edit_rules()}</mm-button
+									>
+								{/if}
+								{#if p.rules.length > 0}
+									<mm-list dense aria-label={m.products_tab_rules()} style="--mm-list-inset: 0">
+										{#each p.rules as rule (rule.id)}
+											<mm-list-item
+												secondary={plainQuery(rule.query_expression) ?? rule.query_expression ?? ''}
+											>
+												<mm-icon slot="start" name="rule" aria-hidden="true"></mm-icon>
+												{rule.name}
+												<mm-text slot="end" variant="caption" tone="secondary" numeric>
+													{rule.is_enabled
+														? m.products_assets_count({ count: rule.matched_asset_count ?? 0 })
+														: m.products_rule_off()}
+												</mm-text>
+											</mm-list-item>
+										{/each}
+									</mm-list>
+								{:else}
+									<mm-text variant="dense" tone="secondary">{m.products_no_rules_title()}</mm-text>
+								{/if}
+							</mm-section>
+						</div>
+					</div>
+				{/if}
+			</mm-tab-panel>
+
+			<mm-tab-panel value="assets">
+				{#if tab === 'assets'}
+					<ProductAssets product={p} {canManage} onChanged={reload} onEditRule={editRule} />
+				{/if}
+			</mm-tab-panel>
+
+			<mm-tab-panel value="rules">
+				{#if tab === 'rules'}
+					<ProductRules product={p} {canManage} bind:editing={editingRule} onChanged={reload} />
+				{/if}
+			</mm-tab-panel>
+
+			<mm-tab-panel value="documentation">
+				{#if tab === 'documentation'}
+					<div class="docs">
+						<DocumentationSystem entityType="data_product" entityId={p.id} />
+					</div>
+				{/if}
+			</mm-tab-panel>
+
+			<mm-tab-panel value="metadata">
+				{#if tab === 'metadata'}
+					<MetadataView
+						metadata={p.metadata}
+						endpoint="/products"
+						id={p.id}
+						readOnly={!canManage}
+						permissionResource="assets"
+						permissionAction="manage"
+					/>
+				{/if}
+			</mm-tab-panel>
+		</mm-tabs>
+	</div>
+
+	<mm-confirm-dialog
+		open={confirmDelete}
+		heading={m.products_delete_title()}
+		body={m.products_delete_confirm_message({ name: p.name })}
+		confirm-label={m.products_delete_product()}
+		confirm-icon="delete"
+		loading={deleting}
+		onmm-confirm={deleteProduct}
+		onmm-close={() => (confirmDelete = false)}
+	></mm-confirm-dialog>
+{/if}
+
+<style>
+	.edit {
+		max-width: 44rem;
+	}
+	.overview {
+		padding-block-start: var(--space-2);
+	}
+	.about {
+		margin: 0;
+		white-space: pre-wrap;
+	}
+	.docs {
+		height: calc(100vh - 320px);
+		min-height: 400px;
+		padding-block-start: var(--space-4);
+	}
+</style>

@@ -87,13 +87,13 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if searchQuery != "" && total > 0 {
-		recorder := h.metricsService.GetRecorder()
+	// Searches that found nothing are recorded too, apart from the rest, for the zero-result list in Insights
+	if searchQuery != "" {
 		queryType := "full_text"
 		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
 			queryType = "filtered"
 		}
-		recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
+		h.metricsService.RecordSearch(queryType, searchQuery, int64(total))
 	}
 
 	response := SearchResponse{

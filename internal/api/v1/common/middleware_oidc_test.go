@@ -31,6 +31,9 @@ func (m *mockAuthService) ValidateToken(_ context.Context, _ string) (*auth.Clai
 func (m *mockAuthService) GetSigningKey(_ context.Context) ([]byte, error) {
 	return nil, nil
 }
+func (m *mockAuthService) GenerateTokenForClient(_ context.Context, _ *user.User, _, _ string) (string, error) {
+	return "", nil
+}
 
 type mockUserService struct {
 	validateAPIKeyFn func(ctx context.Context, key string) (*user.User, error)
@@ -53,33 +56,72 @@ func (m *mockUserService) Get(ctx context.Context, id string) (*user.User, error
 }
 
 // Unused methods to satisfy user.Service interface
-func (m *mockUserService) Create(_ context.Context, _ user.CreateUserInput) (*user.User, error) { return nil, nil }
-func (m *mockUserService) Update(_ context.Context, _ string, _ user.UpdateUserInput) (*user.User, error) { return nil, nil }
-func (m *mockUserService) Delete(_ context.Context, _, _ string) error                                    { return nil }
-func (m *mockUserService) GetUserByUsername(_ context.Context, _ string) (*user.User, error)               { return nil, nil }
-func (m *mockUserService) FindSimilarUsernames(_ context.Context, _ string, _ int) ([]string, error)      { return nil, nil }
-func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, int, error)               { return nil, 0, nil }
-func (m *mockUserService) Authenticate(_ context.Context, _, _ string) (*user.User, error)                { return nil, nil }
-func (m *mockUserService) HasPermission(_ context.Context, _, _ string, _ string) (bool, error)           { return false, nil }
-func (m *mockUserService) GetPermissionsByRoleName(_ context.Context, _ string) ([]user.Permission, error) { return nil, nil }
-func (m *mockUserService) GetUserByProviderID(_ context.Context, _, _ string) (*user.User, error)         { return nil, nil }
-func (m *mockUserService) AuthenticateOAuth(_ context.Context, _, _ string, _ map[string]interface{}) (*user.User, error) { return nil, nil }
-func (m *mockUserService) LinkOAuthAccount(_ context.Context, _, _, _ string, _ map[string]interface{}) error { return nil }
-func (m *mockUserService) UnlinkOAuthAccount(_ context.Context, _, _ string) error                        { return nil }
-func (m *mockUserService) CreateAPIKey(_ context.Context, _, _ string, _ *time.Duration) (*user.APIKey, error) { return nil, nil }
-func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error                              { return nil }
-func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error)                { return nil, nil }
-func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error  { return nil }
-func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error)              { return nil, nil }
+func (m *mockUserService) Create(_ context.Context, _ user.CreateUserInput) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) Update(_ context.Context, _ string, _ user.UpdateUserInput) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) Delete(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) GetUserByUsername(_ context.Context, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) FindSimilarUsernames(_ context.Context, _ string, _ int) ([]string, error) {
+	return nil, nil
+}
+func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, int, error) {
+	return nil, 0, nil
+}
+func (m *mockUserService) Authenticate(_ context.Context, _, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) HasPermission(_ context.Context, _, _ string, _ string) (bool, error) {
+	return false, nil
+}
+func (m *mockUserService) GetPermissionsByRoleName(_ context.Context, _ string) ([]user.Permission, error) {
+	return nil, nil
+}
+func (m *mockUserService) GetUserByProviderID(_ context.Context, _, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) AuthenticateOAuth(_ context.Context, _, _ string, _ map[string]interface{}) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) LinkOAuthAccount(_ context.Context, _, _, _ string, _ map[string]interface{}) error {
+	return nil
+}
+func (m *mockUserService) UnlinkOAuthAccount(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) CreateAPIKey(_ context.Context, _, _ string, _ *time.Duration) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) RotateAPIKey(_ context.Context, _, _ string) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) GetProfile(_ context.Context, _ string) (*user.Profile, error) {
+	return &user.Profile{}, nil
+}
+func (m *mockUserService) UpdateJobTitle(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error {
+	return nil
+}
+func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error) {
+	return nil, nil
+}
 
 type mockOAuthProvider struct {
 	typ string
 }
 
-func (m *mockOAuthProvider) GetAuthURL(_ string) string                                      { return "" }
-func (m *mockOAuthProvider) HandleCallback(_ context.Context, _ string) (*user.User, error)  { return nil, nil }
-func (m *mockOAuthProvider) Name() string                                                    { return m.typ }
-func (m *mockOAuthProvider) Type() string                                                    { return m.typ }
+func (m *mockOAuthProvider) GetAuthURL(_ string) string { return "" }
+func (m *mockOAuthProvider) HandleCallback(_ context.Context, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockOAuthProvider) Name() string { return m.typ }
+func (m *mockOAuthProvider) Type() string { return m.typ }
 
 type mockExchangeProvider struct {
 	mockOAuthProvider

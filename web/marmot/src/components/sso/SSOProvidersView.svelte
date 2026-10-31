@@ -1,25 +1,75 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import IconifyIcon from '@iconify/svelte';
-	import Panel from '$components/ui/Panel.svelte';
-	import Pill from '$components/ui/Pill.svelte';
-	import Alert from '$components/ui/Alert.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
-	import EmptyState from '$components/ui/EmptyState.svelte';
-	import { listSSOProviders } from '$lib/sso/api';
+	import { html } from 'lit';
+	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
+	import { listProviderStatuses, setProviderEnabled } from '$lib/sso/api';
+	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import type { SSOProvider } from '$lib/sso/types';
+	import type { SSOProviderStatus } from '$lib/sso/types';
 
-	// The sign-in providers the server was started with, as read-only cards, since they are defined in the server config rather than here
-	let providers = $state<SSOProvider[]>([]);
+	// Providers are defined in the server configuration, so this page cannot add one; it can switch a configured provider off and on again without touching the file, and shows who uses each.
+	let { onChange }: { onChange?: (providers: SSOProviderStatus[]) => void } = $props();
+
+	let providers = $state<SSOProviderStatus[]>([]);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
+	let error = $state('');
+	let busy = $state<string | null>(null);
 
-	async function fetchAll() {
+	async function toggle(p: SSOProviderStatus) {
+		busy = p.type;
 		try {
-			loading = true;
-			error = null;
-			providers = await listSSOProviders();
+			const updated = await setProviderEnabled(p.type, !p.enabled);
+			providers = providers.map((x) => (x.type === p.type ? updated : x));
+			onChange?.(providers);
+			toasts.success(
+				updated.enabled
+					? m.sso_turned_on_toast({ name: p.name })
+					: m.sso_turned_off_toast({ name: p.name })
+			);
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.sso_toggle_failed());
+		} finally {
+			busy = null;
+		}
+	}
+
+	let columns = $derived<DataTableColumn<SSOProviderStatus>[]>([
+		{ key: 'name', header: m.sso_column_provider(), width: 200 },
+		{ key: 'protocol', header: m.sso_column_protocol(), width: 110 },
+		{ key: 'issuer_url', header: m.sso_column_issuer_url(), type: 'mono', width: 360, empty: '–' },
+		{
+			key: 'enabled',
+			header: m.common_status(),
+			width: 130,
+			value: (p) => (p.enabled ? m.sso_status_on() : m.sso_status_off()),
+			// No pill: a provider switched off is a choice, not a fault
+			render: (p) =>
+				p.enabled ? m.sso_status_on() : html`<span class="mm-muted">${m.sso_status_off()}</span>`
+		},
+		{ key: 'member_count', header: m.sso_column_members(), type: 'number', width: 110 },
+		{
+			key: 'actions',
+			header: m.common_actions(),
+			width: 140,
+			minWidth: 140,
+			align: 'end',
+			render: (p) =>
+				html`<mm-button
+					size="sm"
+					icon=${p.enabled ? 'block' : 'power'}
+					?loading=${busy === p.type}
+					@click=${() => toggle(p)}
+					>${p.enabled ? m.sso_turn_off() : m.sso_turn_on()}</mm-button
+				>`
+		}
+	]);
+
+	async function load() {
+		loading = true;
+		error = '';
+		try {
+			providers = await listProviderStatuses();
+			onChange?.(providers);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.sso_load_error();
 		} finally {
@@ -27,57 +77,28 @@
 		}
 	}
 
-	onMount(fetchAll);
+	onMount(load);
 </script>
 
-<Panel
-	title={m.sso_providers_heading()}
-	description={m.sso_config_note_body({ file: 'config.yaml', section: 'auth.*' })}
-	icon="material-symbols:login"
+<mm-section
+	heading={m.sso_providers_heading()}
+	description={m.sso_config_note_body({ file: 'config.yaml', section: 'auth' })}
 >
-	{#snippet action()}
-		<Pill>
-			<IconifyIcon icon="material-symbols:description-outline" class="h-3.5 w-3.5" />
-			{m.sso_config_note_title()}
-		</Pill>
-	{/snippet}
-
-	{#if loading}
-		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-			<Skeleton class="h-20" />
-			<Skeleton class="h-20" />
-		</div>
-	{:else if error}
-		<Alert>{error}</Alert>
-	{:else if providers.length === 0}
-		<EmptyState icon="material-symbols:login" title={m.sso_none_configured()} />
+	{#if !loading && !error && providers.length === 0}
+		<mm-empty-state
+			compact
+			heading={m.sso_none_configured()}
+			description={m.sso_none_configured_description()}
+		></mm-empty-state>
 	{:else}
-		<ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-			{#each providers as provider (provider.name)}
-				<li
-					class="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-				>
-					<span
-						class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
-					>
-						<IconifyIcon icon="material-symbols:passkey-outline" class="h-5 w-5 text-gray-500" />
-					</span>
-					<span class="min-w-0 flex-1">
-						<span class="flex items-center gap-2">
-							<span class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
-								>{provider.name}</span
-							>
-							<Pill>{provider.type}</Pill>
-						</span>
-						<span
-							class="mt-1 block truncate font-mono text-xs text-gray-500 dark:text-gray-400"
-							title={provider.issuer_url}
-						>
-							{provider.issuer_url || '-'}
-						</span>
-					</span>
-				</li>
-			{/each}
-		</ul>
+		<mm-data-table
+			label={m.sso_providers_heading()}
+			row-key="type"
+			{columns}
+			rows={providers}
+			{loading}
+			{error}
+			onmm-retry={load}
+		></mm-data-table>
 	{/if}
-</Panel>
+</mm-section>

@@ -144,12 +144,13 @@ func parseBucketSize(s string) (time.Duration, error) {
 }
 
 // @Summary Get top search queries
-// @Description Get the most popular search queries
+// @Description Get the most popular search queries. With zero_results=true, get the most frequent searches that found nothing instead, each with a result_count of 0.
 // @Tags metrics
 // @Produce json
 // @Param start query string true "Start time (ISO 8601)"
 // @Param end query string true "End time (ISO 8601)"
 // @Param limit query int false "Number of results" default(10)
+// @Param zero_results query bool false "Only searches that found nothing"
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} []metrics.QueryCount
@@ -184,10 +185,13 @@ func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	results, err := h.metricsService.GetTopQueries(r.Context(), metrics.TimeRange{
-		Start: startTime,
-		End:   endTime,
-	}, limit)
+	timeRange := metrics.TimeRange{Start: startTime, End: endTime}
+	var results []metrics.QueryCount
+	if r.URL.Query().Get("zero_results") == "true" {
+		results, err = h.metricsService.GetZeroResultQueries(r.Context(), timeRange, limit)
+	} else {
+		results, err = h.metricsService.GetTopQueries(r.Context(), timeRange, limit)
+	}
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get top queries")
@@ -391,4 +395,34 @@ func (h *Handler) getAssetsByOwner(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, AssetsByOwnerResponse{Assets: assets})
+}
+
+type AssetsOwnedResponse struct {
+	Count      int64   `json:"count"`
+	Total      int64   `json:"total"`
+	Percentage float64 `json:"percentage"`
+} // @name AssetsOwnedResponse
+
+// @Summary Get owned assets count
+// @Description Get how many catalogued assets have at least one owning user or team, out of all catalogued assets
+// @Tags metrics
+// @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} AssetsOwnedResponse
+// @ID getMetricsAssetsOwned
+// @Router /api/v1/metrics/assets/owned [get]
+func (h *Handler) getAssetsOwned(w http.ResponseWriter, r *http.Request) {
+	owned, total, err := h.metricsService.GetAssetsOwned(r.Context())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get owned assets")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to retrieve owned assets")
+		return
+	}
+
+	var percentage float64
+	if total > 0 {
+		percentage = (float64(owned) / float64(total)) * 100
+	}
+	common.RespondJSON(w, http.StatusOK, AssetsOwnedResponse{Count: owned, Total: total, Percentage: percentage})
 }

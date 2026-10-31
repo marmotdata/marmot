@@ -1,5 +1,6 @@
 import { m } from '$lib/paraglide/messages';
 import { holdsAtRoot, type MyAccess } from '$lib/iam/myAccess';
+import type { Crumb } from '$lib/mm';
 
 // The single definition of what Settings contains and who sees each part. The sub-navigation, the gear in the top bar, the Overview and the command palette all read it, so a section can never be reachable from one and missing from another.
 
@@ -17,6 +18,8 @@ export interface SettingsItem {
 	href: SettingsHref;
 	label: () => string;
 	description: () => string;
+	/** One short line for the Overview list. */
+	summary: () => string;
 	/** Words people search for that the label does not say, such as SSO for Sign-in. */
 	keywords: () => string;
 	icon: string;
@@ -40,6 +43,7 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/members',
 				label: m.settings_members,
 				description: m.settings_members_description,
+				summary: m.settings_members_summary,
 				keywords: m.settings_members_keywords,
 				icon: 'material-symbols:person-outline',
 				anyOf: ['users:view', 'users:manage']
@@ -49,6 +53,7 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/teams',
 				label: m.settings_teams,
 				description: m.settings_teams_description,
+				summary: m.settings_teams_summary,
 				keywords: m.settings_teams_keywords,
 				icon: 'material-symbols:groups-outline',
 				anyOf: ['teams:view', 'teams:manage']
@@ -58,6 +63,7 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/service-accounts',
 				label: m.settings_service_accounts,
 				description: m.settings_service_accounts_description,
+				summary: m.settings_service_accounts_summary,
 				keywords: m.settings_service_accounts_keywords,
 				icon: 'material-symbols:smart-toy-outline',
 				anyOf: ['service_accounts:view', 'service_accounts:manage']
@@ -67,8 +73,9 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/roles',
 				label: m.settings_roles,
 				description: m.settings_roles_description,
+				summary: m.settings_roles_summary,
 				keywords: m.settings_roles_keywords,
-				icon: 'material-symbols:badge-outline',
+				icon: 'material-symbols:admin-panel-settings-outline',
 				anyOf: ['roles:manage']
 			}
 		]
@@ -82,8 +89,9 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/authentication',
 				label: m.settings_authentication,
 				description: m.settings_authentication_description,
+				summary: m.settings_authentication_summary,
 				keywords: m.settings_authentication_keywords,
-				icon: 'material-symbols:login',
+				icon: 'material-symbols:shield-outline',
 				anyOf: ['sso:manage']
 			}
 		]
@@ -97,13 +105,26 @@ export const settingsGroups: SettingsGroup[] = [
 				href: '/settings/system',
 				label: m.settings_system,
 				description: m.settings_system_description,
+				summary: m.settings_system_summary,
 				keywords: m.settings_system_keywords,
-				icon: 'material-symbols:monitor-heart-outline',
+				icon: 'material-symbols:dns-outline',
 				anyOf: ['access:view']
 			}
 		]
 	}
 ];
+
+/** The top-bar crumbs for a Settings page: Settings, then the given trail, the last being the page itself. */
+export function settingsCrumbs(...trail: Crumb[]): Crumb[] {
+	return [{ label: m.settings_title(), href: '/settings' }, ...trail];
+}
+
+/** The section a Settings path belongs to, for the sub-navigation's current item. */
+export function sectionForPath(path: string): SettingsItem | undefined {
+	return settingsGroups
+		.flatMap((group) => group.items)
+		.find((item) => path === item.href || path.startsWith(item.href + '/'));
+}
 
 /** Whether the caller may see an item. */
 export function canSee(access: MyAccess, item: SettingsItem): boolean {

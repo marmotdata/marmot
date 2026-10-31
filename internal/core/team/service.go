@@ -43,14 +43,45 @@ type TeamMemberWithUser struct {
 } // @name TeamMemberWithUser
 
 type SSOTeamMapping struct {
-	ID           string    `json:"id"`
-	Provider     string    `json:"provider"`
-	SSOGroupName string    `json:"sso_group_name"`
-	TeamID       string    `json:"team_id"`
-	MemberRole   string    `json:"member_role"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           string `json:"id"`
+	Provider     string `json:"provider"`
+	SSOGroupName string `json:"sso_group_name"`
+	// TeamID is empty when the mapping only gives a role.
+	TeamID   string  `json:"team_id"`
+	TeamName *string `json:"team_name,omitempty"`
+	// RoleID is the Marmot role members of the group get, replacing the default role at every sign-in.
+	RoleID     *string   `json:"role_id,omitempty"`
+	RoleName   *string   `json:"role_name,omitempty"`
+	MemberRole string    `json:"member_role"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 } // @name SSOTeamMapping
+
+// GroupMappingInput is what a single sign-on group gives its members: a team, a role or both.
+type GroupMappingInput struct {
+	Provider     string
+	SSOGroupName string
+	TeamID       string
+	RoleID       string
+	MemberRole   string
+}
+
+// SSOGroupRef names an identity provider group that feeds a team.
+type SSOGroupRef struct {
+	Provider     string `json:"provider"`
+	SSOGroupName string `json:"sso_group_name"`
+	// RoleName is the Marmot role the same mapping gives, if any.
+	RoleName *string `json:"role_name,omitempty"`
+} // @name SSOGroupRef
+
+// TeamSummary is a team with the counts the team list and team page show.
+type TeamSummary struct {
+	Team
+	MemberCount  int           `json:"member_count"`
+	AssetCount   int           `json:"asset_count"`
+	WebhookCount int           `json:"webhook_count"`
+	SSOGroups    []SSOGroupRef `json:"sso_groups"`
+} // @name TeamSummary
 
 type AssetOwner struct {
 	AssetID   string    `json:"asset_id"`
@@ -274,6 +305,108 @@ func (s *Service) ListSSOMappings(ctx context.Context, provider string) ([]*SSOT
 	return s.repo.ListSSOMappings(ctx, provider)
 }
 
+// ErrEmptyGroupMapping is returned for a mapping that would give neither a team nor a role.
+var ErrEmptyGroupMapping = errors.New("a group mapping needs a team, a role or both")
+
+func normaliseGroupMapping(in *GroupMappingInput) error {
+	if in.TeamID == "" && in.RoleID == "" {
+		return ErrEmptyGroupMapping
+	}
+	if in.MemberRole == "" {
+		in.MemberRole = RoleMember
+	}
+	if in.MemberRole != RoleOwner && in.MemberRole != RoleMember {
+		return fmt.Errorf("invalid member role %q", in.MemberRole)
+	}
+	return nil
+}
+
+// CreateGroupMapping maps a single sign-on group to a team, a role or both.
+func (s *Service) CreateGroupMapping(ctx context.Context, in GroupMappingInput) (*SSOTeamMapping, error) {
+	if err := normaliseGroupMapping(&in); err != nil {
+		return nil, err
+	}
+	mapping := &SSOTeamMapping{
+		Provider:     in.Provider,
+		SSOGroupName: in.SSOGroupName,
+		TeamID:       in.TeamID,
+		MemberRole:   in.MemberRole,
+	}
+	if in.RoleID != "" {
+		mapping.RoleID = &in.RoleID
+	}
+	if err := s.repo.CreateSSOMapping(ctx, mapping); err != nil {
+		return nil, err
+	}
+	return s.repo.GetSSOMapping(ctx, mapping.ID)
+}
+
+// UpdateGroupMapping changes what a mapped group gives; the provider and group stay as they were.
+func (s *Service) UpdateGroupMapping(ctx context.Context, id string, in GroupMappingInput) (*SSOTeamMapping, error) {
+	if err := normaliseGroupMapping(&in); err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateGroupMapping(ctx, id, in.TeamID, in.RoleID, in.MemberRole); err != nil {
+		return nil, err
+	}
+	return s.repo.GetSSOMapping(ctx, id)
+}
+
+// RoleNamesForGroups returns the roles a member's groups map to, so sign-in can give them in place of the default role.
+func (s *Service) RoleNamesForGroups(ctx context.Context, provider string, groups []string) ([]string, error) {
+	if len(groups) == 0 {
+		return nil, nil
+	}
+	mappings, err := s.repo.GetMappingsForGroups(ctx, provider, groups)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	var names []string
+	for _, m := range mappings {
+		if m.RoleName != nil && !seen[*m.RoleName] {
+			seen[*m.RoleName] = true
+			names = append(names, *m.RoleName)
+		}
+	}
+	return names, nil
+}
+
+// ListTeamSummaries lists a page of teams with their counts and the groups that feed them.
+func (s *Service) ListTeamSummaries(ctx context.Context, limit, offset int) ([]*TeamSummary, int, error) {
+	teams, total, err := s.repo.ListTeams(ctx, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	sums, err := s.repo.SummariseTeams(ctx, teams)
+	if err != nil {
+		return nil, 0, err
+	}
+	return sums, total, nil
+}
+
+// GetTeamSummary returns one team with its counts and the groups that feed it.
+func (s *Service) GetTeamSummary(ctx context.Context, id string) (*TeamSummary, error) {
+	t, err := s.repo.GetTeam(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	sums, err := s.repo.SummariseTeams(ctx, []*Team{t})
+	if err != nil {
+		return nil, err
+	}
+	return sums[0], nil
+}
+
+// AddDefaultMember adds a new member to the team new members start in. The membership is manual rather than single sign-on, so a later sign-in that does not list a matching group leaves it alone.
+func (s *Service) AddDefaultMember(ctx context.Context, teamID, userID string) error {
+	err := s.repo.AddMember(ctx, &TeamMember{TeamID: teamID, UserID: userID, Role: RoleMember, Source: SourceManual})
+	if errors.Is(err, ErrMemberAlreadyExists) {
+		return nil
+	}
+	return err
+}
+
 // matchesGroupFilter checks if a group name matches the configured filter
 func matchesGroupFilter(groupName string, filter config.TeamGroupFilter) bool {
 	switch filter.Mode {
@@ -329,14 +462,19 @@ func (s *Service) SyncUserTeamsFromSSO(ctx context.Context, userID, provider str
 		return nil
 	}
 
-	mappings, err := s.repo.GetMappingsForGroups(ctx, provider, ssoGroups)
+	all, err := s.repo.GetMappingsForGroups(ctx, provider, ssoGroups)
 	if err != nil {
 		return fmt.Errorf("failed to get mappings: %w", err)
 	}
 
+	// A group mapped to a role only is still mapped, so team sync does not invent a team for it, but it gives no membership.
 	mappedGroups := make(map[string]*SSOTeamMapping)
-	for _, mapping := range mappings {
+	mappings := make([]*SSOTeamMapping, 0, len(all))
+	for _, mapping := range all {
 		mappedGroups[mapping.SSOGroupName] = mapping
+		if mapping.TeamID != "" {
+			mappings = append(mappings, mapping)
+		}
 	}
 
 	if syncConfig.Enabled {

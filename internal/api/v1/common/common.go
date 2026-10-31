@@ -17,6 +17,8 @@ const (
 // ErrorResponse represents an API error response
 type ErrorResponse struct {
 	Error string `json:"error"`
+	// RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.
+	RequestID string `json:"request_id,omitempty"`
 } // @name ErrorResponse
 
 // LimitErrorResponse is returned with HTTP 403 when a create is refused

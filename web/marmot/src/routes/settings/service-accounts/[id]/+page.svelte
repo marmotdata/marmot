@@ -2,56 +2,58 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import IconifyIcon from '@iconify/svelte';
-	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import RoleSelector from '$lib/components/RoleSelector.svelte';
-	import CreateAPIKeyBlade from '$components/serviceaccount/CreateAPIKeyBlade.svelte';
-	import PageHeader from '$components/ui/PageHeader.svelte';
-	import Panel from '$components/ui/Panel.svelte';
-	import Pill from '$components/ui/Pill.svelte';
-	import Alert from '$components/ui/Alert.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
-	import EmptyState from '$components/ui/EmptyState.svelte';
+	import { html, nothing } from 'lit';
+	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
+	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
+	import { setCrumbs } from '$lib/mm';
 	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from '$lib/ui/classes';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
+	import { formatDate, formatRelativeTime } from '$lib/utils';
+	import { roleLabel } from '$lib/users/format';
 	import {
 		getServiceAccount,
-		updateServiceAccount,
 		deleteServiceAccount,
 		listAPIKeys,
-		deleteAPIKey
+		deleteAPIKey,
+		rotateAPIKey
 	} from '$lib/serviceaccounts/api';
-	import { listRoles } from '$lib/roles/api';
+	import { assetHref } from '$lib/assetrules/assets';
 	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
-	import type { Role } from '$lib/roles/types';
+	import CreateApiKeyDrawer from '$components/serviceaccount/CreateApiKeyDrawer.svelte';
+	import EditServiceAccountDrawer from '$components/serviceaccount/EditServiceAccountDrawer.svelte';
 
+	// The server refuses a sixth key, so the button is disabled before people fill in the form
 	const MAX_KEYS = 5;
+	// Keys this close to expiry are flagged so they can be replaced before anything breaks
+	const EXPIRING_DAYS = 14;
 
 	let sa = $state<ServiceAccount | null>(null);
 	let keys = $state<ServiceAccountAPIKey[]>([]);
-	let availableRoles = $state<Role[]>([]);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
-	let savingDetails = $state(false);
-	let showDeleteModal = $state(false);
-	let keyToDelete = $state<ServiceAccountAPIKey | null>(null);
-	let showDeleteKeyModal = $state(false);
+	let error = $state('');
+	let creatingKey = $state(false);
+	let rotatedKey = $state<ServiceAccountAPIKey | null>(null);
+	let editing = $state(false);
 
-	let name = $state('');
-	let description = $state('');
-	let active = $state(true);
-	let selectedRoleIds = $state<string[]>([]);
+	let canManage = $derived(holdsAtRoot($myAccess, 'service_accounts:manage'));
 
-	let showCreateKey = $state(false);
-	let keyJustCreated = $state(false);
-	let showNewKeyBanner = $derived(keyJustCreated || page.url.searchParams.get('created') === '1');
+	$effect(() => {
+		setCrumbs([
+			{ label: m.settings_title(), href: resolve('/settings') },
+			{ label: m.settings_service_accounts(), href: resolve('/settings/service-accounts') },
+			{ label: sa?.name ?? m.serviceaccounts_detail_crumb() }
+		]);
+	});
 
-	// The old /api-keys/new route redirects here with ?create=1, so open the blade once the account has loaded and drop the flag so a refresh does not reopen it
+	$effect(() => {
+		if (page.params.id) load(page.params.id);
+	});
+
+	// The old /api-keys/new route redirects here with ?create=1, so open the drawer once the account has loaded and drop the flag so a refresh does not reopen it
 	$effect(() => {
 		if (sa && page.url.searchParams.get('create') === '1') {
-			showCreateKey = true;
+			creatingKey = true;
 			goto(resolve('/settings/service-accounts/[id]', { id: sa.id }), {
 				replaceState: true,
 				noScroll: true,
@@ -60,28 +62,16 @@
 		}
 	});
 
-	$effect(() => {
-		if (page.params.id) {
-			load(page.params.id);
-		}
-	});
-
 	async function load(id: string) {
+		loading = true;
+		error = '';
 		try {
-			loading = true;
-			error = null;
-			const [account, keyList, roles] = await Promise.all([
+			const [account, keyList] = await Promise.all([
 				getServiceAccount(id),
-				listAPIKeys(id).catch(() => []),
-				listRoles().catch(() => [])
+				listAPIKeys(id).catch(() => [])
 			]);
 			sa = account;
 			keys = keyList;
-			availableRoles = roles;
-			name = account.name;
-			description = account.description ?? '';
-			active = account.active;
-			selectedRoleIds = account.roles.map((r) => r.id);
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.serviceaccounts_error_load();
 		} finally {
@@ -89,74 +79,16 @@
 		}
 	}
 
-	async function saveDetails() {
-		if (!sa) return;
-		try {
-			savingDetails = true;
-			const updated = await updateServiceAccount(sa.id, {
-				name: name.trim(),
-				description: description.trim() || undefined,
-				active,
-				role_ids: selectedRoleIds
-			});
-			sa = updated;
-			toasts.success(m.serviceaccounts_updated_success());
-		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_update());
-		} finally {
-			savingDetails = false;
-		}
-	}
-
-	async function handleDelete() {
-		if (!sa) return;
-		try {
-			await deleteServiceAccount(sa.id);
-			toasts.success(m.serviceaccounts_deleted_success({ name: sa.name }));
-			goto(resolve('/settings/service-accounts'));
-		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete());
-		} finally {
-			showDeleteModal = false;
-		}
-	}
-
-	async function handleDeleteKey() {
-		if (!sa || !keyToDelete) return;
-		try {
-			await deleteAPIKey(sa.id, keyToDelete.id);
-			toasts.success(m.serviceaccounts_key_deleted_success({ name: keyToDelete.name }));
-			keys = keys.filter((k) => k.id !== keyToDelete?.id);
-		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete_key());
-		} finally {
-			showDeleteKeyModal = false;
-			keyToDelete = null;
-		}
-	}
-
-	async function handleKeyDone() {
-		showCreateKey = false;
-		keyJustCreated = true;
-		if (!sa) return;
-		keys = await listAPIKeys(sa.id).catch(() => keys);
-	}
-
-	let canManage = $derived(holdsAtRoot($myAccess, 'service_accounts:manage'));
-
-	// The most recent use across every key, which is when this identity last acted
+	// The most recent use across every key, which is when this identity last acted; the server works it out, and the key list covers an older server
 	let lastUsed = $derived(
-		keys
-			.map((k) => k.last_used_at)
-			.filter((d): d is string => !!d)
-			.sort()
-			.at(-1)
+		sa?.last_used_at ??
+			keys
+				.map((k) => k.last_used_at)
+				.filter((d): d is string => !!d)
+				.sort()
+				.at(-1)
 	);
-
-	function formatDate(iso: string | undefined): string {
-		if (!iso) return '';
-		return iso.slice(0, 10);
-	}
+	const callsFormat = new Intl.NumberFormat();
 
 	function daysUntil(iso: string | undefined): number | null {
 		if (!iso) return null;
@@ -165,285 +97,295 @@
 		return Math.ceil((target - Date.now()) / (1000 * 60 * 60 * 24));
 	}
 
-	function keyStatus(key: ServiceAccountAPIKey): 'expired' | 'expiring' | 'unused' | 'ok' {
-		const days = daysUntil(key.expires_at);
-		if (days !== null && days <= 0) return 'expired';
-		if (days !== null && days <= 14) return 'expiring';
-		if (!key.last_used_at) return 'unused';
-		return 'ok';
+	async function removeAccount() {
+		if (!sa) return;
+		const ok = await MmConfirmDialog.confirm({
+			heading: m.serviceaccounts_delete_heading({ name: sa.name }),
+			body: keys.length
+				? m.serviceaccounts_delete_revokes({ count: keys.length })
+				: m.serviceaccounts_delete_body(),
+			confirmLabel: m.serviceaccounts_delete_button(),
+			confirmText: sa.name
+		});
+		if (!ok) return;
+		try {
+			await deleteServiceAccount(sa.id);
+			toasts.success(m.serviceaccounts_deleted_success({ name: sa.name }));
+			goto(resolve('/settings/service-accounts'));
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete());
+		}
 	}
+
+	async function revokeKey(key: ServiceAccountAPIKey) {
+		if (!sa) return;
+		const ok = await MmConfirmDialog.confirm({
+			heading: m.serviceaccounts_revoke_heading({ name: key.name }),
+			body: m.serviceaccounts_delete_key_confirm(),
+			confirmLabel: m.serviceaccounts_revoke_key()
+		});
+		if (!ok) return;
+		try {
+			await deleteAPIKey(sa.id, key.id);
+			toasts.success(m.serviceaccounts_key_revoked({ name: key.name }));
+			keys = keys.filter((k) => k.id !== key.id);
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.serviceaccounts_error_delete_key());
+		}
+	}
+
+	async function rotateKey(key: ServiceAccountAPIKey) {
+		if (!sa) return;
+		const ok = await MmConfirmDialog.confirm({
+			heading: m.apikeys_rotate_title(),
+			body: m.apikeys_rotate_message(),
+			confirmLabel: m.apikeys_rotate_button(),
+			confirmIcon: 'sync'
+		});
+		if (!ok) return;
+		try {
+			const result = await rotateAPIKey(sa.id, key.id);
+			keys = keys.map((k) => (k.id === key.id ? { ...result, key: undefined } : k));
+			rotatedKey = result;
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.apikeys_rotate_error());
+		}
+	}
+
+	async function onKeyCreated() {
+		creatingKey = false;
+		rotatedKey = null;
+		if (sa) keys = await listAPIKeys(sa.id).catch(() => keys);
+	}
+
+	function keyState(key: ServiceAccountAPIKey) {
+		const days = daysUntil(key.expires_at);
+		if (days !== null && days <= 0)
+			return html`<mm-status-pill status="danger" icon="error"
+				>${m.serviceaccounts_key_expired()}</mm-status-pill
+			>`;
+		if (days !== null && days <= EXPIRING_DAYS)
+			return html`<mm-status-pill status="warning" icon="schedule"
+				>${m.serviceaccounts_detail_key_expires_in_days({ days })}</mm-status-pill
+			>`;
+		return m.common_active();
+	}
+
+	let keyColumns = $derived<DataTableColumn<ServiceAccountAPIKey>[]>([
+		{ key: 'name', header: m.common_name(), width: 220 },
+		{
+			key: 'prefix',
+			header: m.apikeys_column_key(),
+			type: 'mono',
+			width: 160,
+			empty: m.apikeys_prefix_unknown()
+		},
+		{ key: 'created_at', header: m.serviceaccounts_col_created(), type: 'date', width: 130 },
+		{
+			key: 'last_used_at',
+			header: m.serviceaccounts_col_last_used(),
+			type: 'date',
+			width: 130,
+			empty: m.common_never()
+		},
+		{
+			key: 'expires_at',
+			header: m.serviceaccounts_col_expires(),
+			width: 140,
+			value: (k) => (k.expires_at ? formatDate(k.expires_at) : m.common_never())
+		},
+		{
+			key: 'state',
+			header: m.common_status(),
+			width: 170,
+			minWidth: 160,
+			render: keyState
+		},
+		{
+			key: 'actions',
+			header: m.common_actions(),
+			width: 180,
+			minWidth: 180,
+			align: 'end',
+			// One visible button per row: the action the row needs most, with the rest in More
+			render: (k) => {
+				if (!canManage) return nothing;
+				const days = daysUntil(k.expires_at);
+				if (days === null || days > EXPIRING_DAYS)
+					return html`<mm-button
+						size="sm"
+						variant="ghost"
+						icon="delete"
+						label=${m.serviceaccounts_revoke_key_aria({ name: k.name })}
+						@click=${() => revokeKey(k)}
+						>${m.serviceaccounts_revoke()}</mm-button
+					>`;
+				return html`<span
+					class="mm-cluster"
+					style="--mm-gap:var(--space-1);justify-content:flex-end;flex-wrap:nowrap"
+				>
+					<mm-button size="sm" icon="sync" @click=${() => rotateKey(k)}
+						>${m.apikeys_rotate_button()}</mm-button
+					>
+					<mm-menu-button
+						size="sm"
+						variant="ghost"
+						icon="more-horiz"
+						icon-only
+						label=${m.apikeys_more_actions({ name: k.name })}
+					>
+						<mm-menu
+							label=${m.apikeys_actions_for({ name: k.name })}
+							@mm-select=${() => revokeKey(k)}
+						>
+							<mm-menu-item icon="delete" value="revoke" danger
+								>${m.serviceaccounts_revoke_key()}</mm-menu-item
+							>
+						</mm-menu>
+					</mm-menu-button>
+				</span>`;
+			}
+		}
+	]);
 </script>
 
 <svelte:head>
-	<title
-		>{sa
-			? m.serviceaccounts_page_title({ name: sa.name })
-			: m.serviceaccounts_page_title_fallback()}</title
-	>
+	<title>{sa ? sa.name : m.serviceaccounts_detail_crumb()} · {m.settings_service_accounts()}</title>
 </svelte:head>
 
-{#if loading}
-	<Skeleton class="h-16" />
-	<div class="mt-6 grid gap-6 lg:grid-cols-3">
-		<div class="lg:col-span-2"><Skeleton class="h-48" rows={2} /></div>
-		<Skeleton class="h-64" />
+{#if loading && !sa}
+	<div class="mm-stack" style="--mm-gap: var(--space-5)" aria-busy="true">
+		<mm-skeleton shape="text" count={1} style="width: 16rem"></mm-skeleton>
+		<mm-skeleton shape="table-row" count={5}></mm-skeleton>
 	</div>
-{:else if error}
-	<PageHeader
-		title={m.serviceaccounts_detail_title()}
-		backHref={resolve('/settings/service-accounts')}
-		backLabel={m.settings_service_accounts()}
-	/>
-	<Alert tone="error">{error}</Alert>
-{:else if sa}
-	<PageHeader
-		title={sa.name}
-		description={sa.description || undefined}
-		backHref={resolve('/settings/service-accounts')}
-		backLabel={m.settings_service_accounts()}
-	>
-		{#snippet meta()}
-			<Pill tone={sa?.active ? 'success' : 'warning'}>
-				{sa?.active ? m.common_active() : m.common_inactive()}
-			</Pill>
-			<span class="text-xs tabular-nums text-gray-500 dark:text-gray-400"
-				>{m.serviceaccounts_meta_keys({ count: keys.length })}</span
+{:else if error || !sa}
+	<div class="mm-stack" style="--mm-gap: var(--space-5)">
+		<mm-page-header heading={m.serviceaccounts_detail_crumb()}></mm-page-header>
+		<mm-callout tone="danger" heading={m.serviceaccounts_error_load()}>
+			{error}
+			<mm-button
+				slot="actions"
+				size="sm"
+				icon="refresh"
+				onclick={() => page.params.id && load(page.params.id)}
 			>
-			<span class="text-xs text-gray-400 dark:text-gray-500" aria-hidden="true">·</span>
-			<span class="text-xs text-gray-500 dark:text-gray-400">
-				{lastUsed
-					? m.serviceaccounts_meta_last_used({ date: formatDate(lastUsed) })
-					: m.serviceaccounts_meta_never_used()}
-			</span>
-		{/snippet}
-		{#snippet actions()}
+				{m.common_retry()}
+			</mm-button>
+		</mm-callout>
+	</div>
+{:else}
+	<div class="mm-stack" style="--mm-gap: var(--space-6)">
+		<mm-page-header
+			heading={sa.name}
+			icon="smart-toy"
+			caption={lastUsed
+				? m.serviceaccounts_meta_last_used({ date: formatRelativeTime(lastUsed) })
+				: m.serviceaccounts_meta_never_used()}
+			description={sa.description ?? ''}
+		>
+			{#if sa.used_by?.length}
+				<span slot="owners" class="mm-cluster"
+					><span class="mm-caption">{m.serviceaccounts_col_used_by()}</span>
+					{#each sa.used_by as agent (agent.id)}
+						<mm-owner-chip
+							name={agent.name}
+							kind="agent"
+							href={assetHref(agent)}
+							service-account={sa.name}
+						></mm-owner-chip>
+					{/each}
+				</span>
+			{/if}
 			{#if canManage}
-				<button type="button" class={BTN_SECONDARY} onclick={() => (showDeleteModal = true)}>
-					<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
-					{m.common_delete()}
-				</button>
-				<button
-					type="button"
-					class={BTN_PRIMARY}
-					onclick={() => (showCreateKey = true)}
-					disabled={keys.length >= MAX_KEYS}
-					title={keys.length >= MAX_KEYS
-						? m.serviceaccounts_detail_key_limit_reached({ max: MAX_KEYS })
-						: undefined}
+				<mm-menu-button
+					slot="actions"
+					variant="ghost"
+					icon="more-horiz"
+					icon-only
+					label={m.serviceaccounts_more_actions({ name: sa.name })}
 				>
-					<IconifyIcon icon="material-symbols:key-outline" class="h-5 w-5" />
-					{m.serviceaccounts_detail_create_key_button()}
-				</button>
+					<mm-menu onmm-select={removeAccount}>
+						<mm-menu-item icon="delete" danger>
+							{m.serviceaccounts_delete_named({ name: sa.name })}
+						</mm-menu-item>
+					</mm-menu>
+				</mm-menu-button>
+				<mm-button slot="actions" icon="edit" onclick={() => (editing = true)}>
+					{m.serviceaccounts_edit_button()}
+				</mm-button>
 			{/if}
-		{/snippet}
-	</PageHeader>
+		</mm-page-header>
 
-	{#if showNewKeyBanner}
-		<div class="mb-6 flex items-start gap-2">
-			<div class="min-w-0 flex-1">
-				<Alert tone="success" title={m.serviceaccounts_key_created_banner()}>
-					{m.serviceaccounts_key_saved_reminder()}
-				</Alert>
-			</div>
-			<button
-				type="button"
-				class="{BTN_GHOST} mt-2"
-				onclick={() => {
-					keyJustCreated = false;
-					goto(resolve('/settings/service-accounts/[id]', { id: sa!.id }));
-				}}
-				aria-label={m.serviceaccounts_dismiss_aria()}
+		<mm-description-list layout="inline-grid" columns={4}>
+			<mm-description term={m.users_header_roles()}>
+				{sa.roles.length
+					? sa.roles.map((r) => roleLabel(r.name)).join(', ')
+					: m.serviceaccounts_no_roles()}
+			</mm-description>
+			{#if !sa.active}
+				<mm-description term={m.common_status()}>
+					{m.serviceaccounts_status_inactive()}
+				</mm-description>
+			{/if}
+			<mm-description term={m.serviceaccounts_col_created()}
+				>{formatDate(sa.created_at)}</mm-description
 			>
-				<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
-			</button>
-		</div>
-	{/if}
-
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-		<div class="space-y-6 lg:col-span-2">
-			<Panel title={m.common_details()} icon="material-symbols:info-outline">
-				<div class="space-y-4">
-					<div>
-						<label for="detail-name" class="{LABEL} mb-1.5 block">{m.common_name()}</label>
-						<input id="detail-name" type="text" bind:value={name} class={INPUT} />
-					</div>
-					<div>
-						<label for="detail-desc" class="{LABEL} mb-1.5 block">{m.common_description()}</label>
-						<textarea id="detail-desc" bind:value={description} rows="2" class="{INPUT} resize-y"
-						></textarea>
-					</div>
-					<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-						<input
-							type="checkbox"
-							bind:checked={active}
-							class="rounded border-gray-300 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:border-gray-600"
-						/>
-						{m.common_active()}
-						<span class="text-xs text-gray-500 dark:text-gray-400"
-							>{m.serviceaccounts_active_hint()}</span
-						>
-					</label>
-				</div>
-			</Panel>
-
-			<Panel
-				title={m.serviceaccounts_org_roles_heading()}
-				description={m.serviceaccounts_org_roles_hint()}
-				icon="material-symbols:shield-outline"
+			{#if sa.created_by_name}
+				<mm-description term={m.serviceaccounts_created_by()}>{sa.created_by_name}</mm-description>
+			{/if}
+			<mm-description term={m.serviceaccounts_calls_7_days()}
+				>{callsFormat.format(sa.calls_last_7_days ?? 0)}</mm-description
 			>
-				<RoleSelector
-					roles={availableRoles}
-					selectedIds={selectedRoleIds}
-					onChange={(ids) => (selectedRoleIds = ids)}
-					emptyMessage={m.serviceaccounts_no_roles_available()}
-				/>
-			</Panel>
+		</mm-description-list>
 
+		<mm-section
+			heading={m.serviceaccounts_detail_api_keys_heading()}
+			description={keys.length >= MAX_KEYS
+				? m.serviceaccounts_detail_key_limit_reached({ max: MAX_KEYS })
+				: m.serviceaccounts_keys_description()}
+		>
 			{#if canManage}
-				<div class="flex justify-end">
-					<button
-						type="button"
-						class={BTN_PRIMARY}
-						onclick={saveDetails}
-						disabled={savingDetails || !name.trim()}
-					>
-						<IconifyIcon icon="material-symbols:check" class="h-4 w-4" />
-						{savingDetails ? m.serviceaccounts_saving_label() : m.serviceaccounts_save_changes()}
-					</button>
-				</div>
+				<mm-button
+					slot="actions"
+					variant="primary"
+					icon="key"
+					disabled={keys.length >= MAX_KEYS}
+					onclick={() => (creatingKey = true)}
+				>
+					{m.serviceaccounts_detail_create_key_button()}
+				</mm-button>
 			{/if}
-		</div>
-
-		<!-- API keys -->
-		<div class="lg:col-span-1">
-			<Panel
-				flush
-				title={m.serviceaccounts_detail_api_keys_heading()}
-				icon="material-symbols:key-outline"
-			>
-				{#snippet action()}
-					<!-- The count is spelled out: "1 / 5" on its own made the reader guess what was being counted. -->
-					<span class="text-xs tabular-nums text-gray-500 dark:text-gray-400">
-						{m.serviceaccounts_key_count({ count: keys.length, max: MAX_KEYS })}
-					</span>
-				{/snippet}
-
-				{#if keys.length === 0}
-					<div class="p-5">
-						<EmptyState
-							icon="material-symbols:key-off-outline"
-							title={m.serviceaccounts_no_keys()}
-							description={m.serviceaccounts_detail_no_keys_hint()}
-							dashed={false}
-						>
-							{#snippet action()}
-								{#if canManage}
-									<button
-										type="button"
-										class={BTN_SECONDARY}
-										onclick={() => (showCreateKey = true)}
-									>
-										<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-										{m.serviceaccounts_detail_create_key_button()}
-									</button>
-								{/if}
-							{/snippet}
-						</EmptyState>
-					</div>
-				{:else}
-					<ul class="divide-y divide-gray-100 dark:divide-gray-700/60">
-						{#each keys as key (key.id)}
-							{@const status = keyStatus(key)}
-							{@const daysLeft = daysUntil(key.expires_at)}
-							<li class="group flex items-start gap-3 px-5 py-3">
-								<IconifyIcon
-									icon="material-symbols:vpn-key-outline"
-									class="mt-0.5 h-4 w-4 shrink-0 text-gray-400"
-								/>
-								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-1.5">
-										<span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100"
-											>{key.name}</span
-										>
-										<!-- A pill only when the state is worth acting on. -->
-										{#if status === 'expired'}
-											<Pill tone="danger">{m.serviceaccounts_key_expired()}</Pill>
-										{:else if status === 'expiring' && daysLeft !== null}
-											<Pill tone="warning"
-												>{m.serviceaccounts_detail_key_expires_in_days({ days: daysLeft })}</Pill
-											>
-										{/if}
-									</div>
-									<p class="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
-										{#if key.expires_at}{m.serviceaccounts_key_expires_date({
-												date: formatDate(key.expires_at)
-											})}{:else}{m.serviceaccounts_key_never_expires()}{/if}
-										· {#if key.last_used_at}{m.serviceaccounts_key_used_date({
-												date: formatDate(key.last_used_at)
-											})}{:else}{m.serviceaccounts_key_unused()}{/if}
-									</p>
-								</div>
-								{#if canManage}
-									<button
-										type="button"
-										class="{BTN_GHOST} -mr-2 px-1.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-										onclick={() => {
-											keyToDelete = key;
-											showDeleteKeyModal = true;
-										}}
-										aria-label={m.serviceaccounts_delete_key_aria()}
-										title={m.serviceaccounts_delete_key_aria()}
-									>
-										<IconifyIcon icon="material-symbols:delete-outline" class="h-4 w-4" />
-									</button>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-					{#if keys.length >= MAX_KEYS}
-						<p
-							class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700/60 dark:text-gray-400"
-						>
-							{m.serviceaccounts_detail_key_limit_reached({ max: MAX_KEYS })}
-						</p>
-					{/if}
-				{/if}
-			</Panel>
-		</div>
+			<mm-data-table
+				label={m.serviceaccounts_keys_for({ name: sa.name })}
+				columns={keyColumns}
+				rows={keys}
+				empty-heading={m.serviceaccounts_no_keys()}
+				empty-text={m.serviceaccounts_detail_no_keys_hint()}
+			></mm-data-table>
+		</mm-section>
 	</div>
 {/if}
 
-{#if sa}
-	<DeleteModal
-		show={showDeleteModal}
-		title={m.serviceaccounts_delete_title()}
-		message={keys.length > 0
-			? m.serviceaccounts_delete_revokes({ count: keys.length })
-			: m.serviceaccounts_delete_confirm()}
-		confirmText={m.common_delete()}
-		resourceName={sa.name}
-		requireConfirmation={true}
-		onConfirm={handleDelete}
-		onCancel={() => (showDeleteModal = false)}
+{#if sa && creatingKey}
+	<CreateApiKeyDrawer {sa} onClose={() => (creatingKey = false)} onDone={onKeyCreated} />
+{/if}
+
+{#if sa && rotatedKey}
+	<CreateApiKeyDrawer
+		{sa}
+		rotated={rotatedKey}
+		onClose={() => (rotatedKey = null)}
+		onDone={() => (rotatedKey = null)}
 	/>
 {/if}
 
-{#if keyToDelete}
-	<DeleteModal
-		show={showDeleteKeyModal}
-		title={m.serviceaccounts_delete_key_title()}
-		message={m.serviceaccounts_delete_key_confirm()}
-		confirmText={m.common_delete()}
-		resourceName={keyToDelete.name}
-		requireConfirmation={false}
-		onConfirm={handleDeleteKey}
-		onCancel={() => {
-			showDeleteKeyModal = false;
-			keyToDelete = null;
+{#if sa && editing}
+	<EditServiceAccountDrawer
+		{sa}
+		onClose={() => (editing = false)}
+		onSaved={(updated) => {
+			sa = updated;
+			editing = false;
 		}}
 	/>
-{/if}
-
-{#if sa && showCreateKey}
-	<CreateAPIKeyBlade {sa} onClose={() => (showCreateKey = false)} onDone={handleKeyDone} />
 {/if}

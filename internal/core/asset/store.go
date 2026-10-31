@@ -61,6 +61,10 @@ type Repository interface {
 	RemoveTerm(ctx context.Context, assetID string, termID string) error
 	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
 	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
+	GetAssetsByTermLink(ctx context.Context, termID, link string, limit, offset int) ([]*Asset, int, error)
+	GetTermLinks(ctx context.Context, termID string, assetIDs []string) ([]TermLink, error)
+	GetTermLinkGroups(ctx context.Context, termID string) ([]TermLinkGroup, error)
+	GetByIDs(ctx context.Context, ids []string) ([]*Asset, error)
 }
 
 type AvailableFilters struct {

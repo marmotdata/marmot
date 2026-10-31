@@ -2,14 +2,16 @@ package teams
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -21,10 +23,10 @@ type Handler struct {
 
 // ListTeamsResponse represents the response from the teams list endpoint.
 type ListTeamsResponse struct {
-	Teams  []team.Team `json:"teams"`
-	Total  int         `json:"total"`
-	Limit  int         `json:"limit"`
-	Offset int         `json:"offset"`
+	Teams  []team.TeamSummary `json:"teams"`
+	Total  int                `json:"total"`
+	Limit  int                `json:"limit"`
+	Offset int                `json:"offset"`
 } // @name ListTeamsResponse
 
 // CreateTeamRequest represents the request body for creating a team.
@@ -67,18 +69,21 @@ type ListSSOMappingsResponse struct {
 	Mappings []team.SSOTeamMapping `json:"mappings"`
 } // @name ListSSOMappingsResponse
 
-// CreateSSOMappingRequest represents the request body for creating an SSO mapping.
+// CreateSSOMappingRequest represents the request body for creating an SSO mapping. A mapping gives a team, a role or both.
 type CreateSSOMappingRequest struct {
 	Provider     string `json:"provider"`
 	SSOGroupName string `json:"sso_group_name"`
-	TeamID       string `json:"team_id"`
-	MemberRole   string `json:"member_role"`
+	TeamID       string `json:"team_id,omitempty"`
+	// RoleID is the Marmot role the group's members get at every sign-in, in place of the default role.
+	RoleID     string `json:"role_id,omitempty"`
+	MemberRole string `json:"member_role"`
 } // @name CreateSSOMappingRequest
 
-// UpdateSSOMappingRequest represents the request body for updating an SSO mapping.
+// UpdateSSOMappingRequest represents the request body for updating an SSO mapping. A request without role_id leaves the mapped role as it was, as it did before roles could be mapped.
 type UpdateSSOMappingRequest struct {
-	TeamID     string `json:"team_id"`
-	MemberRole string `json:"member_role"`
+	TeamID     string  `json:"team_id"`
+	RoleID     *string `json:"role_id,omitempty"`
+	MemberRole string  `json:"member_role"`
 } // @name UpdateSSOMappingRequest
 
 // SearchOwnersResponse represents the response from the search owners endpoint.
@@ -267,7 +272,7 @@ func (h *Handler) listTeams(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	teams, total, err := h.teamService.ListTeams(r.Context(), limit, offset)
+	teams, total, err := h.teamService.ListTeamSummaries(r.Context(), limit, offset)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, "Failed to list teams")
 		return
@@ -336,7 +341,7 @@ func (h *Handler) createTeam(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Team ID"
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success 200 {object} team.Team
+// @Success 200 {object} team.TeamSummary
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
 // @ID getTeamsID
@@ -344,7 +349,7 @@ func (h *Handler) createTeam(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	t, err := h.teamService.GetTeam(r.Context(), id)
+	t, err := h.teamService.GetTeamSummary(r.Context(), id)
 	if err != nil {
 		if err == team.ErrTeamNotFound {
 			common.RespondError(w, http.StatusNotFound, "Team not found")
@@ -677,19 +682,25 @@ func (h *Handler) createSSOMapping(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Provider == "" || req.SSOGroupName == "" || req.TeamID == "" {
-		common.RespondError(w, http.StatusBadRequest, "Missing required fields")
+	if req.Provider == "" || req.SSOGroupName == "" || (req.TeamID == "" && req.RoleID == "") {
+		common.RespondError(w, http.StatusBadRequest, "Missing required fields: provider, sso_group_name and a team_id, a role_id or both")
 		return
 	}
 
-	if req.MemberRole == "" {
-		req.MemberRole = team.RoleMember
-	}
-
-	mapping, err := h.teamService.CreateSSOMapping(r.Context(), req.Provider, req.SSOGroupName, req.TeamID, req.MemberRole)
+	mapping, err := h.teamService.CreateGroupMapping(r.Context(), team.GroupMappingInput{
+		Provider:     req.Provider,
+		SSOGroupName: req.SSOGroupName,
+		TeamID:       req.TeamID,
+		RoleID:       req.RoleID,
+		MemberRole:   req.MemberRole,
+	})
 	if err != nil {
 		if err == team.ErrMappingAlreadyExists {
 			common.RespondError(w, http.StatusConflict, "SSO mapping already exists")
+			return
+		}
+		if errors.Is(err, team.ErrEmptyGroupMapping) || strings.HasPrefix(err.Error(), "invalid member role") {
+			common.RespondError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		common.RespondError(w, http.StatusInternalServerError, "Failed to create SSO mapping")
@@ -753,12 +764,28 @@ func (h *Handler) updateSSOMapping(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.TeamID == "" || req.MemberRole == "" {
-		common.RespondError(w, http.StatusBadRequest, "Missing required fields")
+	if req.RoleID == nil {
+		if req.TeamID == "" || req.MemberRole == "" {
+			common.RespondError(w, http.StatusBadRequest, "Missing required fields")
+			return
+		}
+		if err := h.teamService.UpdateSSOMapping(r.Context(), id, req.TeamID, req.MemberRole); err != nil {
+			if err == team.ErrMappingNotFound {
+				common.RespondError(w, http.StatusNotFound, "SSO mapping not found")
+				return
+			}
+			common.RespondError(w, http.StatusInternalServerError, "Failed to update SSO mapping")
+			return
+		}
+		common.RespondJSON(w, http.StatusOK, map[string]string{"message": "SSO mapping updated"})
 		return
 	}
 
-	err := h.teamService.UpdateSSOMapping(r.Context(), id, req.TeamID, req.MemberRole)
+	_, err := h.teamService.UpdateGroupMapping(r.Context(), id, team.GroupMappingInput{TeamID: req.TeamID, RoleID: *req.RoleID, MemberRole: req.MemberRole})
+	if errors.Is(err, team.ErrEmptyGroupMapping) {
+		common.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err != nil {
 		if err == team.ErrMappingNotFound {
 			common.RespondError(w, http.StatusNotFound, "SSO mapping not found")

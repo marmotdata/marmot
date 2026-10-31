@@ -54,6 +54,30 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 	return globalOAuthAuthorizeCompleter
 }
 
+// LastSeenToucher records that a member made a request; it throttles its own writes.
+type LastSeenToucher interface {
+	Touch(userID string)
+}
+
+var globalLastSeen LastSeenToucher
+
+// SetLastSeenTracker registers where WithAuth records members' activity.
+func SetLastSeenTracker(t LastSeenToucher) {
+	globalLastSeen = t
+}
+
+// recordLastSeen notes the activity of members signed in as themselves. The anonymous user is shared by everyone, so it is not anybody's activity.
+func recordLastSeen(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if t := globalLastSeen; t != nil {
+			if u, ok := r.Context().Value(UserContextKey).(*user.User); ok && u.ID != "" && u.Username != "anonymous" {
+				t.Touch(u.ID)
+			}
+		}
+		next(w, r)
+	}
+}
+
 // UpdatePasswordPath is the route passwordChangeGate exempts. RegisterRoutes
 // registers the handler under it, so that drift between the two cannot lock a
 // user with a pending change out of the only endpoint that can clear it.
@@ -83,6 +107,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 	k8sValidator := globalK8sValidator
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		next = passwordChangeGate(next)
+		next = recordLastSeen(next)
 		return func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
 

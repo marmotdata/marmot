@@ -29,6 +29,7 @@ const (
 	TypeLineageChange          = "lineage_change"
 	TypeAssetDeleted           = "asset_deleted"
 	TypeAccessExpiry           = "access_expiry"
+	TypeAccessRequest          = "access_request"
 )
 
 const (
@@ -95,6 +96,9 @@ type NotificationFilter struct {
 type NotificationSummary struct {
 	UnreadCount int `json:"unread_count"`
 	TotalCount  int `json:"total_count"`
+	// ReadRetentionDays and RetentionDays say how long pruning keeps read and all notifications, so the inbox can tell people before they go.
+	ReadRetentionDays int `json:"read_retention_days"`
+	RetentionDays     int `json:"retention_days"`
 }
 
 // ListResult contains paginated notification results.
@@ -516,7 +520,13 @@ func (s *Service) List(ctx context.Context, filter NotificationFilter) (*ListRes
 
 // GetSummary returns unread/total count for a user.
 func (s *Service) GetSummary(ctx context.Context, userID string) (*NotificationSummary, error) {
-	return s.repo.GetSummary(ctx, userID)
+	summary, err := s.repo.GetSummary(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	summary.ReadRetentionDays = int(s.config.PruneReadAge / (24 * time.Hour))
+	summary.RetentionDays = int(s.config.PruneAge / (24 * time.Hour))
+	return summary, nil
 }
 
 // MarkAsRead marks a single notification as read.
@@ -529,6 +539,18 @@ func (s *Service) MarkAsRead(ctx context.Context, id, userID string) error {
 		return ErrUnauthorized
 	}
 	return s.repo.MarkAsRead(ctx, id)
+}
+
+// MarkAsUnread puts a notification back in the unread count, for something read in passing that still needs doing.
+func (s *Service) MarkAsUnread(ctx context.Context, id, userID string) error {
+	notification, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if notification.UserID != userID {
+		return ErrUnauthorized
+	}
+	return s.repo.MarkAsUnread(ctx, id)
 }
 
 // MarkAllAsRead marks all notifications for a user as read.

@@ -22,9 +22,10 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 // reading it back use the same clock even when replicas disagree.
 func (p *pgRepository) PutClient(ctx context.Context, client *ClientRecord, ttl time.Duration) error {
 	const q = `
-		INSERT INTO oauth_clients (client_id, redirect_uris, grant_types, response_types, scopes, expires_at)
-		VALUES ($1, $2, $3, $4, $5, NOW() + make_interval(secs => $6))
+		INSERT INTO oauth_clients (client_id, redirect_uris, grant_types, response_types, scopes, expires_at, client_name)
+		VALUES ($1, $2, $3, $4, $5, NOW() + make_interval(secs => $6), NULLIF($7, ''))
 		ON CONFLICT (client_id) DO UPDATE SET
+			client_name    = EXCLUDED.client_name,
 			redirect_uris  = EXCLUDED.redirect_uris,
 			grant_types    = EXCLUDED.grant_types,
 			response_types = EXCLUDED.response_types,
@@ -38,6 +39,7 @@ func (p *pgRepository) PutClient(ctx context.Context, client *ClientRecord, ttl 
 		nonNil(client.ResponseTypes),
 		nonNil(client.Scopes),
 		ttl.Seconds(),
+		client.Name,
 	)
 	return err
 }
@@ -53,7 +55,7 @@ func nonNil(s []string) []string {
 
 func (p *pgRepository) GetClient(ctx context.Context, clientID string) (*ClientRecord, error) {
 	const q = `
-		SELECT redirect_uris, grant_types, response_types, scopes
+		SELECT redirect_uris, grant_types, response_types, scopes, COALESCE(client_name, '')
 		FROM oauth_clients
 		WHERE client_id = $1 AND expires_at > NOW()
 	`
@@ -63,6 +65,7 @@ func (p *pgRepository) GetClient(ctx context.Context, clientID string) (*ClientR
 		&rec.GrantTypes,
 		&rec.ResponseTypes,
 		&rec.Scopes,
+		&rec.Name,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNoRecord

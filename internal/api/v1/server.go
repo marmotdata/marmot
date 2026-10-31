@@ -30,6 +30,7 @@ import (
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
 	serveAPI "github.com/marmotdata/marmot/internal/api/v1/pluginserve"
+	recentAPI "github.com/marmotdata/marmot/internal/api/v1/recent"
 	rolesAPI "github.com/marmotdata/marmot/internal/api/v1/roles"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
@@ -43,8 +44,10 @@ import (
 	"github.com/marmotdata/marmot/internal/core/accessexpiry"
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdetail"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/assetsignal"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
 	queryService "github.com/marmotdata/marmot/internal/core/dataquery"
@@ -53,10 +56,12 @@ import (
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
+	recentService "github.com/marmotdata/marmot/internal/core/recent"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
 	serviceaccountService "github.com/marmotdata/marmot/internal/core/serviceaccount"
+	settingsService "github.com/marmotdata/marmot/internal/core/settings"
 	"github.com/marmotdata/marmot/internal/core/subscription"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
 	userService "github.com/marmotdata/marmot/internal/core/user"
@@ -145,7 +150,9 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	dataProductRepo := dataproductService.NewPostgresRepository(db, recorder)
 
 	assetSvc := asset.NewService(assetRepo)
-	userSvc := userService.NewService(userRepo)
+	settingsStore := settingsService.NewPostgresStore(db)
+	userSvc := userService.NewService(userRepo, userService.WithSettings(settingsStore))
+	common.SetLastSeenTracker(userService.NewLastSeenTracker(userRepo))
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
@@ -154,7 +161,9 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
-	authSvc := authService.NewService(authRepo, userSvc)
+	// Grants tie OAuth client tokens to the person's consent, so revoking a connected app ends its tokens before they expire
+	oauthGrants := marmotOAuth2.NewPostgresGrantRepository(db, authService.TokenTTL)
+	authSvc := authService.NewService(authRepo, userSvc, authService.WithGrantChecker(oauthGrants))
 	glossarySvc := glossaryService.NewService(glossaryRepo)
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, glossarySvc, recorder)
 	teamRepo := teamService.NewPostgresRepository(db)
@@ -350,6 +359,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	}
 
 	oauthManager := authService.NewOAuthManager()
+	oauthManager.SetTeamService(teamSvc)
+	oauthManager.SetProviderSwitches(settingsService.Switches{Store: settingsStore})
 
 	if oktaConfig := config.Auth.Okta; oktaConfig != nil && oktaConfig.Enabled {
 		if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
@@ -466,6 +477,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	// spans four requests and an instance can serve each from a different replica.
 	oauthRepo := marmotOAuth2.NewPostgresRepository(db)
 	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey, oauthRepo)
+	oauthFositeProvider.Grants = oauthGrants
 	marmotOAuth2.StartCleanup(context.Background(), oauthRepo, 5*time.Minute)
 
 	// Webhook service for external notifications
@@ -528,7 +540,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 				reindexer = searchService.NewReindexer(esClient, searchRepo, esConfig.BulkSize)
 				reindexBroadcaster := websocket.NewSearchReindexBroadcaster(wsHub)
-				reindexer.SetBroadcaster(reindexBroadcaster)
+				reindexer.SetBroadcaster(adminAPI.RecordReindexCompletion(reindexBroadcaster, settingsStore))
 
 				if esConfig.ReindexOnStart {
 					go func() {
@@ -571,6 +583,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 				IngestGlobalInterval: time.Duration(config.Query.IngestOnQueryGlobalInterval) * time.Second,
 				Lineage:              lineageSvc,
 				Served:               servedRunner(serveHub),
+				Notifier:             notificationSvc,
+				Grantors:             queryGrantors(db),
 			},
 		)
 	}
@@ -598,8 +612,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
-		users.NewHandler(userSvc, authSvc, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder).WithDetails(assetdetail.NewStore(db)).WithSignals(assetsignal.New(db)),
+		users.NewHandler(userSvc, authSvc, config).WithTeams(teamSvc),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder),
@@ -620,12 +634,14 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		serviceaccountsAPI.NewHandler(serviceAccountSvc, userSvc, authSvc, config),
 		plugins.NewHandler(userSvc, authSvc, config),
 		ui.NewHandler(config, encryptionConfigured),
-		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
+		adminAPI.NewHandler(reindexer, userSvc, authSvc, config).With(adminAPI.Extras{DB: db, Settings: settingsStore, OAuth: oauthManager, Teams: teamSvc, Roles: roleSvc}),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+		recentAPI.NewHandler(recentService.NewStore(db), userSvc, authSvc, config),
 	}
 	if querySvc != nil {
 		server.pluginInstances = pluginInstances
 		server.handlers = append(server.handlers, queryAPI.NewHandler(querySvc, userSvc, authSvc, config))
+		server.handlers = append(server.handlers, queryAPI.NewWorkspaceHandler(querySvc, queryService.NewSavedQueryStore(db), queryService.NewPostgresRepository(db), userSvc, authSvc, config))
 	}
 	if serveHub != nil {
 		server.serveHub = serveHub
@@ -755,6 +771,18 @@ func startServeHub(cfg *config.Config, db *pgxpool.Pool, schedules *runService.S
 }
 
 // servedRunner keeps a nil hub a nil interface, so the query service sees serving as disabled rather than calling a nil pointer.
+// queryGrantors names who can give a caller query access in OSS: whoever can change a user's roles for a person, and whoever manages service accounts for a machine caller.
+func queryGrantors(db *pgxpool.Pool) queryService.Grantors {
+	users := accessexpiry.RoleHolders(db, "users", "manage")
+	serviceAccounts := accessexpiry.RoleHolders(db, "service_accounts", "manage")
+	return func(ctx context.Context, principalType string) ([]notificationService.Recipient, error) {
+		if principalType == string(authService.PrincipalTypeServiceAccount) {
+			return serviceAccounts(ctx)
+		}
+		return users(ctx)
+	}
+}
+
 func servedRunner(hub *pluginserve.Hub) queryService.ServedRunner {
 	if hub == nil {
 		return nil
@@ -811,9 +839,17 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 					// via lookups.SourceFrom(ctx).
 					r = r.WithContext(lookups.WithSource(r.Context(), lookups.SourceFromRequest(r)))
 
+					// The reference goes on the response and into any error body, so a failure someone reports can be found in the log below
+					var requestID string
+					r, requestID = common.WithRequestID(w, r)
+
 					// For regular HTTP requests, use the wrapped ResponseWriter for metrics
 					wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 					handler(wrapped, r)
+					if wrapped.statusCode >= http.StatusInternalServerError {
+						log.Warn().Str("request_id", requestID).Str("method", r.Method).Str("path", r.URL.Path).
+							Int("status", wrapped.statusCode).Msg("API request failed")
+					}
 
 					duration := time.Since(start)
 					metricPath := s.getMetricPath(path, r.URL.Path)

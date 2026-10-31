@@ -8,6 +8,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/settings"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,6 +41,11 @@ type User struct {
 	Identities            []UserIdentity         `json:"identities,omitempty"`
 	CreatedAt             time.Time              `json:"created_at"`
 	UpdatedAt             time.Time              `json:"updated_at"`
+	// Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.
+	Status string `json:"status,omitempty"`
+	// LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.
+	LastSeenAt      *time.Time `json:"last_seen_at,omitempty"`
+	InviteExpiresAt *time.Time `json:"invite_expires_at,omitempty"`
 } // @name User
 
 type Role struct {
@@ -87,8 +93,12 @@ type Filter struct {
 	Query   string
 	RoleIDs []string
 	Active  *bool
-	Limit   int
-	Offset  int
+	// Status is active, invited or deactivated, and supersedes Active when set.
+	Status string
+	// NoTeam keeps only members who belong to no team.
+	NoTeam bool
+	Limit  int
+	Offset int
 }
 
 type Service interface {
@@ -116,16 +126,36 @@ type Service interface {
 	CreateAPIKey(ctx context.Context, userID string, name string, expiresIn *time.Duration) (*APIKey, error)
 	DeleteAPIKey(ctx context.Context, userID string, keyID string) error
 	ListAPIKeys(ctx context.Context, userID string) ([]*APIKey, error)
+	RotateAPIKey(ctx context.Context, userID string, keyID string) (*APIKey, error)
+
+	// Account profile
+	GetProfile(ctx context.Context, userID string) (*Profile, error)
+	UpdateJobTitle(ctx context.Context, userID string, jobTitle string) error
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
 	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
 	InvalidateSessions(ctx context.Context, userID string) error
+
+	// Invitations
+	GetMember(ctx context.Context, id string) (*User, error)
+	Invite(ctx context.Context, input InviteInput, invitedBy string) (*Invitation, error)
+	RenewInvite(ctx context.Context, userID, invitedBy string) (*Invitation, error)
+	RevokeInvite(ctx context.Context, userID string) error
+	GetInvite(ctx context.Context, token string) (*InviteInfo, error)
+	AcceptInvite(ctx context.Context, token, password, name string) (*User, error)
+
+	// Single sign-on provisioning
+	SignInSettings(ctx context.Context) settings.SignIn
+	ProvisionSSO(ctx context.Context, input CreateUserInput) (*User, bool, error)
+	SetRolesFromSSO(ctx context.Context, userID string, roleNames []string) error
+	CountIdentitiesByProvider(ctx context.Context) (map[string]int, error)
 }
 
 type service struct {
 	repo      Repository
 	validator *validator.Validate
 	guard     limits.Guard
+	settings  settings.Store
 }
 
 type ServiceOption func(*service)
@@ -378,6 +408,10 @@ func (s *service) List(ctx context.Context, filter Filter) ([]*User, int, error)
 		}
 	}
 
+	if err := s.attachMemberStates(ctx, users...); err != nil {
+		return nil, 0, err
+	}
+
 	return users, total, nil
 }
 
@@ -396,6 +430,11 @@ func (s *service) Authenticate(ctx context.Context, username, password string) (
 
 	if err := s.repo.ValidatePassword(ctx, user.ID, password); err != nil {
 		return nil, ErrInvalidPassword
+	}
+
+	// Checked only after the password, so the refusal reveals nothing to someone guessing. Administrators keep password sign-in so an outage at the identity provider cannot lock everyone out.
+	if !s.SignInSettings(ctx).AllowPasswordSignIn && !isAdmin(user) {
+		return nil, ErrPasswordSignInDisabled
 	}
 
 	return user, nil

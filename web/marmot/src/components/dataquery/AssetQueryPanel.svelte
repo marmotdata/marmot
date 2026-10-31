@@ -1,126 +1,133 @@
 <script lang="ts">
-	import IconifyIcon from '@iconify/svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { getErrorMessage } from '$lib/stores/toast';
 	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
-	import { listQueryHistory } from '$lib/dataquery/api';
-	import { clientLabel, outcome, subjectParts } from '$lib/dataquery/format';
-	import type { QueryRecord } from '$lib/dataquery/types';
+	import { getAssetQueryStats, listQueryHistory } from '$lib/dataquery/api';
+	import { durationMs, outcomeReason, outcomeState, workspaceHref } from '$lib/dataquery/format';
+	import type { QueryAssetStats, QueryRecord } from '$lib/dataquery/types';
+	import { formatMs } from '$components/asset/assetFormat';
 	import QueryDetail from './QueryDetail.svelte';
+	import '@marmotdata/elements/query-history.js';
+	import '@marmotdata/elements/sparkline.js';
+	import type { QueryHistoryItem } from '@marmotdata/elements/classes/query-history.js';
 
-	let { mrn, name }: { mrn: string; name: string } = $props();
+	// The asset's Queries tab: queries that went through Marmot, newest first; the "Query table" button lives in the page header so it is not repeated here.
+	let { mrn, provider = '' }: { mrn: string; name?: string; provider?: string } = $props();
 
 	let queries = $state<QueryRecord[]>([]);
+	let stats = $state<QueryAssetStats | null>(null);
 	let total = $state(0);
 	let loading = $state(true);
 	let error = $state('');
 	let selectedId = $state<string | null>(null);
 
-	let callers = $derived(new Set(queries.map((q) => q.audit_subject)).size);
-	let lastSource = $derived(queries.find((q) => q.decision === 'allowed')?.source_name ?? '');
-	let consoleQuery = $derived(
-		new URLSearchParams({
-			...(lastSource ? { source: lastSource } : {}),
-			q: `SELECT *\nFROM ${name}\nLIMIT 10`
-		}).toString()
+	let items = $derived<QueryHistoryItem[]>(
+		queries.map((q) => {
+			const state = outcomeState(q);
+			return {
+				id: q.id,
+				sql: q.statement,
+				status: state === 'allowed' ? 'succeeded' : state,
+				source: { name: q.source_name, provider: q.source_provider || provider },
+				rows: q.rows_returned ?? null,
+				durationMs: durationMs(q) ?? null,
+				startedAt: q.started_at,
+				reason: outcomeReason(q) || undefined
+			};
+		})
 	);
 
-	$effect(() => {
-		const target = mrn;
+	function load() {
 		loading = true;
 		error = '';
-		listQueryHistory({ mrn: target, limit: 15 })
-			.then((data) => {
+		// The tiles are a summary on top of the list, so a failure to load them leaves the list usable.
+		Promise.all([listQueryHistory({ mrn, limit: 25 }), getAssetQueryStats(mrn).catch(() => null)])
+			.then(([data, s]) => {
 				queries = data.queries;
 				total = data.total;
+				stats = s;
 			})
 			.catch((e) => (error = getErrorMessage(e)))
 			.finally(() => (loading = false));
+	}
+
+	$effect(() => {
+		void mrn;
+		load();
 	});
+
+	function sourceOf(id: string): string {
+		return queries.find((q) => q.id === id)?.source_name ?? '';
+	}
 </script>
 
-<div class="mt-6 space-y-5">
-	<div
-		class="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-gradient-to-r from-earthy-brown-50 to-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700 dark:from-gray-800 dark:to-gray-900"
-	>
-		<div class="flex items-center gap-4">
-			<div
-				class="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-900 text-earthy-terracotta-300 shadow-inner"
-			>
-				<IconifyIcon icon="material-symbols:shield-lock-outline" class="h-6 w-6" />
-			</div>
-			<div>
-				<div class="font-semibold text-gray-900 dark:text-gray-100">
-					{m.dataquery_asset_heading()}
-				</div>
-				<div class="text-sm text-gray-600 dark:text-gray-400">
-					{#if loading}
-						&nbsp;
-					{:else if total === 0}
-						{m.dataquery_asset_never()}
-					{:else}
-						{m.dataquery_asset_summary({
-							count: formatNumber(total),
-							callers: formatNumber(callers),
-							when: formatRelativeTime(queries[0].started_at)
-						})}
-					{/if}
-				</div>
-			</div>
-		</div>
-		<a
-			href={resolve(`/query?${consoleQuery}`)}
-			class="inline-flex items-center justify-center gap-2 rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-earthy-terracotta-500"
+{#if loading}
+	<mm-loading active caption={m.asset_page_queries_loading()}></mm-loading>
+{:else if error}
+	<mm-callout tone="danger" heading={m.asset_page_queries_error_heading()}>
+		{error}
+		<mm-button slot="actions" size="sm" variant="secondary" icon="refresh" onclick={load}
+			>{m.common_retry()}</mm-button
 		>
-			<IconifyIcon icon="material-symbols:terminal" class="h-4 w-4" />
-			{m.dataquery_asset_query_button()}
-		</a>
-	</div>
-
-	{#if error}
-		<p class="text-sm text-red-600 dark:text-red-400">{error}</p>
-	{:else if !loading && queries.length > 0}
-		<ul
-			class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800"
+	</mm-callout>
+{:else if total === 0}
+	<mm-empty-state
+		heading={m.asset_page_queries_empty_heading()}
+		description={m.asset_page_queries_empty_body()}
+		seed={9}
+	></mm-empty-state>
+{:else}
+	<div class="mm-stack" style="--mm-gap: var(--space-6)">
+		<mm-section
+			heading={m.asset_page_queries_heading()}
+			description={m.asset_page_queries_description()}
 		>
-			{#each queries as q (q.id)}
-				{@const badge = outcome(q)}
-				{@const who = subjectParts(q.audit_subject)}
-				<li>
-					<button
-						type="button"
-						onclick={() => (selectedId = q.id)}
-						class="flex w-full items-center gap-4 px-4 py-3 text-left transition hover:bg-earthy-brown-50 dark:hover:bg-gray-700/50"
+			{#if stats}
+				<mm-description-list layout="inline-grid" columns={4}>
+					<mm-description term={m.asset_page_queries_14_days()}>
+						<span class="mm-cluster">
+							<mm-text numeric>{formatNumber(stats.queries)}</mm-text>
+							{#if stats.per_day.length > 1}
+								<mm-sparkline label={m.asset_page_queries_per_day_label()} values={stats.per_day}
+								></mm-sparkline>
+							{/if}
+						</span>
+					</mm-description>
+					<mm-description term={m.asset_page_queries_people_agents()}
+						><mm-text numeric>{formatNumber(stats.people + stats.agents)}</mm-text></mm-description
 					>
-						<IconifyIcon
-							icon={q.principal_type === 'user'
-								? 'material-symbols:person-outline'
-								: 'material-symbols:smart-toy-outline'}
-							class="h-5 w-5 flex-shrink-0 text-gray-400"
-						/>
-						<div class="min-w-0 flex-1">
-							<div class="flex items-center gap-2 text-sm">
-								<span class="truncate font-medium text-gray-900 dark:text-gray-100">{who.name}</span
-								>
-								<span class="text-xs text-gray-400">{clientLabel(q.client)}</span>
-							</div>
-							<code class="block truncate font-mono text-xs text-gray-500 dark:text-gray-400"
-								>{q.statement}</code
-							>
-						</div>
-						<span class="rounded-full px-2 py-0.5 text-xs font-medium {badge.classes}"
-							>{badge.label}</span
-						>
-						<span class="hidden w-24 text-right text-xs text-gray-500 sm:block dark:text-gray-400"
-							>{formatRelativeTime(q.started_at)}</span
-						>
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/if}
-</div>
+					<mm-description term={m.asset_page_queries_median()}
+						><mm-text numeric
+							>{stats.median_duration_ms != null ? formatMs(stats.median_duration_ms) : ''}</mm-text
+						></mm-description
+					>
+					<mm-description term={m.asset_page_queries_denied()}
+						><mm-text numeric>{formatNumber(stats.denied)}</mm-text></mm-description
+					>
+				</mm-description-list>
+			{:else}
+				<mm-description-list layout="inline-grid" columns={2}>
+					<mm-description term={m.asset_page_queries_total()}
+						><mm-text numeric>{formatNumber(total)}</mm-text></mm-description
+					>
+					<mm-description term={m.asset_page_queries_last()}
+						>{formatRelativeTime(queries[0].started_at)}</mm-description
+					>
+				</mm-description-list>
+			{/if}
+		</mm-section>
+		<mm-query-history
+			label={m.asset_page_queries_list_label()}
+			queries={items}
+			onmm-open-query={(e: CustomEvent<{ query: QueryHistoryItem }>) =>
+				(selectedId = e.detail.query.id)}
+			onmm-run={(e: CustomEvent<{ sql: string; query: QueryHistoryItem }>) =>
+				goto(resolve(workspaceHref(sourceOf(e.detail.query.id), e.detail.sql, true) as '/query'))}
+		></mm-query-history>
+	</div>
+{/if}
 
 {#if selectedId}
 	<QueryDetail queryId={selectedId} onClose={() => (selectedId = null)} />

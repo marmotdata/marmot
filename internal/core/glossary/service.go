@@ -35,10 +35,33 @@ type GlossaryTerm struct {
 	Owners         []Owner                `json:"owners"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 	Tags           []string               `json:"tags,omitempty"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
-	DeletedAt      *time.Time             `json:"deleted_at,omitempty"`
+	// CreatedBy is the person who wrote the term, absent for terms an ingestion brought in and for those made before authors were recorded.
+	CreatedBy     *string    `json:"created_by,omitempty"`
+	CreatedByName *string    `json:"created_by_name,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+	// LinkedAssetCount counts every asset linked to the term, by hand or by an asset rule, so a tree can show it without a request per term.
+	LinkedAssetCount int `json:"linked_asset_count"`
+	// RelatedTerms is only filled in when a single term is read.
+	RelatedTerms []RelatedTerm `json:"related_terms,omitempty"`
 } // @name GlossaryTerm
+
+// RelatedTerm is a term that sits beside another rather than above or below it.
+type RelatedTerm struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+} // @name GlossaryRelatedTerm
+
+// SuggestedAsset is an asset that looks like it belongs to a term but is not linked to it yet.
+type SuggestedAsset struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	MRN         string   `json:"mrn"`
+	Type        string   `json:"type"`
+	Providers   []string `json:"providers"`
+	Description *string  `json:"description,omitempty"`
+} // @name GlossarySuggestedAsset
 
 type OwnerInput struct {
 	ID   string `json:"id" validate:"required"`
@@ -53,6 +76,10 @@ type CreateTermInput struct {
 	Owners       []OwnerInput           `json:"owners" validate:"required,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs links the new term to existing ones.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
+	// CreatedBy is the user writing the term, left empty for machine identities since the column refers to users.
+	CreatedBy *string `json:"-"`
 }
 
 type UpdateTermInput struct {
@@ -63,6 +90,8 @@ type UpdateTermInput struct {
 	Owners       []OwnerInput           `json:"owners,omitempty" validate:"omitempty,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs replaces the term's related terms when set; nil leaves them as they are and an empty list clears them.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
 }
 
 type SearchFilter struct {
@@ -94,6 +123,10 @@ type Service interface {
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 	GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error)
+	GetRelatedTerms(ctx context.Context, termID string) ([]RelatedTerm, error)
+	AddRelatedTerm(ctx context.Context, termID, relatedTermID string) ([]RelatedTerm, error)
+	RemoveRelatedTerm(ctx context.Context, termID, relatedTermID string) ([]RelatedTerm, error)
+	SuggestAssets(ctx context.Context, termID string, limit int) ([]SuggestedAsset, error)
 	SyncTerms(ctx context.Context, source string, inputs []TermInput) (*SyncResult, error)
 	SetSearchObserver(observer SearchObserver)
 }
@@ -183,12 +216,24 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 		ParentTermID: input.ParentTermID,
 		Metadata:     input.Metadata,
 		Tags:         input.Tags,
+		CreatedBy:    input.CreatedBy,
 		CreatedAt:    time.Now().UTC(),
 		UpdatedAt:    time.Now().UTC(),
 	}
 
+	related, err := s.checkRelated(ctx, "", input.RelatedTermIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := s.repo.Create(ctx, term, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if len(related) > 0 {
+		if err := s.repo.SetRelatedTerms(ctx, term.ID, related); err != nil {
+			return nil, err
+		}
 	}
 
 	if s.searchObserver != nil {
@@ -204,6 +249,12 @@ func (s *service) Get(ctx context.Context, id string) (*GlossaryTerm, error) {
 		return nil, err
 	}
 
+	related, err := s.repo.GetRelatedTerms(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	term.RelatedTerms = related
 	return asRead(term), nil
 }
 
@@ -304,10 +355,24 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 		}
 	}
 
+	var related []string
+	if input.RelatedTermIDs != nil {
+		related, err = s.checkRelated(ctx, id, input.RelatedTermIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	existing.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.Update(ctx, existing, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if input.RelatedTermIDs != nil {
+		if err := s.repo.SetRelatedTerms(ctx, id, related); err != nil {
+			return nil, err
+		}
 	}
 
 	if s.searchObserver != nil {
@@ -439,4 +504,112 @@ func (s *service) GetAncestors(ctx context.Context, termID string) ([]*GlossaryT
 	}
 
 	return allAsRead(ancestors), nil
+}
+
+// checkRelated validates the terms a term is to be related to and drops duplicates, so a bad id is a 400 rather than a foreign key failure.
+func (s *service) checkRelated(ctx context.Context, termID string, ids []string) ([]string, error) {
+	seen := make(map[string]struct{}, len(ids))
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		if id == termID {
+			return nil, fmt.Errorf("%w: a term cannot be related to itself", ErrInvalidInput)
+		}
+		related, err := s.repo.Get(ctx, id)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				return nil, fmt.Errorf("%w: related term not found", ErrInvalidInput)
+			}
+			return nil, fmt.Errorf("getting related term: %w", err)
+		}
+		if related.DeletedAt != nil {
+			return nil, fmt.Errorf("%w: related term is deleted", ErrInvalidInput)
+		}
+		out = append(out, id)
+	}
+	return out, nil
+}
+
+func (s *service) GetRelatedTerms(ctx context.Context, termID string) ([]RelatedTerm, error) {
+	if _, err := s.load(ctx, termID); err != nil {
+		return nil, err
+	}
+	return s.repo.GetRelatedTerms(ctx, termID)
+}
+
+func (s *service) AddRelatedTerm(ctx context.Context, termID, relatedTermID string) ([]RelatedTerm, error) {
+	if _, err := s.load(ctx, termID); err != nil {
+		return nil, err
+	}
+	ids, err := s.checkRelated(ctx, termID, []string{relatedTermID})
+	if err != nil {
+		return nil, err
+	}
+	if len(ids) == 0 {
+		return nil, fmt.Errorf("%w: related term id required", ErrInvalidInput)
+	}
+	if err := s.repo.AddRelatedTerm(ctx, termID, ids[0]); err != nil {
+		return nil, err
+	}
+	return s.repo.GetRelatedTerms(ctx, termID)
+}
+
+func (s *service) RemoveRelatedTerm(ctx context.Context, termID, relatedTermID string) ([]RelatedTerm, error) {
+	if _, err := s.load(ctx, termID); err != nil {
+		return nil, err
+	}
+	if err := s.repo.RemoveRelatedTerm(ctx, termID, relatedTermID); err != nil {
+		return nil, err
+	}
+	return s.repo.GetRelatedTerms(ctx, termID)
+}
+
+// SuggestAssets offers assets that mention the term but are not linked to it, for the link drawer to show before anyone searches.
+func (s *service) SuggestAssets(ctx context.Context, termID string, limit int) ([]SuggestedAsset, error) {
+	term, err := s.load(ctx, termID)
+	if err != nil {
+		return nil, err
+	}
+	if limit <= 0 || limit > 50 {
+		limit = 10
+	}
+	words := suggestionWords(term.Name)
+	if len(words) == 0 {
+		return []SuggestedAsset{}, nil
+	}
+	return s.repo.SuggestAssets(ctx, termID, words, limit)
+}
+
+// suggestionWords splits a term name into the words worth matching on, trimming a plural s so "Refunds" still finds a refund table.
+func suggestionWords(name string) []string {
+	fields := strings.FieldsFunc(strings.ToLower(name), func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= '0' && r <= '9')
+	})
+	seen := map[string]struct{}{}
+	words := []string{}
+	for _, f := range fields {
+		if len(f) < 3 || stopWords[f] {
+			continue
+		}
+		if len(f) > 4 && strings.HasSuffix(f, "s") && !strings.HasSuffix(f, "ss") {
+			f = strings.TrimSuffix(f, "s")
+		}
+		if _, ok := seen[f]; ok {
+			continue
+		}
+		seen[f] = struct{}{}
+		words = append(words, f)
+	}
+	return words
+}
+
+var stopWords = map[string]bool{
+	"the": true, "and": true, "for": true, "per": true, "with": true, "from": true, "all": true, "any": true,
 }

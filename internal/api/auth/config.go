@@ -31,6 +31,8 @@ type SSOProvider struct {
 	Type      string `json:"type"`
 	Name      string `json:"name"`
 	IssuerURL string `json:"issuer_url,omitempty"`
+	// Enabled is false when an administrator has switched the provider off in Settings.
+	Enabled bool `json:"enabled"`
 } // @name SSOProvider
 
 type ssoProvidersResponse struct {
@@ -48,8 +50,8 @@ type ssoProvidersResponse struct {
 // @Router /api/v1/sso-providers [get]
 func (h *Handler) getSSOProviders(w http.ResponseWriter, r *http.Request) {
 	out := ssoProvidersResponse{Providers: []SSOProvider{}}
-	for _, p := range h.oauthManager.GetProviders() {
-		item := SSOProvider{Type: p.Type(), Name: p.Name()}
+	for _, p := range h.oauthManager.AllProviders() {
+		item := SSOProvider{Type: p.Type(), Name: p.Name(), Enabled: h.oauthManager.Enabled(p.Type())}
 		if ip, ok := p.(coreauth.IssuerProvider); ok {
 			item.IssuerURL = ip.IssuerURL()
 		}

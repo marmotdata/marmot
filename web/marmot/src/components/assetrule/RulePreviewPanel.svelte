@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import IconifyIcon from '@iconify/svelte';
-	import AssetIcon from '$components/ui/Icon.svelte';
-	import { fetchApi } from '$lib/api';
+	import { fetchAssetBatch } from '$lib/dataproducts/assets';
 	import { previewAssetRule } from '$lib/assetrules/api';
+	import { assetCaption, assetHref } from '$lib/assetrules/assets';
 	import type { Asset } from '$lib/assets/types';
 	import { m } from '$lib/paraglide/messages';
 
-	let { query }: { query: string } = $props();
+	let {
+		query,
+		onresult
+	}: {
+		query: string;
+		/** Tells the editor whether the query is valid, so it can explain the problem beside the query and hold Save. */
+		onresult?: (r: { count: number | null; error: string | null }) => void;
+	} = $props();
 
-	const SAMPLE_SIZE = 5;
+	const SAMPLE_SIZE = 10;
 	const DEBOUNCE_MS = 400;
 
 	let loading = $state(false);
@@ -30,19 +36,10 @@
 				limit: SAMPLE_SIZE
 			});
 			const ids = (result.asset_ids || []).slice(0, SAMPLE_SIZE);
-			const assets = await Promise.all(
-				ids.map(async (id) => {
-					try {
-						const resp = await fetchApi(`/assets/${id}`);
-						return resp.ok ? ((await resp.json()) as Asset) : null;
-					} catch {
-						return null;
-					}
-				})
-			);
+			const assets = await fetchAssetBatch(ids);
 			if (seq !== requestSeq) return;
 			count = result.asset_count;
-			sample = assets.filter((a): a is Asset => a !== null);
+			sample = assets;
 			error = result.errors?.length ? result.errors.join(' ') : null;
 		} catch (e) {
 			if (seq !== requestSeq) return;
@@ -50,7 +47,10 @@
 			sample = [];
 			error = e instanceof Error ? e.message : m.assetrules_preview_error();
 		} finally {
-			if (seq === requestSeq) loading = false;
+			if (seq === requestSeq) {
+				loading = false;
+				onresult?.({ count, error });
+			}
 		}
 	}
 
@@ -62,106 +62,68 @@
 			error = null;
 			count = null;
 			sample = [];
+			onresult?.({ count: null, error: null });
 			return;
 		}
 		loading = true;
 		const timer = setTimeout(() => runPreview(expression, seq), DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	});
-
-	function assetParams(asset: Asset) {
-		const parts = (asset.mrn ?? '').replace('mrn://', '').split('/');
-		if (parts.length >= 3)
-			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
-		return { type: asset.type, service: asset.providers?.[0] ?? '', name: asset.name };
-	}
-
-	function getIconType(asset: Asset): string {
-		if (asset.providers?.length === 1) return asset.providers[0];
-		return asset.type || 'unknown';
-	}
 </script>
 
-<div
-	class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
-	aria-live="polite"
->
-	<div class="flex items-center justify-between gap-2">
-		<h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-			{m.assetrules_preview_panel_heading()}
-		</h2>
-		{#if loading}
-			<IconifyIcon icon="mdi:loading" class="h-4 w-4 animate-spin text-gray-400" />
-		{/if}
-	</div>
-
-	{#if !trimmed}
-		<div class="mt-6 flex flex-col items-center text-center">
-			<div
-				class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700"
-			>
-				<IconifyIcon icon="material-symbols:filter-list" class="h-6 w-6 text-gray-400" />
-			</div>
-			<p class="mt-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-				{m.assetrules_preview_empty_heading()}
-			</p>
-			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-				{m.assetrules_preview_empty_hint()}
-			</p>
-		</div>
-	{:else if error}
-		<div
-			class="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-300"
-		>
-			<IconifyIcon icon="material-symbols:error" class="mt-0.5 h-4 w-4 flex-shrink-0" />
-			<span>{error}</span>
-		</div>
-	{:else if count === null}
-		<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">{m.assetrules_preview_loading()}</p>
+<div aria-live="polite">
+	{#if error}
+		<mm-callout tone="warning" heading={m.assetrules_preview_paused_heading()}>
+			{m.assetrules_preview_paused_body()}
+		</mm-callout>
 	{:else}
-		<p
-			class="mt-3 text-lg font-semibold text-gray-900 dark:text-gray-100 {loading
-				? 'opacity-60'
-				: ''}"
+		<mm-panel
+			heading={m.assetrules_preview_panel_heading()}
+			icon="visibility"
+			count={count ?? undefined}
+			loading={loading && count === null}
+			empty={!trimmed || count === 0}
 		>
-			{m.assetrules_rule_matches_count({ count })}
-		</p>
-		{#if count === 0}
-			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-				{m.assetrules_preview_no_matches_hint()}
-			</p>
-		{:else if sample.length > 0}
-			<ul class="mt-4 divide-y divide-gray-100 dark:divide-gray-700 {loading ? 'opacity-60' : ''}">
-				{#each sample as asset (asset.id)}
-					<li class="py-2">
-						<a
-							href={resolve('/discover/[type]/[service]/[name]', assetParams(asset))}
-							target="_blank"
-							rel="noopener"
-							class="group flex items-center gap-3"
-						>
-							<span class="flex-shrink-0 rounded-md bg-gray-100 p-1.5 dark:bg-gray-700">
-								<AssetIcon name={getIconType(asset)} size="xs" showLabel={false} />
-							</span>
-							<span class="min-w-0">
-								<span
-									class="block truncate text-sm font-medium text-gray-900 group-hover:text-earthy-terracotta-700 dark:text-gray-100 dark:group-hover:text-earthy-terracotta-400"
-								>
-									{asset.name}
-								</span>
-								<span class="block truncate font-mono text-xs text-gray-500 dark:text-gray-400">
-									{asset.mrn}
-								</span>
-							</span>
-						</a>
-					</li>
-				{/each}
-			</ul>
-			{#if count > sample.length}
-				<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-					{m.assetrules_preview_showing({ shown: sample.length, total: count })}
-				</p>
+			{#if !trimmed}
+				<mm-empty-state
+					slot="empty"
+					compact
+					heading={m.assetrules_preview_empty_heading()}
+					description={m.assetrules_preview_empty_hint()}
+					seed={9}
+				></mm-empty-state>
+			{:else if count === 0}
+				<mm-empty-state
+					slot="empty"
+					compact
+					heading={m.assetrules_preview_no_matches_heading()}
+					description={m.assetrules_preview_no_matches_hint()}
+					seed={9}
+				></mm-empty-state>
+			{:else}
+				<mm-list dense class:stale={loading}>
+					{#each sample as asset (asset.id)}
+						<mm-list-item href={assetHref(asset)} secondary={assetCaption(asset)}>
+							{#if asset.providers?.[0]}
+								<mm-provider-logo slot="start" provider={asset.providers[0]} size={16} decorative
+								></mm-provider-logo>
+							{/if}
+							{asset.name}
+						</mm-list-item>
+					{/each}
+				</mm-list>
+				<div slot="footer">
+					<mm-link href={`${resolve('/discover')}?q=${encodeURIComponent(trimmed)}`}
+						>{m.assetrules_open_in_discover()}</mm-link
+					>
+				</div>
 			{/if}
-		{/if}
+		</mm-panel>
 	{/if}
 </div>
+
+<style>
+	.stale {
+		opacity: 0.6;
+	}
+</style>

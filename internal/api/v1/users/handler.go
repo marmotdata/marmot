@@ -13,6 +13,7 @@ type Handler struct {
 	userService user.Service
 	authService auth.Service
 	config      *config.Config
+	teams       TeamAdder
 }
 
 func NewHandler(userService user.Service, authService auth.Service, cfg *config.Config) *Handler {
@@ -24,7 +25,7 @@ func NewHandler(userService user.Service, authService auth.Service, cfg *config.
 }
 
 func (h *Handler) Routes() []common.Route {
-	return []common.Route{
+	return append(h.inviteRoutes(), []common.Route{
 		{
 			Path:    "/api/v1/users",
 			Method:  http.MethodGet,
@@ -133,6 +134,23 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/users/apikeys/{id}/rotate",
+			Method:  http.MethodPost,
+			Handler: h.rotateAPIKey,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "users", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/users/me/profile",
+			Method:  http.MethodPut,
+			Handler: h.updateProfile,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
 			Path:    "/api/v1/users/me",
 			Method:  http.MethodGet,
 			Handler: h.getCurrentUser,
@@ -165,5 +183,5 @@ func (h *Handler) Routes() []common.Route {
 				common.WithRateLimit(h.config, 10, 60),
 			},
 		},
-	}
+	}...)
 }

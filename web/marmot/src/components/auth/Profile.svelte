@@ -2,22 +2,14 @@
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import ThemeToggle from '$components/ui/ThemeToggle.svelte';
-	import LanguageSelector from '$components/ui/LanguageSelector.svelte';
-	import NotificationPreferencesToggle from '$components/ui/NotificationPreferencesToggle.svelte';
-	import Panel from '$components/ui/Panel.svelte';
-	import Pill from '$components/ui/Pill.svelte';
-	import Alert from '$components/ui/Alert.svelte';
-	import Skeleton from '$components/ui/Skeleton.svelte';
-	import Avatar from '$components/user/Avatar.svelte';
-	import { LABEL, TABLE, TBODY, TD, TH, TR } from '$lib/ui/classes';
+	import { locales } from '$lib/paraglide/runtime';
+	import { changeLocale, locale, type Locale } from '$lib/i18n';
+	import { theme } from '$lib/stores/theme';
+	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { userProfile } from '$lib/stores/user';
+	import { providerName } from './providers';
 
-	// A setting row: what it is and why on the left, the control on the right; stacked on narrow screens.
-	const ROW =
-		'grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-center sm:gap-8';
-	const ROW_LABEL = 'text-sm font-medium text-gray-900 dark:text-gray-100';
-	const ROW_HINT = 'mt-0.5 text-xs text-gray-500 dark:text-gray-400';
+	type ThemeChoice = 'auto' | 'light' | 'dark';
 
 	interface Permission {
 		name: string;
@@ -28,32 +20,63 @@
 
 	interface Role {
 		name: string;
-		permissions: Permission[];
+		permissions?: Permission[];
+	}
+
+	interface Team {
+		id: string;
+		name: string;
+		source: string;
+		sso_provider?: string;
+		sso_group?: string;
+	}
+
+	interface RoleSource {
+		role: string;
+		provider: string;
+		group: string;
 	}
 
 	interface User {
 		name: string;
-		email: string;
 		username?: string;
-		profile_picture?: string | null;
-		active?: boolean;
-		created_at?: string;
-		updated_at?: string;
-		roles: Role[];
+		job_title?: string;
+		teams?: Team[];
+		role_sources?: RoleSource[];
+		roles?: Role[];
+		identities?: { provider: string; provider_email?: string }[];
+		preferences?: { theme?: ThemeChoice };
 	}
 
-	let loading = $state(true);
-	let error = $state<string | null>(null);
-	let user = $state<User>({
-		name: '',
-		email: '',
-		roles: []
-	});
+	let user = $state<User | null>(null);
+	let error = $state('');
+	let savingLanguage = $state(false);
+	let jobTitle = $state('');
+	let jobTitleError = $state('');
+	let savingProfile = $state(false);
 
-	// Every permission the caller's roles grant, once each, since two roles often share the same grant
-	let permissions = $derived.by(() => {
+	const profileChanged = $derived(!!user && jobTitle.trim() !== (user.job_title ?? ''));
+	const teamNames = $derived((user?.teams ?? []).map((t) => t.name).join(', '));
+	// Where each role came from when an identity provider group maps to it, e.g. "Okta group marmot-admins"
+	const roleFrom = $derived(
+		(user?.role_sources ?? [])
+			.map((src) =>
+				m.account_role_from_group({
+					provider: providerName(src.provider) || m.account_sso(),
+					group: src.group
+				})
+			)
+			.join(', ')
+	);
+
+	const identity = $derived(user?.identities?.[0]);
+	const idpName = $derived(identity ? providerName(identity.provider) || m.account_sso() : '');
+	const roleNames = $derived((user?.roles ?? []).map((r) => r.name).join(', '));
+
+	// Every permission the caller's roles grant, once each, since two roles often share the same grant; resource_type:action is the key every check, API call and Terraform binding uses
+	const permissions = $derived.by(() => {
 		const seen: Record<string, { key: string; description: string }> = {};
-		for (const role of user.roles ?? []) {
+		for (const role of user?.roles ?? []) {
 			for (const p of role.permissions ?? []) {
 				const key = `${p.resource_type}:${p.action}`;
 				seen[key] ??= { key, description: p.description };
@@ -62,143 +85,201 @@
 		return Object.values(seen).sort((a, b) => a.key.localeCompare(b.key));
 	});
 
-	onMount(fetchProfile);
+	onMount(load);
 
-	async function fetchProfile() {
+	async function load() {
+		error = '';
 		try {
-			loading = true;
-			error = null;
 			const response = await fetchApi('/users/me');
-			if (!response.ok) {
-				throw new Error(m.profile_load_error());
-			}
+			if (!response.ok) throw new Error(m.profile_load_error());
 			user = await response.json();
+			jobTitle = user?.job_title ?? '';
+			// The saved preference wins over whatever this browser last used
+			const saved = user?.preferences?.theme;
+			if (saved && saved !== $theme) theme.set(saved);
 		} catch (err) {
-			console.error('Profile fetch error:', err);
 			error = err instanceof Error ? err.message : m.profile_load_error();
+		}
+	}
+
+	function displayName(value: string): string {
+		try {
+			const name = new Intl.DisplayNames([value], { type: 'language' }).of(value);
+			if (!name) return value;
+			return name.charAt(0).toLocaleUpperCase(value) + name.slice(1);
+		} catch {
+			return value;
+		}
+	}
+
+	function changeTheme(e: CustomEvent<{ value: string }>) {
+		const next = e.detail.value as ThemeChoice;
+		theme.set(next);
+		// Saved in the background; the theme has already changed on screen
+		fetchApi('/users/preferences', {
+			method: 'PUT',
+			body: JSON.stringify({ preferences: { theme: next } })
+		})
+			.then((response) => {
+				if (!response.ok) toasts.error(m.account_theme_save_error());
+			})
+			.catch(() => toasts.error(m.account_theme_save_error()));
+	}
+
+	async function saveProfile(e: Event) {
+		e.preventDefault();
+		if (!user || savingProfile || !profileChanged) return;
+		savingProfile = true;
+		jobTitleError = '';
+		try {
+			const response = await fetchApi('/users/me/profile', {
+				method: 'PUT',
+				body: JSON.stringify({ job_title: jobTitle.trim() })
+			});
+			if (!response.ok) {
+				const message = await handleApiError(response);
+				if (response.status === 400) jobTitleError = message;
+				else toasts.error(message);
+				return;
+			}
+			const saved: User = await response.json();
+			user = { ...user, job_title: saved.job_title };
+			jobTitle = saved.job_title ?? '';
+			userProfile.patch({ job_title: saved.job_title });
+			toasts.success(m.account_profile_saved());
+		} catch {
+			toasts.error(m.account_profile_save_error());
 		} finally {
-			loading = false;
+			savingProfile = false;
+		}
+	}
+
+	async function changeLanguage(e: CustomEvent<{ value: string }>) {
+		const next = e.detail.value as Locale;
+		if (next === $locale || savingLanguage) return;
+		changeLocale(next);
+		savingLanguage = true;
+		try {
+			const response = await fetchApi('/users/preferences', {
+				method: 'PUT',
+				body: JSON.stringify({ preferences: { language: next } })
+			});
+			if (!response.ok) throw new Error(String(response.status));
+		} catch {
+			toasts.error(m.profile_language_save_error());
+		} finally {
+			savingLanguage = false;
 		}
 	}
 </script>
 
-{#if loading}
-	<div class="space-y-6">
-		<Skeleton class="h-24" />
-		<Skeleton class="h-40" />
-		<Skeleton class="h-64" />
-	</div>
-{:else if error}
-	<Alert>{error}</Alert>
+{#if error}
+	<mm-callout tone="danger">
+		{error}
+		<mm-button slot="actions" size="sm" icon="refresh" onclick={load}
+			>{m.account_try_again()}</mm-button
+		>
+	</mm-callout>
+{:else if !user}
+	<mm-skeleton loading shape="text" count={6}></mm-skeleton>
 {:else}
-	<!-- One column of full-width panels, each a list of rows with what a setting is for on the left and its control on the right, the way Settings reads -->
-	<div class="space-y-6">
-		<Panel>
-			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<div class="flex min-w-0 items-center gap-4">
-					<Avatar
-						name={user.name || user.username || ''}
-						profilePicture={user.profile_picture}
-						size="lg"
-					/>
-					<div class="min-w-0">
-						<div class="flex flex-wrap items-center gap-2">
-							<p
-								class="truncate text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100"
-							>
-								{user.name}
-							</p>
-							<Pill tone={user.active ? 'success' : 'danger'}>
-								{user.active ? m.common_active() : m.common_inactive()}
-							</Pill>
-						</div>
-						<p class="truncate text-sm text-gray-500 dark:text-gray-400">@{user.username}</p>
-					</div>
+	<div class="mm-split">
+		<form class="mm-stack" style="--mm-gap: 0" onsubmit={saveProfile}>
+			<mm-section
+				heading={m.account_profile()}
+				description={idpName ? m.account_profile_from_idp({ provider: idpName }) : ''}
+			>
+				<div class="mm-stack fields">
+					<mm-text-field label={m.common_name()} value={user.name} readonly></mm-text-field>
+					{#if user.username}
+						<mm-text-field label={m.profile_username_label()} value={user.username} readonly
+						></mm-text-field>
+					{/if}
+					{#if identity?.provider_email}
+						<mm-text-field
+							label={m.account_email()}
+							type="email"
+							value={identity.provider_email}
+							readonly
+						></mm-text-field>
+					{/if}
+					<mm-text-field
+						label={m.account_job_title()}
+						name="job-title"
+						value={jobTitle}
+						error={jobTitleError}
+						oninput={(e: Event) => (jobTitle = (e.target as HTMLInputElement).value)}
+					></mm-text-field>
 				</div>
-				<dl class="flex gap-8 text-sm">
-					<div>
-						<dt class={LABEL}>{m.profile_account_created_label()}</dt>
-						<dd class="mt-1 tabular-nums text-gray-900 dark:text-gray-100">
-							{user.created_at ? formatDate(user.created_at) : '-'}
-						</dd>
-					</div>
-					<div>
-						<dt class={LABEL}>{m.profile_last_updated_label()}</dt>
-						<dd class="mt-1 tabular-nums text-gray-900 dark:text-gray-100">
-							{user.updated_at ? formatDate(user.updated_at) : '-'}
-						</dd>
-					</div>
-				</dl>
-			</div>
-		</Panel>
-
-		<Panel title={m.profile_preferences_heading()} icon="material-symbols:tune">
-			<div class="divide-y divide-gray-100 dark:divide-gray-700/60">
-				<div class={ROW}>
-					<div>
-						<p class={ROW_LABEL}>{m.profile_theme_label()}</p>
-						<p class={ROW_HINT}>{m.account_theme_hint()}</p>
-					</div>
-					<div><ThemeToggle /></div>
+			</mm-section>
+			<mm-section heading={m.account_appearance()}>
+				<div class="mm-stack fields">
+					<mm-segmented-control
+						label={m.profile_theme_label()}
+						value={$theme}
+						onmm-change={changeTheme}
+					>
+						<mm-segment value="auto" label={m.account_theme_system()}></mm-segment>
+						<mm-segment value="light" label={m.account_theme_light()}></mm-segment>
+						<mm-segment value="dark" label={m.account_theme_peat()}></mm-segment>
+					</mm-segmented-control>
+					<mm-select
+						label={m.profile_language_label()}
+						value={$locale}
+						disabled={(locales as readonly string[]).length < 2 || savingLanguage}
+						onmm-change={changeLanguage}
+					>
+						{#each locales as value (value)}
+							<mm-option {value} label={displayName(value)}></mm-option>
+						{/each}
+					</mm-select>
 				</div>
-				<div class={ROW}>
-					<div>
-						<p class={ROW_LABEL}>{m.profile_language_label()}</p>
-						<p class={ROW_HINT}>{m.account_language_hint()}</p>
-					</div>
-					<div><LanguageSelector /></div>
-				</div>
-			</div>
-		</Panel>
-
-		<Panel
-			title={m.profile_notifications_label()}
-			description={m.account_notifications_hint()}
-			icon="material-symbols:notifications-outline"
-		>
-			<NotificationPreferencesToggle />
-		</Panel>
-
-		<!-- Roles and Permissions -->
-		<Panel
-			flush
-			title={m.profile_roles_permissions_heading()}
-			icon="material-symbols:badge-outline"
-		>
-			{#snippet action()}
-				<div
-					class="flex flex-wrap justify-end gap-1.5"
-					aria-label={m.profile_assigned_roles_heading()}
+			</mm-section>
+			<div class="save">
+				<mm-button variant="primary" type="submit" disabled={!profileChanged || savingProfile}
+					>{m.account_save_profile()}</mm-button
 				>
-					{#each user.roles as role (role.name)}
-						<Pill tone="brand">{role.name}</Pill>
-					{/each}
-				</div>
-			{/snippet}
-			{#if permissions.length > 0}
-				<div class="overflow-x-auto">
-					<table class="{TABLE} w-full">
-						<thead>
-							<tr class="border-b border-gray-100 dark:border-gray-700/60">
-								<th class={TH}>{m.profile_permissions_heading()}</th>
-								<th class={TH}>{m.common_description()}</th>
-							</tr>
-						</thead>
-						<tbody class={TBODY}>
-							<!-- resource_type:action, not permissions.name. The name column is decorative and inconsistent (view_assets beside service_accounts_view), while this pair is the key every check, API call and Terraform binding actually uses. -->
+			</div>
+		</form>
+
+		<mm-section heading={m.account_roles_heading()}>
+			<div class="mm-stack">
+				<mm-description-list layout="stacked">
+					<mm-description term={m.account_role()}
+						>{roleNames || m.account_role_none()}</mm-description
+					>
+					{#if roleFrom}
+						<mm-description term={m.account_role_from()}>{roleFrom}</mm-description>
+					{/if}
+					{#if teamNames}
+						<mm-description term={m.account_teams()}>{teamNames}</mm-description>
+					{/if}
+					{#if idpName}
+						<mm-description term={m.account_signs_in_with()}>{idpName}</mm-description>
+					{/if}
+				</mm-description-list>
+				{#if permissions.length}
+					<mm-disclosure summary={m.profile_permissions_heading()}>
+						<mm-list dense style="--mm-list-inset: 0">
 							{#each permissions as permission (permission.key)}
-								<tr class={TR}>
-									<td
-										class="{TD} whitespace-nowrap font-mono text-xs text-gray-900 dark:text-gray-100"
-										>{permission.key}</td
-									>
-									<td class="{TD} text-gray-500 dark:text-gray-400">{permission.description}</td>
-								</tr>
+								<mm-list-item secondary={permission.description}>
+									<span class="mm-mono">{permission.key}</span>
+								</mm-list-item>
 							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
-		</Panel>
+						</mm-list>
+					</mm-disclosure>
+				{/if}
+			</div>
+		</mm-section>
 	</div>
 {/if}
+
+<style>
+	.save {
+		margin-block-start: var(--space-8);
+	}
+	.fields {
+		--mm-gap: var(--space-5);
+		max-width: 32rem;
+	}
+</style>

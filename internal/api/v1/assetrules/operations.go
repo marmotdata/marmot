@@ -177,6 +177,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 		PatternValue:    req.PatternValue,
 		Priority:        req.Priority,
 		IsEnabled:       req.IsEnabled,
+		UpdatedBy:       common.CreatedBy(r.Context()),
 	}
 	if req.RuleType != nil {
 		rt := enrichment.RuleType(*req.RuleType)
@@ -331,16 +332,24 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// RuleAssetsResponse is a page of a rule's matched assets. asset_ids is kept for older clients; assets carries the same page with names.
+type RuleAssetsResponse struct {
+	AssetIDs []string              `json:"asset_ids"`
+	Assets   []assetrule.RuleAsset `json:"assets"`
+	Total    int                   `json:"total"`
+} // @name AssetRuleAssetsResponse
+
 // @Summary Get assets matched by a rule
-// @Description Get the list of asset IDs matched by an asset rule
+// @Description Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it.
 // @Tags asset-rules
 // @Produce json
 // @Param id path string true "Asset rule ID"
+// @Param q query string false "Match the asset name or MRN"
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} RuleAssetsResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
 // @ID getAssetRulesAssetsID
@@ -355,7 +364,7 @@ func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 
-	assetIDs, total, err := h.assetRuleService.GetRuleAssets(r.Context(), id, limit, offset)
+	assets, total, err := h.assetRuleService.SearchRuleAssets(r.Context(), id, r.URL.Query().Get("q"), limit, offset)
 	if err != nil {
 		if errors.Is(err, assetrule.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Asset rule not found")
@@ -366,9 +375,15 @@ func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"asset_ids": assetIDs,
-		"total":     total,
+	assetIDs := make([]string, len(assets))
+	for i, a := range assets {
+		assetIDs[i] = a.ID
+	}
+
+	common.RespondJSON(w, http.StatusOK, RuleAssetsResponse{
+		AssetIDs: assetIDs,
+		Assets:   assets,
+		Total:    total,
 	})
 }
 

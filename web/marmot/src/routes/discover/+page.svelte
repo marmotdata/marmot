@@ -1,37 +1,54 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { writable, type Writable } from 'svelte/store';
-	import { page } from '$app/stores';
+	import '@marmotdata/elements/search-bar.js';
+	import '@marmotdata/elements/facet-sidebar.js';
+	import '@marmotdata/elements/popularity.js';
+	import {
+		buildSearch,
+		parseSearch,
+		type SearchBarField,
+		type SearchCondition
+	} from '@marmotdata/elements/search-bar.js';
+	import type { MmFacetOption } from '@marmotdata/elements/classes/facet-sidebar.js';
+	import { untrack } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
-	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { fetchApi } from '$lib/api';
+	import { auth } from '$lib/stores/auth';
+	import { setCrumbs } from '$lib/mm';
+	import { m } from '$lib/paraglide/messages';
+	import { formatRelativeTime } from '$lib/utils/format';
 	import type { Asset } from '$lib/assets/types';
 	import type { DataProduct } from '$lib/dataproducts/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import ProductBlade from '$components/product/ProductBlade.svelte';
-	import Icon from '$components/ui/Icon.svelte';
-	import IconifyIcon from '@iconify/svelte';
-	import Checkbox from '$components/ui/Checkbox.svelte';
-	import QueryBuilder from '$components/query/QueryBuilder.svelte';
-	import GettingStarted from '$components/ui/GettingStarted.svelte';
-	import { auth } from '$lib/stores/auth';
-	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
-	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
+	import {
+		RESULT_KINDS,
+		catalogFields,
+		compactNumber,
+		kindLabel,
+		loadFieldValues,
+		loadMetadataFields,
+		providerLabel,
+		typeLabel
+	} from '$components/query/catalogSearch';
 
 	interface SearchResultMetadata {
 		type?: string;
 		mrn?: string;
 		tags?: string[];
-		created_by?: string;
-		created_at?: string;
-		icon_url?: string;
-		asset_count?: number;
-		owner_count?: number;
+		primary_provider?: string;
 		providers?: string[];
+		asset_count?: number;
 		[key: string]: unknown;
+	}
+
+	interface ResultOwner {
+		id: string;
+		name: string;
+		kind: 'user' | 'team';
 	}
 
 	interface SearchResult {
@@ -43,6 +60,14 @@
 		url: string;
 		rank: number;
 		updated_at?: string;
+		owners?: ResultOwner[];
+		popularity?: number;
+		row_count?: number;
+		column_count?: number;
+		stale?: boolean;
+		linked_asset_count?: number;
+		asset_count?: number;
+		member_count?: number;
 	}
 
 	interface FacetValue {
@@ -50,1008 +75,682 @@
 		count: number;
 	}
 
+	interface OwnerFacetValue extends FacetValue {
+		label: string;
+		kind: 'user' | 'team';
+	}
+
 	interface Facets {
 		types: Record<string, number>;
 		asset_types: FacetValue[];
 		providers: FacetValue[];
 		tags: FacetValue[];
+		owners: OwnerFacetValue[];
 	}
+
+	type Sort = 'relevance' | 'popular' | 'updated' | 'name';
+	const SORTS: Sort[] = ['relevance', 'popular', 'updated', 'name'];
 
 	interface SearchResponse {
 		results: SearchResult[];
 		total: number;
 		facets: Facets;
-		limit: number;
-		offset: number;
 	}
 
-	const results: Writable<SearchResult[]> = writable([]);
-	const totalResults: Writable<number> = writable(0);
-	const facets: Writable<Facets> = writable({
+	/** The filters Discover keeps in its own URL params, read and written by the facets as well as the search bar. */
+	interface Filters {
+		q: string;
+		kinds: string[];
+		types: string[];
+		providers: string[];
+		tags: string[];
+		/** User and team IDs; owners match assets, glossary terms and data products, so they never narrow the kinds. */
+		owners: string[];
+	}
+
+	const ALL_KINDS: string[] = [...RESULT_KINDS];
+	const PAGE_SIZE = 20;
+
+	setCrumbs([{ label: m.discover_heading() }]);
+
+	const canManageAssets = auth.hasPermission('assets', 'manage');
+	const canAddPlugins = auth.hasPermission('ingestion', 'manage');
+
+	let filters = $state<Filters>({
+		q: '',
+		kinds: [],
+		types: [],
+		providers: [],
+		tags: [],
+		owners: []
+	});
+	let sort = $state<Sort>('relevance');
+	let currentPage = $state(1);
+	let barValue = $state('');
+	let results = $state<SearchResult[]>([]);
+	let total = $state(0);
+	let facets = $state<Facets>({
 		types: {},
 		asset_types: [],
 		providers: [],
-		tags: []
+		tags: [],
+		owners: []
 	});
-	const isLoading: Writable<boolean> = writable(true);
-	const error: Writable<{ status: number; message: string } | null> = writable(null);
-
-	let currentPage = $state(1);
-	const itemsPerPage = 20;
+	let loading = $state(true);
+	let loaded = $state(false);
+	let error = $state<{ status: number; message: string } | null>(null);
+	let draftCount = $state<number | undefined>(undefined);
 	let selectedAsset = $state<Asset | null>(null);
 	let selectedProduct = $state<DataProduct | null>(null);
-	let searchQuery = $state('');
-	let searchTimeout: ReturnType<typeof setTimeout>;
-	let selectedKinds = $state<string[]>(['asset', 'glossary', 'team', 'data_product']);
-	let selectedTypes = $state<string[]>([]);
-	let selectedProviders = $state<string[]>([]);
-	let selectedTags = $state<string[]>([]);
-	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
-	let filtersExpanded = $state(true);
-	let queryBuilderExpanded = $state(false);
-	let previousUrl = $state<string | null>(null);
-	let skipNextUrlEffect = false;
 
-	// Initialize filters from URL
+	let lastSearch: string | null = null;
+	let request = 0;
+	let typingTimer: ReturnType<typeof setTimeout> | undefined;
+	let draftTimer: ReturnType<typeof setTimeout> | undefined;
+
+	/** Kinds narrowed below "everything", which is what the backend does when none are given. */
+	const narrowed = (kinds: string[]) => kinds.length > 0 && kinds.length < ALL_KINDS.length;
+
+	// Facet-backed conditions in the bar: plain "is" conditions on these fields live in the URL params rather than in q, so the tokens and the facets edit one set of filters.
+	const FACET_FIELDS = {
+		kind: 'kinds',
+		type: 'types',
+		provider: 'providers',
+		tag: 'tags'
+	} as const;
+
+	function facetConditions(f: Filters): SearchCondition[] {
+		const out: SearchCondition[] = [];
+		if (narrowed(f.kinds)) out.push({ field: 'kind', operator: '=', values: f.kinds });
+		if (f.types.length) out.push({ field: 'type', operator: '=', values: f.types });
+		if (f.providers.length) out.push({ field: 'provider', operator: '=', values: f.providers });
+		if (f.tags.length) out.push({ field: 'tag', operator: '=', values: f.tags });
+		return out;
+	}
+
+	/** The search bar's query: q plus the facet filters as tokens. */
+	function compose(f: Filters): string {
+		const extra = facetConditions(f);
+		const parsed = parseSearch(f.q);
+		if (parsed)
+			return buildSearch({ text: parsed.text, conditions: [...parsed.conditions, ...extra] });
+		const rest = buildSearch({ text: '', conditions: extra });
+		return rest ? `(${f.q}) AND ${rest}` : f.q;
+	}
+
+	/** Splits the bar's query back into q and the facet filters. A query the tokens cannot show stays whole in q, since the backend reads kind, type, provider and tag there too, as do wildcard values the facets cannot hold. Owners have no token, so they carry over. */
+	function decompose(value: string): Filters {
+		const f: Filters = {
+			q: value.trim(),
+			kinds: [],
+			types: [],
+			providers: [],
+			tags: [],
+			owners: [...filters.owners]
+		};
+		const parsed = parseSearch(value);
+		if (!parsed) return f;
+		const rest: SearchCondition[] = [];
+		for (const c of parsed.conditions) {
+			const key = FACET_FIELDS[c.field as keyof typeof FACET_FIELDS];
+			if (key && c.operator === '=' && !c.values.some((v) => v.includes('*'))) {
+				for (const v of c.values) if (!f[key].includes(v)) f[key].push(v);
+			} else rest.push(c);
+		}
+		f.q = buildSearch({ text: parsed.text, conditions: rest });
+		return f;
+	}
+
+	function readParams(params: URLSearchParams) {
+		const list = (key: string) => params.get(key)?.split(',').filter(Boolean) ?? [];
+		filters = {
+			q: params.get('q') ?? '',
+			kinds: list('kind'),
+			types: list('types'),
+			providers: list('providers'),
+			tags: list('tags'),
+			owners: list('owner')
+		};
+		const s = params.get('sort') as Sort | null;
+		sort = s && SORTS.includes(s) ? s : 'relevance';
+		currentPage = Math.max(1, parseInt(params.get('page') ?? '1', 10) || 1);
+	}
+
+	function searchParams(f: Filters, offset: number, limit: number): URLSearchParams {
+		const params = new SvelteURLSearchParams({ limit: String(limit), offset: String(offset) });
+		if (f.q) params.append('q', f.q);
+		for (const kind of f.kinds.length ? f.kinds : ALL_KINDS) params.append('types[]', kind);
+		// Asset filters only apply while assets are among the kinds, as before.
+		if (!f.kinds.length || f.kinds.includes('asset')) {
+			if (f.types.length) params.append('asset_types', f.types.join(','));
+			if (f.providers.length) params.append('providers', f.providers.join(','));
+			if (f.tags.length) params.append('tags', f.tags.join(','));
+		}
+		if (f.owners.length) params.append('owner', f.owners.join(','));
+		if (sort !== 'relevance') params.append('sort', sort);
+		return params;
+	}
+
+	// Follow the URL: the first load, back and forward, and links into Discover from elsewhere.
 	$effect(() => {
-		const currentUrl = $page.url.search;
-
-		// Only process if URL actually changed (but allow first load when previousUrl is null)
-		if (previousUrl !== null && previousUrl === currentUrl) {
-			return;
-		}
-
-		previousUrl = currentUrl;
-
-		if (skipNextUrlEffect) {
-			skipNextUrlEffect = false;
-			return;
-		}
-
-		const searchParams = new URLSearchParams(currentUrl);
-		searchQuery = searchParams.get('q') || '';
-		selectedKinds = searchParams.get('kind')?.split(',').filter(Boolean) || [
-			'asset',
-			'glossary',
-			'team',
-			'data_product'
-		];
-		selectedTypes = searchParams.get('types')?.split(',').filter(Boolean) || [];
-		selectedProviders = searchParams.get('providers')?.split(',').filter(Boolean) || [];
-		selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
-		currentPage = parseInt(searchParams.get('page') || '1', 10);
-
-		if (browser) {
-			fetchResults();
-		}
+		const search = page.url.search;
+		untrack(() => {
+			if (search === lastSearch) return;
+			lastSearch = search;
+			readParams(page.url.searchParams);
+			barValue = compose(filters);
+			if (browser) fetchResults();
+		});
 	});
 
-	function getIconType(asset: SearchResultMetadata | undefined): string {
-		if (!asset) return '';
-		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
-			return asset.providers[0];
-		}
-		return asset.type ?? '';
-	}
-
 	async function fetchResults() {
-		$isLoading = true;
-		$error = null;
-
+		const id = ++request;
+		loading = true;
+		error = null;
 		try {
-			const queryParams = new SvelteURLSearchParams({
-				limit: itemsPerPage.toString(),
-				offset: ((currentPage - 1) * itemsPerPage).toString()
-			});
-
-			if (searchQuery) {
-				queryParams.append('q', searchQuery);
-			}
-
-			// Add kind filters
-			selectedKinds.forEach((kind) => {
-				queryParams.append('types[]', kind);
-			});
-
-			// Add asset-specific filters (only if asset kind is selected)
-			if (selectedKinds.includes('asset')) {
-				if (selectedTypes.length) queryParams.append('asset_types', selectedTypes.join(','));
-				if (selectedProviders.length) queryParams.append('providers', selectedProviders.join(','));
-				if (selectedTags.length) queryParams.append('tags', selectedTags.join(','));
-			}
-
-			const response = await fetchApi(`/search?${queryParams}`);
-
+			const response = await fetchApi(
+				`/search?${searchParams(filters, (currentPage - 1) * PAGE_SIZE, PAGE_SIZE)}`
+			);
+			if (id !== request) return;
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw {
-					status: response.status,
-					message: errorData.error || m.discover_error_generic()
-				};
+				const data = await response.json().catch(() => ({}));
+				error = { status: response.status, message: data.error || m.discover_error_generic() };
+				return;
 			}
-
 			const data: SearchResponse = await response.json();
-
-			$results = data.results || [];
-			$totalResults = data.total || 0;
-			$facets = {
-				types: data.facets?.types || {},
-				asset_types: data.facets?.asset_types || [],
-				providers: data.facets?.providers || [],
-				tags: data.facets?.tags || []
+			if (id !== request) return;
+			results = data.results ?? [];
+			total = data.total ?? 0;
+			facets = {
+				types: data.facets?.types ?? {},
+				asset_types: data.facets?.asset_types ?? [],
+				providers: data.facets?.providers ?? [],
+				tags: data.facets?.tags ?? [],
+				owners: data.facets?.owners ?? []
 			};
-		} catch (e: unknown) {
-			const err = e as { status?: number; message?: string };
-			const errorStatus = err.status || 500;
-			$error = { status: errorStatus, message: err.message || m.discover_error_unknown() };
-			console.error('Error fetching results:', e);
+		} catch (e) {
+			if (id !== request) return;
+			error = { status: 0, message: e instanceof Error ? e.message : m.discover_error_unknown() };
 		} finally {
-			$isLoading = false;
+			if (id === request) {
+				loading = false;
+				loaded = true;
+			}
 		}
-	}
-
-	function handleSearch(query: string) {
-		if (searchTimeout) {
-			clearTimeout(searchTimeout);
-		}
-
-		searchQuery = query;
-
-		searchTimeout = setTimeout(() => {
-			currentPage = 1;
-			updateURL();
-			fetchResults();
-		}, 300);
-	}
-
-	function handleRunQuery(query: string) {
-		if (searchTimeout) {
-			clearTimeout(searchTimeout);
-		}
-
-		searchQuery = query;
-		currentPage = 1;
-		updateURL();
-		fetchResults();
 	}
 
 	function updateURL() {
 		const params = new SvelteURLSearchParams();
-
-		if (searchQuery) params.append('q', searchQuery);
-		if (selectedKinds.length) params.append('kind', selectedKinds.join(','));
-		if (selectedTypes.length) params.append('types', selectedTypes.join(','));
-		if (selectedProviders.length) params.append('providers', selectedProviders.join(','));
-		if (selectedTags.length) params.append('tags', selectedTags.join(','));
-		if (currentPage > 1) params.append('page', currentPage.toString());
-
-		skipNextUrlEffect = true;
-		const queryString = params.toString();
-		goto(resolve(queryString ? `/discover?${queryString}` : '/discover'), {
+		if (filters.q) params.set('q', filters.q);
+		if (filters.kinds.length) params.set('kind', filters.kinds.join(','));
+		if (filters.types.length) params.set('types', filters.types.join(','));
+		if (filters.providers.length) params.set('providers', filters.providers.join(','));
+		if (filters.tags.length) params.set('tags', filters.tags.join(','));
+		if (filters.owners.length) params.set('owner', filters.owners.join(','));
+		if (sort !== 'relevance') params.set('sort', sort);
+		if (currentPage > 1) params.set('page', String(currentPage));
+		const qs = params.toString();
+		lastSearch = qs ? `?${qs}` : '';
+		goto(resolve(qs ? `/discover?${qs}` : '/discover'), {
 			replaceState: true,
 			noScroll: true,
 			keepFocus: true
 		});
 	}
 
-	function handleFilterChange() {
-		currentPage = 1;
+	function apply(next: Filters, page = 1) {
+		filters = next;
+		currentPage = page;
 		updateURL();
 		fetchResults();
 	}
 
-	function handlePageChange(newPage: number) {
-		currentPage = newPage;
-		updateURL();
-		fetchResults();
+	// Typing fires on every key, so wait for a pause; tokens, facets and Enter apply at once.
+	function onBarInput(value: string) {
+		barValue = value;
+		clearTimeout(typingTimer);
+		typingTimer = setTimeout(() => apply(decompose(value)), 300);
 	}
 
-	function handleTagClick(tag: string, event: MouseEvent) {
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (!selectedTags.includes(tag)) {
-			selectedTags = [...selectedTags, tag];
-			handleFilterChange();
-		}
+	function onBarSearch() {
+		clearTimeout(typingTimer);
+		apply(decompose(barValue));
 	}
 
-	function handleTypeClick(type: string, event: MouseEvent) {
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (!selectedTypes.includes(type)) {
-			selectedTypes = [...selectedTypes, type];
-			handleFilterChange();
-		}
+	function onDraft(value: string) {
+		clearTimeout(draftTimer);
+		draftTimer = setTimeout(async () => {
+			try {
+				const res = await fetchApi(`/search?${searchParams(decompose(value), 0, 1)}`);
+				draftCount = res.ok ? ((await res.json()) as SearchResponse).total : undefined;
+			} catch {
+				draftCount = undefined;
+			}
+		}, 300);
 	}
 
-	function handleSubscribeClick(event: MouseEvent | KeyboardEvent) {
-		event.preventDefault();
-		event.stopPropagation();
+	function onFacets(selected: Record<string, string[]>) {
+		const next: Filters = {
+			q: filters.q,
+			kinds: selected.kind ?? [],
+			types: selected.type ?? filters.types,
+			providers: selected.provider ?? filters.providers,
+			tags: selected.tags ?? filters.tags,
+			owners: selected.owner ?? filters.owners
+		};
+		// Picking an asset filter narrows to assets, as the old filters did, so other kinds do not pass through unfiltered.
+		const addedAssetFilter =
+			next.types.length > filters.types.length ||
+			next.providers.length > filters.providers.length ||
+			next.tags.length > filters.tags.length;
+		if (addedAssetFilter && !narrowed(next.kinds)) next.kinds = ['asset'];
+		if (narrowed(next.kinds) === false) next.kinds = [];
+		barValue = compose(next);
+		apply(next);
 	}
 
-	function removeFilter(filterType: 'kind' | 'types' | 'providers' | 'tags', value: string) {
-		if (filterType === 'kind') {
-			selectedKinds = selectedKinds.filter((v) => v !== value);
-		} else if (filterType === 'types') {
-			selectedTypes = selectedTypes.filter((v) => v !== value);
-		} else if (filterType === 'providers') {
-			selectedProviders = selectedProviders.filter((v) => v !== value);
-		} else if (filterType === 'tags') {
-			selectedTags = selectedTags.filter((v) => v !== value);
-		}
-		handleFilterChange();
+	function clearFilters() {
+		const next: Filters = { q: '', kinds: [], types: [], providers: [], tags: [], owners: [] };
+		barValue = '';
+		apply(next);
 	}
 
-	function clearAllFilters() {
-		selectedKinds = ['asset', 'glossary', 'team', 'data_product'];
-		selectedTypes = [];
-		selectedProviders = [];
-		selectedTags = [];
-		searchQuery = '';
-		handleFilterChange();
+	function onSort(value: string) {
+		if (!SORTS.includes(value as Sort) || value === sort) return;
+		sort = value as Sort;
+		apply(filters);
 	}
 
-	async function handleAssetClick(assetId: string) {
+	async function openAsset(id: string) {
 		try {
-			// Fetch the full asset data from the assets API
-			const response = await fetchApi(`/assets/${assetId}`);
+			const response = await fetchApi(`/assets/${id}`);
 			if (response.ok) {
-				const asset: Asset = await response.json();
-				selectedAsset = asset;
-			} else {
-				console.error('Failed to load asset');
+				selectedProduct = null;
+				selectedAsset = await response.json();
 			}
 		} catch (err) {
 			console.error('Error loading asset:', err);
 		}
 	}
 
-	async function handleDataProductClick(productId: string) {
+	async function openProduct(id: string) {
 		try {
-			const response = await fetchApi(`/products/${productId}`);
+			const response = await fetchApi(`/products/${id}`);
 			if (response.ok) {
 				const product: DataProduct = await response.json();
-				// Ensure arrays are initialized
 				product.tags = product.tags || [];
 				product.owners = product.owners || [];
 				product.rules = product.rules || [];
+				selectedAsset = null;
 				selectedProduct = product;
-			} else {
-				console.error('Failed to load data product');
 			}
 		} catch (err) {
 			console.error('Error loading data product:', err);
 		}
 	}
 
-	function navigateToResult(result: SearchResult) {
-		goto(resolve(result.url as `/${string}`));
+	/** Plain clicks open the preview; modified clicks keep the link's own behaviour, such as a new tab. */
+	function preview(e: MouseEvent, open: () => void) {
+		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		e.preventDefault();
+		open();
 	}
 
-	function getTagColor(type: string): string {
-		const colors: Record<string, string> = {
-			KAFKA_TOPIC:
-				'bg-earthy-terracotta-100 text-earthy-terracotta-700 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-100',
-			KAFKA_CONSUMER_GROUP: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
-			KAFKA_CLUSTER: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100',
-			default: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
-		};
-		return colors[type] || colors.default;
+	function providerOf(r: SearchResult): string {
+		return r.metadata?.primary_provider || r.metadata?.providers?.[0] || '';
 	}
 
-	function getResultTypeIcon(type: string): string {
-		const iconMap: Record<string, string> = {
-			asset: 'mdi:database',
-			glossary: 'mdi:book-open-variant',
-			team: 'mdi:account-group',
-			data_product: 'mdi:package-variant-closed'
-		};
-		return iconMap[type] || 'mdi:file-document';
+	function ownerNames(r: SearchResult): string {
+		return (r.owners ?? [])
+			.map((o) => o.name)
+			.filter(Boolean)
+			.join(', ');
 	}
 
-	function getResultTypeColor(type: string): string {
-		const colorMap: Record<string, string> = {
-			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-			data_product:
-				'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-300'
-		};
-		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-	}
-
-	function getKindLabel(kind: string): string {
-		const labels: Record<string, string> = {
-			asset: m.discover_kind_asset(),
-			glossary: m.discover_kind_glossary(),
-			team: m.discover_kind_team(),
-			data_product: m.discover_kind_product()
-		};
-		return labels[kind] || kind;
-	}
-
-	function getResultSubtitle(result: SearchResult): string {
-		if (result.type === 'asset' && result.metadata?.type) {
-			return result.metadata.type;
+	/** One quiet caption per row, as plain text separated by dots: what it is, its size, who owns it and its tags for assets, and the count that matters for each other kind. */
+	function caption(r: SearchResult): string {
+		const parts: string[] = [];
+		if (r.type === 'asset') {
+			if (r.metadata?.type) parts.push(typeLabel(r.metadata.type));
+			const providers = r.metadata?.providers ?? [];
+			if (providers.length) parts.push(providers.map(providerLabel).join(', '));
+			if (r.column_count) parts.push(m.discover_result_columns({ count: r.column_count }));
+			if (r.row_count)
+				parts.push(
+					m.discover_result_rows({ count: r.row_count, rows: compactNumber(r.row_count) })
+				);
+			parts.push(ownerNames(r));
+			parts.push(...(r.metadata?.tags ?? []).filter((t) => t !== 'pii' && t !== 'certified'));
+			if (r.updated_at)
+				parts.push(m.discover_result_updated({ when: formatRelativeTime(r.updated_at) }));
+		} else {
+			parts.push(kindLabel(r.type));
+			if (r.type === 'glossary') {
+				parts.push(ownerNames(r));
+				if (r.linked_asset_count !== undefined)
+					parts.push(m.discover_result_linked_assets({ count: r.linked_asset_count }));
+			} else if (r.type === 'data_product') {
+				parts.push(ownerNames(r));
+				const count = r.asset_count ?? r.metadata?.asset_count;
+				if (count !== undefined) parts.push(m.discover_result_assets({ count }));
+			} else if (r.type === 'team') {
+				if (r.member_count !== undefined)
+					parts.push(m.discover_result_members({ count: r.member_count }));
+				if (r.asset_count !== undefined)
+					parts.push(m.discover_result_assets({ count: r.asset_count }));
+			}
 		}
-		if (result.description) {
-			return result.description;
-		}
-		return '';
+		return parts.filter(Boolean).join(' · ');
 	}
 
-	let hasActiveFilters = $derived(
-		// Check if kinds differ from default (asset, glossary, team, data_product)
-		!(
-			selectedKinds.length === 4 &&
-			selectedKinds.includes('asset') &&
-			selectedKinds.includes('glossary') &&
-			selectedKinds.includes('team') &&
-			selectedKinds.includes('data_product')
-		) ||
-			selectedTypes.length > 0 ||
-			selectedProviders.length > 0 ||
-			selectedTags.length > 0
+	/** mm-popularity draws one to four bars; an asset nobody viewed recently shows none. */
+	function popularityLevel(r: SearchResult): 1 | 2 | 3 | 4 | null {
+		const level = Math.round(r.popularity ?? 0);
+		return level >= 1 ? (Math.min(level, 4) as 1 | 2 | 3 | 4) : null;
+	}
+
+	const kindIcons: Record<string, string> = {
+		glossary: 'menu-book',
+		team: 'groups',
+		data_product: 'package-2'
+	};
+
+	let showAssetFacets = $derived(!filters.kinds.length || filters.kinds.includes('asset'));
+	let hasFilters = $derived(
+		narrowed(filters.kinds) ||
+			filters.types.length > 0 ||
+			filters.providers.length > 0 ||
+			filters.tags.length > 0 ||
+			filters.owners.length > 0
+	);
+	let firstRun = $derived(loaded && !loading && !error && total === 0 && !filters.q && !hasFilters);
+
+	let fields = $derived<SearchBarField[]>(
+		catalogFields({
+			types: facets.asset_types.map((f) => f.value),
+			providers: facets.providers.map((f) => f.value),
+			tags: facets.tags.map((f) => f.value)
+		})
 	);
 
-	let showAssetFilters = $derived(selectedKinds.includes('asset'));
-
-	let showGettingStarted = $derived(
-		!$isLoading && $results.length === 0 && !searchQuery && !hasActiveFilters
+	let kindOptions = $derived<MmFacetOption[]>([
+		{
+			value: 'asset',
+			label: m.discover_facet_assets(),
+			icon: 'database',
+			count: facets.types.asset ?? 0
+		},
+		{
+			value: 'data_product',
+			label: m.discover_facet_products(),
+			icon: 'package-2',
+			count: facets.types.data_product ?? 0
+		},
+		{
+			value: 'glossary',
+			label: m.discover_facet_terms(),
+			icon: 'menu-book',
+			count: facets.types.glossary ?? 0
+		},
+		{
+			value: 'team',
+			label: m.discover_facet_teams(),
+			icon: 'groups',
+			count: facets.types.team ?? 0
+		}
+	]);
+	let typeOptions = $derived<MmFacetOption[]>(
+		facets.asset_types.map((f) => ({ value: f.value, label: typeLabel(f.value), count: f.count }))
 	);
+	let providerOptions = $derived<MmFacetOption[]>(
+		facets.providers.map((f) => ({
+			value: f.value,
+			label: providerLabel(f.value),
+			provider: f.value.toLowerCase(),
+			count: f.count
+		}))
+	);
+	let tagOptions = $derived<MmFacetOption[]>(
+		facets.tags.map((f) => ({ value: f.value, label: f.value, count: f.count }))
+	);
+	// Owners already picked stay listed even when the counts no longer return them, so they can be cleared.
+	let ownerOptions = $derived<MmFacetOption[]>([
+		...facets.owners.map((f) => ({
+			value: f.value,
+			label: f.label || f.value,
+			icon: f.kind === 'team' ? 'groups' : 'person',
+			count: f.count
+		})),
+		...filters.owners
+			.filter((id) => !facets.owners.some((f) => f.value === id))
+			.map((id) => ({ value: id, label: id }))
+	]);
 </script>
 
 <svelte:head>
 	<title>{m.discover_page_title()}</title>
 </svelte:head>
 
-<div class="h-full flex flex-col">
-	<div class="w-full px-4 pt-6 sm:px-6 lg:px-8">
-		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-			<div>
-				<h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-					{m.discover_heading()}
-				</h1>
-				<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{m.discover_subheading()}</p>
-			</div>
-			{#if canManageAssets}
-				<a
-					href={resolve('/assets/new')}
-					class="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-lg bg-earthy-terracotta-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-earthy-terracotta-500"
+<div class="mm-stack" style="--mm-gap: var(--space-5)">
+	<mm-page-header compact heading={m.discover_heading()}>
+		{#if canManageAssets}
+			<mm-button slot="actions" variant="secondary" icon="add" href={resolve('/assets/new')}
+				>{m.discover_new_asset_button()}</mm-button
+			>
+		{/if}
+	</mm-page-header>
+
+	{#if firstRun}
+		<mm-empty-state
+			heading={m.discover_firstrun_heading()}
+			description={m.discover_firstrun_description()}
+			seed={2}
+		>
+			{#if canAddPlugins}
+				<mm-button slot="action" variant="primary" icon="extension" href={resolve('/pipelines/new')}
+					>{m.discover_firstrun_add_plugin()}</mm-button
 				>
-					<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
-					{m.discover_new_asset_button()}
-				</a>
 			{/if}
-		</div>
-	</div>
-	<!-- Main Content -->
-	<div class="flex-1 overflow-hidden">
-		<div class="w-full px-4 py-5 sm:px-6 lg:px-8 h-full flex gap-5">
-			<!-- Filters Sidebar -->
-			<div class="{filtersExpanded ? 'w-56' : 'w-10'} flex-shrink-0 transition-all duration-300">
-				<div
-					class="sticky top-4 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+		</mm-empty-state>
+		<section
+			class="mm-stack mm-measure"
+			style="--mm-gap: var(--space-2); margin-inline: auto; width: 100%"
+			aria-labelledby="other-ways"
+		>
+			<mm-heading id="other-ways" level={2} variant="panel-title"
+				>{m.discover_firstrun_other_ways()}</mm-heading
+			>
+			<mm-list aria-label={m.discover_firstrun_other_ways()}>
+				<mm-list-item
+					href="https://marmotdata.io/docs/open-lineage"
+					target="_blank"
+					secondary={m.discover_firstrun_openlineage_hint()}
+					><mm-icon slot="start" name="conversion-path" aria-hidden="true"
+					></mm-icon>{m.discover_firstrun_openlineage()}</mm-list-item
 				>
-					<button
-						onclick={() => (filtersExpanded = !filtersExpanded)}
-						class="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-						title={filtersExpanded
-							? m.discover_filters_collapse_title()
-							: m.discover_filters_expand_title()}
+				<mm-list-item
+					href="https://marmotdata.io/docs/Populating/CLI"
+					target="_blank"
+					secondary={m.discover_firstrun_cli_hint()}
+					><mm-icon slot="start" name="terminal" aria-hidden="true"
+					></mm-icon>{m.discover_firstrun_cli()}</mm-list-item
+				>
+				{#if canManageAssets}
+					<mm-list-item href={resolve('/assets/new')} secondary={m.discover_firstrun_manual_hint()}
+						><mm-icon slot="start" name="edit-note" aria-hidden="true"
+						></mm-icon>{m.discover_firstrun_manual()}</mm-list-item
 					>
-						{#if filtersExpanded}
-							<h2
-								class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-							>
-								{m.discover_filters_heading()}
-							</h2>
-							<IconifyIcon icon="mdi:chevron-left" class="text-gray-500" />
-						{:else}
-							<IconifyIcon icon="mdi:filter-outline" class="text-gray-500 mx-auto" />
-						{/if}
-					</button>
-
-					{#if filtersExpanded}
-						<div class="p-3">
-							<!-- Clear Filters Link -->
-							<div class="mb-3">
-								<button
-									onclick={clearAllFilters}
-									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-medium"
-								>
-									{m.discover_clear_filters()}
-								</button>
-							</div>
-
-							<!-- Kinds -->
-							<div class="mb-4">
-								<h3
-									class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-								>
-									{m.discover_kind_heading()}
-								</h3>
-								{#each ['asset', 'data_product', 'glossary', 'team'] as kind (kind)}
-									<label class="flex items-center justify-between mb-2 cursor-pointer">
-										<div class="flex items-center">
-											<Checkbox
-												checked={selectedKinds.includes(kind)}
-												onchange={(e) => {
-													if (e.currentTarget.checked) {
-														selectedKinds = [...selectedKinds, kind];
-													} else {
-														selectedKinds = selectedKinds.filter((k) => k !== kind);
-													}
-													handleFilterChange();
-												}}
-											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-												>{getKindLabel(kind)}</span
-											>
-										</div>
-										<span class="text-xs tabular-nums text-gray-400"
-											>{$facets.types[kind] || 0}</span
-										>
-									</label>
-								{/each}
-							</div>
-
-							<!-- Asset-specific filters (only show when Asset is selected) -->
-							{#if showAssetFilters}
-								{#if $facets.asset_types.length > 0}
-									<div class="mb-4">
-										<h3
-											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-										>
-											{m.common_type()}
-										</h3>
-										{#each $facets.asset_types as { value, count } (value)}
-											<label class="flex items-center justify-between mb-2 cursor-pointer">
-												<div class="flex items-center">
-													<Checkbox
-														checked={selectedTypes.includes(value)}
-														onchange={(e) => {
-															if (e.currentTarget.checked) {
-																selectedTypes = [...selectedTypes, value];
-																selectedKinds = ['asset'];
-															} else {
-																selectedTypes = selectedTypes.filter((t) => t !== value);
-															}
-															handleFilterChange();
-														}}
-													/>
-													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
-												</div>
-												<span class="text-xs tabular-nums text-gray-400">{count}</span>
-											</label>
-										{/each}
-									</div>
-								{/if}
-
-								{#if $facets.providers.length > 0}
-									<div class="mb-4">
-										<h3
-											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-										>
-											{m.discover_providers_heading()}
-										</h3>
-										{#each $facets.providers as { value, count } (value)}
-											<label class="flex items-center justify-between mb-2 cursor-pointer">
-												<div class="flex items-center">
-													<Checkbox
-														checked={selectedProviders.includes(value)}
-														onchange={(e) => {
-															if (e.currentTarget.checked) {
-																selectedProviders = [...selectedProviders, value];
-																selectedKinds = ['asset'];
-															} else {
-																selectedProviders = selectedProviders.filter((s) => s !== value);
-															}
-															handleFilterChange();
-														}}
-													/>
-													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
-												</div>
-												<span class="text-xs tabular-nums text-gray-400">{count}</span>
-											</label>
-										{/each}
-									</div>
-								{/if}
-
-								{#if $facets.tags.length > 0}
-									<div>
-										<h3
-											class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-										>
-											{m.common_tags()}
-										</h3>
-										{#each $facets.tags as { value, count } (value)}
-											<label class="flex items-center justify-between mb-2 gap-2 cursor-pointer">
-												<div class="flex items-center min-w-0">
-													<Checkbox
-														checked={selectedTags.includes(value)}
-														onchange={(e) => {
-															if (e.currentTarget.checked) {
-																selectedTags = [...selectedTags, value];
-																selectedKinds = ['asset'];
-															} else {
-																selectedTags = selectedTags.filter((t) => t !== value);
-															}
-															handleFilterChange();
-														}}
-													/>
-													<span
-														class="ml-2 text-sm text-gray-700 dark:text-gray-300 truncate"
-														title={value}
-													>
-														{value.length > 100 ? value.slice(0, 100) + '...' : value}
-													</span>
-												</div>
-												<span class="flex-shrink-0 text-xs tabular-nums text-gray-400">{count}</span
-												>
-											</label>
-										{/each}
-									</div>
-								{/if}
-							{/if}
-						</div>
-					{/if}
-				</div>
-			</div>
-
-			<!-- Results Grid -->
-			<div class="flex-1 flex flex-col min-h-0">
-				<!-- Header with Filters -->
-				<div class="mb-4">
-					<!-- Query Builder (Collapsible) -->
-					<div class="mb-3">
-						<QueryBuilder
-							query={searchQuery}
-							onQueryChange={handleSearch}
-							onRunClick={handleRunQuery}
-							initiallyExpanded={queryBuilderExpanded}
-						/>
-					</div>
-
-					{#if hasActiveFilters}
-						<div>
-							<div class="mb-1.5 flex items-center justify-between">
-								<h2
-									class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-								>
-									{m.discover_active_filters_heading()}
-								</h2>
-								<button
-									onclick={clearAllFilters}
-									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-100 font-medium"
-								>
-									{m.discover_clear_all()}
-								</button>
-							</div>
-							<div class="flex flex-wrap gap-1.5">
-								{#each selectedTypes as type (type)}
-									<span
-										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-									>
-										<span class="text-gray-500 dark:text-gray-400"
-											>{m.discover_filter_type_label()}</span
-										>
-										{type}
-										<button
-											onclick={() => removeFilter('types', type)}
-											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-											aria-label={m.discover_remove_filter_aria({ value: type })}
-										>
-											<svg
-												class="w-3.5 h-3.5"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M6 18L18 6M6 6l12 12"
-												/>
-											</svg>
-										</button>
-									</span>
-								{/each}
-
-								{#each selectedProviders as provider (provider)}
-									<span
-										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-									>
-										<span class="text-gray-500 dark:text-gray-400"
-											>{m.discover_filter_provider_label()}</span
-										>
-										{provider}
-										<button
-											onclick={() => removeFilter('providers', provider)}
-											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-											aria-label={m.discover_remove_filter_aria({ value: provider })}
-										>
-											<svg
-												class="w-3.5 h-3.5"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M6 18L18 6M6 6l12 12"
-												/>
-											</svg>
-										</button>
-									</span>
-								{/each}
-
-								{#each selectedTags as tag (tag)}
-									<span
-										class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-									>
-										<span class="text-gray-500 dark:text-gray-400"
-											>{m.discover_filter_tag_label()}</span
-										>
-										{tag}
-										<button
-											onclick={() => removeFilter('tags', tag)}
-											class="ml-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-											aria-label={m.discover_remove_filter_aria({ value: tag })}
-										>
-											<svg
-												class="w-3.5 h-3.5"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M6 18L18 6M6 6l12 12"
-												/>
-											</svg>
-										</button>
-									</span>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				{#if $error}
-					{#if String($error.status).startsWith('5')}
-						<div
-							class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-100 px-4 py-3 rounded-lg"
-						>
-							{m.discover_error_server()}
-						</div>
-					{:else}
-						<div
-							class="bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900 border border-earthy-terracotta-200 dark:border-earthy-terracotta-800 px-4 py-3 rounded-lg flex items-center gap-3"
-						>
-							<svg
-								class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 flex-shrink-0"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-							</svg>
-							<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-100">
-								{#if $error.status === 400}
-									{m.discover_error_invalid_query()}
-								{:else}
-									{$error.message}
-								{/if}
-							</span>
-						</div>
-					{/if}
-				{:else}
-					<!-- Pagination Header -->
-					<div class="mb-3 flex items-center justify-between">
-						<p class="text-sm text-gray-500 dark:text-gray-400">
-							{#if $totalResults > 0}
-								{m.discover_pagination_range({
-									from: (currentPage - 1) * itemsPerPage + 1,
-									to: Math.min(currentPage * itemsPerPage, $totalResults),
-									total: $totalResults
-								})}
-							{/if}
-						</p>
-						<div class="flex gap-1.5">
-							<button
-								onclick={() => handlePageChange(currentPage - 1)}
-								disabled={currentPage === 1}
-								class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-							>
-								{m.common_previous()}
-							</button>
-							<button
-								onclick={() => handlePageChange(currentPage + 1)}
-								disabled={currentPage * itemsPerPage >= $totalResults}
-								class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-							>
-								{m.common_next()}
-							</button>
-						</div>
-					</div>
-
-					<!-- Results List -->
-					<div class="space-y-2">
-						{#if $isLoading}
-							{#each Array(itemsPerPage) as _, i (i)}
-								<div
-									class="animate-pulse rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-								>
-									<div class="flex justify-between items-start mb-2">
-										<div class="space-y-1.5">
-											<div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-48"></div>
-											<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-64"></div>
-										</div>
-										<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
-									</div>
-									<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-1.5"></div>
-									<div class="flex gap-1.5">
-										{#each Array(3) as _, j (j)}
-											<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-14"></div>
-										{/each}
-									</div>
-								</div>
-							{/each}
-						{:else if $results.length === 0}
-							{#if showGettingStarted}
-								<div class="py-8">
-									<GettingStarted condensed={false} />
-								</div>
-							{:else}
-								<div class="flex-1 flex items-center justify-center py-12">
-									<div class="text-center">
-										<div class="flex justify-center mb-4">
-											<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400" />
-										</div>
-										<p class="text-gray-600 dark:text-gray-400 text-lg">{m.common_no_results()}</p>
-										<p class="text-gray-500 dark:text-gray-500 text-sm mt-2">
-											{m.discover_no_results_hint()}
-										</p>
-									</div>
-								</div>
-							{/if}
-						{:else}
-							{#each $results as result (result.id)}
-								{#if result.type === 'asset'}
-									<!-- Asset card -->
-									<div
-										role="button"
-										tabindex="0"
-										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
-										onclick={() => handleAssetClick(result.id)}
-										onkeydown={(e) => e.key === 'Enter' && handleAssetClick(result.id)}
-									>
-										<div class="flex justify-between items-start mb-2">
-											<div class="flex items-center gap-2 flex-1 min-w-0">
-												<div class="flex-shrink-0">
-													<Icon name={getIconType(result.metadata)} showLabel={false} size="sm" />
-												</div>
-												<div class="min-w-0 flex-1">
-													<h3
-														class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-700 transition-colors"
-													>
-														{result.name}
-													</h3>
-													<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono">
-														{result.metadata?.mrn}
-													</p>
-												</div>
-											</div>
-											<div class="flex items-center gap-1.5 flex-shrink-0">
-												<button
-													onclick={(e) => handleTypeClick(result.metadata?.type ?? '', e)}
-													class="text-xs {getTagColor(
-														result.metadata?.type ?? ''
-													)} px-2 py-0.5 rounded hover:opacity-80 transition-opacity font-medium"
-												>
-													{result.metadata?.type?.replace(/_/g, ' ')}
-												</button>
-											</div>
-										</div>
-
-										{#if result.description}
-											<p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-1">
-												{result.description}
-											</p>
-										{/if}
-
-										{#if result.metadata?.tags && result.metadata.tags.length > 0}
-											<div class="flex flex-wrap gap-1 mb-2">
-												{#each result.metadata.tags.slice(0, 3) as tag (tag)}
-													<button
-														onclick={(e) => handleTagClick(tag, e)}
-														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700 transition-colors"
-													>
-														<IconifyIcon icon="material-symbols:label-outline" class="w-3 h-3" />
-														{tag}
-													</button>
-												{/each}
-												{#if result.metadata.tags.length > 3}
-													<span class="text-xs text-gray-500 dark:text-gray-400 px-1.5 py-0.5">
-														+{result.metadata.tags.length - 3}
-													</span>
-												{/if}
-											</div>
-										{/if}
-
-										<div
-											class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
-										>
-											<div class="flex items-center gap-2">
-												{#if result.metadata?.created_by}
-													<span>{result.metadata.created_by}</span>
-													<span>•</span>
-												{/if}
-												<span>
-													{#if result.metadata?.created_at}
-														{formatDate(result.metadata.created_at)}
-													{/if}
-												</span>
-											</div>
-											<div
-												role="none"
-												onclick={handleSubscribeClick}
-												class="opacity-40 group-hover:opacity-100 transition-opacity"
-											>
-												<SubscribeButton assetId={result.id} variant="icon-only" />
-											</div>
-										</div>
-									</div>
-								{:else if result.type === 'data_product'}
-									<!-- Data Product card -->
-									<div
-										role="button"
-										tabindex="0"
-										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
-										onclick={() => handleDataProductClick(result.id)}
-										onkeydown={(e) => e.key === 'Enter' && handleDataProductClick(result.id)}
-									>
-										<div class="flex justify-between items-start mb-2">
-											<div class="flex items-center gap-2 flex-1 min-w-0">
-												<div class="flex-shrink-0">
-													<div
-														class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center overflow-hidden"
-													>
-														{#if result.metadata?.icon_url}
-															<AuthenticatedImage
-																src={result.metadata.icon_url}
-																alt={m.discover_product_icon_alt({ name: result.name })}
-																class="w-full h-full object-cover"
-															/>
-														{:else}
-															<IconifyIcon
-																icon="mdi:package-variant-closed"
-																class="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-															/>
-														{/if}
-													</div>
-												</div>
-												<div class="min-w-0 flex-1">
-													<h3
-														class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-700 transition-colors"
-													>
-														{result.name}
-													</h3>
-													<div
-														class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
-													>
-														{#if result.metadata?.asset_count !== undefined}
-															<span class="flex items-center gap-1">
-																<IconifyIcon icon="material-symbols:database" class="w-3 h-3" />
-																{m.discover_asset_count({ count: result.metadata.asset_count })}
-															</span>
-														{/if}
-														{#if result.metadata?.owner_count}
-															<span class="flex items-center gap-1">
-																<IconifyIcon icon="material-symbols:person" class="w-3 h-3" />
-																{result.metadata.owner_count}
-															</span>
-														{/if}
-													</div>
-												</div>
-											</div>
-										</div>
-
-										{#if result.description}
-											<p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-1">
-												{result.description}
-											</p>
-										{/if}
-
-										{#if result.metadata?.tags && result.metadata.tags.length > 0}
-											<div class="flex flex-wrap gap-1 mb-2">
-												{#each result.metadata.tags.slice(0, 3) as tag (tag)}
-													<span
-														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded"
-													>
-														<IconifyIcon icon="material-symbols:label-outline" class="w-3 h-3" />
-														{tag}
-													</span>
-												{/each}
-												{#if result.metadata.tags.length > 3}
-													<span class="text-xs text-gray-500 dark:text-gray-400 px-1.5 py-0.5">
-														+{result.metadata.tags.length - 3}
-													</span>
-												{/if}
-											</div>
-										{/if}
-
-										<div
-											class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
-										>
-											{#if result.metadata?.created_by}
-												<span>{result.metadata.created_by}</span>
-												<span>•</span>
-											{/if}
-											<span>
-												{#if result.updated_at}
-													{m.discover_updated_date({ date: formatDate(result.updated_at) })}
-												{/if}
-											</span>
-										</div>
-									</div>
-								{:else}
-									<!-- Other non-asset card (glossary, team) -->
-									<div
-										role="button"
-										tabindex="0"
-										class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-earthy-terracotta-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-earthy-terracotta-700"
-										onclick={() => navigateToResult(result)}
-										onkeydown={(e) => e.key === 'Enter' && navigateToResult(result)}
-									>
-										<div class="flex justify-between items-start mb-2">
-											<div class="flex items-center gap-2 flex-1 min-w-0">
-												<div class="flex-shrink-0">
-													<IconifyIcon icon={getResultTypeIcon(result.type)} class="text-lg" />
-												</div>
-												<div class="min-w-0 flex-1">
-													<h3
-														class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-700 transition-colors"
-													>
-														{result.name}
-													</h3>
-												</div>
-											</div>
-											<span
-												class="flex-shrink-0 text-xs {getResultTypeColor(
-													result.type
-												)} px-2 py-0.5 rounded font-medium"
-											>
-												{getKindLabel(result.type)}
-											</span>
-										</div>
-
-										{#if getResultSubtitle(result)}
-											<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
-												{getResultSubtitle(result)}
-											</p>
-										{/if}
-									</div>
-								{/if}
-							{/each}
-						{/if}
-					</div>
 				{/if}
-			</div>
+			</mm-list>
+		</section>
+	{:else}
+		<mm-search-bar
+			label={m.discover_search_label()}
+			placeholder={m.discover_search_placeholder()}
+			value={barValue}
+			{fields}
+			loadFields={loadMetadataFields}
+			loadValues={loadFieldValues}
+			draft-count={draftCount}
+			onmm-input={(e: CustomEvent<{ value: string }>) => onBarInput(e.detail.value)}
+			onmm-search={onBarSearch}
+			onmm-draft={(e: CustomEvent<{ value: string }>) => onDraft(e.detail.value)}
+		></mm-search-bar>
+
+		<div class="mm-split mm-split--sidebar">
+			<mm-facet-sidebar
+				heading={m.discover_filters_heading()}
+				hide-applied
+				onmm-filter-change={(e: CustomEvent<{ facets: Record<string, string[]> }>) =>
+					onFacets(e.detail.facets)}
+			>
+				<mm-facet
+					name="kind"
+					label={m.discover_kind_heading()}
+					options={kindOptions}
+					value={narrowed(filters.kinds) ? filters.kinds : []}
+				></mm-facet>
+				{#if showAssetFacets}
+					<mm-facet name="type" label={m.common_type()} options={typeOptions} value={filters.types}
+					></mm-facet>
+					<mm-facet
+						name="provider"
+						label={m.discover_field_provider()}
+						options={providerOptions}
+						value={filters.providers}
+					></mm-facet>
+					<mm-facet name="tags" label={m.common_tags()} options={tagOptions} value={filters.tags}
+					></mm-facet>
+				{/if}
+				<mm-facet
+					name="owner"
+					label={m.discover_facet_owner()}
+					options={ownerOptions}
+					value={filters.owners}
+					collapsed={filters.owners.length === 0}
+				></mm-facet>
+			</mm-facet-sidebar>
+
+			<section
+				aria-label={m.discover_results_label()}
+				class="mm-stack"
+				style="--mm-gap: var(--space-4); min-width: 0"
+			>
+				{#if error}
+					{#if error.status === 400}
+						<mm-callout tone="warning" heading={m.discover_error_query_heading()}>
+							{m.discover_error_invalid_query()}
+						</mm-callout>
+					{:else}
+						<mm-callout tone="danger" heading={m.discover_error_heading()}>
+							{error.status >= 500 ? m.discover_error_server() : error.message}
+							<mm-button
+								slot="actions"
+								size="sm"
+								variant="secondary"
+								icon="refresh"
+								onclick={fetchResults}>{m.discover_try_again()}</mm-button
+							>
+						</mm-callout>
+					{/if}
+				{:else if loaded && !loading && results.length === 0}
+					<mm-empty-state
+						heading={m.discover_empty_heading()}
+						description={m.discover_empty_description()}
+						seed={5}
+					>
+						{#if hasFilters}
+							<mm-button slot="action" variant="secondary" icon="filter-list" onclick={clearFilters}
+								>{m.discover_clear_filters()}</mm-button
+							>
+						{/if}
+					</mm-empty-state>
+				{:else}
+					<div class="mm-cluster mm-cluster--between">
+						<mm-text variant="dense" tone="secondary" role="status"
+							>{loaded ? m.discover_results_count({ count: total }) : ''}</mm-text
+						>
+						<mm-select
+							label={m.discover_sort_label()}
+							hide-label
+							value={sort}
+							style="inline-size: 12rem"
+							onmm-change={(e: CustomEvent<{ value: string }>) => onSort(e.detail.value)}
+						>
+							<mm-option value="relevance">{m.discover_sort_relevance()}</mm-option>
+							<mm-option value="popular">{m.discover_sort_popular()}</mm-option>
+							<mm-option value="updated">{m.discover_sort_updated()}</mm-option>
+							<mm-option value="name">{m.discover_sort_name()}</mm-option>
+						</mm-select>
+					</div>
+					<mm-skeleton loading={loading && !results.length} shape="table-row" count={8}>
+						<ul class="mm-list results" aria-label={m.discover_results_label()} aria-busy={loading}>
+							{#each results as r (r.type + r.id)}
+								<li
+									aria-current={selectedAsset?.id === r.id || selectedProduct?.id === r.id
+										? 'true'
+										: undefined}
+								>
+									{#if r.type === 'asset' && providerOf(r)}
+										<mm-provider-logo
+											class="lead"
+											provider={providerOf(r).toLowerCase()}
+											size={20}
+											decorative
+										></mm-provider-logo>
+									{:else}
+										<mm-icon
+											class="lead"
+											name={kindIcons[r.type] ?? 'database'}
+											size={20}
+											aria-hidden="true"
+										></mm-icon>
+									{/if}
+									<div class="mm-stack" style="--mm-gap: var(--space-1); flex: 1; min-width: 0">
+										<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+											<a
+												class="mm-link mm-link--quiet name"
+												href={resolve(r.url as '/')}
+												title={r.description ?? ''}
+												onclick={(e) =>
+													r.type === 'asset'
+														? preview(e, () => openAsset(r.id))
+														: r.type === 'data_product'
+															? preview(e, () => openProduct(r.id))
+															: undefined}>{r.name}</a
+											>
+											{#if r.metadata?.tags?.includes('pii')}
+												<mm-tag variant="pii"></mm-tag>
+											{/if}
+											{#if r.metadata?.tags?.includes('certified')}
+												<mm-tag variant="certified"></mm-tag>
+											{/if}
+											{#if r.stale}
+												<mm-status-pill state="stale"></mm-status-pill>
+											{/if}
+										</div>
+										<mm-text variant="caption" tone="secondary" block>{caption(r)}</mm-text>
+									</div>
+									{#if r.type === 'asset' && popularityLevel(r)}
+										<mm-popularity class="popularity" level={popularityLevel(r)}></mm-popularity>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					</mm-skeleton>
+					{#if total > PAGE_SIZE}
+						<mm-pagination
+							{total}
+							page-size={PAGE_SIZE}
+							page={currentPage}
+							label={m.discover_pagination_label()}
+							onmm-page-change={(e: CustomEvent<{ page: number }>) => apply(filters, e.detail.page)}
+						></mm-pagination>
+					{/if}
+				{/if}
+			</section>
 		</div>
-	</div>
+	{/if}
 </div>
 
 {#if selectedAsset}
@@ -1061,3 +760,43 @@
 {#if selectedProduct}
 	<ProductBlade bind:product={selectedProduct} onClose={() => (selectedProduct = null)} />
 {/if}
+
+<style>
+	.results {
+		border-block: 1px solid var(--mm-rule);
+	}
+	/* The whole row is the target: the name's link stretches over it, so modified clicks and keyboard focus still go to one real link */
+	.results > li {
+		position: relative;
+		align-items: flex-start;
+		gap: var(--space-3);
+		padding-block: var(--space-3);
+		transition: background-color var(--mm-dur-press) var(--mm-ease);
+	}
+	.results > li:hover {
+		background: var(--mm-sunken);
+	}
+	.name::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+	}
+	.results mm-tag {
+		position: relative;
+	}
+	.popularity {
+		flex: none;
+		margin-block-start: 4px;
+	}
+	.results > li[aria-current='true'] {
+		background: var(--mm-selected);
+	}
+	.lead {
+		flex: none;
+		margin-block-start: 2px;
+		color: var(--mm-text-2);
+	}
+	.name {
+		overflow-wrap: anywhere;
+	}
+</style>

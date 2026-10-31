@@ -1,304 +1,221 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import IconifyIcon from '@iconify/svelte';
+	import '@marmotdata/elements/tree.js';
+	import type { TreeAction, TreeNode } from '@marmotdata/elements/classes/tree';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Icon from '$components/ui/Icon.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import { getErrorMessage } from '$lib/stores/toast';
 	import { formatNumber } from '$lib/utils/format';
-	import { listQuerySourceTables, listQuerySources } from '$lib/dataquery/api';
-	import { assetRouteParams } from '$lib/dataquery/format';
+	import { getTableColumns, listQuerySourceTables } from '$lib/dataquery/api';
+	import { assetRouteParams, formatRowCount, qualifiedName } from '$lib/dataquery/format';
 	import type { QuerySource, QuerySourceTable } from '$lib/dataquery/types';
 
 	let {
+		sources,
+		total,
+		loading,
+		error,
 		active,
+		onMore,
+		onRetry,
 		onSelect,
 		onInsert,
-		onPreview
+		onSample,
+		onTables,
+		onColumns
 	}: {
+		sources: QuerySource[];
+		total: number;
+		loading: boolean;
+		error: string;
 		active: string;
+		onMore: () => void;
+		onRetry: () => void;
 		onSelect: (source: string) => void;
 		onInsert: (text: string) => void;
-		onPreview: (source: string, statement: string) => void;
+		onSample: (source: string, statement: string) => void;
+		onTables: (source: string, tables: QuerySourceTable[]) => void;
+		onColumns: (source: string, table: QuerySourceTable, columns: { name: string }[]) => void;
 	} = $props();
 
-	const PAGE = 50;
+	const TABLE_LIMIT = 200;
 
-	let search = $state('');
-	let sources = $state<QuerySource[]>([]);
-	let total = $state(0);
-	let loading = $state(true);
-	let loadingMore = $state(false);
-	let error = $state('');
+	type Entry =
+		| { kind: 'source'; source: string }
+		| { kind: 'schema'; source: string }
+		| { kind: 'table'; source: string; table: QuerySourceTable }
+		| { kind: 'column'; source: string; name: string };
 
-	const expanded = new SvelteSet<string>();
-	const tables = new SvelteMap<string, QuerySourceTable[]>();
-	const tableFilters = new SvelteMap<string, string>();
-	const tablesLoading = new SvelteSet<string>();
+	// The tree drops loaded children whenever its roots change (more sources paged in), so loads are cached here and come back at once
+	const cache: Record<string, TreeNode[]> = {};
 
-	let searchTimer: ReturnType<typeof setTimeout> | undefined;
-	let tableTimer: ReturnType<typeof setTimeout> | undefined;
-	let sourcesRequest = 0;
+	let expandedIds = $state<string[]>([]);
+	let tree = $state<HTMLElement & { expandedIds: string[] }>();
 
-	async function loadSources(append = false) {
-		const id = ++sourcesRequest;
-		if (append) loadingMore = true;
-		else loading = true;
-		error = '';
-		try {
-			const data = await listQuerySources({
-				q: search.trim(),
-				limit: PAGE,
-				offset: append ? sources.length : 0
+	let nodes = $derived<TreeNode[]>(
+		sources.map((s) => ({
+			id: `s:${s.name}`,
+			label: s.name,
+			provider: s.plugin_id || undefined,
+			icon: s.plugin_id ? undefined : 'database',
+			secondary: formatNumber(s.table_count),
+			hasChildren: true,
+			data: { kind: 'source', source: s.name } satisfies Entry
+		}))
+	);
+
+	function tableNode(source: string, table: QuerySourceTable): TreeNode {
+		const pii = table.tags?.some((t) => t.toLowerCase() === 'pii');
+		return {
+			id: `t:${source}:${table.mrn}`,
+			label: table.name,
+			icon: table.type === 'View' ? 'visibility' : 'table',
+			// The size the catalog last saw, so the biggest tables stand out before anyone queries them
+			secondary: table.row_count != null ? formatRowCount(table.row_count) : undefined,
+			secondaryMono: false,
+			hasChildren: !!table.asset_id,
+			badges: pii ? [{ label: 'PII', variant: 'pii' }] : undefined,
+			data: { kind: 'table', source, table } satisfies Entry
+		};
+	}
+
+	async function loadChildren(node: TreeNode): Promise<TreeNode[]> {
+		const cached = cache[node.id];
+		if (cached) return cached;
+		const entry = node.data as Entry;
+		let children: TreeNode[] = [];
+		if (entry.kind === 'source') {
+			const tables = await listQuerySourceTables(entry.source, { limit: TABLE_LIMIT });
+			onTables(entry.source, tables);
+			const schemas = [...new Set(tables.map((t) => t.schema ?? ''))];
+			// Schemas only add a level when there is more than one to tell apart
+			children =
+				schemas.length > 1
+					? schemas.map((schema) => ({
+							id: `sc:${entry.source}:${schema}`,
+							label: schema || m.dataquery_explorer_no_schema(),
+							icon: 'schema',
+							secondary: formatNumber(tables.filter((t) => (t.schema ?? '') === schema).length),
+							children: tables
+								.filter((t) => (t.schema ?? '') === schema)
+								.map((t) => tableNode(entry.source, t)),
+							data: { kind: 'schema', source: entry.source } satisfies Entry
+						}))
+					: tables.map((t) => tableNode(entry.source, t));
+		} else if (entry.kind === 'table' && entry.table.asset_id) {
+			const columns = await getTableColumns(entry.table.asset_id);
+			onColumns(entry.source, entry.table, columns);
+			children = columns.map((c) => ({
+				id: `c:${entry.source}:${entry.table.mrn}:${c.name}`,
+				label: c.name,
+				icon: 'view-column',
+				secondary: c.type,
+				secondaryMono: true,
+				data: { kind: 'column', source: entry.source, name: c.name } satisfies Entry
+			}));
+		}
+		cache[node.id] = children;
+		return children;
+	}
+
+	function actionsFor(node: TreeNode): TreeAction[] {
+		const entry = node.data as Entry;
+		const insert = { id: 'insert', label: m.dataquery_explorer_insert_action(), icon: 'input' };
+		if (entry.kind === 'column') return [insert];
+		if (entry.kind !== 'table') return [];
+		const actions = [insert];
+		if (entry.table.sample_statement)
+			actions.push({ id: 'sample', label: m.dataquery_explorer_preview(), icon: 'code' });
+		if (entry.table.asset_id && assetRouteParams(entry.table.mrn))
+			actions.push({
+				id: 'catalog',
+				label: m.dataquery_explorer_open_catalog(),
+				icon: 'open-in-new'
 			});
-			if (id !== sourcesRequest) return;
-			sources = append ? [...sources, ...data.sources] : data.sources;
-			total = data.total;
-		} catch (e) {
-			if (id === sourcesRequest) error = getErrorMessage(e);
-		} finally {
-			if (id === sourcesRequest) {
-				loading = false;
-				loadingMore = false;
-			}
-		}
+		return actions;
 	}
 
-	async function loadTables(source: string) {
-		tablesLoading.add(source);
-		try {
-			const filter = tableFilters.get(source)?.trim() ?? '';
-			tables.set(source, await listQuerySourceTables(source, { q: filter, limit: 100 }));
-		} catch {
-			tables.set(source, []);
-		} finally {
-			tablesLoading.delete(source);
-		}
-	}
-
-	function toggle(source: string) {
-		if (expanded.has(source)) {
-			expanded.delete(source);
+	function act(action: string, node: TreeNode) {
+		const entry = node.data as Entry;
+		if (entry.kind === 'column') {
+			if (action === 'insert') onInsert(entry.name);
 			return;
 		}
-		expanded.add(source);
-		if (!tables.has(source)) loadTables(source);
-	}
-
-	// Clicking a source's name selects and opens it; clicking the source you are already on folds it away or back out, like a file tree
-	function choose(source: string) {
-		if (source === active) {
-			toggle(source);
-			return;
+		if (entry.kind !== 'table') return;
+		if (action === 'insert') onInsert(qualifiedName(entry.table));
+		else if (action === 'sample' && entry.table.sample_statement)
+			onSample(entry.source, entry.table.sample_statement);
+		else if (action === 'catalog') {
+			const route = assetRouteParams(entry.table.mrn);
+			if (route) goto(resolve('/discover/[type]/[service]/[name]', route));
 		}
-		onSelect(source);
-		if (!expanded.has(source)) toggle(source);
 	}
 
-	function onSearch() {
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => loadSources(), 200);
+	// Selecting anything inside a source makes that source the one queries run against
+	function select(node: TreeNode) {
+		const entry = node.data as Entry;
+		if (entry.source !== active) onSelect(entry.source);
 	}
 
-	function onTableFilter(source: string, value: string) {
-		tableFilters.set(source, value);
-		clearTimeout(tableTimer);
-		tableTimer = setTimeout(() => loadTables(source), 200);
+	// Enter or a double-click does the obvious thing: a table opens its sample query, a column goes into the editor
+	function activate(node: TreeNode) {
+		const entry = node.data as Entry;
+		if (entry.kind === 'table') {
+			if (entry.table.sample_statement) onSample(entry.source, entry.table.sample_statement);
+			else onInsert(qualifiedName(entry.table));
+		} else if (entry.kind === 'column') onInsert(entry.name);
 	}
 
-	// A newly active source opens on its own so the tables you are querying are in view; it only reacts to the source changing, so collapsing it by hand sticks
+	// A newly active source opens so the tables you are querying are in view; collapsing it afterwards sticks
 	let opened = '';
 	$effect(() => {
 		if (!active || active === opened) return;
 		opened = active;
-		untrack(() => {
-			if (!expanded.has(active)) {
-				expanded.add(active);
-				if (!tables.has(active)) loadTables(active);
-			}
-		});
+		const id = `s:${active}`;
+		if (!expandedIds.includes(id)) expandedIds = [...expandedIds, id];
 	});
-
-	onMount(() => loadSources());
 </script>
 
-<div class="flex h-full min-h-0 flex-col">
-	<div class="flex items-center justify-between px-3 pb-2 pt-3">
-		<span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
-			>{m.dataquery_explorer_heading()}</span
-		>
+<div class="explorer mm-stack">
+	<div class="mm-cluster mm-cluster--between">
+		<mm-heading level={2} variant="panel-title">{m.dataquery_explorer_heading()}</mm-heading>
 		{#if total > 0}
-			<span class="text-xs tabular-nums text-gray-400">{formatNumber(total)}</span>
+			<mm-text variant="caption" tone="secondary" numeric>{formatNumber(total)}</mm-text>
 		{/if}
 	</div>
-	<div class="px-3 pb-2">
-		<div class="relative">
-			<IconifyIcon
-				icon="material-symbols:search"
-				class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-			/>
-			<input
-				type="search"
-				bind:value={search}
-				oninput={onSearch}
-				placeholder={m.dataquery_explorer_search()}
-				aria-label={m.dataquery_explorer_search()}
-				class="w-full rounded-md border-gray-200 bg-white py-1.5 pl-8 pr-2 text-sm focus:border-earthy-terracotta-500 focus:ring-earthy-terracotta-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-			/>
-		</div>
-	</div>
-
-	<div class="min-h-0 flex-1 overflow-y-auto px-1.5 pb-3">
-		{#if loading}
-			<div class="space-y-1.5 px-1.5 pt-1">
-				{#each Array(6) as _, i (i)}
-					<div class="h-7 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
-				{/each}
-			</div>
-		{:else if error}
-			<p class="px-2 pt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-		{:else if sources.length === 0}
-			<p class="px-2 pt-2 text-sm text-gray-500 dark:text-gray-400">
-				{search ? m.dataquery_explorer_no_match() : m.dataquery_empty_title()}
-			</p>
-		{:else}
-			<ul role="tree" aria-label={m.dataquery_explorer_heading()}>
-				{#each sources as source (source.id)}
-					{@const open = expanded.has(source.name)}
-					{@const list = tables.get(source.name) ?? []}
-					<li role="treeitem" aria-expanded={open} aria-selected={source.name === active}>
-						<div
-							class="group flex items-center rounded-md {source.name === active
-								? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
-								: 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
-						>
-							<button
-								type="button"
-								onclick={() => toggle(source.name)}
-								class="flex h-7 w-6 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-								aria-label={open ? m.dataquery_explorer_collapse() : m.dataquery_explorer_expand()}
-							>
-								<IconifyIcon
-									icon="material-symbols:chevron-right"
-									class="h-4 w-4 transition-transform {open ? 'rotate-90' : ''}"
-								/>
-							</button>
-							<button
-								type="button"
-								onclick={() => choose(source.name)}
-								class="flex min-w-0 flex-1 items-center gap-2 py-1 pr-2 text-left text-sm"
-							>
-								<Icon name={source.plugin_id || 'database'} size="xs" showLabel={false} />
-								<span
-									class="truncate {source.name === active
-										? 'font-semibold text-earthy-terracotta-800 dark:text-earthy-terracotta-200'
-										: 'text-gray-800 dark:text-gray-200'}">{source.name}</span
-								>
-								<span class="ml-auto text-[11px] tabular-nums text-gray-400"
-									>{formatNumber(source.table_count)}</span
-								>
-							</button>
-						</div>
-
-						{#if open}
-							<div class="ml-3 border-l border-gray-100 pl-1.5 dark:border-gray-800">
-								{#if (source.table_count ?? 0) > 12 || tableFilters.get(source.name)}
-									<input
-										type="search"
-										value={tableFilters.get(source.name) ?? ''}
-										oninput={(e) => onTableFilter(source.name, e.currentTarget.value)}
-										placeholder={m.dataquery_explorer_filter_tables()}
-										aria-label={m.dataquery_explorer_filter_tables()}
-										class="my-1 ml-1.5 w-[calc(100%-0.75rem)] rounded border-gray-200 bg-white px-2 py-1 text-xs focus:border-earthy-terracotta-500 focus:ring-earthy-terracotta-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-									/>
-								{/if}
-								{#if tablesLoading.has(source.name) && list.length === 0}
-									<div class="space-y-1 py-1 pl-1.5">
-										{#each Array(3) as _, i (i)}
-											<div class="h-6 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
-										{/each}
-									</div>
-								{:else if list.length === 0}
-									<p class="py-1.5 pl-2 text-xs text-gray-400">
-										{m.dataquery_explorer_no_tables()}
-									</p>
-								{:else}
-									<ul role="group">
-										{#each list as table (table.mrn)}
-											{@const route = table.asset_id ? assetRouteParams(table.mrn) : null}
-											<li
-												role="treeitem"
-												aria-selected="false"
-												class="group/table flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-												title={table.description || table.mrn}
-											>
-												<button
-													type="button"
-													onclick={() =>
-														table.sample_statement
-															? onPreview(source.name, table.sample_statement)
-															: onInsert(table.name)}
-													class="flex min-w-0 flex-1 items-center gap-2 py-1 pl-1.5 pr-1 text-left text-[13px]"
-													title={table.sample_statement
-														? m.dataquery_explorer_preview()
-														: m.dataquery_explorer_insert({ name: table.name })}
-												>
-													<IconifyIcon
-														icon={table.type === 'View'
-															? 'material-symbols:visibility-outline'
-															: 'material-symbols:table-outline'}
-														class="h-3.5 w-3.5 flex-shrink-0 text-gray-400"
-													/>
-													<span class="truncate font-mono text-gray-700 dark:text-gray-300"
-														>{table.name}</span
-													>
-												</button>
-												<div
-													class="flex flex-shrink-0 items-center pr-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover/table:opacity-100"
-												>
-													<button
-														type="button"
-														onclick={() => onInsert(table.name)}
-														class="rounded p-1 text-gray-400 hover:bg-white hover:text-earthy-terracotta-700 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-400"
-														title={m.dataquery_explorer_insert({ name: table.name })}
-														aria-label={m.dataquery_explorer_insert({ name: table.name })}
-													>
-														<IconifyIcon icon="material-symbols:input-rounded" class="h-4 w-4" />
-													</button>
-													{#if route}
-														<a
-															href={resolve('/discover/[type]/[service]/[name]', route)}
-															class="rounded p-1 text-gray-400 hover:bg-white hover:text-earthy-terracotta-700 dark:hover:bg-gray-700 dark:hover:text-earthy-terracotta-400"
-															title={m.dataquery_explorer_open_catalog()}
-															aria-label={m.dataquery_explorer_open_catalog()}
-														>
-															<IconifyIcon
-																icon="material-symbols:open-in-new"
-																class="h-3.5 w-3.5"
-															/>
-														</a>
-													{/if}
-												</div>
-											</li>
-										{/each}
-									</ul>
-								{/if}
-							</div>
-						{/if}
-					</li>
-				{/each}
-			</ul>
-			{#if sources.length < total}
-				<button
-					type="button"
-					onclick={() => loadSources(true)}
-					disabled={loadingMore}
-					class="mt-2 w-full rounded-md py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-				>
-					{m.dataquery_explorer_more({ count: formatNumber(total - sources.length) })}
-				</button>
-			{/if}
-		{/if}
-	</div>
+	<mm-tree
+		bind:this={tree}
+		label={m.dataquery_explorer_tree_label()}
+		filterable
+		filter-label={m.dataquery_explorer_filter()}
+		filter-placeholder={m.dataquery_explorer_filter()}
+		empty-text={m.dataquery_empty_title()}
+		{nodes}
+		{loading}
+		{error}
+		{expandedIds}
+		selectedIds={active ? [`s:${active}`] : []}
+		{loadChildren}
+		actions={actionsFor}
+		onmm-expand={() => (expandedIds = [...(tree?.expandedIds ?? [])])}
+		onmm-select={(e: CustomEvent<{ node: TreeNode }>) => select(e.detail.node)}
+		onmm-activate={(e: CustomEvent<{ node: TreeNode }>) => activate(e.detail.node)}
+		onmm-action={(e: CustomEvent<{ action: string; node: TreeNode }>) =>
+			act(e.detail.action, e.detail.node)}
+		onmm-retry={onRetry}
+		style="--mm-tree-height: 100%; flex: 1; min-block-size: 0"
+	></mm-tree>
+	{#if sources.length < total}
+		<mm-button size="sm" variant="ghost" icon="expand-more" onclick={onMore}>
+			{m.dataquery_explorer_more({ count: formatNumber(total - sources.length) })}
+		</mm-button>
+	{/if}
 </div>
+
+<style>
+	.explorer {
+		--mm-gap: var(--space-3);
+		block-size: 100%;
+		box-sizing: border-box;
+		padding: var(--space-4) var(--space-3) var(--space-4) var(--space-4);
+	}
+</style>

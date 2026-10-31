@@ -3,11 +3,13 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	coreuser "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
@@ -95,6 +97,12 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := provider.HandleCallback(r.Context(), code)
+	if errors.Is(err, coreuser.ErrSignupDisabled) || errors.Is(err, coreuser.ErrUnverifiedInvitedEmail) {
+		// Not a fault: the instance only admits invited people. The login page shows fixed text for this, so nothing from the provider reaches the page.
+		log.Info().Err(err).Str("provider", providerName).Msg("Single sign-on refused for someone who was not invited")
+		http.Redirect(w, r, "/login?error=not_invited", http.StatusTemporaryRedirect)
+		return
+	}
 	if err != nil {
 		log.Error().Err(err).Str("provider", providerName).Msg("Failed to handle OAuth callback")
 		common.RespondError(w, http.StatusInternalServerError, "Authentication failed")

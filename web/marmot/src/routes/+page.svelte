@@ -1,25 +1,31 @@
 <script lang="ts">
+	import '@marmotdata/elements/kpi-tile.js';
+	import '@marmotdata/elements/activity-feed.js';
+	import '@marmotdata/elements/run-strip.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import IconifyIcon from '@iconify/svelte';
-	import Icon from '$components/ui/Icon.svelte';
-	import ConnectBlade, { type ConnectTab } from '$components/home/ConnectBlade.svelte';
+	import { setCrumbs } from '$lib/mm';
+	import ConnectDrawer, { type ConnectTab } from '$components/home/ConnectDrawer.svelte';
 	import SetupChecklist, { type SetupStep } from '$components/home/SetupChecklist.svelte';
-	import MarmotFlow from '$components/home/MarmotFlow.svelte';
-	import QueryDetail from '$components/dataquery/QueryDetail.svelte';
-	import Sparkline from '$components/charts/Sparkline.svelte';
+	import QueryBlade from '$components/home/QueryBlade.svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { userProfile } from '$lib/stores/user';
 	import { setupHidden, setupRemoved, skippedSteps } from '$lib/stores/setup.svelte';
-	import Modal from '$components/ui/Modal.svelte';
-	import KpiTile from '$components/ui/KpiTile.svelte';
-	import { PANEL, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_DANGER } from '$lib/ui/classes';
 	import { m } from '$lib/paraglide/messages';
 	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
 	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
-	import { outcome, subjectParts } from '$lib/dataquery/format';
-	import type { QueryRecord, QueryStats } from '$lib/dataquery/types';
+	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
+	import type { QueryHistory, QueryRecord, QueryStats } from '$lib/dataquery/types';
+	import {
+		listAgentSummaries,
+		listRecent,
+		listStaleAssets,
+		type AgentSummary,
+		type RecentItem,
+		type StaleAsset
+	} from '$lib/home/api';
+	import { listSavedQueries, savedQueryHref, type SavedQuery } from '$lib/savedqueries/api';
 
 	interface AssetSummary {
 		types: Record<string, { count?: number }>;
@@ -34,17 +40,6 @@
 		mrn?: string;
 	}
 
-	interface PipelineRun {
-		id: string;
-		pipeline_name: string;
-		status: 'pending' | 'claimed' | 'running' | 'succeeded' | 'failed' | 'cancelled';
-		started_at?: string;
-		finished_at?: string;
-		created_at: string;
-		assets_created: number;
-		assets_updated: number;
-	}
-
 	interface ViewedAsset {
 		asset_id: string;
 		asset_name: string;
@@ -53,13 +48,26 @@
 		count: number;
 	}
 
-	// The pages the homepage links into; none take route parameters, so resolve() accepts them with or without a query string
-	type HomeRoute =
-		| `${'/settings' | '/settings/system' | '/settings/members' | '/query-audit' | '/discover' | '/glossary' | '/insights' | '/query' | '/runs' | '/products/new'}`
-		| `${'/settings' | '/discover' | '/runs'}?${string}`;
+	type RunState = 'pending' | 'claimed' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 
-	const TASK =
-		'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700';
+	interface PipelineRun {
+		id: string;
+		schedule_id?: string;
+		status: RunState;
+		started_at?: string;
+		finished_at?: string;
+		created_at: string;
+	}
+
+	interface Pipeline {
+		id: string;
+		name: string;
+		plugin_id: string;
+		last_run_at?: string;
+		last_run_status?: string;
+	}
+
+	setCrumbs([{ label: m.nav_home() }]);
 
 	const canQuery = auth.hasPermission('assets', 'query');
 	const canViewAccess = auth.hasPermission('access', 'view');
@@ -67,25 +75,33 @@
 	const isAdmin = auth.hasRole('admin');
 
 	let loading = $state(true);
+	let unreachable = $state(false);
 	let summary = $state<AssetSummary>({ types: {}, providers: {} });
 	let myAssets = $state<MyAsset[]>([]);
 	let viewed = $state<ViewedAsset[]>([]);
 	let glossaryTotal = $state(0);
 	let productsTotal = $state(0);
 	let usersTotal = $state(1);
-	let recent = $state<QueryRecord[]>([]);
-	let queriesTotal = $state(0);
+	let history = $state<QueryHistory | null>(null);
 	let agentQueries = $state(0);
-	let deniedToday = $state(0);
 	let failedRuns = $state(0);
 	let day = $state<QueryStats | null>(null);
+	let yesterday = $state<QueryStats | null>(null);
 	let week = $state<QueryStats | null>(null);
+	let pipelines = $state<Pipeline[]>([]);
 	let runs = $state<PipelineRun[]>([]);
+	let recents = $state<RecentItem[]>([]);
+	let savedQueries = $state<SavedQuery[]>([]);
+	let agentSummaries = $state<AgentSummary[] | null>(null);
+	let stale = $state<StaleAsset[]>([]);
+	let staleTotal = $state(0);
 
 	let connect = $state<ConnectTab | null>(null);
 	let detailId = $state<string | null>(null);
-	let setupStep = $state<SetupStep | null>(null);
+	let confirmRemove = $state(false);
 
+	let recent = $derived<QueryRecord[]>(history?.queries ?? []);
+	let queriesTotal = $derived(history?.total ?? 0);
 	// Agent assets are cataloged from agents themselves, so they do not count as a connected source
 	let sourceAssets = $derived(
 		Object.entries(summary.types).reduce(
@@ -94,7 +110,6 @@
 		)
 	);
 	let agentCount = $derived(summary.types['Agent']?.count ?? 0);
-	let blank = $derived(!loading && sourceAssets === 0);
 
 	let done = $derived<Record<SetupStep, boolean>>({
 		source: sourceAssets > 0,
@@ -104,131 +119,243 @@
 		context: glossaryTotal + productsTotal > 0,
 		team: usersTotal > 1
 	});
-	// Skipped optional steps count as settled so the Setup pill stops asking about things the team does not use
-	let setupDone = $derived(
-		(Object.keys(done) as SetupStep[]).filter((k) => done[k] || skippedSteps.steps.includes(k))
-			.length
+	let setupComplete = $derived(
+		(Object.keys(done) as SetupStep[]).every((k) => done[k] || skippedSteps.steps.includes(k))
 	);
-	let setupComplete = $derived(setupDone === 5);
-	// The onboarding surface outlives the first source so the remaining steps stay in view; it goes when hidden or when every step is done or skipped
+	// Setup and Pipelines show only before the catalog is in use; the guide goes when hidden, removed or settled
 	let onboarding = $derived(
-		!loading && !setupHidden.value && !setupRemoved.value && !setupComplete
+		!loading && !unreachable && !setupHidden.value && !setupRemoved.value && !setupComplete
 	);
-	let confirmClose = $state(false);
+	let blank = $derived(sourceAssets === 0);
 
-	let topProviders = $derived(
-		Object.entries(summary.providers)
-			.filter(([name]) => name !== 'Marmot')
-			.sort((a, b) => b[1] - a[1])
-			.slice(0, 5)
-	);
-	// Agents are the service accounts that query; people are left to the activity feed
+	// Agents are the service accounts that query; people are left to the activity feed. Each row opens the audit log filtered to that agent for those who may read it.
 	let agents = $derived(
-		(week?.top_callers ?? []).filter((c) => c.principal_type === 'service_account').slice(0, 5)
+		agentSummaries
+			? agentSummaries.map((a) => ({
+					key: a.principal_id,
+					name: a.name || subjectParts(a.audit_subject).name,
+					total: a.queries_7d,
+					href: canViewAccess
+						? `${resolve('/query-audit')}?${new URLSearchParams({ caller: `${a.principal_type}:${a.principal_id}`, range: '7d' })}`
+						: ''
+				}))
+			: (week?.top_callers ?? [])
+					.filter((c) => c.principal_type === 'service_account')
+					.slice(0, 4)
+					.map((c) => ({
+						key: c.key,
+						name: subjectParts(c.label).name,
+						total: c.total,
+						href: ''
+					}))
 	);
 	let activeAgentsToday = $derived(
 		(day?.top_callers ?? []).filter((c) => c.principal_type === 'service_account').length
 	);
-	let hourly = $derived(
-		(day?.series ?? []).map((p) => ({
-			label: new Date(p.bucket).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-			total: p.succeeded + p.failed + p.denied,
-			denied: p.denied
-		}))
-	);
-	let agentMax = $derived(Math.max(1, ...agents.map((a) => a.total)));
+	let spark = $derived((day?.series ?? []).map((p) => p.succeeded + p.failed + p.denied));
+	let deniedToday = $derived(day?.totals?.denied ?? 0);
 
-	// The common jobs people come to Marmot for, each one click from home; only the ones the viewer may do are offered
-	interface Task {
-		id: string;
-		label: string;
-		body: string;
-		icon: string;
-		route?: HomeRoute;
-		connectTab?: ConnectTab;
+	interface JumpItem {
+		key: string;
+		name: string;
+		caption: string;
+		href: string;
+		provider?: string;
+		icon?: string;
 	}
-	const isGlossaryManager = auth.hasPermission('glossary', 'manage');
-	const canManageAssets = auth.hasPermission('assets', 'manage');
-	const tasks: Task[] = [
-		...(canQuery
+
+	const KIND_ICONS: Record<string, string> = {
+		glossary_term: 'menu-book',
+		data_product: 'package-2',
+		saved_query: 'terminal'
+	};
+
+	function kindLabel(r: RecentItem): string {
+		if (r.kind === 'glossary_term') return m.home_jump_kind_term();
+		if (r.kind === 'data_product') return m.home_jump_kind_product();
+		if (r.kind === 'saved_query') return m.home_jump_kind_saved();
+		return r.type || m.home_jump_kind_asset();
+	}
+
+	// Relative times sit mid-caption, so "Just now" drops its capital there
+	function ago(date: string): string {
+		const text = formatRelativeTime(date);
+		return text === m.common_just_now() ? text.toLocaleLowerCase() : text;
+	}
+
+	function recentHref(r: RecentItem): string {
+		if (r.kind === 'glossary_term') return resolve('/glossary/[[id]]', { id: r.id });
+		if (r.kind === 'data_product') return resolve('/products/[id]', { id: r.id });
+		const route = r.mrn ? assetRouteParams(r.mrn) : null;
+		return route ? resolve('/discover/[type]/[service]/[name]', route) : '';
+	}
+
+	// What the viewer opened or ran last, newest first; saved queries count from when they were last run, viewed or saved
+	let recentItems = $derived.by<JumpItem[]>(() => {
+		const viewedAt = new Map(
+			recents.filter((r) => r.kind === 'saved_query').map((r) => [r.id, r.viewed_at])
+		);
+		const dated: { at: number; item: JumpItem }[] = recents
+			.filter((r) => r.kind !== 'saved_query')
+			.map((r) => ({
+				at: new Date(r.viewed_at).getTime(),
+				item: {
+					key: `${r.kind}:${r.id}`,
+					name: r.name,
+					caption: m.home_jump_viewed({
+						kind: kindLabel(r),
+						when: ago(r.viewed_at)
+					}),
+					href: recentHref(r),
+					provider: r.kind === 'asset' ? r.provider?.toLowerCase() || undefined : undefined,
+					icon: KIND_ICONS[r.kind] ?? 'table'
+				}
+			}));
+		for (const q of savedQueries) {
+			const viewed = viewedAt.get(q.id);
+			const ran = q.last_run_at ? new Date(q.last_run_at).getTime() : 0;
+			const seen = viewed ? new Date(viewed).getTime() : 0;
+			const at = Math.max(ran, seen, new Date(q.updated_at).getTime());
+			let caption = m.home_jump_saved({ when: ago(q.updated_at) });
+			if (ran && ran >= seen) caption = m.home_jump_ran({ when: ago(q.last_run_at!) });
+			else if (seen)
+				caption = m.home_jump_viewed({ kind: m.home_jump_kind_saved(), when: ago(viewed!) });
+			dated.push({
+				at,
+				item: {
+					key: `saved_query:${q.id}`,
+					name: q.name,
+					caption,
+					href: savedQueryHref(resolve('/query'), q),
+					icon: KIND_ICONS.saved_query
+				}
+			});
+		}
+		return dated
+			.sort((a, b) => b.at - a.at)
+			.slice(0, 5)
+			.map((d) => d.item);
+	});
+
+	// Before the viewer has opened anything, owned assets then what people open most, so they still have somewhere to go back to
+	let jumpItems = $derived.by<JumpItem[]>(() => {
+		if (recentItems.length > 0) return recentItems;
+		const owned = myAssets.map((a) => ({
+			key: a.id,
+			name: a.name,
+			caption: a.type,
+			provider: a.providers?.[0]?.toLowerCase() || undefined,
+			href: resolve('/discover/[type]/[service]/[name]', myAssetParams(a))
+		}));
+		const popular = viewed
+			.filter((v) => !myAssets.some((a) => a.id === v.asset_id))
+			.map((v) => ({
+				key: v.asset_id,
+				name: v.asset_name,
+				caption: v.asset_type,
+				provider: v.asset_provider?.toLowerCase() || undefined,
+				href: resolve('/discover/[type]/[service]/[name]', {
+					type: v.asset_type,
+					service: v.asset_provider,
+					name: v.asset_name
+				})
+			}));
+		return [...owned, ...popular].slice(0, 5);
+	});
+
+	interface Attention {
+		key: string;
+		label: string;
+		count?: number;
+		secondary?: string;
+		href: string;
+		icon: string;
+		provider?: string;
+	}
+
+	const STALE_SHOWN = 3;
+
+	function staleDetail(a: StaleAsset): string {
+		if (a.last_refreshed_at && a.pipeline_name)
+			return m.home_attention_stale_detail({
+				when: formatRelativeTime(a.last_refreshed_at),
+				pipeline: a.pipeline_name
+			});
+		if (a.pipeline_name) return m.home_attention_stale_pipeline({ pipeline: a.pipeline_name });
+		return '';
+	}
+
+	// Stale assets are named one by one so each links to its page; any beyond the first few are one row that opens the full list in Insights
+	let staleAttention = $derived<Attention[]>([
+		...stale.slice(0, STALE_SHOWN).map((a) => {
+			const route = assetRouteParams(a.mrn);
+			return {
+				key: `stale:${a.id}`,
+				label: m.home_attention_stale({ name: a.name }),
+				secondary: staleDetail(a),
+				href: route ? resolve('/discover/[type]/[service]/[name]', route) : '',
+				icon: 'schedule',
+				provider: a.providers?.[0]?.toLowerCase() || undefined
+			};
+		}),
+		...(staleTotal > STALE_SHOWN
 			? [
 					{
-						id: 'query',
-						label: m.home_task_query(),
-						body: m.home_task_query_body(),
-						icon: 'material-symbols:terminal',
-						route: '/query' as HomeRoute
-					}
-				]
-			: []),
-		{
-			id: 'agent',
-			label: m.home_task_agent(),
-			body: m.home_task_agent_body(),
-			icon: 'material-symbols:smart-toy-outline',
-			connectTab: 'agent' as ConnectTab
-		},
-		...(canManageIngestion
-			? [
-					{
-						id: 'source',
-						label: m.home_task_source(),
-						body: m.home_task_source_body(),
-						icon: 'material-symbols:database-outline',
-						connectTab: 'source' as ConnectTab
-					}
-				]
-			: []),
-		...(isGlossaryManager
-			? [
-					{
-						id: 'term',
-						label: m.home_task_term(),
-						body: m.home_task_term_body(),
-						icon: 'material-symbols:menu-book-outline',
-						route: '/glossary' as HomeRoute
-					}
-				]
-			: []),
-		...(canManageAssets
-			? [
-					{
-						id: 'product',
-						label: m.home_task_product(),
-						body: m.home_task_product_body(),
-						icon: 'material-symbols:inventory-2-outline',
-						route: '/products/new' as HomeRoute
+						key: 'stale:more',
+						label: m.home_attention_stale_more(),
+						count: staleTotal - STALE_SHOWN,
+						href: `${resolve('/insights')}?view=catalog`,
+						icon: 'schedule'
 					}
 				]
 			: [])
-	];
+	]);
+	let countedAttention = $derived<Attention[]>(
+		[
+			...(canQuery
+				? [
+						{
+							key: 'denied',
+							label: m.home_attention_denied(),
+							count: deniedToday,
+							href: canViewAccess
+								? `${resolve('/query-audit')}?outcome=denied&range=24h`
+								: resolve('/query'),
+							icon: 'block'
+						}
+					]
+				: []),
+			{
+				key: 'runs',
+				label: m.home_attention_failed_runs(),
+				count: failedRuns,
+				href: resolve('/runs'),
+				icon: 'sync-problem'
+			}
+		].filter((a) => a.count > 0)
+	);
 
-	// What the blank homepage previews: the same tiles and panels the populated dashboard shows, empty
-	const previewKpis = [
-		{ label: m.home_kpi_assets() },
-		{ label: m.home_kpi_queries() },
-		{ label: m.home_kpi_agents() },
-		{ label: m.home_kpi_refused() }
-	];
-	const previewPanels = [
-		{
-			title: m.home_activity_heading(),
-			icon: 'material-symbols:bolt-outline',
-			caption: m.home_preview_activity()
-		},
-		{
-			title: m.home_agents_heading(),
-			icon: 'material-symbols:smart-toy-outline',
-			caption: m.home_preview_agents()
-		},
-		{
-			title: m.home_pipelines_heading(),
-			icon: 'material-symbols:account-tree-outline',
-			caption: m.home_preview_pipelines()
-		}
-	];
+	let attention = $derived<Attention[]>([...countedAttention, ...staleAttention]);
 
-	let attentionTotal = $derived(deniedToday + failedRuns);
+	// Each pipeline with its recent runs, oldest first, for the run strip
+	let pipelineRows = $derived(
+		pipelines.map((p) => ({
+			...p,
+			strip: runs
+				.filter((r) => r.schedule_id === p.id)
+				.slice(0, 20)
+				.reverse()
+				.map((r) => ({
+					id: r.id,
+					status: stripStatus(r.status),
+					startedAt: r.started_at ?? r.created_at,
+					durationMs:
+						r.started_at && r.finished_at
+							? new Date(r.finished_at).getTime() - new Date(r.started_at).getTime()
+							: undefined
+				}))
+		}))
+	);
 
 	let firstName = $derived.by(() => {
 		const profile = $userProfile;
@@ -236,6 +363,44 @@
 		const name = profile.name?.split(' ')[0] || profile.display_name || profile.username;
 		return name ? name.charAt(0).toUpperCase() + name.slice(1) : null;
 	});
+
+	let greeting = $derived.by(() => {
+		const hour = new Date().getHours();
+		const part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+		if (firstName) {
+			if (part === 'morning') return m.home_greeting_morning({ name: firstName });
+			if (part === 'afternoon') return m.home_greeting_afternoon({ name: firstName });
+			return m.home_greeting_evening({ name: firstName });
+		}
+		if (part === 'morning') return m.home_greeting_morning_anonymous();
+		if (part === 'afternoon') return m.home_greeting_afternoon_anonymous();
+		return m.home_greeting_evening_anonymous();
+	});
+
+	function stripStatus(s: RunState): 'succeeded' | 'failed' | 'running' | 'queued' | 'skipped' {
+		if (s === 'succeeded' || s === 'failed' || s === 'running') return s;
+		if (s === 'cancelled') return 'skipped';
+		return 'queued';
+	}
+
+	function myAssetParams(a: MyAsset) {
+		const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
+		if (parts.length >= 3)
+			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
+		return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
+	}
+
+	// The first table a query read names it in the feed, falling back to its source
+	function activityTarget(q: QueryRecord): { name: string; href: string } {
+		const mrn = q.referenced_mrns?.[0];
+		if (!mrn) return { name: q.source_name, href: '' };
+		const context = q.context?.find((c) => c.mrn === mrn);
+		const route = context?.asset_id ? assetRouteParams(mrn) : null;
+		return {
+			name: context?.name || mrn.split('/').pop() || mrn,
+			href: route ? resolve('/discover/[type]/[service]/[name]', route) : ''
+		};
+	}
 
 	async function json<T>(path: string): Promise<T | null> {
 		try {
@@ -250,6 +415,7 @@
 		const now = new Date();
 		const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
 		const dayAgo = new Date(now.getTime() - 86_400_000);
+		const twoDaysAgo = new Date(now.getTime() - 2 * 86_400_000);
 		const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
 		const [
 			sum,
@@ -258,56 +424,69 @@
 			glossary,
 			products,
 			users,
-			history,
+			hist,
 			stats,
+			prevStats,
 			weekStats,
 			failed,
+			schedules,
 			latestRuns,
-			agentHistory
+			agentHistory,
+			recentViews,
+			saved,
+			agentRows,
+			staleAssets
 		] = await Promise.all([
 			json<AssetSummary>('/assets/summary'),
-			json<{ assets?: MyAsset[] }>('/assets/my-assets?limit=6'),
+			json<{ assets?: MyAsset[] }>('/assets/my-assets?limit=5'),
 			json<ViewedAsset[] | { assets?: ViewedAsset[] }>(
-				`/metrics/top-assets?start=${monthAgo.toISOString()}&end=${now.toISOString()}&limit=6`
+				`/metrics/top-assets?start=${monthAgo.toISOString()}&end=${now.toISOString()}&limit=5`
 			),
 			json<{ total: number }>('/glossary/list?limit=1'),
 			json<{ total: number }>('/products/list?limit=1'),
 			json<{ total: number }>('/users?limit=1'),
 			canQuery ? listQueryHistory({ limit: 8 }).catch(() => null) : Promise.resolve(null),
 			canQuery ? getQueryStats(dayAgo).catch(() => null) : Promise.resolve(null),
+			canQuery ? getQueryStats(twoDaysAgo, dayAgo).catch(() => null) : Promise.resolve(null),
 			canQuery ? getQueryStats(weekAgo).catch(() => null) : Promise.resolve(null),
 			json<{ total: number }>('/ingestion/runs?status=failed&limit=1'),
-			json<{ runs?: PipelineRun[] }>('/ingestion/runs?limit=5'),
+			json<{ schedules?: Pipeline[] }>('/ingestion/schedules?limit=5'),
+			json<{ runs?: PipelineRun[] }>('/ingestion/runs?limit=100'),
 			canQuery
 				? listQueryHistory({ client: 'mcp,cli', limit: 1 }).catch(() => null)
-				: Promise.resolve(null)
+				: Promise.resolve(null),
+			listRecent(10).catch(() => []),
+			canQuery ? listSavedQueries(20).catch(() => null) : Promise.resolve(null),
+			canQuery ? listAgentSummaries(4).catch(() => null) : Promise.resolve(null),
+			listStaleAssets(STALE_SHOWN).catch(() => null)
 		]);
+		// The asset summary backs every view, so without it the API is taken to be unreachable
+		unreachable = sum === null;
 		summary = { types: sum?.types ?? {}, providers: sum?.providers ?? {} };
 		myAssets = mine?.assets ?? [];
 		viewed = Array.isArray(top) ? top : (top?.assets ?? []);
 		glossaryTotal = glossary?.total ?? 0;
 		productsTotal = products?.total ?? 0;
 		usersTotal = users?.total ?? 1;
-		recent = history?.queries ?? [];
-		queriesTotal = history?.total ?? 0;
+		history = hist;
 		agentQueries = agentHistory?.total ?? 0;
 		day = stats;
+		yesterday = prevStats;
 		week = weekStats;
-		deniedToday = stats?.totals?.denied ?? 0;
 		failedRuns = failed?.total ?? 0;
+		pipelines = schedules?.schedules ?? [];
 		runs = latestRuns?.runs ?? [];
+		recents = recentViews;
+		savedQueries = saved?.queries ?? [];
+		agentSummaries = agentRows;
+		stale = staleAssets?.assets ?? [];
+		staleTotal = staleAssets?.total ?? 0;
 		loading = false;
 	}
 
-	function myAssetParams(a: MyAsset) {
-		const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
-		if (parts.length >= 3)
-			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
-		return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
-	}
-
-	function oneLine(text: string): string {
-		return text.replace(/\s+/g, ' ').trim();
+	function retry() {
+		loading = true;
+		load();
 	}
 
 	onMount(() => {
@@ -326,597 +505,308 @@
 	<title>{m.home_page_title()}</title>
 </svelte:head>
 
-{#snippet moduleHeader(title: string, icon: string, linkText?: string, route?: HomeRoute)}
-	<div class="flex items-center justify-between">
-		<h2 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-			<IconifyIcon {icon} class="h-4 w-4 text-gray-400" />
-			{title}
-		</h2>
-		{#if linkText && route}
-			<a
-				href={resolve(route)}
-				class="text-xs font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-				>{linkText}</a
+{#snippet kpis()}
+	<mm-kpi-row label={m.home_kpi_last_day()}>
+		{#if canQuery}
+			<mm-kpi-tile
+				label={m.home_kpi_queries()}
+				value={day?.totals?.queries ?? 0}
+				{spark}
+				delta={day && yesterday ? day.totals.queries - yesterday.totals.queries : undefined}
+				context={day && yesterday ? m.home_kpi_on_yesterday() : m.home_kpi_last_day()}
+				error={day ? '' : m.home_kpi_error()}
+			></mm-kpi-tile>
+			<mm-kpi-tile label={m.home_kpi_agents()} value={activeAgentsToday}></mm-kpi-tile>
+			<mm-kpi-tile
+				label={m.home_kpi_refused()}
+				value={deniedToday}
+				delta={day && yesterday ? deniedToday - yesterday.totals.denied : undefined}
+				trend="bad"
+				context={day && yesterday ? m.home_kpi_on_yesterday() : ''}
+			></mm-kpi-tile>
+		{/if}
+		<mm-kpi-tile label={m.home_kpi_assets()} value={sourceAssets}></mm-kpi-tile>
+	</mm-kpi-row>
+{/snippet}
+
+{#snippet activity()}
+	{#if !canQuery}
+		<mm-panel heading={m.home_activity_heading()} icon="history" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_needs_query()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel
+			heading={m.home_activity_heading()}
+			icon="history"
+			link-href={recent.length > 0 ? resolve(canViewAccess ? '/query-audit' : '/query') : ''}
+			link-label={m.home_activity_link()}
+		>
+			<mm-activity-feed
+				error={history ? '' : m.home_activity_error()}
+				empty-heading={m.home_activity_empty_heading()}
+				empty-description={m.home_activity_empty()}
+				onmm-retry={retry}
 			>
+				{#each recent as q (q.id)}
+					{@const target = activityTarget(q)}
+					<mm-activity-item
+						interactive
+						selected={detailId === q.id}
+						actor={subjectParts(q.audit_subject).name}
+						actor-kind={q.principal_type === 'user' ? 'person' : 'agent'}
+						verb={m.home_activity_verb()}
+						target={target.name}
+						target-href={target.href}
+						time={q.started_at}
+						status={q.decision === 'denied' ? 'denied' : q.status === 'failed' ? 'failed' : ''}
+						onmm-activate={() => (detailId = q.id)}
+					></mm-activity-item>
+				{/each}
+			</mm-activity-feed>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet jumpBackIn()}
+	{#if jumpItems.length > 0}
+		<mm-panel heading={m.home_jump_heading()} icon="history">
+			<mm-list aria-label={m.home_jump_heading()}>
+				{#each jumpItems as a (a.key)}
+					<mm-list-item href={a.href || undefined} secondary={a.caption}>
+						{#if a.provider}
+							<mm-provider-logo slot="start" provider={a.provider} size="20" decorative
+							></mm-provider-logo>
+						{:else}
+							<mm-icon slot="start" name={a.icon ?? 'table'} aria-hidden="true"></mm-icon>
+						{/if}
+						{a.name}
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet needsAttention()}
+	{#if attention.length === 0}
+		<mm-panel heading={m.home_attention_heading()} icon="flag" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_attention_clear()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel heading={m.home_attention_heading()} icon="flag" count={attention.length}>
+			<mm-list>
+				{#each attention as a (a.key)}
+					<mm-list-item href={a.href || undefined} secondary={a.secondary || undefined}>
+						{#if a.provider}
+							<mm-provider-logo slot="start" provider={a.provider} size="20" decorative
+							></mm-provider-logo>
+						{:else}
+							<mm-icon slot="start" name={a.icon} aria-hidden="true"></mm-icon>
+						{/if}
+						{a.label}
+						{#if a.count !== undefined}
+							<mm-text slot="end" variant="dense" numeric>{formatNumber(a.count)}</mm-text>
+						{/if}
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet agentsPanel()}
+	{#if canQuery}
+		{#if agents.length === 0}
+			<mm-panel heading={m.home_agents_heading()} icon="smart-toy" empty>
+				<mm-empty-state
+					slot="empty"
+					compact
+					seed={11}
+					heading={m.home_agents_empty_heading()}
+					description={m.home_agents_empty()}
+				>
+					<mm-button slot="action" icon="smart-toy" onclick={() => (connect = 'agent')}
+						>{m.home_step_agent_action()}</mm-button
+					>
+				</mm-empty-state>
+			</mm-panel>
+		{:else}
+			<mm-panel
+				heading={m.home_agents_heading()}
+				icon="smart-toy"
+				link-href={resolve('/insights')}
+				link-label={m.home_agents_link()}
+			>
+				<mm-list>
+					{#each agents as a (a.key)}
+						<mm-list-item
+							href={a.href || undefined}
+							secondary={m.home_agents_queries({ count: formatNumber(a.total) })}
+						>
+							<mm-avatar slot="start" kind="agent" name={a.name} decorative></mm-avatar>
+							{a.name}
+						</mm-list-item>
+					{/each}
+				</mm-list>
+			</mm-panel>
+		{/if}
+	{/if}
+{/snippet}
+
+{#snippet pipelinesPanel()}
+	{#if pipelineRows.length === 0}
+		<mm-panel heading={m.home_pipelines_heading()} icon="extension" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_pipelines_empty()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel
+			heading={m.home_pipelines_heading()}
+			icon="extension"
+			link-href={resolve('/runs')}
+			link-label={m.home_pipelines_link()}
+		>
+			<mm-list>
+				{#each pipelineRows as p (p.id)}
+					<mm-list-item
+						href={resolve('/runs/[id]', { id: p.id })}
+						secondary={p.last_run_at ? formatRelativeTime(p.last_run_at) : ''}
+					>
+						<mm-provider-logo slot="start" provider={p.plugin_id} size="20" decorative
+						></mm-provider-logo>
+						{p.name}
+						<span slot="end" class="mm-cluster" style="--mm-gap: var(--space-3); flex-wrap: nowrap">
+							{#if p.strip.length > 0}
+								<span class="hidden sm:inline">
+									<mm-run-strip
+										runs={p.strip}
+										label={m.home_pipelines_strip_label({ name: p.name })}
+										live={p.last_run_status === 'running'}
+									></mm-run-strip>
+								</span>
+							{/if}
+							{#if p.last_run_status === 'failed'}
+								<mm-status-pill state="failed"></mm-status-pill>
+							{:else if p.last_run_status === 'running'}
+								<mm-status-pill state="running" live></mm-status-pill>
+							{/if}
+						</span>
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#if loading}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}></mm-page-header>
+		<mm-kpi-row label={m.home_kpi_last_day()}>
+			{#each [m.home_kpi_queries(), m.home_kpi_agents(), m.home_kpi_refused(), m.home_kpi_assets()] as label (label)}
+				<mm-kpi-tile {label} loading></mm-kpi-tile>
+			{/each}
+		</mm-kpi-row>
+		<div class="mm-split">
+			<mm-panel heading={m.home_activity_heading()} icon="history" loading></mm-panel>
+			<mm-panel heading={m.home_attention_heading()} icon="flag" loading></mm-panel>
+		</div>
+	</div>
+{:else if unreachable}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}></mm-page-header>
+		<mm-callout tone="danger" heading={m.home_unreachable_heading()}>
+			{m.home_unreachable_body()}
+			<mm-button slot="actions" size="sm" icon="refresh" onclick={retry}>{m.home_retry()}</mm-button
+			>
+		</mm-callout>
+	</div>
+{:else if onboarding}
+	<div class="mm-stack">
+		<!-- The welcome and setup sit on a faint contour field, the one decoration Home allows, and only before setup is done -->
+		<section class="welcome">
+			<mm-topography seed={7} fade="edges"></mm-topography>
+			<div class="mm-stack">
+				<mm-page-header
+					heading={firstName ? m.home_welcome({ name: firstName }) : m.home_welcome_anonymous()}
+					description={blank ? m.home_welcome_empty() : m.home_welcome_first_run()}
+				>
+					<mm-button slot="actions" icon="link" onclick={() => (connect = 'agent')}
+						>{m.home_connect_button()}</mm-button
+					>
+				</mm-page-header>
+				<div class="max-w-[44rem]">
+					<SetupChecklist
+						{done}
+						onConnectAgent={() => (connect = 'agent')}
+						onHide={() => setupHidden.set(true)}
+						onRemove={() => (confirmRemove = true)}
+						{canManageIngestion}
+						{canQuery}
+						{isAdmin}
+					/>
+				</div>
+			</div>
+		</section>
+		<!-- Before the catalog is in use, panels that can only say "nothing yet" stay hidden -->
+		{#if !blank}
+			{@render kpis()}
+			<div class="mm-split">
+				<div class="mm-stack">{@render activity()}</div>
+				<div class="mm-stack">{@render pipelinesPanel()}</div>
+			</div>
 		{/if}
 	</div>
-{/snippet}
-
-{#snippet attentionRow(icon: string, label: string, count: number, route: HomeRoute, tone: string)}
-	<a
-		href={resolve(route)}
-		class="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-gray-50 dark:hover:bg-gray-700/40"
-	>
-		<span
-			class="flex h-8 w-8 items-center justify-center rounded-lg {count > 0
-				? tone
-				: 'bg-gray-100 text-gray-400 dark:bg-gray-700'}"
-		>
-			<IconifyIcon {icon} class="h-4 w-4" />
-		</span>
-		<span class="flex-1 text-sm text-gray-700 dark:text-gray-300">{label}</span>
-		<span
-			class="text-sm font-semibold tabular-nums {count > 0
-				? 'text-gray-900 dark:text-gray-100'
-				: 'text-gray-400'}">{formatNumber(count)}</span
-		>
-	</a>
-{/snippet}
-
-<div class="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-	{#if !loading && !onboarding}
-		<div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-			<div class="max-w-3xl">
-				<h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-					{firstName ? m.home_greeting({ name: firstName }) : m.home_greeting_anonymous()}
-				</h1>
-				<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{m.home_hero_title()}</p>
+{:else}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}>
+			{#if setupHidden.value && !setupComplete && !setupRemoved.value}
+				<mm-menu-button slot="actions" icon="more-horiz" icon-only label={m.home_more_actions()}>
+					<mm-menu onmm-select={() => setupHidden.set(false)}>
+						<mm-menu-item value="setup" icon="checklist">{m.home_setup_show()}</mm-menu-item>
+					</mm-menu>
+				</mm-menu-button>
+			{/if}
+			<mm-button slot="actions" icon="link" onclick={() => (connect = 'agent')}
+				>{m.home_connect_button()}</mm-button
+			>
+		</mm-page-header>
+		{@render kpis()}
+		<div class="mm-split">
+			<div class="mm-stack">
+				{@render jumpBackIn()}
+				{@render activity()}
 			</div>
-			<div class="flex flex-shrink-0 items-center gap-2">
-				{#if !setupComplete && !setupRemoved.value}
-					<button type="button" onclick={() => setupHidden.set(false)} class={BTN_SECONDARY}>
-						<span class="flex gap-0.5" aria-hidden="true">
-							{#each Array(5) as _, i (i)}
-								<span
-									class="h-1.5 w-3 rounded-full {i < setupDone
-										? 'bg-earthy-green-500'
-										: 'bg-gray-200 dark:bg-gray-600'}"
-								></span>
-							{/each}
-						</span>
-						{m.home_setup_pill({ done: setupDone, total: 5 })}
-					</button>
-				{/if}
-				<button type="button" onclick={() => (connect = 'agent')} class={BTN_PRIMARY}>
-					<IconifyIcon icon="material-symbols:add-link" class="h-5 w-5" />
-					{m.home_connect_button()}
-				</button>
+			<div class="mm-stack">
+				{@render needsAttention()}
+				{@render agentsPanel()}
 			</div>
 		</div>
-	{/if}
-
-	{#if loading}
-		<div class="h-80 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800"></div>
-		<div class="h-32 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
-	{:else}
-		{#if onboarding}
-			<!-- Onboarding is one surface: the message and the checklist on the left, a picture of what Marmot does on the right; it stays until it is hidden or every step is settled, data or not -->
-			<section
-				class="hero relative overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-			>
-				<div
-					class="relative grid items-center gap-10 p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:p-12"
-				>
-					<div class="max-w-xl">
-						<h1
-							class="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100"
-						>
-							{m.home_blank_title()}
-						</h1>
-						<p class="mt-4 text-base text-gray-600 dark:text-gray-400">{m.home_blank_body()}</p>
-						<div class="mt-10">
-							<SetupChecklist
-								{done}
-								bind:selected={setupStep}
-								onDismiss={() => setupHidden.set(true)}
-								onRemove={() => (confirmClose = true)}
-								{canManageIngestion}
-								{canQuery}
-								{isAdmin}
-							/>
-						</div>
-					</div>
-					<div class="hidden lg:block">
-						<MarmotFlow />
-					</div>
-				</div>
-			</section>
-		{/if}
-
-		{#if blank}
-			<!-- A faded preview of the dashboard this page becomes, so a blank instance shows where things will appear rather than empty space -->
-			<section class="ghost space-y-4" aria-hidden="true">
-				<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-					{#each previewKpis as kpi (kpi.label)}
-						<div class="{PANEL} p-4">
-							<p class="text-xs font-medium text-gray-500 dark:text-gray-400">{kpi.label}</p>
-							<p class="mt-1 text-2xl font-semibold tabular-nums text-gray-300 dark:text-gray-600">
-								0
-							</p>
-							<svg
-								class="mt-3 h-6 w-full"
-								viewBox="0 0 100 24"
-								preserveAspectRatio="none"
-								aria-hidden="true"
-							>
-								<path
-									d="M0 20 L100 20"
-									class="stroke-gray-200 dark:stroke-gray-700"
-									stroke-width="2"
-									stroke-dasharray="3 4"
-									vector-effect="non-scaling-stroke"
-								/>
-							</svg>
-						</div>
-					{/each}
-				</div>
-				<div class="grid gap-4 lg:grid-cols-3">
-					{#each previewPanels as panel (panel.title)}
-						<div class="{PANEL} p-5">
-							{@render moduleHeader(panel.title, panel.icon)}
-							<ul class="mt-4 space-y-3" aria-hidden="true">
-								{#each [70, 55, 80, 45] as width, i (i)}
-									<li class="flex items-center gap-3">
-										<span class="h-7 w-7 flex-shrink-0 rounded-lg bg-gray-100 dark:bg-gray-700/60"
-										></span>
-										<span class="flex-1 space-y-1.5">
-											<span
-												class="block h-2 rounded-full bg-gray-100 dark:bg-gray-700/60"
-												style="width: {width}%"
-											></span>
-											<span
-												class="block h-2 rounded-full bg-gray-100/70 dark:bg-gray-700/40"
-												style="width: {width - 25}%"
-											></span>
-										</span>
-									</li>
-								{/each}
-							</ul>
-							<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">{panel.caption}</p>
-						</div>
-					{/each}
-				</div>
-			</section>
-		{:else}
-			<!-- Quick ways into the common jobs -->
-			<div
-				class="-mt-2 flex flex-wrap items-center gap-2"
-				role="group"
-				aria-label={m.home_tasks_label()}
-			>
-				{#each tasks as task (task.id)}
-					{#if task.route}
-						<a href={resolve(task.route)} class={TASK} title={task.body}>
-							<IconifyIcon icon={task.icon} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
-							{task.label}
-						</a>
-					{:else}
-						<button
-							type="button"
-							onclick={() => (connect = task.connectTab ?? 'agent')}
-							class={TASK}
-							title={task.body}
-						>
-							<IconifyIcon icon={task.icon} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
-							{task.label}
-						</button>
-					{/if}
-				{/each}
-			</div>
-
-			<!-- The pulse: how much is happening and how much of it was refused -->
-			<div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-				{#if canQuery}
-					<a
-						href={resolve('/query')}
-						class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
-					>
-						<div class={LABEL}>
-							{m.home_kpi_queries()}
-						</div>
-						<div class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-							{formatNumber(day?.totals?.queries ?? 0)}
-						</div>
-						<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-							{m.home_kpi_last_day()}
-						</div>
-						<Sparkline points={hourly.map((h) => ({ label: h.label, value: h.total }))} />
-					</a>
-					<KpiTile
-						href={resolve('/query')}
-						label={m.home_kpi_agents()}
-						value={formatNumber(activeAgentsToday)}
-						sub={m.home_kpi_agents_sub({ count: formatNumber(agentCount) })}
-					/>
-					<a
-						href={resolve(canViewAccess ? '/query-audit' : '/query')}
-						class="{PANEL} block p-4 transition hover:border-gray-300 dark:hover:border-gray-600"
-					>
-						<div class={LABEL}>
-							{m.home_kpi_refused()}
-						</div>
-						<div
-							class="mt-1 text-2xl font-semibold tabular-nums {deniedToday > 0
-								? 'text-red-700 dark:text-red-300'
-								: 'text-gray-900 dark:text-gray-100'}"
-						>
-							{formatNumber(deniedToday)}
-						</div>
-						<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-							{m.home_kpi_last_day()}
-						</div>
-						<Sparkline
-							points={hourly.map((h) => ({ label: h.label, value: h.denied }))}
-							tone="critical"
-						/>
-					</a>
-				{/if}
-				<KpiTile
-					href={resolve('/insights')}
-					label={m.home_kpi_assets()}
-					value={formatNumber(sourceAssets)}
-					sub={m.home_kpi_assets_sub({ count: formatNumber(topProviders.length) })}
-				>
-					<div class="flex flex-wrap gap-1.5">
-						{#each topProviders.slice(0, 4) as [name] (name)}
-							<span
-								class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-							>
-								<Icon name={name.toLowerCase()} size="xs" showLabel={false} />
-								{name}
-							</span>
-						{/each}
-					</div>
-				</KpiTile>
-			</div>
-
-			<!-- What happened, and what needs a look -->
-			<div class="grid gap-5 lg:grid-cols-3">
-				<section class="{PANEL} p-5 lg:col-span-2">
-					{@render moduleHeader(
-						m.home_activity_heading(),
-						'material-symbols:bolt-outline',
-						canQuery ? m.home_activity_link() : undefined,
-						canViewAccess ? '/query-audit' : '/query'
-					)}
-					{#if !canQuery}
-						<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">{m.home_needs_query()}</p>
-					{:else if recent.length === 0}
-						<div class="mt-6 flex flex-col items-start gap-3">
-							<p class="text-sm text-gray-500 dark:text-gray-400">{m.home_activity_empty()}</p>
-							<button
-								type="button"
-								onclick={() => (connect = 'agent')}
-								class="inline-flex items-center gap-1.5 text-sm font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-							>
-								<IconifyIcon icon="material-symbols:smart-toy-outline" class="h-4 w-4" />
-								{m.home_step_agent_action()}
-							</button>
-						</div>
-					{:else}
-						<ul class="mt-3 divide-y divide-gray-100 dark:divide-gray-700/60">
-							{#each recent as q (q.id)}
-								{@const who = subjectParts(q.audit_subject)}
-								{@const o = outcome(q)}
-								<li>
-									<button
-										type="button"
-										onclick={() => (detailId = q.id)}
-										class="flex w-full items-center gap-3 py-2.5 text-left transition hover:bg-gray-50 dark:hover:bg-gray-700/30"
-									>
-										<span
-											class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full {q.principal_type ===
-											'user'
-												? 'bg-earthy-blue-100 text-earthy-blue-800 dark:bg-earthy-blue-900/40 dark:text-earthy-blue-200'
-												: 'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900/40 dark:text-earthy-terracotta-200'}"
-										>
-											<IconifyIcon
-												icon={q.principal_type === 'user'
-													? 'material-symbols:person-outline'
-													: 'material-symbols:smart-toy-outline'}
-												class="h-4 w-4"
-											/>
-										</span>
-										<span class="min-w-0 flex-1">
-											<span class="block truncate text-sm text-gray-900 dark:text-gray-100">
-												<span class="font-medium">{who.name}</span>
-												<span class="text-gray-500 dark:text-gray-400">
-													· {q.source_name} · {formatRelativeTime(q.started_at)}</span
-												>
-											</span>
-											<span
-												class="block truncate font-mono text-xs text-gray-500 dark:text-gray-400"
-												>{oneLine(q.statement)}</span
-											>
-										</span>
-										<span
-											class="flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium {o.classes}"
-											>{o.label}</span
-										>
-									</button>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
-
-				<div class="space-y-5">
-					{#if canQuery}
-						<section class="{PANEL} p-5">
-							{@render moduleHeader(
-								m.home_agents_heading(),
-								'material-symbols:smart-toy-outline',
-								m.home_agents_link(),
-								'/query'
-							)}
-							{#if agents.length === 0}
-								<div class="mt-4 flex flex-col items-start gap-2">
-									<p class="text-sm text-gray-500 dark:text-gray-400">{m.home_agents_empty()}</p>
-									<button
-										type="button"
-										onclick={() => (connect = 'agent')}
-										class="inline-flex items-center gap-1.5 text-sm font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-									>
-										<IconifyIcon icon="material-symbols:add-link" class="h-4 w-4" />
-										{m.home_step_agent_action()}
-									</button>
-								</div>
-							{:else}
-								<ul class="mt-3 space-y-3">
-									{#each agents as a (a.key)}
-										<li>
-											<div class="flex items-center gap-2 text-sm">
-												<IconifyIcon
-													icon="material-symbols:smart-toy-outline"
-													class="h-4 w-4 flex-shrink-0 text-earthy-terracotta-600"
-												/>
-												<span class="truncate font-medium text-gray-900 dark:text-gray-100"
-													>{subjectParts(a.label).name}</span
-												>
-												<span
-													class="ml-auto whitespace-nowrap text-xs tabular-nums text-gray-500 dark:text-gray-400"
-												>
-													{m.home_agents_counts({
-														total: formatNumber(a.total),
-														denied: formatNumber(a.denied)
-													})}
-												</span>
-											</div>
-											<div
-												class="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700/60"
-												style="width: {(a.total / agentMax) * 100}%"
-											>
-												<div
-													class="bg-earthy-terracotta-400 dark:bg-earthy-terracotta-500"
-													style="width: {(a.allowed / Math.max(1, a.total)) * 100}%"
-												></div>
-												<div
-													class="bg-red-300 dark:bg-red-400/70"
-													style="width: {(a.denied / Math.max(1, a.total)) * 100}%"
-												></div>
-											</div>
-										</li>
-									{/each}
-								</ul>
-								<p class="mt-3 text-[11px] text-gray-400">{m.home_agents_window()}</p>
-							{/if}
-						</section>
-					{/if}
-
-					<section class="{PANEL} p-5">
-						{@render moduleHeader(
-							m.home_attention_heading(),
-							'material-symbols:notifications-outline'
-						)}
-						<div class="mt-3 space-y-0.5">
-							{#if canQuery}
-								{@render attentionRow(
-									'material-symbols:block',
-									m.home_attention_denied(),
-									deniedToday,
-									canViewAccess ? '/query-audit' : '/query',
-									'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-								)}
-							{/if}
-							{@render attentionRow(
-								'material-symbols:sync-problem',
-								m.home_attention_failed_runs(),
-								failedRuns,
-								'/runs',
-								'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-							)}
-						</div>
-						{#if attentionTotal === 0}
-							<p
-								class="mt-3 flex items-center gap-1.5 border-t border-gray-100 pt-3 text-xs text-earthy-green-700 dark:border-gray-700 dark:text-earthy-green-400"
-							>
-								<IconifyIcon icon="material-symbols:check-circle-outline" class="h-4 w-4" />
-								{m.home_attention_clear()}
-							</p>
-						{/if}
-					</section>
-				</div>
-			</div>
-
-			<!-- Your data, popular data and what the catalog holds -->
-			<div class="grid gap-5 lg:grid-cols-3">
-				<section class="{PANEL} p-5">
-					{@render moduleHeader(
-						m.home_your_assets_heading(),
-						'material-symbols:person-pin-outline',
-						m.home_view_all_link(),
-						'/discover'
-					)}
-					{#if myAssets.length === 0}
-						<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
-							{m.home_your_assets_empty()}
-						</p>
-					{:else}
-						<ul class="mt-3 space-y-1">
-							{#each myAssets as a (a.id)}
-								<li>
-									<a
-										href={resolve('/discover/[type]/[service]/[name]', myAssetParams(a))}
-										class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition hover:bg-gray-50 dark:hover:bg-gray-700/40"
-									>
-										<Icon name={a.providers?.[0] ?? a.type} size="xs" showLabel={false} />
-										<span class="truncate text-gray-800 dark:text-gray-200">{a.name}</span>
-										<span class="ml-auto text-xs text-gray-400">{a.type}</span>
-									</a>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
-
-				<section class="{PANEL} p-5">
-					{@render moduleHeader(
-						m.home_most_viewed_heading(),
-						'material-symbols:visibility-outline',
-						m.home_see_all_link(),
-						'/insights'
-					)}
-					{#if viewed.length === 0}
-						<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
-							{m.home_most_viewed_empty()}
-						</p>
-					{:else}
-						<ul class="mt-3 space-y-1">
-							{#each viewed as a (a.asset_id)}
-								<li>
-									<a
-										href={resolve('/discover/[type]/[service]/[name]', {
-											type: a.asset_type,
-											service: a.asset_provider,
-											name: a.asset_name
-										})}
-										class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition hover:bg-gray-50 dark:hover:bg-gray-700/40"
-									>
-										<Icon name={a.asset_provider} size="xs" showLabel={false} />
-										<span class="truncate text-gray-800 dark:text-gray-200">{a.asset_name}</span>
-										<span class="ml-auto text-xs tabular-nums text-gray-400"
-											>{formatNumber(a.count)}</span
-										>
-									</a>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
-
-				<section class="{PANEL} p-5">
-					{@render moduleHeader(
-						m.home_pipelines_heading(),
-						'material-symbols:account-tree-outline',
-						m.home_view_all_link(),
-						'/runs'
-					)}
-					{#if runs.length === 0}
-						<div class="mt-4 flex flex-col items-start gap-2">
-							<p class="text-sm text-gray-500 dark:text-gray-400">{m.home_pipelines_empty()}</p>
-							{#if canManageIngestion}
-								<button
-									type="button"
-									onclick={() => (connect = 'source')}
-									class="inline-flex items-center gap-1.5 text-sm font-medium text-earthy-terracotta-700 hover:underline dark:text-earthy-terracotta-400"
-								>
-									<IconifyIcon icon="material-symbols:add" class="h-4 w-4" />
-									{m.home_step_source_action()}
-								</button>
-							{/if}
-						</div>
-					{:else}
-						<ul class="mt-3 space-y-1">
-							{#each runs as run (run.id)}
-								<li
-									class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm"
-									title={run.status}
-								>
-									<span
-										class="h-2 w-2 flex-shrink-0 rounded-full {run.status === 'succeeded'
-											? 'bg-earthy-green-500'
-											: run.status === 'failed'
-												? 'bg-red-500'
-												: run.status === 'running' || run.status === 'claimed'
-													? 'bg-earthy-blue-500'
-													: 'bg-gray-400'}"
-									></span>
-									<span class="truncate text-gray-800 dark:text-gray-200">{run.pipeline_name}</span>
-									<span class="ml-auto whitespace-nowrap text-xs text-gray-400">
-										{#if run.status === 'succeeded'}
-											{m.home_pipelines_changed({
-												count: formatNumber(run.assets_created + run.assets_updated)
-											})} ·
-										{/if}
-										{formatRelativeTime(run.finished_at ?? run.started_at ?? run.created_at)}
-									</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
-			</div>
-		{/if}
-	{/if}
-</div>
-
-{#if confirmClose}
-	<Modal
-		title={m.home_setup_remove_title()}
-		subtitle={m.home_setup_remove_body()}
-		onClose={() => (confirmClose = false)}
-		width="md"
-	>
-		{#snippet footer(close)}
-			<button
-				type="button"
-				onclick={close}
-				class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-				>{m.common_cancel()}</button
-			>
-			<button
-				type="button"
-				onclick={() => {
-					setupRemoved.set(true);
-					confirmClose = false;
-				}}
-				class={BTN_DANGER}>{m.home_setup_remove_confirm()}</button
-			>
-		{/snippet}
-	</Modal>
+	</div>
 {/if}
 
+<mm-confirm-dialog
+	open={confirmRemove}
+	heading={m.home_setup_remove_title()}
+	body={m.home_setup_remove_body()}
+	confirm-label={m.home_setup_remove_confirm()}
+	tone="default"
+	onmm-confirm={() => setupRemoved.set(true)}
+	onmm-close={() => (confirmRemove = false)}
+></mm-confirm-dialog>
+
 {#if connect}
-	<ConnectBlade tab={connect} onClose={() => (connect = null)} />
+	<ConnectDrawer tab={connect} onClose={() => (connect = null)} />
 {/if}
 
 {#if detailId}
-	<QueryDetail queryId={detailId} onClose={() => (detailId = null)} />
+	<QueryBlade queryId={detailId} onClose={() => (detailId = null)} />
 {/if}
 
 <style>
-	/* The blank-state preview fades out downwards so it reads as a glimpse of what is coming, not as broken panels */
-	.ghost {
-		mask-image: linear-gradient(to bottom, black 55%, transparent);
-	}
-
-	/* A faint dot grid behind the hero, fading out towards the copy so the text stays clean */
-	.hero::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background-image: radial-gradient(rgb(148 163 184 / 0.35) 1px, transparent 1px);
-		background-size: 18px 18px;
-		mask-image: linear-gradient(to right, transparent 25%, black 70%);
+	.welcome {
+		position: relative;
+		isolation: isolate;
+		padding: var(--space-6);
+		margin: calc(-1 * var(--space-6));
+		margin-block-end: 0;
 	}
 </style>

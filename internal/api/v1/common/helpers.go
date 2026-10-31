@@ -20,7 +20,7 @@ func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 
 // RespondError sends a standard error response
 func RespondError(w http.ResponseWriter, status int, message string) {
-	RespondJSON(w, status, ErrorResponse{Error: message})
+	RespondJSON(w, status, ErrorResponse{Error: message, RequestID: w.Header().Get(RequestIDHeader)})
 }
 
 // RespondLimitExceeded writes the structured 403 response for a

@@ -191,10 +191,15 @@ func (h *Handler) handleAuthorizePending(w http.ResponseWriter, r *http.Request)
 	}
 
 	redirectURI := pending.GetRedirectURI()
+	clientID := pending.GetClient().GetID()
+	scopes := []string(pending.GetRequestedScopes())
 	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"client_id":    pending.GetClient().GetID(),
+		"client_id":    clientID,
+		"client_name":  h.oauthProvider.Store.ClientName(r.Context(), clientID),
 		"redirect_uri": redirectURI.String(),
-		"scopes":       []string(pending.GetRequestedScopes()),
+		"scopes":       scopes,
+		// What allowing the client lets it do, in words, so the consent screen does not have to explain raw scope names.
+		"scope_descriptions": marmotOAuth2.DescribeScopes(scopes),
 	})
 }
 

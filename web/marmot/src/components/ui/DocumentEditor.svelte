@@ -150,7 +150,7 @@
 	<Alert tone="error">{m.ui_document_load_error()}</Alert>
 {:else}
 	<div
-		class="relative overflow-hidden rounded-lg border border-gray-200 focus-within:border-earthy-terracotta-500 focus-within:ring-2 focus-within:ring-earthy-terracotta-500/30 dark:border-gray-700"
+		class="relative overflow-hidden rounded-md border border-mm-control-border focus-within:border-mm-text focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-mm-text"
 		style:height
 	>
 		<div bind:this={host} class="h-full"></div>
@@ -158,7 +158,7 @@
 			<button
 				type="button"
 				onclick={copy}
-				class="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/90 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+				class="absolute right-2 top-2 z-10 inline-flex h-[var(--control-h-sm)] items-center gap-space-1 rounded-md border border-mm-control-border bg-mm-surface px-[10px] text-label text-mm-text transition-colors hover:border-mm-text"
 				aria-live="polite"
 			>
 				<IconifyIcon
@@ -169,11 +169,7 @@
 			</button>
 		{/if}
 		{#if !controller}
-			<div
-				class="absolute inset-0 animate-pulse bg-gray-50 dark:bg-gray-900"
-				role="status"
-				aria-live="polite"
-			>
+			<div class="absolute inset-0 bg-mm-sunken" role="status" aria-live="polite">
 				<span class="sr-only">{m.ui_document_loading()}</span>
 			</div>
 		{/if}

@@ -69,12 +69,12 @@
 </script>
 
 {#if loading}
-	<div class="{className} animate-pulse bg-gray-200 dark:bg-gray-700"></div>
+	<div class="{className} animate-pulse bg-mm-sunken"></div>
 {:else if error || !blobUrl}
 	{#if fallback}
 		{@render fallback()}
 	{:else}
-		<div class="{className} bg-gray-200 dark:bg-gray-700"></div>
+		<div class="{className} bg-mm-sunken"></div>
 	{/if}
 {:else}
 	<img src={blobUrl} {alt} class={className} />

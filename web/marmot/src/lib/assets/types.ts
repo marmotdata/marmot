@@ -46,6 +46,34 @@ export interface Asset {
 	query?: string;
 	query_language?: string;
 	external_links?: ExternalLink[];
+	/** Size from what the asset's plugin recorded; absent when no plugin said. */
+	row_count?: number;
+	column_count?: number;
+	/** True when the pipeline that refreshes the asset has missed more than two runs' worth of time. */
+	stale?: boolean;
+	/** 0 to 4 from views over the last 30 days; 0 means not viewed recently. */
+	popularity?: number;
+	/** Markers people set on schema fields, merged onto the outline by schema key and dotted path. */
+	field_annotations?: FieldAnnotation[];
+}
+
+export interface FieldAnnotation {
+	schema: string;
+	path: string;
+	pii: boolean;
+	certified: boolean;
+	description?: string;
+	glossary_terms: { id: string; name: string }[];
+	updated_by?: string;
+	updated_at: string;
+}
+
+/** Numbers beside the asset page's tabs; queries is absent for callers who may not read the query log. */
+export interface AssetTabCounts {
+	lineage: number;
+	runs: number;
+	agent_runs: number;
+	queries?: number;
 }
 
 export interface GlossaryTerm {

@@ -17,6 +17,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/notification"
 	"github.com/marmotdata/marmot/internal/plugin"
 )
 
@@ -66,6 +67,8 @@ type fakeRunner struct {
 	lastCfg   map[string]any
 	executed  bool
 	streamsOK bool
+	// block, when set, makes execution wait until its context ends, standing in for a slow source.
+	block chan struct{}
 }
 
 func (r *fakeRunner) PlanQuery(_ context.Context, _ string, config map[string]any, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
@@ -73,15 +76,26 @@ func (r *fakeRunner) PlanQuery(_ context.Context, _ string, config map[string]an
 	return r.plan, r.planErr
 }
 
-func (r *fakeRunner) ExecuteQuery(_ context.Context, _ string, _ map[string]any, _ pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+func (r *fakeRunner) ExecuteQuery(ctx context.Context, _ string, _ map[string]any, _ pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
 	r.executed = true
 	if r.execErr != nil {
 		return nil, r.execErr
+	}
+	if r.block != nil {
+		return &blockingStream{ctx: ctx}, nil
 	}
 	return &fakeStream{runner: r, chunks: r.chunks}, nil
 }
 
 func (r *fakeRunner) Status() []plugin.InstanceStatus { return nil }
+
+type blockingStream struct{ ctx context.Context }
+
+func (s *blockingStream) Recv() (*pluginsdk.QueryResultChunk, error) {
+	<-s.ctx.Done()
+	return nil, s.ctx.Err()
+}
+func (s *blockingStream) Close() error { return nil }
 
 type fakeStream struct {
 	runner *fakeRunner
@@ -110,6 +124,8 @@ type memRepo struct {
 
 	lastStats  StatsFilter
 	withTables []string
+	facts      map[string]TableFacts
+	requests   []*AccessRequest
 }
 
 func newMemRepo() *memRepo {
@@ -131,6 +147,9 @@ func (m *memRepo) CompleteQuery(_ context.Context, id string, o QueryOutcome) er
 	defer m.mu.Unlock()
 	q := m.queries[id]
 	q.Status, q.RowsReturned, q.Truncated, q.Error, q.Context = o.Status, o.RowsReturned, o.Truncated, o.Error, o.Context
+	if o.Reason != "" {
+		q.OutcomeReason = o.Reason
+	}
 	return nil
 }
 func (m *memRepo) GetQuery(_ context.Context, id string) (*Query, error) {
@@ -150,7 +169,32 @@ func (m *memRepo) Stats(_ context.Context, f StatsFilter) (*Stats, error) {
 func (m *memRepo) ListSourceTables(context.Context, SourceTablesFilter) ([]SourceTable, map[string]map[string]any, error) {
 	return nil, nil, nil
 }
-func (m *memRepo) SourceActivity(context.Context, []*Source) error { return nil }
+func (m *memRepo) SourceActivity(context.Context, []*Source) error                  { return nil }
+func (m *memRepo) EachQuery(context.Context, QueryFilter, func(*Query) error) error { return nil }
+func (m *memRepo) TableFacts(_ context.Context, ids []string) (map[string]TableFacts, error) {
+	return m.facts, nil
+}
+func (m *memRepo) CreateAccessRequest(_ context.Context, req *AccessRequest) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	req.ID = "request-" + strconv.Itoa(len(m.requests)+1)
+	req.CreatedAt = time.Now()
+	cp := *req
+	m.requests = append(m.requests, &cp)
+	return nil
+}
+func (m *memRepo) RecentAccessRequest(_ context.Context, principalType, principalID, sourceName, needed string, since time.Time) (*AccessRequest, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i := len(m.requests) - 1; i >= 0; i-- {
+		r := m.requests[i]
+		if r.PrincipalType == principalType && r.PrincipalID == principalID && r.SourceName == sourceName && r.Needed == needed && !r.CreatedAt.Before(since) {
+			cp := *r
+			return &cp, nil
+		}
+	}
+	return nil, nil
+}
 func (m *memRepo) SourcesWithTables(_ context.Context, ids []string, _ func(string, int) (string, []any)) ([]string, error) {
 	return m.withTables, nil
 }
@@ -208,6 +252,7 @@ type fixture struct {
 	runner  *fakeRunner
 	trigger *countTrigger
 	sources *fakeSources
+	assets  *fakeAssets
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -236,22 +281,145 @@ func newFixture(t *testing.T) *fixture {
 		IngestSourceInterval: time.Hour,
 		IngestGlobalInterval: 0,
 	})
-	return &fixture{svc: svc, repo: repo, runner: runner, trigger: trigger, sources: sources}
+	return &fixture{svc: svc, repo: repo, runner: runner, trigger: trigger, sources: sources, assets: assets}
 }
 
 func TestQueryDeniedWithoutQueryPermission(t *testing.T) {
 	f := newFixture(t)
 
-	_, err := f.svc.Query(context.Background(), fakePrincipal{}, QueryInput{Source: "warehouse", Statement: "SELECT * FROM orders"}, ClientMCP)
+	_, err := f.svc.Query(context.Background(), fakePrincipal{}, QueryInput{Source: "warehouse", Statement: "SELECT * FROM orders", Agent: "claude-code"}, ClientMCP)
 	require.ErrorIs(t, err, ErrDenied)
 	assert.False(t, f.runner.executed, "a denied query must never execute")
+
+	var denied *DeniedError
+	require.ErrorAs(t, err, &denied)
+	assert.Equal(t, ReasonPermission, denied.Refusal.Rule)
+	assert.Equal(t, "assets:query", denied.Refusal.Permission)
+	assert.Equal(t, "assets:query on warehouse", denied.Refusal.Needed)
+	assert.Equal(t, []string{}, denied.Refusal.Roles)
+	assert.NotEmpty(t, denied.Refusal.QueryID)
+	assert.Contains(t, err.Error(), "query denied by policy: querying data needs the assets:query permission", "the message callers have always read is kept")
 
 	q := f.repo.only(t)
 	assert.Equal(t, DecisionDenied, q.Decision)
 	assert.Equal(t, StatusDenied, q.Status)
+	assert.Equal(t, ReasonPermission, q.OutcomeReason)
 	assert.Equal(t, ClientMCP, q.Client)
-	assert.Equal(t, []string{ordersMRN}, q.ReferencedMRNs)
+	assert.Empty(t, q.ReferencedMRNs, "a caller who may not query is refused before the statement is planned")
 	assert.Contains(t, q.DecisionDetail["reason"], "assets:query")
+	assert.Equal(t, "assets:query on warehouse", q.DecisionDetail["needed"])
+	require.NotNil(t, q.ServiceAccount)
+	assert.Equal(t, "test-agent", *q.ServiceAccount)
+	require.NotNil(t, q.Agent)
+	assert.Equal(t, "claude-code", *q.Agent)
+}
+
+func TestQueryDeniedBeforeSourceLookup(t *testing.T) {
+	f := newFixture(t)
+
+	_, err := f.svc.Query(context.Background(), fakePrincipal{}, QueryInput{Source: "no-such-source", Statement: "SELECT 1"}, ClientAPI)
+	require.ErrorIs(t, err, ErrDenied, "an unknown source reads as a refusal, so its existence is not confirmed")
+	assert.Nil(t, f.repo.only(t).SourceID)
+}
+
+func TestQueryContextCarriesTableFacts(t *testing.T) {
+	f := newFixture(t)
+	a := f.assets.byMRN[ordersMRN]
+	a.Tags = []string{"certified"}
+	a.Metadata = map[string]any{"row_count": float64(1284019)}
+	a.Schema = map[string]string{"columns": `[{"column_name":"id"},{"column_name":"email","tags":["PII.Sensitive"]},{"column_name":"total"}]`}
+	f.repo.facts = map[string]TableFacts{"asset-1": {Owners: []string{"Analytics Engineering"}, PersonalData: []string{"phone"}}}
+
+	res, err := f.svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "warehouse", Statement: "SELECT id FROM orders"}, ClientAPI)
+	require.NoError(t, err)
+	require.Len(t, res.Context, 1)
+	c := res.Context[0]
+	assert.Equal(t, []string{"Analytics Engineering"}, c.Owners)
+	require.NotNil(t, c.RowCount)
+	assert.Equal(t, int64(1284019), *c.RowCount)
+	require.NotNil(t, c.ColumnsRead)
+	assert.Equal(t, 1, *c.ColumnsRead, "only id came back")
+	assert.True(t, c.Certified)
+	assert.Equal(t, []PersonalDataColumn{{Name: "email"}, {Name: "phone"}}, c.PersonalData)
+	assert.Equal(t, ReasonRole, f.repo.only(t).OutcomeReason)
+}
+
+func TestQueryCancel(t *testing.T) {
+	f := newFixture(t)
+	f.runner.block = make(chan struct{})
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := f.svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "warehouse", Statement: "SELECT pg_sleep(60)"}, ClientEditor)
+		done <- err
+	}()
+
+	var id string
+	require.Eventually(t, func() bool {
+		f.repo.mu.Lock()
+		defer f.repo.mu.Unlock()
+		for qid, q := range f.repo.queries {
+			if q.Status == StatusRunning {
+				id = qid
+				return true
+			}
+		}
+		return false
+	}, time.Second, 5*time.Millisecond)
+	require.Eventually(t, func() bool { return f.svc.Cancel(context.Background(), id) == nil }, time.Second, 5*time.Millisecond)
+
+	err := <-done
+	require.ErrorIs(t, err, ErrCancelled)
+	q := f.repo.only(t)
+	assert.Equal(t, StatusCancelled, q.Status)
+	assert.Equal(t, ReasonCancelled, q.OutcomeReason)
+	assert.Equal(t, ClientEditor, q.Client)
+	assert.ErrorIs(t, f.svc.Cancel(context.Background(), id), ErrNotRunning, "a finished query cannot be cancelled")
+}
+
+// otherPrincipal is a different service account from fakePrincipal.
+type otherPrincipal struct{ fakePrincipal }
+
+func (otherPrincipal) ID() string { return "00000000-0000-0000-0000-000000000043" }
+
+type recordingNotifier struct {
+	inputs []notification.CreateNotificationInput
+}
+
+func (r *recordingNotifier) CreateSync(_ context.Context, input notification.CreateNotificationInput) (int, error) {
+	r.inputs = append(r.inputs, input)
+	return len(input.Recipients), nil
+}
+
+func TestRequestAccessNotifiesGrantorsOnce(t *testing.T) {
+	f := newFixture(t)
+	notifier := &recordingNotifier{}
+	f.svc.(*service).opts.Notifier = notifier
+	f.svc.(*service).opts.Grantors = func(_ context.Context, principalType string) ([]notification.Recipient, error) {
+		assert.Equal(t, "service_account", principalType)
+		return []notification.Recipient{{Type: notification.RecipientTypeUser, ID: "admin-1"}}, nil
+	}
+
+	_, err := f.svc.Query(context.Background(), fakePrincipal{}, QueryInput{Source: "warehouse", Statement: "SELECT 1"}, ClientAPI)
+	var denied *DeniedError
+	require.ErrorAs(t, err, &denied)
+
+	req, err := f.svc.RequestAccess(context.Background(), fakePrincipal{}, AccessRequestInput{QueryID: denied.Refusal.QueryID, Message: "for the churn report"})
+	require.NoError(t, err)
+	assert.Equal(t, "assets:query on warehouse", req.Needed)
+	assert.Equal(t, 1, req.Notified)
+	assert.False(t, req.Repeat)
+	require.Len(t, notifier.inputs, 1)
+	assert.Equal(t, notification.TypeAccessRequest, notifier.inputs[0].Type)
+	assert.Equal(t, "/query-audit?id="+denied.Refusal.QueryID, notifier.inputs[0].Data["link"])
+
+	again, err := f.svc.RequestAccess(context.Background(), fakePrincipal{}, AccessRequestInput{Source: "warehouse"})
+	require.NoError(t, err)
+	assert.True(t, again.Repeat, "the same access asked for again within a day is not sent twice")
+	assert.Len(t, notifier.inputs, 1)
+
+	_, err = f.svc.RequestAccess(context.Background(), otherPrincipal{}, AccessRequestInput{QueryID: denied.Refusal.QueryID})
+	assert.ErrorIs(t, err, ErrQueryNotFound, "someone else's query cannot be the basis of a request")
 }
 
 func TestQueryAllowedReturnsRowsAndContext(t *testing.T) {

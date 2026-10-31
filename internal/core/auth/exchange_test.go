@@ -49,7 +49,7 @@ func newTestJWKS(t *testing.T) *testJWKS {
 		case "/.well-known/openid-configuration":
 			disc := map[string]interface{}{
 				"issuer":                 tj.server.URL,
-				"jwks_uri":              tj.server.URL + "/jwks",
+				"jwks_uri":               tj.server.URL + "/jwks",
 				"authorization_endpoint": tj.server.URL + "/auth",
 				"token_endpoint":         tj.server.URL + "/token",
 			}
@@ -122,7 +122,7 @@ func (m *mockUserService) Update(ctx context.Context, id string, input user.Upda
 	return nil, nil
 }
 
-func (m *mockUserService) Delete(_ context.Context, _, _ string) error                           { return nil }
+func (m *mockUserService) Delete(_ context.Context, _, _ string) error { return nil }
 func (m *mockUserService) Get(ctx context.Context, id string) (*user.User, error) {
 	if m.getFn != nil {
 		return m.getFn(ctx, id)
@@ -165,6 +165,13 @@ func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error { r
 func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error) {
 	return nil, nil
 }
+func (m *mockUserService) RotateAPIKey(_ context.Context, _, _ string) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) GetProfile(_ context.Context, _ string) (*user.Profile, error) {
+	return &user.Profile{}, nil
+}
+func (m *mockUserService) UpdateJobTitle(_ context.Context, _, _ string) error { return nil }
 func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error {
 	return nil
 }

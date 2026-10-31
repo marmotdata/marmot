@@ -1,178 +1,188 @@
 <script lang="ts">
-	import IconifyIcon from '@iconify/svelte';
+	import '@marmotdata/elements/filter-pill.js';
+	import '@marmotdata/elements/toolbar.js';
 	import { resolve } from '$app/paths';
-	import Icon from '$components/ui/Icon.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import {
-		PANEL,
-		SEARCH_FIELD,
-		FILTER_PILL,
-		FILTER_PILL_ON,
-		FILTER_PILL_OFF
-	} from '$lib/ui/classes';
-
-	interface Plugin {
-		id: string;
-		name: string;
-		description?: string;
-		icon?: string;
-		category?: string;
-		supports_query?: boolean;
-	}
+	import type { PluginInfo } from './pipeline';
 
 	interface Props {
-		plugins: Plugin[];
+		plugins: PluginInfo[];
 		// How many pipelines already use each plugin, by plugin id
 		connected: Record<string, number>;
 		canAdd: boolean;
+		queryOnly?: boolean;
 	}
 
-	let { plugins, connected, canAdd }: Props = $props();
+	let { plugins, connected, canAdd, queryOnly = $bindable(false) }: Props = $props();
 
-	// Every plugin Marmot can connect, searchable and filterable; picking one opens the create flow with it chosen
+	// Every plugin Marmot can connect, grouped by what it connects to; picking one opens the create flow with it chosen
 	type NewRoute = `/pipelines/new?${string}`;
+	const FOLDED_PER_CATEGORY = 4;
+
+	const CATEGORY_ORDER = [
+		'database',
+		'data-warehouse',
+		'data-lake',
+		'streaming',
+		'messaging',
+		'transformation',
+		'etl',
+		'orchestration',
+		'dashboard',
+		'storage',
+		'catalog',
+		'ml',
+		'compute',
+		'container',
+		'api'
+	];
+
+	const CATEGORY_LABELS: Record<string, () => string> = {
+		database: m.plugins_category_database,
+		'data-warehouse': m.plugins_category_warehouse,
+		'data-lake': m.plugins_category_data_lake,
+		streaming: m.plugins_category_streaming,
+		messaging: m.plugins_category_messaging,
+		transformation: m.plugins_category_transformation,
+		etl: m.plugins_category_etl,
+		orchestration: m.plugins_category_orchestration,
+		dashboard: m.plugins_category_dashboard,
+		storage: m.plugins_category_storage,
+		catalog: m.plugins_category_catalog,
+		ml: m.plugins_category_ml,
+		compute: m.plugins_category_compute,
+		container: m.plugins_category_container,
+		api: m.plugins_category_api
+	};
 
 	let search = $state('');
-	let queryOnly = $state(false);
-	let category = $state('');
+	let expanded = $state(false);
 
-	let categories = $derived(
-		[...new Set(plugins.map((p) => p.category).filter((c): c is string => !!c))].sort()
-	);
 	let queryCount = $derived(plugins.filter((p) => p.supports_query).length);
-	let shown = $derived.by(() => {
+	let matches = $derived.by(() => {
 		const q = search.trim().toLowerCase();
 		return plugins
 			.filter((p) => !queryOnly || p.supports_query)
-			.filter((p) => !category || p.category === category)
 			.filter(
 				(p) =>
 					!q ||
 					p.name.toLowerCase().includes(q) ||
 					p.id.includes(q) ||
-					p.description?.toLowerCase().includes(q)
+					p.description?.toLowerCase().includes(q) ||
+					p.catalogs?.some((c) => c.toLowerCase().includes(q))
 			)
 			.sort((a, b) => a.name.localeCompare(b.name));
 	});
+	// Searching or filtering shows every match; otherwise each category starts folded to its first few plugins
+	let folded = $derived(!expanded && !search.trim() && !queryOnly);
+	let categories = $derived.by(() => {
+		const byKey: Record<string, PluginInfo[]> = {};
+		for (const p of matches) (byKey[p.category ?? 'other'] ??= []).push(p);
+		const rank = (k: string) => {
+			const i = CATEGORY_ORDER.indexOf(k);
+			return i === -1 ? CATEGORY_ORDER.length : i;
+		};
+		return Object.entries(byKey)
+			.sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
+			.map(([key, list]) => ({
+				key,
+				label: CATEGORY_LABELS[key]?.() ?? m.plugins_category_other(),
+				list: folded ? list.slice(0, FOLDED_PER_CATEGORY) : list
+			}));
+	});
+	let hidden = $derived(
+		folded &&
+			categories.some(
+				(c) => c.list.length < matches.filter((p) => (p.category ?? 'other') === c.key).length
+			)
+	);
 
-	const PILL = FILTER_PILL + ' capitalize';
-	const PILL_ON = FILTER_PILL_ON;
-	const PILL_OFF = FILTER_PILL_OFF;
+	function caption(p: PluginInfo): string {
+		const uses = connected[p.id] ?? 0;
+		return [
+			p.supports_query ? m.plugins_filter_queryable() : '',
+			p.produces_lineage ? m.plugins_lineage_tag() : '',
+			uses ? m.plugins_connected_uses({ count: uses }) : ''
+		]
+			.filter(Boolean)
+			.join(' · ');
+	}
 </script>
 
-<section id="available" class="scroll-mt-20" aria-labelledby="available-heading">
-	<div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<h2 id="available-heading" class="text-base font-semibold text-gray-900 dark:text-gray-100">
-				{m.plugins_available_heading()}
-				<span class="ml-1 text-sm font-normal tabular-nums text-gray-400">{plugins.length}</span>
-			</h2>
-			<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{m.plugins_available_body()}</p>
-		</div>
-		<label class="{SEARCH_FIELD} w-full sm:w-72">
-			<IconifyIcon icon="material-symbols:search" class="h-4 w-4 text-gray-400" />
-			<input
-				bind:value={search}
-				type="search"
+<mm-section
+	id="gallery"
+	heading={m.plugins_available_heading()}
+	description={m.plugins_available_body()}
+	style="scroll-margin-block-start: var(--space-8)"
+>
+	<div class="mm-stack" style="--mm-gap: var(--space-5)">
+		<mm-toolbar label={m.plugins_filter_plugins_label()}>
+			<mm-search-field
+				label={m.pipelines_search_plugins_placeholder()}
+				hide-label
 				placeholder={m.pipelines_search_plugins_placeholder()}
-				aria-label={m.pipelines_search_plugins_placeholder()}
-				class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100"
-			/>
-		</label>
-	</div>
+				value={search}
+				style="inline-size: min(18rem, 100%)"
+				oninput={(e: Event) => (search = (e.currentTarget as HTMLInputElement).value)}
+			></mm-search-field>
+			{#if queryCount > 0}
+				<mm-filter-pill
+					pressed={queryOnly}
+					count={queryCount}
+					onmm-change={(e: CustomEvent<{ pressed: boolean }>) => (queryOnly = e.detail.pressed)}
+					><mm-icon slot="start" name="terminal"
+					></mm-icon>{m.plugins_filter_queryable()}</mm-filter-pill
+				>
+			{/if}
+		</mm-toolbar>
 
-	<div class="mt-4 flex flex-wrap items-center gap-2" role="group">
-		<button
-			type="button"
-			onclick={() => {
-				queryOnly = false;
-				category = '';
-			}}
-			aria-pressed={!queryOnly && !category}
-			class="{PILL} {!queryOnly && !category ? PILL_ON : PILL_OFF}">{m.plugins_filter_all()}</button
-		>
-		{#if queryCount > 0}
-			<button
-				type="button"
-				onclick={() => (queryOnly = !queryOnly)}
-				aria-pressed={queryOnly}
-				class="{PILL} {queryOnly ? PILL_ON : PILL_OFF}"
-			>
-				<IconifyIcon icon="material-symbols:bolt" class="h-3.5 w-3.5" />
-				{m.plugins_filter_queryable()}
-			</button>
-		{/if}
-		{#each categories as c (c)}
-			<button
-				type="button"
-				onclick={() => (category = category === c ? '' : c)}
-				aria-pressed={category === c}
-				class="{PILL} {category === c ? PILL_ON : PILL_OFF}">{c}</button
-			>
-		{/each}
-	</div>
-
-	{#if shown.length === 0}
-		<p class="py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-			{m.pipelines_no_plugins_match({ query: search })}
-		</p>
-	{:else}
-		<ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-			{#each shown as plugin (plugin.id)}
-				{@const uses = connected[plugin.id] ?? 0}
-				<li>
-					<svelte:element
-						this={canAdd ? 'a' : 'div'}
-						href={canAdd
-							? resolve(
-									`/pipelines/new?plugin=${plugin.id}${plugin.supports_query ? '&query=1' : ''}` as NewRoute
-								)
-							: undefined}
-						class="{PANEL} group flex h-full items-start gap-3 p-4 transition {canAdd
-							? 'hover:-translate-y-px hover:border-earthy-terracotta-300 hover:shadow-sm dark:hover:border-earthy-terracotta-700'
-							: ''}"
-					>
-						<span
-							class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+		{#if matches.length === 0}
+			<mm-empty-state
+				compact
+				heading={m.plugins_gallery_no_match_heading()}
+				description={m.plugins_gallery_no_match_body()}
+			></mm-empty-state>
+		{:else}
+			<div class="mm-columns" style="columns: 3 20rem">
+				{#each categories as c (c.key)}
+					<section aria-labelledby="plugin-cat-{c.key}">
+						<mm-heading level={3} variant="panel-title" id="plugin-cat-{c.key}"
+							>{c.label}</mm-heading
 						>
-							<Icon name={plugin.icon || plugin.id} size="sm" showLabel={false} />
-						</span>
-						<span class="min-w-0 flex-1">
-							<span class="flex items-center gap-1.5">
-								<span class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
-									>{plugin.name}</span
+						<mm-list aria-label={c.label}>
+							{#each c.list as p (p.id)}
+								<mm-list-item
+									href={canAdd
+										? resolve(`/pipelines/new?plugin=${encodeURIComponent(p.id)}` as NewRoute)
+										: undefined}
+									secondary={p.description}
 								>
-								{#if plugin.supports_query}
-									<IconifyIcon
-										icon="material-symbols:bolt"
-										class="h-4 w-4 flex-shrink-0 text-earthy-terracotta-600"
-										aria-label={m.runs_queryable_badge()}
-									/>
-								{/if}
-							</span>
-							{#if plugin.description}
-								<span class="mt-0.5 line-clamp-2 block text-xs text-gray-500 dark:text-gray-400"
-									>{plugin.description}</span
-								>
-							{/if}
-							{#if uses > 0}
-								<span
-									class="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-earthy-green-700 dark:text-earthy-green-300"
-								>
-									<IconifyIcon icon="material-symbols:check-circle-outline" class="h-3.5 w-3.5" />
-									{m.plugins_connected_uses({ count: uses })}
-								</span>
-							{/if}
-						</span>
-						{#if canAdd}
-							<IconifyIcon
-								icon="material-symbols:add"
-								class="h-5 w-5 flex-shrink-0 text-gray-300 transition group-hover:text-earthy-terracotta-600"
-							/>
-						{/if}
-					</svelte:element>
-				</li>
-			{/each}
-		</ul>
-	{/if}
-</section>
+									<mm-provider-logo slot="start" provider={p.icon || p.id} size="20" decorative
+									></mm-provider-logo>
+									{p.name}
+									{#if caption(p)}
+										<mm-text slot="end" variant="caption" tone="secondary">{caption(p)}</mm-text>
+									{/if}
+								</mm-list-item>
+							{/each}
+						</mm-list>
+					</section>
+				{/each}
+			</div>
+		{/if}
+
+		<div class="mm-cluster mm-cluster--between">
+			<mm-text variant="dense" tone="secondary"
+				>{m.plugins_missing_source()}
+				<mm-link href="https://marmotdata.io/docs/Develop/creating-plugins" external
+					>{m.plugins_write_plugin()}</mm-link
+				></mm-text
+			>
+			{#if hidden}
+				<mm-button variant="secondary" icon="expand-more" onclick={() => (expanded = true)}
+					>{m.plugins_show_all()}</mm-button
+				>
+			{/if}
+		</div>
+	</div>
+</mm-section>

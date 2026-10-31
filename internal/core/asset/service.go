@@ -211,6 +211,12 @@ type Service interface {
 	RemoveTerm(ctx context.Context, assetID string, termID string) error
 	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
 	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
+	// GetAssetsByTermLink pages through a term's assets linked one way: "" for all, "manual" or "rule:<id>".
+	GetAssetsByTermLink(ctx context.Context, termID, link string, limit, offset int) ([]*Asset, int, error)
+	GetTermLinks(ctx context.Context, termID string, assetIDs []string) ([]TermLink, error)
+	GetTermLinkGroups(ctx context.Context, termID string) ([]TermLinkGroup, error)
+	// GetByIDs reads up to MaxBatchIDs assets at once, in the order asked for, skipping ids that match nothing.
+	GetByIDs(ctx context.Context, ids []string) ([]*Asset, error)
 
 	// SetMembershipObserver registers an observer for asset create/delete events.
 	SetMembershipObserver(observer MembershipObserver)

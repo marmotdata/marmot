@@ -11,6 +11,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -38,6 +39,8 @@ const (
 	ClientAPI = "api"
 	ClientMCP = "mcp"
 	ClientCLI = "cli"
+	// ClientEditor is a query run from the web UI's query editors.
+	ClientEditor = "editor"
 )
 
 // QueryRunner dispatches plan and execute calls to long-running plugin
@@ -105,6 +108,9 @@ type Options struct {
 	// holding assets:query may query every queryable source; the cloud
 	// distribution supplies one backed by its IAM.
 	Authorizer Authorizer
+	// Notifier and Grantors tell the people who can grant access about access requests. When either is nil, requests are recorded without notifying anyone.
+	Notifier Notifier
+	Grantors Grantors
 }
 
 // QueryInput is one statement to run against a queryable source.
@@ -112,6 +118,10 @@ type QueryInput struct {
 	Source    string `json:"source" validate:"required"`
 	Statement string `json:"statement" validate:"required"`
 	MaxRows   int64  `json:"max_rows,omitempty"`
+
+	// Agent and Credential are set by the transport, never by the caller: the client that identified itself on the caller's behalf, such as an MCP client's name, and the kind of credential the request authenticated with.
+	Agent      string `json:"-"`
+	Credential string `json:"-"`
 } // @name QueryRunInput
 
 // QueryColumn describes one result column.
@@ -142,10 +152,18 @@ type Service interface {
 	InstanceStatus() []plugin.InstanceStatus
 
 	Query(ctx context.Context, principal auth.Principal, input QueryInput, client string) (*QueryResult, error)
+	// Cancel stops a query running on this replica. The caller decides who may cancel which query.
+	Cancel(ctx context.Context, id string) error
 	GetQuery(ctx context.Context, id string) (*Query, error)
 	ListQueries(ctx context.Context, filter QueryFilter) ([]*Query, int, error)
+	// EachQuery streams every query the filter matches, newest first, for exports.
+	EachQuery(ctx context.Context, filter QueryFilter, fn func(*Query) error) error
+	RequestAccess(ctx context.Context, principal auth.Principal, input AccessRequestInput) (*AccessRequest, error)
 
 	Stats(ctx context.Context, filter StatsFilter) (*Stats, error)
+	SourceStats(ctx context.Context, source string, filter StatsFilter) (*SourceStats, error)
+	// AssetStats summarises the queries that read one asset, for its Queries tab.
+	AssetStats(ctx context.Context, mrn string, filter StatsFilter) (*AssetStats, error)
 }
 
 type service struct {
@@ -159,6 +177,7 @@ type service struct {
 	opts       Options
 	validator  *validator.Validate
 	authorizer Authorizer
+	running    *runningQueries
 }
 
 func NewService(repo Repository, sources SourceProvider, assets asset.Service, runner QueryRunner, ingest IngestTrigger, encryptor *crypto.Encryptor, opts Options) Service {
@@ -177,6 +196,7 @@ func NewService(repo Repository, sources SourceProvider, assets asset.Service, r
 		encryptor:  encryptor,
 		opts:       opts,
 		validator:  validator.New(),
+		running:    newRunningQueries(),
 	}
 }
 
@@ -264,7 +284,23 @@ func (s *service) InstanceStatus() []plugin.InstanceStatus {
 }
 
 func (s *service) GetQuery(ctx context.Context, id string) (*Query, error) {
-	return s.repo.GetQuery(ctx, id)
+	q, err := s.repo.GetQuery(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	s.running.fillProgress(q)
+	return q, nil
+}
+
+func (s *service) EachQuery(ctx context.Context, filter QueryFilter, fn func(*Query) error) error {
+	return s.repo.EachQuery(ctx, filter, fn)
+}
+
+func (s *service) Cancel(_ context.Context, id string) error {
+	if !s.running.cancel(id) {
+		return ErrNotRunning
+	}
+	return nil
 }
 
 func (s *service) ListQueries(ctx context.Context, filter QueryFilter) ([]*Query, int, error) {
@@ -274,7 +310,14 @@ func (s *service) ListQueries(ctx context.Context, filter QueryFilter) ([]*Query
 	if filter.Offset < 0 {
 		filter.Offset = 0
 	}
-	return s.repo.ListQueries(ctx, filter)
+	queries, total, err := s.repo.ListQueries(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	for _, q := range queries {
+		s.running.fillProgress(q)
+	}
+	return queries, total, nil
 }
 
 // maxStatsSpan bounds a stats window so a dashboard cannot ask for years of
@@ -322,6 +365,13 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
+	// A caller who may not query at all is refused before the source is looked up or the statement planned, so neither the source's existence nor the statement's errors reach them; the attempt is still recorded.
+	if !s.authorizer.Admits(ctx, principal) {
+		decision := permissionRefusal(&Source{Name: input.Source})
+		record := s.newRecord(principal, input, client, &Source{Name: input.Source}, nil, decision)
+		return nil, s.refuse(ctx, principal, record, decision)
+	}
+
 	source, err := s.sources.GetQueryableSource(ctx, input.Source)
 	if err != nil {
 		return nil, err
@@ -344,8 +394,10 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 		Identity:  principal.AuditSubject(),
 	}
 
-	queryCtx, cancel := context.WithTimeout(ctx, s.opts.QueryTimeout)
-	defer cancel()
+	timeoutCtx, cancelTimeout := context.WithTimeout(ctx, s.opts.QueryTimeout)
+	defer cancelTimeout()
+	queryCtx, cancel := context.WithCancelCause(timeoutCtx)
+	defer cancel(nil)
 
 	resources, err := s.planResources(queryCtx, source, runner, req)
 	if err != nil {
@@ -357,40 +409,31 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 		return nil, fmt.Errorf("checking access: %w", err)
 	}
 
-	record := &Query{
-		PrincipalType:  string(principal.Type()),
-		PrincipalID:    principal.ID(),
-		AuditSubject:   principal.AuditSubject(),
-		Client:         client,
-		SourceID:       &source.ID,
-		SourceName:     source.Name,
-		Statement:      input.Statement,
-		ReferencedMRNs: resources,
-		Decision:       DecisionAllowed,
-		DecisionDetail: decisionDetail(decision),
-		Status:         StatusRunning,
-	}
+	record := s.newRecord(principal, input, client, source, resources, decision)
 	if !decision.Allowed {
-		record.Decision = DecisionDenied
-		record.Status = StatusDenied
+		return nil, s.refuse(ctx, principal, record, decision)
 	}
 	if err := s.repo.CreateQuery(ctx, record); err != nil {
 		return nil, err
 	}
 
-	if !decision.Allowed {
-		s.complete(ctx, record.ID, QueryOutcome{Status: StatusDenied})
-		return nil, fmt.Errorf("%w: %s", ErrDenied, decision.Reason)
-	}
+	progress := s.running.add(record.ID, cancel)
+	defer s.running.remove(record.ID)
 
-	result, execErr := s.execute(queryCtx, runner, record.ID, req, maxRows)
+	result, execErr := s.execute(queryCtx, runner, record.ID, req, maxRows, progress)
 	if execErr != nil {
+		// A query stopped by its caller, through Cancel or by hanging up, is cancelled rather than failed, and keeps the rows it had received.
+		if errors.Is(context.Cause(queryCtx), errCancelled) || errors.Is(ctx.Err(), context.Canceled) {
+			rows := progress.Load()
+			s.complete(ctx, record.ID, QueryOutcome{Status: StatusCancelled, Reason: ReasonCancelled, RowsReturned: &rows})
+			return nil, fmt.Errorf("%w: the query was cancelled", ErrCancelled)
+		}
 		msg := pluginMessage(execErr)
-		s.complete(ctx, record.ID, QueryOutcome{Status: StatusFailed, Error: &msg})
+		s.complete(ctx, record.ID, QueryOutcome{Status: StatusFailed, Reason: failureReason(execErr), Error: &msg})
 		return nil, fmt.Errorf("%w: %s", ErrQueryFailed, msg)
 	}
 
-	assetContext := s.assetContext(ctx, resources)
+	assetContext := s.assetContext(ctx, resources, result.Columns)
 	s.complete(ctx, record.ID, QueryOutcome{
 		Status:       StatusCompleted,
 		RowsReturned: &result.RowCount,
@@ -410,6 +453,103 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 	result.ReferencedMRNs = resources
 	result.Context = assetContext
 	return result, nil
+}
+
+// errCancelled is the cause a query's context carries when Cancel stopped it.
+var errCancelled = errors.New("cancelled by request")
+
+// ErrCancelled is returned to a caller whose query was cancelled.
+var ErrCancelled = errors.New("query cancelled")
+
+// newRecord builds the log entry for a query, naming the service account behind a machine caller and the agent that spoke for it.
+func (s *service) newRecord(principal auth.Principal, input QueryInput, client string, source *Source, resources []string, decision Decision) *Query {
+	record := &Query{
+		PrincipalType:  string(principal.Type()),
+		PrincipalID:    principal.ID(),
+		AuditSubject:   principal.AuditSubject(),
+		Client:         client,
+		SourceName:     source.Name,
+		Statement:      input.Statement,
+		ReferencedMRNs: resources,
+		Decision:       DecisionAllowed,
+		DecisionDetail: decisionDetail(decision, principal),
+		Status:         StatusRunning,
+		OutcomeReason:  decision.Rule,
+	}
+	if source.ID != "" {
+		record.SourceID = &source.ID
+	}
+	if principal.Type() == auth.PrincipalTypeServiceAccount {
+		name := principal.DisplayName()
+		record.ServiceAccount = &name
+	}
+	if agent := strings.TrimSpace(input.Agent); agent != "" {
+		agent = truncate(agent, 255)
+		record.Agent = &agent
+	}
+	if input.Credential != "" {
+		credential := input.Credential
+		record.Credential = &credential
+	}
+	if decision.Allowed {
+		if record.OutcomeReason == "" {
+			record.OutcomeReason = ReasonRole
+		}
+	} else {
+		record.Decision = DecisionDenied
+		record.Status = StatusDenied
+		if record.OutcomeReason == "" {
+			record.OutcomeReason = ReasonPermission
+		}
+	}
+	return record
+}
+
+// refuse records a denied query and returns the structured refusal for it.
+func (s *service) refuse(ctx context.Context, principal auth.Principal, record *Query, decision Decision) error {
+	if err := s.repo.CreateQuery(ctx, record); err != nil {
+		return err
+	}
+	s.complete(ctx, record.ID, QueryOutcome{Status: StatusDenied, Reason: record.OutcomeReason})
+	roles := principal.Roles()
+	if roles == nil {
+		roles = []string{}
+	}
+	return &DeniedError{Refusal: Refusal{
+		QueryID:    record.ID,
+		Reason:     decision.Reason,
+		Rule:       record.OutcomeReason,
+		Permission: decision.Permission,
+		Policy:     decision.Policy,
+		Needed:     decision.Needed,
+		Resources:  decision.Resources,
+		Roles:      roles,
+		Source:     record.SourceName,
+		DecidedAt:  record.StartedAt,
+	}}
+}
+
+// failureReason sorts an execution error into the outcome reasons the audit filters by.
+func failureReason(err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ReasonTimeout
+	}
+	if st, ok := status.FromError(err); ok {
+		switch st.Code() {
+		case codes.DeadlineExceeded:
+			return ReasonTimeout
+		case codes.Unavailable:
+			return ReasonUnreachable
+		}
+	}
+	return ReasonSourceError
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n]
 }
 
 // sourceRunner plans and executes queries for one source.
@@ -496,7 +636,7 @@ func (s *service) planResources(ctx context.Context, source *Source, runner sour
 	return plan.ReferencedMRNs, nil
 }
 
-func (s *service) execute(ctx context.Context, runner sourceRunner, queryID string, req pluginsdk.QueryRequest, maxRows int64) (*QueryResult, error) {
+func (s *service) execute(ctx context.Context, runner sourceRunner, queryID string, req pluginsdk.QueryRequest, maxRows int64, progress *atomic.Int64) (*QueryResult, error) {
 	stream, err := runner.execute(ctx, queryID, req)
 	if err != nil {
 		return nil, err
@@ -526,13 +666,16 @@ func (s *service) execute(ctx context.Context, runner sourceRunner, queryID stri
 			result.Rows = append(result.Rows, row)
 			result.RowCount++
 		}
+		if progress != nil {
+			progress.Store(result.RowCount)
+		}
 	}
 }
 
 // assetContext snapshots the catalog's view of every referenced asset, so
 // agents receive meaning together with rows and the query log keeps what the
 // catalog said at the time.
-func (s *service) assetContext(ctx context.Context, mrns []string) []AssetContext {
+func (s *service) assetContext(ctx context.Context, mrns []string, columns []QueryColumn) []AssetContext {
 	var catalogued []string
 	for _, m := range mrns {
 		if !isSourceMRN(m) {
@@ -549,6 +692,17 @@ func (s *service) assetContext(ctx context.Context, mrns []string) []AssetContex
 		return nil
 	}
 
+	var ids []string
+	for _, a := range assets {
+		if a != nil && a.ID != "" {
+			ids = append(ids, a.ID)
+		}
+	}
+	facts, err := s.repo.TableFacts(ctx, ids)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to load table facts for data query")
+	}
+
 	var contexts []AssetContext
 	for _, m := range catalogued {
 		a, ok := assets[m]
@@ -561,7 +715,12 @@ func (s *service) assetContext(ctx context.Context, mrns []string) []AssetContex
 			Type:      a.Type,
 			Providers: a.Providers,
 			Tags:      a.Tags,
+			RowCount:  rowCountOf(a.Metadata),
+			Certified: slices.ContainsFunc(a.Tags, func(t string) bool { return strings.EqualFold(t, "certified") }),
 		}
+		f := facts[a.ID]
+		ac.Owners = f.Owners
+		ac.ColumnsRead, ac.PersonalData = columnFacts(catalogColumns(a.Schema), f.PersonalData, columns)
 		if !a.LastSyncAt.IsZero() {
 			lastSync := a.LastSyncAt
 			ac.LastSyncAt = &lastSync
@@ -602,10 +761,26 @@ func pluginMessage(err error) string {
 	return err.Error()
 }
 
-func decisionDetail(d Decision) map[string]any {
+// decisionDetail keeps what a refusal said, and the caller's roles when it was made, so the audit can show it later as the caller saw it.
+func decisionDetail(d Decision, principal auth.Principal) map[string]any {
 	detail := map[string]any{}
 	if d.Reason != "" {
 		detail["reason"] = d.Reason
+	}
+	for key, value := range map[string]string{"rule": d.Rule, "permission": d.Permission, "policy": d.Policy, "needed": d.Needed} {
+		if value != "" {
+			detail[key] = value
+		}
+	}
+	if len(d.Resources) > 0 {
+		detail["resources"] = d.Resources
+	}
+	if !d.Allowed && principal != nil {
+		roles := principal.Roles()
+		if roles == nil {
+			roles = []string{}
+		}
+		detail["roles"] = roles
 	}
 	if len(detail) == 0 {
 		return nil

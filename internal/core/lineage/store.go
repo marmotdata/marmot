@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 type Repository interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error)
+	CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string) (string, error)
 	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
@@ -43,6 +45,8 @@ type LineageNode struct {
 	Type  string       `json:"type"`
 	Asset *asset.Asset `json:"asset"`
 	Depth int          `json:"depth"`
+	// LastRunStatus is the outcome of the latest run recorded against the asset: succeeded, failed or running. Empty when it has no runs.
+	LastRunStatus string `json:"last_run_status,omitempty"`
 } // @name LineageNode
 
 type LineageEdge struct {
@@ -54,6 +58,8 @@ type LineageEdge struct {
 	ObservationCount int        `json:"observation_count,omitempty"`
 	LastSeenAt       *time.Time `json:"last_seen_at,omitempty"`
 	JobMRN           string     `json:"job_mrn,omitempty"`
+	// DeclaredBy names who declared the edge: the pipeline whose run wrote it, or the person or service account that added it.
+	DeclaredBy string `json:"declared_by,omitempty"`
 } // @name LineageEdge
 
 type PostgresRepository struct {
@@ -74,7 +80,7 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
                     ELSE 'DEFAULT'
                 END
             ) as type,
-            e.origin, e.observation_count, e.last_seen_at
+            e.origin, e.observation_count, e.last_seen_at, COALESCE(e.declared_by, '')
         FROM lineage_edges e
         JOIN assets a1 ON e.source_mrn = a1.mrn
         JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -92,6 +98,7 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
 		&edge.Origin,
 		&edge.ObservationCount,
 		&edge.LastSeenAt,
+		&edge.DeclaredBy,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -162,6 +169,11 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 }
 
 func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
+	return r.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, "")
+}
+
+// CreateDeclaredLineage writes a declared edge, or returns the existing one. declaredBy, when set, records who declared it and takes over an existing edge, so the latest pipeline to write an edge is the one shown.
+func (r *PostgresRepository) CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string) (string, error) {
 	// Check if edge already exists
 	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
@@ -175,6 +187,14 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 			sourceMRN, targetMRN).Scan(&edgeID)
 		if err != nil {
 			return "", fmt.Errorf("getting existing edge ID: %w", err)
+		}
+		if declaredBy != "" {
+			if _, err := r.db.Exec(ctx, `
+				UPDATE lineage_edges SET declared_by = $3
+				WHERE source_mrn = $1 AND target_mrn = $2 AND origin = 'declared' AND declared_by IS DISTINCT FROM $3`,
+				sourceMRN, targetMRN, declaredBy); err != nil {
+				return "", fmt.Errorf("recording who declared the edge: %w", err)
+			}
 		}
 		return edgeID, nil
 	}
@@ -231,11 +251,15 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 	if jobMRN != "" {
 		job = &jobMRN
 	}
+	var declarer *string
+	if declaredBy != "" {
+		declarer = &declaredBy
+	}
 
 	_, err = tx.Exec(ctx, `
-        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, job_mrn)
-        VALUES ($1, $2, $3, $4, $5, 'declared', $6)`,
-		edgeID, sourceMRN, targetMRN, eventID, lineageType, job,
+        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, job_mrn, declared_by)
+        VALUES ($1, $2, $3, $4, $5, 'declared', $6, $7)`,
+		edgeID, sourceMRN, targetMRN, eventID, lineageType, job, declarer,
 	)
 	if err != nil {
 		return "", fmt.Errorf("inserting lineage edge: %w", err)
@@ -307,6 +331,10 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 
 	edges, err := r.getLineageEdges(ctx, tx, nodes)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := r.fillLastRunStatus(ctx, tx, nodes); err != nil {
 		return nil, err
 	}
 
@@ -415,7 +443,8 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 			) as type,
 			e.origin,
 			e.observation_count,
-			e.last_seen_at
+			e.last_seen_at,
+			COALESCE(e.declared_by, '')
 		FROM lineage_edges e
 		JOIN assets a1 ON e.source_mrn = a1.mrn
 		JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -430,7 +459,7 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 	for rows.Next() {
 		var edge LineageEdge
 		var jobMRN *string
-		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type, &edge.Origin, &edge.ObservationCount, &edge.LastSeenAt); err != nil {
+		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type, &edge.Origin, &edge.ObservationCount, &edge.LastSeenAt, &edge.DeclaredBy); err != nil {
 			return nil, fmt.Errorf("scanning edge: %w", err)
 		}
 		if jobMRN != nil {
@@ -661,4 +690,57 @@ func (r *PostgresRepository) GetImmediateNeighbors(ctx context.Context, assetMRN
 	}
 
 	return mrns, nil
+}
+
+// fillLastRunStatus sets each node's latest run outcome from its run history, so the canvas can mark assets whose last run failed. Only the newest event per asset is read, through the asset_id and event_time indexes.
+func (r *PostgresRepository) fillLastRunStatus(ctx context.Context, tx pgx.Tx, nodes []LineageNode) error {
+	if len(nodes) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(nodes))
+	for _, n := range nodes {
+		if n.Asset != nil && n.Asset.ID != "" {
+			ids = append(ids, n.Asset.ID)
+		}
+	}
+	rows, err := tx.Query(ctx, `
+		SELECT DISTINCT ON (asset_id) asset_id, event_type
+		FROM run_history
+		WHERE asset_id = ANY($1)
+		ORDER BY asset_id, event_time DESC`, ids)
+	if err != nil {
+		return fmt.Errorf("querying last runs: %w", err)
+	}
+	defer rows.Close()
+
+	status := make(map[string]string, len(ids))
+	for rows.Next() {
+		var id, eventType string
+		if err := rows.Scan(&id, &eventType); err != nil {
+			return fmt.Errorf("scanning last run: %w", err)
+		}
+		status[id] = RunStatusOf(eventType)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterating last runs: %w", err)
+	}
+	for i := range nodes {
+		if nodes[i].Asset != nil {
+			nodes[i].LastRunStatus = status[nodes[i].Asset.ID]
+		}
+	}
+	return nil
+}
+
+// RunStatusOf maps an OpenLineage run event type onto the outcome the UI shows. Events that say nothing about the outcome, such as OTHER, read as empty.
+func RunStatusOf(eventType string) string {
+	switch strings.ToUpper(eventType) {
+	case "COMPLETE":
+		return "succeeded"
+	case "FAIL", "ABORT":
+		return "failed"
+	case "START", "RUNNING":
+		return "running"
+	}
+	return ""
 }

@@ -40,6 +40,8 @@ type SearchUsersResponse struct {
 // @Param query query string false "Search query for username or email"
 // @Param role_ids query []string false "Filter by role IDs"
 // @Param active query bool false "Filter by active status"
+// @Param status query string false "Filter by member status: active, invited or deactivated" Enums(active, invited, deactivated)
+// @Param team query string false "Pass none to keep only members who belong to no team"
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} ListUsersResponse
@@ -68,6 +70,23 @@ func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 	if activeStr := r.URL.Query().Get("active"); activeStr != "" {
 		active := activeStr == "true"
 		filter.Active = &active
+	}
+
+	switch status := r.URL.Query().Get("status"); status {
+	case "", user.StatusActive, user.StatusInvited, user.StatusDeactivated:
+		filter.Status = status
+	default:
+		common.RespondError(w, http.StatusBadRequest, "status must be active, invited or deactivated")
+		return
+	}
+
+	switch team := r.URL.Query().Get("team"); team {
+	case "":
+	case "none":
+		filter.NoTeam = true
+	default:
+		common.RespondError(w, http.StatusBadRequest, "team only accepts none")
+		return
 	}
 
 	users, total, err := h.userService.List(r.Context(), filter)
@@ -148,7 +167,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.userService.Get(r.Context(), id)
+	result, err := h.userService.GetMember(r.Context(), id)
 	if err != nil {
 		if respondUserError(w, err) {
 			return

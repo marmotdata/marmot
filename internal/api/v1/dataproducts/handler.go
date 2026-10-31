@@ -58,6 +58,34 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/products/facets",
+			Method:  http.MethodGet,
+			Handler: h.facets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/products/members/{id}",
+			Method:  http.MethodGet,
+			Handler: h.members,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 100, 60),
+			},
+		},
+		{
+			Path:    "/api/v1/products/rule-order/{id}",
+			Method:  http.MethodPut,
+			Handler: h.reorderRules,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
 			Path:    "/api/v1/products/",
 			Method:  http.MethodPost,
 			Handler: h.create,

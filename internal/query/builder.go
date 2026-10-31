@@ -12,6 +12,7 @@ import (
 type TableConfig struct {
 	TypeColumn     string // "type" for assets, "asset_type" for search_index
 	ProviderColumn string // "providers" for both
+	TagsColumn     string // "tags" for both
 	NameColumn     string // "name" for both
 	MetadataColumn string // "metadata" for both
 	// IDColumn identifies the asset in the row, so @term can look up the asset's glossary links.
@@ -23,6 +24,7 @@ func DefaultAssetsConfig() TableConfig {
 	return TableConfig{
 		TypeColumn:     "type",
 		ProviderColumn: "providers",
+		TagsColumn:     "tags",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
 		IDColumn:       "assets.id",
@@ -34,6 +36,7 @@ func SearchIndexConfig() TableConfig {
 	return TableConfig{
 		TypeColumn:     "asset_type",
 		ProviderColumn: "providers",
+		TagsColumn:     "tags",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
 		IDColumn:       "search_index.entity_id",
@@ -276,6 +279,10 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 
 	if filter.FieldType == FieldTerm {
 		return b.termCondition(filter, paramCount)
+	}
+
+	if filter.FieldType == FieldTag {
+		return b.tagCondition(filter, paramCount)
 	}
 
 	// Build column reference based on field type
@@ -524,4 +531,25 @@ func (b *Builder) termCondition(filter Filter, paramCount int) (string, []interf
 		b.config.IDColumn, match,
 	)
 	return condition, []interface{}{value}, paramCount, nil
+}
+
+// tagCondition matches rows carrying a tag, ignoring case like @provider, with * wildcards and partial matches checked against each tag in turn.
+func (b *Builder) tagCondition(filter Filter, paramCount int) (string, []interface{}, int, error) {
+	if b.config.TagsColumn == "" {
+		return "", nil, paramCount, fmt.Errorf("@tag is not supported here")
+	}
+	value := fmt.Sprintf("%v", filter.Value)
+	col := b.config.TagsColumn
+	switch filter.Operator {
+	case OpEquals:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE lower(tag) = lower($%d))", col, paramCount), []interface{}{value}, paramCount, nil
+	case OpNotEquals:
+		return fmt.Sprintf("NOT EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE lower(tag) = lower($%d))", col, paramCount), []interface{}{value}, paramCount, nil
+	case OpWildcard:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE tag ILIKE $%d)", col, paramCount), []interface{}{strings.ReplaceAll(value, "*", "%")}, paramCount, nil
+	case OpContains:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE tag ILIKE $%d)", col, paramCount), []interface{}{"%" + value + "%"}, paramCount, nil
+	default:
+		return "", nil, paramCount, fmt.Errorf("operator %s is not supported for @tag", filter.Operator)
+	}
 }
