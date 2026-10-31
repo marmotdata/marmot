@@ -51,10 +51,9 @@
 		value={draft}
 		oninput={(e: Event) => (draft = (e.currentTarget as HTMLInputElement).value)}
 		onkeydowncapture={(e: KeyboardEvent) => {
-			// Enter adds the value rather than submitting the pipeline form: caught on the way down so it never reaches the field's own implicit submission
+			// Enter adds the value rather than submitting the pipeline form: caught on the way down, before the field's own listener, which skips implicit submission once the key is handled
 			if (e.key === 'Enter' && !e.isComposing) {
 				e.preventDefault();
-				e.stopPropagation();
 				add();
 			}
 		}}

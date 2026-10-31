@@ -3,11 +3,8 @@ allowBuilds:
   protobufjs: true
 
 minimumReleaseAgeExclude:
-  - '@marmotdata/css@0.1.2'
-  - '@marmotdata/elements@0.1.2'
-  - '@marmotdata/icons@0.1.2'
-  - '@marmotdata/svelte@0.1.2'
-  - '@marmotdata/tokens@0.1.2'
+  # Our own design system ships alongside the app, so a fresh release is used straight away
+  - '@marmotdata/*'
 
 overrides:
   pbkdf2: '>=3.1.5'

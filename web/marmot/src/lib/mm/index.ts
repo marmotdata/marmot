@@ -52,20 +52,3 @@ import '@marmotdata/elements/topography.js';
 export { setCrumbs, setBleed, chrome, type Crumb } from './chrome';
 export { default as BladeSlot } from './BladeSlot.svelte';
 export { mmIcon } from './icons';
-
-// Svelte sets mm-button's `type` as a property, and @marmotdata/elements 0.1.1 neither reflects it nor checks the property when Enter in a field looks for the form's submit button, so Enter did nothing in multi-field forms. Mirror it to the attribute until a release with the design-system fix is installed.
-{
-	const proto = customElements.get('mm-button')?.prototype as HTMLElement | undefined;
-	const desc = proto && Object.getOwnPropertyDescriptor(proto, 'type');
-	if (proto && desc?.set && desc.get) {
-		Object.defineProperty(proto, 'type', {
-			...desc,
-			set(this: HTMLElement, value: string) {
-				desc.set!.call(this, value);
-				if (value && value !== 'button') {
-					if (this.getAttribute('type') !== value) this.setAttribute('type', value);
-				} else if (this.hasAttribute('type')) this.removeAttribute('type');
-			}
-		});
-	}
-}

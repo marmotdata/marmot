@@ -10,10 +10,8 @@ ignoredBuiltDependencies:
   - core-js-pure
 
 minimumReleaseAgeExclude:
-  - '@marmotdata/css@0.1.2'
-  - '@marmotdata/elements@0.1.2'
-  - '@marmotdata/icons@0.1.2'
-  - '@marmotdata/tokens@0.1.2'
+  # Our own design system ships alongside the site, so a fresh release is used straight away
+  - '@marmotdata/*'
 
 overrides:
   node-forge: ">=1.4.0"
