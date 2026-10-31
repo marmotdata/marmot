@@ -18,9 +18,11 @@ var (
 
 // Run is a single agent invocation as recorded by the SDK.
 type Run struct {
-	ID         string     `json:"id"`
-	AgentID    string     `json:"agent_id"`
-	RunID      string     `json:"run_id"`
+	ID      string `json:"id"`
+	AgentID string `json:"agent_id"`
+	RunID   string `json:"run_id"`
+	// Prompt is what the run was asked, such as a ticket's subject, so a list of runs reads as the questions they answered.
+	Prompt     string     `json:"prompt,omitempty"`
 	StartedAt  time.Time  `json:"started_at"`
 	EndedAt    *time.Time `json:"ended_at,omitempty"`
 	DurationMs *int       `json:"duration_ms,omitempty"`
@@ -31,6 +33,8 @@ type Run struct {
 	Error      string     `json:"error,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	// ServiceAccountID is the account whose key reported the run, which is how an account learns which agents use it.
+	ServiceAccountID *string `json:"-"`
 } // @name AgentRun
 
 // ToolCall is a single tool invocation inside a Run.
@@ -41,6 +45,13 @@ type ToolCall struct {
 	StartedAt  time.Time `json:"started_at"`
 	DurationMs *int      `json:"duration_ms,omitempty"`
 	Status     string    `json:"status"`
+	// Detail is the call's argument in a readable form, such as the SQL of a query or the text of a search.
+	Detail string `json:"detail,omitempty"`
+	// Result summarises what came back, such as "5 rows".
+	Result string `json:"result,omitempty"`
+	// Reason says why a refused or failed call did not go through, and Rule names the policy or rule that refused it.
+	Reason string `json:"reason,omitempty"`
+	Rule   string `json:"rule,omitempty"`
 } // @name ToolCall
 
 // Bucket is an hour-aligned aggregate of runs by status.
@@ -93,10 +104,10 @@ func (r *PostgresRepository) InsertRun(ctx context.Context, run *Run) error {
 	_, err = tx.Exec(ctx, `
         INSERT INTO agent_runs (
             id, agent_id, run_id, started_at, ended_at, duration_ms,
-            status, model, tokens_in, tokens_out, error, created_at
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+            status, model, tokens_in, tokens_out, error, created_at, service_account_id, prompt
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 		run.ID, run.AgentID, run.RunID, run.StartedAt, run.EndedAt, run.DurationMs,
-		run.Status, run.Model, run.TokensIn, run.TokensOut, run.Error, run.CreatedAt,
+		run.Status, run.Model, run.TokensIn, run.TokensOut, run.Error, run.CreatedAt, run.ServiceAccountID, nullableString(run.Prompt),
 	)
 	if err != nil {
 		return fmt.Errorf("inserting agent run: %w", err)
@@ -105,10 +116,12 @@ func (r *PostgresRepository) InsertRun(ctx context.Context, run *Run) error {
 	for _, tc := range run.ToolCalls {
 		_, err := tx.Exec(ctx, `
             INSERT INTO agent_tool_calls (
-                run_pk, ordinal, tool_name, target_mrn, started_at, duration_ms, status
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                run_pk, ordinal, tool_name, target_mrn, started_at, duration_ms, status,
+                detail, result, reason, rule
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			run.ID, tc.Ordinal, tc.ToolName, nullableString(tc.TargetMRN),
 			tc.StartedAt, tc.DurationMs, tc.Status,
+			nullableString(tc.Detail), nullableString(tc.Result), nullableString(tc.Reason), nullableString(tc.Rule),
 		)
 		if err != nil {
 			return fmt.Errorf("inserting tool call %d: %w", tc.Ordinal, err)
@@ -121,7 +134,7 @@ func (r *PostgresRepository) InsertRun(ctx context.Context, run *Run) error {
 func (r *PostgresRepository) GetByAgentRunID(ctx context.Context, agentID, runID string) (*Run, error) {
 	row := r.db.QueryRow(ctx, `
         SELECT id, agent_id, run_id, started_at, ended_at, duration_ms,
-               status, model, tokens_in, tokens_out, error, created_at
+               status, model, tokens_in, tokens_out, error, created_at, prompt
         FROM agent_runs WHERE agent_id = $1 AND run_id = $2`,
 		agentID, runID,
 	)
@@ -139,7 +152,7 @@ func (r *PostgresRepository) GetByAgentRunID(ctx context.Context, agentID, runID
 func (r *PostgresRepository) ListRuns(ctx context.Context, agentID string, since time.Time, limit int) ([]*Run, error) {
 	rows, err := r.db.Query(ctx, `
         SELECT id, agent_id, run_id, started_at, ended_at, duration_ms,
-               status, model, tokens_in, tokens_out, error, created_at
+               status, model, tokens_in, tokens_out, error, created_at, prompt
         FROM agent_runs
         WHERE agent_id = $1 AND started_at >= $2
         ORDER BY started_at DESC
@@ -175,7 +188,8 @@ func (r *PostgresRepository) ListRuns(ctx context.Context, agentID string, since
 	}
 
 	tcRows, err := r.db.Query(ctx, `
-        SELECT run_pk, ordinal, tool_name, target_mrn, started_at, duration_ms, status
+        SELECT run_pk, ordinal, tool_name, target_mrn, started_at, duration_ms, status,
+               COALESCE(detail, ''), COALESCE(result, ''), COALESCE(reason, ''), COALESCE(rule, '')
         FROM agent_tool_calls
         WHERE run_pk = ANY($1)
         ORDER BY run_pk, ordinal`,
@@ -190,7 +204,7 @@ func (r *PostgresRepository) ListRuns(ctx context.Context, agentID string, since
 		var runPK string
 		var tc ToolCall
 		var target *string
-		if err := tcRows.Scan(&runPK, &tc.Ordinal, &tc.ToolName, &target, &tc.StartedAt, &tc.DurationMs, &tc.Status); err != nil {
+		if err := tcRows.Scan(&runPK, &tc.Ordinal, &tc.ToolName, &target, &tc.StartedAt, &tc.DurationMs, &tc.Status, &tc.Detail, &tc.Result, &tc.Reason, &tc.Rule); err != nil {
 			return nil, fmt.Errorf("scanning tool call: %w", err)
 		}
 		if target != nil {
@@ -262,10 +276,10 @@ type rowScanner interface {
 }
 
 func scanRun(s rowScanner, run *Run) error {
-	var model, errMsg *string
+	var model, errMsg, prompt *string
 	if err := s.Scan(
 		&run.ID, &run.AgentID, &run.RunID, &run.StartedAt, &run.EndedAt, &run.DurationMs,
-		&run.Status, &model, &run.TokensIn, &run.TokensOut, &errMsg, &run.CreatedAt,
+		&run.Status, &model, &run.TokensIn, &run.TokensOut, &errMsg, &run.CreatedAt, &prompt,
 	); err != nil {
 		return err
 	}
@@ -274,6 +288,9 @@ func scanRun(s rowScanner, run *Run) error {
 	}
 	if errMsg != nil {
 		run.Error = *errMsg
+	}
+	if prompt != nil {
+		run.Prompt = *prompt
 	}
 	return nil
 }

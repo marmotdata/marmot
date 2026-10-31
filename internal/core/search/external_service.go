@@ -3,7 +3,10 @@ package search
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/marmotdata/marmot/internal/query"
 )
 
 // ExternalSearchService routes text queries to an external search indexer
@@ -36,8 +39,8 @@ func (s *ExternalSearchService) Search(ctx context.Context, filter Filter) (*Res
 		filter.Offset = 0
 	}
 
-	// Empty/browse queries stay on PG
-	if filter.Query == "" {
+	// Empty/browse queries stay on PG, as do queries the external index cannot answer: it holds no owners or views, and it matches text only, so @field conditions would be searched as words.
+	if filter.Query == "" || filter.Sort == SortPopular || len(filter.Owners) > 0 || hasFieldConditions(filter.Query) {
 		return s.pgSvc.Search(ctx, filter)
 	}
 
@@ -50,6 +53,13 @@ func (s *ExternalSearchService) Search(ctx context.Context, filter Filter) (*Res
 		return nil, fmt.Errorf("external search: %w", err)
 	}
 
+	if e, ok := s.pgSvc.(resultEnricher); ok {
+		e.EnrichResults(ctx, results)
+	}
+	if facets != nil && facets.Owners == nil {
+		facets.Owners = []OwnerFacetValue{}
+	}
+
 	return &Response{
 		Results: results,
 		Total:   total,
@@ -57,4 +67,16 @@ func (s *ExternalSearchService) Search(ctx context.Context, filter Filter) (*Res
 		Limit:   filter.Limit,
 		Offset:  filter.Offset,
 	}, nil
+}
+
+// hasFieldConditions reports whether a query uses the query language's @field conditions rather than plain text.
+func hasFieldConditions(q string) bool {
+	if !strings.Contains(q, "@") {
+		return false
+	}
+	if len(extractKindFilters(q)) > 0 {
+		return true
+	}
+	parsed, err := query.NewParser().Parse(q)
+	return err == nil && parsed.HasStructuredFilters()
 }

@@ -53,6 +53,10 @@ func newPostgresRepository(t *testing.T) (Repository, context.Context) {
 	if _, err := pool.Exec(ctx, create); err != nil {
 		t.Fatalf("apply migration: %v", err)
 	}
+	// The grants migration adds client_name to this table; the rest of it needs users, which this standalone schema does not have.
+	if _, err := pool.Exec(ctx, "ALTER TABLE oauth_clients ADD COLUMN IF NOT EXISTS client_name TEXT"); err != nil {
+		t.Fatalf("add client_name: %v", err)
+	}
 
 	return NewPostgresRepository(pool), ctx
 }
@@ -62,6 +66,7 @@ func TestPostgres_ClientRoundTrip(t *testing.T) {
 
 	want := &ClientRecord{
 		ID:            "client-1",
+		Name:          "Claude",
 		RedirectURIs:  []string{"http://localhost:9999/callback"},
 		GrantTypes:    []string{"authorization_code"},
 		ResponseTypes: []string{"code"},
@@ -80,6 +85,9 @@ func TestPostgres_ClientRoundTrip(t *testing.T) {
 	}
 	if len(got.GrantTypes) != 1 || got.GrantTypes[0] != "authorization_code" {
 		t.Fatalf("grant types did not round trip: %v", got.GrantTypes)
+	}
+	if got.Name != "Claude" {
+		t.Fatalf("client name did not round trip: %q", got.Name)
 	}
 	if len(got.Scopes) != 1 || got.Scopes[0] != "openid" {
 		t.Fatalf("scopes did not round trip: %v", got.Scopes)

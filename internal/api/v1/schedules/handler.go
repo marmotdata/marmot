@@ -3,6 +3,7 @@ package schedules
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -62,6 +63,17 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userSvc, h.authSvc, h.config),
 				common.RequirePermission(h.userSvc, "ingestion", "view"),
+			},
+		},
+		{
+			// manage rather than view: a test launches the plugin and connects out with whatever settings it is given.
+			Path:    "/api/v1/ingestion/test-connection",
+			Method:  http.MethodPost,
+			Handler: h.testConnection,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userSvc, h.authSvc, h.config),
+				common.RequirePermission(h.userSvc, "ingestion", "manage"),
+				common.WithRateLimit(h.config, 30, 60),
 			},
 		},
 		{
@@ -239,6 +251,119 @@ func (h *Handler) validateConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// TestConnectionRequest is a plugin and the settings to try. ScheduleID names the pipeline being edited, so secrets it returned masked are tested with their stored values.
+type TestConnectionRequest struct {
+	PluginID   string                 `json:"plugin_id"`
+	Config     map[string]interface{} `json:"config"`
+	ScheduleID string                 `json:"schedule_id,omitempty"`
+} // @name TestConnectionRequest
+
+// TestConnectionResponse reports a connection test. Errors lists settings that failed validation, in which case the plugin was never started; otherwise Result says what the plugin could see.
+type TestConnectionResponse struct {
+	Valid  bool                       `json:"valid"`
+	Errors []common.ValidationError   `json:"errors,omitempty"`
+	Result *runs.ConnectionTestResult `json:"result,omitempty"`
+} // @name TestConnectionResponse
+
+// connectionTests bounds how many connection tests run at once, since each one starts a plugin process that connects out.
+var connectionTests = make(chan struct{}, 4)
+
+// @Summary Test a plugin connection
+// @Description Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work.
+// @Tags ingestion
+// @Accept json
+// @Produce json
+// @Param request body TestConnectionRequest true "Plugin and settings to test"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} TestConnectionResponse
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 403 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 429 {object} common.ErrorResponse
+// @Failure 503 {object} common.ErrorResponse
+// @ID postIngestionTestConnection
+// @Router /api/v1/ingestion/test-connection [post]
+func (h *Handler) testConnection(w http.ResponseWriter, r *http.Request) {
+	if !common.RequirePluginsReady(w) {
+		return
+	}
+
+	var req TestConnectionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.PluginID == "" {
+		common.RespondError(w, http.StatusBadRequest, "Plugin ID is required")
+		return
+	}
+	entry, err := plugin.GetRegistry().Get(req.PluginID)
+	if err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Unknown plugin ID")
+		return
+	}
+	if req.Config == nil {
+		req.Config = map[string]interface{}{}
+	}
+
+	if req.ScheduleID != "" {
+		existing, err := h.service.GetSchedule(r.Context(), req.ScheduleID)
+		if err != nil {
+			if errors.Is(err, runs.ErrScheduleNotFound) {
+				common.RespondError(w, http.StatusNotFound, "Schedule not found")
+				return
+			}
+			log.Error().Err(err).Msg("Failed to get schedule")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+			return
+		}
+		var previous map[string]interface{}
+		if existing.PluginID == req.PluginID {
+			if err := runs.DecryptScheduleConfig(existing, h.encryptor); err != nil {
+				log.Error().Err(err).Msg("Failed to decrypt config")
+				common.RespondError(w, http.StatusInternalServerError, "Failed to decrypt config")
+				return
+			}
+			previous = existing.Config
+		}
+		if err := runs.RestoreMaskedScheduleConfig(req.PluginID, req.Config, previous); err != nil {
+			common.RespondError(w, http.StatusBadRequest, "Unknown plugin")
+			return
+		}
+	}
+
+	validated, err := entry.Source.Validate(req.Config)
+	if err != nil {
+		var validationErrs pluginsdk.ValidationErrors
+		if errors.As(err, &validationErrs) {
+			apiErrors := make([]common.ValidationError, len(validationErrs.Errors))
+			for i, e := range validationErrs.Errors {
+				apiErrors[i] = common.ValidationError{Field: e.Field, Message: e.Message}
+			}
+			common.RespondJSON(w, http.StatusOK, TestConnectionResponse{Errors: apiErrors})
+			return
+		}
+		common.RespondJSON(w, http.StatusOK, TestConnectionResponse{
+			Errors: []common.ValidationError{{Field: "config", Message: err.Error()}},
+		})
+		return
+	}
+
+	select {
+	case connectionTests <- struct{}{}:
+		defer func() { <-connectionTests }()
+	default:
+		w.Header().Set("Retry-After", "10")
+		common.RespondError(w, http.StatusTooManyRequests, "Other connection tests are running, try again shortly")
+		return
+	}
+
+	result := runs.TestConnection(r.Context(), entry.Source, validated, runs.DefaultConnectionTestTimeout)
+	common.RespondJSON(w, http.StatusOK, TestConnectionResponse{Valid: true, Result: result})
+}
+
 type CreateScheduleRequest struct {
 	Name           string                 `json:"name"`
 	PluginID       string                 `json:"plugin_id"`
@@ -251,6 +376,11 @@ type CreateScheduleRequest struct {
 	// IngestOnQuery refreshes the source's catalog in the background after
 	// data queries, rate-limited per source.
 	IngestOnQuery bool `json:"ingest_on_query"`
+	// Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.
+	Description *string `json:"description,omitempty"`
+	// OwnerType is "user" or "team" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.
+	OwnerType *string `json:"owner_type,omitempty"`
+	OwnerID   *string `json:"owner_id,omitempty"`
 } // @name CreateScheduleRequest
 
 type UpdateScheduleRequest struct {
@@ -265,6 +395,11 @@ type UpdateScheduleRequest struct {
 	// IngestOnQuery refreshes the source's catalog in the background after
 	// data queries, rate-limited per source.
 	IngestOnQuery bool `json:"ingest_on_query"`
+	// Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.
+	Description *string `json:"description,omitempty"`
+	// OwnerType is "user" or "team" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.
+	OwnerType *string `json:"owner_type,omitempty"`
+	OwnerID   *string `json:"owner_id,omitempty"`
 } // @name UpdateScheduleRequest
 
 type ListSchedulesResponse struct {
@@ -272,6 +407,8 @@ type ListSchedulesResponse struct {
 	Total     int              `json:"total"`
 	Limit     int              `json:"limit"`
 	Offset    int              `json:"offset"`
+	// PluginCounts counts every pipeline by plugin, whatever the filters, so the plugin gallery can say how many of each are connected.
+	PluginCounts map[string]int `json:"plugin_counts"`
 } // @name ListSchedulesResponse
 
 type ListJobRunsResponse struct {
@@ -336,7 +473,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	schedule, err := h.service.CreateSchedule(
+	schedule, err := h.service.CreateScheduleWithDetails(
 		r.Context(),
 		req.Name,
 		req.PluginID,
@@ -346,9 +483,14 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Queryable,
 		req.IngestOnQuery,
 		createdBy,
+		runs.ScheduleDetails{Description: req.Description, OwnerType: req.OwnerType, OwnerID: req.OwnerID},
 	)
 
 	if err != nil {
+		if errors.Is(err, runs.ErrScheduleOwnerNotFound) {
+			common.RespondError(w, http.StatusBadRequest, "Owner must be an existing user or team")
+			return
+		}
 		if err == runs.ErrScheduleNameExists {
 			common.RespondError(w, http.StatusConflict, "Schedule with this name already exists")
 			return
@@ -371,6 +513,8 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 // @Tags ingestion
 // @Produce json
 // @Param enabled query boolean false "Filter by enabled status"
+// @Param search query string false "Match pipeline name or plugin, case-insensitively"
+// @Param status query string false "Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
 // @Security ApiKeyAuth
@@ -399,9 +543,28 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 		enabled = &enabledVal
 	}
 
-	schedules, total, err := h.service.ListSchedules(r.Context(), enabled, limit, offset)
+	status := r.URL.Query().Get("status")
+	if !runs.ValidScheduleStatusFilter(status) {
+		common.RespondError(w, http.StatusBadRequest, "status must be one of failed, succeeded, cancelled, running or never")
+		return
+	}
+
+	schedules, total, err := h.service.SearchSchedules(r.Context(), runs.ScheduleFilter{
+		Enabled: enabled,
+		Search:  r.URL.Query().Get("search"),
+		Status:  status,
+		Limit:   limit,
+		Offset:  offset,
+	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list schedules")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to list schedules")
+		return
+	}
+
+	pluginCounts, err := h.service.CountSchedulesByPlugin(r.Context())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to count schedules by plugin")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to list schedules")
 		return
 	}
@@ -411,10 +574,11 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, ListSchedulesResponse{
-		Schedules: schedules,
-		Total:     total,
-		Limit:     limit,
-		Offset:    offset,
+		Schedules:    schedules,
+		Total:        total,
+		Limit:        limit,
+		Offset:       offset,
+		PluginCounts: pluginCounts,
 	})
 }
 
@@ -548,7 +712,7 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	schedule, err := h.service.UpdateSchedule(
+	schedule, err := h.service.UpdateScheduleWithDetails(
 		r.Context(),
 		id,
 		req.Name,
@@ -558,9 +722,14 @@ func (h *Handler) updateSchedule(w http.ResponseWriter, r *http.Request) {
 		req.Enabled,
 		req.Queryable,
 		req.IngestOnQuery,
+		runs.ScheduleDetails{Description: req.Description, OwnerType: req.OwnerType, OwnerID: req.OwnerID},
 	)
 
 	if err != nil {
+		if errors.Is(err, runs.ErrScheduleOwnerNotFound) {
+			common.RespondError(w, http.StatusBadRequest, "Owner must be an existing user or team")
+			return
+		}
 		if err == runs.ErrScheduleNotFound {
 			common.RespondError(w, http.StatusNotFound, "Schedule not found")
 			return

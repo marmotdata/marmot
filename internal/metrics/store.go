@@ -56,6 +56,8 @@ type QueryCount struct {
 	Query     string `json:"query"`
 	QueryType string `json:"query_type"`
 	Count     int64  `json:"count"`
+	// ResultCount is set on the zero-result list, where it is always 0; ordinary top queries leave it out because only searches that found nothing are recorded with their result count
+	ResultCount *int64 `json:"result_count,omitempty"`
 } // @name QueryCount
 
 type AssetCount struct {
@@ -82,6 +84,7 @@ type Store interface {
 	GetAggregatedMetrics(ctx context.Context, opts QueryOptions) ([]AggregatedMetric, error)
 
 	GetTopQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error)
+	GetZeroResultQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error)
 	GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error)
 
 	// Asset statistics (from pre-computed table)
@@ -92,6 +95,7 @@ type Store interface {
 	GetAssetsWithSchemas(ctx context.Context) (int64, error)
 	GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error)
 	GetAssetBreakdown(ctx context.Context) ([]AssetBreakdown, error)
+	GetAssetsOwned(ctx context.Context) (owned int64, total int64, err error)
 
 	// Maintenance
 	RefreshAssetStatistics(ctx context.Context, ownerFields []string) error
@@ -386,13 +390,27 @@ func getBucketExpression(bucketSize time.Duration) string {
 
 // GetTopQueries returns the most frequent search queries.
 func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error) {
+	return s.topQueries(ctx, MetricSearchQueries, timeRange, limit)
+}
+
+// GetZeroResultQueries returns the most frequent searches that found nothing, which point at what the catalog is missing or names differently.
+func (s *PostgresStore) GetZeroResultQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error) {
+	results, err := s.topQueries(ctx, MetricSearchQueriesEmpty, timeRange, limit)
+	for i := range results {
+		var zero int64
+		results[i].ResultCount = &zero
+	}
+	return results, err
+}
+
+func (s *PostgresStore) topQueries(ctx context.Context, metricName string, timeRange TimeRange, limit int) ([]QueryCount, error) {
 	query := `
 		SELECT
 			labels->>'query' as query,
 			labels->>'query_type' as query_type,
 			SUM(total_sum)::bigint as count
 		FROM metrics_timeseries
-		WHERE metric_name = 'search_queries_detailed'
+		WHERE metric_name = $4
 		  AND day >= $1::date AND day <= $2::date
 		  AND labels->>'query' IS NOT NULL
 		  AND labels->>'query' != ''
@@ -400,7 +418,7 @@ func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, 
 		ORDER BY count DESC
 		LIMIT $3`
 
-	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit)
+	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit, metricName)
 	if err != nil {
 		return nil, fmt.Errorf("querying top queries: %w", err)
 	}
@@ -728,6 +746,19 @@ func (s *PostgresStore) getAssetBreakdownFromSource(ctx context.Context) ([]Asse
 		result = append(result, breakdown)
 	}
 	return result, rows.Err()
+}
+
+// GetAssetsOwned counts catalogued assets with at least one owning user or team, against all catalogued assets. It reads assets directly rather than the statistics snapshot, which tracks metadata owner fields rather than asset owners.
+func (s *PostgresStore) GetAssetsOwned(ctx context.Context) (int64, int64, error) {
+	var owned, total int64
+	err := s.db.QueryRow(ctx, `
+		SELECT COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM asset_owners o WHERE o.asset_id = a.id)), COUNT(*)
+		FROM assets a
+		WHERE a.is_stub = FALSE`).Scan(&owned, &total)
+	if err != nil {
+		return 0, 0, fmt.Errorf("counting owned assets: %w", err)
+	}
+	return owned, total, nil
 }
 
 // =============================================================================

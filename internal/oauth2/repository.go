@@ -25,7 +25,9 @@ const (
 // ClientRecord is a dynamically registered OAuth client. Every one of these is
 // public with a loopback redirect URI, so there is no secret to keep.
 type ClientRecord struct {
-	ID            string
+	ID string
+	// Name is what the client called itself at registration. Registration is unauthenticated, so it is a claim to show beside the id, never proof of who the client is.
+	Name          string
 	RedirectURIs  []string
 	GrantTypes    []string
 	ResponseTypes []string
@@ -46,6 +48,7 @@ func (c *ClientRecord) toFosite() fosite.Client {
 func (c *ClientRecord) clone() *ClientRecord {
 	return &ClientRecord{
 		ID:            c.ID,
+		Name:          c.Name,
 		RedirectURIs:  append([]string(nil), c.RedirectURIs...),
 		GrantTypes:    append([]string(nil), c.GrantTypes...),
 		ResponseTypes: append([]string(nil), c.ResponseTypes...),

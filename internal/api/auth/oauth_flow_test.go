@@ -520,6 +520,13 @@ func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error { r
 func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error) {
 	return nil, nil
 }
+func (m *mockUserService) RotateAPIKey(_ context.Context, _, _ string) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) GetProfile(_ context.Context, _ string) (*user.Profile, error) {
+	return &user.Profile{}, nil
+}
+func (m *mockUserService) UpdateJobTitle(_ context.Context, _, _ string) error { return nil }
 func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error {
 	return nil
 }

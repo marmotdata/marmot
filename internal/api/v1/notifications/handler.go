@@ -82,6 +82,14 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/notifications/item/{id}/mark-unread",
+			Method:  http.MethodPost,
+			Handler: h.markAsUnread,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
 			Path:    "/api/v1/notifications/item/{id}/mark-read",
 			Method:  http.MethodPost,
 			Handler: h.markAsRead,

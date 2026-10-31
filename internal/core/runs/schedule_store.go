@@ -34,6 +34,8 @@ var (
 	ErrInvalidCronExpression = errors.New("invalid cron expression")
 	// ErrSourceOwned is returned when a source name is already taken by a pipeline Marmot runs or by another principal's served plugin.
 	ErrSourceOwned = errors.New("source name is owned by another pipeline")
+	// ErrScheduleOwnerNotFound is returned when a schedule names an owner that is not a user or team.
+	ErrScheduleOwnerNotFound = errors.New("schedule owner not found")
 )
 
 type Schedule struct {
@@ -50,12 +52,50 @@ type Schedule struct {
 	NextRunAt      *time.Time             `json:"next_run_at,omitempty"`
 	ManagedBy      *string                `json:"managed_by,omitempty"`
 	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
-	ServedByType *string   `json:"served_by_type,omitempty"`
-	ServedByID   *string   `json:"served_by_id,omitempty"`
-	CreatedBy    *string   `json:"created_by,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ServedByType *string `json:"served_by_type,omitempty"`
+	ServedByID   *string `json:"served_by_id,omitempty"`
+	// Description says what the pipeline catalogs, in the words of whoever set it up.
+	Description *string `json:"description,omitempty"`
+	// OwnerType is "user" or "team" and names, with OwnerID, who is told when a run fails; both are nil for an unowned pipeline.
+	OwnerType *string `json:"owner_type,omitempty"`
+	OwnerID   *string `json:"owner_id,omitempty"`
+	OwnerName *string `json:"owner_name,omitempty"`
+	// AssetCount counts the assets the pipeline's latest successful run cataloged that are still in the catalog; it is only filled in when schedules are read one at a time or listed.
+	AssetCount int       `json:"asset_count"`
+	CreatedBy  *string   `json:"created_by,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 } // @name Schedule
+
+// Owner types a schedule can name.
+const (
+	ScheduleOwnerUser = "user"
+	ScheduleOwnerTeam = "team"
+)
+
+// ScheduleFilter narrows a list of schedules. Status matches the latest run: failed, succeeded and cancelled match that status, running matches a run that is queued or under way and never matches a pipeline that has not run.
+type ScheduleFilter struct {
+	Enabled *bool
+	Search  string
+	Status  string
+	Limit   int
+	Offset  int
+}
+
+// Status filters a schedule list accepts beyond the job run statuses.
+const (
+	ScheduleStatusRunning = "running"
+	ScheduleStatusNever   = "never"
+)
+
+// ValidScheduleStatusFilter reports whether a schedule list can be filtered by status.
+func ValidScheduleStatusFilter(status string) bool {
+	switch status {
+	case "", JobStatusFailed, JobStatusSucceeded, JobStatusCancelled, ScheduleStatusRunning, ScheduleStatusNever:
+		return true
+	}
+	return false
+}
 
 // Served reports whether a plugin running outside Marmot serves this source, in which case Marmot never runs the plugin itself.
 func (s *Schedule) Served() bool {
@@ -85,6 +125,10 @@ type JobRun struct {
 	CreatedBy          string                 `json:"created_by"`
 	CreatedAt          time.Time              `json:"created_at"`
 	UpdatedAt          time.Time              `json:"updated_at"`
+	// ConnectingAt, ExtractingAt and WritingAt record when the worker began launching the plugin, asked it to discover and began writing to the catalog; empty when the run never got there or predates them.
+	ConnectingAt *time.Time `json:"connecting_at,omitempty"`
+	ExtractingAt *time.Time `json:"extracting_at,omitempty"`
+	WritingAt    *time.Time `json:"writing_at,omitempty"`
 } // @name JobRun
 
 // ValidJobStatus checks if a job status is valid
@@ -106,6 +150,8 @@ type ScheduleRepository interface {
 	UpdateSchedule(ctx context.Context, schedule *Schedule) error
 	DeleteSchedule(ctx context.Context, id string) error
 	ListSchedules(ctx context.Context, enabled *bool, limit, offset int) ([]*Schedule, int, error)
+	SearchSchedules(ctx context.Context, filter ScheduleFilter) ([]*Schedule, int, error)
+	CountSchedulesByPlugin(ctx context.Context) (map[string]int, error)
 	UpdateScheduleNextRun(ctx context.Context, id string, nextRunAt time.Time) error
 	UpdateScheduleLastRun(ctx context.Context, id string, lastRunAt time.Time) error
 	GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error)
@@ -127,6 +173,7 @@ type ScheduleRepository interface {
 	CompleteJobRun(ctx context.Context, id string, status string, errorMessage *string, assetsCreated, assetsUpdated, assetsDeleted, lineageCreated, documentationAdded int) error
 	ReleaseExpiredClaims(ctx context.Context, expiry time.Duration) (int, error)
 	CancelJobRun(ctx context.Context, id string) error
+	MarkJobRunPhase(ctx context.Context, id, phase string) error
 
 	// Asset-schedule associations
 	LinkAssetsByMRN(ctx context.Context, scheduleID string, assetMRNs []string) error
@@ -169,9 +216,10 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 		return fmt.Errorf("marshaling config: %w", err)
 	}
 
+	ownerUserID, ownerTeamID := scheduleOwnerColumns(schedule)
 	query := `
-		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, next_run_at, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, next_run_at, created_by, description, owner_user_id, owner_team_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULLIF($10, ''), $11, $12)
 		RETURNING id, created_at, updated_at`
 
 	err = r.db.QueryRow(ctx, query,
@@ -184,12 +232,14 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 		schedule.IngestOnQuery,
 		schedule.NextRunAt,
 		schedule.CreatedBy,
+		schedule.Description,
+		ownerUserID,
+		ownerTeamID,
 	).Scan(&schedule.ID, &schedule.CreatedAt, &schedule.UpdatedAt)
 
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return ErrScheduleNameExists
+		if mapped := scheduleWriteError(err); mapped != err {
+			return mapped
 		}
 		return fmt.Errorf("failed to create schedule: %w", err)
 	}
@@ -198,56 +248,65 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 }
 
 func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string) (*Schedule, error) {
-	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
-		FROM ingestion_schedules
-		WHERE id = $1`
-
-	schedule := &Schedule{}
-	var configJSON []byte
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&schedule.ID,
-		&schedule.Name,
-		&schedule.PluginID,
-		&configJSON,
-		&schedule.CronExpression,
-		&schedule.Enabled,
-		&schedule.Queryable,
-		&schedule.IngestOnQuery,
-		&schedule.LastRunAt,
-		&schedule.NextRunAt,
-		&schedule.ManagedBy,
-		&schedule.ServedByType,
-		&schedule.ServedByID,
-
-		&schedule.CreatedBy,
-		&schedule.CreatedAt,
-		&schedule.UpdatedAt,
-	)
-
+	schedule, err := scanSchedule(r.db.QueryRow(ctx, scheduleSelect+` WHERE s.id = $1`, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrScheduleNotFound
 		}
 		return nil, fmt.Errorf("failed to get schedule: %w", err)
 	}
-
-	if err := json.Unmarshal(configJSON, &schedule.Config); err != nil {
-		return nil, fmt.Errorf("unmarshaling config: %w", err)
-	}
-
 	return schedule, nil
 }
 
 func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name string) (*Schedule, error) {
-	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, queryable, ingest_on_query, last_run_at, next_run_at, managed_by, served_by_type, served_by_id, created_by, created_at, updated_at
-		FROM ingestion_schedules
-		WHERE name = $1`
+	schedule, err := scanSchedule(r.db.QueryRow(ctx, scheduleSelect+` WHERE s.name = $1`, name))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrScheduleNotFound
+		}
+		return nil, fmt.Errorf("failed to get schedule: %w", err)
+	}
+	return schedule, nil
+}
 
+// scheduleSelect reads a schedule with what the pipeline pages show beside it: its owner's name, its latest run's status and how many assets it currently catalogs. The asset count reads the checkpoints of the same baseline run staleness uses, so it agrees with what a run would remove.
+const scheduleSelect = `
+	SELECT
+		s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
+		s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
+		s.description,
+		CASE WHEN s.owner_user_id IS NOT NULL THEN 'user' WHEN s.owner_team_id IS NOT NULL THEN 'team' END,
+		COALESCE(s.owner_user_id, s.owner_team_id)::text,
+		COALESCE(owner_user.name, owner_team.name),
+		lr.status,
+		COALESCE(ac.n, 0)
+	FROM ingestion_schedules s
+	LEFT JOIN users owner_user ON owner_user.id = s.owner_user_id
+	LEFT JOIN teams owner_team ON owner_team.id = s.owner_team_id
+	LEFT JOIN LATERAL (
+		SELECT jr.status FROM ingestion_job_runs jr
+		WHERE jr.schedule_id = s.id
+		ORDER BY jr.created_at DESC
+		LIMIT 1
+	) lr ON true
+	LEFT JOIN LATERAL (
+		SELECT count(*) AS n
+		FROM run_checkpoints c
+		JOIN assets a ON a.mrn = c.entity_mrn
+		WHERE c.entity_type = 'asset' AND c.operation <> 'deleted'
+		  AND c.run_id = (
+			SELECT pr.id FROM runs pr
+			WHERE pr.pipeline_name = s.name AND pr.source_name = s.plugin_id AND pr.status = 'completed'
+			  AND EXISTS (SELECT 1 FROM run_checkpoints rc WHERE rc.run_id = pr.id)
+			ORDER BY pr.completed_at DESC
+			LIMIT 1
+		  )
+	) ac ON true`
+
+func scanSchedule(row pgx.Row) (*Schedule, error) {
 	schedule := &Schedule{}
 	var configJSON []byte
-	err := r.db.QueryRow(ctx, query, name).Scan(
+	if err := row.Scan(
 		&schedule.ID,
 		&schedule.Name,
 		&schedule.PluginID,
@@ -261,24 +320,50 @@ func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name
 		&schedule.ManagedBy,
 		&schedule.ServedByType,
 		&schedule.ServedByID,
-
 		&schedule.CreatedBy,
 		&schedule.CreatedAt,
 		&schedule.UpdatedAt,
-	)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrScheduleNotFound
-		}
-		return nil, fmt.Errorf("failed to get schedule: %w", err)
+		&schedule.Description,
+		&schedule.OwnerType,
+		&schedule.OwnerID,
+		&schedule.OwnerName,
+		&schedule.LastRunStatus,
+		&schedule.AssetCount,
+	); err != nil {
+		return nil, err
 	}
-
 	if err := json.Unmarshal(configJSON, &schedule.Config); err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
-
 	return schedule, nil
+}
+
+// scheduleOwnerColumns turns an owner type and id into the user and team columns, so the one-owner constraint is kept by construction.
+func scheduleOwnerColumns(schedule *Schedule) (userID, teamID *string) {
+	if schedule.OwnerID == nil || schedule.OwnerType == nil {
+		return nil, nil
+	}
+	switch *schedule.OwnerType {
+	case ScheduleOwnerUser:
+		return schedule.OwnerID, nil
+	case ScheduleOwnerTeam:
+		return nil, schedule.OwnerID
+	}
+	return nil, nil
+}
+
+// scheduleWriteError maps the constraint errors a create or update can hit onto the errors callers check for.
+func scheduleWriteError(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505":
+			return ErrScheduleNameExists
+		case "23503", "22P02":
+			return ErrScheduleOwnerNotFound
+		}
+	}
+	return err
 }
 
 func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedule *Schedule) error {
@@ -294,9 +379,11 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 		return fmt.Errorf("marshaling config: %w", err)
 	}
 
+	ownerUserID, ownerTeamID := scheduleOwnerColumns(schedule)
 	query := `
 		UPDATE ingestion_schedules
-		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, queryable = $6, ingest_on_query = $7, updated_at = NOW()
+		SET name = $1, plugin_id = $2, config = $3, cron_expression = $4, enabled = $5, queryable = $6, ingest_on_query = $7,
+			description = NULLIF($9, ''), owner_user_id = $10, owner_team_id = $11, updated_at = NOW()
 		WHERE id = $8
 		RETURNING updated_at`
 
@@ -309,15 +396,17 @@ func (r *SchedulePostgresRepository) UpdateSchedule(ctx context.Context, schedul
 		schedule.Queryable,
 		schedule.IngestOnQuery,
 		schedule.ID,
+		schedule.Description,
+		ownerUserID,
+		ownerTeamID,
 	).Scan(&schedule.UpdatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrScheduleNotFound
 		}
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return ErrScheduleNameExists
+		if mapped := scheduleWriteError(err); mapped != err {
+			return mapped
 		}
 		return fmt.Errorf("failed to update schedule: %w", err)
 	}
@@ -342,60 +431,60 @@ func (r *SchedulePostgresRepository) DeleteSchedule(ctx context.Context, id stri
 }
 
 func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled *bool, limit, offset int) ([]*Schedule, int, error) {
-	var countQuery string
-	var listQuery string
+	return r.SearchSchedules(ctx, ScheduleFilter{Enabled: enabled, Limit: limit, Offset: offset})
+}
+
+// SearchSchedules pages through schedules by name, filtered by name or plugin and by the status of each one's latest run.
+func (r *SchedulePostgresRepository) SearchSchedules(ctx context.Context, filter ScheduleFilter) ([]*Schedule, int, error) {
+	if !ValidScheduleStatusFilter(filter.Status) {
+		return nil, 0, ErrInvalidJobStatus
+	}
+
 	var args []interface{}
-
-	if enabled != nil {
-		countQuery = `SELECT COUNT(*) FROM ingestion_schedules WHERE enabled = $1`
-		listQuery = `
-			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
-				s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
-				(
-					SELECT status
-					FROM ingestion_job_runs jr
-					WHERE jr.schedule_id = s.id
-					ORDER BY jr.created_at DESC
-					LIMIT 1
-				) as last_run_status
-			FROM ingestion_schedules s
-			WHERE s.enabled = $1
-			ORDER BY s.name
-			LIMIT $2 OFFSET $3`
-		args = append(args, *enabled)
-	} else {
-		countQuery = `SELECT COUNT(*) FROM ingestion_schedules`
-		listQuery = `
-			SELECT
-				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
-				s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
-				(
-					SELECT status
-					FROM ingestion_job_runs jr
-					WHERE jr.schedule_id = s.id
-					ORDER BY jr.created_at DESC
-					LIMIT 1
-				) as last_run_status
-			FROM ingestion_schedules s
-			ORDER BY s.name
-			LIMIT $1 OFFSET $2`
+	add := func(v interface{}) string {
+		args = append(args, v)
+		return fmt.Sprintf("$%d", len(args))
+	}
+	conditions := []string{}
+	if filter.Enabled != nil {
+		conditions = append(conditions, "s.enabled = "+add(*filter.Enabled))
+	}
+	if search := strings.TrimSpace(filter.Search); search != "" {
+		pattern := add("%" + likeEscaper.Replace(search) + "%")
+		conditions = append(conditions, "(s.name ILIKE "+pattern+" OR s.plugin_id ILIKE "+pattern+")")
+	}
+	switch filter.Status {
+	case "":
+	case ScheduleStatusNever:
+		conditions = append(conditions, "NOT EXISTS (SELECT 1 FROM ingestion_job_runs jr WHERE jr.schedule_id = s.id)")
+	case ScheduleStatusRunning:
+		conditions = append(conditions, "lr.status = ANY("+add([]string{JobStatusPending, JobStatusClaimed, JobStatusRunning})+")")
+	default:
+		conditions = append(conditions, "lr.status = "+add(filter.Status))
+	}
+	where := ""
+	if len(conditions) > 0 {
+		where = " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	// Get total count
+	// The count needs the latest run only when filtering on it, so the common unfiltered count stays a plain scan.
+	countQuery := `SELECT COUNT(*) FROM ingestion_schedules s`
+	if filter.Status != "" && filter.Status != ScheduleStatusNever {
+		countQuery += ` LEFT JOIN LATERAL (
+			SELECT jr.status FROM ingestion_job_runs jr
+			WHERE jr.schedule_id = s.id
+			ORDER BY jr.created_at DESC
+			LIMIT 1
+		) lr ON true`
+	}
 	var total int
-	var countArgs []interface{}
-	if enabled != nil {
-		countArgs = []interface{}{*enabled}
-	}
-	err := r.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total)
-	if err != nil {
+	if err := r.db.QueryRow(ctx, countQuery+where, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("failed to count schedules: %w", err)
 	}
 
-	// Get list
-	args = append(args, limit, offset)
-	rows, err := r.db.Query(ctx, listQuery, args...)
+	limitArg := add(filter.Limit)
+	offsetArg := add(filter.Offset)
+	rows, err := r.db.Query(ctx, scheduleSelect+where+" ORDER BY s.name LIMIT "+limitArg+" OFFSET "+offsetArg, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list schedules: %w", err)
 	}
@@ -403,38 +492,33 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 
 	schedules := []*Schedule{}
 	for rows.Next() {
-		schedule := &Schedule{}
-		var configJSON []byte
-		err := rows.Scan(
-			&schedule.ID,
-			&schedule.Name,
-			&schedule.PluginID,
-			&configJSON,
-			&schedule.CronExpression,
-			&schedule.Enabled,
-			&schedule.Queryable,
-			&schedule.IngestOnQuery,
-			&schedule.LastRunAt,
-			&schedule.NextRunAt,
-			&schedule.ManagedBy,
-			&schedule.ServedByType,
-			&schedule.ServedByID,
-
-			&schedule.CreatedBy,
-			&schedule.CreatedAt,
-			&schedule.UpdatedAt,
-			&schedule.LastRunStatus,
-		)
+		schedule, err := scanSchedule(rows)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan schedule: %w", err)
-		}
-		if err := json.Unmarshal(configJSON, &schedule.Config); err != nil {
-			return nil, 0, fmt.Errorf("unmarshaling config: %w", err)
 		}
 		schedules = append(schedules, schedule)
 	}
 
-	return schedules, total, nil
+	return schedules, total, rows.Err()
+}
+
+// CountSchedulesByPlugin counts the pipelines each plugin backs, so the plugin gallery can say how many are connected whatever page of pipelines is shown.
+func (r *SchedulePostgresRepository) CountSchedulesByPlugin(ctx context.Context) (map[string]int, error) {
+	rows, err := r.db.Query(ctx, `SELECT plugin_id, COUNT(*) FROM ingestion_schedules GROUP BY plugin_id`)
+	if err != nil {
+		return nil, fmt.Errorf("counting schedules by plugin: %w", err)
+	}
+	defer rows.Close()
+	counts := map[string]int{}
+	for rows.Next() {
+		var pluginID string
+		var n int
+		if err := rows.Scan(&pluginID, &n); err != nil {
+			return nil, fmt.Errorf("counting schedules by plugin: %w", err)
+		}
+		counts[pluginID] = n
+	}
+	return counts, rows.Err()
 }
 
 // ClaimServedSources records that each schedule's ServedByType/ServedByID serves the queryable source of its name from a plugin outside Marmot. The first principal to claim a free name owns it; later claims succeed only for that owner, or for the operator on a Run it already manages. The claims are all made or none are: if any name belongs to a pipeline someone else configured, ErrSourceOwned is returned and nothing is claimed.
@@ -691,6 +775,7 @@ func (r *SchedulePostgresRepository) GetJobRun(ctx context.Context, id string) (
 			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
 			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
 			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
+			jr.connecting_at, jr.extracting_at, jr.writing_at,
 			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
 			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
@@ -720,6 +805,9 @@ func (r *SchedulePostgresRepository) GetJobRun(ctx context.Context, id string) (
 		&run.DocumentationAdded,
 		&run.CreatedAt,
 		&run.UpdatedAt,
+		&run.ConnectingAt,
+		&run.ExtractingAt,
+		&run.WritingAt,
 		&run.PipelineName,
 		&run.SourceName,
 		&configJSON,
@@ -828,6 +916,7 @@ func (r *SchedulePostgresRepository) ListJobRuns(ctx context.Context, scheduleID
 			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
 			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
 			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
+			jr.connecting_at, jr.extracting_at, jr.writing_at,
 			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
 			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
@@ -876,6 +965,9 @@ func (r *SchedulePostgresRepository) ListJobRuns(ctx context.Context, scheduleID
 			&run.DocumentationAdded,
 			&run.CreatedAt,
 			&run.UpdatedAt,
+			&run.ConnectingAt,
+			&run.ExtractingAt,
+			&run.WritingAt,
 			&run.PipelineName,
 			&run.SourceName,
 			&configJSON,
@@ -970,6 +1062,7 @@ func (r *SchedulePostgresRepository) GetJobRunByPluginRunID(ctx context.Context,
 			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
 			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
 			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
+			jr.connecting_at, jr.extracting_at, jr.writing_at,
 			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
 			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
@@ -999,6 +1092,9 @@ func (r *SchedulePostgresRepository) GetJobRunByPluginRunID(ctx context.Context,
 		&run.DocumentationAdded,
 		&run.CreatedAt,
 		&run.UpdatedAt,
+		&run.ConnectingAt,
+		&run.ExtractingAt,
+		&run.WritingAt,
 		&run.PipelineName,
 		&run.SourceName,
 		&configJSON,
@@ -1131,6 +1227,37 @@ func (r *SchedulePostgresRepository) CancelJobRun(ctx context.Context, id string
 		return fmt.Errorf("failed to cancel job run: %w", err)
 	}
 
+	return nil
+}
+
+// Run phases a worker records as it reaches them.
+const (
+	JobPhaseConnecting = "connecting"
+	JobPhaseExtracting = "extracting"
+	JobPhaseWriting    = "writing"
+)
+
+// MarkJobRunPhase records when a run reached a phase. Only the first time counts, so a retried step does not move the phase later than it began.
+func (r *SchedulePostgresRepository) MarkJobRunPhase(ctx context.Context, id, phase string) error {
+	var column string
+	switch phase {
+	case JobPhaseConnecting:
+		column = "connecting_at"
+	case JobPhaseExtracting:
+		column = "extracting_at"
+	case JobPhaseWriting:
+		column = "writing_at"
+	default:
+		return fmt.Errorf("unknown job run phase %q", phase)
+	}
+	query := `UPDATE ingestion_job_runs SET ` + column + ` = COALESCE(` + column + `, NOW()), updated_at = NOW() WHERE id = $1`
+	tag, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("marking job run phase: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrJobRunNotFound
+	}
 	return nil
 }
 

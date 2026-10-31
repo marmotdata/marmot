@@ -68,6 +68,11 @@ type DataProduct struct {
 	RuleAssetCount   int `json:"rule_asset_count,omitempty"`
 
 	IconURL *string `json:"icon_url,omitempty"`
+
+	// Popularity is a level from 0 to 4 from its assets' views over the last 30 days. It is filled in by the filtered list and by Get.
+	Popularity int `json:"popularity"`
+	// AssetTypes counts the product's assets by type and is only filled in by Get.
+	AssetTypes []TypeCount `json:"asset_types,omitempty"`
 } // @name DataProduct
 
 type Owner struct {
@@ -85,22 +90,30 @@ type OwnerInput struct {
 }
 
 type Rule struct {
-	ID              string    `json:"id"`
-	DataProductID   string    `json:"data_product_id"`
-	Name            string    `json:"name"`
-	Description     *string   `json:"description,omitempty"`
-	RuleType        RuleType  `json:"rule_type"`
-	QueryExpression *string   `json:"query_expression,omitempty"`
-	MetadataField   *string   `json:"metadata_field,omitempty"`
-	PatternType     *string   `json:"pattern_type,omitempty"`
-	PatternValue    *string   `json:"pattern_value,omitempty"`
-	Priority        int       `json:"priority"`
-	IsEnabled       bool      `json:"is_enabled"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID              string   `json:"id"`
+	DataProductID   string   `json:"data_product_id"`
+	Name            string   `json:"name"`
+	Description     *string  `json:"description,omitempty"`
+	RuleType        RuleType `json:"rule_type"`
+	QueryExpression *string  `json:"query_expression,omitempty"`
+	MetadataField   *string  `json:"metadata_field,omitempty"`
+	PatternType     *string  `json:"pattern_type,omitempty"`
+	PatternValue    *string  `json:"pattern_value,omitempty"`
+	Priority        int      `json:"priority"`
+	// Position is where the rule sits in the product's hand-set order, starting at 0.
+	Position  int       `json:"position"`
+	IsEnabled bool      `json:"is_enabled"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	MatchedAssetCount int `json:"matched_asset_count,omitempty"`
 } // @name DataProductRule
+
+// ruleColumns is what every read of a rule selects, in the order the scans expect. The matched count comes from the memberships the reconciler keeps, so it is exact rather than capped like a preview.
+const ruleColumns = `id, data_product_id, name, description, rule_type, query_expression,
+			   metadata_field, pattern_type, pattern_value, priority, position, is_enabled,
+			   created_at, updated_at,
+			   (SELECT COUNT(*) FROM data_product_memberships m WHERE m.rule_id = data_product_rules.id) AS matched_asset_count`
 
 type RuleInput struct {
 	ID              *string  `json:"id,omitempty"`
@@ -169,6 +182,13 @@ type Repository interface {
 	PreviewRule(ctx context.Context, rule *RuleInput, limit int) (*RulePreview, error)
 
 	GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error)
+
+	ListFiltered(ctx context.Context, filter ListFilter) (*ListResult, error)
+	FillPopularity(ctx context.Context, products []*DataProduct) error
+	GetAssetTypes(ctx context.Context, dataProductID string) ([]TypeCount, error)
+	GetFacets(ctx context.Context) (*Facets, error)
+	GetMembers(ctx context.Context, dataProductID string, filter MemberFilter) (*MembersResult, error)
+	ReorderRules(ctx context.Context, dataProductID string, ruleIDs []string) error
 
 	UploadProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImage, error)
 	GetProductImage(ctx context.Context, imageID string) (*ProductImage, error)
@@ -253,12 +273,10 @@ func (r *PostgresRepository) setOwners(ctx context.Context, tx pgx.Tx, dataProdu
 
 func (r *PostgresRepository) loadRules(ctx context.Context, dataProductID string) ([]Rule, error) {
 	q := `
-		SELECT id, data_product_id, name, description, rule_type, query_expression,
-			   metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			   created_at, updated_at
+		SELECT ` + ruleColumns + `
 		FROM data_product_rules
 		WHERE data_product_id = $1
-		ORDER BY priority ASC, created_at ASC`
+		ORDER BY position ASC, priority ASC, created_at ASC`
 
 	rows, err := r.db.Query(ctx, q, dataProductID)
 	if err != nil {
@@ -272,8 +290,8 @@ func (r *PostgresRepository) loadRules(ctx context.Context, dataProductID string
 		if err := rows.Scan(
 			&rule.ID, &rule.DataProductID, &rule.Name, &rule.Description,
 			&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
-			&rule.PatternType, &rule.PatternValue, &rule.Priority,
-			&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt,
+			&rule.PatternType, &rule.PatternValue, &rule.Priority, &rule.Position,
+			&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt, &rule.MatchedAssetCount,
 		); err != nil {
 			return nil, fmt.Errorf("scanning rule: %w", err)
 		}
@@ -798,8 +816,9 @@ func (r *PostgresRepository) CreateRule(ctx context.Context, dataProductID strin
 		INSERT INTO data_product_rules (
 			data_product_id, name, description, rule_type, query_expression,
 			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			created_at, updated_at, position
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+			(SELECT COALESCE(MAX(position) + 1, 0) FROM data_product_rules WHERE data_product_id = $1))
 		RETURNING id`
 
 	now := time.Now().UTC()
@@ -882,9 +901,7 @@ func (r *PostgresRepository) GetRule(ctx context.Context, ruleID string) (*Rule,
 	start := time.Now()
 
 	q := `
-		SELECT id, data_product_id, name, description, rule_type, query_expression,
-			   metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			   created_at, updated_at
+		SELECT ` + ruleColumns + `
 		FROM data_product_rules
 		WHERE id = $1`
 
@@ -892,8 +909,8 @@ func (r *PostgresRepository) GetRule(ctx context.Context, ruleID string) (*Rule,
 	err := r.db.QueryRow(ctx, q, ruleID).Scan(
 		&rule.ID, &rule.DataProductID, &rule.Name, &rule.Description,
 		&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
-		&rule.PatternType, &rule.PatternValue, &rule.Priority,
-		&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt,
+		&rule.PatternType, &rule.PatternValue, &rule.Priority, &rule.Position,
+		&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt, &rule.MatchedAssetCount,
 	)
 
 	duration := time.Since(start)

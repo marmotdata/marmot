@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -36,6 +37,10 @@ type Repository interface {
 	UpdateAPIKeyLastUsed(ctx context.Context, id string) error
 	DeleteAPIKey(ctx context.Context, id string) error
 	ListAPIKeys(ctx context.Context, userID string) ([]*APIKey, error)
+	RotateAPIKey(ctx context.Context, id, keyHash, keyLookup, keyPrefix string) error
+
+	GetProfile(ctx context.Context, userID string) (*Profile, error)
+	UpdateJobTitle(ctx context.Context, userID string, jobTitle string) error
 
 	AssignRoles(ctx context.Context, userID string, roleNames []string) error
 	UpdateRoles(ctx context.Context, userID string, roleNames []string) error
@@ -44,6 +49,15 @@ type Repository interface {
 	ValidatePassword(ctx context.Context, userID string, password string) error
 
 	UsernameExists(ctx context.Context, username string) (bool, error)
+
+	SaveInvite(ctx context.Context, userID, email, tokenHash string, createdBy *string, expiresAt time.Time) error
+	GetInvite(ctx context.Context, userID string) (*Invite, error)
+	GetInviteByTokenHash(ctx context.Context, tokenHash string) (*Invite, error)
+	FindInviteByEmail(ctx context.Context, email string) (*Invite, error)
+	AcceptInvite(ctx context.Context, userID, passwordHash, name string) error
+	TouchLastSeen(ctx context.Context, userID string, minInterval time.Duration) error
+	GetMemberStates(ctx context.Context, ids []string) (map[string]MemberState, error)
+	CountIdentitiesByProvider(ctx context.Context) (map[string]int, error)
 }
 
 type PostgresRepository struct {
@@ -251,10 +265,24 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 		argNum++
 	}
 
-	if filter.Active != nil {
-		conditions = append(conditions, fmt.Sprintf("active = $%d", argNum))
-		args = append(args, *filter.Active)
-		argNum++
+	const invited = "EXISTS (SELECT 1 FROM user_invites ui WHERE ui.user_id = u.id)"
+	switch filter.Status {
+	case StatusInvited:
+		conditions = append(conditions, invited)
+	case StatusActive:
+		conditions = append(conditions, "u.active AND NOT "+invited)
+	case StatusDeactivated:
+		conditions = append(conditions, "NOT u.active AND NOT "+invited)
+	default:
+		if filter.Active != nil {
+			conditions = append(conditions, fmt.Sprintf("active = $%d", argNum))
+			args = append(args, *filter.Active)
+			argNum++
+		}
+	}
+
+	if filter.NoTeam {
+		conditions = append(conditions, "NOT EXISTS (SELECT 1 FROM team_members tm WHERE tm.user_id = u.id)")
 	}
 
 	countQuery := fmt.Sprintf(`
@@ -748,9 +776,9 @@ func (r *PostgresRepository) DeleteUserIdentity(ctx context.Context, userID stri
 func (r *PostgresRepository) CreateAPIKey(ctx context.Context, apiKey *APIKey, keyHash string) error {
 	query := `
 		INSERT INTO api_keys (
-			user_id, name, key_hash, key_lookup, expires_at, created_at
+			user_id, name, key_hash, key_lookup, key_prefix, expires_at, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, NULLIF($5, ''), $6, $7)
 		RETURNING id`
 
 	err := r.db.QueryRow(ctx, query,
@@ -758,6 +786,7 @@ func (r *PostgresRepository) CreateAPIKey(ctx context.Context, apiKey *APIKey, k
 		apiKey.Name,
 		keyHash,
 		APIKeyLookup(apiKey.Key),
+		apiKey.Prefix,
 		apiKey.ExpiresAt,
 		apiKey.CreatedAt,
 	).Scan(&apiKey.ID)
@@ -776,7 +805,7 @@ func (r *PostgresRepository) CreateAPIKey(ctx context.Context, apiKey *APIKey, k
 func (r *PostgresRepository) GetAPIKey(ctx context.Context, id string) (*APIKey, error) {
 	var apiKey APIKey
 	err := r.db.QueryRow(ctx, `
-		SELECT id, user_id, name, expires_at, last_used_at, created_at
+		SELECT id, user_id, name, COALESCE(key_prefix, ''), expires_at, last_used_at, created_at
 		FROM api_keys
 		WHERE id = $1`,
 		id,
@@ -784,6 +813,7 @@ func (r *PostgresRepository) GetAPIKey(ctx context.Context, id string) (*APIKey,
 		&apiKey.ID,
 		&apiKey.UserID,
 		&apiKey.Name,
+		&apiKey.Prefix,
 		&apiKey.ExpiresAt,
 		&apiKey.LastUsedAt,
 		&apiKey.CreatedAt,
@@ -902,9 +932,25 @@ func (r *PostgresRepository) DeleteAPIKey(ctx context.Context, id string) error 
 	return nil
 }
 
+// RotateAPIKey swaps the secret behind a key. last_used_at is cleared because it described the old secret, and key_lookup moves with the hash so the old secret no longer finds the row.
+func (r *PostgresRepository) RotateAPIKey(ctx context.Context, id, keyHash, keyLookup, keyPrefix string) error {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE api_keys
+		   SET key_hash = $2, key_lookup = $3, key_prefix = NULLIF($4, ''), last_used_at = NULL
+		 WHERE id = $1`,
+		id, keyHash, keyLookup, keyPrefix)
+	if err != nil {
+		return fmt.Errorf("rotating API key: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
 func (r *PostgresRepository) ListAPIKeys(ctx context.Context, userID string) ([]*APIKey, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT id, user_id, name, expires_at, last_used_at, created_at
+		SELECT id, user_id, name, COALESCE(key_prefix, ''), expires_at, last_used_at, created_at
 		FROM api_keys
 		WHERE user_id = $1
 		ORDER BY created_at DESC`,
@@ -921,6 +967,7 @@ func (r *PostgresRepository) ListAPIKeys(ctx context.Context, userID string) ([]
 			&key.ID,
 			&key.UserID,
 			&key.Name,
+			&key.Prefix,
 			&key.ExpiresAt,
 			&key.LastUsedAt,
 			&key.CreatedAt,

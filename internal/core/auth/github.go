@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/marmotdata/marmot/pkg/config"
+	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -21,6 +22,7 @@ type GitHubProvider struct {
 	config       *config.Config
 	userService  user.Service
 	oauthConfig  *oauth2.Config
+	teamService  *team.Service
 }
 
 func NewGitHubProvider(cfg *config.Config, userService user.Service) (*GitHubProvider, error) {
@@ -149,10 +151,12 @@ func (p *GitHubProvider) HandleCallback(ctx context.Context, code string) (*user
 		RoleNames:         []string{"user"},
 	}
 
-	usr, err = p.userService.Create(ctx, newUser)
+	var created bool
+	usr, created, err = p.userService.ProvisionSSO(ctx, newUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+	applyNewMemberDefaults(ctx, p.userService, p.teamService, usr, created)
 
 	return usr, nil
 }
@@ -215,4 +219,9 @@ func (p *GitHubProvider) Name() string {
 
 func (p *GitHubProvider) Type() string {
 	return "github"
+}
+
+// SetTeamService lets new members created through this provider join the default team.
+func (p *GitHubProvider) SetTeamService(t *team.Service) {
+	p.teamService = t
 }

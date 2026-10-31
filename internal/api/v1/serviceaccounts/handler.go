@@ -92,6 +92,15 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/service-accounts/{id}/api-keys/{keyId}/rotate",
+			Method:  http.MethodPost,
+			Handler: h.rotateAPIKey,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "service_accounts", "manage"),
+			},
+		},
+		{
 			Path:    "/api/v1/service-accounts/{id}/api-keys/{keyId}",
 			Method:  http.MethodDelete,
 			Handler: h.deleteAPIKey,

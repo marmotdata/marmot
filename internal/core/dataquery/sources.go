@@ -22,6 +22,8 @@ type SourceTable struct {
 	Tags            []string `json:"tags,omitempty"`
 	Queries         int64    `json:"queries"`
 	SampleStatement string   `json:"sample_statement,omitempty"`
+	// RowCount is the table's size as its plugin last reported it in the catalog, when it reports one.
+	RowCount *int64 `json:"row_count,omitempty"`
 } // @name QuerySourceTable
 
 // SourceTablesFilter narrows the tables listed for a source. Metadata pins
@@ -313,6 +315,7 @@ func (s *service) ListSourceTables(ctx context.Context, principal auth.Principal
 		return nil, err
 	}
 	for i := range tables {
+		tables[i].RowCount = rowCountOf(meta[tables[i].MRN])
 		if known {
 			tables[i].SampleStatement = locator.statement(meta[tables[i].MRN], tables[i].Name)
 		} else {

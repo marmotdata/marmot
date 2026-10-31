@@ -10,8 +10,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/core/assetsignal"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -30,13 +32,36 @@ type Repository interface {
 type PostgresRepository struct {
 	db       *pgxpool.Pool
 	recorder metrics.Recorder
+	signals  *assetsignal.Service
 }
 
 func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *PostgresRepository {
 	return &PostgresRepository{
 		db:       db,
 		recorder: recorder,
+		signals:  assetsignal.New(db),
 	}
+}
+
+// orderBy returns the ORDER BY list for the filter's sort, or the given relevance order when the sort is relevance or unknown. Every order ends on entity_id so pages never overlap.
+func orderBy(sort Sort, relevance string) string {
+	switch sort {
+	case SortName:
+		return "lower(name) ASC, entity_id ASC"
+	case SortUpdated:
+		return "updated_at DESC NULLS LAST, entity_id ASC"
+	case SortPopular:
+		return "COALESCE(pv.views, 0) DESC, updated_at DESC NULLS LAST, entity_id ASC"
+	}
+	return relevance + ", entity_id ASC"
+}
+
+// popularJoin joins each row to its asset's recent views when sorting by popularity, as the pv relation orderBy refers to.
+func popularJoin(sort Sort) string {
+	if sort != SortPopular {
+		return ""
+	}
+	return " LEFT JOIN (" + assetsignal.ViewsSQL + ") pv ON type = 'asset' AND pv.asset_id = entity_id "
 }
 
 // Search performs a unified search across all entity types using the search_index table.
@@ -161,21 +186,24 @@ func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query
 
 	canUseIndexSort := r.canUseIndexedSort(parsedQuery, filter)
 
+	order := orderBy(filter.Sort, "updated_at DESC")
+	join := popularJoin(filter.Sort)
+
 	if canUseIndexSort {
 		sqlQuery := fmt.Sprintf(`
 			SELECT
 				type, entity_id, name, description, url_path,
 				0.0::real as rank,
 				updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-			FROM search_index
+			FROM search_index%s
 			%s
-			ORDER BY updated_at DESC
+			ORDER BY %s
 			LIMIT $%d OFFSET $%d
-		`, whereSQL, limitParam, offsetParam)
+		`, join, whereSQL, order, limitParam, offsetParam)
 		return sqlQuery, params
 	}
 
-	if parsedQuery.HasStructuredFilters() || len(filter.Tags) > 0 {
+	if parsedQuery.HasStructuredFilters() || len(filter.Tags) > 0 || len(filter.Owners) > 0 {
 		sqlQuery := fmt.Sprintf(`
 			SELECT
 				type, entity_id, name, description, url_path,
@@ -187,10 +215,10 @@ func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query
 				FROM search_index
 				%s
 				LIMIT %d
-			) candidates
-			ORDER BY updated_at DESC
+			) candidates%s
+			ORDER BY %s
 			LIMIT $%d OFFSET $%d
-		`, whereSQL, structuredResultWindow, limitParam, offsetParam)
+		`, whereSQL, structuredResultWindow, join, order, limitParam, offsetParam)
 		return sqlQuery, params
 	}
 
@@ -201,11 +229,11 @@ func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query
 			type, entity_id, name, description, url_path,
 			0.0::real as rank,
 			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM search_index
+		FROM search_index%s
 		%s
-		ORDER BY updated_at DESC
+		ORDER BY %s
 		LIMIT $%d OFFSET $%d
-	`, whereSQL, limitParam, offsetParam)
+	`, join, whereSQL, order, limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -215,6 +243,9 @@ func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query
 // This avoids expensive in-memory sorts for high-cardinality matches.
 func (r *PostgresRepository) canUseIndexedSort(parsedQuery *query.Query, filter Filter) bool {
 	// Check if query can use composite index (single @type or @provider exact match)
+	if len(filter.Owners) > 0 {
+		return false
+	}
 	if parsedQuery != nil && parsedQuery.CanUseCompositeIndex() && len(filter.Tags) == 0 {
 		return true
 	}
@@ -269,12 +300,12 @@ func (r *PostgresRepository) buildPrefixSearchQuery(searchQuery string, filter F
 				ELSE 500.0
 			END::real as rank,
 			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM search_index
+		FROM search_index%s
 		WHERE (lower(name) = $%d OR lower(name) LIKE $%d || '%%')
 		%s
-		ORDER BY rank DESC, updated_at DESC
+		ORDER BY %s
 		LIMIT $%d OFFSET $%d
-	`, queryParam, queryParam, queryParam, whereSQL, limitParam, offsetParam)
+	`, queryParam, popularJoin(filter.Sort), queryParam, queryParam, whereSQL, orderBy(filter.Sort, "rank DESC, updated_at DESC"), limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -306,12 +337,12 @@ func (r *PostgresRepository) buildFuzzySearchQuery(searchQuery string, filter Fi
 		SELECT type, entity_id, name, description, url_path,
 		       (word_similarity($%d, name) * 100.0)::real as rank,
 		       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM search_index
+		FROM search_index%s
 		WHERE name %%> $%d
 		%s
-		ORDER BY rank DESC, updated_at DESC
+		ORDER BY %s
 		LIMIT $%d OFFSET $%d
-	`, queryParam, queryParam, whereSQL, limitParam, offsetParam)
+	`, queryParam, popularJoin(filter.Sort), queryParam, whereSQL, orderBy(filter.Sort, "rank DESC, updated_at DESC"), limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -355,10 +386,10 @@ func (r *PostgresRepository) buildFullTextSearchQuery(searchQuery string, filter
 			type, entity_id, name, description, url_path,
 			ts_rank_cd(search_text, %s('english', $%d), 32)::real as rank,
 			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM candidates
-		ORDER BY rank DESC, updated_at DESC
+		FROM candidates%s
+		ORDER BY %s
 		LIMIT $%d OFFSET $%d
-	`, tsFunc, queryParam, whereSQL, tsFunc, queryParam, limitParam, offsetParam)
+	`, tsFunc, queryParam, whereSQL, tsFunc, queryParam, popularJoin(filter.Sort), orderBy(filter.Sort, "rank DESC, updated_at DESC"), limitParam, offsetParam)
 
 	return sqlQuery, params
 }
@@ -409,6 +440,12 @@ func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *quer
 		paramCount++
 		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
 		params = append(params, filter.Tags)
+	}
+
+	if len(filter.Owners) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, ownerFilterCondition(paramCount))
+		params = append(params, filter.Owners)
 	}
 
 	// Add structured query conditions from the query package
@@ -530,6 +567,7 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 		AssetTypes: []FacetValue{},
 		Providers:  []FacetValue{},
 		Tags:       []FacetValue{},
+		Owners:     []OwnerFacetValue{},
 	}
 
 	// For search queries, skip expensive facet computation
@@ -550,6 +588,7 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 		if err := r.db.QueryRow(ctx, countQuery, params...).Scan(&total); err != nil {
 			return facets, 0, nil
 		}
+		r.addOwnerFacets(ctx, facets, whereSQL, params, structuredResultWindow)
 		return facets, total, nil
 	}
 
@@ -558,8 +597,12 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 	// Note: selecting all 4 entity types is functionally equivalent to no type filter
 	allTypesSelected := len(filter.Types) == 4
 	noTypeFilter := len(filter.Types) == 0 || allTypesSelected
-	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 {
-		return r.buildCachedFacets(ctx, filter)
+	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 && len(filter.Owners) == 0 {
+		facets, total, err := r.buildCachedFacets(ctx, filter)
+		if err == nil {
+			r.addOwnerFacets(ctx, facets, "", nil, 0)
+		}
+		return facets, total, err
 	}
 
 	// For listing queries with filters, compute facets (filtered queries are fast)
@@ -608,6 +651,8 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 		facets.AssetTypes = facets.AssetTypes[:maxFacetResults]
 	}
 
+	r.addOwnerFacets(ctx, facets, baseWhere, baseParams, 0)
+
 	// Provider and tag facets (with unnest, but no search filter so faster)
 	if err := r.computeArrayFacets(ctx, baseWhere, baseParams, facets); err != nil {
 		// Non-fatal: return partial facets
@@ -615,6 +660,35 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 	}
 
 	return facets, total, nil
+}
+
+// addOwnerFacets counts results per owner for the owner facet. A window above zero bounds the rows considered, as filter-only listings are bounded. It is best effort: on failure the facet is left empty.
+func (r *PostgresRepository) addOwnerFacets(ctx context.Context, facets *Facets, whereSQL string, params []interface{}, window int) {
+	limit := ""
+	if window > 0 {
+		limit = fmt.Sprintf("LIMIT %d", window)
+	}
+	q := fmt.Sprintf(`
+		SELECT o.owner_id, o.owner_kind, MAX(o.owner_name), COUNT(*) AS cnt
+		FROM (SELECT type, entity_id FROM search_index %s %s) si
+		JOIN (%s) o ON o.entity_type = si.type AND o.entity_id = si.entity_id
+		GROUP BY o.owner_id, o.owner_kind
+		ORDER BY cnt DESC, 3 ASC
+		LIMIT %d`, whereSQL, limit, entityOwnersSQL, maxFacetResults)
+	rows, err := r.db.Query(ctx, q, params...)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to compute owner facets")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var v OwnerFacetValue
+		if err := rows.Scan(&v.Value, &v.Kind, &v.Label, &v.Count); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan owner facet")
+			return
+		}
+		facets.Owners = append(facets.Owners, v)
+	}
 }
 
 // sortFacetValues sorts facet values by count descending
@@ -656,6 +730,12 @@ func (r *PostgresRepository) buildListingFacetWhereClause(filter Filter) (string
 		paramCount++
 		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
 		params = append(params, filter.Tags)
+	}
+
+	if len(filter.Owners) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, ownerFilterCondition(paramCount))
+		params = append(params, filter.Owners)
 	}
 
 	whereSQL := "WHERE true"
@@ -910,6 +990,7 @@ func emptyFacets() *Facets {
 		AssetTypes: []FacetValue{},
 		Providers:  []FacetValue{},
 		Tags:       []FacetValue{},
+		Owners:     []OwnerFacetValue{},
 	}
 }
 
@@ -922,6 +1003,7 @@ func (r *PostgresRepository) buildCachedFacets(ctx context.Context, filter Filte
 		AssetTypes: []FacetValue{},
 		Providers:  []FacetValue{},
 		Tags:       []FacetValue{},
+		Owners:     []OwnerFacetValue{},
 	}
 
 	rows, err := r.db.Query(ctx, `

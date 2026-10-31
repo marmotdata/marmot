@@ -20,6 +20,7 @@ type Repository interface {
 	ListWithCursor(ctx context.Context, filter NotificationFilter) (*ListResult, error)
 	GetSummary(ctx context.Context, userID string) (*NotificationSummary, error)
 	MarkAsRead(ctx context.Context, id string) error
+	MarkAsUnread(ctx context.Context, id string) error
 	MarkAllAsRead(ctx context.Context, userID string) error
 	MarkAllAsReadChunked(ctx context.Context, userID string, chunkSize int) error
 	Delete(ctx context.Context, id string) error
@@ -337,6 +338,16 @@ func (r *PostgresRepository) MarkAsRead(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("marking notification as read: %w", err)
+	}
+	return nil
+}
+
+// MarkAsUnread clears read_at too, so read-retention pruning stops counting from the earlier read.
+func (r *PostgresRepository) MarkAsUnread(ctx context.Context, id string) error {
+	query := `UPDATE notifications SET read = FALSE, read_at = NULL WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("marking notification as unread: %w", err)
 	}
 	return nil
 }

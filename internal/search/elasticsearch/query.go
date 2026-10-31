@@ -119,10 +119,22 @@ func buildSearchQuery(filter search.Filter) map[string]interface{} {
 		}
 	}
 
-	// Sort: _score desc then updated_at desc
+	// Sort: _score desc then updated_at desc, unless the caller asked for name or recency. Popularity needs view counts the index does not hold, so the search service answers that sort from Postgres.
 	sort := []interface{}{
 		map[string]interface{}{"_score": map[string]interface{}{"order": "desc"}},
 		map[string]interface{}{"updated_at": map[string]interface{}{"order": "desc"}},
+	}
+	switch filter.Sort {
+	case search.SortName:
+		sort = []interface{}{
+			map[string]interface{}{"name.keyword": map[string]interface{}{"order": "asc"}},
+			map[string]interface{}{"_score": map[string]interface{}{"order": "desc"}},
+		}
+	case search.SortUpdated:
+		sort = []interface{}{
+			map[string]interface{}{"updated_at": map[string]interface{}{"order": "desc", "missing": "_last"}},
+			map[string]interface{}{"_score": map[string]interface{}{"order": "desc"}},
+		}
 	}
 
 	// Aggregations for facets

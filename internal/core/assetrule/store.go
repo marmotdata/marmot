@@ -45,6 +45,9 @@ type AssetRule struct {
 	Priority        int                 `json:"priority"`
 	IsEnabled       bool                `json:"is_enabled"`
 	CreatedBy       *string             `json:"created_by,omitempty"`
+	CreatedByName   *string             `json:"created_by_name,omitempty"`
+	UpdatedBy       *string             `json:"updated_by,omitempty"`
+	UpdatedByName   *string             `json:"updated_by_name,omitempty"`
 	CreatedAt       time.Time           `json:"created_at"`
 	UpdatedAt       time.Time           `json:"updated_at"`
 
@@ -86,6 +89,14 @@ func (r *AssetRule) ComputeHash() string {
 	h.Write([]byte(fmt.Sprintf("%t", r.IsEnabled)))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
+
+// ruleColumns is what every read of a rule selects, in the order scanRule expects. Author names are scalar subqueries so the callers' unqualified WHERE clauses stay unambiguous.
+const ruleColumns = `id, name, description, links, rule_type, query_expression,
+			metadata_field, pattern_type, pattern_value, priority, is_enabled,
+			created_by, (SELECT u.name FROM users u WHERE u.id = asset_rules.created_by) AS created_by_name,
+			updated_by, (SELECT u.name FROM users u WHERE u.id = asset_rules.updated_by) AS updated_by_name,
+			created_at, updated_at, membership_count,
+			last_reconciled_at, reconciliation_hash`
 
 // RuleSource returns the source string for asset_terms rows.
 func (r *AssetRule) RuleSource() string {
@@ -167,8 +178,8 @@ func (r *PostgresRepository) Create(ctx context.Context, rule *AssetRule) error 
 	q := `
 		INSERT INTO asset_rules (name, description, links, rule_type, query_expression,
 			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_by, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+			created_by, created_at, updated_at, updated_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $11)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, q,
@@ -210,10 +221,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*AssetRule, er
 	start := time.Now()
 
 	q := `
-		SELECT id, name, description, links, rule_type, query_expression,
-			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_by, created_at, updated_at, membership_count,
-			last_reconciled_at, reconciliation_hash
+		SELECT `+ruleColumns+`
 		FROM asset_rules
 		WHERE id = $1`
 
@@ -260,13 +268,14 @@ func (r *PostgresRepository) Update(ctx context.Context, rule *AssetRule) error 
 		UPDATE asset_rules
 		SET name = $1, description = $2, links = $3, rule_type = $4, query_expression = $5,
 			metadata_field = $6, pattern_type = $7, pattern_value = $8,
-			priority = $9, is_enabled = $10, updated_at = $11
+			priority = $9, is_enabled = $10, updated_at = $11,
+			updated_by = COALESCE($13, updated_by)
 		WHERE id = $12`
 
 	result, err := tx.Exec(ctx, q,
 		rule.Name, rule.Description, linksJSON, rule.RuleType, rule.QueryExpression,
 		rule.MetadataField, rule.PatternType, rule.PatternValue,
-		rule.Priority, rule.IsEnabled, rule.UpdatedAt, rule.ID,
+		rule.Priority, rule.IsEnabled, rule.UpdatedAt, rule.ID, rule.UpdatedBy,
 	)
 
 	duration := time.Since(start)
@@ -336,10 +345,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 
 	q := `
-		SELECT id, name, description, links, rule_type, query_expression,
-			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_by, created_at, updated_at, membership_count,
-			last_reconciled_at, reconciliation_hash
+		SELECT `+ruleColumns+`
 		FROM asset_rules
 		ORDER BY name ASC
 		LIMIT $1 OFFSET $2`
@@ -379,7 +385,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	conditions := []string{}
 
 	if filter.Query != "" {
-		conditions = append(conditions, fmt.Sprintf("(search_text @@ plainto_tsquery('english', $%d) OR name ILIKE $%d)", argCount, argCount+1))
+		// A rule is also found by the terms and links it adds, since that is often what people remember about it.
+		conditions = append(conditions, fmt.Sprintf(`(search_text @@ plainto_tsquery('english', $%[1]d) OR name ILIKE $%[2]d
+			OR links::text ILIKE $%[2]d
+			OR EXISTS (SELECT 1 FROM asset_rule_terms art JOIN glossary_terms gt ON gt.id = art.glossary_term_id
+				WHERE art.asset_rule_id = asset_rules.id AND gt.deleted_at IS NULL AND gt.name ILIKE $%[2]d))`, argCount, argCount+1))
 		args = append(args, filter.Query, "%"+filter.Query+"%")
 		argCount += 2
 	}
@@ -397,14 +407,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	q := fmt.Sprintf(`
-		SELECT id, name, description, links, rule_type, query_expression,
-			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_by, created_at, updated_at, membership_count,
-			last_reconciled_at, reconciliation_hash
+		SELECT %s
 		FROM asset_rules
 		%s
 		ORDER BY name ASC
-		LIMIT $%d OFFSET $%d`, where, argCount, argCount+1)
+		LIMIT $%d OFFSET $%d`, ruleColumns, where, argCount, argCount+1)
 
 	args = append(args, filter.Limit, filter.Offset)
 
@@ -439,10 +446,7 @@ func (r *PostgresRepository) GetAllEnabled(ctx context.Context) ([]*AssetRule, e
 	start := time.Now()
 
 	q := `
-		SELECT id, name, description, links, rule_type, query_expression,
-			metadata_field, pattern_type, pattern_value, priority, is_enabled,
-			created_by, created_at, updated_at, membership_count,
-			last_reconciled_at, reconciliation_hash
+		SELECT `+ruleColumns+`
 		FROM asset_rules
 		WHERE is_enabled = TRUE
 		ORDER BY priority ASC, created_at ASC`
@@ -612,7 +616,8 @@ func (r *PostgresRepository) scanRule(row pgx.Row) (*AssetRule, error) {
 		&rule.ID, &rule.Name, &rule.Description, &linksJSON,
 		&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
 		&rule.PatternType, &rule.PatternValue, &rule.Priority, &rule.IsEnabled,
-		&rule.CreatedBy, &rule.CreatedAt, &rule.UpdatedAt, &rule.MembershipCount,
+		&rule.CreatedBy, &rule.CreatedByName, &rule.UpdatedBy, &rule.UpdatedByName,
+		&rule.CreatedAt, &rule.UpdatedAt, &rule.MembershipCount,
 		&rule.LastReconciledAt, &rule.ReconciliationHash,
 	)
 	if err != nil {
@@ -634,7 +639,8 @@ func (r *PostgresRepository) scanRuleFromRows(rows pgx.Rows) (*AssetRule, error)
 		&rule.ID, &rule.Name, &rule.Description, &linksJSON,
 		&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
 		&rule.PatternType, &rule.PatternValue, &rule.Priority, &rule.IsEnabled,
-		&rule.CreatedBy, &rule.CreatedAt, &rule.UpdatedAt, &rule.MembershipCount,
+		&rule.CreatedBy, &rule.CreatedByName, &rule.UpdatedBy, &rule.UpdatedByName,
+		&rule.CreatedAt, &rule.UpdatedAt, &rule.MembershipCount,
 		&rule.LastReconciledAt, &rule.ReconciliationHash,
 	)
 	if err != nil {

@@ -19,6 +19,191 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/admin/auth/providers": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every provider configured in the server config, whether it is switched on and how many members have signed in with it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List single sign-on providers with their status",
+                "operationId": "getAdminAuthProviders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SSOProviderStatusList"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/providers/{type}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Providers are configured in the server config; this switches one off without removing its configuration, or back on. Members who signed in with it keep their accounts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Switch a single sign-on provider on or off",
+                "operationId": "putAdminAuthProvidersType",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider type, such as okta",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Whether the provider is on",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateSSOProviderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SSOProviderStatus"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/settings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Whether single sign-on creates new members, the role and team they start with, and whether members may sign in with a password.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get sign-in settings",
+                "operationId": "getAdminAuthSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SignInSettings"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replaces the sign-in settings. Administrators can always sign in with a password, so turning password sign-in off cannot lock everyone out; it is refused while no single sign-on provider is on.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update sign-in settings",
+                "operationId": "putAdminAuthSettings",
+                "parameters": [
+                    {
+                        "description": "Sign-in settings",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SignInSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SignInSettings"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/search/reindex": {
             "get": {
                 "security": [
@@ -104,6 +289,47 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/system": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Product version and build, the Postgres version and the size of the search index. Admin only.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get system information",
+                "operationId": "getAdminSystem",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SystemResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -359,7 +585,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get the list of asset IDs matched by an asset rule",
+                "description": "Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it.",
                 "produces": [
                     "application/json"
                 ],
@@ -375,6 +601,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Match the asset name or MRN",
+                        "name": "q",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -395,8 +627,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/AssetRuleAssetsResponse"
                         }
                     },
                     "404": {
@@ -751,7 +982,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new asset in the system",
+                "description": "Create a new asset in the system. Owners, a user description and glossary terms can be set in the same request; if any of them cannot be applied the asset is not kept.",
                 "consumes": [
                     "application/json"
                 ],
@@ -802,6 +1033,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/assets/batch": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Read up to 200 assets by id in one request, in the order asked for. Ids that match no asset are left out. Unlike reading one asset, this does not count as a view.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get several assets",
+                "operationId": "postAssetsBatch",
+                "parameters": [
+                    {
+                        "description": "Asset ids",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/BatchGetAssetsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/BatchGetAssetsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/assets/by-glossary-term/{term_id}": {
             "get": {
                 "security": [
@@ -812,7 +1098,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve all assets associated with a specific glossary term",
+                "description": "Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:\u003crule id\u003e to page through one group.",
                 "produces": [
                     "application/json"
                 ],
@@ -828,6 +1114,12 @@ const docTemplate = `{
                         "name": "term_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only assets linked this way: manual, or rule:\u003casset rule id\u003e",
+                        "name": "link",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -848,8 +1140,63 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/AssetsByTermResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/counts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Counts shown beside the asset page's tabs: lineage neighbours one edge away, pipeline runs, agent runs and queries through Marmot in the last 14 days. queries is left out for callers who may not read the query log; callers who may query but not read the whole log only count their own queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset tab counts",
+                "operationId": "getAssetsCountsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AssetTabCounts"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
@@ -1008,6 +1355,183 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/Documentation"
                             }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/field-annotations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists the markers people set on an asset's schema fields: personal data, certified, an edited description and glossary terms. The asset response carries the same list as field_annotations.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "List field annotations",
+                "operationId": "getAssetsFieldAnnotationsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/FieldAnnotationsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the markers on one schema field, merging into what is there: omitted markers keep their value, an empty description clears an edited one and a field left with no markers is removed. Returns every annotated field of the asset.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Set a field annotation",
+                "operationId": "putAssetsFieldAnnotationsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Field markers",
+                        "name": "annotation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/FieldAnnotationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/FieldAnnotationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes every marker from one schema field.",
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Delete a field annotation",
+                "operationId": "deleteAssetsFieldAnnotationsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Schema key the field belongs to",
+                        "name": "schema",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dotted path of the field",
+                        "name": "path",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "404": {
@@ -1552,6 +2076,57 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/stale": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List assets whose pipeline has not refreshed them for more than twice its schedule interval, longest unrefreshed first. Assets no enabled pipeline refreshes are never stale.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "List stale assets",
+                "operationId": "getAssetsStale",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of assets to return (1 to 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of assets to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/StaleAssetList"
                         }
                     },
                     "500": {
@@ -2458,6 +3033,179 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/glossary/related/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List the terms related to a glossary term",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Get related terms",
+                "operationId": "getGlossaryRelatedID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RelatedTermsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Relate two glossary terms to each other. The link shows on both terms.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Add a related term",
+                "operationId": "postGlossaryRelatedID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Term to relate",
+                        "name": "term",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AddRelatedTermRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RelatedTermsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/glossary/related/{id}/{related_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unrelate two glossary terms. The link goes from both terms.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Remove a related term",
+                "operationId": "deleteGlossaryRelatedIDRelatedID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Related Term ID",
+                        "name": "related_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RelatedTermsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/glossary/search": {
             "get": {
                 "security": [
@@ -2514,6 +3262,63 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/glossary/suggested-assets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Suggest assets for a term",
+                "operationId": "getGlossarySuggestedAssetsID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Maximum number of assets to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GlossarySuggestedAssetsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -2970,6 +3775,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Match pipeline name or plugin, case-insensitively",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Limit",
                         "name": "limit",
@@ -3287,6 +4104,85 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/ingestion/test-connection": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ingestion"
+                ],
+                "summary": "Test a plugin connection",
+                "operationId": "postIngestionTestConnection",
+                "parameters": [
+                    {
+                        "description": "Plugin and settings to test",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TestConnectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/TestConnectionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/ingestion/validate": {
             "post": {
                 "security": [
@@ -3334,6 +4230,108 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/invites/{token}": {
+            "get": {
+                "description": "Returns who an invitation link is for, so the accept page can greet them. Needs no sign-in: the link's token is the credential.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Look up an invitation",
+                "operationId": "getInvitesToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invitation token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/InviteInfo"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/invites/{token}/accept": {
+            "post": {
+                "description": "Sets the invited member's password, activates them and signs them in. The link cannot be used again.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Accept an invitation",
+                "operationId": "postInvitesTokenAccept",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invitation token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The new password",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AcceptInviteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -3924,6 +4922,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/metrics/assets/owned": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get how many catalogued assets have at least one owning user or team, out of all catalogued assets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get owned assets count",
+                "operationId": "getMetricsAssetsOwned",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AssetsOwnedResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/metrics/assets/total": {
             "get": {
                 "security": [
@@ -4047,7 +5074,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get the most popular search queries",
+                "description": "Get the most popular search queries. With zero_results=true, get the most frequent searches that found nothing instead, each with a result_count of 0.",
                 "produces": [
                     "application/json"
                 ],
@@ -4077,6 +5104,12 @@ const docTemplate = `{
                         "description": "Number of results",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only searches that found nothing",
+                        "name": "zero_results",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4087,6 +5120,59 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/QueryCount"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/item/{id}/mark-unread": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Put a notification the current user has read back into their unread count",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Mark notification as unread",
+                "operationId": "postNotificationsItemIDMarkUnread",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -4547,6 +5633,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/products/facets": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List the owners and tags in use on data products, for filtering the list",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Data product filter values",
+                "operationId": "getProductsFacets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DataProductFacets"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/products/images/{id}": {
             "get": {
                 "security": [
@@ -4797,7 +5918,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve a paginated list of data products",
+                "description": "Retrieve a paginated list of data products, optionally searched, filtered and sorted on the server. Each product carries its popularity, a level from 0 to 4.",
                 "produces": [
                     "application/json"
                 ],
@@ -4808,8 +5929,38 @@ const docTemplate = `{
                 "operationId": "getProductsList",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Search name, description and tags",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated user or team ids; keeps products any of them own",
+                        "name": "owners",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated tags; keeps products carrying any of them",
+                        "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "only: products you or your teams own; exclude: everything else",
+                        "name": "mine",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "name (default), updated or popular",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
-                        "default": 20,
+                        "default": 50,
                         "description": "Maximum number of data products to return",
                         "name": "limit",
                         "in": "query"
@@ -4827,6 +5978,112 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DataProductListResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/products/members/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Page through a data product's assets with each asset's name, type, owners and popularity and how it joined: manually or through which rule",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get data product members",
+                "operationId": "getProductsMembersID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "manual or rule",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only assets this rule brought in",
+                        "name": "rule_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Match the asset name or MRN",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only assets of this type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "name (default) or popular",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Maximum number of assets to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of assets to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DataProductMembersResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
@@ -4885,6 +6142,74 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DataProductResolvedAssets"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/products/rule-order/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Set the order of a data product's rules. rule_ids must name every rule of the product once.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Reorder data product rules",
+                "operationId": "putProductsRuleOrderID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rule ids in their new order",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ReorderDataProductRulesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DataProductRulesResponse"
                         }
                     },
                     "400": {
@@ -5485,6 +6810,176 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/query/access-requests": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Request query access",
+                "parameters": [
+                    {
+                        "description": "Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryAccessRequestInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An identical recent request",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAccessRequest"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAccessRequest"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/agents": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Summarise agents' queries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "One service account",
+                        "name": "principal_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "At most 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAgentSummariesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/asset-stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Query stats for one asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset MRN",
+                        "name": "mrn",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Window start, RFC 3339; defaults to 14 days before to",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Window end, RFC 3339; defaults to now",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAssetStats"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/query/history": {
             "get": {
                 "security": [
@@ -5495,7 +6990,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lists the query log, newest first. Callers without access:view only see their own queries.",
+                "description": "Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered.",
                 "produces": [
                     "application/json"
                 ],
@@ -5506,8 +7001,32 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Only the query with this id",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Source name",
                         "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A caller as principal_type:principal_id or as its audit subject, such as user:alice",
+                        "name": "caller",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "allowed (ran to completion), denied, failed, cancelled or running",
+                        "name": "outcome",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled",
+                        "name": "reason",
                         "in": "query"
                     },
                     {
@@ -5518,7 +7037,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "running, completed, failed or denied",
+                        "description": "running, completed, failed, cancelled or denied",
                         "name": "status",
                         "in": "query"
                     },
@@ -5548,7 +7067,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Comma-separated clients to include: api, mcp or cli",
+                        "description": "Comma-separated clients to include: api, mcp, cli or editor",
                         "name": "client",
                         "in": "query"
                     },
@@ -5566,7 +7085,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Matches the caller, source, statement or a referenced MRN",
+                        "description": "Matches the caller, agent, service account, source, statement or a referenced MRN",
                         "name": "q",
                         "in": "query"
                     },
@@ -5590,6 +7109,115 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/QueryHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/history/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Export queries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "csv",
+                        "description": "csv",
+                        "name": "format",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only the query with this id",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Source name",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A caller as principal_type:principal_id or as its audit subject",
+                        "name": "caller",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "allowed, denied, failed, cancelled or running",
+                        "name": "outcome",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Outcome reason",
+                        "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated clients",
+                        "name": "client",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC 3339",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC 3339",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only the caller's own queries",
+                        "name": "mine",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -5638,6 +7266,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/query/history/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Cancel a query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "The query is not running here",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/query/run": {
             "post": {
                 "security": [
@@ -5668,6 +7342,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/QueryRunInput"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "editor (or web) when the query comes from the web UI's query editor",
+                        "name": "X-Marmot-Client",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -5686,7 +7366,295 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
+                            "$ref": "#/definitions/QueryRefusedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "The query was cancelled",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/saved": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists the current person's saved queries, the most recently run or edited first.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "List saved queries",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size, at most 500",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListSavedQueriesResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Saves a statement and the source it runs against for the current person to run again.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Save a query",
+                "parameters": [
+                    {
+                        "description": "Saved query",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SavedQueryInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/SavedQuery"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/saved/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns one of the current person's saved queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Get a saved query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Saved query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SavedQuery"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replaces the name, statement and source of one of the current person's saved queries.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Update a saved query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Saved query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Saved query",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SavedQueryInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SavedQuery"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes one of the current person's saved queries. The query log keeps every run.",
+                "tags": [
+                    "query"
+                ],
+                "summary": "Delete a saved query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Saved query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/saved/{id}/run": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Mark a saved query as run",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Saved query ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SavedQuery"
                         }
                     },
                     "404": {
@@ -5743,6 +7711,73 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/QueryListSourcesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/query/sources/{name}/stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Query stats for one source",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Source name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Window start, RFC 3339; defaults to seven days before to",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Window end, RFC 3339; defaults to now",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QuerySourceStats"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -6679,6 +8714,43 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Comma-separated asset types to filter assets by",
+                        "name": "asset_types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated providers to filter assets by",
+                        "name": "providers",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated tags to filter by",
+                        "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated user or team IDs; matches assets, glossary terms and data products they own",
+                        "name": "owner",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "relevance",
+                            "popular",
+                            "updated",
+                            "name"
+                        ],
+                        "type": "string",
+                        "default": "relevance",
+                        "description": "Result order",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 20,
                         "description": "Limit",
@@ -7064,6 +9136,57 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-accounts/{id}/api-keys/{keyId}/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Issue a new secret for a service account API key, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Rotate an API key",
+                "operationId": "postServiceAccountsIDAPIKeysKeyIDRotate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "API key ID",
+                        "name": "keyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ServiceAccountAPIKey"
+                        }
                     },
                     "404": {
                         "description": "Not Found",
@@ -7526,7 +9649,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Team"
+                            "$ref": "#/definitions/TeamSummary"
                         }
                     },
                     "404": {
@@ -8072,6 +10195,23 @@ const docTemplate = `{
                         "description": "Filter by active status",
                         "name": "active",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "invited",
+                            "deactivated"
+                        ],
+                        "type": "string",
+                        "description": "Filter by member status: active, invited or deactivated",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Pass none to keep only members who belong to no team",
+                        "name": "team",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -8281,6 +10421,187 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/apikeys/{id}/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Issue a new secret for one of the current user's API keys, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Rotate API key",
+                "operationId": "postUsersApikeysIDRotate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "API key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIKey"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/invites": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a pending member with the given roles and teams and returns a one-time link for them to set a password. Marmot sends no email: pass the link on yourself. The link works for 7 days.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Invite a member",
+                "operationId": "postUsersInvites",
+                "parameters": [
+                    {
+                        "description": "Who to invite",
+                        "name": "invite",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/InviteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/InviteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/invites/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Withdraws a pending invitation and removes the pending member it created.",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Withdraw an invitation",
+                "operationId": "deleteUsersIDInvite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/invites/{id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replaces a pending member's invitation link with a new one that works for another 7 days. The old link stops working.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Renew an invitation",
+                "operationId": "postUsersIDInvite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/InviteResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/login": {
             "post": {
                 "description": "Authenticate a user with username/email and password",
@@ -8354,11 +10675,230 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/CurrentUser"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/connected-apps": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List the OAuth clients, such as MCP clients and the CLI, that the current user has allowed and that still hold a valid token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List connected apps",
+                "operationId": "getUsersMeConnectedApps",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ConnectedAppsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/connected-apps/{client_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revoke an OAuth client's access to the current user's account. Tokens already issued to it stop working at once; the client has to ask again to get back in.",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Revoke a connected app",
+                "operationId": "deleteUsersMeConnectedAppsClientID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/profile": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the profile fields the current user may set about themselves, such as job title",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update current user profile",
+                "operationId": "putUsersMeProfile",
+                "parameters": [
+                    {
+                        "description": "Profile fields",
+                        "name": "profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/CurrentUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me/recent": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns what the current person opened most recently in the UI: assets, glossary terms, data products and their saved queries, newest first, described as they are now. Items since deleted, and kinds the caller can no longer view, are left out. Callers without a user account get an empty list.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List recently viewed items",
+                "operationId": "listRecentItems",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items, at most 50",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListRecentResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Notes that the current person opened an item, for their recently viewed list. Repeat views within a minute are ignored and only the latest 50 items are kept. Callers without a user account are accepted and nothing is stored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Record a view",
+                "operationId": "recordRecentView",
+                "parameters": [
+                    {
+                        "description": "The item viewed",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RecordRecentViewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -9125,6 +11665,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "prefix": {
+                    "description": "Prefix is the start of the key kept in clear so a key can be recognised in a list after its secret is gone; empty for keys issued before it was stored.",
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -9144,6 +11688,17 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "AcceptInviteRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },
@@ -9180,6 +11735,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddRelatedTermRequest": {
+            "type": "object",
+            "required": [
+                "term_id"
+            ],
+            "properties": {
+                "term_id": {
                     "type": "string"
                 }
             }
@@ -9221,6 +11787,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "model": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "description": "Prompt is what the run was asked, such as a ticket's subject, so a list of runs reads as the questions they answered.",
                     "type": "string"
                 },
                 "run_id": {
@@ -9415,6 +11985,9 @@ const docTemplate = `{
                 "created_by": {
                     "type": "string"
                 },
+                "created_by_name": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -9468,6 +12041,55 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "updated_by_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssetRuleAsset": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssetRuleAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "asset_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetRuleAsset"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9563,6 +12185,27 @@ const docTemplate = `{
                 }
             }
         },
+        "AssetTabCounts": {
+            "type": "object",
+            "properties": {
+                "agent_runs": {
+                    "description": "AgentRuns counts the runs of an agent asset.",
+                    "type": "integer"
+                },
+                "lineage": {
+                    "description": "Lineage counts the distinct assets one edge away, upstream or downstream.",
+                    "type": "integer"
+                },
+                "queries": {
+                    "description": "Queries counts queries through Marmot that read the asset in the last 14 days.",
+                    "type": "integer"
+                },
+                "runs": {
+                    "description": "Runs counts the distinct pipeline runs recorded against the asset.",
+                    "type": "integer"
+                }
+            }
+        },
         "AssetTerm": {
             "type": "object",
             "properties": {
@@ -9586,6 +12229,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "term_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssetTermLink": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "rule_name": {
+                    "type": "string"
+                },
+                "source": {
+                    "description": "Source is \"manual\" or \"rule\".",
+                    "type": "string"
+                }
+            }
+        },
+        "AssetTermLinkGroup": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "rule_name": {
+                    "type": "string"
+                },
+                "source": {
                     "type": "string"
                 }
             }
@@ -9625,6 +12303,32 @@ const docTemplate = `{
                 }
             }
         },
+        "AssetsByTermResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Asset"
+                    }
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetTermLinkGroup"
+                    }
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetTermLink"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "AssetsByTypeResponse": {
             "type": "object",
             "properties": {
@@ -9634,6 +12338,20 @@ const docTemplate = `{
                         "type": "integer",
                         "format": "int64"
                     }
+                }
+            }
+        },
+        "AssetsOwnedResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9858,6 +12576,32 @@ const docTemplate = `{
                 }
             }
         },
+        "BatchGetAssetsRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "maxItems": 200,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "BatchGetAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Asset"
+                    }
+                }
+            }
+        },
         "BatchLineageResult": {
             "type": "object",
             "properties": {
@@ -9905,6 +12649,85 @@ const docTemplate = `{
                 }
             }
         },
+        "ConnectedApp": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "client_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "description": "ExpiresAt is when the newest token issued under the grant stops working, after which the client has to ask again.",
+                    "type": "string"
+                },
+                "last_authorised_at": {
+                    "type": "string"
+                },
+                "redirect_uri": {
+                    "type": "string"
+                },
+                "scope_descriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OAuthScopeDescription"
+                    }
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ConnectedAppsResponse": {
+            "type": "object",
+            "properties": {
+                "apps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectedApp"
+                    }
+                }
+            }
+        },
+        "ConnectionTestResult": {
+            "type": "object",
+            "properties": {
+                "asset_types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "assets": {
+                    "type": "integer"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "lineage": {
+                    "type": "integer"
+                },
+                "succeeded": {
+                    "type": "boolean"
+                },
+                "tables": {
+                    "type": "integer"
+                },
+                "timed_out": {
+                    "type": "boolean"
+                }
+            }
+        },
         "CreateAPIKeyRequest": {
             "type": "object",
             "required": [
@@ -9916,6 +12739,21 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "CreateAssetOwner": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "team"
+                    ]
                 }
             }
         },
@@ -9949,6 +12787,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "owners": {
+                    "description": "Owners are the users and teams to own the asset.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CreateAssetOwner"
+                    }
+                },
                 "providers": {
                     "type": "array",
                     "items": {
@@ -9973,7 +12818,18 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "terms": {
+                    "description": "Terms are the IDs of glossary terms to link the asset to.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "type": {
+                    "type": "string"
+                },
+                "user_description": {
+                    "description": "UserDescription is the people-written description, kept apart from the source's own.",
                     "type": "string"
                 }
             }
@@ -10162,6 +13018,10 @@ const docTemplate = `{
                 "provider": {
                     "type": "string"
                 },
+                "role_id": {
+                    "description": "RoleID is the Marmot role the group's members get at every sign-in, in place of the default role.",
+                    "type": "string"
+                },
                 "sso_group_name": {
                     "type": "string"
                 },
@@ -10180,6 +13040,10 @@ const docTemplate = `{
                 "cron_expression": {
                     "type": "string"
                 },
+                "description": {
+                    "description": "Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.",
+                    "type": "string"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
@@ -10188,6 +13052,13 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "owner_type": {
+                    "description": "OwnerType is \"user\" or \"team\" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.",
                     "type": "string"
                 },
                 "plugin_id": {
@@ -10285,6 +13156,19 @@ const docTemplate = `{
                 },
                 "parent_term_id": {
                     "type": "string"
+                },
+                "related_term_ids": {
+                    "description": "RelatedTermIDs links the new term to existing terms, in both directions.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -10330,11 +13214,93 @@ const docTemplate = `{
                 }
             }
         },
+        "CurrentUser": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserIdentity"
+                    }
+                },
+                "invite_expires_at": {
+                    "type": "string"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "last_seen_at": {
+                    "description": "LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
+                    "type": "string"
+                },
+                "must_change_password": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "preferences": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "role_sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProfileRoleSource"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserRole"
+                    }
+                },
+                "sessions_invalidated_at": {
+                    "description": "Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.",
+                    "type": "string"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProfileTeam"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "DataProduct": {
             "type": "object",
             "properties": {
                 "asset_count": {
                     "type": "integer"
+                },
+                "asset_types": {
+                    "description": "AssetTypes counts the product's assets by type and is only filled in by Get.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductTypeCount"
+                    }
                 },
                 "created_at": {
                     "type": "string"
@@ -10366,6 +13332,10 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/DataProductOwner"
                     }
+                },
+                "popularity": {
+                    "description": "Popularity is a level from 0 to 4 from its assets' views over the last 30 days. It is filled in by the filtered list and by Get.",
+                    "type": "integer"
                 },
                 "rule_asset_count": {
                     "type": "integer"
@@ -10401,6 +13371,23 @@ const docTemplate = `{
                 }
             }
         },
+        "DataProductFacets": {
+            "type": "object",
+            "properties": {
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductOwnerFacet"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductTagFacet"
+                    }
+                }
+            }
+        },
         "DataProductListResult": {
             "type": "object",
             "properties": {
@@ -10408,6 +13395,68 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/DataProduct"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DataProductMember": {
+            "type": "object",
+            "properties": {
+                "added_at": {
+                    "type": "string"
+                },
+                "asset_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "popularity": {
+                    "description": "Popularity is the asset's level from 0 to 4, as assetsignal defines it.",
+                    "type": "integer"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "rule_name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "DataProductMembersResult": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductMember"
                     }
                 },
                 "total": {
@@ -10434,6 +13483,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "DataProductOwnerFacet": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -10515,6 +13581,10 @@ const docTemplate = `{
                 },
                 "pattern_value": {
                     "type": "string"
+                },
+                "position": {
+                    "description": "Position is where the rule sits in the product's hand-set order, starting at 0.",
+                    "type": "integer"
                 },
                 "priority": {
                     "type": "integer"
@@ -10608,6 +13678,28 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "DataProductTagFacet": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "DataProductTypeCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -10765,6 +13857,10 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "type": "string"
+                },
+                "request_id": {
+                    "description": "RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.",
+                    "type": "string"
                 }
             }
         },
@@ -10788,6 +13884,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/FacetValue"
                     }
                 },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OwnerFacetValue"
+                    }
+                },
                 "providers": {
                     "type": "array",
                     "items": {
@@ -10804,6 +13906,88 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": {
                         "type": "integer"
+                    }
+                }
+            }
+        },
+        "FieldAnnotation": {
+            "type": "object",
+            "properties": {
+                "certified": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "glossary_terms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FieldAnnotationTerm"
+                    }
+                },
+                "path": {
+                    "description": "Path is the field's dotted path, such as customer.email.",
+                    "type": "string"
+                },
+                "pii": {
+                    "type": "boolean"
+                },
+                "schema": {
+                    "description": "Schema is the key of the schema the field belongs to, as in the asset's schema map.",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "FieldAnnotationInput": {
+            "type": "object",
+            "properties": {
+                "certified": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "glossary_term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "path": {
+                    "type": "string"
+                },
+                "pii": {
+                    "type": "boolean"
+                },
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
+        "FieldAnnotationTerm": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "FieldAnnotationsResponse": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FieldAnnotation"
                     }
                 }
             }
@@ -10890,10 +14074,68 @@ const docTemplate = `{
                 }
             }
         },
+        "GlossaryRelatedTerm": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "GlossarySuggestedAsset": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "GlossarySuggestedAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GlossarySuggestedAsset"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "GlossaryTerm": {
             "type": "object",
             "properties": {
                 "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "CreatedBy is the person who wrote the term, absent for terms an ingestion brought in and for those made before authors were recorded.",
+                    "type": "string"
+                },
+                "created_by_name": {
                     "type": "string"
                 },
                 "definition": {
@@ -10908,6 +14150,10 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "linked_asset_count": {
+                    "description": "LinkedAssetCount counts every asset linked to the term, by hand or by an asset rule, so a tree can show it without a request per term.",
+                    "type": "integer"
                 },
                 "metadata": {
                     "type": "object",
@@ -10924,6 +14170,13 @@ const docTemplate = `{
                 },
                 "parent_term_id": {
                     "type": "string"
+                },
+                "related_terms": {
+                    "description": "RelatedTerms is only filled in when a single term is read.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GlossaryRelatedTerm"
+                    }
                 },
                 "tags": {
                     "type": "array",
@@ -10991,6 +14244,71 @@ const docTemplate = `{
                 "ImagePurposeHeader"
             ]
         },
+        "InviteInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password_sign_in": {
+                    "description": "PasswordSignIn says whether accepting can set a password; when false the person signs in with single sign-on instead.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "InviteRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "team_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "InviteResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "failed_team_ids": {
+                    "description": "FailedTeamIDs are the teams the person could not be added to, such as teams whose membership comes from single sign-on.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "invite_url": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/User"
+                }
+            }
+        },
         "Job": {
             "type": "object",
             "properties": {
@@ -11028,6 +14346,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "connecting_at": {
+                    "description": "ConnectingAt, ExtractingAt and WritingAt record when the worker began launching the plugin, asked it to discover and began writing to the catalog; empty when the run never got there or predates them.",
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -11038,6 +14360,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "error_message": {
+                    "type": "string"
+                },
+                "extracting_at": {
                     "type": "string"
                 },
                 "finished_at": {
@@ -11075,12 +14400,19 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "writing_at": {
+                    "type": "string"
                 }
             }
         },
         "LineageEdge": {
             "type": "object",
             "properties": {
+                "declared_by": {
+                    "description": "DeclaredBy names who declared the edge: the pipeline whose run wrote it, or the person or service account that added it.",
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -11117,6 +14449,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "last_run_status": {
+                    "description": "LastRunStatus is the outcome of the latest run recorded against the asset: succeeded, failed or running. Empty when it has no runs.",
                     "type": "string"
                 },
                 "type": {
@@ -11213,7 +14549,18 @@ const docTemplate = `{
                 "plugins": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pluginsdk.Meta"
+                        "$ref": "#/definitions/PluginInfo"
+                    }
+                }
+            }
+        },
+        "ListRecentResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RecentItem"
                     }
                 }
             }
@@ -11229,6 +14576,20 @@ const docTemplate = `{
                 }
             }
         },
+        "ListSavedQueriesResponse": {
+            "type": "object",
+            "properties": {
+                "queries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SavedQuery"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "ListSchedulesResponse": {
             "type": "object",
             "properties": {
@@ -11237,6 +14598,13 @@ const docTemplate = `{
                 },
                 "offset": {
                     "type": "integer"
+                },
+                "plugin_counts": {
+                    "description": "PluginCounts counts every pipeline by plugin, whatever the filters, so the plugin gallery can say how many of each are connected.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
                 },
                 "schedules": {
                     "type": "array",
@@ -11261,7 +14629,7 @@ const docTemplate = `{
                 "teams": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Team"
+                        "$ref": "#/definitions/TeamSummary"
                     }
                 },
                 "total": {
@@ -11388,6 +14756,35 @@ const docTemplate = `{
                 }
             }
         },
+        "OAuthScopeDescription": {
+            "type": "object",
+            "properties": {
+                "scope": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                }
+            }
+        },
+        "OwnerFacetValue": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "description": "\"user\" or \"team\"",
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "OwnerRequest": {
             "type": "object",
             "required": [
@@ -11424,6 +14821,64 @@ const docTemplate = `{
                 },
                 "resource_type": {
                     "type": "string"
+                }
+            }
+        },
+        "PluginInfo": {
+            "type": "object",
+            "properties": {
+                "asset_schemas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.AssetSchema"
+                    }
+                },
+                "catalogs": {
+                    "description": "Catalogs names the kinds of asset the plugin documents, in the order it lists them.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string"
+                },
+                "config_spec": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ConfigField"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "produces_lineage": {
+                    "description": "ProducesLineage reports whether the plugin says it discovers lineage between assets.",
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "supports_data_preview": {
+                    "type": "boolean"
+                },
+                "supports_query": {
+                    "type": "boolean"
                 }
             }
         },
@@ -11558,11 +15013,157 @@ const docTemplate = `{
                 }
             }
         },
+        "ProfileRoleSource": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProfileTeam": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "sso_group": {
+                    "type": "string"
+                },
+                "sso_provider": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryAccessRequest": {
+            "type": "object",
+            "properties": {
+                "audit_subject": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "needed": {
+                    "type": "string"
+                },
+                "notified": {
+                    "description": "Notified counts the people told about this request; Repeat is set when an identical request made within the last day was returned instead, and nobody was told again.",
+                    "type": "integer"
+                },
+                "permission": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "query_id": {
+                    "type": "string"
+                },
+                "repeat": {
+                    "type": "boolean"
+                },
+                "source_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryAccessRequestInput": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "query_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryAgentSummariesResponse": {
+            "type": "object",
+            "properties": {
+                "agents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryAgentSummary"
+                    }
+                }
+            }
+        },
+        "QueryAgentSummary": {
+            "type": "object",
+            "properties": {
+                "audit_subject": {
+                    "type": "string"
+                },
+                "last_active_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "queries_24h": {
+                    "type": "integer"
+                },
+                "queries_7d": {
+                    "type": "integer"
+                },
+                "refused_24h": {
+                    "type": "integer"
+                },
+                "refused_7d": {
+                    "type": "integer"
+                },
+                "tables_read_7d": {
+                    "type": "integer"
+                }
+            }
+        },
         "QueryAssetContext": {
             "type": "object",
             "properties": {
                 "asset_id": {
                     "type": "string"
+                },
+                "certified": {
+                    "type": "boolean"
+                },
+                "columns_read": {
+                    "type": "integer"
                 },
                 "description": {
                     "type": "string"
@@ -11576,11 +15177,27 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "owners": {
+                    "description": "What the catalog says about the table as data: who owns it, how big it is, which of its columns hold personal data and whether it is certified. ColumnsRead counts the table's catalogued columns among the result's columns, matched by name, so it is nil when the catalog has no columns for the table.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "personal_data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QueryPersonalDataColumn"
+                    }
+                },
                 "providers": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "row_count": {
+                    "type": "integer"
                 },
                 "tags": {
                     "type": "array",
@@ -11589,6 +15206,42 @@ const docTemplate = `{
                     }
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryAssetStats": {
+            "type": "object",
+            "properties": {
+                "agents": {
+                    "type": "integer"
+                },
+                "denied": {
+                    "type": "integer"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "median_duration_ms": {
+                    "type": "integer"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "people": {
+                    "type": "integer"
+                },
+                "per_day": {
+                    "description": "PerDay counts queries per UTC day across the window, oldest first, with empty days as zero.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "queries": {
+                    "type": "integer"
+                },
+                "to": {
                     "type": "string"
                 }
             }
@@ -11615,6 +15268,10 @@ const docTemplate = `{
                 },
                 "query_type": {
                     "type": "string"
+                },
+                "result_count": {
+                    "description": "ResultCount is set on the zero-result list, where it is always 0; ordinary top queries leave it out because only searches that found nothing are recorded with their result count",
+                    "type": "integer"
                 }
             }
         },
@@ -11652,9 +15309,23 @@ const docTemplate = `{
                 }
             }
         },
+        "QueryPersonalDataColumn": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "read": {
+                    "type": "boolean"
+                }
+            }
+        },
         "QueryRecord": {
             "type": "object",
             "properties": {
+                "agent": {
+                    "type": "string"
+                },
                 "audit_subject": {
                     "type": "string"
                 },
@@ -11670,6 +15341,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/QueryAssetContext"
                     }
                 },
+                "credential": {
+                    "type": "string"
+                },
                 "decision": {
                     "type": "string"
                 },
@@ -11681,6 +15355,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "outcome_reason": {
+                    "description": "OutcomeReason refines the decision and status, such as role, permission, policy, source_error, timeout, unreachable or cancelled.",
                     "type": "string"
                 },
                 "principal_id": {
@@ -11698,10 +15376,18 @@ const docTemplate = `{
                 "rows_returned": {
                     "type": "integer"
                 },
+                "service_account": {
+                    "description": "ServiceAccount names the service account a machine caller ran as, Agent the client that identified itself on its behalf (an MCP client's name) and Credential how the request authenticated.",
+                    "type": "string"
+                },
                 "source_id": {
                     "type": "string"
                 },
                 "source_name": {
+                    "type": "string"
+                },
+                "source_provider": {
+                    "description": "SourceProvider is the plugin behind the source, such as snowflake, so the UI can show its logo; empty once the source is deleted.",
                     "type": "string"
                 },
                 "started_at": {
@@ -11715,6 +15401,63 @@ const docTemplate = `{
                 },
                 "truncated": {
                     "type": "boolean"
+                }
+            }
+        },
+        "QueryRefusal": {
+            "type": "object",
+            "properties": {
+                "decided_at": {
+                    "type": "string"
+                },
+                "needed": {
+                    "description": "Needed says what would allow the query, such as \"assets:query on warehouse\".",
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "string"
+                },
+                "policy": {
+                    "type": "string"
+                },
+                "query_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rule": {
+                    "description": "Rule is the outcome reason: permission when the caller lacks a permission, policy when a policy refused the statement.",
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryRefusedResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "refusal": {
+                    "$ref": "#/definitions/QueryRefusal"
                 }
             }
         },
@@ -11806,6 +15549,32 @@ const docTemplate = `{
                 }
             }
         },
+        "QuerySourceStats": {
+            "type": "object",
+            "properties": {
+                "allowed": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "queries": {
+                    "type": "integer"
+                },
+                "refused": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
         "QuerySourceTable": {
             "type": "object",
             "properties": {
@@ -11822,6 +15591,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "queries": {
+                    "type": "integer"
+                },
+                "row_count": {
+                    "description": "RowCount is the table's size as its plugin last reported it in the catalog, when it reports one.",
                     "type": "integer"
                 },
                 "sample_statement": {
@@ -11903,6 +15676,10 @@ const docTemplate = `{
                 "principal_type": {
                     "type": "string"
                 },
+                "schedule_id": {
+                    "description": "ScheduleID is the ingestion schedule behind a source, so a busy source can link to its pipeline",
+                    "type": "string"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -11969,6 +15746,53 @@ const docTemplate = `{
             "type": "object",
             "additionalProperties": true
         },
+        "RecentItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "viewed_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "RecordRecentViewRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string",
+                    "example": "asset"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "RecordRunRequest": {
             "type": "object",
             "properties": {
@@ -11989,6 +15813,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "prompt": {
+                    "type": "string"
                 },
                 "run_id": {
                     "type": "string"
@@ -12037,6 +15864,20 @@ const docTemplate = `{
                 }
             }
         },
+        "RelatedTermsResponse": {
+            "type": "object",
+            "properties": {
+                "related_terms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GlossaryRelatedTerm"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "RemoveTermRequest": {
             "type": "object",
             "required": [
@@ -12048,14 +15889,44 @@ const docTemplate = `{
                 }
             }
         },
+        "ReorderDataProductRulesRequest": {
+            "type": "object",
+            "required": [
+                "rule_ids"
+            ],
+            "properties": {
+                "rule_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "Result": {
             "type": "object",
             "properties": {
+                "asset_count": {
+                    "description": "AssetCount is how many assets a data product holds or a team owns.",
+                    "type": "integer"
+                },
+                "column_count": {
+                    "description": "ColumnCount is how many columns or top-level fields an asset's schema has, where it can be read.",
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "linked_asset_count": {
+                    "description": "LinkedAssetCount is how many assets a glossary term is linked to.",
+                    "type": "integer"
+                },
+                "member_count": {
+                    "description": "MemberCount is how many people are in a team.",
+                    "type": "integer"
                 },
                 "metadata": {
                     "type": "object",
@@ -12064,8 +15935,27 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "owners": {
+                    "description": "Owners are the people and teams that own an asset, glossary term or data product.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SearchResultOwner"
+                    }
+                },
+                "popularity": {
+                    "description": "Popularity is an asset's level from 0 to 4, from its views over the last 30 days.",
+                    "type": "integer"
+                },
                 "rank": {
                     "type": "number"
+                },
+                "row_count": {
+                    "description": "RowCount is an asset's row count where its source reports one.",
+                    "type": "integer"
+                },
+                "stale": {
+                    "description": "Stale is set on assets: true when the pipeline that refreshes it has missed more than two runs' worth of time.",
+                    "type": "boolean"
                 },
                 "type": {
                     "$ref": "#/definitions/ResultType"
@@ -12463,9 +16353,28 @@ const docTemplate = `{
                 }
             }
         },
+        "SSOGroupRef": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string"
+                },
+                "role_name": {
+                    "description": "RoleName is the Marmot role the same mapping gives, if any.",
+                    "type": "string"
+                },
+                "sso_group_name": {
+                    "type": "string"
+                }
+            }
+        },
         "SSOProvider": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "description": "Enabled is false when an administrator has switched the provider off in Settings.",
+                    "type": "boolean"
+                },
                 "issuer_url": {
                     "type": "string"
                 },
@@ -12474,6 +16383,42 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "SSOProviderStatus": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "Enabled is false when an administrator has switched the provider off here; its configuration is kept.",
+                    "type": "boolean"
+                },
+                "issuer_url": {
+                    "type": "string"
+                },
+                "member_count": {
+                    "description": "MemberCount is how many members have signed in with the provider at least once.",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "SSOProviderStatusList": {
+            "type": "object",
+            "properties": {
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SSOProviderStatus"
+                    }
                 }
             }
         },
@@ -12503,10 +16448,21 @@ const docTemplate = `{
                 "provider": {
                     "type": "string"
                 },
+                "role_id": {
+                    "description": "RoleID is the Marmot role members of the group get, replacing the default role at every sign-in.",
+                    "type": "string"
+                },
+                "role_name": {
+                    "type": "string"
+                },
                 "sso_group_name": {
                     "type": "string"
                 },
                 "team_id": {
+                    "description": "TeamID is empty when the mapping only gives a role.",
+                    "type": "string"
+                },
+                "team_name": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -12514,9 +16470,53 @@ const docTemplate = `{
                 }
             }
         },
+        "SavedQuery": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_run_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "sql": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "SavedQueryInput": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "sql": {
+                    "type": "string"
+                }
+            }
+        },
         "Schedule": {
             "type": "object",
             "properties": {
+                "asset_count": {
+                    "description": "AssetCount counts the assets the pipeline's latest successful run cataloged that are still in the catalog; it is only filled in when schedules are read one at a time or listed.",
+                    "type": "integer"
+                },
                 "config": {
                     "type": "object",
                     "additionalProperties": true
@@ -12528,6 +16528,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "cron_expression": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description says what the pipeline catalogs, in the words of whoever set it up.",
                     "type": "string"
                 },
                 "enabled": {
@@ -12552,6 +16556,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "next_run_at": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "owner_name": {
+                    "type": "string"
+                },
+                "owner_type": {
+                    "description": "OwnerType is \"user\" or \"team\" and names, with OwnerID, who is told when a run fails; both are nil for an unowned pipeline.",
                     "type": "string"
                 },
                 "plugin_id": {
@@ -12606,6 +16620,21 @@ const docTemplate = `{
                 }
             }
         },
+        "SearchResultOwner": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "\"user\" or \"team\"",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "ServeKeyGeneration": {
             "type": "object",
             "properties": {
@@ -12648,16 +16677,31 @@ const docTemplate = `{
                 "active": {
                     "type": "boolean"
                 },
+                "api_key_count": {
+                    "type": "integer"
+                },
+                "calls_last_7_days": {
+                    "description": "CallsLast7Days counts authenticated requests made with the account's keys over the last seven days, including today.",
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "type": "string"
                 },
+                "created_by_name": {
+                    "description": "CreatedByName is the creator's display name, empty once that user is deleted.",
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "last_used_at": {
+                    "description": "LastUsedAt is the latest use of any of the account's keys.",
                     "type": "string"
                 },
                 "name": {
@@ -12671,6 +16715,13 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "used_by": {
+                    "description": "UsedBy lists the agents that have reported runs with one of this account's keys.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ServiceAccountAgentRef"
+                    }
                 }
             }
         },
@@ -12695,8 +16746,90 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "prefix": {
+                    "description": "Prefix is the start of the key kept in clear so it can be recognised later; empty for keys issued before it was stored.",
+                    "type": "string"
+                },
                 "service_account_id": {
                     "type": "string"
+                }
+            }
+        },
+        "ServiceAccountAgentRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "SignInSettings": {
+            "type": "object",
+            "properties": {
+                "allow_password_sign_in": {
+                    "description": "AllowPasswordSignIn lets members sign in with a password. Administrators always can, so an outage at the identity provider cannot lock everyone out.",
+                    "type": "boolean"
+                },
+                "create_on_first_sso": {
+                    "description": "CreateOnFirstSSO lets anyone the identity provider vouches for become a member by signing in; when off only invited people can.",
+                    "type": "boolean"
+                },
+                "default_role": {
+                    "description": "DefaultRole is given to a new member when none of their groups is mapped to a role.",
+                    "type": "string"
+                },
+                "default_team_id": {
+                    "description": "DefaultTeamID is the team a new single sign-on member joins, empty for none.",
+                    "type": "string"
+                }
+            }
+        },
+        "StaleAsset": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_refreshed_at": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "StaleAssetList": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StaleAsset"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -12737,6 +16870,41 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "tokens_out": {
+                    "type": "integer"
+                }
+            }
+        },
+        "SystemResponse": {
+            "type": "object",
+            "properties": {
+                "build": {
+                    "$ref": "#/definitions/sysinfo.Build"
+                },
+                "database": {
+                    "$ref": "#/definitions/sysinfo.Database"
+                },
+                "search_index": {
+                    "$ref": "#/definitions/SystemSearchIndex"
+                }
+            }
+        },
+        "SystemSearchIndex": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "description": "Backend is postgres, or elasticsearch when Elasticsearch serves searches from a copy of the index.",
+                    "type": "string"
+                },
+                "documents": {
+                    "type": "integer"
+                },
+                "last_full_reindex": {
+                    "type": "string"
+                },
+                "reindex_running": {
+                    "type": "boolean"
+                },
+                "size_bytes": {
                     "type": "integer"
                 }
             }
@@ -12852,6 +17020,92 @@ const docTemplate = `{
                 }
             }
         },
+        "TeamSummary": {
+            "type": "object",
+            "properties": {
+                "asset_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "created_via_sso": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "member_count": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sso_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SSOGroupRef"
+                    }
+                },
+                "sso_provider": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "webhook_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "TestConnectionRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "plugin_id": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "TestConnectionResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ValidationErrorDetail"
+                    }
+                },
+                "result": {
+                    "$ref": "#/definitions/ConnectionTestResult"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
         "TokenExchangeResponse": {
             "type": "object",
             "properties": {
@@ -12889,11 +17143,26 @@ const docTemplate = `{
         "ToolCall": {
             "type": "object",
             "properties": {
+                "detail": {
+                    "description": "Detail is the call's argument in a readable form, such as the SQL of a query or the text of a search.",
+                    "type": "string"
+                },
                 "duration_ms": {
                     "type": "integer"
                 },
                 "ordinal": {
                     "type": "integer"
+                },
+                "reason": {
+                    "description": "Reason says why a refused or failed call did not go through, and Rule names the policy or rule that refused it.",
+                    "type": "string"
+                },
+                "result": {
+                    "description": "Result summarises what came back, such as \"5 rows\".",
+                    "type": "string"
+                },
+                "rule": {
+                    "type": "string"
                 },
                 "started_at": {
                     "type": "string"
@@ -12912,8 +17181,23 @@ const docTemplate = `{
         "ToolCallPayload": {
             "type": "object",
             "properties": {
+                "detail": {
+                    "description": "Detail is the call's argument in a readable form, such as the SQL of a query.",
+                    "type": "string"
+                },
                 "duration_ms": {
                     "type": "integer"
+                },
+                "reason": {
+                    "description": "Reason and Rule explain a refused or failed call: why, and which policy or rule refused it.",
+                    "type": "string"
+                },
+                "result": {
+                    "description": "Result summarises what came back, such as \"5 rows\".",
+                    "type": "string"
+                },
+                "rule": {
+                    "type": "string"
                 },
                 "started_at": {
                     "type": "string"
@@ -13105,14 +17389,33 @@ const docTemplate = `{
                 }
             }
         },
+        "UpdateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "job_title": {
+                    "type": "string"
+                }
+            }
+        },
         "UpdateSSOMappingRequest": {
             "type": "object",
             "properties": {
                 "member_role": {
                     "type": "string"
                 },
+                "role_id": {
+                    "type": "string"
+                },
                 "team_id": {
                     "type": "string"
+                }
+            }
+        },
+        "UpdateSSOProviderRequest": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -13126,6 +17429,10 @@ const docTemplate = `{
                 "cron_expression": {
                     "type": "string"
                 },
+                "description": {
+                    "description": "Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.",
+                    "type": "string"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
@@ -13134,6 +17441,13 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "owner_type": {
+                    "description": "OwnerType is \"user\" or \"team\" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.",
                     "type": "string"
                 },
                 "plugin_id": {
@@ -13210,6 +17524,19 @@ const docTemplate = `{
                 },
                 "parent_term_id": {
                     "type": "string"
+                },
+                "related_term_ids": {
+                    "description": "RelatedTermIDs replaces the term's related terms when present; an empty list clears them.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -13263,6 +17590,13 @@ const docTemplate = `{
                         "$ref": "#/definitions/UserIdentity"
                     }
                 },
+                "invite_expires_at": {
+                    "type": "string"
+                },
+                "last_seen_at": {
+                    "description": "LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
+                    "type": "string"
+                },
                 "must_change_password": {
                     "type": "boolean"
                 },
@@ -13284,6 +17618,10 @@ const docTemplate = `{
                 },
                 "sessions_invalidated_at": {
                     "description": "Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.",
                     "type": "string"
                 },
                 "updated_at": {
@@ -13530,53 +17868,6 @@ const docTemplate = `{
                 "FieldTypeObject"
             ]
         },
-        "pluginsdk.Meta": {
-            "type": "object",
-            "properties": {
-                "asset_schemas": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pluginsdk.AssetSchema"
-                    }
-                },
-                "category": {
-                    "type": "string"
-                },
-                "config_spec": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pluginsdk.ConfigField"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "features": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "supports_data_preview": {
-                    "type": "boolean"
-                },
-                "supports_query": {
-                    "type": "boolean"
-                }
-            }
-        },
         "pluginsdk.ShowWhen": {
             "type": "object",
             "properties": {
@@ -13666,6 +17957,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "sysinfo.Build": {
+            "type": "object",
+            "properties": {
+                "built_at": {
+                    "type": "string"
+                },
+                "commit": {
+                    "type": "string"
+                },
+                "go_version": {
+                    "type": "string"
+                },
+                "modified": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "sysinfo.Database": {
+            "type": "object",
+            "properties": {
+                "size_bytes": {
+                    "description": "SizeBytes is the size of the whole Marmot database.",
+                    "type": "integer"
+                },
+                "version": {
                     "type": "string"
                 }
             }

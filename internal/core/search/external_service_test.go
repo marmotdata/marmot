@@ -190,3 +190,52 @@ func TestExternalSearchService_DefaultLimits(t *testing.T) {
 		t.Errorf("expected default offset=0, got %d", capturedFilter.Offset)
 	}
 }
+
+func TestExternalSearchService_UnsupportedQueriesGoToPG(t *testing.T) {
+	cases := map[string]Filter{
+		"popular sort":     {Query: "orders", Sort: SortPopular},
+		"owner filter":     {Query: "orders", Owners: []string{"u1"}},
+		"field conditions": {Query: `orders AND @tag = "pii"`},
+		"kind condition":   {Query: `@kind = "glossary" revenue`},
+	}
+	for name, filter := range cases {
+		t.Run(name, func(t *testing.T) {
+			indexer := &mockIndexer{searchFunc: func(ctx context.Context, f Filter) ([]*Result, int, *Facets, error) {
+				t.Fatal("the external index should not be asked")
+				return nil, 0, nil, nil
+			}}
+			pgCalled := false
+			pg := &mockPGService{searchFunc: func(ctx context.Context, f Filter) (*Response, error) {
+				pgCalled = true
+				return &Response{}, nil
+			}}
+			svc := NewExternalSearchService(indexer, pg, time.Second)
+			if _, err := svc.Search(context.Background(), filter); err != nil {
+				t.Fatal(err)
+			}
+			if !pgCalled {
+				t.Fatal("expected Postgres to answer")
+			}
+		})
+	}
+}
+
+func TestExternalSearchService_NameSortStaysOnIndexer(t *testing.T) {
+	called := false
+	indexer := &mockIndexer{searchFunc: func(ctx context.Context, f Filter) ([]*Result, int, *Facets, error) {
+		called = true
+		return nil, 0, &Facets{}, nil
+	}}
+	pg := &mockPGService{searchFunc: func(ctx context.Context, f Filter) (*Response, error) {
+		t.Fatal("Postgres should not be asked")
+		return nil, nil
+	}}
+	svc := NewExternalSearchService(indexer, pg, time.Second)
+	resp, err := svc.Search(context.Background(), Filter{Query: "orders", Sort: SortName})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !called || resp.Facets.Owners == nil {
+		t.Fatal("expected the indexer to answer with an empty owner facet")
+	}
+}

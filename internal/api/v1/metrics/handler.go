@@ -99,6 +99,16 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/metrics/assets/owned",
+			Method:  http.MethodGet,
+			Handler: h.getAssetsOwned,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "metrics", "view"),
+				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
+			},
+		},
+		{
 			Path:    "/api/v1/metrics/assets/by-owner",
 			Method:  http.MethodGet,
 			Handler: h.getAssetsByOwner,

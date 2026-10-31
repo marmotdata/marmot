@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -125,6 +126,42 @@ func (h *Handler) markAsRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Notification marked as read"})
+}
+
+// @Summary Mark notification as unread
+// @Description Put a notification the current user has read back into their unread count
+// @Tags notifications
+// @Produce json
+// @Param id path string true "Notification ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} map[string]string
+// @Failure 403 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @ID postNotificationsItemIDMarkUnread
+// @Router /api/v1/notifications/item/{id}/mark-unread [post]
+func (h *Handler) markAsUnread(w http.ResponseWriter, r *http.Request) {
+	usr, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	id := r.PathValue("id")
+	if err := h.notificationService.MarkAsUnread(r.Context(), id, usr.ID); err != nil {
+		if errors.Is(err, notification.ErrNotificationNotFound) {
+			common.RespondError(w, http.StatusNotFound, "Notification not found")
+			return
+		}
+		if errors.Is(err, notification.ErrUnauthorized) {
+			common.RespondError(w, http.StatusForbidden, "Access denied")
+			return
+		}
+		common.RespondError(w, http.StatusInternalServerError, "Failed to mark notification as unread")
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Notification marked as unread"})
 }
 
 func (h *Handler) markAllAsRead(w http.ResponseWriter, r *http.Request) {

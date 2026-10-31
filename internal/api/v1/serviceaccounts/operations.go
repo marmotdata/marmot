@@ -331,6 +331,36 @@ func (h *Handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Rotate an API key
+// @Description Issue a new secret for a service account API key, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response.
+// @Tags service_accounts
+// @Produce json
+// @Param id path string true "Service account ID"
+// @Param keyId path string true "API key ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} serviceaccount.APIKey
+// @Failure 404 {object} common.ErrorResponse
+// @ID postServiceAccountsIDAPIKeysKeyIDRotate
+// @Router /api/v1/service-accounts/{id}/api-keys/{keyId}/rotate [post]
+func (h *Handler) rotateAPIKey(w http.ResponseWriter, r *http.Request) {
+	saID, keyID := r.PathValue("id"), r.PathValue("keyId")
+
+	key, err := h.svcService.RotateAPIKey(r.Context(), saID, keyID)
+	if err != nil {
+		if errors.Is(err, serviceaccount.ErrKeyNotFound) {
+			common.RespondError(w, http.StatusNotFound, "API key not found")
+			return
+		}
+		log.Error().Err(err).Str("sa_id", saID).Str("key_id", keyID).Msg("Failed to rotate API key")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to rotate API key")
+		return
+	}
+
+	w.Header().Set("Cache-Control", "no-store")
+	common.RespondJSON(w, http.StatusOK, key)
+}
+
 func extractID(path, prefix, suffix string) string {
 	id := strings.TrimPrefix(path, prefix)
 	if suffix != "" {

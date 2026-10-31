@@ -95,7 +95,7 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 	if edge.Type != "" {
 		lineageType = edge.Type
 	}
-	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN)
+	edgeID, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN, declarerOf(r))
 	if err != nil {
 		log.Error().Err(err).
 			Str("source", edge.Source).
@@ -313,4 +313,12 @@ func withoutEdgeTypes(resp *lineage.LineageResponse, exclude map[string]bool, ro
 	}
 
 	return &lineage.LineageResponse{Nodes: nodes, Edges: edges}
+}
+
+// declarerOf names the caller as the declarer of edges they add, so an edge added by hand or by a script reads as theirs.
+func declarerOf(r *http.Request) string {
+	if principal, ok := common.PrincipalFromContext(r.Context()); ok {
+		return principal.DisplayName()
+	}
+	return ""
 }

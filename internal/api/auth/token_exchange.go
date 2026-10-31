@@ -115,14 +115,32 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	token, err := h.authService.GenerateToken(ctx, usr, nil)
+	clientID := accessReq.GetClient().GetID()
+	var token string
+	if grants := h.oauthProvider.Grants; grants != nil {
+		// The grant is recorded before the token exists, so a token is never issued that the account page cannot show or revoke.
+		grantID, gerr := grants.RecordGrant(ctx, usr.ID, marmotOAuth2.Grant{
+			ClientID:    clientID,
+			ClientName:  h.oauthProvider.Store.ClientName(ctx, clientID),
+			RedirectURI: accessReq.GetRequestForm().Get("redirect_uri"),
+			Scopes:      []string(accessReq.GetGrantedScopes()),
+		})
+		if gerr != nil {
+			log.Error().Err(gerr).Str("client_id", clientID).Msg("Failed to record OAuth grant")
+			respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to record authorisation")
+			return
+		}
+		token, err = h.authService.GenerateTokenForClient(ctx, usr, clientID, grantID)
+	} else {
+		token, err = h.authService.GenerateToken(ctx, usr, nil)
+	}
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token")
 		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
 		return
 	}
 
-	if err := h.oauthProvider.Store.KeepClientAlive(ctx, accessReq.GetClient().GetID()); err != nil {
+	if err := h.oauthProvider.Store.KeepClientAlive(ctx, clientID); err != nil {
 		log.Error().Err(err).Msg("Failed to extend OAuth client lease")
 	}
 

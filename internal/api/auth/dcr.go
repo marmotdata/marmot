@@ -125,6 +125,8 @@ func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
 	if len(req.ClientName) > 128 {
 		req.ClientName = req.ClientName[:128]
 	}
+	// The name is now stored, and Postgres refuses invalid UTF-8, which a byte cut or a hostile client can produce.
+	req.ClientName = strings.ToValidUTF8(req.ClientName, "")
 
 	if req.TokenEndpointAuthMethod != "" && req.TokenEndpointAuthMethod != "none" {
 		respondOAuthError(w, http.StatusBadRequest, "invalid_client_metadata",
@@ -136,6 +138,7 @@ func (h *Handler) handleDCR(w http.ResponseWriter, r *http.Request) {
 
 	client := &marmotOAuth2.ClientRecord{
 		ID:            clientID,
+		Name:          req.ClientName,
 		RedirectURIs:  req.RedirectURIs,
 		GrantTypes:    []string{"authorization_code"},
 		ResponseTypes: []string{"code"},

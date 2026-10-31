@@ -26,6 +26,9 @@ type CreateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs links the new term to existing terms, in both directions.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
 } // @name CreateTermRequest
 
 type UpdateTermRequest struct {
@@ -35,7 +38,14 @@ type UpdateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs replaces the term's related terms when present; an empty list clears them.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
 } // @name UpdateTermRequest
+
+type AddRelatedTermRequest struct {
+	TermID string `json:"term_id" validate:"required"`
+} // @name AddRelatedTermRequest
 
 // CreateTerm creates a new glossary term
 // @Summary Create glossary term
@@ -81,13 +91,17 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := glossary.CreateTermInput{
-		Name:         req.Name,
-		Definition:   req.Definition,
-		Description:  req.Description,
-		ParentTermID: req.ParentTermID,
-		Owners:       owners,
-		Metadata:     req.Metadata,
+		Name:           req.Name,
+		Definition:     req.Definition,
+		Description:    req.Description,
+		ParentTermID:   req.ParentTermID,
+		Owners:         owners,
+		Metadata:       req.Metadata,
+		Tags:           req.Tags,
+		RelatedTermIDs: req.RelatedTermIDs,
 	}
+	// created_by refers to users, so a machine identity or a synthetic user leaves it empty.
+	input.CreatedBy = common.CreatedBy(r.Context())
 
 	term, err := h.glossaryService.Create(r.Context(), input)
 	if err != nil {
@@ -191,12 +205,14 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := glossary.UpdateTermInput{
-		Name:         req.Name,
-		Definition:   req.Definition,
-		Description:  req.Description,
-		ParentTermID: req.ParentTermID,
-		Owners:       owners,
-		Metadata:     req.Metadata,
+		Name:           req.Name,
+		Definition:     req.Definition,
+		Description:    req.Description,
+		ParentTermID:   req.ParentTermID,
+		Owners:         owners,
+		Metadata:       req.Metadata,
+		Tags:           req.Tags,
+		RelatedTermIDs: req.RelatedTermIDs,
 	}
 
 	term, err := h.glossaryService.Update(r.Context(), id, input)

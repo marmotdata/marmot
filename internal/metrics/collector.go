@@ -227,11 +227,30 @@ func (c *Collector) SetDBConnections(count int) {
 	c.dbConnections.Set(float64(count))
 }
 
+// Metric names for searches, kept apart so the existing searches series keeps counting only searches that found something.
+const (
+	MetricSearchQueries      = "search_queries_detailed"
+	MetricSearchQueriesEmpty = "search_queries_empty"
+)
+
 func (c *Collector) RecordSearchQuery(queryType, query string) {
 	c.searchQueries.WithLabelValues(queryType).Inc()
 
 	c.queueMetric(Metric{
-		Name:      "search_queries_detailed",
+		Name:      MetricSearchQueries,
+		Type:      Counter,
+		Value:     1,
+		Labels:    map[string]string{"query_type": queryType, "query": query},
+		Timestamp: time.Now(),
+	})
+}
+
+// RecordEmptySearch records a search that found nothing, for the zero-result list in Insights.
+func (c *Collector) RecordEmptySearch(queryType, query string) {
+	c.searchQueries.WithLabelValues(queryType).Inc()
+
+	c.queueMetric(Metric{
+		Name:      MetricSearchQueriesEmpty,
 		Type:      Counter,
 		Value:     1,
 		Labels:    map[string]string{"query_type": queryType, "query": query},

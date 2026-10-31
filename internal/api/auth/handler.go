@@ -114,5 +114,21 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.handleToken,
 		},
+		{
+			Path:    "/api/v1/users/me/connected-apps",
+			Method:  http.MethodGet,
+			Handler: h.listConnectedApps,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
+			Path:    "/api/v1/users/me/connected-apps/{client_id}",
+			Method:  http.MethodDelete,
+			Handler: h.revokeConnectedApp,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
 	}
 }

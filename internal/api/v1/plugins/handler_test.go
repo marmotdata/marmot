@@ -1,6 +1,10 @@
 package plugins
 
-import "testing"
+import (
+	"testing"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+)
 
 // Both routes shipped without middleware and answered anonymously on every
 // deployed instance: the plugin list is which systems a tenant has connected,
@@ -37,5 +41,32 @@ func TestCredentialStatusIsNotReadableByViewers(t *testing.T) {
 	}
 	if status < 2 {
 		t.Errorf("GET /api/v1/plugins/aws/credentials/status: want auth and a permission check, got %d middleware", status)
+	}
+}
+
+func TestSummariseReadsCatalogsAndLineageFromMetadata(t *testing.T) {
+	got := summarise(pluginsdk.Meta{
+		ID:       "postgresql",
+		Features: []string{"Assets", "Lineage"},
+		AssetSchemas: []pluginsdk.AssetSchema{
+			{DisplayName: "Database"}, {DisplayName: "Table"}, {DisplayName: "table"}, {DisplayName: " "}, {DisplayName: "Column"},
+		},
+	})
+	if !got.ProducesLineage {
+		t.Error("a plugin listing the Lineage feature produces lineage")
+	}
+	want := []string{"Database", "Table", "Column"}
+	if len(got.Catalogs) != len(want) {
+		t.Fatalf("catalogs = %v, want %v", got.Catalogs, want)
+	}
+	for i := range want {
+		if got.Catalogs[i] != want[i] {
+			t.Fatalf("catalogs = %v, want %v", got.Catalogs, want)
+		}
+	}
+
+	none := summarise(pluginsdk.Meta{ID: "kafka", Features: []string{"Assets"}})
+	if none.ProducesLineage || none.Catalogs == nil || len(none.Catalogs) != 0 {
+		t.Errorf("a plugin with no schemas or lineage summarises as empty, got %+v", none)
 	}
 }

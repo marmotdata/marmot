@@ -8,6 +8,7 @@ import (
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataquery"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
@@ -83,11 +84,19 @@ func (tc *ToolContext) queryData(
 		), nil, nil
 	}
 
-	result, err := tc.queryService.Query(ctx, tc.principal, dataquery.QueryInput{
+	input := dataquery.QueryInput{
 		Source:    args.Source,
 		Statement: args.Statement,
 		MaxRows:   args.MaxRows,
-	}, dataquery.ClientMCP)
+	}
+	// The MCP client names itself, which is the agent behind the caller's identity in the query log.
+	if info := clientInfo(req); info != nil {
+		input.Agent = info.Name
+	}
+	if credential, ok := common.CredentialFromContext(ctx); ok {
+		input.Credential = credential.Type
+	}
+	result, err := tc.queryService.Query(ctx, tc.principal, input, dataquery.ClientMCP)
 	if err != nil {
 		switch {
 		case errors.Is(err, dataquery.ErrDenied):
@@ -181,4 +190,12 @@ func textResult(text string) *mcpsdk.CallToolResult {
 	return &mcpsdk.CallToolResult{
 		Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: text}},
 	}
+}
+
+// clientInfo reads the calling MCP client's self-description, which tests and in-process callers may not have.
+func clientInfo(req *mcpsdk.CallToolRequest) *mcpsdk.Implementation {
+	if req == nil {
+		return nil
+	}
+	return req.ClientInfo()
 }

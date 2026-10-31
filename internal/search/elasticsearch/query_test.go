@@ -173,3 +173,24 @@ func TestBuildSearchQuery_Aggregations(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildSearchQuery_Sort(t *testing.T) {
+	body := buildSearchQuery(search.Filter{Query: "orders", Sort: search.SortName, Limit: 20})
+	sort := body["sort"].([]interface{})
+	first := sort[0].(map[string]interface{})
+	if _, ok := first["name.keyword"]; !ok {
+		t.Fatalf("name sort should order by name.keyword first, got %v", first)
+	}
+
+	body = buildSearchQuery(search.Filter{Query: "orders", Sort: search.SortUpdated, Limit: 20})
+	first = body["sort"].([]interface{})[0].(map[string]interface{})
+	if _, ok := first["updated_at"]; !ok {
+		t.Fatalf("updated sort should order by updated_at first, got %v", first)
+	}
+
+	body = buildSearchQuery(search.Filter{Query: "orders", Limit: 20})
+	first = body["sort"].([]interface{})[0].(map[string]interface{})
+	if _, ok := first["_score"]; !ok {
+		t.Fatalf("relevance should order by score first, got %v", first)
+	}
+}

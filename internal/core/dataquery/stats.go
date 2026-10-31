@@ -53,6 +53,8 @@ type StatsGroup struct {
 	Allowed       int64    `json:"allowed"`
 	Denied        int64    `json:"denied"`
 	Total         int64    `json:"total"`
+	// ScheduleID is the ingestion schedule behind a source, so a busy source can link to its pipeline
+	ScheduleID string `json:"schedule_id,omitempty"`
 } // @name QueryStatsGroup
 
 // Stats summarises data query activity over a window, computed from the hourly
@@ -120,14 +122,15 @@ func (r *PostgresRepository) Stats(ctx context.Context, f StatsFilter) (*Stats, 
 
 	if stats.TopCallers, err = r.topGroups(ctx, f, "", `
 		SELECT principal_type || ':' || principal_id, max(audit_subject), principal_type, '', NULL::text[],
-		       sum(queries) FILTER (WHERE decision = 'allowed'), sum(queries) FILTER (WHERE decision = 'denied'), sum(queries)
+		       sum(queries) FILTER (WHERE decision = 'allowed'), sum(queries) FILTER (WHERE decision = 'denied'), sum(queries), ''
 		FROM data_query_stats_hourly WHERE %s
 		GROUP BY principal_type, principal_id`); err != nil {
 		return nil, fmt.Errorf("loading top callers: %w", err)
 	}
 	if stats.TopSources, err = r.topGroups(ctx, f, "st", `
 		SELECT st.source_name, st.source_name, '', COALESCE(max(sc.plugin_id), ''), NULL::text[],
-		       sum(st.queries) FILTER (WHERE st.decision = 'allowed'), sum(st.queries) FILTER (WHERE st.decision = 'denied'), sum(st.queries)
+		       sum(st.queries) FILTER (WHERE st.decision = 'allowed'), sum(st.queries) FILTER (WHERE st.decision = 'denied'), sum(st.queries),
+		       COALESCE(max(sc.id::text), '')
 		FROM data_query_stats_hourly st
 		LEFT JOIN ingestion_schedules sc ON sc.name = st.source_name
 		WHERE %s
@@ -136,7 +139,7 @@ func (r *PostgresRepository) Stats(ctx context.Context, f StatsFilter) (*Stats, 
 	}
 	if stats.TopTables, err = r.topGroups(ctx, f, "t", `
 		SELECT t.mrn, COALESCE(max(a.name), ''), '', '', max(a.tags),
-		       sum(t.queries) FILTER (WHERE t.decision = 'allowed'), sum(t.queries) FILTER (WHERE t.decision = 'denied'), sum(t.queries)
+		       sum(t.queries) FILTER (WHERE t.decision = 'allowed'), sum(t.queries) FILTER (WHERE t.decision = 'denied'), sum(t.queries), ''
 		FROM data_query_table_stats_hourly t
 		LEFT JOIN assets a ON a.mrn = t.mrn
 		WHERE %s
@@ -147,7 +150,7 @@ func (r *PostgresRepository) Stats(ctx context.Context, f StatsFilter) (*Stats, 
 }
 
 // topGroups runs a grouped query returning key, label, principal type,
-// plugin, tags, allowed, denied and total, and keeps the busiest groups.
+// plugin, tags, allowed, denied, total and schedule, and keeps the busiest groups.
 func (r *PostgresRepository) topGroups(ctx context.Context, f StatsFilter, alias, query string) ([]StatsGroup, error) {
 	var args []any
 	where := f.scope(&args, alias)
@@ -162,7 +165,7 @@ func (r *PostgresRepository) topGroups(ctx context.Context, f StatsFilter, alias
 	for rows.Next() {
 		var g StatsGroup
 		var allowed, denied *int64
-		if err := rows.Scan(&g.Key, &g.Label, &g.PrincipalType, &g.PluginID, &g.Tags, &allowed, &denied, &g.Total); err != nil {
+		if err := rows.Scan(&g.Key, &g.Label, &g.PrincipalType, &g.PluginID, &g.Tags, &allowed, &denied, &g.Total, &g.ScheduleID); err != nil {
 			return nil, err
 		}
 		if allowed != nil {
@@ -184,7 +187,7 @@ func (r *PostgresRepository) series(ctx context.Context, f StatsFilter) ([]Stats
 	args = append(args, f.Interval)
 	rows, err := r.db.Query(ctx, fmt.Sprintf(`
 		SELECT date_trunc($%d, bucket, 'UTC') AS b,
-		       COALESCE(sum(queries) FILTER (WHERE decision = 'allowed' AND status <> 'failed'), 0),
+		       COALESCE(sum(queries) FILTER (WHERE decision = 'allowed' AND status NOT IN ('failed', 'cancelled')), 0),
 		       COALESCE(sum(queries) FILTER (WHERE status = 'failed'), 0),
 		       COALESCE(sum(queries) FILTER (WHERE decision = 'denied'), 0)
 		FROM data_query_stats_hourly WHERE %s

@@ -25,7 +25,7 @@ var _ = user.User{}
 // @Produce json
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success 200 {object} user.User
+// @Success 200 {object} CurrentUserResponse
 // @Failure 401 {object} common.ErrorResponse
 // @ID getUsersMe
 // @Router /api/v1/users/me [get]
@@ -43,7 +43,7 @@ func (h *Handler) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, fullUser)
+	common.RespondJSON(w, http.StatusOK, h.withProfile(r, fullUser))
 }
 
 // @Summary Update user preferences
@@ -101,6 +101,7 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 			notification.TypeLineageChange:          true,
 			notification.TypeAssetDeleted:           true,
 			notification.TypeAccessExpiry:           true,
+			notification.TypeAccessRequest:          true,
 		}
 		for key, val := range notifPrefs {
 			if !validTypes[key] {

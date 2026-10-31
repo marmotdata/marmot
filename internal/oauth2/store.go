@@ -77,6 +77,21 @@ func (s *Store) GetClient(ctx context.Context, id string) (fosite.Client, error)
 	return rec.toFosite(), nil
 }
 
+// BuiltinCLIClientName is shown for the static client older CLI versions use, which never registers a name.
+const BuiltinCLIClientName = "Marmot CLI"
+
+// ClientName returns the name a client registered with, or "" when it gave none or has expired.
+func (s *Store) ClientName(ctx context.Context, id string) string {
+	if id == builtinCLIClient.ID {
+		return BuiltinCLIClientName
+	}
+	rec, err := s.repo.GetClient(ctx, id)
+	if err != nil {
+		return ""
+	}
+	return rec.Name
+}
+
 // RegisterClient stores a dynamically registered client on a short lease.
 // KeepClientAlive extends it once someone actually signs in.
 func (s *Store) RegisterClient(ctx context.Context, client *ClientRecord) error {

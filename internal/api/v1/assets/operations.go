@@ -6,10 +6,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdetail"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
@@ -19,6 +22,15 @@ import (
 type AssetResponse struct {
 	*asset.Asset
 	EnrichedExternalLinks []assetrule.EnrichedExternalLink `json:"enriched_external_links,omitempty"`
+	// RowCount and ColumnCount give the asset's size for its header, read from what its plugin recorded; absent when no plugin said.
+	RowCount    *int64 `json:"row_count,omitempty"`
+	ColumnCount *int   `json:"column_count,omitempty"`
+	// FieldAnnotations are the markers people set on schema fields, merged by the UI onto the fields the schema describes.
+	FieldAnnotations []assetdetail.FieldAnnotation `json:"field_annotations,omitempty"`
+	// Stale is true when the pipeline that refreshes the asset has missed more than two runs' worth of time.
+	Stale bool `json:"stale"`
+	// Popularity is a level from 0 to 4 from the asset's views over the last 30 days.
+	Popularity *int `json:"popularity,omitempty"`
 }
 
 type CreateRequest struct {
@@ -32,7 +44,19 @@ type CreateRequest struct {
 	Sources       []asset.AssetSource          `json:"sources"`
 	Environments  map[string]asset.Environment `json:"environments"`
 	ExternalLinks []asset.ExternalLink         `json:"external_links"`
+	// UserDescription is the people-written description, kept apart from the source's own.
+	UserDescription *string `json:"user_description"`
+	// Owners are the users and teams to own the asset.
+	Owners []CreateOwner `json:"owners"`
+	// Terms are the IDs of glossary terms to link the asset to.
+	Terms []string `json:"terms"`
 } // @name CreateAssetRequest
+
+// CreateOwner names a user or team to own a new asset.
+type CreateOwner struct {
+	Type string `json:"type" enums:"user,team"`
+	ID   string `json:"id"`
+} // @name CreateAssetOwner
 
 type UpdateRequest struct {
 	Name            *string                      `json:"name"`
@@ -49,7 +73,7 @@ type UpdateRequest struct {
 } // @name UpdateAssetRequest
 
 // @Summary Create a new asset
-// @Description Create a new asset in the system
+// @Description Create a new asset in the system. Owners, a user description and glossary terms can be set in the same request; if any of them cannot be applied the asset is not kept.
 // @Tags assets
 // @Accept json
 // @Produce json
@@ -72,6 +96,11 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
 		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	if msg := validateCreateExtras(req); msg != "" {
+		common.RespondError(w, http.StatusBadRequest, msg)
 		return
 	}
 
@@ -115,7 +144,74 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if status, msg := h.applyCreateExtras(r, newAsset, req); status != 0 {
+		// The extras were part of the request, so a half-made asset would leave the caller to tidy up; remove it and report what went wrong instead.
+		if err := h.assetService.Delete(r.Context(), newAsset.ID); err != nil {
+			log.Error().Err(err).Str("id", newAsset.ID).Msg("Failed to remove asset after its owners, description or terms could not be set")
+		}
+		common.RespondError(w, status, msg)
+		return
+	}
+
 	common.RespondJSON(w, http.StatusCreated, newAsset)
+}
+
+// validateCreateExtras checks the owners and terms of a create request before anything is written, so a mistyped ID is reported without creating an asset.
+func validateCreateExtras(req CreateRequest) string {
+	if len(req.Providers) == 0 {
+		return "At least one provider is required"
+	}
+	for _, o := range req.Owners {
+		if o.Type != team.OwnerTypeUser && o.Type != team.OwnerTypeTeam {
+			return "Owner type must be user or team"
+		}
+		if _, err := uuid.Parse(o.ID); err != nil {
+			return "Owner ID must be a valid ID"
+		}
+	}
+	for _, id := range req.Terms {
+		if _, err := uuid.Parse(id); err != nil {
+			return "Glossary term ID must be a valid ID"
+		}
+	}
+	return ""
+}
+
+// applyCreateExtras sets the owners, user description and glossary terms a create request carried. It returns a status and message when one could not be set, or zero when all were.
+func (h *Handler) applyCreateExtras(r *http.Request, created *asset.Asset, req CreateRequest) (int, string) {
+	ctx := r.Context()
+	if req.UserDescription != nil && strings.TrimSpace(*req.UserDescription) != "" {
+		updated, err := h.assetService.Update(ctx, created.ID, asset.UpdateInput{UserDescription: req.UserDescription, SkipNotification: true})
+		if err != nil {
+			log.Error().Err(err).Str("id", created.ID).Msg("Failed to set user description on new asset")
+			return http.StatusInternalServerError, "Failed to set the description"
+		}
+		*created = *updated
+	}
+	for _, o := range req.Owners {
+		if err := h.teamService.AddAssetOwner(ctx, created.ID, o.Type, o.ID); err != nil {
+			if errors.Is(err, team.ErrTeamNotFound) {
+				return http.StatusBadRequest, "Owner team not found"
+			}
+			log.Error().Err(err).Str("id", created.ID).Str("owner_id", o.ID).Msg("Failed to add owner to new asset")
+			return http.StatusBadRequest, "Owner could not be added; check the user or team exists"
+		}
+	}
+	if len(req.Terms) > 0 {
+		principal, _ := common.PrincipalFromContext(ctx)
+		// created_by is a foreign key into users, so only a person goes there; machine identities are named in source, as when adding terms on their own.
+		source, author := "user", ""
+		if usr := principal.AsUser(); usr != nil {
+			author = usr.ID
+		} else {
+			source = string(principal.Type())
+		}
+		if err := h.assetService.AddTerms(ctx, created.ID, req.Terms, source, author); err != nil {
+			log.Error().Err(err).Str("id", created.ID).Msg("Failed to link glossary terms to new asset")
+			return http.StatusBadRequest, "Glossary terms could not be linked; check they exist"
+		}
+	}
+	return 0, ""
 }
 
 func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
@@ -135,6 +231,34 @@ func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *Ass
 		}
 		allLinks = append(allLinks, enrichedLinks...)
 		resp.EnrichedExternalLinks = allLinks
+	}
+
+	if n, ok := assetdetail.RowCount(result.Metadata); ok {
+		resp.RowCount = &n
+	}
+	if n, ok := assetdetail.ColumnCount(result.Schema); ok {
+		resp.ColumnCount = &n
+	}
+	if h.signals != nil {
+		if stale, err := h.signals.IsStale(r.Context(), result.ID); err != nil {
+			log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to check whether the asset is stale")
+		} else {
+			resp.Stale = stale
+		}
+		if levels, err := h.signals.Popularity(r.Context(), []string{result.ID}); err != nil {
+			log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to get asset popularity")
+		} else {
+			level := levels[result.ID]
+			resp.Popularity = &level
+		}
+	}
+	if h.details != nil {
+		annotations, err := h.details.ListFieldAnnotations(r.Context(), result.ID)
+		if err != nil {
+			log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to get field annotations")
+		} else if len(annotations) > 0 {
+			resp.FieldAnnotations = annotations
+		}
 	}
 
 	return resp

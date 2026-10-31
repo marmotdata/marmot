@@ -60,6 +60,10 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 			common.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
 			return
 		}
+		if errors.Is(err, user.ErrPasswordSignInDisabled) {
+			common.RespondError(w, http.StatusForbidden, "Password sign-in is turned off. Sign in with single sign-on.")
+			return
+		}
 		log.Error().Err(err).Str("username", input.Username).Msg("Authentication failed")
 		common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
 		return
