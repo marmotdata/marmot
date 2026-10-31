@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, StrictInt
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
-from marmot.generated.models.team import Team
+from marmot.generated.models.team_summary import TeamSummary
 
 
 class ListTeamsResponse(BaseModel):
@@ -30,7 +30,7 @@ class ListTeamsResponse(BaseModel):
 
     limit: StrictInt | None = None
     offset: StrictInt | None = None
-    teams: list[Team] | None = None
+    teams: list[TeamSummary] | None = None
     total: StrictInt | None = None
     __properties: ClassVar[list[str]] = ["limit", "offset", "teams", "total"]
 
@@ -93,7 +93,7 @@ class ListTeamsResponse(BaseModel):
             {
                 "limit": obj.get("limit"),
                 "offset": obj.get("offset"),
-                "teams": [Team.from_dict(_item) for _item in obj["teams"]]
+                "teams": [TeamSummary.from_dict(_item) for _item in obj["teams"]]
                 if obj.get("teams") is not None
                 else None,
                 "total": obj.get("total"),

@@ -14,6 +14,9 @@ import (
 // swagger:model LineageEdge
 type LineageEdge struct {
 
+	// DeclaredBy names who declared the edge: the pipeline whose run wrote it, or the person or service account that added it.
+	DeclaredBy string `json:"declared_by,omitempty"`
+
 	// id
 	ID string `json:"id,omitempty"`
 

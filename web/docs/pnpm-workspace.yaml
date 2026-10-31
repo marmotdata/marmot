@@ -42,6 +42,8 @@ overrides:
   lodash: ">=4.18.1"
   qs: "^6.16.0"
   ajv: ">=8.18.0"
+  # schema-utils 3 (url-loader, file-loader) needs ajv 6; 6.14.0 carries the same fix as 8.18.0
+  "schema-utils@3>ajv": "^6.14.0"
   path-to-regexp: "~0.1.13"
   webpack: "~5.104.1"
   uuid: ">=9.0.1"

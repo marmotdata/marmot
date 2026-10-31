@@ -33,6 +33,7 @@ class TestLineageEdge(unittest.TestCase):
         model = LineageEdge()
         if include_optional:
             return LineageEdge(
+                declared_by = '',
                 id = '',
                 job_mrn = '',
                 last_seen_at = '',

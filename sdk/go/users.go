@@ -11,6 +11,9 @@ import (
 // User is a single user account.
 type User = models.User
 
+// CurrentUser is the authenticated user's profile including job title, teams and role sources, as returned by UsersService.Me.
+type CurrentUser = models.CurrentUser
+
 // UserList is a paginated set of users.
 type UserList = models.ListUsersResponse
 
@@ -82,7 +85,7 @@ func (s *UsersService) Get(ctx context.Context, id string) (*User, error) {
 }
 
 // Me returns the currently authenticated user.
-func (s *UsersService) Me(ctx context.Context) (*User, error) {
+func (s *UsersService) Me(ctx context.Context) (*CurrentUser, error) {
 	p := users.NewGetUsersMeParams().WithContext(ctx)
 	resp, err := s.gen.Users.GetUsersMe(p, nil)
 	if err != nil {

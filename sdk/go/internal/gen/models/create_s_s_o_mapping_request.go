@@ -20,6 +20,9 @@ type CreateSSOMappingRequest struct {
 	// provider
 	Provider string `json:"provider,omitempty"`
 
+	// RoleID is the Marmot role the group's members get at every sign-in, in place of the default role.
+	RoleID string `json:"role_id,omitempty"`
+
 	// sso group name
 	SsoGroupName string `json:"sso_group_name,omitempty"`
 

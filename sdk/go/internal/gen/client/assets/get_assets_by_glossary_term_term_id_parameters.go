@@ -70,6 +70,11 @@ type GetAssetsByGlossaryTermTermIDParams struct {
 	// Default: 20
 	Limit *int64
 
+	// Link.
+	//
+	// Only assets linked this way: manual, or rule:<asset rule id>
+	Link *string
+
 	// Offset.
 	//
 	// Pagination offset
@@ -162,6 +167,17 @@ func (o *GetAssetsByGlossaryTermTermIDParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
+// WithLink adds the link to the get assets by glossary term term ID params.
+func (o *GetAssetsByGlossaryTermTermIDParams) WithLink(link *string) *GetAssetsByGlossaryTermTermIDParams {
+	o.SetLink(link)
+	return o
+}
+
+// SetLink adds the link to the get assets by glossary term term ID params.
+func (o *GetAssetsByGlossaryTermTermIDParams) SetLink(link *string) {
+	o.Link = link
+}
+
 // WithOffset adds the offset to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithOffset(offset *int64) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetOffset(offset)
@@ -203,6 +219,23 @@ func (o *GetAssetsByGlossaryTermTermIDParams) WriteToRequest(r runtime.ClientReq
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Link != nil {
+
+		// query param link
+		var qrLink string
+
+		if o.Link != nil {
+			qrLink = *o.Link
+		}
+		qLink := qrLink
+		if qLink != "" {
+
+			if err := r.SetQueryParam("link", qLink); err != nil {
 				return err
 			}
 		}

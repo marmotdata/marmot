@@ -53,7 +53,7 @@ func NewGetTeamsIDOK() *GetTeamsIDOK {
 //
 // OK
 type GetTeamsIDOK struct {
-	Payload *models.Team
+	Payload *models.TeamSummary
 }
 
 // IsSuccess returns true when this get teams Id o k response has a 2xx status code
@@ -96,13 +96,13 @@ func (o *GetTeamsIDOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/teams/{id}][%d] getTeamsIdOK %s", 200, payload)
 }
 
-func (o *GetTeamsIDOK) GetPayload() *models.Team {
+func (o *GetTeamsIDOK) GetPayload() *models.TeamSummary {
 	return o.Payload
 }
 
 func (o *GetTeamsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Team)
+	o.Payload = new(models.TeamSummary)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

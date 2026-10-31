@@ -45,6 +45,12 @@ func (o *PostAPIV1QueryRunReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
+	case 409:
+		result := NewPostAPIV1QueryRunConflict()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[POST /api/v1/query/run] PostAPIV1QueryRun", response, response.Code())
 	}
@@ -195,7 +201,7 @@ func NewPostAPIV1QueryRunForbidden() *PostAPIV1QueryRunForbidden {
 //
 // Forbidden
 type PostAPIV1QueryRunForbidden struct {
-	Payload *models.ErrorResponse
+	Payload *models.QueryRefusedResponse
 }
 
 // IsSuccess returns true when this post Api v1 query run forbidden response has a 2xx status code
@@ -238,13 +244,13 @@ func (o *PostAPIV1QueryRunForbidden) String() string {
 	return fmt.Sprintf("[POST /api/v1/query/run][%d] postApiV1QueryRunForbidden %s", 403, payload)
 }
 
-func (o *PostAPIV1QueryRunForbidden) GetPayload() *models.ErrorResponse {
+func (o *PostAPIV1QueryRunForbidden) GetPayload() *models.QueryRefusedResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1QueryRunForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.QueryRefusedResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -311,6 +317,74 @@ func (o *PostAPIV1QueryRunNotFound) GetPayload() *models.ErrorResponse {
 }
 
 func (o *PostAPIV1QueryRunNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostAPIV1QueryRunConflict creates a PostAPIV1QueryRunConflict with default headers values
+func NewPostAPIV1QueryRunConflict() *PostAPIV1QueryRunConflict {
+	return &PostAPIV1QueryRunConflict{}
+}
+
+// PostAPIV1QueryRunConflict describes a response with status code 409, with default header values.
+//
+// The query was cancelled
+type PostAPIV1QueryRunConflict struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this post Api v1 query run conflict response has a 2xx status code
+func (o *PostAPIV1QueryRunConflict) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post Api v1 query run conflict response has a 3xx status code
+func (o *PostAPIV1QueryRunConflict) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post Api v1 query run conflict response has a 4xx status code
+func (o *PostAPIV1QueryRunConflict) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post Api v1 query run conflict response has a 5xx status code
+func (o *PostAPIV1QueryRunConflict) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post Api v1 query run conflict response a status code equal to that given
+func (o *PostAPIV1QueryRunConflict) IsCode(code int) bool {
+	return code == 409
+}
+
+// Code gets the status code for the post Api v1 query run conflict response
+func (o *PostAPIV1QueryRunConflict) Code() int {
+	return 409
+}
+
+func (o *PostAPIV1QueryRunConflict) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/query/run][%d] postApiV1QueryRunConflict %s", 409, payload)
+}
+
+func (o *PostAPIV1QueryRunConflict) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/query/run][%d] postApiV1QueryRunConflict %s", 409, payload)
+}
+
+func (o *PostAPIV1QueryRunConflict) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *PostAPIV1QueryRunConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 

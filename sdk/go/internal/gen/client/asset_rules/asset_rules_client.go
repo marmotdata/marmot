@@ -176,7 +176,7 @@ func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAs
 
 // GetAssetRulesAssetsID gets assets matched by a rule.
 //
-// Get the list of asset IDs matched by an asset rule.
+// Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -195,7 +195,7 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, auth
 
 // GetAssetRulesAssetsIDContext gets assets matched by a rule.
 //
-// Get the list of asset IDs matched by an asset rule.
+// Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it..
 //
 // Do not use the deprecated [GetAssetRulesAssetsIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {

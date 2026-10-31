@@ -16,11 +16,12 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.glossary_owner import GlossaryOwner
+from marmot.generated.models.glossary_related_term import GlossaryRelatedTerm
 
 
 class GlossaryTerm(BaseModel):
@@ -29,6 +30,11 @@ class GlossaryTerm(BaseModel):
     """
 
     created_at: StrictStr | None = None
+    created_by: StrictStr | None = Field(
+        default=None,
+        description="CreatedBy is the person who wrote the term, absent for terms an ingestion brought in and for those made before authors were recorded.",
+    )
+    created_by_name: StrictStr | None = None
     definition: StrictStr | None = Field(
         default=None,
         description="Definition is what the last run wrote. On a term a person has worded themselves the read path serves UserDefinition here instead, so a caller always gets the wording the catalog stands behind.",
@@ -36,10 +42,17 @@ class GlossaryTerm(BaseModel):
     deleted_at: StrictStr | None = None
     description: StrictStr | None = None
     id: StrictStr | None = None
+    linked_asset_count: StrictInt | None = Field(
+        default=None,
+        description="LinkedAssetCount counts every asset linked to the term, by hand or by an asset rule, so a tree can show it without a request per term.",
+    )
     metadata: dict[str, Any] | None = None
     name: StrictStr | None = None
     owners: list[GlossaryOwner] | None = None
     parent_term_id: StrictStr | None = None
+    related_terms: list[GlossaryRelatedTerm] | None = Field(
+        default=None, description="RelatedTerms is only filled in when a single term is read."
+    )
     tags: list[StrictStr] | None = None
     updated_at: StrictStr | None = None
     user_definition: StrictStr | None = Field(
@@ -48,14 +61,18 @@ class GlossaryTerm(BaseModel):
     )
     __properties: ClassVar[list[str]] = [
         "created_at",
+        "created_by",
+        "created_by_name",
         "definition",
         "deleted_at",
         "description",
         "id",
+        "linked_asset_count",
         "metadata",
         "name",
         "owners",
         "parent_term_id",
+        "related_terms",
         "tags",
         "updated_at",
         "user_definition",
@@ -105,6 +122,13 @@ class GlossaryTerm(BaseModel):
                 if _item_owners:
                     _items.append(_item_owners.to_dict())
             _dict["owners"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in related_terms (list)
+        _items = []
+        if self.related_terms:
+            for _item_related_terms in self.related_terms:
+                if _item_related_terms:
+                    _items.append(_item_related_terms.to_dict())
+            _dict["related_terms"] = _items
         return _dict
 
     @classmethod
@@ -119,16 +143,24 @@ class GlossaryTerm(BaseModel):
         return cls.model_validate(
             {
                 "created_at": obj.get("created_at"),
+                "created_by": obj.get("created_by"),
+                "created_by_name": obj.get("created_by_name"),
                 "definition": obj.get("definition"),
                 "deleted_at": obj.get("deleted_at"),
                 "description": obj.get("description"),
                 "id": obj.get("id"),
+                "linked_asset_count": obj.get("linked_asset_count"),
                 "metadata": obj.get("metadata"),
                 "name": obj.get("name"),
                 "owners": [GlossaryOwner.from_dict(_item) for _item in obj["owners"]]
                 if obj.get("owners") is not None
                 else None,
                 "parent_term_id": obj.get("parent_term_id"),
+                "related_terms": [
+                    GlossaryRelatedTerm.from_dict(_item) for _item in obj["related_terms"]
+                ]
+                if obj.get("related_terms") is not None
+                else None,
                 "tags": obj.get("tags"),
                 "updated_at": obj.get("updated_at"),
                 "user_definition": obj.get("user_definition"),

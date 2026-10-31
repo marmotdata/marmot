@@ -41,13 +41,24 @@ class TestQueryResult(unittest.TestCase):
                 context = [
                     marmot.generated.models.query_asset_context.QueryAssetContext(
                         asset_id = '',
+                        certified = True,
+                        columns_read = 56,
                         description = '',
                         last_sync_at = '',
                         mrn = '',
                         name = '',
+                        owners = [
+                            ''
+                            ],
+                        personal_data = [
+                            marmot.generated.models.query_personal_data_column.QueryPersonalDataColumn(
+                                name = '',
+                                read = True, )
+                            ],
                         providers = [
                             ''
                             ],
+                        row_count = 56,
                         tags = [
                             ''
                             ],

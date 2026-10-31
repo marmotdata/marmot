@@ -38,6 +38,7 @@ class TestQuerySourceTable(unittest.TestCase):
                 mrn = '',
                 name = '',
                 queries = 56,
+                row_count = 56,
                 sample_statement = '',
                 var_schema = '',
                 tags = [

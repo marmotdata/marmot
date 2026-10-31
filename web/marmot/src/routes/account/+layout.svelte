@@ -48,8 +48,8 @@
 			.join(', ')
 	);
 
-	function signOut() {
-		auth.clearToken();
+	async function signOut() {
+		await auth.signOut();
 		userProfile.clear();
 		window.location.href = '/';
 	}

@@ -53,8 +53,50 @@ type Client struct {
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
+// This client is generated with a few options you might find useful for your swagger spec.
+//
+// Feel free to add you own set of options.
+
+// WithAccept allows the client to force the Accept header
+// to negotiate a specific Producer from the server.
+//
+// You may use this option to set arbitrary extensions to your MIME media type.
+func WithAccept(mime string) ClientOption {
+	return func(r *runtime.ClientOperation) {
+		r.ProducesMediaTypes = []string{mime}
+	}
+}
+
+// WithAcceptApplicationJSON sets the Accept header to "application/json".
+func WithAcceptApplicationJSON(r *runtime.ClientOperation) {
+	r.ProducesMediaTypes = []string{"application/json"}
+}
+
+// WithAcceptTextCsv sets the Accept header to "text/csv".
+func WithAcceptTextCsv(r *runtime.ClientOperation) {
+	r.ProducesMediaTypes = []string{"text/csv"}
+}
+
 // ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteAPIV1QuerySavedID delete a saved query.
+	DeleteAPIV1QuerySavedID(params *DeleteAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAPIV1QuerySavedIDNoContent, error)
+
+	// DeleteAPIV1QuerySavedIDContext delete a saved query.
+	DeleteAPIV1QuerySavedIDContext(ctx context.Context, params *DeleteAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAPIV1QuerySavedIDNoContent, error)
+
+	// GetAPIV1QueryAgents summarise agents queries.
+	GetAPIV1QueryAgents(params *GetAPIV1QueryAgentsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAgentsOK, error)
+
+	// GetAPIV1QueryAgentsContext summarise agents queries.
+	GetAPIV1QueryAgentsContext(ctx context.Context, params *GetAPIV1QueryAgentsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAgentsOK, error)
+
+	// GetAPIV1QueryAssetStats query stats for one asset.
+	GetAPIV1QueryAssetStats(params *GetAPIV1QueryAssetStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAssetStatsOK, error)
+
+	// GetAPIV1QueryAssetStatsContext query stats for one asset.
+	GetAPIV1QueryAssetStatsContext(ctx context.Context, params *GetAPIV1QueryAssetStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAssetStatsOK, error)
 
 	// GetAPIV1QueryHistory list queries.
 	GetAPIV1QueryHistory(params *GetAPIV1QueryHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryOK, error)
@@ -62,17 +104,41 @@ type ClientService interface {
 	// GetAPIV1QueryHistoryContext list queries.
 	GetAPIV1QueryHistoryContext(ctx context.Context, params *GetAPIV1QueryHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryOK, error)
 
+	// GetAPIV1QueryHistoryExport export queries.
+	GetAPIV1QueryHistoryExport(params *GetAPIV1QueryHistoryExportParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryExportOK, error)
+
+	// GetAPIV1QueryHistoryExportContext export queries.
+	GetAPIV1QueryHistoryExportContext(ctx context.Context, params *GetAPIV1QueryHistoryExportParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryExportOK, error)
+
 	// GetAPIV1QueryHistoryID get a query.
 	GetAPIV1QueryHistoryID(params *GetAPIV1QueryHistoryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryIDOK, error)
 
 	// GetAPIV1QueryHistoryIDContext get a query.
 	GetAPIV1QueryHistoryIDContext(ctx context.Context, params *GetAPIV1QueryHistoryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryIDOK, error)
 
+	// GetAPIV1QuerySaved list saved queries.
+	GetAPIV1QuerySaved(params *GetAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedOK, error)
+
+	// GetAPIV1QuerySavedContext list saved queries.
+	GetAPIV1QuerySavedContext(ctx context.Context, params *GetAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedOK, error)
+
+	// GetAPIV1QuerySavedID get a saved query.
+	GetAPIV1QuerySavedID(params *GetAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedIDOK, error)
+
+	// GetAPIV1QuerySavedIDContext get a saved query.
+	GetAPIV1QuerySavedIDContext(ctx context.Context, params *GetAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedIDOK, error)
+
 	// GetAPIV1QuerySources list queryable sources.
 	GetAPIV1QuerySources(params *GetAPIV1QuerySourcesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesOK, error)
 
 	// GetAPIV1QuerySourcesContext list queryable sources.
 	GetAPIV1QuerySourcesContext(ctx context.Context, params *GetAPIV1QuerySourcesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesOK, error)
+
+	// GetAPIV1QuerySourcesNameStats query stats for one source.
+	GetAPIV1QuerySourcesNameStats(params *GetAPIV1QuerySourcesNameStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesNameStatsOK, error)
+
+	// GetAPIV1QuerySourcesNameStatsContext query stats for one source.
+	GetAPIV1QuerySourcesNameStatsContext(ctx context.Context, params *GetAPIV1QuerySourcesNameStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesNameStatsOK, error)
 
 	// GetAPIV1QuerySourcesNameTables list a source s tables.
 	GetAPIV1QuerySourcesNameTables(params *GetAPIV1QuerySourcesNameTablesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesNameTablesOK, error)
@@ -98,11 +164,35 @@ type ClientService interface {
 	// GetQueryServeKeysContext list serving key generations.
 	GetQueryServeKeysContext(ctx context.Context, params *GetQueryServeKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetQueryServeKeysOK, error)
 
+	// PostAPIV1QueryAccessRequests request query access.
+	PostAPIV1QueryAccessRequests(params *PostAPIV1QueryAccessRequestsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryAccessRequestsOK, *PostAPIV1QueryAccessRequestsCreated, error)
+
+	// PostAPIV1QueryAccessRequestsContext request query access.
+	PostAPIV1QueryAccessRequestsContext(ctx context.Context, params *PostAPIV1QueryAccessRequestsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryAccessRequestsOK, *PostAPIV1QueryAccessRequestsCreated, error)
+
+	// PostAPIV1QueryHistoryIDCancel cancel a query.
+	PostAPIV1QueryHistoryIDCancel(params *PostAPIV1QueryHistoryIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryHistoryIDCancelNoContent, error)
+
+	// PostAPIV1QueryHistoryIDCancelContext cancel a query.
+	PostAPIV1QueryHistoryIDCancelContext(ctx context.Context, params *PostAPIV1QueryHistoryIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryHistoryIDCancelNoContent, error)
+
 	// PostAPIV1QueryRun run a query.
 	PostAPIV1QueryRun(params *PostAPIV1QueryRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryRunOK, error)
 
 	// PostAPIV1QueryRunContext run a query.
 	PostAPIV1QueryRunContext(ctx context.Context, params *PostAPIV1QueryRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryRunOK, error)
+
+	// PostAPIV1QuerySaved save a query.
+	PostAPIV1QuerySaved(params *PostAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedCreated, error)
+
+	// PostAPIV1QuerySavedContext save a query.
+	PostAPIV1QuerySavedContext(ctx context.Context, params *PostAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedCreated, error)
+
+	// PostAPIV1QuerySavedIDRun mark a saved query as run.
+	PostAPIV1QuerySavedIDRun(params *PostAPIV1QuerySavedIDRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedIDRunOK, error)
+
+	// PostAPIV1QuerySavedIDRunContext mark a saved query as run.
+	PostAPIV1QuerySavedIDRunContext(ctx context.Context, params *PostAPIV1QuerySavedIDRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedIDRunOK, error)
 
 	// PostQueryServeEnrol enrol a serving plugin.
 	PostQueryServeEnrol(params *PostQueryServeEnrolParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostQueryServeEnrolOK, error)
@@ -116,12 +206,219 @@ type ClientService interface {
 	// PostQueryServeKeysRotateContext rotate serving keys.
 	PostQueryServeKeysRotateContext(ctx context.Context, params *PostQueryServeKeysRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostQueryServeKeysRotateOK, error)
 
+	// PutAPIV1QuerySavedID update a saved query.
+	PutAPIV1QuerySavedID(params *PutAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAPIV1QuerySavedIDOK, error)
+
+	// PutAPIV1QuerySavedIDContext update a saved query.
+	PutAPIV1QuerySavedIDContext(ctx context.Context, params *PutAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAPIV1QuerySavedIDOK, error)
+
 	SetTransport(transport runtime.ContextualTransport)
+}
+
+// DeleteAPIV1QuerySavedID deletes a saved query.
+//
+// Deletes one of the current person's saved queries. The query log keeps every run..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAPIV1QuerySavedIDContext] instead.
+func (a *Client) DeleteAPIV1QuerySavedID(params *DeleteAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAPIV1QuerySavedIDNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAPIV1QuerySavedIDContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteAPIV1QuerySavedIDContext deletes a saved query.
+//
+// Deletes one of the current person's saved queries. The query log keeps every run..
+//
+// Do not use the deprecated [DeleteAPIV1QuerySavedIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAPIV1QuerySavedIDContext(ctx context.Context, params *DeleteAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAPIV1QuerySavedIDNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteAPIV1QuerySavedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "DeleteAPIV1QuerySavedID",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/query/saved/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteAPIV1QuerySavedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteAPIV1QuerySavedIDNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteAPIV1QuerySavedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QueryAgents summarises agents queries.
+//
+// Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QueryAgentsContext] instead.
+func (a *Client) GetAPIV1QueryAgents(params *GetAPIV1QueryAgentsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAgentsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QueryAgentsContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QueryAgentsContext summarises agents queries.
+//
+// Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries..
+//
+// Do not use the deprecated [GetAPIV1QueryAgentsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QueryAgentsContext(ctx context.Context, params *GetAPIV1QueryAgentsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAgentsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QueryAgentsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QueryAgents",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/agents",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QueryAgentsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QueryAgentsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryAgents: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QueryAssetStats queries stats for one asset.
+//
+// Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QueryAssetStatsContext] instead.
+func (a *Client) GetAPIV1QueryAssetStats(params *GetAPIV1QueryAssetStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAssetStatsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QueryAssetStatsContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QueryAssetStatsContext queries stats for one asset.
+//
+// Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries..
+//
+// Do not use the deprecated [GetAPIV1QueryAssetStatsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QueryAssetStatsContext(ctx context.Context, params *GetAPIV1QueryAssetStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryAssetStatsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QueryAssetStatsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QueryAssetStats",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/asset-stats",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QueryAssetStatsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QueryAssetStatsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryAssetStats: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // GetAPIV1QueryHistory lists queries.
 //
-// Lists the query log, newest first. Callers without access:view only see their own queries..
+// Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -140,7 +437,7 @@ func (a *Client) GetAPIV1QueryHistory(params *GetAPIV1QueryHistoryParams, authIn
 
 // GetAPIV1QueryHistoryContext lists queries.
 //
-// Lists the query log, newest first. Callers without access:view only see their own queries..
+// Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered..
 //
 // Do not use the deprecated [GetAPIV1QueryHistoryParams.Context] with this method: it would be ignored.
 func (a *Client) GetAPIV1QueryHistoryContext(ctx context.Context, params *GetAPIV1QueryHistoryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryOK, error) {
@@ -183,6 +480,73 @@ func (a *Client) GetAPIV1QueryHistoryContext(ctx context.Context, params *GetAPI
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryHistory: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QueryHistoryExport exports queries.
+//
+// Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QueryHistoryExportContext] instead.
+func (a *Client) GetAPIV1QueryHistoryExport(params *GetAPIV1QueryHistoryExportParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryExportOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QueryHistoryExportContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QueryHistoryExportContext exports queries.
+//
+// Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written..
+//
+// Do not use the deprecated [GetAPIV1QueryHistoryExportParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QueryHistoryExportContext(ctx context.Context, params *GetAPIV1QueryHistoryExportParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryExportOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QueryHistoryExportParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QueryHistoryExport",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/history/export",
+		ProducesMediaTypes: []string{"text/csv"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QueryHistoryExportReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QueryHistoryExportOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryHistoryExport: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -253,6 +617,140 @@ func (a *Client) GetAPIV1QueryHistoryIDContext(ctx context.Context, params *GetA
 	panic(msg)
 }
 
+// GetAPIV1QuerySaved lists saved queries.
+//
+// Lists the current person's saved queries, the most recently run or edited first..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QuerySavedContext] instead.
+func (a *Client) GetAPIV1QuerySaved(params *GetAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QuerySavedContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QuerySavedContext lists saved queries.
+//
+// Lists the current person's saved queries, the most recently run or edited first..
+//
+// Do not use the deprecated [GetAPIV1QuerySavedParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QuerySavedContext(ctx context.Context, params *GetAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QuerySavedParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QuerySaved",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/saved",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QuerySavedReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QuerySavedOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QuerySaved: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QuerySavedID gets a saved query.
+//
+// Returns one of the current person's saved queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QuerySavedIDContext] instead.
+func (a *Client) GetAPIV1QuerySavedID(params *GetAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QuerySavedIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QuerySavedIDContext gets a saved query.
+//
+// Returns one of the current person's saved queries..
+//
+// Do not use the deprecated [GetAPIV1QuerySavedIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QuerySavedIDContext(ctx context.Context, params *GetAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QuerySavedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QuerySavedID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/saved/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QuerySavedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QuerySavedIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QuerySavedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetAPIV1QuerySources lists queryable sources.
 //
 // Pages through the sources that answer data queries, in name order. Use a source's name as the "source" of a query..
@@ -317,6 +815,73 @@ func (a *Client) GetAPIV1QuerySourcesContext(ctx context.Context, params *GetAPI
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetAPIV1QuerySources: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QuerySourcesNameStats queries stats for one source.
+//
+// Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QuerySourcesNameStatsContext] instead.
+func (a *Client) GetAPIV1QuerySourcesNameStats(params *GetAPIV1QuerySourcesNameStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesNameStatsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QuerySourcesNameStatsContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QuerySourcesNameStatsContext queries stats for one source.
+//
+// Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries..
+//
+// Do not use the deprecated [GetAPIV1QuerySourcesNameStatsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QuerySourcesNameStatsContext(ctx context.Context, params *GetAPIV1QuerySourcesNameStatsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySourcesNameStatsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QuerySourcesNameStatsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QuerySourcesNameStats",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/sources/{name}/stats",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QuerySourcesNameStatsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QuerySourcesNameStatsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QuerySourcesNameStats: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -584,6 +1149,140 @@ func (a *Client) GetQueryServeKeysContext(ctx context.Context, params *GetQueryS
 	panic(msg)
 }
 
+// PostAPIV1QueryAccessRequests requests query access.
+//
+// Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1QueryAccessRequestsContext] instead.
+func (a *Client) PostAPIV1QueryAccessRequests(params *PostAPIV1QueryAccessRequestsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryAccessRequestsOK, *PostAPIV1QueryAccessRequestsCreated, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1QueryAccessRequestsContext(ctx, params, authInfo, opts...)
+}
+
+// PostAPIV1QueryAccessRequestsContext requests query access.
+//
+// Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again..
+//
+// Do not use the deprecated [PostAPIV1QueryAccessRequestsParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1QueryAccessRequestsContext(ctx context.Context, params *PostAPIV1QueryAccessRequestsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryAccessRequestsOK, *PostAPIV1QueryAccessRequestsCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAPIV1QueryAccessRequestsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PostAPIV1QueryAccessRequests",
+		Method:             "POST",
+		PathPattern:        "/api/v1/query/access-requests",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAPIV1QueryAccessRequestsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// several success responses have to be checked
+	switch value := result.(type) {
+	case *PostAPIV1QueryAccessRequestsOK:
+		return value, nil, nil
+	case *PostAPIV1QueryAccessRequestsCreated:
+		return nil, value, nil
+	}
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for query: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostAPIV1QueryHistoryIDCancel cancels a query.
+//
+// Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1QueryHistoryIDCancelContext] instead.
+func (a *Client) PostAPIV1QueryHistoryIDCancel(params *PostAPIV1QueryHistoryIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryHistoryIDCancelNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1QueryHistoryIDCancelContext(ctx, params, authInfo, opts...)
+}
+
+// PostAPIV1QueryHistoryIDCancelContext cancels a query.
+//
+// Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it..
+//
+// Do not use the deprecated [PostAPIV1QueryHistoryIDCancelParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1QueryHistoryIDCancelContext(ctx context.Context, params *PostAPIV1QueryHistoryIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QueryHistoryIDCancelNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAPIV1QueryHistoryIDCancelParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PostAPIV1QueryHistoryIDCancel",
+		Method:             "POST",
+		PathPattern:        "/api/v1/query/history/{id}/cancel",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAPIV1QueryHistoryIDCancelReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostAPIV1QueryHistoryIDCancelNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostAPIV1QueryHistoryIDCancel: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostAPIV1QueryRun runs a query.
 //
 // Runs a read-only statement against a queryable source as the caller. The statement is planned first and refused unless the caller may query every table it references. Every attempt is recorded in the query log..
@@ -648,6 +1347,140 @@ func (a *Client) PostAPIV1QueryRunContext(ctx context.Context, params *PostAPIV1
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PostAPIV1QueryRun: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostAPIV1QuerySaved saves a query.
+//
+// Saves a statement and the source it runs against for the current person to run again..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1QuerySavedContext] instead.
+func (a *Client) PostAPIV1QuerySaved(params *PostAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedCreated, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1QuerySavedContext(ctx, params, authInfo, opts...)
+}
+
+// PostAPIV1QuerySavedContext saves a query.
+//
+// Saves a statement and the source it runs against for the current person to run again..
+//
+// Do not use the deprecated [PostAPIV1QuerySavedParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1QuerySavedContext(ctx context.Context, params *PostAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAPIV1QuerySavedParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PostAPIV1QuerySaved",
+		Method:             "POST",
+		PathPattern:        "/api/v1/query/saved",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAPIV1QuerySavedReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostAPIV1QuerySavedCreated)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostAPIV1QuerySaved: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostAPIV1QuerySavedIDRun marks a saved query as run.
+//
+// Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1QuerySavedIDRunContext] instead.
+func (a *Client) PostAPIV1QuerySavedIDRun(params *PostAPIV1QuerySavedIDRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedIDRunOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1QuerySavedIDRunContext(ctx, params, authInfo, opts...)
+}
+
+// PostAPIV1QuerySavedIDRunContext marks a saved query as run.
+//
+// Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other..
+//
+// Do not use the deprecated [PostAPIV1QuerySavedIDRunParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1QuerySavedIDRunContext(ctx context.Context, params *PostAPIV1QuerySavedIDRunParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAPIV1QuerySavedIDRunOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAPIV1QuerySavedIDRunParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PostAPIV1QuerySavedIDRun",
+		Method:             "POST",
+		PathPattern:        "/api/v1/query/saved/{id}/run",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAPIV1QuerySavedIDRunReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostAPIV1QuerySavedIDRunOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostAPIV1QuerySavedIDRun: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -782,6 +1615,73 @@ func (a *Client) PostQueryServeKeysRotateContext(ctx context.Context, params *Po
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PostQueryServeKeysRotate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutAPIV1QuerySavedID updates a saved query.
+//
+// Replaces the name, statement and source of one of the current person's saved queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAPIV1QuerySavedIDContext] instead.
+func (a *Client) PutAPIV1QuerySavedID(params *PutAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAPIV1QuerySavedIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAPIV1QuerySavedIDContext(ctx, params, authInfo, opts...)
+}
+
+// PutAPIV1QuerySavedIDContext updates a saved query.
+//
+// Replaces the name, statement and source of one of the current person's saved queries..
+//
+// Do not use the deprecated [PutAPIV1QuerySavedIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAPIV1QuerySavedIDContext(ctx context.Context, params *PutAPIV1QuerySavedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAPIV1QuerySavedIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAPIV1QuerySavedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "PutAPIV1QuerySavedID",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/query/saved/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAPIV1QuerySavedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutAPIV1QuerySavedIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PutAPIV1QuerySavedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

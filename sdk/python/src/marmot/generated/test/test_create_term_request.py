@@ -42,7 +42,13 @@ class TestCreateTermRequest(unittest.TestCase):
                         id = '',
                         type = 'user', )
                     ],
-                parent_term_id = ''
+                parent_term_id = '',
+                related_term_ids = [
+                    ''
+                    ],
+                tags = [
+                    ''
+                    ]
             )
         else:
             return CreateTermRequest(

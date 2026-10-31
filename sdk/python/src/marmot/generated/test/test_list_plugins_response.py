@@ -35,7 +35,7 @@ class TestListPluginsResponse(unittest.TestCase):
             return ListPluginsResponse(
                 loading = True,
                 plugins = [
-                    marmot.generated.models.pluginsdk/meta.pluginsdk.Meta(
+                    marmot.generated.models.plugin_info.PluginInfo(
                         asset_schemas = [
                             marmot.generated.models.pluginsdk/asset_schema.pluginsdk.AssetSchema(
                                 description = '',
@@ -47,6 +47,9 @@ class TestListPluginsResponse(unittest.TestCase):
                                         type = '', )
                                     ],
                                 struct_name = '', )
+                            ],
+                        catalogs = [
+                            ''
                             ],
                         category = '',
                         config_spec = [
@@ -84,6 +87,7 @@ class TestListPluginsResponse(unittest.TestCase):
                         icon = '',
                         id = '',
                         name = '',
+                        produces_lineage = True,
                         status = '',
                         supports_data_preview = True,
                         supports_query = True, )

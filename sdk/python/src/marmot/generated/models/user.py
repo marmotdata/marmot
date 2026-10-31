@@ -33,6 +33,11 @@ class User(BaseModel):
     created_at: StrictStr | None = None
     id: StrictStr | None = None
     identities: list[UserIdentity] | None = None
+    invite_expires_at: StrictStr | None = None
+    last_seen_at: StrictStr | None = Field(
+        default=None,
+        description="LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
+    )
     must_change_password: StrictBool | None = None
     name: StrictStr | None = None
     preferences: dict[str, Any] | None = None
@@ -42,6 +47,10 @@ class User(BaseModel):
         default=None,
         description="Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.",
     )
+    status: StrictStr | None = Field(
+        default=None,
+        description="Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.",
+    )
     updated_at: StrictStr | None = None
     username: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
@@ -49,12 +58,15 @@ class User(BaseModel):
         "created_at",
         "id",
         "identities",
+        "invite_expires_at",
+        "last_seen_at",
         "must_change_password",
         "name",
         "preferences",
         "profile_picture",
         "roles",
         "sessions_invalidated_at",
+        "status",
         "updated_at",
         "username",
     ]
@@ -129,6 +141,8 @@ class User(BaseModel):
                 "identities": [UserIdentity.from_dict(_item) for _item in obj["identities"]]
                 if obj.get("identities") is not None
                 else None,
+                "invite_expires_at": obj.get("invite_expires_at"),
+                "last_seen_at": obj.get("last_seen_at"),
                 "must_change_password": obj.get("must_change_password"),
                 "name": obj.get("name"),
                 "preferences": obj.get("preferences"),
@@ -137,6 +151,7 @@ class User(BaseModel):
                 if obj.get("roles") is not None
                 else None,
                 "sessions_invalidated_at": obj.get("sessions_invalidated_at"),
+                "status": obj.get("status"),
                 "updated_at": obj.get("updated_at"),
                 "username": obj.get("username"),
             }

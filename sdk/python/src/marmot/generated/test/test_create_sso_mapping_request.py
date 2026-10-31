@@ -35,6 +35,7 @@ class TestCreateSSOMappingRequest(unittest.TestCase):
             return CreateSSOMappingRequest(
                 member_role = '',
                 provider = '',
+                role_id = '',
                 sso_group_name = '',
                 team_id = ''
             )

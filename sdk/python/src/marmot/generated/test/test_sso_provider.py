@@ -33,6 +33,7 @@ class TestSSOProvider(unittest.TestCase):
         model = SSOProvider()
         if include_optional:
             return SSOProvider(
+                enabled = True,
                 issuer_url = '',
                 name = '',
                 type = ''

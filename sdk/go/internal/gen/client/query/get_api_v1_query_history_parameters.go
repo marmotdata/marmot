@@ -63,9 +63,14 @@ GetAPIV1QueryHistoryParams contains all the parameters to send to the API endpoi
 */
 type GetAPIV1QueryHistoryParams struct {
 
+	// Caller.
+	//
+	// A caller as principal_type:principal_id or as its audit subject, such as user:alice
+	Caller *string
+
 	// Client.
 	//
-	// Comma-separated clients to include: api, mcp or cli
+	// Comma-separated clients to include: api, mcp, cli or editor
 	Client *string
 
 	// Decision.
@@ -77,6 +82,11 @@ type GetAPIV1QueryHistoryParams struct {
 	//
 	// Only queries started at or after this time (RFC 3339)
 	From *string
+
+	// ID.
+	//
+	// Only the query with this id
+	ID *string
 
 	// Limit.
 	//
@@ -100,6 +110,11 @@ type GetAPIV1QueryHistoryParams struct {
 	// Page offset
 	Offset *int64
 
+	// Outcome.
+	//
+	// allowed (ran to completion), denied, failed, cancelled or running
+	Outcome *string
+
 	// PrincipalID.
 	//
 	// Principal ID
@@ -112,8 +127,13 @@ type GetAPIV1QueryHistoryParams struct {
 
 	// Q.
 	//
-	// Matches the caller, source, statement or a referenced MRN
+	// Matches the caller, agent, service account, source, statement or a referenced MRN
 	Q *string
+
+	// Reason.
+	//
+	// Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled
+	Reason *string
 
 	// Source.
 	//
@@ -122,7 +142,7 @@ type GetAPIV1QueryHistoryParams struct {
 
 	// Status.
 	//
-	// running, completed, failed or denied
+	// running, completed, failed, cancelled or denied
 	Status *string
 
 	// To.
@@ -201,6 +221,17 @@ func (o *GetAPIV1QueryHistoryParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCaller adds the caller to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithCaller(caller *string) *GetAPIV1QueryHistoryParams {
+	o.SetCaller(caller)
+	return o
+}
+
+// SetCaller adds the caller to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetCaller(caller *string) {
+	o.Caller = caller
+}
+
 // WithClient adds the client to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) WithClient(client *string) *GetAPIV1QueryHistoryParams {
 	o.SetClient(client)
@@ -232,6 +263,17 @@ func (o *GetAPIV1QueryHistoryParams) WithFrom(from *string) *GetAPIV1QueryHistor
 // SetFrom adds the from to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) SetFrom(from *string) {
 	o.From = from
+}
+
+// WithID adds the id to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithID(id *string) *GetAPIV1QueryHistoryParams {
+	o.SetID(id)
+	return o
+}
+
+// SetID adds the id to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetID(id *string) {
+	o.ID = id
 }
 
 // WithLimit adds the limit to the get API v1 query history params.
@@ -278,6 +320,17 @@ func (o *GetAPIV1QueryHistoryParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
+// WithOutcome adds the outcome to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithOutcome(outcome *string) *GetAPIV1QueryHistoryParams {
+	o.SetOutcome(outcome)
+	return o
+}
+
+// SetOutcome adds the outcome to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetOutcome(outcome *string) {
+	o.Outcome = outcome
+}
+
 // WithPrincipalID adds the principalID to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) WithPrincipalID(principalID *string) *GetAPIV1QueryHistoryParams {
 	o.SetPrincipalID(principalID)
@@ -309,6 +362,17 @@ func (o *GetAPIV1QueryHistoryParams) WithQ(q *string) *GetAPIV1QueryHistoryParam
 // SetQ adds the q to the get API v1 query history params.
 func (o *GetAPIV1QueryHistoryParams) SetQ(q *string) {
 	o.Q = q
+}
+
+// WithReason adds the reason to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) WithReason(reason *string) *GetAPIV1QueryHistoryParams {
+	o.SetReason(reason)
+	return o
+}
+
+// SetReason adds the reason to the get API v1 query history params.
+func (o *GetAPIV1QueryHistoryParams) SetReason(reason *string) {
+	o.Reason = reason
 }
 
 // WithSource adds the source to the get API v1 query history params.
@@ -350,6 +414,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		return err
 	}
 	var res []error
+
+	if o.Caller != nil {
+
+		// query param caller
+		var qrCaller string
+
+		if o.Caller != nil {
+			qrCaller = *o.Caller
+		}
+		qCaller := qrCaller
+		if qCaller != "" {
+
+			if err := r.SetQueryParam("caller", qCaller); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.Client != nil {
 
@@ -397,6 +478,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		if qFrom != "" {
 
 			if err := r.SetQueryParam("from", qFrom); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.ID != nil {
+
+		// query param id
+		var qrID string
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := qrID
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
 				return err
 			}
 		}
@@ -470,6 +568,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		}
 	}
 
+	if o.Outcome != nil {
+
+		// query param outcome
+		var qrOutcome string
+
+		if o.Outcome != nil {
+			qrOutcome = *o.Outcome
+		}
+		qOutcome := qrOutcome
+		if qOutcome != "" {
+
+			if err := r.SetQueryParam("outcome", qOutcome); err != nil {
+				return err
+			}
+		}
+	}
+
 	if o.PrincipalID != nil {
 
 		// query param principal_id
@@ -516,6 +631,23 @@ func (o *GetAPIV1QueryHistoryParams) WriteToRequest(r runtime.ClientRequest, reg
 		if qQ != "" {
 
 			if err := r.SetQueryParam("q", qQ); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Reason != nil {
+
+		// query param reason
+		var qrReason string
+
+		if o.Reason != nil {
+			qrReason = *o.Reason
+		}
+		qReason := qrReason
+		if qReason != "" {
+
+			if err := r.SetQueryParam("reason", qReason); err != nil {
 				return err
 			}
 		}

@@ -6,6 +6,9 @@
 	import type { Asset, FieldAnnotation } from '$lib/assets/types';
 	import { m } from '$lib/paraglide/messages';
 	import { applyAnnotations, parseSchema } from './schemaColumns';
+	import FieldTermsDrawer from './FieldTermsDrawer.svelte';
+	import { resolve } from '$app/paths';
+	import { toast } from '@marmotdata/elements/toast.js';
 	import '@marmotdata/elements/schema-table.js';
 	import '@marmotdata/elements/code-sample.js';
 	import type { MenuSelectDetail } from '@marmotdata/elements/classes/menu.js';
@@ -37,6 +40,9 @@
 	let descriptionDialog = $state<MmDialog>();
 	let descriptionPath = $state('');
 	let descriptionDraft = $state('');
+	// The field whose glossary terms are open in the picker, held apart from the selection so the drawer keeps its field
+	let termsField = $state<{ schema: string; path: string } | null>(null);
+	let termBusy = $state<string | null>(null);
 
 	let keys = $derived(Object.keys(schemas));
 	let parsed = $derived(activeKey && activeKey in schemas ? parseSchema(schemas[activeKey]) : null);
@@ -49,6 +55,19 @@
 	let annotations = $derived((asset.field_annotations ?? []).filter((a) => a.schema === activeKey));
 	let columns = $derived(parsed ? applyAnnotations(parsed.columns, annotations) : []);
 	let selectedAnnotation = $derived(annotations.find((a) => a.path === selectedPath));
+	let selectedTerms = $derived(selectedAnnotation?.glossary_terms ?? []);
+	let termsFieldTerms = $derived(
+		termsField ? fieldTerms(termsField.schema, termsField.path) : ([] as FieldTerm[])
+	);
+
+	type FieldTerm = FieldAnnotation['glossary_terms'][number];
+
+	function fieldTerms(schema: string, path: string): FieldTerm[] {
+		return (
+			asset.field_annotations?.find((a) => a.schema === schema && a.path === path)
+				?.glossary_terms ?? []
+		);
+	}
 
 	// Reads only the asset, never the state it writes, so an asset without a schema does not loop on a fresh empty object
 	$effect(() => {
@@ -126,7 +145,11 @@
 
 	async function setField(
 		path: string,
-		change: Partial<Record<'pii' | 'certified', boolean>> & { description?: string }
+		change: Partial<Record<'pii' | 'certified', boolean>> & {
+			description?: string;
+			glossary_term_ids?: string[];
+		},
+		schema = activeKey
 	) {
 		if (!asset?.id || !path) return false;
 		fieldSaving = true;
@@ -134,7 +157,7 @@
 			const response = await fetchApi(`/assets/field-annotations/${encodeURIComponent(asset.id)}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ schema: activeKey, path, ...change })
+				body: JSON.stringify({ schema, path, ...change })
 			});
 			const data = await response.json().catch(() => ({}));
 			if (!response.ok) throw new Error(data.error || m.schema_error_unknown());
@@ -150,6 +173,47 @@
 		} finally {
 			fieldSaving = false;
 		}
+	}
+
+	// Each link and unlink saves the field's whole term list at once and offers Undo, which reads the list as it is then so other changes in between survive
+	async function linkTerm(schema: string, path: string, term: FieldTerm, announce = true) {
+		const ids = fieldTerms(schema, path).map((t) => t.id);
+		if (ids.includes(term.id)) return true;
+		termBusy = term.id;
+		const ok = await setField(path, { glossary_term_ids: [...ids, term.id] }, schema);
+		termBusy = null;
+		if (ok && announce) {
+			toast({
+				tone: 'success',
+				message: m.schema_field_term_linked_toast({ term: term.name, path }),
+				action: m.glossary_undo(),
+				duration: 8000,
+				onAction: () => unlinkTerm(schema, path, term, false)
+			});
+		}
+		return ok;
+	}
+
+	async function unlinkTerm(schema: string, path: string, term: FieldTerm, announce = true) {
+		const ids = fieldTerms(schema, path).map((t) => t.id);
+		if (!ids.includes(term.id)) return true;
+		termBusy = term.id;
+		const ok = await setField(
+			path,
+			{ glossary_term_ids: ids.filter((id) => id !== term.id) },
+			schema
+		);
+		termBusy = null;
+		if (ok && announce) {
+			toast({
+				tone: 'success',
+				message: m.schema_field_term_unlinked_toast({ term: term.name, path }),
+				action: m.glossary_undo(),
+				duration: 8000,
+				onAction: () => linkTerm(schema, path, term, false)
+			});
+		}
+		return ok;
 	}
 
 	function editDescription(path: string, current: string) {
@@ -305,9 +369,32 @@
 							onclick={() => editDescription(selectedPath, selectedAnnotation?.description ?? '')}
 							>{m.schema_edit_field_description()}</mm-button
 						>
+						<mm-button
+							variant="ghost"
+							size="sm"
+							icon="menu-book"
+							disabled={fieldSaving}
+							onclick={() => (termsField = { schema: activeKey, path: selectedPath })}
+							>{m.schema_field_terms_button()}</mm-button
+						>
 					{:else}
 						<mm-text variant="caption" tone="secondary">{m.schema_select_field_hint()}</mm-text>
 					{/if}
+				</div>
+			{/if}
+
+			{#if selectedPath && selectedTerms.length > 0}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+					<mm-text variant="caption" tone="secondary"
+						>{m.schema_field_terms_of({ path: selectedPath })}</mm-text
+					>
+					{#each selectedTerms as t (t.id)}
+						<mm-tag
+							href={resolve(`/glossary/${t.id}`)}
+							removable={canManageAssets && !fieldSaving}
+							onmm-remove={() => unlinkTerm(activeKey, selectedPath, t)}>{t.name}</mm-tag
+						>
+					{/each}
 				</div>
 			{/if}
 
@@ -368,6 +455,19 @@
 		>{m.common_save()}</mm-button
 	>
 </mm-dialog>
+
+{#if termsField}
+	<FieldTermsDrawer
+		path={termsField.path}
+		terms={termsFieldTerms}
+		busy={termBusy}
+		onLink={(t) =>
+			termsField ? linkTerm(termsField.schema, termsField.path, t) : Promise.resolve(false)}
+		onUnlink={(t) =>
+			termsField ? unlinkTerm(termsField.schema, termsField.path, t) : Promise.resolve(false)}
+		onClose={() => (termsField = null)}
+	/>
+{/if}
 
 <mm-confirm-dialog
 	bind:this={deleteDialog}

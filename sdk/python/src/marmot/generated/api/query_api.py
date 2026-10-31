@@ -15,16 +15,24 @@ from pydantic import Field, StrictBool, StrictFloat, StrictInt, StrictStr, valid
 
 from marmot.generated.api_client import ApiClient, RequestSerialized
 from marmot.generated.api_response import ApiResponse
+from marmot.generated.models.list_saved_queries_response import ListSavedQueriesResponse
 from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInput
 from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
+from marmot.generated.models.query_access_request import QueryAccessRequest
+from marmot.generated.models.query_access_request_input import QueryAccessRequestInput
+from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse
+from marmot.generated.models.query_asset_stats import QueryAssetStats
 from marmot.generated.models.query_history_response import QueryHistoryResponse
 from marmot.generated.models.query_list_sources_response import QueryListSourcesResponse
 from marmot.generated.models.query_record import QueryRecord
 from marmot.generated.models.query_result import QueryResult
 from marmot.generated.models.query_run_input import QueryRunInput
+from marmot.generated.models.query_source_stats import QuerySourceStats
 from marmot.generated.models.query_source_table import QuerySourceTable
 from marmot.generated.models.query_stats import QueryStats
 from marmot.generated.models.query_status_response import QueryStatusResponse
+from marmot.generated.models.saved_query import SavedQuery
+from marmot.generated.models.saved_query_input import SavedQueryInput
 from marmot.generated.models.serve_key_generation import ServeKeyGeneration
 from marmot.generated.models.serve_rotate_keys_request import ServeRotateKeysRequest
 from marmot.generated.rest import RESTResponseType
@@ -44,12 +52,1647 @@ class QueryApi:
         self.api_client = api_client
 
     @validate_call
+    async def api_v1_query_access_requests_post(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAccessRequest:
+        """Request query access
+
+        Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again.
+
+        :param query_access_request_input: Request (required)
+        :type query_access_request_input: QueryAccessRequestInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_access_requests_post_serialize(
+            query_access_request_input=query_access_request_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAccessRequest",
+            "201": "QueryAccessRequest",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_access_requests_post_with_http_info(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAccessRequest]:
+        """Request query access
+
+        Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again.
+
+        :param query_access_request_input: Request (required)
+        :type query_access_request_input: QueryAccessRequestInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_access_requests_post_serialize(
+            query_access_request_input=query_access_request_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAccessRequest",
+            "201": "QueryAccessRequest",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_access_requests_post_without_preload_content(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Request query access
+
+        Asks the people who can grant access for what a refused query needed, and notifies them in Marmot. Pass the refused query's id, or a source when there is no query. Asking again for the same access within a day returns the earlier request without notifying anyone again.
+
+        :param query_access_request_input: Request (required)
+        :type query_access_request_input: QueryAccessRequestInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_access_requests_post_serialize(
+            query_access_request_input=query_access_request_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAccessRequest",
+            "201": "QueryAccessRequest",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_access_requests_post_sync(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAccessRequest:
+        """Request query access (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_access_requests_post`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_access_requests_post(
+                query_access_request_input=query_access_request_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_access_requests_post_sync_with_http_info(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAccessRequest]:
+        """Request query access (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_access_requests_post_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_access_requests_post_with_http_info(
+                query_access_request_input=query_access_request_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_access_requests_post_sync_without_preload_content(
+        self,
+        query_access_request_input: Annotated[
+            QueryAccessRequestInput, Field(description="Request")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Request query access (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_access_requests_post_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_access_requests_post_without_preload_content(
+                query_access_request_input=query_access_request_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_access_requests_post_serialize(
+        self,
+        query_access_request_input,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if query_access_request_input is not None:
+            _body_params = query_access_request_input
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/query/access-requests",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_agents_get(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAgentSummariesResponse:
+        """Summarise agents' queries
+
+        Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries.
+
+        :param principal_id: One service account
+        :type principal_id: str
+        :param limit: At most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_agents_get_serialize(
+            principal_id=principal_id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAgentSummariesResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_agents_get_with_http_info(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAgentSummariesResponse]:
+        """Summarise agents' queries
+
+        Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries.
+
+        :param principal_id: One service account
+        :type principal_id: str
+        :param limit: At most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_agents_get_serialize(
+            principal_id=principal_id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAgentSummariesResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_agents_get_without_preload_content(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Summarise agents' queries
+
+        Lists the service accounts agents query as, busiest first over the last 7 days, with queries and refusals in the last 24 hours and 7 days, the tables read and when each last queried. Pass principal_id for one account. Callers without access:view only see their own activity. Each row's principal_type and principal_id filter GET /query/history to that agent's queries.
+
+        :param principal_id: One service account
+        :type principal_id: str
+        :param limit: At most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_agents_get_serialize(
+            principal_id=principal_id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAgentSummariesResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_agents_get_sync(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAgentSummariesResponse:
+        """Summarise agents' queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_agents_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_agents_get(
+                principal_id=principal_id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_agents_get_sync_with_http_info(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAgentSummariesResponse]:
+        """Summarise agents' queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_agents_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_agents_get_with_http_info(
+                principal_id=principal_id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_agents_get_sync_without_preload_content(
+        self,
+        principal_id: Annotated[StrictStr | None, Field(description="One service account")] = None,
+        limit: Annotated[StrictInt | None, Field(description="At most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Summarise agents' queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_agents_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_agents_get_without_preload_content(
+                principal_id=principal_id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_agents_get_serialize(
+        self,
+        principal_id,
+        limit,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if principal_id is not None:
+            _query_params.append(("principal_id", principal_id))
+
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/agents",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_asset_stats_get(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAssetStats:
+        """Query stats for one asset
+
+        Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries.
+
+        :param mrn: Asset MRN (required)
+        :type mrn: str
+        :param var_from: Window start, RFC 3339; defaults to 14 days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_asset_stats_get_serialize(
+            mrn=mrn,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAssetStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_asset_stats_get_with_http_info(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAssetStats]:
+        """Query stats for one asset
+
+        Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries.
+
+        :param mrn: Asset MRN (required)
+        :type mrn: str
+        :param var_from: Window start, RFC 3339; defaults to 14 days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_asset_stats_get_serialize(
+            mrn=mrn,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAssetStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_asset_stats_get_without_preload_content(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Query stats for one asset
+
+        Summarises the queries through Marmot that read an asset over a window, the last 14 days by default: how many, how many distinct people and agents asked, the median run time, how many policy denied and a count per day. Callers without access:view see only their own queries.
+
+        :param mrn: Asset MRN (required)
+        :type mrn: str
+        :param var_from: Window start, RFC 3339; defaults to 14 days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_asset_stats_get_serialize(
+            mrn=mrn,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QueryAssetStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_asset_stats_get_sync(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QueryAssetStats:
+        """Query stats for one asset (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_asset_stats_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_asset_stats_get(
+                mrn=mrn,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_asset_stats_get_sync_with_http_info(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QueryAssetStats]:
+        """Query stats for one asset (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_asset_stats_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_asset_stats_get_with_http_info(
+                mrn=mrn,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_asset_stats_get_sync_without_preload_content(
+        self,
+        mrn: Annotated[StrictStr, Field(description="Asset MRN")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to 14 days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Query stats for one asset (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_asset_stats_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_asset_stats_get_without_preload_content(
+                mrn=mrn,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_asset_stats_get_serialize(
+        self,
+        mrn,
+        var_from,
+        to,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if mrn is not None:
+            _query_params.append(("mrn", mrn))
+
+        if var_from is not None:
+            _query_params.append(("from", var_from))
+
+        if to is not None:
+            _query_params.append(("to", to))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/asset-stats",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_history_export_get(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> str:
+        """Export queries
+
+        Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written.
+
+        :param format: csv
+        :type format: str
+        :param id: Only the query with this id
+        :type id: str
+        :param source: Source name
+        :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject
+        :type caller: str
+        :param outcome: allowed, denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason
+        :type reason: str
+        :param client: Comma-separated clients
+        :type client: str
+        :param var_from: RFC 3339
+        :type var_from: str
+        :param to: RFC 3339
+        :type to: str
+        :param q: Search
+        :type q: str
+        :param mine: Only the caller's own queries
+        :type mine: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_export_get_serialize(
+            format=format,
+            id=id,
+            source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
+            client=client,
+            var_from=var_from,
+            to=to,
+            q=q,
+            mine=mine,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "str",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_history_export_get_with_http_info(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[str]:
+        """Export queries
+
+        Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written.
+
+        :param format: csv
+        :type format: str
+        :param id: Only the query with this id
+        :type id: str
+        :param source: Source name
+        :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject
+        :type caller: str
+        :param outcome: allowed, denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason
+        :type reason: str
+        :param client: Comma-separated clients
+        :type client: str
+        :param var_from: RFC 3339
+        :type var_from: str
+        :param to: RFC 3339
+        :type to: str
+        :param q: Search
+        :type q: str
+        :param mine: Only the caller's own queries
+        :type mine: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_export_get_serialize(
+            format=format,
+            id=id,
+            source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
+            client=client,
+            var_from=var_from,
+            to=to,
+            q=q,
+            mine=mine,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "str",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_history_export_get_without_preload_content(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Export queries
+
+        Streams the query log as CSV, newest first, with the same filters as the listing (limit and offset are ignored). Callers without access:view only export their own queries. At most 100,000 rows are written.
+
+        :param format: csv
+        :type format: str
+        :param id: Only the query with this id
+        :type id: str
+        :param source: Source name
+        :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject
+        :type caller: str
+        :param outcome: allowed, denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason
+        :type reason: str
+        :param client: Comma-separated clients
+        :type client: str
+        :param var_from: RFC 3339
+        :type var_from: str
+        :param to: RFC 3339
+        :type to: str
+        :param q: Search
+        :type q: str
+        :param mine: Only the caller's own queries
+        :type mine: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_export_get_serialize(
+            format=format,
+            id=id,
+            source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
+            client=client,
+            var_from=var_from,
+            to=to,
+            q=q,
+            mine=mine,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "str",
+            "400": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_history_export_get_sync(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> str:
+        """Export queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_export_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_export_get(
+                format=format,
+                id=id,
+                source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
+                client=client,
+                var_from=var_from,
+                to=to,
+                q=q,
+                mine=mine,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_history_export_get_sync_with_http_info(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[str]:
+        """Export queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_export_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_export_get_with_http_info(
+                format=format,
+                id=id,
+                source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
+                client=client,
+                var_from=var_from,
+                to=to,
+                q=q,
+                mine=mine,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_history_export_get_sync_without_preload_content(
+        self,
+        format: Annotated[StrictStr | None, Field(description="csv")] = None,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
+        source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(description="A caller as principal_type:principal_id or as its audit subject"),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None, Field(description="allowed, denied, failed, cancelled or running")
+        ] = None,
+        reason: Annotated[StrictStr | None, Field(description="Outcome reason")] = None,
+        client: Annotated[StrictStr | None, Field(description="Comma-separated clients")] = None,
+        var_from: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        to: Annotated[StrictStr | None, Field(description="RFC 3339")] = None,
+        q: Annotated[StrictStr | None, Field(description="Search")] = None,
+        mine: Annotated[
+            StrictBool | None, Field(description="Only the caller's own queries")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Export queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_export_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_export_get_without_preload_content(
+                format=format,
+                id=id,
+                source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
+                client=client,
+                var_from=var_from,
+                to=to,
+                q=q,
+                mine=mine,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_history_export_get_serialize(
+        self,
+        format,
+        id,
+        source,
+        caller,
+        outcome,
+        reason,
+        client,
+        var_from,
+        to,
+        q,
+        mine,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if format is not None:
+            _query_params.append(("format", format))
+
+        if id is not None:
+            _query_params.append(("id", id))
+
+        if source is not None:
+            _query_params.append(("source", source))
+
+        if caller is not None:
+            _query_params.append(("caller", caller))
+
+        if outcome is not None:
+            _query_params.append(("outcome", outcome))
+
+        if reason is not None:
+            _query_params.append(("reason", reason))
+
+        if client is not None:
+            _query_params.append(("client", client))
+
+        if var_from is not None:
+            _query_params.append(("from", var_from))
+
+        if to is not None:
+            _query_params.append(("to", to))
+
+        if q is not None:
+            _query_params.append(("q", q))
+
+        if mine is not None:
+            _query_params.append(("mine", mine))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["text/csv"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/history/export",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
     async def api_v1_query_history_get(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -61,7 +1704,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -72,7 +1715,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -86,13 +1731,21 @@ class QueryApi:
     ) -> QueryHistoryResponse:
         """List queries
 
-        Lists the query log, newest first. Callers without access:view only see their own queries.
+        Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered.
 
+        :param id: Only the query with this id
+        :type id: str
         :param source: Source name
         :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject, such as user:alice
+        :type caller: str
+        :param outcome: allowed (ran to completion), denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled
+        :type reason: str
         :param decision: allowed or denied
         :type decision: str
-        :param status: running, completed, failed or denied
+        :param status: running, completed, failed, cancelled or denied
         :type status: str
         :param mrn: Only queries that referenced this MRN
         :type mrn: str
@@ -102,13 +1755,13 @@ class QueryApi:
         :type principal_id: str
         :param mine: Only the caller's own queries
         :type mine: bool
-        :param client: Comma-separated clients to include: api, mcp or cli
+        :param client: Comma-separated clients to include: api, mcp, cli or editor
         :type client: str
         :param var_from: Only queries started at or after this time (RFC 3339)
         :type var_from: str
         :param to: Only queries started before this time (RFC 3339)
         :type to: str
-        :param q: Matches the caller, source, statement or a referenced MRN
+        :param q: Matches the caller, agent, service account, source, statement or a referenced MRN
         :type q: str
         :param limit: Page size
         :type limit: int
@@ -137,7 +1790,11 @@ class QueryApi:
         """
 
         _param = self._api_v1_query_history_get_serialize(
+            id=id,
             source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
             decision=decision,
             status=status,
             mrn=mrn,
@@ -158,6 +1815,7 @@ class QueryApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "QueryHistoryResponse",
+            "400": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -169,10 +1827,27 @@ class QueryApi:
     @validate_call
     async def api_v1_query_history_get_with_http_info(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -184,7 +1859,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -195,7 +1870,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -209,13 +1886,21 @@ class QueryApi:
     ) -> ApiResponse[QueryHistoryResponse]:
         """List queries
 
-        Lists the query log, newest first. Callers without access:view only see their own queries.
+        Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered.
 
+        :param id: Only the query with this id
+        :type id: str
         :param source: Source name
         :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject, such as user:alice
+        :type caller: str
+        :param outcome: allowed (ran to completion), denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled
+        :type reason: str
         :param decision: allowed or denied
         :type decision: str
-        :param status: running, completed, failed or denied
+        :param status: running, completed, failed, cancelled or denied
         :type status: str
         :param mrn: Only queries that referenced this MRN
         :type mrn: str
@@ -225,13 +1910,13 @@ class QueryApi:
         :type principal_id: str
         :param mine: Only the caller's own queries
         :type mine: bool
-        :param client: Comma-separated clients to include: api, mcp or cli
+        :param client: Comma-separated clients to include: api, mcp, cli or editor
         :type client: str
         :param var_from: Only queries started at or after this time (RFC 3339)
         :type var_from: str
         :param to: Only queries started before this time (RFC 3339)
         :type to: str
-        :param q: Matches the caller, source, statement or a referenced MRN
+        :param q: Matches the caller, agent, service account, source, statement or a referenced MRN
         :type q: str
         :param limit: Page size
         :type limit: int
@@ -260,7 +1945,11 @@ class QueryApi:
         """
 
         _param = self._api_v1_query_history_get_serialize(
+            id=id,
             source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
             decision=decision,
             status=status,
             mrn=mrn,
@@ -281,6 +1970,7 @@ class QueryApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "QueryHistoryResponse",
+            "400": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -292,10 +1982,27 @@ class QueryApi:
     @validate_call
     async def api_v1_query_history_get_without_preload_content(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -307,7 +2014,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -318,7 +2025,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -332,13 +2041,21 @@ class QueryApi:
     ) -> RESTResponseType:
         """List queries
 
-        Lists the query log, newest first. Callers without access:view only see their own queries.
+        Lists the query log, newest first. Callers without access:view only see their own queries. Every filter can be passed in a link, so other pages can open the audit already filtered.
 
+        :param id: Only the query with this id
+        :type id: str
         :param source: Source name
         :type source: str
+        :param caller: A caller as principal_type:principal_id or as its audit subject, such as user:alice
+        :type caller: str
+        :param outcome: allowed (ran to completion), denied, failed, cancelled or running
+        :type outcome: str
+        :param reason: Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled
+        :type reason: str
         :param decision: allowed or denied
         :type decision: str
-        :param status: running, completed, failed or denied
+        :param status: running, completed, failed, cancelled or denied
         :type status: str
         :param mrn: Only queries that referenced this MRN
         :type mrn: str
@@ -348,13 +2065,13 @@ class QueryApi:
         :type principal_id: str
         :param mine: Only the caller's own queries
         :type mine: bool
-        :param client: Comma-separated clients to include: api, mcp or cli
+        :param client: Comma-separated clients to include: api, mcp, cli or editor
         :type client: str
         :param var_from: Only queries started at or after this time (RFC 3339)
         :type var_from: str
         :param to: Only queries started before this time (RFC 3339)
         :type to: str
-        :param q: Matches the caller, source, statement or a referenced MRN
+        :param q: Matches the caller, agent, service account, source, statement or a referenced MRN
         :type q: str
         :param limit: Page size
         :type limit: int
@@ -383,7 +2100,11 @@ class QueryApi:
         """
 
         _param = self._api_v1_query_history_get_serialize(
+            id=id,
             source=source,
+            caller=caller,
+            outcome=outcome,
+            reason=reason,
             decision=decision,
             status=status,
             mrn=mrn,
@@ -404,6 +2125,7 @@ class QueryApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "QueryHistoryResponse",
+            "400": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
@@ -411,10 +2133,27 @@ class QueryApi:
     @validate_call
     def api_v1_query_history_get_sync(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -426,7 +2165,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -437,7 +2176,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -456,7 +2197,11 @@ class QueryApi:
         """
         return run_sync(
             self.api_v1_query_history_get(
+                id=id,
                 source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
                 decision=decision,
                 status=status,
                 mrn=mrn,
@@ -480,10 +2225,27 @@ class QueryApi:
     @validate_call
     def api_v1_query_history_get_sync_with_http_info(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -495,7 +2257,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -506,7 +2268,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -525,7 +2289,11 @@ class QueryApi:
         """
         return run_sync(
             self.api_v1_query_history_get_with_http_info(
+                id=id,
                 source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
                 decision=decision,
                 status=status,
                 mrn=mrn,
@@ -549,10 +2317,27 @@ class QueryApi:
     @validate_call
     def api_v1_query_history_get_sync_without_preload_content(
         self,
+        id: Annotated[StrictStr | None, Field(description="Only the query with this id")] = None,
         source: Annotated[StrictStr | None, Field(description="Source name")] = None,
+        caller: Annotated[
+            StrictStr | None,
+            Field(
+                description="A caller as principal_type:principal_id or as its audit subject, such as user:alice"
+            ),
+        ] = None,
+        outcome: Annotated[
+            StrictStr | None,
+            Field(description="allowed (ran to completion), denied, failed, cancelled or running"),
+        ] = None,
+        reason: Annotated[
+            StrictStr | None,
+            Field(
+                description="Outcome reason: role, permission, policy, source_error, timeout, unreachable or cancelled"
+            ),
+        ] = None,
         decision: Annotated[StrictStr | None, Field(description="allowed or denied")] = None,
         status: Annotated[
-            StrictStr | None, Field(description="running, completed, failed or denied")
+            StrictStr | None, Field(description="running, completed, failed, cancelled or denied")
         ] = None,
         mrn: Annotated[
             StrictStr | None, Field(description="Only queries that referenced this MRN")
@@ -564,7 +2349,7 @@ class QueryApi:
         ] = None,
         client: Annotated[
             StrictStr | None,
-            Field(description="Comma-separated clients to include: api, mcp or cli"),
+            Field(description="Comma-separated clients to include: api, mcp, cli or editor"),
         ] = None,
         var_from: Annotated[
             StrictStr | None,
@@ -575,7 +2360,9 @@ class QueryApi:
         ] = None,
         q: Annotated[
             StrictStr | None,
-            Field(description="Matches the caller, source, statement or a referenced MRN"),
+            Field(
+                description="Matches the caller, agent, service account, source, statement or a referenced MRN"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Page size")] = None,
         offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
@@ -594,7 +2381,11 @@ class QueryApi:
         """
         return run_sync(
             self.api_v1_query_history_get_without_preload_content(
+                id=id,
                 source=source,
+                caller=caller,
+                outcome=outcome,
+                reason=reason,
                 decision=decision,
                 status=status,
                 mrn=mrn,
@@ -617,7 +2408,11 @@ class QueryApi:
 
     def _api_v1_query_history_get_serialize(
         self,
+        id,
         source,
+        caller,
+        outcome,
+        reason,
         decision,
         status,
         mrn,
@@ -649,8 +2444,20 @@ class QueryApi:
 
         # process the path parameters
         # process the query parameters
+        if id is not None:
+            _query_params.append(("id", id))
+
         if source is not None:
             _query_params.append(("source", source))
+
+        if caller is not None:
+            _query_params.append(("caller", caller))
+
+        if outcome is not None:
+            _query_params.append(("outcome", outcome))
+
+        if reason is not None:
+            _query_params.append(("reason", reason))
 
         if decision is not None:
             _query_params.append(("decision", decision))
@@ -702,6 +2509,316 @@ class QueryApi:
         return self.api_client.param_serialize(
             method="GET",
             resource_path="/api/v1/query/history",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_history_id_cancel_post(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Cancel a query
+
+        Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it.
+
+        :param id: Query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_id_cancel_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_history_id_cancel_post_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Cancel a query
+
+        Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it.
+
+        :param id: Query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_id_cancel_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_history_id_cancel_post_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cancel a query
+
+        Stops a running query. The query must be the caller's own unless the caller holds access:manage. A query runs on one replica, which is the only one that can stop it; elsewhere this answers 409, and the caller can still stop its own query by closing the request that runs it.
+
+        :param id: Query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_history_id_cancel_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_history_id_cancel_post_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Cancel a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_id_cancel_post`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_id_cancel_post(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_history_id_cancel_post_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Cancel a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_id_cancel_post_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_id_cancel_post_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_history_id_cancel_post_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Cancel a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_history_id_cancel_post_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_history_id_cancel_post_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_history_id_cancel_post_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/query/history/{id}/cancel",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1025,6 +3142,12 @@ class QueryApi:
     async def api_v1_query_run_post(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1039,6 +3162,8 @@ class QueryApi:
 
         :param query_run_input: Query (required)
         :type query_run_input: QueryRunInput
+        :param x_marmot_client: editor (or web) when the query comes from the web UI's query editor
+        :type x_marmot_client: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1063,6 +3188,7 @@ class QueryApi:
 
         _param = self._api_v1_query_run_post_serialize(
             query_run_input=query_run_input,
+            x_marmot_client=x_marmot_client,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1072,8 +3198,9 @@ class QueryApi:
         _response_types_map: dict[str, str | None] = {
             "200": "QueryResult",
             "400": "ErrorResponse",
-            "403": "ErrorResponse",
+            "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1086,6 +3213,12 @@ class QueryApi:
     async def api_v1_query_run_post_with_http_info(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1100,6 +3233,8 @@ class QueryApi:
 
         :param query_run_input: Query (required)
         :type query_run_input: QueryRunInput
+        :param x_marmot_client: editor (or web) when the query comes from the web UI's query editor
+        :type x_marmot_client: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1124,6 +3259,7 @@ class QueryApi:
 
         _param = self._api_v1_query_run_post_serialize(
             query_run_input=query_run_input,
+            x_marmot_client=x_marmot_client,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1133,8 +3269,9 @@ class QueryApi:
         _response_types_map: dict[str, str | None] = {
             "200": "QueryResult",
             "400": "ErrorResponse",
-            "403": "ErrorResponse",
+            "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1147,6 +3284,12 @@ class QueryApi:
     async def api_v1_query_run_post_without_preload_content(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1161,6 +3304,8 @@ class QueryApi:
 
         :param query_run_input: Query (required)
         :type query_run_input: QueryRunInput
+        :param x_marmot_client: editor (or web) when the query comes from the web UI's query editor
+        :type x_marmot_client: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1185,6 +3330,7 @@ class QueryApi:
 
         _param = self._api_v1_query_run_post_serialize(
             query_run_input=query_run_input,
+            x_marmot_client=x_marmot_client,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1194,8 +3340,9 @@ class QueryApi:
         _response_types_map: dict[str, str | None] = {
             "200": "QueryResult",
             "400": "ErrorResponse",
-            "403": "ErrorResponse",
+            "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
+            "409": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
@@ -1204,6 +3351,12 @@ class QueryApi:
     def api_v1_query_run_post_sync(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1220,6 +3373,7 @@ class QueryApi:
         return run_sync(
             self.api_v1_query_run_post(
                 query_run_input=query_run_input,
+                x_marmot_client=x_marmot_client,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1232,6 +3386,12 @@ class QueryApi:
     def api_v1_query_run_post_sync_with_http_info(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1248,6 +3408,7 @@ class QueryApi:
         return run_sync(
             self.api_v1_query_run_post_with_http_info(
                 query_run_input=query_run_input,
+                x_marmot_client=x_marmot_client,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1260,6 +3421,12 @@ class QueryApi:
     def api_v1_query_run_post_sync_without_preload_content(
         self,
         query_run_input: Annotated[QueryRunInput, Field(description="Query")],
+        x_marmot_client: Annotated[
+            StrictStr | None,
+            Field(
+                description="editor (or web) when the query comes from the web UI's query editor"
+            ),
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1276,6 +3443,7 @@ class QueryApi:
         return run_sync(
             self.api_v1_query_run_post_without_preload_content(
                 query_run_input=query_run_input,
+                x_marmot_client=x_marmot_client,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -1287,6 +3455,7 @@ class QueryApi:
     def _api_v1_query_run_post_serialize(
         self,
         query_run_input,
+        x_marmot_client,
         _request_auth,
         _content_type,
         _headers,
@@ -1307,6 +3476,8 @@ class QueryApi:
         # process the path parameters
         # process the query parameters
         # process the header parameters
+        if x_marmot_client is not None:
+            _header_params["X-Marmot-Client"] = x_marmot_client
         # process the form parameters
         # process the body parameter
         if query_run_input is not None:
@@ -1330,6 +3501,1914 @@ class QueryApi:
         return self.api_client.param_serialize(
             method="POST",
             resource_path="/api/v1/query/run",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_get(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ListSavedQueriesResponse:
+        """List saved queries
+
+        Lists the current person's saved queries, the most recently run or edited first.
+
+        :param limit: Page size, at most 500
+        :type limit: int
+        :param offset: Page offset
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_get_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ListSavedQueriesResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_get_with_http_info(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ListSavedQueriesResponse]:
+        """List saved queries
+
+        Lists the current person's saved queries, the most recently run or edited first.
+
+        :param limit: Page size, at most 500
+        :type limit: int
+        :param offset: Page offset
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_get_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ListSavedQueriesResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_get_without_preload_content(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List saved queries
+
+        Lists the current person's saved queries, the most recently run or edited first.
+
+        :param limit: Page size, at most 500
+        :type limit: int
+        :param offset: Page offset
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_get_serialize(
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "ListSavedQueriesResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_get_sync(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ListSavedQueriesResponse:
+        """List saved queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_get(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_get_sync_with_http_info(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ListSavedQueriesResponse]:
+        """List saved queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_get_with_http_info(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_get_sync_without_preload_content(
+        self,
+        limit: Annotated[StrictInt | None, Field(description="Page size, at most 500")] = None,
+        offset: Annotated[StrictInt | None, Field(description="Page offset")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List saved queries (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_get_without_preload_content(
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_get_serialize(
+        self,
+        limit,
+        offset,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        if offset is not None:
+            _query_params.append(("offset", offset))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/saved",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_delete(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete a saved query
+
+        Deletes one of the current person's saved queries. The query log keeps every run.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_delete_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_id_delete_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete a saved query
+
+        Deletes one of the current person's saved queries. The query log keeps every run.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_delete_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_delete_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete a saved query
+
+        Deletes one of the current person's saved queries. The query log keeps every run.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_delete_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_id_delete_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Delete a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_delete`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_delete(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_delete_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Delete a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_delete_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_delete_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_delete_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Delete a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_delete_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_delete_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_id_delete_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/query/saved/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_get(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Get a saved query
+
+        Returns one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_get_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_id_get_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Get a saved query
+
+        Returns one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_get_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_get_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get a saved query
+
+        Returns one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_get_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_id_get_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Get a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_get(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_get_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Get a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_get_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_get_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_get_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_id_get_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/saved/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_put(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Update a saved query
+
+        Replaces the name, statement and source of one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_put_serialize(
+            id=id,
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_id_put_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Update a saved query
+
+        Replaces the name, statement and source of one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_put_serialize(
+            id=id,
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_put_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update a saved query
+
+        Replaces the name, statement and source of one of the current person's saved queries.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_put_serialize(
+            id=id,
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_id_put_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Update a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_put`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_put(
+                id=id,
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_put_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Update a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_put_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_put_with_http_info(
+                id=id,
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_put_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Update a saved query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_put_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_put_without_preload_content(
+                id=id,
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_id_put_serialize(
+        self,
+        id,
+        saved_query_input,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if saved_query_input is not None:
+            _body_params = saved_query_input
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="PUT",
+            resource_path="/api/v1/query/saved/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_run_post(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Mark a saved query as run
+
+        Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_run_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_id_run_post_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Mark a saved query as run
+
+        Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_run_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_id_run_post_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Mark a saved query as run
+
+        Records that the current person ran a saved query, setting its last_run_at. The statement itself runs through POST /query/run, which checks access and logs it like any other.
+
+        :param id: Saved query ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_id_run_post_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "SavedQuery",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_id_run_post_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Mark a saved query as run (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_run_post`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_run_post(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_run_post_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Mark a saved query as run (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_run_post_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_run_post_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_id_run_post_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Saved query ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Mark a saved query as run (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_id_run_post_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_id_run_post_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_id_run_post_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/query/saved/{id}/run",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_post(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Save a query
+
+        Saves a statement and the source it runs against for the current person to run again.
+
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_post_serialize(
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SavedQuery",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_saved_post_with_http_info(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Save a query
+
+        Saves a statement and the source it runs against for the current person to run again.
+
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_post_serialize(
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SavedQuery",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_saved_post_without_preload_content(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Save a query
+
+        Saves a statement and the source it runs against for the current person to run again.
+
+        :param saved_query_input: Saved query (required)
+        :type saved_query_input: SavedQueryInput
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_saved_post_serialize(
+            saved_query_input=saved_query_input,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "201": "SavedQuery",
+            "400": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_saved_post_sync(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SavedQuery:
+        """Save a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_post`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_post(
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_post_sync_with_http_info(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SavedQuery]:
+        """Save a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_post_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_post_with_http_info(
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_saved_post_sync_without_preload_content(
+        self,
+        saved_query_input: Annotated[SavedQueryInput, Field(description="Saved query")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Save a query (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_saved_post_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_saved_post_without_preload_content(
+                saved_query_input=saved_query_input,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_saved_post_serialize(
+        self,
+        saved_query_input,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if saved_query_input is not None:
+            _body_params = saved_query_input
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/query/saved",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1679,6 +5758,393 @@ class QueryApi:
         return self.api_client.param_serialize(
             method="GET",
             resource_path="/api/v1/query/sources",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def api_v1_query_sources_name_stats_get(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QuerySourceStats:
+        """Query stats for one source
+
+        Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries.
+
+        :param name: Source name (required)
+        :type name: str
+        :param var_from: Window start, RFC 3339; defaults to seven days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_sources_name_stats_get_serialize(
+            name=name,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QuerySourceStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def api_v1_query_sources_name_stats_get_with_http_info(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QuerySourceStats]:
+        """Query stats for one source
+
+        Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries.
+
+        :param name: Source name (required)
+        :type name: str
+        :param var_from: Window start, RFC 3339; defaults to seven days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_sources_name_stats_get_serialize(
+            name=name,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QuerySourceStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def api_v1_query_sources_name_stats_get_without_preload_content(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Query stats for one source
+
+        Counts a source's queries over a window, the last seven days by default: how many were asked, refused by policy and failed at the source. Callers without access:view see only their own queries.
+
+        :param name: Source name (required)
+        :type name: str
+        :param var_from: Window start, RFC 3339; defaults to seven days before to
+        :type var_from: str
+        :param to: Window end, RFC 3339; defaults to now
+        :type to: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._api_v1_query_sources_name_stats_get_serialize(
+            name=name,
+            var_from=var_from,
+            to=to,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "QuerySourceStats",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def api_v1_query_sources_name_stats_get_sync(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> QuerySourceStats:
+        """Query stats for one source (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_sources_name_stats_get`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_sources_name_stats_get(
+                name=name,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_sources_name_stats_get_sync_with_http_info(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[QuerySourceStats]:
+        """Query stats for one source (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_sources_name_stats_get_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_sources_name_stats_get_with_http_info(
+                name=name,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def api_v1_query_sources_name_stats_get_sync_without_preload_content(
+        self,
+        name: Annotated[StrictStr, Field(description="Source name")],
+        var_from: Annotated[
+            StrictStr | None,
+            Field(description="Window start, RFC 3339; defaults to seven days before to"),
+        ] = None,
+        to: Annotated[
+            StrictStr | None, Field(description="Window end, RFC 3339; defaults to now")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Query stats for one source (synchronous)
+
+        Synchronous variant of :meth:`api_v1_query_sources_name_stats_get_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.api_v1_query_sources_name_stats_get_without_preload_content(
+                name=name,
+                var_from=var_from,
+                to=to,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _api_v1_query_sources_name_stats_get_serialize(
+        self,
+        name,
+        var_from,
+        to,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if name is not None:
+            _path_params["name"] = name
+        # process the query parameters
+        if var_from is not None:
+            _query_params.append(("from", var_from))
+
+        if to is not None:
+            _query_params.append(("to", to))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/query/sources/{name}/stats",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

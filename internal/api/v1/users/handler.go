@@ -81,6 +81,15 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			// Not behind WithAuth: a token whose account was deleted or deactivated must still be revocable, and the handler verifies the token itself.
+			Path:    "/api/v1/users/sign-out",
+			Method:  http.MethodPost,
+			Handler: h.signOut,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithRateLimit(h.config, 10, 60),
+			},
+		},
+		{
 			Path:    "/api/v1/users/login",
 			Method:  http.MethodPost,
 			Handler: h.login,

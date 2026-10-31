@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -32,6 +32,10 @@ class QueryStatsGroup(BaseModel):
     label: StrictStr | None = None
     plugin_id: StrictStr | None = None
     principal_type: StrictStr | None = None
+    schedule_id: StrictStr | None = Field(
+        default=None,
+        description="ScheduleID is the ingestion schedule behind a source, so a busy source can link to its pipeline",
+    )
     tags: list[StrictStr] | None = None
     total: StrictInt | None = None
     __properties: ClassVar[list[str]] = [
@@ -41,6 +45,7 @@ class QueryStatsGroup(BaseModel):
         "label",
         "plugin_id",
         "principal_type",
+        "schedule_id",
         "tags",
         "total",
     ]
@@ -100,6 +105,7 @@ class QueryStatsGroup(BaseModel):
                 "label": obj.get("label"),
                 "plugin_id": obj.get("plugin_id"),
                 "principal_type": obj.get("principal_type"),
+                "schedule_id": obj.get("schedule_id"),
                 "tags": obj.get("tags"),
                 "total": obj.get("total"),
             }

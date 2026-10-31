@@ -33,6 +33,9 @@ type RecordRunRequest struct {
 	// observed assets
 	ObservedAssets []string `json:"observed_assets"`
 
+	// prompt
+	Prompt string `json:"prompt,omitempty"`
+
 	// run id
 	RunID string `json:"run_id,omitempty"`
 

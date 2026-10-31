@@ -35,6 +35,18 @@ class TestGlossaryApi(unittest.IsolatedAsyncioTestCase):
         Delete glossary term
         """
 
+    async def test_delete_glossary_related_id_related_id(self) -> None:
+        """Test case for delete_glossary_related_id_related_id
+
+        Remove a related term
+        """
+
+    def test_delete_glossary_related_id_related_id_sync(self) -> None:
+        """Test case for delete_glossary_related_id_related_id (synchronous)
+
+        Remove a related term
+        """
+
     async def test_get_glossary_ancestors_id(self) -> None:
         """Test case for get_glossary_ancestors_id
 
@@ -83,6 +95,18 @@ class TestGlossaryApi(unittest.IsolatedAsyncioTestCase):
         List glossary terms
         """
 
+    async def test_get_glossary_related_id(self) -> None:
+        """Test case for get_glossary_related_id
+
+        Get related terms
+        """
+
+    def test_get_glossary_related_id_sync(self) -> None:
+        """Test case for get_glossary_related_id (synchronous)
+
+        Get related terms
+        """
+
     async def test_get_glossary_search(self) -> None:
         """Test case for get_glossary_search
 
@@ -95,6 +119,18 @@ class TestGlossaryApi(unittest.IsolatedAsyncioTestCase):
         Search glossary terms
         """
 
+    async def test_get_glossary_suggested_assets_id(self) -> None:
+        """Test case for get_glossary_suggested_assets_id
+
+        Suggest assets for a term
+        """
+
+    def test_get_glossary_suggested_assets_id_sync(self) -> None:
+        """Test case for get_glossary_suggested_assets_id (synchronous)
+
+        Suggest assets for a term
+        """
+
     async def test_post_glossary(self) -> None:
         """Test case for post_glossary
 
@@ -105,6 +141,18 @@ class TestGlossaryApi(unittest.IsolatedAsyncioTestCase):
         """Test case for post_glossary (synchronous)
 
         Create glossary term
+        """
+
+    async def test_post_glossary_related_id(self) -> None:
+        """Test case for post_glossary_related_id
+
+        Add a related term
+        """
+
+    def test_post_glossary_related_id_sync(self) -> None:
+        """Test case for post_glossary_related_id (synchronous)
+
+        Add a related term
         """
 
     async def test_put_glossary_id(self) -> None:

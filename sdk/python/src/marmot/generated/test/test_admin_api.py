@@ -23,6 +23,30 @@ class TestAdminApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
+    async def test_get_admin_auth_providers(self) -> None:
+        """Test case for get_admin_auth_providers
+
+        List single sign-on providers with their status
+        """
+
+    def test_get_admin_auth_providers_sync(self) -> None:
+        """Test case for get_admin_auth_providers (synchronous)
+
+        List single sign-on providers with their status
+        """
+
+    async def test_get_admin_auth_settings(self) -> None:
+        """Test case for get_admin_auth_settings
+
+        Get sign-in settings
+        """
+
+    def test_get_admin_auth_settings_sync(self) -> None:
+        """Test case for get_admin_auth_settings (synchronous)
+
+        Get sign-in settings
+        """
+
     async def test_get_admin_search_reindex(self) -> None:
         """Test case for get_admin_search_reindex
 
@@ -35,6 +59,18 @@ class TestAdminApi(unittest.IsolatedAsyncioTestCase):
         Get reindex status
         """
 
+    async def test_get_admin_system(self) -> None:
+        """Test case for get_admin_system
+
+        Get system information
+        """
+
+    def test_get_admin_system_sync(self) -> None:
+        """Test case for get_admin_system (synchronous)
+
+        Get system information
+        """
+
     async def test_post_admin_search_reindex(self) -> None:
         """Test case for post_admin_search_reindex
 
@@ -45,6 +81,30 @@ class TestAdminApi(unittest.IsolatedAsyncioTestCase):
         """Test case for post_admin_search_reindex (synchronous)
 
         Start search reindex
+        """
+
+    async def test_put_admin_auth_providers_type(self) -> None:
+        """Test case for put_admin_auth_providers_type
+
+        Switch a single sign-on provider on or off
+        """
+
+    def test_put_admin_auth_providers_type_sync(self) -> None:
+        """Test case for put_admin_auth_providers_type (synchronous)
+
+        Switch a single sign-on provider on or off
+        """
+
+    async def test_put_admin_auth_settings(self) -> None:
+        """Test case for put_admin_auth_settings
+
+        Update sign-in settings
+        """
+
+    def test_put_admin_auth_settings_sync(self) -> None:
+        """Test case for put_admin_auth_settings (synchronous)
+
+        Update sign-in settings
         """
 
 

@@ -11,11 +11,11 @@ Do not edit the class manually.
 
 import unittest
 
-from marmot.generated.models.pluginsdk_meta import PluginsdkMeta
+from marmot.generated.models.plugin_info import PluginInfo
 
 
-class TestPluginsdkMeta(unittest.TestCase):
-    """PluginsdkMeta unit test stubs"""
+class TestPluginInfo(unittest.TestCase):
+    """PluginInfo unit test stubs"""
 
     def setUp(self):
         pass
@@ -23,16 +23,16 @@ class TestPluginsdkMeta(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> PluginsdkMeta:
-        """Test PluginsdkMeta
+    def make_instance(self, include_optional) -> PluginInfo:
+        """Test PluginInfo
         include_optional is a boolean, when False only required
         params are included, when True both required and
         optional params are included"""
-        # uncomment below to create an instance of `PluginsdkMeta`
+        # uncomment below to create an instance of `PluginInfo`
         """
-        model = PluginsdkMeta()
+        model = PluginInfo()
         if include_optional:
-            return PluginsdkMeta(
+            return PluginInfo(
                 asset_schemas = [
                     marmot.generated.models.pluginsdk/asset_schema.pluginsdk.AssetSchema(
                         description = '',
@@ -44,6 +44,9 @@ class TestPluginsdkMeta(unittest.TestCase):
                                 type = '', )
                             ],
                         struct_name = '', )
+                    ],
+                catalogs = [
+                    ''
                     ],
                 category = '',
                 config_spec = [
@@ -109,17 +112,18 @@ class TestPluginsdkMeta(unittest.TestCase):
                 icon = '',
                 id = '',
                 name = '',
+                produces_lineage = True,
                 status = '',
                 supports_data_preview = True,
                 supports_query = True
             )
         else:
-            return PluginsdkMeta(
+            return PluginInfo(
         )
         """
 
-    def testPluginsdkMeta(self):
-        """Test PluginsdkMeta"""
+    def testPluginInfo(self):
+        """Test PluginInfo"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

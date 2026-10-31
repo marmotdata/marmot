@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/centrifugal/centrifuge"
@@ -78,7 +79,16 @@ func (h *Hub) Start(ctx context.Context) {
 			Msg("Client connecting")
 
 		if event.Token != "" {
-			if claims, err := h.authSvc.ValidateToken(ctx, event.Token); err == nil {
+			claims, err := h.authSvc.ValidateToken(ctx, event.Token)
+			// A signed-out token is not retried as an API key, and one whose state could not be read is refused.
+			if errors.Is(err, auth.ErrTokenRevoked) {
+				return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+			}
+			if errors.Is(err, auth.ErrTokenCheck) {
+				log.Error().Err(err).Msg("WS: failed to check token sign-out")
+				return centrifuge.ConnectReply{}, centrifuge.ErrorInternal
+			}
+			if err == nil {
 				u, err := h.userSvc.Get(ctx, claims.Subject)
 				if err != nil {
 					log.Debug().Err(err).Msg("WS: failed to look up user from JWT subject")

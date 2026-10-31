@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, StrictBool
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
-from marmot.generated.models.pluginsdk_meta import PluginsdkMeta
+from marmot.generated.models.plugin_info import PluginInfo
 
 
 class ListPluginsResponse(BaseModel):
@@ -29,7 +29,7 @@ class ListPluginsResponse(BaseModel):
     """
 
     loading: StrictBool | None = None
-    plugins: list[PluginsdkMeta] | None = None
+    plugins: list[PluginInfo] | None = None
     __properties: ClassVar[list[str]] = ["loading", "plugins"]
 
     model_config = ConfigDict(
@@ -90,7 +90,7 @@ class ListPluginsResponse(BaseModel):
         return cls.model_validate(
             {
                 "loading": obj.get("loading"),
-                "plugins": [PluginsdkMeta.from_dict(_item) for _item in obj["plugins"]]
+                "plugins": [PluginInfo.from_dict(_item) for _item in obj["plugins"]]
                 if obj.get("plugins") is not None
                 else None,
             }

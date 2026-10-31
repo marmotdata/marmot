@@ -47,6 +47,8 @@ class TestUser(unittest.TestCase):
                         updated_at = '',
                         user_id = '', )
                     ],
+                invite_expires_at = '',
+                last_seen_at = '',
                 must_change_password = True,
                 name = '',
                 preferences = { },
@@ -66,6 +68,7 @@ class TestUser(unittest.TestCase):
                             ], )
                     ],
                 sessions_invalidated_at = '',
+                status = '',
                 updated_at = '',
                 username = ''
             )

@@ -110,6 +110,12 @@ type ClientService interface {
 	// PostIngestionSchedulesIDTriggerContext manually trigger an ingestion schedule.
 	PostIngestionSchedulesIDTriggerContext(ctx context.Context, params *PostIngestionSchedulesIDTriggerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesIDTriggerCreated, error)
 
+	// PostIngestionTestConnection test a plugin connection.
+	PostIngestionTestConnection(params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error)
+
+	// PostIngestionTestConnectionContext test a plugin connection.
+	PostIngestionTestConnectionContext(ctx context.Context, params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error)
+
 	// PostIngestionValidate validate plugin configuration.
 	PostIngestionValidate(params *PostIngestionValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionValidateOK, error)
 
@@ -689,6 +695,73 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postIngestionSchedulesIDTrigger: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostIngestionTestConnection tests a plugin connection.
+//
+// Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostIngestionTestConnectionContext] instead.
+func (a *Client) PostIngestionTestConnection(params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostIngestionTestConnectionContext(ctx, params, authInfo, opts...)
+}
+
+// PostIngestionTestConnectionContext tests a plugin connection.
+//
+// Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work..
+//
+// Do not use the deprecated [PostIngestionTestConnectionParams.Context] with this method: it would be ignored.
+func (a *Client) PostIngestionTestConnectionContext(ctx context.Context, params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostIngestionTestConnectionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postIngestionTestConnection",
+		Method:             "POST",
+		PathPattern:        "/api/v1/ingestion/test-connection",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostIngestionTestConnectionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostIngestionTestConnectionOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postIngestionTestConnection: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

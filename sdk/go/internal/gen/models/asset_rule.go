@@ -24,6 +24,9 @@ type AssetRule struct {
 	// created by
 	CreatedBy string `json:"created_by,omitempty"`
 
+	// created by name
+	CreatedByName string `json:"created_by_name,omitempty"`
+
 	// description
 	Description string `json:"description,omitempty"`
 
@@ -71,6 +74,12 @@ type AssetRule struct {
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
+
+	// updated by
+	UpdatedBy string `json:"updated_by,omitempty"`
+
+	// updated by name
+	UpdatedByName string `json:"updated_by_name,omitempty"`
 }
 
 // Validate validates this asset rule

@@ -30,6 +30,12 @@ type User struct {
 	// identities
 	Identities []*UserIdentity `json:"identities"`
 
+	// invite expires at
+	InviteExpiresAt string `json:"invite_expires_at,omitempty"`
+
+	// LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.
+	LastSeenAt string `json:"last_seen_at,omitempty"`
+
 	// must change password
 	MustChangePassword bool `json:"must_change_password,omitempty"`
 
@@ -47,6 +53,9 @@ type User struct {
 
 	// Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.
 	SessionsInvalidatedAt string `json:"sessions_invalidated_at,omitempty"`
+
+	// Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.
+	Status string `json:"status,omitempty"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`

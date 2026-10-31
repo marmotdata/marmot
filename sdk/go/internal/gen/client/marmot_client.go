@@ -18,6 +18,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/lineage"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/mcp"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/metrics"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/notifications"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/owners"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/pipelines"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/plugins"
@@ -86,6 +87,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot
 	cli.Lineage = lineage.New(transport, formats)
 	cli.Mcp = mcp.New(transport, formats)
 	cli.Metrics = metrics.New(transport, formats)
+	cli.Notifications = notifications.New(transport, formats)
 	cli.Owners = owners.New(transport, formats)
 	cli.Pipelines = pipelines.New(transport, formats)
 	cli.Plugins = plugins.New(transport, formats)
@@ -178,6 +180,8 @@ type Marmot struct {
 
 	Metrics metrics.ClientService
 
+	Notifications notifications.ClientService
+
 	Owners owners.ClientService
 
 	Pipelines pipelines.ClientService
@@ -220,6 +224,7 @@ func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.Lineage.SetTransport(transport)
 	c.Mcp.SetTransport(transport)
 	c.Metrics.SetTransport(transport)
+	c.Notifications.SetTransport(transport)
 	c.Owners.SetTransport(transport)
 	c.Pipelines.SetTransport(transport)
 	c.Plugins.SetTransport(transport)

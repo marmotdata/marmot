@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -27,7 +27,11 @@ class ErrorResponse(BaseModel):
     """
 
     error: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["error"]
+    request_id: StrictStr | None = Field(
+        default=None,
+        description="RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.",
+    )
+    __properties: ClassVar[list[str]] = ["error", "request_id"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -76,4 +80,4 @@ class ErrorResponse(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        return cls.model_validate({"error": obj.get("error")})
+        return cls.model_validate({"error": obj.get("error"), "request_id": obj.get("request_id")})

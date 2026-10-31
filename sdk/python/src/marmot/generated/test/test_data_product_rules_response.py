@@ -45,6 +45,7 @@ class TestDataProductRulesResponse(unittest.TestCase):
                         name = '',
                         pattern_type = '',
                         pattern_value = '',
+                        position = 56,
                         priority = 56,
                         query_expression = '',
                         rule_type = 'query',

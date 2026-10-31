@@ -21,6 +21,12 @@ type GlossaryTerm struct {
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
+	// CreatedBy is the person who wrote the term, absent for terms an ingestion brought in and for those made before authors were recorded.
+	CreatedBy string `json:"created_by,omitempty"`
+
+	// created by name
+	CreatedByName string `json:"created_by_name,omitempty"`
+
 	// Definition is what the last run wrote. On a term a person has
 	// worded themselves the read path serves UserDefinition here instead,
 	// so a caller always gets the wording the catalog stands behind.
@@ -35,6 +41,9 @@ type GlossaryTerm struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// LinkedAssetCount counts every asset linked to the term, by hand or by an asset rule, so a tree can show it without a request per term.
+	LinkedAssetCount int64 `json:"linked_asset_count,omitempty"`
+
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
@@ -46,6 +55,9 @@ type GlossaryTerm struct {
 
 	// parent term id
 	ParentTermID string `json:"parent_term_id,omitempty"`
+
+	// RelatedTerms is only filled in when a single term is read.
+	RelatedTerms []*GlossaryRelatedTerm `json:"related_terms"`
 
 	// tags
 	Tags []string `json:"tags"`
@@ -63,6 +75,10 @@ func (m *GlossaryTerm) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOwners(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRelatedTerms(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -102,11 +118,45 @@ func (m *GlossaryTerm) validateOwners(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *GlossaryTerm) validateRelatedTerms(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.RelatedTerms) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RelatedTerms); i++ {
+		if typeutils.IsZero(m.RelatedTerms[i]) { // not required
+			continue
+		}
+
+		if m.RelatedTerms[i] != nil {
+			if err := m.RelatedTerms[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("related_terms" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("related_terms" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // ContextValidate validate this glossary term based on the context it is used
 func (m *GlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRelatedTerms(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -134,6 +184,35 @@ func (m *GlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *GlossaryTerm) contextValidateRelatedTerms(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.RelatedTerms); i++ {
+
+		if m.RelatedTerms[i] != nil {
+
+			if typeutils.IsZero(m.RelatedTerms[i]) { // not required
+				return nil
+			}
+
+			if err := m.RelatedTerms[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("related_terms" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("related_terms" + "." + strconv.Itoa(i))
 				}
 
 				return err

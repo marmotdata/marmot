@@ -11042,6 +11042,38 @@
                 }
             }
         },
+        "/api/v1/users/sign-out": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too.",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Sign out",
+                "operationId": "postUsersSignOut",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/sign-out-all/{id}": {
             "post": {
                 "security": [

@@ -36,10 +36,13 @@ class TestGlossaryListResult(unittest.TestCase):
                 terms = [
                     marmot.generated.models.glossary_term.GlossaryTerm(
                         created_at = '',
+                        created_by = '',
+                        created_by_name = '',
                         definition = '',
                         deleted_at = '',
                         description = '',
                         id = '',
+                        linked_asset_count = 56,
                         metadata = { },
                         name = '',
                         owners = [
@@ -52,6 +55,11 @@ class TestGlossaryListResult(unittest.TestCase):
                                 username = '', )
                             ],
                         parent_term_id = '',
+                        related_terms = [
+                            marmot.generated.models.glossary_related_term.GlossaryRelatedTerm(
+                                id = '',
+                                name = '', )
+                            ],
                         tags = [
                             ''
                             ],

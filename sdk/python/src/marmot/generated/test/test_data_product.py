@@ -34,6 +34,11 @@ class TestDataProduct(unittest.TestCase):
         if include_optional:
             return DataProduct(
                 asset_count = 56,
+                asset_types = [
+                    marmot.generated.models.data_product_type_count.DataProductTypeCount(
+                        count = 56,
+                        type = '', )
+                    ],
                 created_at = '',
                 created_by = '',
                 description = '',
@@ -51,6 +56,7 @@ class TestDataProduct(unittest.TestCase):
                         type = '',
                         username = '', )
                     ],
+                popularity = 56,
                 rule_asset_count = 56,
                 rules = [
                     marmot.generated.models.data_product_rule.DataProductRule(
@@ -64,6 +70,7 @@ class TestDataProduct(unittest.TestCase):
                         name = '',
                         pattern_type = '',
                         pattern_value = '',
+                        position = 56,
                         priority = 56,
                         query_expression = '',
                         rule_type = 'query',

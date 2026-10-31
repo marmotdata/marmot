@@ -16,6 +16,9 @@ type ErrorResponse struct {
 
 	// error
 	Error string `json:"error,omitempty"`
+
+	// RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // Validate validates this error response

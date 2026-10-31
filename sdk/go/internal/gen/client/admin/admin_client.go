@@ -56,11 +56,29 @@ type ClientOption func(*runtime.ClientOperation)
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
+	// GetAdminAuthProviders list single sign on providers with their status.
+	GetAdminAuthProviders(params *GetAdminAuthProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthProvidersOK, error)
+
+	// GetAdminAuthProvidersContext list single sign on providers with their status.
+	GetAdminAuthProvidersContext(ctx context.Context, params *GetAdminAuthProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthProvidersOK, error)
+
+	// GetAdminAuthSettings get sign in settings.
+	GetAdminAuthSettings(params *GetAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthSettingsOK, error)
+
+	// GetAdminAuthSettingsContext get sign in settings.
+	GetAdminAuthSettingsContext(ctx context.Context, params *GetAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthSettingsOK, error)
+
 	// GetAdminSearchReindex get reindex status.
 	GetAdminSearchReindex(params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
 
 	// GetAdminSearchReindexContext get reindex status.
 	GetAdminSearchReindexContext(ctx context.Context, params *GetAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSearchReindexOK, error)
+
+	// GetAdminSystem get system information.
+	GetAdminSystem(params *GetAdminSystemParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSystemOK, error)
+
+	// GetAdminSystemContext get system information.
+	GetAdminSystemContext(ctx context.Context, params *GetAdminSystemParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSystemOK, error)
 
 	// PostAdminSearchReindex start search reindex.
 	PostAdminSearchReindex(params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
@@ -68,7 +86,153 @@ type ClientService interface {
 	// PostAdminSearchReindexContext start search reindex.
 	PostAdminSearchReindexContext(ctx context.Context, params *PostAdminSearchReindexParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAdminSearchReindexAccepted, error)
 
+	// PutAdminAuthProvidersType switch a single sign on provider on or off.
+	PutAdminAuthProvidersType(params *PutAdminAuthProvidersTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthProvidersTypeOK, error)
+
+	// PutAdminAuthProvidersTypeContext switch a single sign on provider on or off.
+	PutAdminAuthProvidersTypeContext(ctx context.Context, params *PutAdminAuthProvidersTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthProvidersTypeOK, error)
+
+	// PutAdminAuthSettings update sign in settings.
+	PutAdminAuthSettings(params *PutAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthSettingsOK, error)
+
+	// PutAdminAuthSettingsContext update sign in settings.
+	PutAdminAuthSettingsContext(ctx context.Context, params *PutAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthSettingsOK, error)
+
 	SetTransport(transport runtime.ContextualTransport)
+}
+
+// GetAdminAuthProviders lists single sign on providers with their status.
+//
+// Every provider configured in the server config, whether it is switched on and how many members have signed in with it..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAdminAuthProvidersContext] instead.
+func (a *Client) GetAdminAuthProviders(params *GetAdminAuthProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthProvidersOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAdminAuthProvidersContext(ctx, params, authInfo, opts...)
+}
+
+// GetAdminAuthProvidersContext lists single sign on providers with their status.
+//
+// Every provider configured in the server config, whether it is switched on and how many members have signed in with it..
+//
+// Do not use the deprecated [GetAdminAuthProvidersParams.Context] with this method: it would be ignored.
+func (a *Client) GetAdminAuthProvidersContext(ctx context.Context, params *GetAdminAuthProvidersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthProvidersOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAdminAuthProvidersParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAdminAuthProviders",
+		Method:             "GET",
+		PathPattern:        "/api/v1/admin/auth/providers",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAdminAuthProvidersReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAdminAuthProvidersOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAdminAuthProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAdminAuthSettings gets sign in settings.
+//
+// Whether single sign-on creates new members, the role and team they start with, and whether members may sign in with a password..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAdminAuthSettingsContext] instead.
+func (a *Client) GetAdminAuthSettings(params *GetAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthSettingsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAdminAuthSettingsContext(ctx, params, authInfo, opts...)
+}
+
+// GetAdminAuthSettingsContext gets sign in settings.
+//
+// Whether single sign-on creates new members, the role and team they start with, and whether members may sign in with a password..
+//
+// Do not use the deprecated [GetAdminAuthSettingsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAdminAuthSettingsContext(ctx context.Context, params *GetAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminAuthSettingsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAdminAuthSettingsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAdminAuthSettings",
+		Method:             "GET",
+		PathPattern:        "/api/v1/admin/auth/settings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAdminAuthSettingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAdminAuthSettingsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAdminAuthSettings: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // GetAdminSearchReindex gets reindex status.
@@ -138,6 +302,73 @@ func (a *Client) GetAdminSearchReindexContext(ctx context.Context, params *GetAd
 	panic(msg)
 }
 
+// GetAdminSystem gets system information.
+//
+// Product version and build, the Postgres version and the size of the search index. Admin only..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAdminSystemContext] instead.
+func (a *Client) GetAdminSystem(params *GetAdminSystemParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSystemOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAdminSystemContext(ctx, params, authInfo, opts...)
+}
+
+// GetAdminSystemContext gets system information.
+//
+// Product version and build, the Postgres version and the size of the search index. Admin only..
+//
+// Do not use the deprecated [GetAdminSystemParams.Context] with this method: it would be ignored.
+func (a *Client) GetAdminSystemContext(ctx context.Context, params *GetAdminSystemParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAdminSystemOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAdminSystemParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAdminSystem",
+		Method:             "GET",
+		PathPattern:        "/api/v1/admin/system",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAdminSystemReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAdminSystemOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAdminSystem: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostAdminSearchReindex starts search reindex.
 //
 // Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time..
@@ -202,6 +433,140 @@ func (a *Client) PostAdminSearchReindexContext(ctx context.Context, params *Post
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postAdminSearchReindex: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutAdminAuthProvidersType switches a single sign on provider on or off.
+//
+// Providers are configured in the server config; this switches one off without removing its configuration, or back on. Members who signed in with it keep their accounts..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAdminAuthProvidersTypeContext] instead.
+func (a *Client) PutAdminAuthProvidersType(params *PutAdminAuthProvidersTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthProvidersTypeOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAdminAuthProvidersTypeContext(ctx, params, authInfo, opts...)
+}
+
+// PutAdminAuthProvidersTypeContext switches a single sign on provider on or off.
+//
+// Providers are configured in the server config; this switches one off without removing its configuration, or back on. Members who signed in with it keep their accounts..
+//
+// Do not use the deprecated [PutAdminAuthProvidersTypeParams.Context] with this method: it would be ignored.
+func (a *Client) PutAdminAuthProvidersTypeContext(ctx context.Context, params *PutAdminAuthProvidersTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthProvidersTypeOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAdminAuthProvidersTypeParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putAdminAuthProvidersType",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/admin/auth/providers/{type}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAdminAuthProvidersTypeReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutAdminAuthProvidersTypeOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for putAdminAuthProvidersType: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutAdminAuthSettings updates sign in settings.
+//
+// Replaces the sign-in settings. Administrators can always sign in with a password, so turning password sign-in off cannot lock everyone out; it is refused while no single sign-on provider is on..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAdminAuthSettingsContext] instead.
+func (a *Client) PutAdminAuthSettings(params *PutAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthSettingsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAdminAuthSettingsContext(ctx, params, authInfo, opts...)
+}
+
+// PutAdminAuthSettingsContext updates sign in settings.
+//
+// Replaces the sign-in settings. Administrators can always sign in with a password, so turning password sign-in off cannot lock everyone out; it is refused while no single sign-on provider is on..
+//
+// Do not use the deprecated [PutAdminAuthSettingsParams.Context] with this method: it would be ignored.
+func (a *Client) PutAdminAuthSettingsContext(ctx context.Context, params *PutAdminAuthSettingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAdminAuthSettingsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAdminAuthSettingsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putAdminAuthSettings",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/admin/auth/settings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAdminAuthSettingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutAdminAuthSettingsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for putAdminAuthSettings: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

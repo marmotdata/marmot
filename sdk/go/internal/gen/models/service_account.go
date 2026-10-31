@@ -21,17 +21,29 @@ type ServiceAccount struct {
 	// active
 	Active bool `json:"active,omitempty"`
 
+	// api key count
+	APIKeyCount int64 `json:"api_key_count,omitempty"`
+
+	// CallsLast7Days counts authenticated requests made with the account's keys over the last seven days, including today.
+	CallsLast7Days int64 `json:"calls_last_7_days,omitempty"`
+
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
 	// created by
 	CreatedBy string `json:"created_by,omitempty"`
 
+	// CreatedByName is the creator's display name, empty once that user is deleted.
+	CreatedByName string `json:"created_by_name,omitempty"`
+
 	// description
 	Description string `json:"description,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
+
+	// LastUsedAt is the latest use of any of the account's keys.
+	LastUsedAt string `json:"last_used_at,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -41,6 +53,9 @@ type ServiceAccount struct {
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
+
+	// UsedBy lists the agents that have reported runs with one of this account's keys.
+	UsedBy []*ServiceAccountAgentRef `json:"used_by"`
 }
 
 // Validate validates this service account
@@ -48,6 +63,10 @@ func (m *ServiceAccount) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateRoles(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUsedBy(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -87,11 +106,45 @@ func (m *ServiceAccount) validateRoles(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ServiceAccount) validateUsedBy(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.UsedBy) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.UsedBy); i++ {
+		if typeutils.IsZero(m.UsedBy[i]) { // not required
+			continue
+		}
+
+		if m.UsedBy[i] != nil {
+			if err := m.UsedBy[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("used_by" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("used_by" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // ContextValidate validate this service account based on the context it is used
 func (m *ServiceAccount) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateRoles(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateUsedBy(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -119,6 +172,35 @@ func (m *ServiceAccount) contextValidateRoles(ctx context.Context, formats strfm
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("roles" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *ServiceAccount) contextValidateUsedBy(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.UsedBy); i++ {
+
+		if m.UsedBy[i] != nil {
+
+			if typeutils.IsZero(m.UsedBy[i]) { // not required
+				return nil
+			}
+
+			if err := m.UsedBy[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("used_by" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("used_by" + "." + strconv.Itoa(i))
 				}
 
 				return err

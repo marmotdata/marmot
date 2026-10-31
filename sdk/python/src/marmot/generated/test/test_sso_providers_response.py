@@ -35,6 +35,7 @@ class TestSSOProvidersResponse(unittest.TestCase):
             return SSOProvidersResponse(
                 providers = [
                     marmot.generated.models.sso_provider.SSOProvider(
+                        enabled = True,
                         issuer_url = '',
                         name = '',
                         type = '', )

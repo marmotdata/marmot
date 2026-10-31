@@ -45,6 +45,8 @@ type Service interface {
 	// GenerateTokenForClient issues a user token on behalf of an OAuth client, tied to the grant the person gave it so revoking the grant ends the token.
 	GenerateTokenForClient(ctx context.Context, u *user.User, clientID, grantID string) (string, error)
 	ValidateToken(ctx context.Context, tokenString string) (*Claims, error)
+	// RevokeToken signs one token out before it expires, leaving the person's other sessions alone. A token that does not verify returns ErrInvalidToken and is not recorded.
+	RevokeToken(ctx context.Context, tokenString string) error
 	GetSigningKey(ctx context.Context) ([]byte, error)
 }
 
@@ -60,6 +62,7 @@ type service struct {
 	repo        Repository
 	userService user.Service
 	grants      GrantChecker
+	revocations RevocationStore
 }
 
 // ServiceOption configures the auth service.
@@ -159,8 +162,33 @@ func (s *service) generate(ctx context.Context, p Principal, preferencesClaims m
 	return token.SignedString(signingKey)
 }
 
-// ValidateToken validates the given JWT token and returns the claims.
+// ValidateToken validates the given JWT token and returns the claims. A signed-out token returns ErrTokenRevoked, and one whose sign-out state could not be read returns ErrTokenCheck.
 func (s *service) ValidateToken(ctx context.Context, tokenString string) (*Claims, error) {
+	claims, err := s.parse(ctx, tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.checkRevoked(ctx, claims, tokenString); err != nil {
+		return nil, err
+	}
+
+	// Only client tokens pay for this lookup; a failed lookup refuses the token rather than letting a revoked client back in.
+	if claims.GrantID != "" && s.grants != nil {
+		ok, err := s.grants.GrantValid(ctx, claims.Subject, claims.GrantID)
+		if err != nil {
+			return nil, fmt.Errorf("checking oauth grant: %w", err)
+		}
+		if !ok {
+			return nil, ErrGrantRevoked
+		}
+	}
+
+	return claims, nil
+}
+
+// parse checks the token's signature, algorithm and time claims and nothing that needs the database beyond the signing key.
+func (s *service) parse(ctx context.Context, tokenString string) (*Claims, error) {
 	signingKey, err := s.GetSigningKey(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("getting signing key: %w", err)
@@ -175,19 +203,7 @@ func (s *service) ValidateToken(ctx context.Context, tokenString string) (*Claim
 	})
 
 	if err != nil || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, ErrInvalidToken
 	}
-
-	// Only client tokens pay for this lookup; a failed lookup refuses the token rather than letting a revoked client back in.
-	if claims.GrantID != "" && s.grants != nil {
-		ok, err := s.grants.GrantValid(ctx, claims.Subject, claims.GrantID)
-		if err != nil {
-			return nil, fmt.Errorf("checking oauth grant: %w", err)
-		}
-		if !ok {
-			return nil, ErrGrantRevoked
-		}
-	}
-
 	return claims, nil
 }

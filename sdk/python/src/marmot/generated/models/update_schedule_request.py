@@ -28,12 +28,21 @@ class UpdateScheduleRequest(BaseModel):
 
     config: dict[str, Any] | None = None
     cron_expression: StrictStr | None = None
+    description: StrictStr | None = Field(
+        default=None,
+        description="Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.",
+    )
     enabled: StrictBool | None = None
     ingest_on_query: StrictBool | None = Field(
         default=None,
         description="IngestOnQuery refreshes the source's catalog in the background after data queries, rate-limited per source.",
     )
     name: StrictStr | None = None
+    owner_id: StrictStr | None = None
+    owner_type: StrictStr | None = Field(
+        default=None,
+        description='OwnerType is "user" or "team" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.',
+    )
     plugin_id: StrictStr | None = None
     queryable: StrictBool | None = Field(
         default=None,
@@ -42,9 +51,12 @@ class UpdateScheduleRequest(BaseModel):
     __properties: ClassVar[list[str]] = [
         "config",
         "cron_expression",
+        "description",
         "enabled",
         "ingest_on_query",
         "name",
+        "owner_id",
+        "owner_type",
         "plugin_id",
         "queryable",
     ]
@@ -100,9 +112,12 @@ class UpdateScheduleRequest(BaseModel):
             {
                 "config": obj.get("config"),
                 "cron_expression": obj.get("cron_expression"),
+                "description": obj.get("description"),
                 "enabled": obj.get("enabled"),
                 "ingest_on_query": obj.get("ingest_on_query"),
                 "name": obj.get("name"),
+                "owner_id": obj.get("owner_id"),
+                "owner_type": obj.get("owner_type"),
                 "plugin_id": obj.get("plugin_id"),
                 "queryable": obj.get("queryable"),
             }

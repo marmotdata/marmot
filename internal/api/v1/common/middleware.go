@@ -166,6 +166,17 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					next(w, r.WithContext(ctx))
 					return
 				}
+				// A Marmot token that verified but was signed out is not retried as anything else. One whose sign-out state could not be read is refused with a 500, since a 401 would send the client round a sign-in that cannot help.
+				if errors.Is(err, auth.ErrTokenCheck) {
+					log.Error().Err(err).Str("endpoint", r.URL.Path).Msg("Failed to check token sign-out")
+					RespondError(w, http.StatusInternalServerError, "Could not check your sign-in")
+					return
+				}
+				if errors.Is(err, auth.ErrTokenRevoked) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "Invalid token")
+					return
+				}
 
 				// Try K8s ServiceAccount token validation
 				if k8sValidator != nil {

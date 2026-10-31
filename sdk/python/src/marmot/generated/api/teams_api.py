@@ -21,6 +21,7 @@ from marmot.generated.models.list_members_response import ListMembersResponse
 from marmot.generated.models.list_teams_response import ListTeamsResponse
 from marmot.generated.models.message_response import MessageResponse
 from marmot.generated.models.team import Team
+from marmot.generated.models.team_summary import TeamSummary
 from marmot.generated.models.update_member_role_request import UpdateMemberRoleRequest
 from marmot.generated.models.update_team_request import UpdateTeamRequest
 from marmot.generated.rest import RESTResponseType
@@ -1024,7 +1025,7 @@ class TeamsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Team:
+    ) -> TeamSummary:
         """Get a team
 
         Get a team by its ID
@@ -1062,7 +1063,7 @@ class TeamsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Team",
+            "200": "TeamSummary",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -1084,7 +1085,7 @@ class TeamsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Team]:
+    ) -> ApiResponse[TeamSummary]:
         """Get a team
 
         Get a team by its ID
@@ -1122,7 +1123,7 @@ class TeamsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Team",
+            "200": "TeamSummary",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -1182,7 +1183,7 @@ class TeamsApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Team",
+            "200": "TeamSummary",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -1200,7 +1201,7 @@ class TeamsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Team:
+    ) -> TeamSummary:
         """Get a team (synchronous)
 
         Synchronous variant of :meth:`get_teams_id`. It calls the asynchronous
@@ -1228,7 +1229,7 @@ class TeamsApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Team]:
+    ) -> ApiResponse[TeamSummary]:
         """Get a team (synchronous)
 
         Synchronous variant of :meth:`get_teams_id_with_http_info`. It calls the

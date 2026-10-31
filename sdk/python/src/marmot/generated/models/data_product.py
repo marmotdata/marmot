@@ -16,12 +16,13 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.data_product_owner import DataProductOwner
 from marmot.generated.models.data_product_rule import DataProductRule
+from marmot.generated.models.data_product_type_count import DataProductTypeCount
 
 
 class DataProduct(BaseModel):
@@ -30,6 +31,10 @@ class DataProduct(BaseModel):
     """
 
     asset_count: StrictInt | None = None
+    asset_types: list[DataProductTypeCount] | None = Field(
+        default=None,
+        description="AssetTypes counts the product's assets by type and is only filled in by Get.",
+    )
     created_at: StrictStr | None = None
     created_by: StrictStr | None = None
     description: StrictStr | None = None
@@ -39,12 +44,17 @@ class DataProduct(BaseModel):
     metadata: dict[str, Any] | None = None
     name: StrictStr | None = None
     owners: list[DataProductOwner] | None = None
+    popularity: StrictInt | None = Field(
+        default=None,
+        description="Popularity is a level from 0 to 4 from its assets' views over the last 30 days. It is filled in by the filtered list and by Get.",
+    )
     rule_asset_count: StrictInt | None = None
     rules: list[DataProductRule] | None = None
     tags: list[StrictStr] | None = None
     updated_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "asset_count",
+        "asset_types",
         "created_at",
         "created_by",
         "description",
@@ -54,6 +64,7 @@ class DataProduct(BaseModel):
         "metadata",
         "name",
         "owners",
+        "popularity",
         "rule_asset_count",
         "rules",
         "tags",
@@ -97,6 +108,13 @@ class DataProduct(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in asset_types (list)
+        _items = []
+        if self.asset_types:
+            for _item_asset_types in self.asset_types:
+                if _item_asset_types:
+                    _items.append(_item_asset_types.to_dict())
+            _dict["asset_types"] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in owners (list)
         _items = []
         if self.owners:
@@ -125,6 +143,11 @@ class DataProduct(BaseModel):
         return cls.model_validate(
             {
                 "asset_count": obj.get("asset_count"),
+                "asset_types": [
+                    DataProductTypeCount.from_dict(_item) for _item in obj["asset_types"]
+                ]
+                if obj.get("asset_types") is not None
+                else None,
                 "created_at": obj.get("created_at"),
                 "created_by": obj.get("created_by"),
                 "description": obj.get("description"),
@@ -136,6 +159,7 @@ class DataProduct(BaseModel):
                 "owners": [DataProductOwner.from_dict(_item) for _item in obj["owners"]]
                 if obj.get("owners") is not None
                 else None,
+                "popularity": obj.get("popularity"),
                 "rule_asset_count": obj.get("rule_asset_count"),
                 "rules": [DataProductRule.from_dict(_item) for _item in obj["rules"]]
                 if obj.get("rules") is not None

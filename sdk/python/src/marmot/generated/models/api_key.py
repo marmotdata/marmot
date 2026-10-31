@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -32,6 +32,10 @@ class APIKey(BaseModel):
     key: StrictStr | None = None
     last_used_at: StrictStr | None = None
     name: StrictStr | None = None
+    prefix: StrictStr | None = Field(
+        default=None,
+        description="Prefix is the start of the key kept in clear so a key can be recognised in a list after its secret is gone; empty for keys issued before it was stored.",
+    )
     user_id: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "created_at",
@@ -40,6 +44,7 @@ class APIKey(BaseModel):
         "key",
         "last_used_at",
         "name",
+        "prefix",
         "user_id",
     ]
 
@@ -98,6 +103,7 @@ class APIKey(BaseModel):
                 "key": obj.get("key"),
                 "last_used_at": obj.get("last_used_at"),
                 "name": obj.get("name"),
+                "prefix": obj.get("prefix"),
                 "user_id": obj.get("user_id"),
             }
         )

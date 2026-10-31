@@ -39,6 +39,7 @@ class TestQueryStatsGroup(unittest.TestCase):
                 label = '',
                 plugin_id = '',
                 principal_type = '',
+                schedule_id = '',
                 tags = [
                     ''
                     ],

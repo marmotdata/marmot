@@ -40,6 +40,7 @@ class TestRecordRunRequest(unittest.TestCase):
                 observed_assets = [
                     ''
                     ],
+                prompt = '',
                 run_id = '',
                 started_at = '',
                 status = '',
@@ -47,7 +48,11 @@ class TestRecordRunRequest(unittest.TestCase):
                 tokens_out = 56,
                 tool_calls = [
                     marmot.generated.models.tool_call_payload.ToolCallPayload(
+                        detail = '',
                         duration_ms = 56,
+                        reason = '',
+                        result = '',
+                        rule = '',
                         started_at = '',
                         status = '',
                         target_mrn = '',

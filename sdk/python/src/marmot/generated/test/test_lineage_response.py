@@ -35,6 +35,7 @@ class TestLineageResponse(unittest.TestCase):
             return LineageResponse(
                 edges = [
                     marmot.generated.models.lineage_edge.LineageEdge(
+                        declared_by = '',
                         id = '',
                         job_mrn = '',
                         last_seen_at = '',
@@ -96,6 +97,7 @@ class TestLineageResponse(unittest.TestCase):
                             user_description = '', ),
                         depth = 56,
                         id = '',
+                        last_run_status = '',
                         type = '', )
                     ]
             )

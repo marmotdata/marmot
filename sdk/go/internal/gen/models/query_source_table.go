@@ -29,6 +29,9 @@ type QuerySourceTable struct {
 	// queries
 	Queries int64 `json:"queries,omitempty"`
 
+	// RowCount is the table's size as its plugin last reported it in the catalog, when it reports one.
+	RowCount int64 `json:"row_count,omitempty"`
+
 	// sample statement
 	SampleStatement string `json:"sample_statement,omitempty"`
 

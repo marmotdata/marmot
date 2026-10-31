@@ -53,7 +53,7 @@ func NewGetAssetRulesAssetsIDOK() *GetAssetRulesAssetsIDOK {
 //
 // OK
 type GetAssetRulesAssetsIDOK struct {
-	Payload any
+	Payload *models.AssetRuleAssetsResponse
 }
 
 // IsSuccess returns true when this get asset rules assets Id o k response has a 2xx status code
@@ -96,14 +96,16 @@ func (o *GetAssetRulesAssetsIDOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/asset-rules/assets/{id}][%d] getAssetRulesAssetsIdOK %s", 200, payload)
 }
 
-func (o *GetAssetRulesAssetsIDOK) GetPayload() any {
+func (o *GetAssetRulesAssetsIDOK) GetPayload() *models.AssetRuleAssetsResponse {
 	return o.Payload
 }
 
 func (o *GetAssetRulesAssetsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
+	o.Payload = new(models.AssetRuleAssetsResponse)
+
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 

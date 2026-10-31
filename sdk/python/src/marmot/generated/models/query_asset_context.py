@@ -16,9 +16,11 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
+
+from marmot.generated.models.query_personal_data_column import QueryPersonalDataColumn
 
 
 class QueryAssetContext(BaseModel):
@@ -27,20 +29,33 @@ class QueryAssetContext(BaseModel):
     """
 
     asset_id: StrictStr | None = None
+    certified: StrictBool | None = None
+    columns_read: StrictInt | None = None
     description: StrictStr | None = None
     last_sync_at: StrictStr | None = None
     mrn: StrictStr | None = None
     name: StrictStr | None = None
+    owners: list[StrictStr] | None = Field(
+        default=None,
+        description="What the catalog says about the table as data: who owns it, how big it is, which of its columns hold personal data and whether it is certified. ColumnsRead counts the table's catalogued columns among the result's columns, matched by name, so it is nil when the catalog has no columns for the table.",
+    )
+    personal_data: list[QueryPersonalDataColumn] | None = None
     providers: list[StrictStr] | None = None
+    row_count: StrictInt | None = None
     tags: list[StrictStr] | None = None
     type: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "asset_id",
+        "certified",
+        "columns_read",
         "description",
         "last_sync_at",
         "mrn",
         "name",
+        "owners",
+        "personal_data",
         "providers",
+        "row_count",
         "tags",
         "type",
     ]
@@ -77,11 +92,19 @@ class QueryAssetContext(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in personal_data (list)
+        _items = []
+        if self.personal_data:
+            for _item_personal_data in self.personal_data:
+                if _item_personal_data:
+                    _items.append(_item_personal_data.to_dict())
+            _dict["personal_data"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -95,11 +118,20 @@ class QueryAssetContext(BaseModel):
         return cls.model_validate(
             {
                 "asset_id": obj.get("asset_id"),
+                "certified": obj.get("certified"),
+                "columns_read": obj.get("columns_read"),
                 "description": obj.get("description"),
                 "last_sync_at": obj.get("last_sync_at"),
                 "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
+                "owners": obj.get("owners"),
+                "personal_data": [
+                    QueryPersonalDataColumn.from_dict(_item) for _item in obj["personal_data"]
+                ]
+                if obj.get("personal_data") is not None
+                else None,
                 "providers": obj.get("providers"),
+                "row_count": obj.get("row_count"),
                 "tags": obj.get("tags"),
                 "type": obj.get("type"),
             }

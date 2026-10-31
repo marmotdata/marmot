@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -30,9 +30,13 @@ class ListSchedulesResponse(BaseModel):
 
     limit: StrictInt | None = None
     offset: StrictInt | None = None
+    plugin_counts: dict[str, StrictInt] | None = Field(
+        default=None,
+        description="PluginCounts counts every pipeline by plugin, whatever the filters, so the plugin gallery can say how many of each are connected.",
+    )
     schedules: list[Schedule] | None = None
     total: StrictInt | None = None
-    __properties: ClassVar[list[str]] = ["limit", "offset", "schedules", "total"]
+    __properties: ClassVar[list[str]] = ["limit", "offset", "plugin_counts", "schedules", "total"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -93,6 +97,7 @@ class ListSchedulesResponse(BaseModel):
             {
                 "limit": obj.get("limit"),
                 "offset": obj.get("offset"),
+                "plugin_counts": obj.get("plugin_counts"),
                 "schedules": [Schedule.from_dict(_item) for _item in obj["schedules"]]
                 if obj.get("schedules") is not None
                 else None,

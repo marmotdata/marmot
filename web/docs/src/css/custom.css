@@ -167,6 +167,9 @@ html .DocSearch-Commands-Key {
   border-radius: var(--radius-sm);
 }
 html .DocSearch-Button {
+  /* The header's control height, so it lines up with the buttons beside it in mm-site-header. */
+  box-sizing: border-box;
+  height: var(--control-h);
   border-color: var(--mm-control-border);
   border-radius: var(--radius-sm);
   transition: border-color var(--mm-dur-press) var(--mm-ease);

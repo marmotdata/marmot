@@ -91,6 +91,16 @@ type GetUsersParams struct {
 	// Filter by role IDs
 	RoleIds []string
 
+	// Status.
+	//
+	// Filter by member status: active, invited or deactivated
+	Status *string
+
+	// Team.
+	//
+	// Pass none to keep only members who belong to no team
+	Team *string
+
 	HTTPClient *http.Client
 
 	inner innerParams
@@ -217,6 +227,28 @@ func (o *GetUsersParams) SetRoleIds(roleIds []string) {
 	o.RoleIds = roleIds
 }
 
+// WithStatus adds the status to the get users params.
+func (o *GetUsersParams) WithStatus(status *string) *GetUsersParams {
+	o.SetStatus(status)
+	return o
+}
+
+// SetStatus adds the status to the get users params.
+func (o *GetUsersParams) SetStatus(status *string) {
+	o.Status = status
+}
+
+// WithTeam adds the team to the get users params.
+func (o *GetUsersParams) WithTeam(team *string) *GetUsersParams {
+	o.SetTeam(team)
+	return o
+}
+
+// SetTeam adds the team to the get users params.
+func (o *GetUsersParams) SetTeam(team *string) {
+	o.Team = team
+}
+
 // WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 	if err := r.SetTimeout(o.inner.timeout); err != nil {
@@ -300,6 +332,40 @@ func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		// query array param role_ids
 		if err := r.SetQueryParam("role_ids", joinedRoleIds...); err != nil {
 			return err
+		}
+	}
+
+	if o.Status != nil {
+
+		// query param status
+		var qrStatus string
+
+		if o.Status != nil {
+			qrStatus = *o.Status
+		}
+		qStatus := qrStatus
+		if qStatus != "" {
+
+			if err := r.SetQueryParam("status", qStatus); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Team != nil {
+
+		// query param team
+		var qrTeam string
+
+		if o.Team != nil {
+			qrTeam = *o.Team
+		}
+		qTeam := qrTeam
+		if qTeam != "" {
+
+			if err := r.SetQueryParam("team", qTeam); err != nil {
+				return err
+			}
 		}
 	}
 

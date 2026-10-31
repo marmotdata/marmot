@@ -3,10 +3,12 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/pkg/config"
 )
@@ -82,5 +84,48 @@ func TestWithAuth_InactiveUserIsNotRetriedAsServiceAccount(t *testing.T) {
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
+	}
+}
+
+// revokingAuthService answers ValidateToken with a fixed error, standing in for a signed-out token or a failed sign-out lookup.
+type revokingAuthService struct {
+	mockAuthService
+	err error
+}
+
+func (m *revokingAuthService) ValidateToken(_ context.Context, _ string) (*auth.Claims, error) {
+	return nil, m.err
+}
+
+// A signed-out token is refused without being retried as an API key, and a sign-out lookup that fails is a 500 rather than a 401 or a pass.
+func TestWithAuth_SignedOutToken(t *testing.T) {
+	for _, tc := range []struct {
+		err    error
+		status int
+	}{
+		{auth.ErrTokenRevoked, http.StatusUnauthorized},
+		{fmt.Errorf("%w: database down", auth.ErrTokenCheck), http.StatusInternalServerError},
+	} {
+		t.Run(tc.err.Error(), func(t *testing.T) {
+			triedAPIKey := false
+			userSvc := &mockUserService{
+				validateAPIKeyFn: func(_ context.Context, _ string) (*user.User, error) {
+					triedAPIKey = true
+					return &user.User{ID: "u1", Active: true}, nil
+				},
+			}
+			reached := false
+			handler := WithAuth(userSvc, &revokingAuthService{err: tc.err}, &config.Config{})(func(w http.ResponseWriter, _ *http.Request) {
+				reached = true
+			})
+			rec := httptest.NewRecorder()
+			handler(rec, bearerRequest("signed-out-jwt"))
+			if reached || triedAPIKey {
+				t.Fatalf("reached handler = %v, tried as API key = %v", reached, triedAPIKey)
+			}
+			if rec.Code != tc.status {
+				t.Fatalf("status = %d, want %d", rec.Code, tc.status)
+			}
+		})
 	}
 }

@@ -32,6 +32,9 @@ type QueryStatsGroup struct {
 	// principal type
 	PrincipalType string `json:"principal_type,omitempty"`
 
+	// ScheduleID is the ingestion schedule behind a source, so a busy source can link to its pipeline
+	ScheduleID string `json:"schedule_id,omitempty"`
+
 	// tags
 	Tags []string `json:"tags"`
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -95,6 +96,29 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)
+}
+
+// @Summary Sign out
+// @Description Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too.
+// @Tags users
+// @Security BearerAuth
+// @Success 204
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID postUsersSignOut
+// @Router /api/v1/users/sign-out [post]
+func (h *Handler) signOut(w http.ResponseWriter, r *http.Request) {
+	token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !ok || token == "" {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+	if err := h.authService.RevokeToken(r.Context(), token); err != nil && !errors.Is(err, auth.ErrInvalidToken) {
+		log.Error().Err(err).Msg("Failed to revoke token on sign-out")
+		common.RespondError(w, http.StatusInternalServerError, "Could not sign you out")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // @Summary Link OAuth account

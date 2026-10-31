@@ -32,6 +32,9 @@ type JobRun struct {
 	// config
 	Config any `json:"config,omitempty"`
 
+	// ConnectingAt, ExtractingAt and WritingAt record when the worker began launching the plugin, asked it to discover and began writing to the catalog; empty when the run never got there or predates them.
+	ConnectingAt string `json:"connecting_at,omitempty"`
+
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
@@ -43,6 +46,9 @@ type JobRun struct {
 
 	// error message
 	ErrorMessage string `json:"error_message,omitempty"`
+
+	// extracting at
+	ExtractingAt string `json:"extracting_at,omitempty"`
 
 	// finished at
 	FinishedAt string `json:"finished_at,omitempty"`
@@ -79,6 +85,9 @@ type JobRun struct {
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
+
+	// writing at
+	WritingAt string `json:"writing_at,omitempty"`
 }
 
 // Validate validates this job run

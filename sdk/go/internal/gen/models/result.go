@@ -5,6 +5,7 @@ package models
 import (
 	"context"
 	stderrors "errors"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -17,11 +18,23 @@ import (
 // swagger:model Result
 type Result struct {
 
+	// AssetCount is how many assets a data product holds or a team owns.
+	AssetCount int64 `json:"asset_count,omitempty"`
+
+	// ColumnCount is how many columns or top-level fields an asset's schema has, where it can be read.
+	ColumnCount int64 `json:"column_count,omitempty"`
+
 	// description
 	Description string `json:"description,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
+
+	// LinkedAssetCount is how many assets a glossary term is linked to.
+	LinkedAssetCount int64 `json:"linked_asset_count,omitempty"`
+
+	// MemberCount is how many people are in a team.
+	MemberCount int64 `json:"member_count,omitempty"`
 
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
@@ -29,8 +42,20 @@ type Result struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Owners are the people and teams that own an asset, glossary term or data product.
+	Owners []*SearchResultOwner `json:"owners"`
+
+	// Popularity is an asset's level from 0 to 4, from its views over the last 30 days.
+	Popularity int64 `json:"popularity,omitempty"`
+
 	// rank
 	Rank float64 `json:"rank,omitempty"`
+
+	// RowCount is an asset's row count where its source reports one.
+	RowCount int64 `json:"row_count,omitempty"`
+
+	// Stale is set on assets: true when the pipeline that refreshes it has missed more than two runs' worth of time.
+	Stale bool `json:"stale,omitempty"`
 
 	// type
 	Type ResultType `json:"type,omitempty"`
@@ -46,6 +71,10 @@ type Result struct {
 func (m *Result) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateOwners(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateType(formats); err != nil {
 		res = append(res, err)
 	}
@@ -53,6 +82,36 @@ func (m *Result) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Result) validateOwners(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Owners) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Owners); i++ {
+		if typeutils.IsZero(m.Owners[i]) { // not required
+			continue
+		}
+
+		if m.Owners[i] != nil {
+			if err := m.Owners[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -81,6 +140,10 @@ func (m *Result) validateType(formats strfmt.Registry) error {
 func (m *Result) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateOwners(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -88,6 +151,35 @@ func (m *Result) ContextValidate(ctx context.Context, formats strfmt.Registry) e
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Result) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Owners); i++ {
+
+		if m.Owners[i] != nil {
+
+			if typeutils.IsZero(m.Owners[i]) { // not required
+				return nil
+			}
+
+			if err := m.Owners[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

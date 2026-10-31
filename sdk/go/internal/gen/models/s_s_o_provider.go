@@ -14,6 +14,9 @@ import (
 // swagger:model SSOProvider
 type SSOProvider struct {
 
+	// Enabled is false when an administrator has switched the provider off in Settings.
+	Enabled bool `json:"enabled,omitempty"`
+
 	// issuer url
 	IssuerURL string `json:"issuer_url,omitempty"`
 

@@ -39,6 +39,9 @@ type AgentRun struct {
 	// model
 	Model string `json:"model,omitempty"`
 
+	// Prompt is what the run was asked, such as a ticket's subject, so a list of runs reads as the questions they answered.
+	Prompt string `json:"prompt,omitempty"`
+
 	// run id
 	RunID string `json:"run_id,omitempty"`
 

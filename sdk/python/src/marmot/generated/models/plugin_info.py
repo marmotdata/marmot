@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -24,12 +24,16 @@ from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
 
 
-class PluginsdkMeta(BaseModel):
+class PluginInfo(BaseModel):
     """
-    PluginsdkMeta
+    PluginInfo
     """
 
     asset_schemas: list[PluginsdkAssetSchema] | None = None
+    catalogs: list[StrictStr] | None = Field(
+        default=None,
+        description="Catalogs names the kinds of asset the plugin documents, in the order it lists them.",
+    )
     category: StrictStr | None = None
     config_spec: list[PluginsdkConfigField] | None = None
     description: StrictStr | None = None
@@ -37,11 +41,16 @@ class PluginsdkMeta(BaseModel):
     icon: StrictStr | None = None
     id: StrictStr | None = None
     name: StrictStr | None = None
+    produces_lineage: StrictBool | None = Field(
+        default=None,
+        description="ProducesLineage reports whether the plugin says it discovers lineage between assets.",
+    )
     status: StrictStr | None = None
     supports_data_preview: StrictBool | None = None
     supports_query: StrictBool | None = None
     __properties: ClassVar[list[str]] = [
         "asset_schemas",
+        "catalogs",
         "category",
         "config_spec",
         "description",
@@ -49,6 +58,7 @@ class PluginsdkMeta(BaseModel):
         "icon",
         "id",
         "name",
+        "produces_lineage",
         "status",
         "supports_data_preview",
         "supports_query",
@@ -71,7 +81,7 @@ class PluginsdkMeta(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self | None:
-        """Create an instance of PluginsdkMeta from a JSON string"""
+        """Create an instance of PluginInfo from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> dict[str, Any]:
@@ -109,7 +119,7 @@ class PluginsdkMeta(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
-        """Create an instance of PluginsdkMeta from a dict"""
+        """Create an instance of PluginInfo from a dict"""
         if obj is None:
             return None
 
@@ -123,6 +133,7 @@ class PluginsdkMeta(BaseModel):
                 ]
                 if obj.get("asset_schemas") is not None
                 else None,
+                "catalogs": obj.get("catalogs"),
                 "category": obj.get("category"),
                 "config_spec": [
                     PluginsdkConfigField.from_dict(_item) for _item in obj["config_spec"]
@@ -134,6 +145,7 @@ class PluginsdkMeta(BaseModel):
                 "icon": obj.get("icon"),
                 "id": obj.get("id"),
                 "name": obj.get("name"),
+                "produces_lineage": obj.get("produces_lineage"),
                 "status": obj.get("status"),
                 "supports_data_preview": obj.get("supports_data_preview"),
                 "supports_query": obj.get("supports_query"),

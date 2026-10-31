@@ -13,13 +13,16 @@ import (
 	"github.com/go-openapi/swag/typeutils"
 )
 
-// PluginsdkMeta pluginsdk meta
+// PluginInfo plugin info
 //
-// swagger:model pluginsdk.Meta
-type PluginsdkMeta struct {
+// swagger:model PluginInfo
+type PluginInfo struct {
 
 	// asset schemas
 	AssetSchemas []*PluginsdkAssetSchema `json:"asset_schemas"`
+
+	// Catalogs names the kinds of asset the plugin documents, in the order it lists them.
+	Catalogs []string `json:"catalogs"`
 
 	// category
 	Category string `json:"category,omitempty"`
@@ -42,6 +45,9 @@ type PluginsdkMeta struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// ProducesLineage reports whether the plugin says it discovers lineage between assets.
+	ProducesLineage bool `json:"produces_lineage,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 
@@ -52,8 +58,8 @@ type PluginsdkMeta struct {
 	SupportsQuery bool `json:"supports_query,omitempty"`
 }
 
-// Validate validates this pluginsdk meta
-func (m *PluginsdkMeta) Validate(formats strfmt.Registry) error {
+// Validate validates this plugin info
+func (m *PluginInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAssetSchemas(formats); err != nil {
@@ -70,7 +76,7 @@ func (m *PluginsdkMeta) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PluginsdkMeta) validateAssetSchemas(formats strfmt.Registry) error {
+func (m *PluginInfo) validateAssetSchemas(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.AssetSchemas) { // not required
 		return nil
 	}
@@ -100,7 +106,7 @@ func (m *PluginsdkMeta) validateAssetSchemas(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PluginsdkMeta) validateConfigSpec(formats strfmt.Registry) error {
+func (m *PluginInfo) validateConfigSpec(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.ConfigSpec) { // not required
 		return nil
 	}
@@ -130,8 +136,8 @@ func (m *PluginsdkMeta) validateConfigSpec(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this pluginsdk meta based on the context it is used
-func (m *PluginsdkMeta) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this plugin info based on the context it is used
+func (m *PluginInfo) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateAssetSchemas(ctx, formats); err != nil {
@@ -148,7 +154,7 @@ func (m *PluginsdkMeta) ContextValidate(ctx context.Context, formats strfmt.Regi
 	return nil
 }
 
-func (m *PluginsdkMeta) contextValidateAssetSchemas(ctx context.Context, formats strfmt.Registry) error {
+func (m *PluginInfo) contextValidateAssetSchemas(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.AssetSchemas); i++ {
 
@@ -177,7 +183,7 @@ func (m *PluginsdkMeta) contextValidateAssetSchemas(ctx context.Context, formats
 	return nil
 }
 
-func (m *PluginsdkMeta) contextValidateConfigSpec(ctx context.Context, formats strfmt.Registry) error {
+func (m *PluginInfo) contextValidateConfigSpec(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.ConfigSpec); i++ {
 
@@ -207,7 +213,7 @@ func (m *PluginsdkMeta) contextValidateConfigSpec(ctx context.Context, formats s
 }
 
 // MarshalBinary interface implementation
-func (m *PluginsdkMeta) MarshalBinary() ([]byte, error) {
+func (m *PluginInfo) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -215,8 +221,8 @@ func (m *PluginsdkMeta) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PluginsdkMeta) UnmarshalBinary(b []byte) error {
-	var res PluginsdkMeta
+func (m *PluginInfo) UnmarshalBinary(b []byte) error {
+	var res PluginInfo
 	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}

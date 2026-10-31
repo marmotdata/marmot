@@ -34,6 +34,25 @@ function createAuthStore() {
 				set(null);
 			}
 		},
+		// Clearing the token only forgets it in this browser; a copy would still work until it expires, so the API is told to revoke it first. Best effort: a failure here must not leave the person signed in.
+		signOut: async (): Promise<void> => {
+			if (!browser) return;
+			const token = localStorage.getItem('jwt');
+			if (token) {
+				try {
+					await fetch('/api/v1/users/sign-out', {
+						method: 'POST',
+						headers: { Authorization: `Bearer ${token}`, 'X-Marmot-Client': 'web' },
+						keepalive: true,
+						signal: AbortSignal.timeout(5000)
+					});
+				} catch {
+					// The API is unreachable or slow; sign out locally regardless.
+				}
+			}
+			localStorage.removeItem('jwt');
+			set(null);
+		},
 		getToken: (): string | null => {
 			if (browser) {
 				return localStorage.getItem('jwt');

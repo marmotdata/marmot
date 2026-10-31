@@ -22,6 +22,9 @@ type QueryCount struct {
 
 	// query type
 	QueryType string `json:"query_type,omitempty"`
+
+	// ResultCount is set on the zero-result list, where it is always 0; ordinary top queries leave it out because only searches that found nothing are recorded with their result count
+	ResultCount int64 `json:"result_count,omitempty"`
 }
 
 // Validate validates this query count

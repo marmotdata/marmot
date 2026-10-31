@@ -17,6 +17,9 @@ type UpdateSSOMappingRequest struct {
 	// member role
 	MemberRole string `json:"member_role,omitempty"`
 
+	// role id
+	RoleID string `json:"role_id,omitempty"`
+
 	// team id
 	TeamID string `json:"team_id,omitempty"`
 }

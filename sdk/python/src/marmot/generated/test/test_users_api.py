@@ -47,6 +47,30 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Delete a user
         """
 
+    async def test_delete_users_id_invite(self) -> None:
+        """Test case for delete_users_id_invite
+
+        Withdraw an invitation
+        """
+
+    def test_delete_users_id_invite_sync(self) -> None:
+        """Test case for delete_users_id_invite (synchronous)
+
+        Withdraw an invitation
+        """
+
+    async def test_delete_users_me_connected_apps_client_id(self) -> None:
+        """Test case for delete_users_me_connected_apps_client_id
+
+        Revoke a connected app
+        """
+
+    def test_delete_users_me_connected_apps_client_id_sync(self) -> None:
+        """Test case for delete_users_me_connected_apps_client_id (synchronous)
+
+        Revoke a connected app
+        """
+
     async def test_delete_users_oauth_unlink_id_provider(self) -> None:
         """Test case for delete_users_oauth_unlink_id_provider
 
@@ -57,6 +81,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         """Test case for delete_users_oauth_unlink_id_provider (synchronous)
 
         Unlink OAuth account
+        """
+
+    async def test_get_invites_token(self) -> None:
+        """Test case for get_invites_token
+
+        Look up an invitation
+        """
+
+    def test_get_invites_token_sync(self) -> None:
+        """Test case for get_invites_token (synchronous)
+
+        Look up an invitation
         """
 
     async def test_get_users(self) -> None:
@@ -107,6 +143,42 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Get current user profile
         """
 
+    async def test_get_users_me_connected_apps(self) -> None:
+        """Test case for get_users_me_connected_apps
+
+        List connected apps
+        """
+
+    def test_get_users_me_connected_apps_sync(self) -> None:
+        """Test case for get_users_me_connected_apps (synchronous)
+
+        List connected apps
+        """
+
+    async def test_list_recent_items(self) -> None:
+        """Test case for list_recent_items
+
+        List recently viewed items
+        """
+
+    def test_list_recent_items_sync(self) -> None:
+        """Test case for list_recent_items (synchronous)
+
+        List recently viewed items
+        """
+
+    async def test_post_invites_token_accept(self) -> None:
+        """Test case for post_invites_token_accept
+
+        Accept an invitation
+        """
+
+    def test_post_invites_token_accept_sync(self) -> None:
+        """Test case for post_invites_token_accept (synchronous)
+
+        Accept an invitation
+        """
+
     async def test_post_users(self) -> None:
         """Test case for post_users
 
@@ -131,6 +203,30 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Create API key
         """
 
+    async def test_post_users_apikeys_id_rotate(self) -> None:
+        """Test case for post_users_apikeys_id_rotate
+
+        Rotate API key
+        """
+
+    def test_post_users_apikeys_id_rotate_sync(self) -> None:
+        """Test case for post_users_apikeys_id_rotate (synchronous)
+
+        Rotate API key
+        """
+
+    async def test_post_users_id_invite(self) -> None:
+        """Test case for post_users_id_invite
+
+        Renew an invitation
+        """
+
+    def test_post_users_id_invite_sync(self) -> None:
+        """Test case for post_users_id_invite (synchronous)
+
+        Renew an invitation
+        """
+
     async def test_post_users_id_sign_out_all(self) -> None:
         """Test case for post_users_id_sign_out_all
 
@@ -141,6 +237,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         """Test case for post_users_id_sign_out_all (synchronous)
 
         Sign a user out of all sessions
+        """
+
+    async def test_post_users_invites(self) -> None:
+        """Test case for post_users_invites
+
+        Invite a member
+        """
+
+    def test_post_users_invites_sync(self) -> None:
+        """Test case for post_users_invites (synchronous)
+
+        Invite a member
         """
 
     async def test_post_users_login(self) -> None:
@@ -191,6 +299,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         Update a user
         """
 
+    async def test_put_users_me_profile(self) -> None:
+        """Test case for put_users_me_profile
+
+        Update current user profile
+        """
+
+    def test_put_users_me_profile_sync(self) -> None:
+        """Test case for put_users_me_profile (synchronous)
+
+        Update current user profile
+        """
+
     async def test_put_users_preferences(self) -> None:
         """Test case for put_users_preferences
 
@@ -201,6 +321,18 @@ class TestUsersApi(unittest.IsolatedAsyncioTestCase):
         """Test case for put_users_preferences (synchronous)
 
         Update user preferences
+        """
+
+    async def test_record_recent_view(self) -> None:
+        """Test case for record_recent_view
+
+        Record a view
+        """
+
+    def test_record_recent_view_sync(self) -> None:
+        """Test case for record_recent_view (synchronous)
+
+        Record a view
         """
 
 

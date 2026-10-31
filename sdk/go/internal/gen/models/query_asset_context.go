@@ -4,9 +4,13 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // QueryAssetContext query asset context
@@ -16,6 +20,12 @@ type QueryAssetContext struct {
 
 	// asset id
 	AssetID string `json:"asset_id,omitempty"`
+
+	// certified
+	Certified bool `json:"certified,omitempty"`
+
+	// columns read
+	ColumnsRead int64 `json:"columns_read,omitempty"`
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -29,8 +39,17 @@ type QueryAssetContext struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// What the catalog says about the table as data: who owns it, how big it is, which of its columns hold personal data and whether it is certified. ColumnsRead counts the table's catalogued columns among the result's columns, matched by name, so it is nil when the catalog has no columns for the table.
+	Owners []string `json:"owners"`
+
+	// personal data
+	PersonalData []*QueryPersonalDataColumn `json:"personal_data"`
+
 	// providers
 	Providers []string `json:"providers"`
+
+	// row count
+	RowCount int64 `json:"row_count,omitempty"`
 
 	// tags
 	Tags []string `json:"tags"`
@@ -40,12 +59,89 @@ type QueryAssetContext struct {
 }
 
 // Validate validates this query asset context
-func (m *QueryAssetContext) Validate(_ strfmt.Registry) error {
+func (m *QueryAssetContext) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validatePersonalData(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this query asset context based on context it is used
-func (m *QueryAssetContext) ContextValidate(_ context.Context, _ strfmt.Registry) error {
+func (m *QueryAssetContext) validatePersonalData(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.PersonalData) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.PersonalData); i++ {
+		if typeutils.IsZero(m.PersonalData[i]) { // not required
+			continue
+		}
+
+		if m.PersonalData[i] != nil {
+			if err := m.PersonalData[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("personal_data" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("personal_data" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this query asset context based on the context it is used
+func (m *QueryAssetContext) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidatePersonalData(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *QueryAssetContext) contextValidatePersonalData(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.PersonalData); i++ {
+
+		if m.PersonalData[i] != nil {
+
+			if typeutils.IsZero(m.PersonalData[i]) { // not required
+				return nil
+			}
+
+			if err := m.PersonalData[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("personal_data" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("personal_data" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

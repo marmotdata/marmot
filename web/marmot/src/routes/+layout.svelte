@@ -107,20 +107,12 @@
 		}
 	});
 
-	function withManualNav(fn: () => void) {
+	async function signOut() {
+		// Set before the token is cleared so the redirect-to-login effect does not race the reload below
 		manualNavigation = true;
-		fn();
-		setTimeout(() => {
-			manualNavigation = false;
-		}, 100);
-	}
-
-	function signOut() {
-		withManualNav(() => {
-			auth.clearToken();
-			userProfile.clear();
-			window.location.href = '/';
-		});
+		await auth.signOut();
+		userProfile.clear();
+		window.location.href = '/';
 	}
 
 	type NavId =

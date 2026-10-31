@@ -51,6 +51,7 @@ class TestQueryStats(unittest.TestCase):
                         label = '',
                         plugin_id = '',
                         principal_type = '',
+                        schedule_id = '',
                         tags = [
                             ''
                             ],
@@ -64,6 +65,7 @@ class TestQueryStats(unittest.TestCase):
                         label = '',
                         plugin_id = '',
                         principal_type = '',
+                        schedule_id = '',
                         tags = [
                             ''
                             ],
@@ -77,6 +79,7 @@ class TestQueryStats(unittest.TestCase):
                         label = '',
                         plugin_id = '',
                         principal_type = '',
+                        schedule_id = '',
                         tags = [
                             ''
                             ],

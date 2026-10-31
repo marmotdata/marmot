@@ -32,6 +32,9 @@ type ServiceAccountAPIKey struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Prefix is the start of the key kept in clear so it can be recognised later; empty for keys issued before it was stored.
+	Prefix string `json:"prefix,omitempty"`
+
 	// service account id
 	ServiceAccountID string `json:"service_account_id,omitempty"`
 }

@@ -63,6 +63,11 @@ PostAPIV1QueryRunParams contains all the parameters to send to the API endpoint
 */
 type PostAPIV1QueryRunParams struct {
 
+	// XMarmotClient.
+	//
+	// editor (or web) when the query comes from the web UI's query editor
+	XMarmotClient *string
+
 	// Request.
 	//
 	// Query
@@ -125,6 +130,17 @@ func (o *PostAPIV1QueryRunParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithXMarmotClient adds the xMarmotClient to the post API v1 query run params.
+func (o *PostAPIV1QueryRunParams) WithXMarmotClient(xMarmotClient *string) *PostAPIV1QueryRunParams {
+	o.SetXMarmotClient(xMarmotClient)
+	return o
+}
+
+// SetXMarmotClient adds the xMarmotClient to the post API v1 query run params.
+func (o *PostAPIV1QueryRunParams) SetXMarmotClient(xMarmotClient *string) {
+	o.XMarmotClient = xMarmotClient
+}
+
 // WithRequest adds the request to the post API v1 query run params.
 func (o *PostAPIV1QueryRunParams) WithRequest(request *models.QueryRunInput) *PostAPIV1QueryRunParams {
 	o.SetRequest(request)
@@ -142,6 +158,14 @@ func (o *PostAPIV1QueryRunParams) WriteToRequest(r runtime.ClientRequest, reg st
 		return err
 	}
 	var res []error
+
+	if o.XMarmotClient != nil {
+
+		// header param X-Marmot-Client
+		if err := r.SetHeaderParam("X-Marmot-Client", *o.XMarmotClient); err != nil {
+			return err
+		}
+	}
 	if o.Request != nil {
 		if err := r.SetBodyParam(o.Request); err != nil {
 			return err

@@ -56,6 +56,12 @@ type ClientOption func(*runtime.ClientOperation)
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
+	// DeleteAssetsFieldAnnotationsID delete a field annotation.
+	DeleteAssetsFieldAnnotationsID(params *DeleteAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsFieldAnnotationsIDNoContent, error)
+
+	// DeleteAssetsFieldAnnotationsIDContext delete a field annotation.
+	DeleteAssetsFieldAnnotationsIDContext(ctx context.Context, params *DeleteAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsFieldAnnotationsIDNoContent, error)
+
 	// DeleteAssetsID delete an asset.
 	DeleteAssetsID(params *DeleteAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
 
@@ -80,11 +86,23 @@ type ClientService interface {
 	// GetAssetsByGlossaryTermTermIDContext get assets by glossary term.
 	GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
+	// GetAssetsCountsID get asset tab counts.
+	GetAssetsCountsID(params *GetAssetsCountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsCountsIDOK, error)
+
+	// GetAssetsCountsIDContext get asset tab counts.
+	GetAssetsCountsIDContext(ctx context.Context, params *GetAssetsCountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsCountsIDOK, error)
+
 	// GetAssetsDocumentationMrn get asset documentation.
 	GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
 	// GetAssetsDocumentationMrnContext get asset documentation.
 	GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
+
+	// GetAssetsFieldAnnotationsID list field annotations.
+	GetAssetsFieldAnnotationsID(params *GetAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsFieldAnnotationsIDOK, error)
+
+	// GetAssetsFieldAnnotationsIDContext list field annotations.
+	GetAssetsFieldAnnotationsIDContext(ctx context.Context, params *GetAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsFieldAnnotationsIDOK, error)
 
 	// GetAssetsID get an asset by ID.
 	GetAssetsID(params *GetAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDOK, error)
@@ -140,6 +158,12 @@ type ClientService interface {
 	// GetAssetsSearchContext search assets.
 	GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSearchOK, error)
 
+	// GetAssetsStale list stale assets.
+	GetAssetsStale(params *GetAssetsStaleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsStaleOK, error)
+
+	// GetAssetsStaleContext list stale assets.
+	GetAssetsStaleContext(ctx context.Context, params *GetAssetsStaleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsStaleOK, error)
+
 	// GetAssetsSuggestionsMetadataFields get metadata field suggestions.
 	GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
 
@@ -176,6 +200,12 @@ type ClientService interface {
 	// PostAssetsContext create a new asset.
 	PostAssetsContext(ctx context.Context, params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error)
 
+	// PostAssetsBatch get several assets.
+	PostAssetsBatch(params *PostAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsBatchOK, error)
+
+	// PostAssetsBatchContext get several assets.
+	PostAssetsBatchContext(ctx context.Context, params *PostAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsBatchOK, error)
+
 	// PostAssetsDocumentation create asset documentation.
 	PostAssetsDocumentation(params *PostAssetsDocumentationParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
 
@@ -200,6 +230,12 @@ type ClientService interface {
 	// PostAssetsTermsIDContext add glossary terms to asset.
 	PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
 
+	// PutAssetsFieldAnnotationsID set a field annotation.
+	PutAssetsFieldAnnotationsID(params *PutAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsFieldAnnotationsIDOK, error)
+
+	// PutAssetsFieldAnnotationsIDContext set a field annotation.
+	PutAssetsFieldAnnotationsIDContext(ctx context.Context, params *PutAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsFieldAnnotationsIDOK, error)
+
 	// PutAssetsID update an asset.
 	PutAssetsID(params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error)
 
@@ -207,6 +243,73 @@ type ClientService interface {
 	PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
+}
+
+// DeleteAssetsFieldAnnotationsID deletes a field annotation.
+//
+// Removes every marker from one schema field..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAssetsFieldAnnotationsIDContext] instead.
+func (a *Client) DeleteAssetsFieldAnnotationsID(params *DeleteAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsFieldAnnotationsIDNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAssetsFieldAnnotationsIDContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteAssetsFieldAnnotationsIDContext deletes a field annotation.
+//
+// Removes every marker from one schema field..
+//
+// Do not use the deprecated [DeleteAssetsFieldAnnotationsIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAssetsFieldAnnotationsIDContext(ctx context.Context, params *DeleteAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsFieldAnnotationsIDNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteAssetsFieldAnnotationsIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "deleteAssetsFieldAnnotationsID",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/assets/field-annotations/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteAssetsFieldAnnotationsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteAssetsFieldAnnotationsIDNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteAssetsFieldAnnotationsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // DeleteAssetsID deletes an asset.
@@ -412,7 +515,7 @@ func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteA
 
 // GetAssetsByGlossaryTermTermID gets assets by glossary term.
 //
-// Retrieve all assets associated with a specific glossary term.
+// Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -431,7 +534,7 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 
 // GetAssetsByGlossaryTermTermIDContext gets assets by glossary term.
 //
-// Retrieve all assets associated with a specific glossary term.
+// Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group..
 //
 // Do not use the deprecated [GetAssetsByGlossaryTermTermIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
@@ -474,6 +577,73 @@ func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, param
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getAssetsByGlossaryTermTermID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAssetsCountsID gets asset tab counts.
+//
+// Counts shown beside the asset page's tabs: lineage neighbours one edge away, pipeline runs, agent runs and queries through Marmot in the last 14 days. queries is left out for callers who may not read the query log; callers who may query but not read the whole log only count their own queries..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsCountsIDContext] instead.
+func (a *Client) GetAssetsCountsID(params *GetAssetsCountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsCountsIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsCountsIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetAssetsCountsIDContext gets asset tab counts.
+//
+// Counts shown beside the asset page's tabs: lineage neighbours one edge away, pipeline runs, agent runs and queries through Marmot in the last 14 days. queries is left out for callers who may not read the query log; callers who may query but not read the whole log only count their own queries..
+//
+// Do not use the deprecated [GetAssetsCountsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsCountsIDContext(ctx context.Context, params *GetAssetsCountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsCountsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsCountsIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAssetsCountsID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/assets/counts/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsCountsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsCountsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAssetsCountsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -541,6 +711,73 @@ func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *G
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getAssetsDocumentationMrn: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAssetsFieldAnnotationsID lists field annotations.
+//
+// Lists the markers people set on an asset's schema fields: personal data, certified, an edited description and glossary terms. The asset response carries the same list as field_annotations..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsFieldAnnotationsIDContext] instead.
+func (a *Client) GetAssetsFieldAnnotationsID(params *GetAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsFieldAnnotationsIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsFieldAnnotationsIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetAssetsFieldAnnotationsIDContext lists field annotations.
+//
+// Lists the markers people set on an asset's schema fields: personal data, certified, an edited description and glossary terms. The asset response carries the same list as field_annotations..
+//
+// Do not use the deprecated [GetAssetsFieldAnnotationsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsFieldAnnotationsIDContext(ctx context.Context, params *GetAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsFieldAnnotationsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsFieldAnnotationsIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAssetsFieldAnnotationsID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/assets/field-annotations/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsFieldAnnotationsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsFieldAnnotationsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAssetsFieldAnnotationsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1147,6 +1384,73 @@ func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSe
 	panic(msg)
 }
 
+// GetAssetsStale lists stale assets.
+//
+// List assets whose pipeline has not refreshed them for more than twice its schedule interval, longest unrefreshed first. Assets no enabled pipeline refreshes are never stale..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsStaleContext] instead.
+func (a *Client) GetAssetsStale(params *GetAssetsStaleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsStaleOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsStaleContext(ctx, params, authInfo, opts...)
+}
+
+// GetAssetsStaleContext lists stale assets.
+//
+// List assets whose pipeline has not refreshed them for more than twice its schedule interval, longest unrefreshed first. Assets no enabled pipeline refreshes are never stale..
+//
+// Do not use the deprecated [GetAssetsStaleParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsStaleContext(ctx context.Context, params *GetAssetsStaleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsStaleOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsStaleParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAssetsStale",
+		Method:             "GET",
+		PathPattern:        "/api/v1/assets/stale",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsStaleReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsStaleOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAssetsStale: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetAssetsSuggestionsMetadataFields gets metadata field suggestions.
 //
 // Get suggestions for metadata fields and their types.
@@ -1484,7 +1788,7 @@ func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsT
 
 // PostAssets creates a new asset.
 //
-// Create a new asset in the system.
+// Create a new asset in the system. Owners, a user description and glossary terms can be set in the same request; if any of them cannot be applied the asset is not kept..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -1503,7 +1807,7 @@ func (a *Client) PostAssets(params *PostAssetsParams, authInfo runtime.ClientAut
 
 // PostAssetsContext creates a new asset.
 //
-// Create a new asset in the system.
+// Create a new asset in the system. Owners, a user description and glossary terms can be set in the same request; if any of them cannot be applied the asset is not kept..
 //
 // Do not use the deprecated [PostAssetsParams.Context] with this method: it would be ignored.
 func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error) {
@@ -1546,6 +1850,73 @@ func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostAssetsBatch gets several assets.
+//
+// Read up to 200 assets by id in one request, in the order asked for. Ids that match no asset are left out. Unlike reading one asset, this does not count as a view..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsBatchContext] instead.
+func (a *Client) PostAssetsBatch(params *PostAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsBatchOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsBatchContext(ctx, params, authInfo, opts...)
+}
+
+// PostAssetsBatchContext gets several assets.
+//
+// Read up to 200 assets by id in one request, in the order asked for. Ids that match no asset are left out. Unlike reading one asset, this does not count as a view..
+//
+// Do not use the deprecated [PostAssetsBatchParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsBatchContext(ctx context.Context, params *PostAssetsBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsBatchOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAssetsBatchParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postAssetsBatch",
+		Method:             "POST",
+		PathPattern:        "/api/v1/assets/batch",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAssetsBatchReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostAssetsBatchOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postAssetsBatch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1814,6 +2185,73 @@ func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAsset
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutAssetsFieldAnnotationsID sets a field annotation.
+//
+// Sets the markers on one schema field, merging into what is there: omitted markers keep their value, an empty description clears an edited one and a field left with no markers is removed. Returns every annotated field of the asset..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAssetsFieldAnnotationsIDContext] instead.
+func (a *Client) PutAssetsFieldAnnotationsID(params *PutAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsFieldAnnotationsIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAssetsFieldAnnotationsIDContext(ctx, params, authInfo, opts...)
+}
+
+// PutAssetsFieldAnnotationsIDContext sets a field annotation.
+//
+// Sets the markers on one schema field, merging into what is there: omitted markers keep their value, an empty description clears an edited one and a field left with no markers is removed. Returns every annotated field of the asset..
+//
+// Do not use the deprecated [PutAssetsFieldAnnotationsIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAssetsFieldAnnotationsIDContext(ctx context.Context, params *PutAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsFieldAnnotationsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAssetsFieldAnnotationsIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putAssetsFieldAnnotationsID",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/assets/field-annotations/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAssetsFieldAnnotationsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutAssetsFieldAnnotationsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for putAssetsFieldAnnotationsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

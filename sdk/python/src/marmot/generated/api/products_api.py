@@ -19,13 +19,18 @@ from marmot.generated.models.add_data_product_assets_request import AddDataProdu
 from marmot.generated.models.create_data_product_request import CreateDataProductRequest
 from marmot.generated.models.data_product import DataProduct
 from marmot.generated.models.data_product_assets_result import DataProductAssetsResult
+from marmot.generated.models.data_product_facets import DataProductFacets
 from marmot.generated.models.data_product_list_result import DataProductListResult
+from marmot.generated.models.data_product_members_result import DataProductMembersResult
 from marmot.generated.models.data_product_resolved_assets import DataProductResolvedAssets
 from marmot.generated.models.data_product_rule import DataProductRule
 from marmot.generated.models.data_product_rule_preview import DataProductRulePreview
 from marmot.generated.models.data_product_rule_request import DataProductRuleRequest
 from marmot.generated.models.data_product_rules_response import DataProductRulesResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta
+from marmot.generated.models.reorder_data_product_rules_request import (
+    ReorderDataProductRulesRequest,
+)
 from marmot.generated.models.update_data_product_request import UpdateDataProductRequest
 from marmot.generated.rest import RESTResponseType
 from marmot.generated.sync_helper import run_sync
@@ -1725,6 +1730,292 @@ class ProductsApi:
         )
 
     @validate_call
+    async def get_products_facets(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductFacets:
+        """Data product filter values
+
+        List the owners and tags in use on data products, for filtering the list
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_facets_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductFacets",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_facets_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductFacets]:
+        """Data product filter values
+
+        List the owners and tags in use on data products, for filtering the list
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_facets_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductFacets",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_facets_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Data product filter values
+
+        List the owners and tags in use on data products, for filtering the list
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_facets_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductFacets",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_facets_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductFacets:
+        """Data product filter values (synchronous)
+
+        Synchronous variant of :meth:`get_products_facets`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_facets(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_facets_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductFacets]:
+        """Data product filter values (synchronous)
+
+        Synchronous variant of :meth:`get_products_facets_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_facets_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_facets_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Data product filter values (synchronous)
+
+        Synchronous variant of :meth:`get_products_facets_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_facets_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_facets_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/facets",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
     async def get_products_id(
         self,
         id: Annotated[StrictStr, Field(description="Data Product ID")],
@@ -2683,6 +2974,24 @@ class ProductsApi:
     @validate_call
     async def get_products_list(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2699,8 +3008,18 @@ class ProductsApi:
     ) -> DataProductListResult:
         """List data products
 
-        Retrieve a paginated list of data products
+        Retrieve a paginated list of data products, optionally searched, filtered and sorted on the server. Each product carries its popularity, a level from 0 to 4.
 
+        :param q: Search name, description and tags
+        :type q: str
+        :param owners: Comma-separated user or team ids; keeps products any of them own
+        :type owners: str
+        :param tags: Comma-separated tags; keeps products carrying any of them
+        :type tags: str
+        :param mine: only: products you or your teams own; exclude: everything else
+        :type mine: str
+        :param sort: name (default), updated or popular
+        :type sort: str
         :param limit: Maximum number of data products to return
         :type limit: int
         :param offset: Number of data products to skip
@@ -2728,6 +3047,11 @@ class ProductsApi:
         """
 
         _param = self._get_products_list_serialize(
+            q=q,
+            owners=owners,
+            tags=tags,
+            mine=mine,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -2738,6 +3062,7 @@ class ProductsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "DataProductListResult",
+            "400": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -2750,6 +3075,24 @@ class ProductsApi:
     @validate_call
     async def get_products_list_with_http_info(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2766,8 +3109,18 @@ class ProductsApi:
     ) -> ApiResponse[DataProductListResult]:
         """List data products
 
-        Retrieve a paginated list of data products
+        Retrieve a paginated list of data products, optionally searched, filtered and sorted on the server. Each product carries its popularity, a level from 0 to 4.
 
+        :param q: Search name, description and tags
+        :type q: str
+        :param owners: Comma-separated user or team ids; keeps products any of them own
+        :type owners: str
+        :param tags: Comma-separated tags; keeps products carrying any of them
+        :type tags: str
+        :param mine: only: products you or your teams own; exclude: everything else
+        :type mine: str
+        :param sort: name (default), updated or popular
+        :type sort: str
         :param limit: Maximum number of data products to return
         :type limit: int
         :param offset: Number of data products to skip
@@ -2795,6 +3148,11 @@ class ProductsApi:
         """
 
         _param = self._get_products_list_serialize(
+            q=q,
+            owners=owners,
+            tags=tags,
+            mine=mine,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -2805,6 +3163,7 @@ class ProductsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "DataProductListResult",
+            "400": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -2817,6 +3176,24 @@ class ProductsApi:
     @validate_call
     async def get_products_list_without_preload_content(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2833,8 +3210,18 @@ class ProductsApi:
     ) -> RESTResponseType:
         """List data products
 
-        Retrieve a paginated list of data products
+        Retrieve a paginated list of data products, optionally searched, filtered and sorted on the server. Each product carries its popularity, a level from 0 to 4.
 
+        :param q: Search name, description and tags
+        :type q: str
+        :param owners: Comma-separated user or team ids; keeps products any of them own
+        :type owners: str
+        :param tags: Comma-separated tags; keeps products carrying any of them
+        :type tags: str
+        :param mine: only: products you or your teams own; exclude: everything else
+        :type mine: str
+        :param sort: name (default), updated or popular
+        :type sort: str
         :param limit: Maximum number of data products to return
         :type limit: int
         :param offset: Number of data products to skip
@@ -2862,6 +3249,11 @@ class ProductsApi:
         """
 
         _param = self._get_products_list_serialize(
+            q=q,
+            owners=owners,
+            tags=tags,
+            mine=mine,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -2872,6 +3264,7 @@ class ProductsApi:
 
         _response_types_map: dict[str, str | None] = {
             "200": "DataProductListResult",
+            "400": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -2880,6 +3273,24 @@ class ProductsApi:
     @validate_call
     def get_products_list_sync(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2901,6 +3312,11 @@ class ProductsApi:
         """
         return run_sync(
             self.get_products_list(
+                q=q,
+                owners=owners,
+                tags=tags,
+                mine=mine,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -2914,6 +3330,24 @@ class ProductsApi:
     @validate_call
     def get_products_list_sync_with_http_info(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2935,6 +3369,11 @@ class ProductsApi:
         """
         return run_sync(
             self.get_products_list_with_http_info(
+                q=q,
+                owners=owners,
+                tags=tags,
+                mine=mine,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -2948,6 +3387,24 @@ class ProductsApi:
     @validate_call
     def get_products_list_sync_without_preload_content(
         self,
+        q: Annotated[
+            StrictStr | None, Field(description="Search name, description and tags")
+        ] = None,
+        owners: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated user or team ids; keeps products any of them own"),
+        ] = None,
+        tags: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated tags; keeps products carrying any of them"),
+        ] = None,
+        mine: Annotated[
+            StrictStr | None,
+            Field(description="only: products you or your teams own; exclude: everything else"),
+        ] = None,
+        sort: Annotated[
+            StrictStr | None, Field(description="name (default), updated or popular")
+        ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Maximum number of data products to return")
         ] = None,
@@ -2969,6 +3426,11 @@ class ProductsApi:
         """
         return run_sync(
             self.get_products_list_without_preload_content(
+                q=q,
+                owners=owners,
+                tags=tags,
+                mine=mine,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -2981,6 +3443,11 @@ class ProductsApi:
 
     def _get_products_list_serialize(
         self,
+        q,
+        owners,
+        tags,
+        mine,
+        sort,
         limit,
         offset,
         _request_auth,
@@ -3002,6 +3469,21 @@ class ProductsApi:
 
         # process the path parameters
         # process the query parameters
+        if q is not None:
+            _query_params.append(("q", q))
+
+        if owners is not None:
+            _query_params.append(("owners", owners))
+
+        if tags is not None:
+            _query_params.append(("tags", tags))
+
+        if mine is not None:
+            _query_params.append(("mine", mine))
+
+        if sort is not None:
+            _query_params.append(("sort", sort))
+
         if limit is not None:
             _query_params.append(("limit", limit))
 
@@ -3022,6 +3504,497 @@ class ProductsApi:
         return self.api_client.param_serialize(
             method="GET",
             resource_path="/api/v1/products/list",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_products_members_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductMembersResult:
+        """Get data product members
+
+        Page through a data product's assets with each asset's name, type, owners and popularity and how it joined: manually or through which rule
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param source: manual or rule
+        :type source: str
+        :param rule_id: Only assets this rule brought in
+        :type rule_id: str
+        :param q: Match the asset name or MRN
+        :type q: str
+        :param type: Only assets of this type
+        :type type: str
+        :param sort: name (default) or popular
+        :type sort: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_members_id_serialize(
+            id=id,
+            source=source,
+            rule_id=rule_id,
+            q=q,
+            type=type,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductMembersResult",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_products_members_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductMembersResult]:
+        """Get data product members
+
+        Page through a data product's assets with each asset's name, type, owners and popularity and how it joined: manually or through which rule
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param source: manual or rule
+        :type source: str
+        :param rule_id: Only assets this rule brought in
+        :type rule_id: str
+        :param q: Match the asset name or MRN
+        :type q: str
+        :param type: Only assets of this type
+        :type type: str
+        :param sort: name (default) or popular
+        :type sort: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_members_id_serialize(
+            id=id,
+            source=source,
+            rule_id=rule_id,
+            q=q,
+            type=type,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductMembersResult",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_products_members_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product members
+
+        Page through a data product's assets with each asset's name, type, owners and popularity and how it joined: manually or through which rule
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param source: manual or rule
+        :type source: str
+        :param rule_id: Only assets this rule brought in
+        :type rule_id: str
+        :param q: Match the asset name or MRN
+        :type q: str
+        :param type: Only assets of this type
+        :type type: str
+        :param sort: name (default) or popular
+        :type sort: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param offset: Number of assets to skip
+        :type offset: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_products_members_id_serialize(
+            id=id,
+            source=source,
+            rule_id=rule_id,
+            q=q,
+            type=type,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductMembersResult",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_products_members_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductMembersResult:
+        """Get data product members (synchronous)
+
+        Synchronous variant of :meth:`get_products_members_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_members_id(
+                id=id,
+                source=source,
+                rule_id=rule_id,
+                q=q,
+                type=type,
+                sort=sort,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_members_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductMembersResult]:
+        """Get data product members (synchronous)
+
+        Synchronous variant of :meth:`get_products_members_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_members_id_with_http_info(
+                id=id,
+                source=source,
+                rule_id=rule_id,
+                q=q,
+                type=type,
+                sort=sort,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_products_members_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        source: Annotated[StrictStr | None, Field(description="manual or rule")] = None,
+        rule_id: Annotated[
+            StrictStr | None, Field(description="Only assets this rule brought in")
+        ] = None,
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
+        type: Annotated[StrictStr | None, Field(description="Only assets of this type")] = None,
+        sort: Annotated[StrictStr | None, Field(description="name (default) or popular")] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        offset: Annotated[StrictInt | None, Field(description="Number of assets to skip")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get data product members (synchronous)
+
+        Synchronous variant of :meth:`get_products_members_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_products_members_id_without_preload_content(
+                id=id,
+                source=source,
+                rule_id=rule_id,
+                q=q,
+                type=type,
+                sort=sort,
+                limit=limit,
+                offset=offset,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_products_members_id_serialize(
+        self,
+        id,
+        source,
+        rule_id,
+        q,
+        type,
+        sort,
+        limit,
+        offset,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        if source is not None:
+            _query_params.append(("source", source))
+
+        if rule_id is not None:
+            _query_params.append(("rule_id", rule_id))
+
+        if q is not None:
+            _query_params.append(("q", q))
+
+        if type is not None:
+            _query_params.append(("type", type))
+
+        if sort is not None:
+            _query_params.append(("sort", sort))
+
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        if offset is not None:
+            _query_params.append(("offset", offset))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/products/members/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6262,6 +7235,360 @@ class ProductsApi:
         return self.api_client.param_serialize(
             method="PUT",
             resource_path="/api/v1/products/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def put_products_rule_order_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductRulesResponse:
+        """Reorder data product rules
+
+        Set the order of a data product's rules. rule_ids must name every rule of the product once.
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param reorder_data_product_rules_request: Rule ids in their new order (required)
+        :type reorder_data_product_rules_request: ReorderDataProductRulesRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_products_rule_order_id_serialize(
+            id=id,
+            reorder_data_product_rules_request=reorder_data_product_rules_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def put_products_rule_order_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductRulesResponse]:
+        """Reorder data product rules
+
+        Set the order of a data product's rules. rule_ids must name every rule of the product once.
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param reorder_data_product_rules_request: Rule ids in their new order (required)
+        :type reorder_data_product_rules_request: ReorderDataProductRulesRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_products_rule_order_id_serialize(
+            id=id,
+            reorder_data_product_rules_request=reorder_data_product_rules_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def put_products_rule_order_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Reorder data product rules
+
+        Set the order of a data product's rules. rule_ids must name every rule of the product once.
+
+        :param id: Data Product ID (required)
+        :type id: str
+        :param reorder_data_product_rules_request: Rule ids in their new order (required)
+        :type reorder_data_product_rules_request: ReorderDataProductRulesRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._put_products_rule_order_id_serialize(
+            id=id,
+            reorder_data_product_rules_request=reorder_data_product_rules_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "DataProductRulesResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def put_products_rule_order_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> DataProductRulesResponse:
+        """Reorder data product rules (synchronous)
+
+        Synchronous variant of :meth:`put_products_rule_order_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_products_rule_order_id(
+                id=id,
+                reorder_data_product_rules_request=reorder_data_product_rules_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def put_products_rule_order_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[DataProductRulesResponse]:
+        """Reorder data product rules (synchronous)
+
+        Synchronous variant of :meth:`put_products_rule_order_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_products_rule_order_id_with_http_info(
+                id=id,
+                reorder_data_product_rules_request=reorder_data_product_rules_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def put_products_rule_order_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Data Product ID")],
+        reorder_data_product_rules_request: Annotated[
+            ReorderDataProductRulesRequest, Field(description="Rule ids in their new order")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Reorder data product rules (synchronous)
+
+        Synchronous variant of :meth:`put_products_rule_order_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.put_products_rule_order_id_without_preload_content(
+                id=id,
+                reorder_data_product_rules_request=reorder_data_product_rules_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _put_products_rule_order_id_serialize(
+        self,
+        id,
+        reorder_data_product_rules_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if reorder_data_product_rules_request is not None:
+            _body_params = reorder_data_product_rules_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="PUT",
+            resource_path="/api/v1/products/rule-order/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

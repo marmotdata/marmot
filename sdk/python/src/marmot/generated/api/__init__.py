@@ -12,6 +12,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.api.lineage_api import LineageApi
     from marmot.generated.api.mcp_api import McpApi
     from marmot.generated.api.metrics_api import MetricsApi
+    from marmot.generated.api.notifications_api import NotificationsApi
     from marmot.generated.api.owners_api import OwnersApi
     from marmot.generated.api.pipelines_api import PipelinesApi
     from marmot.generated.api.plugins_api import PluginsApi
@@ -43,6 +44,7 @@ from marmot.generated.api.ingestion_api import IngestionApi
 from marmot.generated.api.lineage_api import LineageApi
 from marmot.generated.api.mcp_api import McpApi
 from marmot.generated.api.metrics_api import MetricsApi
+from marmot.generated.api.notifications_api import NotificationsApi
 from marmot.generated.api.owners_api import OwnersApi
 from marmot.generated.api.pipelines_api import PipelinesApi
 from marmot.generated.api.plugins_api import PluginsApi

@@ -41,6 +41,10 @@ func (m *mockAuthService) ValidateToken(ctx context.Context, token string) (*cor
 	return nil, nil
 }
 
+func (m *mockAuthService) RevokeToken(ctx context.Context, token string) error {
+	return nil
+}
+
 func (m *mockAuthService) GetSigningKey(ctx context.Context) ([]byte, error) {
 	return nil, nil
 }

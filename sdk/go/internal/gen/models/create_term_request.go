@@ -38,6 +38,12 @@ type CreateTermRequest struct {
 
 	// parent term id
 	ParentTermID string `json:"parent_term_id,omitempty"`
+
+	// RelatedTermIDs links the new term to existing terms, in both directions.
+	RelatedTermIds []string `json:"related_term_ids"`
+
+	// tags
+	Tags []string `json:"tags"`
 }
 
 // Validate validates this create term request

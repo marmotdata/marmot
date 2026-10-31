@@ -39,6 +39,7 @@ class TestAPIKey(unittest.TestCase):
                 key = '',
                 last_used_at = '',
                 name = '',
+                prefix = '',
                 user_id = ''
             )
         else:

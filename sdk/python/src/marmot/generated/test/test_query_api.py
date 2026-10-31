@@ -23,6 +23,54 @@ class TestQueryApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
+    async def test_api_v1_query_access_requests_post(self) -> None:
+        """Test case for api_v1_query_access_requests_post
+
+        Request query access
+        """
+
+    def test_api_v1_query_access_requests_post_sync(self) -> None:
+        """Test case for api_v1_query_access_requests_post (synchronous)
+
+        Request query access
+        """
+
+    async def test_api_v1_query_agents_get(self) -> None:
+        """Test case for api_v1_query_agents_get
+
+        Summarise agents' queries
+        """
+
+    def test_api_v1_query_agents_get_sync(self) -> None:
+        """Test case for api_v1_query_agents_get (synchronous)
+
+        Summarise agents' queries
+        """
+
+    async def test_api_v1_query_asset_stats_get(self) -> None:
+        """Test case for api_v1_query_asset_stats_get
+
+        Query stats for one asset
+        """
+
+    def test_api_v1_query_asset_stats_get_sync(self) -> None:
+        """Test case for api_v1_query_asset_stats_get (synchronous)
+
+        Query stats for one asset
+        """
+
+    async def test_api_v1_query_history_export_get(self) -> None:
+        """Test case for api_v1_query_history_export_get
+
+        Export queries
+        """
+
+    def test_api_v1_query_history_export_get_sync(self) -> None:
+        """Test case for api_v1_query_history_export_get (synchronous)
+
+        Export queries
+        """
+
     async def test_api_v1_query_history_get(self) -> None:
         """Test case for api_v1_query_history_get
 
@@ -33,6 +81,18 @@ class TestQueryApi(unittest.IsolatedAsyncioTestCase):
         """Test case for api_v1_query_history_get (synchronous)
 
         List queries
+        """
+
+    async def test_api_v1_query_history_id_cancel_post(self) -> None:
+        """Test case for api_v1_query_history_id_cancel_post
+
+        Cancel a query
+        """
+
+    def test_api_v1_query_history_id_cancel_post_sync(self) -> None:
+        """Test case for api_v1_query_history_id_cancel_post (synchronous)
+
+        Cancel a query
         """
 
     async def test_api_v1_query_history_id_get(self) -> None:
@@ -59,6 +119,78 @@ class TestQueryApi(unittest.IsolatedAsyncioTestCase):
         Run a query
         """
 
+    async def test_api_v1_query_saved_get(self) -> None:
+        """Test case for api_v1_query_saved_get
+
+        List saved queries
+        """
+
+    def test_api_v1_query_saved_get_sync(self) -> None:
+        """Test case for api_v1_query_saved_get (synchronous)
+
+        List saved queries
+        """
+
+    async def test_api_v1_query_saved_id_delete(self) -> None:
+        """Test case for api_v1_query_saved_id_delete
+
+        Delete a saved query
+        """
+
+    def test_api_v1_query_saved_id_delete_sync(self) -> None:
+        """Test case for api_v1_query_saved_id_delete (synchronous)
+
+        Delete a saved query
+        """
+
+    async def test_api_v1_query_saved_id_get(self) -> None:
+        """Test case for api_v1_query_saved_id_get
+
+        Get a saved query
+        """
+
+    def test_api_v1_query_saved_id_get_sync(self) -> None:
+        """Test case for api_v1_query_saved_id_get (synchronous)
+
+        Get a saved query
+        """
+
+    async def test_api_v1_query_saved_id_put(self) -> None:
+        """Test case for api_v1_query_saved_id_put
+
+        Update a saved query
+        """
+
+    def test_api_v1_query_saved_id_put_sync(self) -> None:
+        """Test case for api_v1_query_saved_id_put (synchronous)
+
+        Update a saved query
+        """
+
+    async def test_api_v1_query_saved_id_run_post(self) -> None:
+        """Test case for api_v1_query_saved_id_run_post
+
+        Mark a saved query as run
+        """
+
+    def test_api_v1_query_saved_id_run_post_sync(self) -> None:
+        """Test case for api_v1_query_saved_id_run_post (synchronous)
+
+        Mark a saved query as run
+        """
+
+    async def test_api_v1_query_saved_post(self) -> None:
+        """Test case for api_v1_query_saved_post
+
+        Save a query
+        """
+
+    def test_api_v1_query_saved_post_sync(self) -> None:
+        """Test case for api_v1_query_saved_post (synchronous)
+
+        Save a query
+        """
+
     async def test_api_v1_query_sources_get(self) -> None:
         """Test case for api_v1_query_sources_get
 
@@ -69,6 +201,18 @@ class TestQueryApi(unittest.IsolatedAsyncioTestCase):
         """Test case for api_v1_query_sources_get (synchronous)
 
         List queryable sources
+        """
+
+    async def test_api_v1_query_sources_name_stats_get(self) -> None:
+        """Test case for api_v1_query_sources_name_stats_get
+
+        Query stats for one source
+        """
+
+    def test_api_v1_query_sources_name_stats_get_sync(self) -> None:
+        """Test case for api_v1_query_sources_name_stats_get (synchronous)
+
+        Query stats for one source
         """
 
     async def test_api_v1_query_sources_name_tables_get(self) -> None:

@@ -571,6 +571,11 @@ html .menu__link--sublist-caret::after {
    The narrow-screen sidebar (opened by the header's menu button in src/theme/Navbar)
    ============================================ */
 
+/* The header is mm-site-header now, so the sidebar is no longer inside its stacking context: lift the sidebar and its backdrop over the sticky header, as Docusaurus's own navbar did. */
+html .navbar-sidebar,
+html .navbar-sidebar__backdrop {
+  z-index: calc(var(--mm-z-sticky) + 1);
+}
 html .navbar-sidebar {
   width: min(22rem, 86vw);
   background: var(--mm-paper);

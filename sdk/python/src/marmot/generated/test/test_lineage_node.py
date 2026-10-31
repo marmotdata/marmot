@@ -83,6 +83,7 @@ class TestLineageNode(unittest.TestCase):
                     user_description = '', ),
                 depth = 56,
                 id = '',
+                last_run_status = '',
                 type = ''
             )
         else:

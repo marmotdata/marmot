@@ -33,7 +33,11 @@ class TestToolCallPayload(unittest.TestCase):
         model = ToolCallPayload()
         if include_optional:
             return ToolCallPayload(
+                detail = '',
                 duration_ms = 56,
+                reason = '',
+                result = '',
+                rule = '',
                 started_at = '',
                 status = '',
                 target_mrn = '',

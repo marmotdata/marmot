@@ -39,6 +39,13 @@ class TestSearchResponse(unittest.TestCase):
                             count = 56,
                             value = '', )
                         ],
+                    owners = [
+                        marmot.generated.models.owner_facet_value.OwnerFacetValue(
+                            count = 56,
+                            kind = '',
+                            label = '',
+                            value = '', )
+                        ],
                     providers = [
                         marmot.generated.models.facet_value.FacetValue(
                             count = 56,
@@ -54,11 +61,24 @@ class TestSearchResponse(unittest.TestCase):
                 offset = 56,
                 results = [
                     marmot.generated.models.result.Result(
+                        asset_count = 56,
+                        column_count = 56,
                         description = '',
                         id = '',
+                        linked_asset_count = 56,
+                        member_count = 56,
                         metadata = { },
                         name = '',
+                        owners = [
+                            marmot.generated.models.search_result_owner.SearchResultOwner(
+                                id = '',
+                                kind = '',
+                                name = '', )
+                            ],
+                        popularity = 56,
                         rank = 1.337,
+                        row_count = 56,
+                        stale = True,
                         type = 'asset',
                         updated_at = '',
                         url = '', )

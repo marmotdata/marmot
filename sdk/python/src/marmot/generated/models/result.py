@@ -16,11 +16,12 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.result_type import ResultType
+from marmot.generated.models.search_result_owner import SearchResultOwner
 
 
 class Result(BaseModel):
@@ -28,20 +29,58 @@ class Result(BaseModel):
     Result
     """
 
+    asset_count: StrictInt | None = Field(
+        default=None,
+        description="AssetCount is how many assets a data product holds or a team owns.",
+    )
+    column_count: StrictInt | None = Field(
+        default=None,
+        description="ColumnCount is how many columns or top-level fields an asset's schema has, where it can be read.",
+    )
     description: StrictStr | None = None
     id: StrictStr | None = None
+    linked_asset_count: StrictInt | None = Field(
+        default=None,
+        description="LinkedAssetCount is how many assets a glossary term is linked to.",
+    )
+    member_count: StrictInt | None = Field(
+        default=None, description="MemberCount is how many people are in a team."
+    )
     metadata: dict[str, Any] | None = None
     name: StrictStr | None = None
+    owners: list[SearchResultOwner] | None = Field(
+        default=None,
+        description="Owners are the people and teams that own an asset, glossary term or data product.",
+    )
+    popularity: StrictInt | None = Field(
+        default=None,
+        description="Popularity is an asset's level from 0 to 4, from its views over the last 30 days.",
+    )
     rank: StrictFloat | StrictInt | None = None
+    row_count: StrictInt | None = Field(
+        default=None, description="RowCount is an asset's row count where its source reports one."
+    )
+    stale: StrictBool | None = Field(
+        default=None,
+        description="Stale is set on assets: true when the pipeline that refreshes it has missed more than two runs' worth of time.",
+    )
     type: ResultType | None = None
     updated_at: StrictStr | None = None
     url: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
+        "asset_count",
+        "column_count",
         "description",
         "id",
+        "linked_asset_count",
+        "member_count",
         "metadata",
         "name",
+        "owners",
+        "popularity",
         "rank",
+        "row_count",
+        "stale",
         "type",
         "updated_at",
         "url",
@@ -79,11 +118,19 @@ class Result(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in owners (list)
+        _items = []
+        if self.owners:
+            for _item_owners in self.owners:
+                if _item_owners:
+                    _items.append(_item_owners.to_dict())
+            _dict["owners"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -96,11 +143,21 @@ class Result(BaseModel):
 
         return cls.model_validate(
             {
+                "asset_count": obj.get("asset_count"),
+                "column_count": obj.get("column_count"),
                 "description": obj.get("description"),
                 "id": obj.get("id"),
+                "linked_asset_count": obj.get("linked_asset_count"),
+                "member_count": obj.get("member_count"),
                 "metadata": obj.get("metadata"),
                 "name": obj.get("name"),
+                "owners": [SearchResultOwner.from_dict(_item) for _item in obj["owners"]]
+                if obj.get("owners") is not None
+                else None,
+                "popularity": obj.get("popularity"),
                 "rank": obj.get("rank"),
+                "row_count": obj.get("row_count"),
+                "stale": obj.get("stale"),
                 "type": obj.get("type"),
                 "updated_at": obj.get("updated_at"),
                 "url": obj.get("url"),

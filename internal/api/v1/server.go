@@ -163,7 +163,10 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	// Grants tie OAuth client tokens to the person's consent, so revoking a connected app ends its tokens before they expire
 	oauthGrants := marmotOAuth2.NewPostgresGrantRepository(db, authService.TokenTTL)
-	authSvc := authService.NewService(authRepo, userSvc, authService.WithGrantChecker(oauthGrants))
+	// Signed-out tokens are refused before they expire rather than only being forgotten by the browser
+	authSvc := authService.NewService(authRepo, userSvc,
+		authService.WithGrantChecker(oauthGrants),
+		authService.WithRevocationStore(authService.NewPostgresRevocationStore(db)))
 	glossarySvc := glossaryService.NewService(glossaryRepo)
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, glossarySvc, recorder)
 	teamRepo := teamService.NewPostgresRepository(db)

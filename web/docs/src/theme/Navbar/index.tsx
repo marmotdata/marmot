@@ -1,120 +1,86 @@
-import React from "react";
+import React, { useCallback } from "react";
 import clsx from "clsx";
-import Link from "@docusaurus/Link";
-import { useLocation } from "@docusaurus/router";
+import { useHistory, useLocation } from "@docusaurus/router";
 import { useColorMode } from "@docusaurus/theme-common";
 import { useNavbarMobileSidebar } from "@docusaurus/theme-common/internal";
 import NavbarMobileSidebar from "@theme/Navbar/MobileSidebar";
 import SearchBar from "@theme/SearchBar";
-import Wordmark from "@marmotdata/tokens/logos/marmot-wordmark.svg";
-import MenuIcon from "~icons/material-symbols/menu";
-import OpenInNew from "~icons/material-symbols/open-in-new";
-import DarkMode from "~icons/material-symbols/dark-mode";
-import DarkModeOutline from "~icons/material-symbols/dark-mode-outline";
-import GitHub from "~icons/simple-icons/github";
+import { MmSiteHeader } from "@marmotdata/react/site-header.js";
 import { CONSOLE_URL, useCloudSignedIn } from "@site/src/hooks/useCloudSignedIn";
 
-// The same places as themeConfig.navbar.items, which the narrow-screen sidebar still draws.
-const links: { href: string; label: string; external?: boolean }[] = [
-  { href: "/docs/introduction", label: "Docs" },
-  { href: "https://plugins.marmotdata.io", label: "Plugins" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/resources", label: "Resources" },
-  { href: "/blog", label: "Blog" },
-  { href: "https://discord.gg/TWCk7hVFN4", label: "Community", external: true },
+const SITE = "https://marmotdata.io";
+
+// The header's sections by the first segment of the path, so each page marks the one it belongs to.
+const sections: [string, string][] = [
+  ["/docs", "Docs"],
+  ["/pricing", "Pricing"],
+  ["/resources", "Resources"],
+  ["/blog", "Blog"],
 ];
 
+function currentSection(pathname: string): string {
+  const hit = sections.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  return hit ? hit[1] : "";
+}
+
 /**
- * The site header, from the design system's marketing classes. Docusaurus's own pieces stay where
- * the docs rely on them: search, and on narrow screens its sidebar, which carries the docs
- * navigation as well as these links.
+ * The site header is the design system's mm-site-header, the same header as the plugin directory and Marmot Cloud's public pages. Docusaurus keeps the parts the docs rely on: its search in the header's search slot, its colour mode for the theme button and on narrow screens its sidebar, which carries the docs navigation as well as these links.
  */
-export default function Navbar(): JSX.Element {
+export default function Navbar(): React.JSX.Element {
   const { pathname } = useLocation();
-  const { colorMode, setColorMode } = useColorMode();
+  const history = useHistory();
+  const { setColorMode } = useColorMode();
   const mobileSidebar = useNavbarMobileSidebar();
   const signedIn = useCloudSignedIn();
-  const dark = colorMode === "dark";
+
+  const onThemeChange = useCallback(
+    (e: CustomEvent<{ theme: "light" | "dark" }>) => {
+      e.preventDefault();
+      setColorMode(e.detail.theme);
+    },
+    [setColorMode],
+  );
+
+  // Docusaurus's sidebar only renders at its own mobile width; wider than that (a row that does not fit) the header's own menu panel opens instead.
+  const onMenuToggle = useCallback(
+    (e: CustomEvent<{ open: boolean }>) => {
+      if (!mobileSidebar.shouldRender) return;
+      e.preventDefault();
+      mobileSidebar.toggle();
+    },
+    [mobileSidebar],
+  );
+
+  // The header's links are absolute marmotdata.io URLs so they work on every site; here they route client-side.
+  const onNavigate = useCallback(
+    (e: CustomEvent<{ href: string }>) => {
+      const { href } = e.detail;
+      if (href !== SITE && !href.startsWith(`${SITE}/`)) return;
+      e.preventDefault();
+      history.push(href.slice(SITE.length) || "/");
+    },
+    [history],
+  );
 
   return (
-    <header className={clsx("mkt-header", mobileSidebar.shown && "navbar-sidebar--show")}>
-      {/* Docusaurus measures `.navbar` to offset the table of contents' highlight; this gives it the
-          header's height without the old navbar's styles. */}
-      <span className="navbar mkt-header__probe" aria-hidden="true" />
-      <div className="mkt-header__inner">
-        <Link className="mkt-header__brand" to="/" aria-label="Marmot home">
-          <span className="mm-wordmark">
-            <Wordmark aria-hidden="true" />
-          </span>
-        </Link>
-        <nav className="mkt-header__nav" aria-label="Main">
-          {links.map((l) =>
-            l.external ? (
-              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                {l.label}
-                <OpenInNew aria-hidden="true" />
-                <span className="mm-visually-hidden">(opens in a new tab)</span>
-              </a>
-            ) : (
-              <Link
-                key={l.href}
-                to={l.href}
-                aria-current={!l.href.includes("#") && pathname.startsWith(l.href.replace(/\/introduction$/, "")) ? "page" : undefined}
-              >
-                {l.label}
-              </Link>
-            ),
-          )}
-        </nav>
-        <div className="mkt-header__end">
-          <div className="mkt-header__wide">
-            <SearchBar />
-          </div>
-          <a
-            className="mm-btn mm-btn--ghost mm-btn--icon mkt-header__wide"
-            href="https://github.com/marmotdata/marmot"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Marmot on GitHub (opens in a new tab)"
-          >
-            <GitHub aria-hidden="true" />
-          </a>
-          <button
-            type="button"
-            className="mm-btn mm-btn--ghost mm-btn--icon"
-            aria-label="Dark theme"
-            aria-pressed={dark}
-            onClick={() => setColorMode(dark ? "light" : "dark")}
-          >
-            {dark ? <DarkMode aria-hidden="true" /> : <DarkModeOutline aria-hidden="true" />}
-          </button>
-          {signedIn ? (
-            <a className="mm-btn mm-btn--primary" href={CONSOLE_URL}>
-              Open console
-            </a>
-          ) : (
-            <>
-              <a className="mm-btn mm-btn--ghost mkt-header__wide" href="https://cloud.marmotdata.io/login">
-                Sign in
-              </a>
-              <a className="mm-btn mm-btn--primary" href="https://cloud.marmotdata.io/signup">
-                Start for free
-              </a>
-            </>
-          )}
-          <button
-            type="button"
-            className="mm-btn mm-btn--ghost mm-btn--icon mkt-header__narrow"
-            aria-label="Menu"
-            aria-expanded={mobileSidebar.shown}
-            onClick={mobileSidebar.toggle}
-          >
-            <MenuIcon aria-hidden="true" />
-          </button>
+    <div className={clsx("site-header", mobileSidebar.shown && "navbar-sidebar--show")}>
+      {/* Docusaurus measures `.navbar` to offset the table of contents' highlight; this gives it the header's height without the old navbar's styles. */}
+      <span className="navbar site-header__probe" aria-hidden="true" />
+      <MmSiteHeader
+        current={currentSection(pathname)}
+        signedIn={signedIn}
+        consoleHref={CONSOLE_URL}
+        navExpanded={mobileSidebar.shown}
+        onMmThemeChange={onThemeChange}
+        onMmMenuToggle={onMenuToggle}
+        onMmNavigate={onNavigate}
+      >
+        <div slot="search" className="site-header__search">
+          <SearchBar />
         </div>
-      </div>
+      </MmSiteHeader>
       <div role="presentation" className="navbar-sidebar__backdrop" onClick={mobileSidebar.toggle} />
       <NavbarMobileSidebar />
-    </header>
+    </div>
   );
 }

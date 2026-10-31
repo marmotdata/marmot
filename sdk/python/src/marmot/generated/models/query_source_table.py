@@ -31,6 +31,10 @@ class QuerySourceTable(BaseModel):
     mrn: StrictStr | None = None
     name: StrictStr | None = None
     queries: StrictInt | None = None
+    row_count: StrictInt | None = Field(
+        default=None,
+        description="RowCount is the table's size as its plugin last reported it in the catalog, when it reports one.",
+    )
     sample_statement: StrictStr | None = None
     var_schema: StrictStr | None = Field(default=None, alias="schema")
     tags: list[StrictStr] | None = None
@@ -41,6 +45,7 @@ class QuerySourceTable(BaseModel):
         "mrn",
         "name",
         "queries",
+        "row_count",
         "sample_statement",
         "schema",
         "tags",
@@ -101,6 +106,7 @@ class QuerySourceTable(BaseModel):
                 "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "queries": obj.get("queries"),
+                "row_count": obj.get("row_count"),
                 "sample_statement": obj.get("sample_statement"),
                 "schema": obj.get("schema"),
                 "tags": obj.get("tags"),

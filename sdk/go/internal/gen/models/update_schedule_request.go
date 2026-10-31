@@ -20,6 +20,9 @@ type UpdateScheduleRequest struct {
 	// cron expression
 	CronExpression string `json:"cron_expression,omitempty"`
 
+	// Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.
+	Description string `json:"description,omitempty"`
+
 	// enabled
 	Enabled bool `json:"enabled,omitempty"`
 
@@ -29,6 +32,12 @@ type UpdateScheduleRequest struct {
 
 	// name
 	Name string `json:"name,omitempty"`
+
+	// owner id
+	OwnerID string `json:"owner_id,omitempty"`
+
+	// OwnerType is "user" or "team" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.
+	OwnerType string `json:"owner_type,omitempty"`
 
 	// plugin id
 	PluginID string `json:"plugin_id,omitempty"`

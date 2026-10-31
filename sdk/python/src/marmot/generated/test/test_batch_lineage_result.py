@@ -34,6 +34,7 @@ class TestBatchLineageResult(unittest.TestCase):
         if include_optional:
             return BatchLineageResult(
                 edge = marmot.generated.models.lineage_edge.LineageEdge(
+                    declared_by = '',
                     id = '',
                     job_mrn = '',
                     last_seen_at = '',

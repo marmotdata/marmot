@@ -23,6 +23,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
+    async def test_delete_assets_field_annotations_id(self) -> None:
+        """Test case for delete_assets_field_annotations_id
+
+        Delete a field annotation
+        """
+
+    def test_delete_assets_field_annotations_id_sync(self) -> None:
+        """Test case for delete_assets_field_annotations_id (synchronous)
+
+        Delete a field annotation
+        """
+
     async def test_delete_assets_id(self) -> None:
         """Test case for delete_assets_id
 
@@ -71,6 +83,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Get assets by glossary term
         """
 
+    async def test_get_assets_counts_id(self) -> None:
+        """Test case for get_assets_counts_id
+
+        Get asset tab counts
+        """
+
+    def test_get_assets_counts_id_sync(self) -> None:
+        """Test case for get_assets_counts_id (synchronous)
+
+        Get asset tab counts
+        """
+
     async def test_get_assets_documentation_mrn(self) -> None:
         """Test case for get_assets_documentation_mrn
 
@@ -81,6 +105,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for get_assets_documentation_mrn (synchronous)
 
         Get asset documentation
+        """
+
+    async def test_get_assets_field_annotations_id(self) -> None:
+        """Test case for get_assets_field_annotations_id
+
+        List field annotations
+        """
+
+    def test_get_assets_field_annotations_id_sync(self) -> None:
+        """Test case for get_assets_field_annotations_id (synchronous)
+
+        List field annotations
         """
 
     async def test_get_assets_id(self) -> None:
@@ -191,6 +227,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Search assets
         """
 
+    async def test_get_assets_stale(self) -> None:
+        """Test case for get_assets_stale
+
+        List stale assets
+        """
+
+    def test_get_assets_stale_sync(self) -> None:
+        """Test case for get_assets_stale (synchronous)
+
+        List stale assets
+        """
+
     async def test_get_assets_suggestions_metadata_fields(self) -> None:
         """Test case for get_assets_suggestions_metadata_fields
 
@@ -263,6 +311,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Create a new asset
         """
 
+    async def test_post_assets_batch(self) -> None:
+        """Test case for post_assets_batch
+
+        Get several assets
+        """
+
+    def test_post_assets_batch_sync(self) -> None:
+        """Test case for post_assets_batch (synchronous)
+
+        Get several assets
+        """
+
     async def test_post_assets_documentation(self) -> None:
         """Test case for post_assets_documentation
 
@@ -309,6 +369,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for post_assets_terms_id (synchronous)
 
         Add glossary terms to asset
+        """
+
+    async def test_put_assets_field_annotations_id(self) -> None:
+        """Test case for put_assets_field_annotations_id
+
+        Set a field annotation
+        """
+
+    def test_put_assets_field_annotations_id_sync(self) -> None:
+        """Test case for put_assets_field_annotations_id (synchronous)
+
+        Set a field annotation
         """
 
     async def test_put_assets_id(self) -> None:

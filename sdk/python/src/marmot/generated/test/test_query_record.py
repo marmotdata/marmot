@@ -33,38 +33,54 @@ class TestQueryRecord(unittest.TestCase):
         model = QueryRecord()
         if include_optional:
             return QueryRecord(
+                agent = '',
                 audit_subject = '',
                 client = '',
                 completed_at = '',
                 context = [
                     marmot.generated.models.query_asset_context.QueryAssetContext(
                         asset_id = '',
+                        certified = True,
+                        columns_read = 56,
                         description = '',
                         last_sync_at = '',
                         mrn = '',
                         name = '',
+                        owners = [
+                            ''
+                            ],
+                        personal_data = [
+                            marmot.generated.models.query_personal_data_column.QueryPersonalDataColumn(
+                                name = '',
+                                read = True, )
+                            ],
                         providers = [
                             ''
                             ],
+                        row_count = 56,
                         tags = [
                             ''
                             ],
                         type = '', )
                     ],
+                credential = '',
                 decision = '',
                 decision_detail = {
                     'key' : null
                     },
                 error = '',
                 id = '',
+                outcome_reason = '',
                 principal_id = '',
                 principal_type = '',
                 referenced_mrns = [
                     ''
                     ],
                 rows_returned = 56,
+                service_account = '',
                 source_id = '',
                 source_name = '',
+                source_provider = '',
                 started_at = '',
                 statement = '',
                 status = '',

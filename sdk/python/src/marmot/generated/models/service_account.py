@@ -16,11 +16,12 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.role import Role
+from marmot.generated.models.service_account_agent_ref import ServiceAccountAgentRef
 
 
 class ServiceAccount(BaseModel):
@@ -29,22 +30,43 @@ class ServiceAccount(BaseModel):
     """
 
     active: StrictBool | None = None
+    api_key_count: StrictInt | None = None
+    calls_last_7_days: StrictInt | None = Field(
+        default=None,
+        description="CallsLast7Days counts authenticated requests made with the account's keys over the last seven days, including today.",
+    )
     created_at: StrictStr | None = None
     created_by: StrictStr | None = None
+    created_by_name: StrictStr | None = Field(
+        default=None,
+        description="CreatedByName is the creator's display name, empty once that user is deleted.",
+    )
     description: StrictStr | None = None
     id: StrictStr | None = None
+    last_used_at: StrictStr | None = Field(
+        default=None, description="LastUsedAt is the latest use of any of the account's keys."
+    )
     name: StrictStr | None = None
     roles: list[Role] | None = None
     updated_at: StrictStr | None = None
+    used_by: list[ServiceAccountAgentRef] | None = Field(
+        default=None,
+        description="UsedBy lists the agents that have reported runs with one of this account's keys.",
+    )
     __properties: ClassVar[list[str]] = [
         "active",
+        "api_key_count",
+        "calls_last_7_days",
         "created_at",
         "created_by",
+        "created_by_name",
         "description",
         "id",
+        "last_used_at",
         "name",
         "roles",
         "updated_at",
+        "used_by",
     ]
 
     model_config = ConfigDict(
@@ -91,6 +113,13 @@ class ServiceAccount(BaseModel):
                 if _item_roles:
                     _items.append(_item_roles.to_dict())
             _dict["roles"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in used_by (list)
+        _items = []
+        if self.used_by:
+            for _item_used_by in self.used_by:
+                if _item_used_by:
+                    _items.append(_item_used_by.to_dict())
+            _dict["used_by"] = _items
         return _dict
 
     @classmethod
@@ -105,14 +134,21 @@ class ServiceAccount(BaseModel):
         return cls.model_validate(
             {
                 "active": obj.get("active"),
+                "api_key_count": obj.get("api_key_count"),
+                "calls_last_7_days": obj.get("calls_last_7_days"),
                 "created_at": obj.get("created_at"),
                 "created_by": obj.get("created_by"),
+                "created_by_name": obj.get("created_by_name"),
                 "description": obj.get("description"),
                 "id": obj.get("id"),
+                "last_used_at": obj.get("last_used_at"),
                 "name": obj.get("name"),
                 "roles": [Role.from_dict(_item) for _item in obj["roles"]]
                 if obj.get("roles") is not None
                 else None,
                 "updated_at": obj.get("updated_at"),
+                "used_by": [ServiceAccountAgentRef.from_dict(_item) for _item in obj["used_by"]]
+                if obj.get("used_by") is not None
+                else None,
             }
         )

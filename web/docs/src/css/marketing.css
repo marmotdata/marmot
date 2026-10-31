@@ -16,22 +16,21 @@
 		max-width: var(--mkt-width);
 	}
 
-	/* Site header: the marketing counterpart of mm-top-bar. Chrome, so quiet: ink-2 links, no fill,
-     a hairline below. One primary button at most, at the end. Under 720px the links move into the
-     __menu disclosure. Give the page `scroll-padding-top` of the header height so anchors and
-     focused elements are never hidden under it. */
-	.mkt-header {
-		position: sticky;
-		top: 0;
-		z-index: var(--mm-z-sticky);
-		container-type: inline-size;
-		background: var(--mm-chrome);
-		border-block-end: 1px solid var(--mm-rule);
+	/* Site header: the design system's mm-site-header (src/theme/Navbar), the same header as the plugin directory and Marmot Cloud. It is sticky and 57px tall, so the page scrolls anchors and focused elements clear of it. The wrapper only carries Docusaurus's sidebar state, so it stays out of the layout and the header sticks to the page. */
+	html {
+		scroll-padding-top: var(--ifm-navbar-height, 57px);
 	}
-	.mkt-header__probe.navbar {
+	.site-header {
+		display: contents;
+	}
+	/* Docusaurus measures `.navbar` for the table of contents' highlight offset: the header's height, never seen. */
+	.site-header__probe.navbar {
 		position: absolute;
-		inset: 0;
-		block-size: auto;
+		inset-block-start: 0;
+		inset-inline-start: 0;
+		display: block;
+		inline-size: 0;
+		block-size: var(--ifm-navbar-height, 57px);
 		padding: 0;
 		border: 0;
 		background: none;
@@ -40,108 +39,9 @@
 		visibility: hidden;
 		pointer-events: none;
 	}
-	.mkt-header__inner {
+	.site-header__search {
 		display: flex;
 		align-items: center;
-		gap: var(--space-6);
-		max-width: var(--mkt-width, 1360px);
-		margin-inline: auto;
-		padding-inline: var(--space-8);
-		height: calc(var(--space-12) + var(--space-2));
-	}
-	.mkt-header__brand {
-		display: inline-flex;
-		align-items: center;
-		color: var(--mm-text);
-		text-decoration: none;
-		border-radius: var(--radius-sm);
-	}
-	.mkt-header__nav {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
-	}
-	.mkt-header__nav a,
-	.mkt-header__menu-panel a {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-1);
-		padding: 6px var(--space-2);
-		border-radius: var(--radius-sm);
-		font: var(--text-button);
-		color: var(--mm-text-2);
-		text-decoration: none;
-		transition:
-			color var(--mm-dur-press) var(--mm-ease),
-			background-color var(--mm-dur-press) var(--mm-ease);
-	}
-	.mkt-header__nav a:hover,
-	.mkt-header__menu-panel a:hover {
-		color: var(--mm-text);
-		background: var(--mm-sunken);
-	}
-	.mkt-header__nav a[aria-current='page'],
-	.mkt-header__menu-panel a[aria-current='page'] {
-		color: var(--mm-text);
-	}
-	.mkt-header__nav :is(svg, mm-icon),
-	.mkt-header__menu-panel :is(svg, mm-icon) {
-		width: 16px;
-		height: 16px;
-		flex: none;
-		fill: currentColor;
-	}
-	.mkt-header__end {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin-inline-start: auto;
-	}
-	/* The narrow-screen menu: a native disclosure, so it works before any script runs. */
-	.mkt-header__menu,
-	.mkt-header__narrow {
-		display: none;
-	}
-	.mkt-header__menu > summary {
-		list-style: none;
-	}
-	.mkt-header__menu > summary::-webkit-details-marker {
-		display: none;
-	}
-	.mkt-header__menu-panel {
-		position: absolute;
-		inset-inline: 0;
-		top: 100%;
-		display: grid;
-		padding: var(--space-2) var(--space-4) var(--space-4);
-		background: var(--mm-chrome);
-		border-block-end: 1px solid var(--mm-rule);
-	}
-	.mkt-header__menu-panel a {
-		min-height: var(--target-touch);
-		padding-inline: var(--space-2);
-	}
-	/* Two steps down: first the links move into the menu, then search, GitHub and Sign in, so the
-	   bar never overflows between a phone and a full desktop. */
-	@container (max-width: 1080px) {
-		.mkt-header__nav {
-			display: none;
-		}
-		.mkt-header__narrow {
-			display: inline-flex;
-		}
-		.mkt-header__menu {
-			display: block;
-		}
-	}
-	@container (max-width: 720px) {
-		.mkt-header__inner {
-			padding-inline: var(--space-4);
-			gap: var(--space-3);
-		}
-		.mkt-header__wide {
-			display: none;
-		}
 	}
 
 	/* Hero: the headline, one line, the actions and the background field. Nothing else: no mock UI,

@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -35,6 +35,10 @@ class AgentRun(BaseModel):
     error: StrictStr | None = None
     id: StrictStr | None = None
     model: StrictStr | None = None
+    prompt: StrictStr | None = Field(
+        default=None,
+        description="Prompt is what the run was asked, such as a ticket's subject, so a list of runs reads as the questions they answered.",
+    )
     run_id: StrictStr | None = None
     started_at: StrictStr | None = None
     status: StrictStr | None = None
@@ -49,6 +53,7 @@ class AgentRun(BaseModel):
         "error",
         "id",
         "model",
+        "prompt",
         "run_id",
         "started_at",
         "status",
@@ -121,6 +126,7 @@ class AgentRun(BaseModel):
                 "error": obj.get("error"),
                 "id": obj.get("id"),
                 "model": obj.get("model"),
+                "prompt": obj.get("prompt"),
                 "run_id": obj.get("run_id"),
                 "started_at": obj.get("started_at"),
                 "status": obj.get("status"),

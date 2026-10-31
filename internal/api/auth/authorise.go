@@ -137,6 +137,11 @@ func (h *Handler) handleAuthorizeComplete(w http.ResponseWriter, r *http.Request
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 	claims, err := h.authService.ValidateToken(r.Context(), tokenString)
+	if errors.Is(err, coreauth.ErrTokenCheck) {
+		log.Error().Err(err).Msg("Failed to check token sign-out")
+		common.RespondError(w, http.StatusInternalServerError, "Could not check your sign-in")
+		return
+	}
 	if err != nil {
 		common.RespondError(w, http.StatusUnauthorized, "Invalid token")
 		return

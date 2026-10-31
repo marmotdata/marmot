@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -28,39 +28,58 @@ class QueryRecord(BaseModel):
     QueryRecord
     """
 
+    agent: StrictStr | None = None
     audit_subject: StrictStr | None = None
     client: StrictStr | None = None
     completed_at: StrictStr | None = None
     context: list[QueryAssetContext] | None = None
+    credential: StrictStr | None = None
     decision: StrictStr | None = None
     decision_detail: dict[str, Any] | None = None
     error: StrictStr | None = None
     id: StrictStr | None = None
+    outcome_reason: StrictStr | None = Field(
+        default=None,
+        description="OutcomeReason refines the decision and status, such as role, permission, policy, source_error, timeout, unreachable or cancelled.",
+    )
     principal_id: StrictStr | None = None
     principal_type: StrictStr | None = None
     referenced_mrns: list[StrictStr] | None = None
     rows_returned: StrictInt | None = None
+    service_account: StrictStr | None = Field(
+        default=None,
+        description="ServiceAccount names the service account a machine caller ran as, Agent the client that identified itself on its behalf (an MCP client's name) and Credential how the request authenticated.",
+    )
     source_id: StrictStr | None = None
     source_name: StrictStr | None = None
+    source_provider: StrictStr | None = Field(
+        default=None,
+        description="SourceProvider is the plugin behind the source, such as snowflake, so the UI can show its logo; empty once the source is deleted.",
+    )
     started_at: StrictStr | None = None
     statement: StrictStr | None = None
     status: StrictStr | None = None
     truncated: StrictBool | None = None
     __properties: ClassVar[list[str]] = [
+        "agent",
         "audit_subject",
         "client",
         "completed_at",
         "context",
+        "credential",
         "decision",
         "decision_detail",
         "error",
         "id",
+        "outcome_reason",
         "principal_id",
         "principal_type",
         "referenced_mrns",
         "rows_returned",
+        "service_account",
         "source_id",
         "source_name",
+        "source_provider",
         "started_at",
         "statement",
         "status",
@@ -124,22 +143,27 @@ class QueryRecord(BaseModel):
 
         return cls.model_validate(
             {
+                "agent": obj.get("agent"),
                 "audit_subject": obj.get("audit_subject"),
                 "client": obj.get("client"),
                 "completed_at": obj.get("completed_at"),
                 "context": [QueryAssetContext.from_dict(_item) for _item in obj["context"]]
                 if obj.get("context") is not None
                 else None,
+                "credential": obj.get("credential"),
                 "decision": obj.get("decision"),
                 "decision_detail": obj.get("decision_detail"),
                 "error": obj.get("error"),
                 "id": obj.get("id"),
+                "outcome_reason": obj.get("outcome_reason"),
                 "principal_id": obj.get("principal_id"),
                 "principal_type": obj.get("principal_type"),
                 "referenced_mrns": obj.get("referenced_mrns"),
                 "rows_returned": obj.get("rows_returned"),
+                "service_account": obj.get("service_account"),
                 "source_id": obj.get("source_id"),
                 "source_name": obj.get("source_name"),
+                "source_provider": obj.get("source_provider"),
                 "started_at": obj.get("started_at"),
                 "statement": obj.get("statement"),
                 "status": obj.get("status"),

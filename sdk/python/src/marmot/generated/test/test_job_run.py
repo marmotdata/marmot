@@ -39,10 +39,12 @@ class TestJobRun(unittest.TestCase):
                 claimed_at = '',
                 claimed_by = '',
                 config = { },
+                connecting_at = '',
                 created_at = '',
                 created_by = '',
                 documentation_added = 56,
                 error_message = '',
+                extracting_at = '',
                 finished_at = '',
                 id = '',
                 lineage_created = 56,
@@ -54,7 +56,8 @@ class TestJobRun(unittest.TestCase):
                 source_name = '',
                 started_at = '',
                 status = '',
-                updated_at = ''
+                updated_at = '',
+                writing_at = ''
             )
         else:
             return JobRun(

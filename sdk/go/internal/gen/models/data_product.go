@@ -21,6 +21,9 @@ type DataProduct struct {
 	// asset count
 	AssetCount int64 `json:"asset_count,omitempty"`
 
+	// AssetTypes counts the product's assets by type and is only filled in by Get.
+	AssetTypes []*DataProductTypeCount `json:"asset_types"`
+
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
@@ -48,6 +51,9 @@ type DataProduct struct {
 	// owners
 	Owners []*DataProductOwner `json:"owners"`
 
+	// Popularity is a level from 0 to 4 from its assets' views over the last 30 days. It is filled in by the filtered list and by Get.
+	Popularity int64 `json:"popularity,omitempty"`
+
 	// rule asset count
 	RuleAssetCount int64 `json:"rule_asset_count,omitempty"`
 
@@ -65,6 +71,10 @@ type DataProduct struct {
 func (m *DataProduct) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAssetTypes(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateOwners(formats); err != nil {
 		res = append(res, err)
 	}
@@ -76,6 +86,36 @@ func (m *DataProduct) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *DataProduct) validateAssetTypes(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.AssetTypes) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.AssetTypes); i++ {
+		if typeutils.IsZero(m.AssetTypes[i]) { // not required
+			continue
+		}
+
+		if m.AssetTypes[i] != nil {
+			if err := m.AssetTypes[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("asset_types" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("asset_types" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -143,6 +183,10 @@ func (m *DataProduct) validateRules(formats strfmt.Registry) error {
 func (m *DataProduct) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateAssetTypes(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -154,6 +198,35 @@ func (m *DataProduct) ContextValidate(ctx context.Context, formats strfmt.Regist
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *DataProduct) contextValidateAssetTypes(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.AssetTypes); i++ {
+
+		if m.AssetTypes[i] != nil {
+
+			if typeutils.IsZero(m.AssetTypes[i]) { // not required
+				return nil
+			}
+
+			if err := m.AssetTypes[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("asset_types" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("asset_types" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

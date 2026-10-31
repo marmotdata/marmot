@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -26,6 +26,10 @@ class LineageEdge(BaseModel):
     LineageEdge
     """
 
+    declared_by: StrictStr | None = Field(
+        default=None,
+        description="DeclaredBy names who declared the edge: the pipeline whose run wrote it, or the person or service account that added it.",
+    )
     id: StrictStr | None = None
     job_mrn: StrictStr | None = None
     last_seen_at: StrictStr | None = None
@@ -35,6 +39,7 @@ class LineageEdge(BaseModel):
     target: StrictStr | None = None
     type: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
+        "declared_by",
         "id",
         "job_mrn",
         "last_seen_at",
@@ -94,6 +99,7 @@ class LineageEdge(BaseModel):
 
         return cls.model_validate(
             {
+                "declared_by": obj.get("declared_by"),
                 "id": obj.get("id"),
                 "job_mrn": obj.get("job_mrn"),
                 "last_seen_at": obj.get("last_seen_at"),

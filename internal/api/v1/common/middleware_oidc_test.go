@@ -28,6 +28,9 @@ func (m *mockAuthService) GenerateTokenForPrincipal(_ context.Context, _ auth.Pr
 func (m *mockAuthService) ValidateToken(_ context.Context, _ string) (*auth.Claims, error) {
 	return nil, auth.ErrNotFound
 }
+func (m *mockAuthService) RevokeToken(_ context.Context, _ string) error {
+	return nil
+}
 func (m *mockAuthService) GetSigningKey(_ context.Context) ([]byte, error) {
 	return nil, nil
 }

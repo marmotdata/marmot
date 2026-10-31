@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -26,15 +26,31 @@ class ToolCall(BaseModel):
     ToolCall
     """
 
+    detail: StrictStr | None = Field(
+        default=None,
+        description="Detail is the call's argument in a readable form, such as the SQL of a query or the text of a search.",
+    )
     duration_ms: StrictInt | None = None
     ordinal: StrictInt | None = None
+    reason: StrictStr | None = Field(
+        default=None,
+        description="Reason says why a refused or failed call did not go through, and Rule names the policy or rule that refused it.",
+    )
+    result: StrictStr | None = Field(
+        default=None, description='Result summarises what came back, such as "5 rows".'
+    )
+    rule: StrictStr | None = None
     started_at: StrictStr | None = None
     status: StrictStr | None = None
     target_mrn: StrictStr | None = None
     tool_name: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
+        "detail",
         "duration_ms",
         "ordinal",
+        "reason",
+        "result",
+        "rule",
         "started_at",
         "status",
         "target_mrn",
@@ -90,8 +106,12 @@ class ToolCall(BaseModel):
 
         return cls.model_validate(
             {
+                "detail": obj.get("detail"),
                 "duration_ms": obj.get("duration_ms"),
                 "ordinal": obj.get("ordinal"),
+                "reason": obj.get("reason"),
+                "result": obj.get("result"),
+                "rule": obj.get("rule"),
                 "started_at": obj.get("started_at"),
                 "status": obj.get("status"),
                 "target_mrn": obj.get("target_mrn"),

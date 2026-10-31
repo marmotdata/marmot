@@ -26,11 +26,20 @@ type SSOTeamMapping struct {
 	// provider
 	Provider string `json:"provider,omitempty"`
 
+	// RoleID is the Marmot role members of the group get, replacing the default role at every sign-in.
+	RoleID string `json:"role_id,omitempty"`
+
+	// role name
+	RoleName string `json:"role_name,omitempty"`
+
 	// sso group name
 	SsoGroupName string `json:"sso_group_name,omitempty"`
 
-	// team id
+	// TeamID is empty when the mapping only gives a role.
 	TeamID string `json:"team_id,omitempty"`
+
+	// team name
+	TeamName string `json:"team_name,omitempty"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`

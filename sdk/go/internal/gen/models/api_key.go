@@ -32,6 +32,9 @@ type APIKey struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Prefix is the start of the key kept in clear so a key can be recognised in a list after its secret is gone; empty for keys issued before it was stored.
+	Prefix string `json:"prefix,omitempty"`
+
 	// user id
 	UserID string `json:"user_id,omitempty"`
 }

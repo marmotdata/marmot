@@ -18,6 +18,9 @@ import (
 // swagger:model QueryRecord
 type QueryRecord struct {
 
+	// agent
+	Agent string `json:"agent,omitempty"`
+
 	// audit subject
 	AuditSubject string `json:"audit_subject,omitempty"`
 
@@ -29,6 +32,9 @@ type QueryRecord struct {
 
 	// context
 	Context []*QueryAssetContext `json:"context"`
+
+	// credential
+	Credential string `json:"credential,omitempty"`
 
 	// decision
 	Decision string `json:"decision,omitempty"`
@@ -42,6 +48,9 @@ type QueryRecord struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// OutcomeReason refines the decision and status, such as role, permission, policy, source_error, timeout, unreachable or cancelled.
+	OutcomeReason string `json:"outcome_reason,omitempty"`
+
 	// principal id
 	PrincipalID string `json:"principal_id,omitempty"`
 
@@ -54,11 +63,17 @@ type QueryRecord struct {
 	// rows returned
 	RowsReturned int64 `json:"rows_returned,omitempty"`
 
+	// ServiceAccount names the service account a machine caller ran as, Agent the client that identified itself on its behalf (an MCP client's name) and Credential how the request authenticated.
+	ServiceAccount string `json:"service_account,omitempty"`
+
 	// source id
 	SourceID string `json:"source_id,omitempty"`
 
 	// source name
 	SourceName string `json:"source_name,omitempty"`
+
+	// SourceProvider is the plugin behind the source, such as snowflake, so the UI can show its logo; empty once the source is deleted.
+	SourceProvider string `json:"source_provider,omitempty"`
 
 	// started at
 	StartedAt string `json:"started_at,omitempty"`

@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -26,10 +26,14 @@ class SSOProvider(BaseModel):
     SSOProvider
     """
 
+    enabled: StrictBool | None = Field(
+        default=None,
+        description="Enabled is false when an administrator has switched the provider off in Settings.",
+    )
     issuer_url: StrictStr | None = None
     name: StrictStr | None = None
     type: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["issuer_url", "name", "type"]
+    __properties: ClassVar[list[str]] = ["enabled", "issuer_url", "name", "type"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -79,5 +83,10 @@ class SSOProvider(BaseModel):
             return cls.model_validate(obj)
 
         return cls.model_validate(
-            {"issuer_url": obj.get("issuer_url"), "name": obj.get("name"), "type": obj.get("type")}
+            {
+                "enabled": obj.get("enabled"),
+                "issuer_url": obj.get("issuer_url"),
+                "name": obj.get("name"),
+                "type": obj.get("type"),
+            }
         )
