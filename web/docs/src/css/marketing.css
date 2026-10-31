@@ -28,6 +28,18 @@
 		background: var(--mm-chrome);
 		border-block-end: 1px solid var(--mm-rule);
 	}
+	.mkt-header__probe.navbar {
+		position: absolute;
+		inset: 0;
+		block-size: auto;
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none;
+		backdrop-filter: none;
+		visibility: hidden;
+		pointer-events: none;
+	}
 	.mkt-header__inner {
 		display: flex;
 		align-items: center;
@@ -326,77 +338,176 @@
 		max-width: 60ch;
 	}
 
-	/* Plans: the one table a marketing page gets, a comparison a buyer checks cell by cell, with
-     about six rows. Plans head the columns with their price, one sentence and their button; one
-     primary button in the table, in a header row of their own (.mkt-plans__actions). Wrap the table in .mkt-plans, which scrolls sideways only when the
-     columns cannot fit (give it role="region", an aria-label and tabindex="0" so the keyboard can
-     scroll it). Row labels stay pinned at the start. */
+	/* Plans: the four plans as open columns on the paper, divided by hairlines, with a rule above
+	   and below. Each reads top to bottom: name and who it is for, the price and what it buys,
+	   the button, then what it adds as quiet lines. Rows line up across the columns. */
+	.mkt-tiers {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		border-block: 1px solid var(--mm-rule);
+	}
+	.mkt-tier {
+		display: flex;
+		flex-direction: column;
+		padding: var(--space-8) var(--space-6);
+	}
+	.mkt-tier:first-child {
+		padding-inline-start: 0;
+	}
+	.mkt-tier:last-child {
+		padding-inline-end: 0;
+	}
+	.mkt-tier + .mkt-tier {
+		border-inline-start: 1px solid var(--mm-rule);
+	}
+	.mkt-tier__name {
+		margin: 0;
+		font: var(--text-heading-sm);
+		color: var(--mm-text);
+	}
+	.mkt-tier__for {
+		margin: var(--space-1) 0 0;
+		min-height: calc(2 * 1.45em);
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+	.mkt-tier__price {
+		margin: var(--space-8) 0 0;
+		color: var(--mm-text);
+		white-space: nowrap;
+	}
+	.mkt-tier__amount {
+		font: var(--text-display-section);
+		font-size: 40px;
+		letter-spacing: var(--tracking-display-title);
+		font-variant-numeric: tabular-nums;
+	}
+	.mkt-tier__from,
+	.mkt-tier__per {
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+	.mkt-tier__basis {
+		margin: var(--space-1) 0 0;
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+	.mkt-tier__action {
+		margin-block-start: var(--space-6);
+		inline-size: 100%;
+	}
+	.mkt-tier__lead {
+		margin: var(--space-8) 0 var(--space-3);
+		font: var(--text-label);
+		color: var(--mm-text);
+	}
+	.mkt-tier__adds {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: var(--space-2);
+	}
+	.mkt-tier__adds li {
+		margin: 0;
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+	.mkt-tiers__foot {
+		margin: var(--space-4) 0 0;
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+	@media (max-width: 1080px) {
+		.mkt-tiers {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.mkt-tier:nth-child(odd) {
+			padding-inline: 0 var(--space-6);
+		}
+		.mkt-tier:nth-child(even) {
+			padding-inline: var(--space-6) 0;
+		}
+		.mkt-tier:nth-child(3) {
+			border-inline-start: 0;
+		}
+		.mkt-tier:nth-child(n + 3) {
+			border-block-start: 1px solid var(--mm-rule);
+		}
+	}
+	@media (max-width: 640px) {
+		.mkt-tiers {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-tier,
+		.mkt-tier:nth-child(odd),
+		.mkt-tier:nth-child(even) {
+			padding: var(--space-6) 0;
+		}
+		.mkt-tier + .mkt-tier {
+			border-inline-start: 0;
+			border-block-start: 1px solid var(--mm-rule);
+		}
+		.mkt-tier__for {
+			min-height: 0;
+		}
+		.mkt-tier__price {
+			margin-block-start: var(--space-5);
+		}
+	}
+
+	/* Compare plans: every difference, grouped, with plan names heading the columns. Scrolls
+	   sideways only when the columns cannot fit, with the row labels pinned at the start. */
 	.mkt-plans {
 		overflow-x: auto;
 	}
 	.mkt-plans table {
+		display: table;
 		width: 100%;
 		min-width: 720px;
-		border-collapse: collapse;
+		margin: 0;
+		/* Separate borders, so each pinned label carries its own rule over the scrolling cells. */
+		border-collapse: separate;
+		border-spacing: 0;
 		table-layout: fixed;
 		font: var(--text-dense);
 	}
 	.mkt-plans col:first-child {
-		width: 11rem;
+		width: 30%;
+	}
+	.mkt-plans :is(th, td) {
+		border: 0;
+		background: none;
+	}
+	.mkt-plans tr {
+		border: 0;
+		background: none;
 	}
 	.mkt-plans thead th {
 		padding: 0 var(--space-4) var(--space-3);
 		text-align: start;
-		vertical-align: top;
-		font-weight: 400;
-	}
-	.mkt-plans__name {
-		display: block;
 		font: var(--text-heading-sm);
 		color: var(--mm-text);
 	}
-	.mkt-plans__price {
-		display: block;
-		margin-block-start: var(--space-3);
-		font: var(--text-display-kpi);
-		letter-spacing: var(--tracking-display-kpi);
-		font-variant-numeric: tabular-nums;
-		color: var(--mm-text);
-		white-space: nowrap;
-	}
-	.mkt-plans__price small {
-		font: var(--text-caption);
-		letter-spacing: 0;
+	.mkt-plans__group th {
+		padding: var(--space-8) 0 var(--space-2);
+		text-align: start;
+		font: var(--text-label);
 		color: var(--mm-text-2);
 	}
-	/* Always present, empty where the price needs no period, so the notes start level. */
-	.mkt-plans__per {
-		display: block;
-		min-height: 1.45em;
-		font: var(--text-caption);
-		color: var(--mm-text-2);
+	.mkt-plans tbody:first-of-type .mkt-plans__group th {
+		padding-block-start: var(--space-3);
 	}
-	.mkt-plans__note {
-		display: block;
-		margin-block-start: var(--space-2);
-		font: var(--text-caption);
-		color: var(--mm-text-2);
-	}
-	/* The buttons get their own header row, so they line up however long each note runs. */
-	.mkt-plans__actions > * {
-		padding: 0 var(--space-4) var(--space-5);
-		vertical-align: bottom;
-	}
-	.mkt-plans__actions .mm-btn {
-		width: 100%;
-	}
-	.mkt-plans tbody th {
+	.mkt-plans tbody th[scope="row"] {
 		position: sticky;
 		inset-inline-start: 0;
 		z-index: 1;
 		background: var(--mm-paper);
-		font: var(--text-label);
-		color: var(--mm-text-2);
+		font: var(--text-dense);
+		color: var(--mm-text);
 		text-align: start;
 		padding: var(--space-3) var(--space-4) var(--space-3) 0;
 	}
@@ -405,23 +516,31 @@
 		color: var(--mm-text);
 		font-variant-numeric: tabular-nums;
 	}
-	.mkt-plans tbody tr {
+	/* Rules go on the cells, not the rows, so the pinned labels keep theirs as they scroll. */
+	.mkt-plans tbody tr:not(.mkt-plans__group) > * {
 		border-block-start: 1px solid var(--mm-rule);
 	}
-	.mkt-plans tbody tr:last-child {
+	.mkt-plans tbody:last-of-type tr:last-child > * {
 		border-block-end: 1px solid var(--mm-rule);
 	}
-	/* Yes and no read as words with an icon, never a coloured tick alone. */
+	@media (max-width: 720px) {
+		.mkt-plans table {
+			min-width: 640px;
+		}
+		.mkt-plans col:first-child {
+			width: 9rem;
+		}
+	}
+	/* A tick or a dash, each with a hidden word, so nothing depends on colour or shape alone. */
 	.mkt-plans__yes,
 	.mkt-plans__no {
 		display: inline-flex;
 		align-items: center;
-		gap: var(--space-2);
 	}
 	.mkt-plans__yes :is(svg, mm-icon),
 	.mkt-plans__no :is(svg, mm-icon) {
-		width: 16px;
-		height: 16px;
+		width: 18px;
+		height: 18px;
 		flex: none;
 		fill: currentColor;
 	}
@@ -429,13 +548,9 @@
 		color: var(--mm-success);
 	}
 	.mkt-plans__no {
-		color: var(--mm-text-2);
+		color: var(--mm-text-3);
 	}
-	.mkt-plans__foot {
-		margin: var(--space-4) 0 0;
-		font: var(--text-caption);
-		color: var(--mm-text-2);
-	}
+
 
 	/* Site footer: chrome, on the same ground as the header with a hairline above. Columns of muted
      links under a label, then one line for the legal name and address. */
@@ -684,41 +799,215 @@
 	}
 
 	/* The unit estimator: one panel split by a hairline, the inputs and then what they come to. */
-	.mkt-estimator {
+	/* The estimator: inputs on the left with their values set large as they move, and the result
+	   as an ink panel on a contour field, the one inverse surface on the page. */
+	.mkt-calc {
 		display: grid;
-		grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+		grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+		gap: var(--space-8);
+		align-items: stretch;
 	}
-	.mkt-estimator__inputs {
+	.mkt-calc__inputs {
 		display: grid;
-		gap: var(--space-6);
-		padding: var(--space-6) var(--space-5);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: calc(var(--space-8) * 1.25) var(--space-8);
+		align-content: center;
+		padding-block: var(--space-6);
 	}
-	.mkt-estimator__result {
+	.mkt-calc__field {
 		display: grid;
 		align-content: start;
-		gap: var(--space-4);
-		padding: var(--space-2) var(--space-5) var(--space-6);
-		border-inline-start: 1px solid var(--mm-rule);
 	}
-	/* The tile brings its own padding; line its text up with the rest of the column. */
-	.mkt-estimator__result mm-kpi-tile {
-		margin-inline: calc(-1 * var(--space-5));
-	}
-	.mkt-estimator__limit {
-		margin: 0;
-		font: var(--text-caption);
+	.mkt-calc__label {
+		padding: 0;
+		font: var(--text-label);
 		color: var(--mm-text-2);
 	}
-	.mkt-estimator__note {
-		margin: 0;
+	.mkt-calc__value {
+		margin-block: var(--space-2) var(--space-3);
+		font: var(--text-display-kpi);
+		letter-spacing: var(--tracking-display-kpi);
+		font-variant-numeric: tabular-nums;
+		color: var(--mm-text);
 	}
-	@media (max-width: 880px) {
-		.mkt-estimator {
+	.mkt-calc__value small {
+		font: var(--text-caption);
+		letter-spacing: 0;
+		color: var(--mm-text-2);
+	}
+	/* The big value above replaces the slider's own label and readout; its label still names it. */
+	.mkt-calc mm-slider {
+		width: 100%;
+	}
+	.mkt-calc mm-slider::part(label),
+	.mkt-calc mm-slider::part(readout) {
+		display: none;
+	}
+	.mkt-calc__activity {
+		grid-column: 1 / -1;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+	.mkt-calc__choices {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--space-2);
+		margin-block-start: var(--space-3);
+	}
+	.mkt-calc__choice {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-3);
+		padding: var(--space-3) var(--space-4);
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+		border: 1px solid var(--mm-control-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition:
+			background-color var(--mm-dur-press) var(--mm-ease),
+			border-color var(--mm-dur-press) var(--mm-ease);
+	}
+	.mkt-calc__choice:hover {
+		border-color: var(--mm-text-2);
+	}
+	.mkt-calc__choice strong {
+		display: block;
+		font: var(--text-label);
+		color: var(--mm-text);
+	}
+	/* The radio itself is hidden; the card is the control, and its focus ring shows on the card. */
+	.mkt-calc__choice input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.mkt-calc__choice:has(input:checked) {
+		background: var(--mm-selected);
+		border-color: var(--mm-text);
+	}
+	.mkt-calc__choice:has(input:focus-visible) {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
+	}
+	.mkt-calc__bars {
+		display: flex;
+		align-items: flex-end;
+		gap: 3px;
+		block-size: 16px;
+		margin-block-start: 2px;
+		flex: none;
+	}
+	.mkt-calc__bars span {
+		inline-size: 4px;
+		border-radius: 1px;
+		background: var(--mm-rule);
+	}
+	.mkt-calc__bars span.is-on {
+		background: var(--mm-text-2);
+	}
+	.mkt-calc__choice:has(input:checked) .mkt-calc__bars span.is-on {
+		background: var(--mm-text);
+	}
+
+	.mkt-calc__result {
+		/* The field's lines default to the rule colour, which glares on ink; mix them from paper. */
+		--mm-topography-line: color-mix(in oklab, var(--mm-paper) 14%, transparent);
+		--mm-topography-index: color-mix(in oklab, var(--mm-paper) 22%, transparent);
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		/* A fixed height, so moving a slider never resizes the panel or the inputs beside it. */
+		block-size: 28rem;
+		padding: var(--space-8);
+		color: var(--mm-paper);
+		background: var(--mm-text);
+		border-radius: var(--radius-md);
+	}
+	.mkt-calc__plan {
+		margin: 0;
+		font: var(--text-label);
+		color: color-mix(in oklab, var(--mm-paper) 72%, var(--mm-text));
+	}
+	.mkt-calc__price {
+		margin: var(--space-4) 0 0;
+		font: var(--text-display-hero);
+		font-size: clamp(44px, 4vw, 56px);
+		letter-spacing: var(--tracking-display-hero);
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+	}
+	.mkt-calc__price small {
+		font: var(--text-body);
+		letter-spacing: 0;
+		color: color-mix(in oklab, var(--mm-paper) 72%, var(--mm-text));
+	}
+	.mkt-calc__sum {
+		margin: var(--space-4) 0 0;
+		font: var(--text-dense);
+	}
+	.mkt-calc__spec--note {
+		min-height: 1.45em;
+	}
+	.mkt-calc__spec {
+		margin: var(--space-1) 0 0;
+		font: var(--text-caption);
+		color: color-mix(in oklab, var(--mm-paper) 72%, var(--mm-text));
+	}
+	.mkt-calc__highlights {
+		list-style: none;
+		display: grid;
+		gap: var(--space-2);
+		margin: var(--space-6) 0 0;
+		padding: var(--space-5) 0 0;
+		border-block-start: 1px solid color-mix(in oklab, var(--mm-paper) 22%, transparent);
+	}
+	.mkt-calc__highlights li {
+		display: flex;
+		gap: var(--space-2);
+		margin: 0;
+		font: var(--text-dense);
+	}
+	.mkt-calc__highlights svg {
+		inline-size: 16px;
+		block-size: 16px;
+		flex: none;
+		margin-block-start: 3px;
+		fill: currentColor;
+	}
+	/* An inverse button: paper on the ink panel, so it is clearly the next step without a second
+	   burnt-sienna fill beside the plans' own primary. */
+	.mm-btn.mkt-calc__action {
+		margin-block-start: auto;
+		align-self: stretch;
+		color: var(--mm-text);
+		background: var(--mm-paper);
+		border-color: var(--mm-paper);
+	}
+	.mm-btn.mkt-calc__action:hover {
+		background: color-mix(in oklab, var(--mm-paper) 88%, var(--mm-text));
+	}
+	.mm-btn.mkt-calc__action:focus-visible {
+		outline-color: var(--mm-paper);
+	}
+	@media (max-width: 960px) {
+		.mkt-calc {
 			grid-template-columns: minmax(0, 1fr);
 		}
-		.mkt-estimator__result {
-			border-inline-start: 0;
-			border-block-start: 1px solid var(--mm-rule);
+	}
+	@media (max-width: 560px) {
+		.mkt-calc__inputs,
+		.mkt-calc__choices {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-calc__result {
+			block-size: auto;
+			min-block-size: 28rem;
+			padding: var(--space-6);
 		}
 	}
 
@@ -1075,10 +1364,6 @@
 		margin-block-start: 0;
 	}
 
-	/* A short comparison (two or three columns) fits any width, so it never scrolls sideways. */
-	.mkt-plans--compact table {
-		min-width: 0;
-	}
 
 	/* The map hero: words on the left, the surveyed map of a sample organisation on the right,
 	   with one agent's question playing over it. Stacks below 1080px. */
@@ -1434,10 +1719,6 @@
 		color: var(--mm-text);
 		text-wrap: pretty;
 	}
-	.mkt-proof__sources-foot {
-		font: var(--text-caption);
-		color: var(--mm-text-2);
-	}
 	@media (max-width: 960px) {
 		.mkt-proof__inner {
 			grid-template-columns: minmax(0, 1fr);
@@ -1455,24 +1736,32 @@
 	.mkt-before-after section:last-child li :is(svg, mm-icon) {
 		color: var(--mm-success);
 	}
-	/* Two ways to run it, side by side and of equal weight. */
+	/* Two ways to run it, side by side and of equal weight: open columns with a hairline between
+	   them rather than a pair of boxes. Pricing lives in the Cloud column, so the page says it once. */
 	.mkt-deploy {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-6);
+		border-block-start: 1px solid var(--mm-rule);
 	}
 	.mkt-deploy__option {
 		display: grid;
 		align-content: start;
 		gap: var(--space-3);
-		padding: var(--space-6);
-		background: var(--mm-surface);
-		border: 1px solid var(--mm-rule);
-		border-radius: var(--radius-md);
+		padding: var(--space-8) var(--space-8) 0 0;
+	}
+	.mkt-deploy__option + .mkt-deploy__option {
+		padding-inline: var(--space-8) 0;
+		border-inline-start: 1px solid var(--mm-rule);
 	}
 	.mkt-deploy__option h3 {
 		margin: 0;
-		font: var(--text-heading-sm);
+		font: var(--text-display-section);
+		letter-spacing: var(--tracking-display-section);
+	}
+	.mkt-deploy__option .mkt-deploy__price {
+		margin-block-start: var(--space-2);
+		font: var(--text-label);
+		color: var(--mm-text);
 	}
 	.mkt-deploy__option p {
 		margin: 0;
@@ -1489,6 +1778,104 @@
 	@media (max-width: 720px) {
 		.mkt-deploy {
 			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-deploy__option,
+		.mkt-deploy__option + .mkt-deploy__option {
+			padding: var(--space-6) 0;
+			border-inline-start: 0;
+		}
+		.mkt-deploy__option + .mkt-deploy__option {
+			border-block-start: 1px solid var(--mm-rule);
+		}
+	}
+
+	/* A pause between chapters: one line and the two ways in, set on the tour's own rules rather
+	   than a band, so it reads as part of the tour. */
+	.mkt-tour-action {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-6);
+		padding-block: var(--space-12);
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	.mkt-tour-action__title {
+		margin: 0;
+		font: var(--text-display-section);
+		letter-spacing: var(--tracking-display-section);
+	}
+	.mkt-tour-action__lede {
+		margin: var(--space-2) 0 0;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+	.mkt-tour-action .mkt-hero__actions {
+		margin: 0;
+	}
+	.mkt-tour-action + .mkt-chapter {
+		border-block-start: 1px solid var(--mm-rule);
+	}
+
+	/* A chapter's way on to the docs, under its points. */
+	.mkt-chapter__more {
+		justify-self: start;
+		font: var(--text-dense);
+	}
+	/* The actions that follow a section's main picture. */
+	.mkt-block__actions {
+		margin-block-start: var(--space-8);
+	}
+
+	/* Band: the closing call to action, over the contour field like the hero's map. A heading at
+	   hero scale, one sentence and the two ways in. */
+	.mkt-band {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		padding-block: calc(var(--space-12) * 3);
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	.mkt-band__title {
+		margin: 0;
+		max-width: 18ch;
+		font: var(--text-display-hero);
+		font-size: clamp(34px, 3.6vw, 52px);
+		letter-spacing: var(--tracking-display-hero);
+		text-wrap: balance;
+	}
+	.mkt-band__lede {
+		margin: var(--space-5) 0 0;
+		max-width: 46ch;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+	.mkt-band .mkt-hero__actions {
+		margin-block-start: var(--space-8);
+	}
+	@media (max-width: 720px) {
+		.mkt-band {
+			padding-block: calc(var(--space-12) * 2);
+		}
+	}
+	/* The closing band that is also the deploy choice: the two options sit under the heading on the
+	   contour field, on a surface of their own so the lines never run behind the lists. */
+	.mkt-band--deploy .mkt-deploy {
+		margin-block-start: calc(var(--space-8) * 1.5);
+		background: var(--mm-paper);
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+	}
+	.mkt-band--deploy .mkt-deploy__option {
+		padding: var(--space-8);
+	}
+	.mkt-band--deploy .mkt-deploy__option + .mkt-deploy__option {
+		padding-inline: var(--space-8);
+	}
+	@media (max-width: 720px) {
+		.mkt-band--deploy .mkt-deploy__option,
+		.mkt-band--deploy .mkt-deploy__option + .mkt-deploy__option {
+			padding: var(--space-6);
 		}
 	}
 
@@ -1508,26 +1895,44 @@
 	}
 
 	/* Split chapters: the words beside the demo, swapping sides each time so the tour reads as a
-	   sequence. The words stay in view while the demo plays. */
+	   sequence. Laid out like the hero: the heading starts level with the top of the screen, the gap
+	   opens up as the page widens, and on wide screens the demo runs out past the column on its
+	   outer side, up to 160px, so it reads as the product rather than a framed figure. */
 	.mkt-chapter--split {
+		--mkt-bleed: 0px;
 		display: grid;
 		grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
-		gap: var(--space-8) var(--space-12);
-		align-items: center;
+		gap: var(--space-8) clamp(var(--space-12), 15vw - 144px, calc(var(--space-12) * 2));
+		align-items: start;
 		padding-block: calc(var(--space-12) * 1.75);
 	}
 	.mkt-chapter--split .mkt-chapter__text {
 		display: grid;
-		gap: var(--space-6);
+		gap: var(--space-8);
 		margin-block-end: 0;
 		align-items: start;
 		grid-template-columns: minmax(0, 1fr);
+	}
+	.mkt-chapter--split .mkt-chapter__title {
+		font-size: clamp(26px, 2.2vw, 34px);
+		margin-block-start: 0;
+	}
+	.mkt-chapter--split > .mkt-showcase {
+		margin-inline-end: calc(-1 * var(--mkt-bleed));
 	}
 	.mkt-chapter--flip {
 		grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
 	}
 	.mkt-chapter--flip > .mkt-chapter__text {
 		order: 2;
+	}
+	.mkt-chapter--flip > .mkt-showcase {
+		margin-inline: calc(-1 * var(--mkt-bleed)) 0;
+	}
+	@media (min-width: 1081px) {
+		.mkt-chapter--split {
+			--mkt-bleed: clamp(0px, (100vw - var(--mkt-width, 1200px)) / 2, 160px);
+		}
 	}
 	@media (max-width: 1080px) {
 		.mkt-chapter--split,
@@ -1536,6 +1941,62 @@
 		}
 		.mkt-chapter--flip > .mkt-chapter__text {
 			order: 0;
+		}
+	}
+
+	/* Beats: once the demo is playing, the points caption it. The one on screen is in ink, with a
+	   hairline filling along its rule for as long as it plays; the rest step back. Choosing one
+	   plays the demo from there. */
+	.mkt-beats[data-live] li {
+		position: relative;
+		padding: 0;
+		color: var(--mm-text-3);
+		transition: color var(--mm-dur-press) var(--mm-ease);
+	}
+	.mkt-beats[data-live] li:hover,
+	.mkt-beats[data-live] li.is-active {
+		color: var(--mm-text);
+	}
+	.mkt-beats[data-live] li::before {
+		content: "";
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: -1px;
+		block-size: 1px;
+		background: var(--mm-text);
+		transform: scaleX(var(--beat-progress, 0));
+		transform-origin: 0 50%;
+		opacity: 0;
+	}
+	.mkt-beats[data-live] li.is-active::before {
+		opacity: 1;
+		/* The player reports progress about ten times a second; this joins the steps up. */
+		transition: transform 100ms linear;
+	}
+	.mkt-beats button {
+		display: flex;
+		gap: var(--space-3);
+		inline-size: 100%;
+		margin: 0;
+		padding-block: var(--space-2);
+		padding-inline: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		color: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+	.mkt-beats button:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
+	}
+	.mkt-beats[data-live] :is(svg, mm-icon) {
+		color: inherit;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.mkt-beats[data-live] li::before {
+			display: none;
 		}
 	}
 	/* A screen on its own: one hairline frame and a caption under it, no well around it. */
@@ -1649,50 +2110,50 @@
 	.mkt-block--tight {
 		padding-block: var(--space-4) calc(var(--space-12) * 1.5);
 	}
-	.mkt-checklist {
-		list-style: none;
-		margin: 0;
-		padding: 0;
+	/* What changes, as two map sheets of the same ground: unmapped (the agent wanders, dotted)
+	   beside surveyed (contours, one logged route, a hatched restricted zone). Each caption sits
+	   over its own sheet: side by side on wide screens, caption then sheet on a phone. */
+	.mkt-survey {
 		display: grid;
-		gap: var(--space-3);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-6) var(--space-8);
 	}
-	.mkt-checklist li {
-		display: flex;
-		gap: var(--space-3);
-		padding-block-start: var(--space-3);
-		border-block-start: 1px solid var(--mm-rule);
+	.mkt-survey__halves {
+		display: contents;
 	}
-	.mkt-checklist svg {
-		inline-size: 18px;
-		block-size: 18px;
-		flex: none;
-		margin-block-start: 3px;
-		fill: currentColor;
-		color: var(--mm-success);
-	}
-	/* The homepage's word on pricing: one line and the way to the full page. */
-	.mkt-pricing-teaser {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-6);
-	}
-	.mkt-pricing-teaser__actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-3);
-	}
-
-	/* What changes, as a map: unmapped ground (the agent wanders, dotted) beside the same ground
-	   surveyed (contours, one logged route, a hatched restricted zone). The story plays like the
-	   hero's; the layer switch sits inside the map, as a map's own furniture. */
 	.mkt-survey__map {
 		position: relative;
-		aspect-ratio: 1200 / 480;
+		aspect-ratio: 600 / 420;
 	}
 	.mkt-survey.is-tall .mkt-survey__map {
-		aspect-ratio: 400 / 780;
+		aspect-ratio: 340 / 520;
+	}
+	/* The unmapped sheet is bare paper; a hairline frame on both says these are two sheets, and the
+	   survey's contours stop at its edge like a map's neatline. */
+	.mkt-survey__sheet {
+		overflow: hidden;
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+		padding: var(--space-4);
+	}
+	/* Without Marmot sits on a sunken sheet: bare, unsurveyed ground beside the surveyed one, so
+	   the two differ before anyone reads them. Its warnings keep their colour. */
+	.mkt-survey__sheet.is-without {
+		background: var(--mm-sunken);
+	}
+	.mkt-survey__sheet.is-without .mkt-maphero__label {
+		background: var(--mm-sunken);
+	}
+	@media (max-width: 720px) {
+		.mkt-survey {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-survey__halves li:nth-child(2) {
+			order: 2;
+		}
+		.mkt-survey__sheet.is-with {
+			order: 3;
+		}
 	}
 	.mkt-survey__svg {
 		position: absolute;
@@ -1704,19 +2165,13 @@
 	.mkt-survey__ground path {
 		fill: none;
 		stroke: var(--mm-contour);
-		stroke-opacity: 0.3;
+		stroke-opacity: 0.2;
 		stroke-width: 1;
-		stroke-dasharray: 1;
-		stroke-dashoffset: 1;
-		transition: stroke-dashoffset 1400ms var(--mm-ease);
 	}
 	.mkt-survey__ground path.is-index {
 		stroke: var(--mm-contour-index);
-		stroke-opacity: 0.42;
+		stroke-opacity: 0.3;
 		stroke-width: 1.5;
-	}
-	.mkt-survey.is-with .mkt-survey__ground path {
-		stroke-dashoffset: 0;
 	}
 	.mkt-survey__hatch {
 		stroke: var(--mm-danger);
@@ -1729,23 +2184,12 @@
 		stroke-width: 1.25;
 		stroke-dasharray: 5 4;
 	}
-	.mkt-survey__zone {
-		opacity: 0;
-		transition: opacity var(--mm-dur-dialog) var(--mm-ease) 600ms;
-	}
-	.mkt-survey.is-with .mkt-survey__zone {
-		opacity: 1;
-	}
 	.mkt-survey__wander {
 		fill: none;
 		stroke: var(--mm-warning);
 		stroke-width: 1.5;
 		stroke-dasharray: 2 6;
 		stroke-linecap: round;
-		transition: opacity var(--mm-dur-dialog) var(--mm-ease);
-	}
-	.mkt-survey.is-with .mkt-survey__wander {
-		opacity: 0;
 	}
 	.mkt-survey__route {
 		fill: none;
@@ -1759,9 +2203,6 @@
 		stroke-dashoffset: 0;
 		transition: stroke-dashoffset 2400ms linear;
 	}
-	.mkt-survey.is-without .mkt-survey__route {
-		opacity: 0;
-	}
 	.mkt-survey__spur {
 		fill: none;
 		stroke: var(--mm-danger);
@@ -1774,9 +2215,6 @@
 	.mkt-survey__spur.is-on {
 		opacity: 1;
 	}
-	.mkt-survey.is-without .mkt-survey__spur {
-		opacity: 0;
-	}
 	.mkt-survey__stop {
 		fill: var(--mm-paper);
 		stroke: var(--mm-danger);
@@ -1787,34 +2225,13 @@
 		stroke: var(--mm-paper);
 		stroke-width: 2;
 	}
-	.mkt-survey__sweep {
-		stroke: var(--mm-primary);
-		stroke-width: 1.5;
-		opacity: 0;
-		transform: translateX(0);
-	}
-	.mkt-survey__sweep.is-on {
-		opacity: 0.7;
-		transform: translateX(var(--mkt-sweep));
-		transition: transform 1500ms linear, opacity var(--mm-dur-press) var(--mm-ease);
-	}
 	@media (prefers-reduced-motion: reduce) {
-		.mkt-survey__ground path,
 		.mkt-survey__route.is-drawn {
 			transition: none;
 		}
 	}
 
-	.mkt-survey__only-with,
-	.mkt-survey__only-without {
-		transition: opacity var(--mm-dur-dialog) var(--mm-ease);
-	}
-	.mkt-survey.is-without .mkt-survey__only-with,
-	.mkt-survey.is-with .mkt-survey__only-without {
-		opacity: 0;
-		visibility: hidden;
-	}
-	.mkt-survey.is-with .mkt-maphero__asset.is-quiet {
+	.mkt-survey__sheet.is-with .mkt-maphero__asset.is-quiet {
 		opacity: 0.45;
 	}
 	.mkt-maphero__asset {
@@ -1874,27 +2291,17 @@
 		color: var(--mm-danger);
 	}
 
-	/* The layer switch sits in the map's top left corner. */
-	.mkt-survey__layers {
-		position: absolute;
-		inset-inline-start: 0;
-		inset-block-start: 0;
+	/* A label with a quiet line under it. The quiet line follows the row's colour, so it steps back
+	   with the label when another half is playing. */
+	.mkt-beats__words {
+		display: grid;
+		gap: 2px;
 	}
-	.mkt-survey {
-		position: relative;
+	.mkt-beats__words strong {
+		font: var(--text-label);
 	}
-	/* Until the map is wide enough to hold it in its corner, the switch sits above the map. */
-	@media (max-width: 1100px) {
-		.mkt-survey {
-			display: grid;
-			gap: var(--space-4);
-		}
-		.mkt-survey__layers {
-			position: static;
-		}
-		.mkt-survey__layers {
-			justify-self: center;
-		}
+	.mkt-beats__words span {
+		font: var(--text-caption);
 	}
 	/* Unlike the hero, the survey has no chat beside it, so a phone keeps the names and notes of
 	   whatever the agent has reached. */

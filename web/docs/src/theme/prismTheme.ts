@@ -1,165 +1,41 @@
 import type { PrismTheme } from "prism-react-renderer";
 
-// Light theme with darker earthy colors for better contrast
-export const lightTheme: PrismTheme = {
+/*
+ * The design system's editor palette: warm near-black in both themes, with the mm-syn-* colours.
+ * The values are custom properties, so code blocks follow the tokens rather than a copy of them,
+ * and the light and dark themes are the same object.
+ */
+const editor: PrismTheme = {
   plain: {
-    color: "#1f2937",
-    backgroundColor: "var(--code-block-bg)",
+    color: "var(--mm-code-text)",
+    backgroundColor: "var(--mm-code-bg)",
   },
   styles: [
     {
       types: ["comment", "prolog", "doctype", "cdata"],
-      style: {
-        color: "#4a674a",
-        fontStyle: "italic",
-      },
+      style: { color: "var(--mm-syn-comment)", fontStyle: "italic" },
+    },
+    { types: ["namespace"], style: { opacity: 0.7 } },
+    { types: ["punctuation", "operator"], style: { color: "var(--mm-code-text)" } },
+    {
+      types: ["string", "attr-value", "char", "inserted", "regex", "url"],
+      style: { color: "var(--mm-syn-string)" },
     },
     {
-      types: ["namespace"],
-      style: {
-        opacity: 0.7,
-      },
+      types: ["number", "boolean", "constant", "symbol", "entity"],
+      style: { color: "var(--mm-syn-number)" },
     },
     {
-      types: ["string", "attr-value"],
-      style: {
-        color: "#35593b",
-      },
+      types: ["keyword", "atrule", "selector", "tag", "important", "deleted"],
+      style: { color: "var(--mm-syn-keyword)" },
     },
     {
-      types: ["punctuation", "operator"],
-      style: {
-        color: "#4a674a",
-      },
+      types: ["function", "function-variable", "class-name", "builtin", "attr-name", "property", "field"],
+      style: { color: "var(--mm-syn-function)" },
     },
-    {
-      types: [
-        "entity",
-        "url",
-        "symbol",
-        "number",
-        "boolean",
-        "variable",
-        "constant",
-        "property",
-        "regex",
-        "inserted",
-      ],
-      style: {
-        color: "#7b5935",
-      },
-    },
-    {
-      types: ["atrule", "keyword", "attr-name", "selector"],
-      style: {
-        color: "#8d3718",
-      },
-    },
-    {
-      types: ["function", "deleted", "tag"],
-      style: {
-        color: "#b34822",
-      },
-    },
-    {
-      types: ["function-variable"],
-      style: {
-        color: "#b34822",
-      },
-    },
-    {
-      types: ["tag", "selector", "keyword"],
-      style: {
-        color: "#8d3718",
-      },
-    },
-    {
-      types: ["field"],
-      style: {
-        color: "#2563eb",
-      },
-    },
+    { types: ["variable", "parameter"], style: { color: "var(--mm-code-text)" } },
   ],
 };
 
-// Dark theme with brighter earthy tones for better readability
-export const darkTheme: PrismTheme = {
-  plain: {
-    color: "#f3f4f6",
-    backgroundColor: "var(--code-block-bg)",
-  },
-  styles: [
-    {
-      types: ["comment", "prolog", "doctype", "cdata"],
-      style: {
-        color: "#a8c5a8",
-        fontStyle: "italic",
-      },
-    },
-    {
-      types: ["namespace"],
-      style: {
-        opacity: 0.7,
-      },
-    },
-    {
-      types: ["string", "attr-value"],
-      style: {
-        color: "#b9d9b9",
-      },
-    },
-    {
-      types: ["punctuation", "operator"],
-      style: {
-        color: "#d1e5d1",
-      },
-    },
-    {
-      types: [
-        "entity",
-        "url",
-        "symbol",
-        "number",
-        "boolean",
-        "variable",
-        "constant",
-        "property",
-        "regex",
-        "inserted",
-      ],
-      style: {
-        color: "#f0d97e",
-      },
-    },
-    {
-      types: ["atrule", "keyword", "attr-name", "selector"],
-      style: {
-        color: "#ffa77d",
-      },
-    },
-    {
-      types: ["function", "deleted", "tag"],
-      style: {
-        color: "#ffb899",
-      },
-    },
-    {
-      types: ["function-variable"],
-      style: {
-        color: "#ffb899",
-      },
-    },
-    {
-      types: ["tag", "selector", "keyword"],
-      style: {
-        color: "#ffa77d",
-      },
-    },
-    {
-      types: ["field"],
-      style: {
-        color: "#60a5fa",
-      },
-    },
-  ],
-};
+export const lightTheme = editor;
+export const darkTheme = editor;

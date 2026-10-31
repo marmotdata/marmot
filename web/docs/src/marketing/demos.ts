@@ -23,7 +23,9 @@ import {
 	type QueryState
 } from './screens';
 
-export interface DemoConfig<S extends { focus?: string }> {
+// `beat` marks which of the chapter's points the script is showing, from 0. The chapter reads the
+// timing of each beat from the script itself, so it never drifts from what plays.
+export interface DemoConfig<S extends { focus?: string; beat?: number }> {
 	label: string;
 	screen: (s: S) => TemplateResult;
 	initial: S;
@@ -31,7 +33,7 @@ export interface DemoConfig<S extends { focus?: string }> {
 	rest?: number;
 }
 
-type Focus = { focus?: string };
+type Focus = { focus?: string; beat?: number };
 
 // The one demo that shows the whole app first, before the camera moves in on the run.
 export const agentDemo: DemoConfig<AgentState & Focus> = {
@@ -125,7 +127,7 @@ export const queryDemo: DemoConfig<QueryDemoState> = {
 	label:
 		'revenue-agent’s query on orders_daily runs and returns 7 rows. Its next query reads a personal data column and is refused. Both land in the query audit.',
 	screen: (s) => (s.view === 'audit' ? auditScreen({ newest: s.newest }) : queryScreen(s)),
-	initial: { view: 'query', sql: '', state: 'idle', newest: 0, focus: 'mm-sql-editor' },
+	initial: { view: 'query', sql: '', state: 'idle', newest: 0, focus: 'mm-sql-editor', beat: 0 },
 	async steps(demo, set) {
 		await demo.wait(800);
 		await type(demo, QUERY_SQL, (sql) => set({ sql }), 16);
@@ -134,12 +136,12 @@ export const queryDemo: DemoConfig<QueryDemoState> = {
 		await demo.wait(1100);
 		set({ state: 'results', focus: 'mm-results-grid' });
 		await demo.wait(2800);
-		set({ sql: '', state: 'idle', focus: 'mm-sql-editor' });
+		set({ sql: '', state: 'idle', focus: 'mm-sql-editor', beat: 1 });
 		await type(demo, DENIED_SQL, (sql) => set({ sql }), 18);
 		await demo.wait(600);
 		set({ state: 'denied', focus: 'mm-callout' });
 		await demo.wait(3200);
-		set({ view: 'audit', newest: 1, focus: 'mm-audit-log' });
+		set({ view: 'audit', newest: 1, focus: 'mm-audit-log', beat: 2 });
 		await demo.wait(1200);
 		set({ newest: 2 });
 		await demo.wait(4000);

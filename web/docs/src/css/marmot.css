@@ -6,6 +6,8 @@
 @import "@marmotdata/tokens/index.css";
 @import "@marmotdata/css";
 @import "./marketing.css";
+@import "./document.css";
+@import "./docs.css";
 
 /* Infima reads its fonts and colours from these: point them at the design system's. */
 :root {

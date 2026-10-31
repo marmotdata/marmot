@@ -1,13 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
 import { CONSOLE_URL, useCloudSignedIn } from "@site/src/hooks/useCloudSignedIn";
 import MapHero from "@site/src/components/home/MapHero";
-import ContextMap from "@site/src/components/home/ContextMap";
 import ScreenDemo from "@site/src/components/home/ScreenDemo";
+import Beats from "@site/src/components/home/Beats";
+import type { Player } from "@site/src/marketing/demo";
 import Faq from "@site/src/components/home/Faq";
 import BeforeAfter from "@site/src/components/home/BeforeAfter";
-import { accessDemo, findDemo, queryDemo, traceDemo, understandDemo, type DemoConfig } from "@site/src/marketing/demos";
+import { findDemo, queryDemo, traceDemo, understandDemo, type DemoConfig } from "@site/src/marketing/demos";
 import Search from "~icons/material-symbols/search";
 import FilterList from "~icons/material-symbols/filter-list";
 import Extension from "~icons/material-symbols/extension-outline";
@@ -17,9 +18,6 @@ import Verified from "~icons/material-symbols/verified-outline";
 import AccountTree from "~icons/material-symbols/account-tree-outline";
 import Sync from "~icons/material-symbols/sync";
 import Dashboard from "~icons/material-symbols/dashboard-outline";
-import Shield from "~icons/material-symbols/shield-outline";
-import CodeIcon from "~icons/material-symbols/code";
-import KeyOff from "~icons/material-symbols/key-off-outline";
 import Terminal from "~icons/material-symbols/terminal";
 import Block from "~icons/material-symbols/block";
 import History from "~icons/material-symbols/history";
@@ -31,10 +29,12 @@ type ChapterData = {
   title: string;
   lede: string;
   points: { Icon: IconType; text: string }[];
-  demo: DemoConfig<{ focus?: string }>;
+  /** Where to read more: the docs for what the chapter shows. */
+  more: { to: string; label: string };
+  demo: DemoConfig<{ focus?: string; beat?: number }>;
 };
 // Each chapter's demo drives a different screen; the list only has to hand them on.
-const any = <S extends { focus?: string }>(d: DemoConfig<S>) => d as unknown as DemoConfig<{ focus?: string }>;
+const any = <S extends { focus?: string; beat?: number }>(d: DemoConfig<S>) => d as unknown as DemoConfig<{ focus?: string; beat?: number }>;
 
 // Each chapter opens with the problem it solves, then shows the product solving it, and each
 // calls back to the headline: real data, reached safely.
@@ -48,18 +48,8 @@ const chapters: ChapterData[] = [
       { Icon: Block, text: "Refused before it reaches the database" },
       { Icon: History, text: "Who ran what, when, and what came back" },
     ],
+    more: { to: "/docs/Cloud/access-control", label: "How access control works" },
     demo: any(queryDemo),
-  },
-  {
-    id: "access",
-    title: "Decide exactly what each agent can read",
-    lede: "Grant a role on one table, data product or glossary term. Everything else stays out of reach, for agents and people alike.",
-    points: [
-      { Icon: Shield, text: "Roles for people, teams and agents" },
-      { Icon: CodeIcon, text: "The same grants in Terraform, reviewed in pull requests" },
-      { Icon: KeyOff, text: "Service accounts instead of shared passwords" },
-    ],
-    demo: any(accessDemo),
   },
   {
     id: "find",
@@ -70,6 +60,7 @@ const chapters: ChapterData[] = [
       { Icon: FilterList, text: "Filter by type, owner, tag or any metadata" },
       { Icon: Extension, text: "Kept current by more than 60 plugins" },
     ],
+    more: { to: "/docs/Plugins", label: "See the plugins" },
     demo: any(findDemo),
   },
   {
@@ -81,6 +72,7 @@ const chapters: ChapterData[] = [
       { Icon: MenuBook, text: "Glossary terms that explain each field" },
       { Icon: Verified, text: "Certified data marked as the one to use" },
     ],
+    more: { to: "/docs/glossary", label: "How the glossary works" },
     demo: any(understandDemo),
   },
   {
@@ -92,6 +84,7 @@ const chapters: ChapterData[] = [
       { Icon: Sync, text: "From plugins and OpenLineage runs" },
       { Icon: Dashboard, text: "Dashboards that break, before they do" },
     ],
+    more: { to: "/docs/open-lineage", label: "How lineage is collected" },
     demo: any(traceDemo),
   },
 ];
@@ -104,8 +97,9 @@ const deploy = {
   cloud: ["Access control per table, product and term", "Governed SQL with an audit log of every query", "Upgrades, nightly backups and support from the team"],
 };
 
-// One chapter of the tour: the problem and the points beside a demo of the product solving it.
+// One chapter of the tour: the problem, then its points as captions that follow the demo beside it.
 function Chapter({ c, flip = false }: { c: ChapterData; flip?: boolean }): JSX.Element {
+  const [demo, setDemo] = useState<{ player: Player; bounds: number[] }>();
   return (
     <section className={`mkt-chapter mkt-chapter--split${flip ? " mkt-chapter--flip" : ""}`} id={c.id} aria-labelledby={`${c.id}-title`}>
       <div className="mkt-chapter__text">
@@ -115,17 +109,33 @@ function Chapter({ c, flip = false }: { c: ChapterData; flip?: boolean }): JSX.E
           </h2>
           <p className="mkt-chapter__lede">{c.lede}</p>
         </div>
-        <ul className="mkt-chapter__points">
-          {c.points.map(({ Icon, text }) => (
-            <li key={text}>
-              <Icon aria-hidden="true" />
-              {text}
-            </li>
-          ))}
-        </ul>
+        <Beats points={c.points} player={demo?.player} bounds={demo?.bounds} />
+        <Link className="mm-link mkt-chapter__more" to={c.more.to}>
+          {c.more.label}
+        </Link>
       </div>
-      <ScreenDemo {...c.demo} />
+      <ScreenDemo {...c.demo} onPlayer={(player, bounds) => setDemo({ player, bounds })} />
     </section>
+  );
+}
+
+// A pause in the tour: one line and the two ways in, so nobody scrolls three demos with nothing to act on.
+function TourAction(): JSX.Element {
+  return (
+    <aside className="mkt-tour-action" aria-labelledby="tour-action">
+      <div>
+        <h2 className="mkt-tour-action__title" id="tour-action">
+          Try it on your own data
+        </h2>
+        <p className="mkt-tour-action__lede">Launch an instance in about a minute and connect your first source.</p>
+      </div>
+      <div className="mkt-hero__actions">
+        <SignUp />
+        <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
+          Deploy it yourself
+        </Link>
+      </div>
+    </aside>
   );
 }
 
@@ -196,7 +206,6 @@ export default function Home(): JSX.Element {
                 </a>
               </p>
               <p className="mkt-proof__sources-list">{sources.join(", ")} and dozens more.</p>
-              <p className="mkt-proof__sources-foot">Open source under MIT, with one MCP server for every assistant.</p>
             </div>
           </div>
         </section>
@@ -209,40 +218,74 @@ export default function Home(): JSX.Element {
           <div className="mm-container">
             <div className="mkt-block__head">
               <h2 className="mkt-block__title" id="change">
-                What changes when agents go through Marmot
+                Why a database password isn’t enough
               </h2>
+              <p className="mkt-block__lede">We asked finance-agent for last week’s revenue, once with a password and once through Marmot.</p>
             </div>
             <BeforeAfter />
+            <div className="mkt-hero__actions mkt-block__actions">
+              <SignUp />
+              <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
+                Deploy it yourself
+              </Link>
+            </div>
           </div>
         </section>
 
         <div className="mm-container mkt-tour">
           {chapters.slice(1).map((c, i) => (
-            <Chapter c={c} flip={i % 2 === 1} key={c.id} />
+            <React.Fragment key={c.id}>
+              <Chapter c={c} flip={i % 2 === 1} />
+              {c.id === "understand" && <TourAction />}
+            </React.Fragment>
           ))}
         </div>
 
-        <section className="mkt-block mkt-block--rule" aria-labelledby="stack">
-          <div className="mm-container">
+        <section className="mkt-block mkt-block--rule" aria-labelledby="questions">
+          <div className="mm-container mkt-block--aside">
             <div className="mkt-block__head">
-              <h2 className="mkt-block__title" id="stack">
-                Fits the stack you already run
+              <h2 className="mkt-block__title" id="questions">
+                Questions
               </h2>
-              <p className="mkt-block__lede">Manage it from code, keep it current with plugins, and reach it from any assistant or app.</p>
+              <p className="mkt-block__lede">
+                Anything else, email{" "}
+                <a className="mm-link" href="mailto:support@marmotdata.io">
+                  support@marmotdata.io
+                </a>
+                .
+              </p>
             </div>
-            <ContextMap />
+            <Faq />
           </div>
         </section>
 
-        <section className="mkt-block mkt-block--rule" aria-labelledby="deploy">
+        <section className="mkt-band mkt-band--deploy" aria-labelledby="deploy">
+          <mm-topography seed="11" fade="start"></mm-topography>
           <div className="mm-container">
-            <div className="mkt-block__head">
-              <h2 className="mkt-block__title" id="deploy">
-                Run it yourself, or let us run it
-              </h2>
-              <p className="mkt-block__lede">The same catalog and the same MCP server either way, so you can move between them.</p>
-            </div>
+            <h2 className="mkt-band__title" id="deploy">
+              Give your first agent a safe way in to your data
+            </h2>
+            <p className="mkt-band__lede">Run it yourself or let us run it. It’s the same catalog and the same MCP server either way, so you can move between them.</p>
             <div className="mkt-deploy">
+              <section className="mkt-deploy__option" aria-labelledby="deploy-cloud">
+                <h3 id="deploy-cloud">Marmot Cloud</h3>
+                <p>We run it for you, with governance built in.</p>
+                <ul>
+                  {deploy.cloud.map((t) => (
+                    <li key={t}>
+                      <Check aria-hidden="true" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mkt-deploy__price">Free to start with no card, and unlimited users on every plan.</p>
+                <div className="mkt-deploy__actions">
+                  <SignUp />
+                  <Link className="mm-link" to="/pricing">
+                    See pricing
+                  </Link>
+                </div>
+              </section>
               <section className="mkt-deploy__option" aria-labelledby="deploy-oss">
                 <h3 id="deploy-oss">Open source</h3>
                 <p>MIT-licensed and free, on your own infrastructure.</p>
@@ -263,75 +306,10 @@ export default function Home(): JSX.Element {
                   </a>
                 </div>
               </section>
-              <section className="mkt-deploy__option" aria-labelledby="deploy-cloud">
-                <h3 id="deploy-cloud">Marmot Cloud</h3>
-                <p>We run it for you, with governance built in. Free to start.</p>
-                <ul>
-                  {deploy.cloud.map((t) => (
-                    <li key={t}>
-                      <Check aria-hidden="true" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mkt-deploy__actions">
-                  <SignUp />
-                </div>
-              </section>
             </div>
           </div>
         </section>
 
-        <section className="mkt-block mkt-block--rule" id="pricing" aria-labelledby="pricing-title">
-          <div className="mm-container mkt-pricing-teaser">
-            <div>
-              <h2 className="mkt-block__title" id="pricing-title">
-                Free to start, with unlimited users
-              </h2>
-              <p className="mkt-block__lede">No card for the free plan. Paid plans grow with your catalog and your agents, never with headcount.</p>
-            </div>
-            <div className="mkt-pricing-teaser__actions">
-              <Link className="mm-btn mm-btn--secondary" to="/pricing">
-                See pricing
-              </Link>
-              <SignUp />
-            </div>
-          </div>
-        </section>
-
-        <section className="mkt-block mkt-block--rule" aria-labelledby="questions">
-          <div className="mm-container mkt-block--aside">
-            <div className="mkt-block__head">
-              <h2 className="mkt-block__title" id="questions">
-                Questions
-              </h2>
-              <p className="mkt-block__lede">
-                Anything else, email{" "}
-                <a className="mm-link" href="mailto:support@marmotdata.io">
-                  support@marmotdata.io
-                </a>
-                .
-              </p>
-            </div>
-            <Faq />
-          </div>
-        </section>
-
-        <section className="mkt-band mkt-band--closing" aria-labelledby="start">
-          <mm-topography seed="11" fade="edges"></mm-topography>
-          <div className="mm-container">
-            <h2 className="mkt-band__title" id="start">
-              Give your first agent a safe way in to your data.
-            </h2>
-            <p className="mkt-band__lede">Start on the free plan with no card, or run Marmot on your own infrastructure.</p>
-            <div className="mkt-hero__actions">
-              <SignUp />
-              <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
-                Deploy it yourself
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
     </Layout>
   );

@@ -1,0 +1,1361 @@
+/*
+ * Docs, blog and resources: Docusaurus's content pages on the design system.
+ *
+ * Docusaurus draws these from Infima's markup (.markdown, .menu, .breadcrumbs, .pagination-nav,
+ * .table-of-contents) and a few components of ours (src/components, src/theme). Prose follows
+ * mm-prose and the document layout in document.css: Geist throughout, the display face only for the
+ * page title, body 16px/1.55 at a 72ch measure, thin rules rather than boxes. Burnt sienna is for
+ * links and the primary button only; the current sidebar item and the current TOC entry are ink on
+ * the neutral selection tint. Every colour is a token, so Peat follows from data-theme.
+ *
+ * Unlayered on purpose: Infima's element rules are unlayered too, and these must beat them.
+ */
+
+/* ============================================
+   Prose
+   ============================================ */
+
+.markdown {
+  --doc-measure: 72ch;
+  font: var(--text-body);
+  color: var(--mm-text);
+}
+html .markdown > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, dl, header),
+html .markdown .doc-callout,
+html .markdown .doc-next {
+  max-width: var(--doc-measure);
+}
+
+html .markdown h1,
+html .markdown header h1 {
+  margin: 0 0 var(--space-6);
+  font: var(--text-display-title);
+  letter-spacing: var(--tracking-display-title);
+  color: var(--mm-text);
+  text-wrap: balance;
+}
+html .markdown h2 {
+  margin: var(--space-12) 0 var(--space-3);
+  font: var(--text-heading);
+  letter-spacing: var(--tracking-heading);
+  color: var(--mm-text);
+}
+html .markdown h3 {
+  margin: var(--space-8) 0 var(--space-2);
+  font: var(--text-heading-sm);
+  color: var(--mm-text);
+}
+html .markdown :is(h4, h5, h6) {
+  margin: var(--space-6) 0 var(--space-2);
+  font: var(--text-panel-title);
+  color: var(--mm-text);
+}
+html .markdown > :is(h2, h3, h4):first-child,
+html .markdown header + :is(h2, h3) {
+  margin-top: var(--space-6);
+}
+html .markdown :is(h2, h3, h4) code {
+  font-size: calc(1em - 1px);
+}
+/* The # that appears on hover is a quiet mark, not a coloured link. */
+html .markdown .hash-link {
+  color: var(--mm-text-3);
+  text-decoration: none;
+}
+
+html .markdown p {
+  margin: 0 0 var(--space-4);
+}
+html .markdown :is(ul, ol) {
+  margin: 0 0 var(--space-4);
+  padding-inline-start: var(--space-6);
+}
+html .markdown li + li,
+html .markdown li > :is(ul, ol) {
+  margin-top: var(--space-1);
+}
+html .markdown li > p {
+  margin-bottom: var(--space-2);
+}
+html .markdown li::marker {
+  color: var(--mm-text-3);
+}
+html .markdown strong {
+  font-weight: 600;
+}
+html .markdown hr {
+  height: 0;
+  margin: var(--space-8) 0;
+  border: 0;
+  border-top: 1px solid var(--mm-rule);
+  background: none;
+}
+html .markdown blockquote {
+  margin: 0 0 var(--space-4);
+  padding: 0 0 0 var(--space-4);
+  color: var(--mm-text-2);
+  border-left: 1px solid var(--mm-control-border);
+  font-size: inherit;
+}
+html .markdown img {
+  max-width: 100%;
+}
+
+/* Links in running text: burnt sienna, underlined, thicker on hover. */
+html .markdown a:not(.mm-btn, .hash-link, .mm-link-list__item, [class*="resource-list__"], .resource-article__back) {
+  color: var(--mm-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+html .markdown a:not(.mm-btn, .hash-link, .mm-link-list__item, [class*="resource-list__"], .resource-article__back):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Inline code: mono 1px smaller, on the sunken well, no border. */
+html .markdown code,
+html .doc-callout code {
+  padding: 1px 4px;
+  font-family: var(--font-mono);
+  font-size: calc(1em - 1px);
+  color: var(--mm-text);
+  background: var(--mm-sunken);
+  border: 0;
+  border-radius: var(--radius-sm);
+  vertical-align: baseline;
+  overflow-wrap: anywhere;
+}
+html .markdown a code {
+  color: inherit;
+}
+
+/* Tables are read across: the full column width, thin rules, labels for headers. */
+html .markdown table {
+  display: table;
+  width: 100%;
+  margin: 0 0 var(--space-6);
+  border-collapse: collapse;
+  font: var(--text-dense);
+}
+html .markdown :is(thead, tbody, tr) {
+  background: none;
+  border: 0;
+}
+html .markdown :is(th, td) {
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+  vertical-align: top;
+  border: 0;
+  border-bottom: 1px solid var(--mm-rule);
+  background: none;
+}
+html .markdown :is(th, td):first-child {
+  padding-inline-start: 0;
+}
+html .markdown thead th {
+  font: var(--text-label);
+  color: var(--mm-text-2);
+  border-bottom-color: var(--mm-control-border);
+}
+html .markdown td code {
+  overflow-wrap: normal;
+}
+@media (max-width: 996px) {
+  html .markdown table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* ============================================
+   Code blocks: the fixed editor palette (prismTheme.ts), no shadow, no window dots
+   ============================================ */
+
+html .theme-code-block {
+  margin: 0 0 var(--space-5);
+  color: var(--mm-code-text);
+  background: var(--mm-code-bg);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+html .theme-code-block pre {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--mm-code-bg);
+  border-radius: var(--radius-md);
+}
+html .theme-code-block :is(pre, code) {
+  font: var(--text-mono-editor);
+}
+html .theme-code-block code {
+  padding: 0;
+  color: inherit;
+  background: none;
+  overflow-wrap: normal;
+}
+html .theme-code-block [class*="codeBlockTitle"] {
+  padding: 8px 16px;
+  font: var(--text-mono-dense);
+  color: var(--mm-code-text);
+  background: var(--mm-code-bg);
+  border-bottom: 1px solid color-mix(in oklab, var(--mm-code-text) 16%, var(--mm-code-bg));
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+html .theme-code-block [class*="codeBlockTitle"] + [class*="codeBlockContent"] pre {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+/* Copy and wrap buttons: the design system's mm-code__copy. */
+html .theme-code-block [class*="buttonGroup"] button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--mm-code-text);
+  background: var(--mm-code-bg);
+  border: 1px solid var(--mm-syn-comment);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--mm-dur-press) var(--mm-ease);
+}
+html .theme-code-block [class*="buttonGroup"] button svg {
+  width: 16px;
+  height: 16px;
+}
+html .theme-code-block [class*="buttonGroup"] button:hover {
+  border-color: var(--mm-code-text);
+}
+
+/* ============================================
+   Callouts (admonitions and TipBox, both drawn as mm-callout)
+   ============================================ */
+
+html .doc-callout {
+  margin: 0 0 var(--space-5);
+}
+html .doc-callout .mm-callout__title {
+  margin: 0;
+  font-weight: 600;
+}
+html .doc-callout .mm-callout__body {
+  color: var(--mm-text);
+}
+html .doc-callout .mm-callout__body > :last-child {
+  margin-bottom: 0;
+}
+html .doc-callout .mm-callout__body :is(p, ul, ol) {
+  margin: 0 0 var(--space-2);
+  max-width: none;
+}
+html .doc-callout .mm-callout__body .theme-code-block {
+  margin: var(--space-2) 0;
+}
+.mm-callout--neutral {
+  background: var(--mm-sunken);
+}
+.mm-callout--neutral > svg {
+  color: var(--mm-text-2);
+}
+
+/* The "unreleased" banner on preview docs, as a warning callout. */
+html .theme-doc-version-banner {
+  margin-bottom: var(--space-5);
+  padding: 12px 14px;
+  font: var(--text-dense);
+  color: var(--mm-text);
+  background: var(--mm-warning-soft);
+  border: 0;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+html .theme-doc-version-banner a {
+  color: var(--mm-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================
+   Breadcrumbs, the version badge, the page footer
+   ============================================ */
+
+html .theme-doc-breadcrumbs {
+  margin-bottom: var(--space-4);
+}
+html .breadcrumbs {
+  font: var(--text-caption);
+}
+html .breadcrumbs__item {
+  display: inline-flex;
+  align-items: center;
+}
+html .breadcrumbs__link {
+  padding: 0;
+  font-size: inherit;
+  color: var(--mm-text-2);
+  background: none;
+  border-radius: 0;
+}
+html a.breadcrumbs__link:hover {
+  color: var(--mm-text);
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html .breadcrumbs__item--active .breadcrumbs__link {
+  color: var(--mm-text);
+  background: none;
+}
+html .breadcrumbs__item:not(:last-child)::after {
+  content: "/";
+  width: auto;
+  height: auto;
+  margin: 0 var(--space-2);
+  color: var(--mm-text-3);
+  background: none;
+  filter: none;
+  opacity: 1;
+}
+html .breadcrumbs__link svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+}
+
+/* The sidebar's version picker already says which version this is; on narrow screens, where the
+   sidebar is folded away, the badge says it as a caption instead. */
+html .theme-doc-version-badge {
+  display: block;
+  width: fit-content;
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+  background: none;
+  border: 0;
+}
+@media (min-width: 997px) {
+  html .theme-doc-version-badge {
+    display: none;
+  }
+}
+
+html .theme-doc-footer {
+  margin-top: var(--space-8);
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+}
+html .theme-last-updated,
+html .theme-edit-this-page {
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+}
+html .theme-last-updated b {
+  font-weight: 400;
+}
+html .theme-edit-this-page {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================
+   Previous and next
+   ============================================ */
+
+html .pagination-nav {
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+html .pagination-nav__link {
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+  transition: border-color var(--mm-dur-press) var(--mm-ease);
+}
+html .pagination-nav__link:hover {
+  border-color: var(--mm-control-border);
+  text-decoration: none;
+}
+html .pagination-nav__sublabel {
+  margin-bottom: 2px;
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+}
+html .pagination-nav__label {
+  font: var(--text-panel-title);
+  color: var(--mm-text);
+}
+html .pagination-nav__link--prev .pagination-nav__label::before,
+html .pagination-nav__link--next .pagination-nav__label::after {
+  content: none;
+}
+
+/* ============================================
+   Table of contents: neutral, the current entry in ink
+   ============================================ */
+
+html .table-of-contents {
+  padding-block: 0;
+  font: var(--text-caption);
+}
+html .theme-doc-toc-desktop {
+  padding-top: var(--space-6);
+}
+html .theme-doc-toc-desktop .table-of-contents {
+  border-left: 1px solid var(--mm-rule);
+}
+html .table-of-contents li {
+  margin: 0;
+}
+html .table-of-contents__left-border {
+  border-left: 0;
+}
+html .table-of-contents__link {
+  display: block;
+  padding: 3px 0;
+  color: var(--mm-text-2);
+}
+html .table-of-contents__link:hover {
+  color: var(--mm-text);
+  text-decoration: none;
+}
+html .table-of-contents__link--active {
+  color: var(--mm-text);
+  font-weight: 600;
+}
+html .table-of-contents__link code {
+  padding: 0;
+  font-size: calc(1em - 1px);
+  background: none;
+}
+/* The narrow-screen "On this page" fold. */
+html .theme-doc-toc-mobile {
+  margin-bottom: var(--space-5);
+  background: none;
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+}
+html .theme-doc-toc-mobile > button {
+  font: var(--text-button);
+  color: var(--mm-text);
+}
+
+/* ============================================
+   Docs sidebar
+   ============================================ */
+
+html .theme-doc-sidebar-container {
+  border-right-color: var(--mm-rule);
+}
+html .theme-doc-sidebar-menu,
+html .navbar-sidebar .menu {
+  font: var(--text-dense);
+}
+html .menu {
+  font-weight: 400;
+}
+html .menu__list .menu__list {
+  margin-top: 1px;
+  padding-left: var(--space-3);
+}
+html .menu__list-item:not(:first-child) {
+  margin-top: 1px;
+}
+html .menu__link {
+  padding: 6px 10px;
+  font: var(--text-dense);
+  color: var(--mm-text-2);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--mm-dur-press) var(--mm-ease), color var(--mm-dur-press) var(--mm-ease);
+}
+html .menu__link:hover {
+  color: var(--mm-text);
+  background: var(--mm-sunken);
+  text-decoration: none;
+}
+/* The current page: ink on the neutral selection tint. Its open category stays ink, untinted. */
+html .menu__link.menu__link--active {
+  color: var(--mm-text);
+}
+html .menu__link.menu__link--active:not(.menu__link--sublist) {
+  font-weight: 600;
+  background: var(--mm-selected);
+}
+html .menu__list-item-collapsible {
+  border-radius: var(--radius-sm);
+}
+html .menu__list-item-collapsible:hover,
+html .menu__list-item-collapsible--active {
+  background: none;
+}
+html .menu__list-item-collapsible:hover {
+  background: var(--mm-sunken);
+}
+html .menu__list-item-collapsible .menu__link:hover {
+  background: none;
+}
+/* Category carets: a quiet chevron in ink-3, drawn from currentColor so it follows the theme. */
+html .menu__caret {
+  padding: 0 8px;
+  color: var(--mm-text-3);
+}
+html .menu__caret:hover {
+  background: none;
+}
+html .menu__caret::before,
+html .menu__link--sublist-caret::after {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  background: currentColor;
+  -webkit-mask: var(--ifm-menu-link-sublist-icon) center / 16px 16px no-repeat;
+  mask: var(--ifm-menu-link-sublist-icon) center / 16px 16px no-repeat;
+  filter: none;
+}
+html .menu__link--sublist-caret::after {
+  color: var(--mm-text-3);
+}
+
+/* The version picker: a design-system select, sentence-case label. */
+.sidebar-version {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 var(--space-3);
+  padding: var(--space-4) var(--space-2) 0;
+}
+.sidebar-version__label {
+  font: var(--text-label);
+  color: var(--mm-text-2);
+}
+.sidebar-version__control {
+  position: relative;
+}
+.sidebar-version__select {
+  width: 100%;
+  height: var(--control-h-sm);
+  padding: 0 32px 0 10px;
+  font: var(--text-dense);
+  color: var(--mm-text);
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-control-border);
+  border-radius: var(--radius-sm);
+  appearance: none;
+  cursor: pointer;
+  transition: border-color var(--mm-dur-press) var(--mm-ease);
+}
+.sidebar-version__select:hover {
+  border-color: var(--mm-text);
+}
+.sidebar-version__select:focus-visible {
+  border-color: var(--mm-text);
+  outline: var(--mm-focus-ring-width) solid var(--mm-text);
+  outline-offset: var(--mm-focus-ring-offset);
+}
+.sidebar-version__caret {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  color: var(--mm-text-3);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+@media (pointer: coarse) {
+  .sidebar-version__select {
+    font-size: 16px;
+  }
+}
+
+/* ============================================
+   The narrow-screen sidebar (opened by the header's menu button in src/theme/Navbar)
+   ============================================ */
+
+html .navbar-sidebar {
+  width: min(22rem, 86vw);
+  background: var(--mm-paper);
+  box-shadow: var(--shadow-dialog);
+  backdrop-filter: none;
+}
+html .navbar-sidebar__backdrop {
+  background: var(--mm-scrim);
+}
+html .navbar-sidebar__brand {
+  height: auto;
+  min-height: var(--ifm-navbar-height);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--mm-rule);
+  box-shadow: none;
+}
+html .navbar-sidebar__brand .navbar__logo {
+  height: 22px;
+}
+/* The header has its own theme button; the sidebar's copy is not needed. */
+html .navbar-sidebar__brand [class*="toggle_"] {
+  display: none;
+}
+html .navbar-sidebar__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-touch);
+  height: var(--target-touch);
+  margin-right: calc(var(--space-2) * -1);
+  color: var(--mm-text-2);
+}
+html .navbar-sidebar__close svg {
+  width: 20px;
+  height: 20px;
+}
+html .navbar-sidebar__item {
+  padding: var(--space-3) var(--space-3);
+}
+html .navbar-sidebar__back {
+  margin: 0 0 var(--space-2);
+  padding: 6px 10px;
+  font: var(--text-button);
+  color: var(--mm-text-2);
+  background: none;
+  border-radius: var(--radius-sm);
+}
+html .navbar-sidebar__back:hover {
+  color: var(--mm-text);
+  background: var(--mm-sunken);
+}
+html .navbar-sidebar .menu__link {
+  padding: 10px;
+}
+/* The GitHub item has an aria-label but no text of its own (it was an icon in the old header). */
+html .navbar-sidebar .header-github-link::before {
+  content: "GitHub";
+}
+html .navbar-sidebar .sidebar-version {
+  padding-top: 0;
+}
+
+/* ============================================
+   Components used in docs content (src/components)
+   ============================================ */
+
+/* DocCard / FeatureCard: the design system's .mm-link-list. Only the spacing around it and the
+   resets Infima's prose list styles need are set here. */
+html .markdown ul.mm-link-list {
+  margin: var(--space-4) 0 var(--space-8);
+  padding: 0;
+}
+html .markdown ul.mm-link-list > li {
+  margin: 0;
+}
+html .markdown a.mm-link-list__item {
+  color: var(--mm-text);
+}
+
+/* CalloutCard: a next step. One quiet panel, one sentence, one button. */
+.doc-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  margin: var(--space-6) 0;
+  padding: var(--space-4) var(--space-5);
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+}
+.doc-next__text {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+html .markdown .doc-next__title {
+  margin: 0;
+  font: var(--text-panel-title);
+  color: var(--mm-text);
+}
+html .markdown .doc-next__desc {
+  margin: 2px 0 0;
+  font: var(--text-dense);
+  color: var(--mm-text-2);
+}
+.doc-next .mm-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Steps: a quiet number in a ruled circle and a hairline down to the next step. */
+html .markdown .doc-steps {
+  margin: var(--space-6) 0;
+  padding: 0;
+  list-style: none;
+}
+html .markdown .doc-steps__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: 0;
+  padding-bottom: var(--space-6);
+}
+html .markdown .doc-steps__item:last-child {
+  padding-bottom: 0;
+}
+.doc-steps__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  bottom: 6px;
+  left: 13.5px;
+  width: 1px;
+  background: var(--mm-rule);
+}
+.doc-steps__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--mm-text);
+  background: var(--mm-paper);
+  border: 1px solid var(--mm-control-border);
+  border-radius: var(--radius-full);
+}
+.doc-steps__content {
+  min-width: 0;
+  padding-top: 2px;
+}
+html .markdown .doc-steps__title {
+  margin: 0 0 var(--space-2);
+  font: var(--text-panel-title);
+}
+.doc-steps__body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Tabs: mm-tabs, the active tab underlined in burnt sienna. */
+.doc-tabs {
+  margin: var(--space-4) 0 var(--space-6);
+}
+.doc-tabs__list {
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+}
+.doc-tabs__list .mm-tab {
+  white-space: nowrap;
+}
+.doc-tabs__panel > :last-child {
+  margin-bottom: 0;
+}
+html .markdown .doc-subhead {
+  margin: var(--space-4) 0 var(--space-2);
+  font: var(--text-panel-title);
+}
+html .markdown .doc-tabs__panel > .doc-subhead:first-child {
+  margin-top: 0;
+}
+
+/* Collapsible: one ruled panel with its title as the button. */
+.doc-collapsible {
+  margin: var(--space-4) 0;
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+  background: var(--mm-surface);
+}
+.doc-collapsible__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  font: var(--text-panel-title);
+  color: var(--mm-text);
+  text-align: start;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.doc-collapsible__toggle:hover {
+  background: var(--mm-sunken);
+}
+.doc-collapsible__caret {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--mm-text-3);
+  transition: transform var(--mm-dur-menu) var(--mm-ease);
+}
+.doc-collapsible__toggle[aria-expanded="true"] .doc-collapsible__caret {
+  transform: rotate(180deg);
+}
+.doc-collapsible__body {
+  padding: var(--space-4);
+  border-top: 1px solid var(--mm-rule);
+}
+.doc-collapsible__body > :last-child {
+  margin-bottom: 0;
+}
+.doc-collapsible__seg {
+  margin-bottom: var(--space-3);
+}
+
+/* ConfigTable: the same thin-ruled table as Markdown tables, option names in mono. */
+html .markdown .doc-config-table td:first-child code {
+  white-space: nowrap;
+}
+
+/* ComparisonTable */
+.doc-compare {
+  margin: var(--space-6) 0;
+  overflow-x: auto;
+}
+html .markdown .doc-compare table {
+  display: table;
+  margin: 0;
+  min-width: 36rem;
+}
+html .markdown .doc-compare tbody th {
+  font: var(--text-label);
+  color: var(--mm-text);
+}
+html .markdown .doc-compare thead th.is-highlight {
+  color: var(--mm-text);
+}
+html .markdown .doc-compare .is-highlight {
+  background: var(--mm-sunken);
+}
+.doc-compare__cell {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.doc-compare__mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+.doc-compare__mark.is-yes {
+  color: var(--mm-success);
+}
+.doc-compare__mark.is-no {
+  color: var(--mm-text-3);
+}
+.doc-compare__mark.is-partial {
+  color: var(--mm-warning);
+}
+
+/* ============================================
+   Blog
+   ============================================ */
+
+/* The index and tag pages: a list with thin rules, a title and a caption per post. */
+html .blog-list {
+  max-width: var(--doc-measure, 72ch);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--mm-rule);
+}
+html .blog-list__item {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: center;
+  margin: 0;
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--mm-rule);
+}
+html .blog-list__item > :only-child {
+  grid-column: 1 / -1;
+}
+@media (max-width: 560px) {
+  html .blog-list__item {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+}
+html .blog-list__title {
+  margin: 0 0 2px;
+  font: var(--text-heading-sm);
+  color: var(--mm-text);
+}
+html .blog-list__title a {
+  color: var(--mm-text);
+  text-decoration: none;
+}
+html .blog-list__title a:hover,
+html .blog-list__title a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+html .blog-caption {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A post: the title in display type and ink, the caption, then the same prose as the docs. */
+html .blog-post__header {
+  max-width: var(--doc-measure, 72ch);
+  margin-bottom: var(--space-8);
+}
+html .blog-post__header .blog-post__title {
+  margin: 0 0 var(--space-3);
+  font: var(--text-display-title);
+  letter-spacing: var(--tracking-display-title);
+  color: var(--mm-text);
+  text-wrap: balance;
+}
+html.blog-post-page article .markdown img {
+  border-radius: var(--radius-md);
+}
+
+/* Tags and the post footer. */
+html.blog-post-page article footer {
+  margin-top: var(--space-8);
+}
+html.blog-post-page article footer b {
+  font: var(--text-label);
+  color: var(--mm-text-2);
+}
+html a[class*="tagRegular"],
+html a[class*="tagWithCount"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 8px;
+  font: var(--text-caption);
+  line-height: 1;
+  color: var(--mm-text-2);
+  background: var(--mm-sunken);
+  border: 0;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+html a[class*="tagRegular"]:hover,
+html a[class*="tagWithCount"]:hover {
+  color: var(--mm-text);
+  background: var(--mm-sunken);
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html a[class*="tagWithCount"]::before,
+html a[class*="tagWithCount"]::after {
+  content: none;
+}
+html a[class*="tagWithCount"] span {
+  font: var(--text-caption);
+  color: var(--mm-text-3);
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* "Recent posts": quiet and dense. */
+.blog-sidebar {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + var(--space-8));
+  max-height: calc(100vh - (var(--ifm-navbar-height) + var(--space-8)));
+  overflow-y: auto;
+}
+html .blog-sidebar__title {
+  margin: 0 0 var(--space-2);
+  font: var(--text-label);
+  color: var(--mm-text-2);
+}
+html .blog-sidebar__year {
+  margin: var(--space-4) 0 var(--space-1);
+  font: var(--text-caption);
+  color: var(--mm-text-3);
+}
+html .blog-sidebar__list {
+  margin: 0;
+  font: var(--text-dense);
+}
+html .blog-sidebar__item {
+  margin: 0;
+}
+html .blog-sidebar__link {
+  display: block;
+  margin-inline-start: -8px;
+  padding: 5px 8px;
+  color: var(--mm-text-2);
+  border-radius: var(--radius-sm);
+}
+html .blog-sidebar__link:hover {
+  color: var(--mm-text);
+  background: var(--mm-sunken);
+  text-decoration: none;
+}
+html .blog-sidebar__link.blog-sidebar__link--active {
+  color: var(--mm-text);
+  font-weight: 600;
+  background: var(--mm-selected);
+}
+@media (max-width: 996px) {
+  .blog-sidebar {
+    display: none;
+  }
+}
+
+/* The blog index's title and its one line, above the list. */
+html .blog-list__header {
+  max-width: var(--doc-measure, 72ch);
+  margin-bottom: var(--space-8);
+}
+html .blog-list__header h1 {
+  margin: 0;
+}
+html .blog-list__lede {
+  margin: var(--space-3) 0 0;
+  font: var(--text-body);
+  color: var(--mm-text-2);
+}
+
+/* The blog's page title on tag pages ("2 posts tagged with …"). */
+html .blog-wrapper header h1,
+html .blog-wrapper main > header h1 {
+  font: var(--text-display-title);
+  letter-spacing: var(--tracking-display-title);
+}
+
+/* ============================================
+   Resources
+   ============================================ */
+
+/* The hub's header: the title, one sentence and its two actions. */
+.resource-hero {
+  max-width: var(--doc-measure, 72ch);
+  padding: var(--space-8) 0 var(--space-8);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--mm-rule);
+}
+html .markdown h1.resource-hero__title {
+  margin: 0;
+  font: var(--text-display-title);
+  letter-spacing: var(--tracking-display-title);
+}
+html .markdown .resource-hero__lede {
+  margin: var(--space-4) 0 0;
+  max-width: 60ch;
+  color: var(--mm-text-2);
+}
+.resource-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+/* The hub's lists: title and one quiet line, thin rules between. */
+html .markdown .resource-list {
+  max-width: var(--doc-measure, 72ch);
+  margin: var(--space-3) 0 var(--space-8);
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--mm-rule);
+}
+html .markdown .resource-list__item {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--mm-rule);
+}
+html .markdown a.resource-list__title {
+  font: var(--text-body-strong);
+  color: var(--mm-text);
+  text-decoration: none;
+}
+html .markdown a.resource-list__title:hover,
+html .markdown a.resource-list__title:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.resource-list__desc {
+  font: var(--text-dense);
+  color: var(--mm-text-2);
+}
+/* A row with its cover: the thumbnail at the start, then the title and its line. */
+html .markdown .resource-list__item--cover {
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+}
+.resource-list__text {
+  display: grid;
+  gap: 2px;
+}
+html .markdown a.resource-list__thumb,
+html .blog-list__thumb {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+  aspect-ratio: 1200 / 630;
+  background: var(--mm-paper);
+}
+html .markdown .resource-list__thumb img,
+html .blog-list__thumb img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 0;
+}
+@media (max-width: 560px) {
+  html .markdown .resource-list__item--cover {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+/* An article: a quiet link back to the hub, the title, a caption and its cover, then the opening
+   paragraph as the lede. */
+html .markdown .resource-article__cover {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: var(--doc-measure, 72ch);
+  block-size: auto;
+  margin: var(--space-6) 0 0;
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+}
+html .resource-article__header {
+  margin-bottom: var(--space-6);
+}
+html .markdown a.resource-article__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+  text-decoration: none;
+}
+html .markdown a.resource-article__back svg {
+  width: 16px;
+  height: 16px;
+}
+html .markdown a.resource-article__back:hover {
+  color: var(--mm-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html .markdown .resource-article__header h1 {
+  margin-bottom: var(--space-2);
+}
+html .markdown .resource-article__caption {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--mm-text-2);
+}
+html .resource-article > .resource-article__header + p {
+  color: var(--mm-text-2);
+}
+
+/* ============================================
+   Introduction diagram
+   ============================================ */
+
+/* The systems you run, the mascot on its contour field, and who reads it, joined by dotted flows.
+   Provider marks carry the colour; people and agents use their tints. */
+.intro-map {
+  margin: var(--space-8) 0;
+  max-width: var(--doc-measure, 72ch);
+}
+.intro-map__grid {
+  display: grid;
+  grid-template-columns: auto minmax(var(--space-8), 1fr) auto minmax(var(--space-8), 1fr) auto;
+  align-items: center;
+}
+html .markdown :is(.intro-map__sources, .intro-map__readers) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+html .markdown .intro-map__sources {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  gap: var(--space-2);
+}
+html .markdown .intro-map__sources li {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  margin: 0;
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+}
+.intro-map__sources mm-provider-logo {
+  inline-size: 20px;
+  block-size: 20px;
+}
+html .markdown .intro-map__more {
+  font: var(--text-label);
+  color: var(--mm-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The flow: a dotted rule with an arrowhead at its end. */
+.intro-map__flow {
+  position: relative;
+  block-size: 2px;
+  margin-inline: var(--space-3);
+  background-image: radial-gradient(circle, var(--mm-text-3) 1px, transparent 1.5px);
+  background-size: 6px 2px;
+  background-repeat: repeat-x;
+}
+.intro-map__flow::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -2px;
+  inset-block-start: 50%;
+  inline-size: 7px;
+  block-size: 7px;
+  border-block-start: 1.5px solid var(--mm-text-3);
+  border-inline-end: 1.5px solid var(--mm-text-3);
+  transform: translateY(-50%) rotate(45deg);
+}
+[dir="rtl"] .intro-map__flow::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.intro-map__hub {
+  display: grid;
+  justify-items: center;
+}
+/* The mascot stands about 64px above the panel. Pushing the other columns down by the same amount
+   centres them, and the flows between them, on the panel rather than on panel and mascot. */
+.intro-map__grid > :not(.intro-map__hub) {
+  margin-block-start: 64px;
+}
+/* The mascot lies on the panel's top edge, overlapping it slightly. */
+html .markdown .intro-map__mascot {
+  position: relative;
+  z-index: 1;
+  inline-size: 104px;
+  block-size: auto;
+  margin: 0 0 -14px;
+}
+.intro-map__panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-inline-size: 168px;
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-control-border);
+  border-radius: var(--radius-md);
+}
+html .markdown .intro-map__name {
+  margin: 0 0 var(--space-2);
+  font: var(--text-heading-sm);
+  color: var(--mm-text);
+  text-align: center;
+}
+html .markdown .intro-map__holds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+html .markdown .intro-map__holds li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 6px 0;
+  font: var(--text-dense);
+  color: var(--mm-text);
+  border-top: 1px solid var(--mm-rule);
+}
+.intro-map__holds svg {
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  fill: currentColor;
+  color: var(--mm-text-2);
+}
+
+html .markdown .intro-map__readers {
+  display: grid;
+  gap: var(--space-2);
+}
+html .markdown .intro-map__reader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font: var(--text-label);
+  color: var(--mm-text);
+  white-space: nowrap;
+}
+.intro-map__reader svg {
+  inline-size: 18px;
+  block-size: 18px;
+  flex: none;
+  fill: currentColor;
+}
+.intro-map__reader--people {
+  background: var(--mm-info-soft);
+}
+.intro-map__reader--people svg {
+  color: var(--mm-info);
+}
+.intro-map__reader--agents {
+  background: var(--mm-primary-tint);
+}
+.intro-map__reader--agents svg {
+  color: var(--mm-primary);
+}
+.intro-map__reader--code {
+  background: var(--mm-sunken);
+}
+.intro-map__reader--code svg {
+  color: var(--mm-text-2);
+}
+
+/* A phone stacks the three, with the flows turned to point down. */
+@media (max-width: 720px) {
+  .intro-map__grid {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .intro-map__grid > :not(.intro-map__hub) {
+    margin-block-start: 0;
+  }
+  .intro-map__flow {
+    inline-size: 2px;
+    block-size: var(--space-8);
+    margin: var(--space-2) 0;
+    background-image: radial-gradient(circle, var(--mm-text-3) 1px, transparent 1.5px);
+    background-size: 2px 6px;
+    background-repeat: repeat-y;
+  }
+  .intro-map__flow::after {
+    inset-inline-end: auto;
+    inset-inline-start: 50%;
+    inset-block-start: auto;
+    inset-block-end: -2px;
+    transform: translateX(-50%) rotate(135deg);
+  }
+}
+
+/* Blog banners come in different shapes (some are tall stickers), so they fit whole, never cropped. */
+html .blog-list__thumb img {
+  object-fit: contain;
+}

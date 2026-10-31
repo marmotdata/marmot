@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { TemplateResult } from "lit";
-import type { Player } from "@site/src/marketing/demo";
+import type { Demo, Player } from "@site/src/marketing/demo";
 import type { DemoConfig } from "@site/src/marketing/demos";
 
 // The size a screen is laid out at, as the app would be in a browser window.
@@ -27,6 +27,27 @@ function quietScrollbars(root: Element | ShadowRoot, seen: WeakSet<ShadowRoot>) 
   }
 }
 
+/** Where each beat starts in playing time, then where the script ends: the script run once with
+ *  waits that only add up. */
+async function beatBounds<S extends { focus?: string; beat?: number }>(steps: DemoConfig<S>["steps"]): Promise<number[]> {
+  let t = 0;
+  const starts = [0];
+  const dry: Demo = {
+    still: false,
+    async wait(ms) {
+      t += ms;
+    },
+    async animate(ms, onFrame) {
+      t += ms;
+      onFrame(1);
+    },
+  };
+  await steps(dry, (patch) => {
+    if (patch.beat !== undefined) starts[patch.beat] = t;
+  });
+  return [...starts, t];
+}
+
 const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
@@ -35,8 +56,14 @@ const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-
  * picture rather than a second app to tab through, and `label` tells assistive technology what
  * it shows. It plays only on screen and can be paused.
  */
-export default function ScreenDemo<S extends { focus?: string }>(props: DemoConfig<S>): JSX.Element {
-  const { label, screen, initial, steps, rest } = props;
+export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
+  props: DemoConfig<S> & {
+    /** Hands over the player and where each beat starts and the script ends, for words that
+     *  follow along. */
+    onPlayer?: (player: Player, bounds: number[]) => void;
+  },
+): JSX.Element {
+  const { label, screen, initial, steps, rest, onPlayer } = props;
   const root = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -89,6 +116,8 @@ export default function ScreenDemo<S extends { focus?: string }>(props: DemoConf
           rest,
         });
         setPlayer(p);
+        const player = p;
+        if (onPlayer) void beatBounds(steps).then((bounds) => !cancelled && onPlayer(player, bounds));
       },
     );
     return () => {

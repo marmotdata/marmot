@@ -200,7 +200,6 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           showLastUpdateTime: true,
-          showLastUpdateAuthor: true,
           lastVersion: versions.length > 0 ? versions[0] : "current",
           versions: {
             current: {

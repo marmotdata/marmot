@@ -38,6 +38,9 @@ export default function Navbar(): JSX.Element {
 
   return (
     <header className={clsx("mkt-header", mobileSidebar.shown && "navbar-sidebar--show")}>
+      {/* Docusaurus measures `.navbar` to offset the table of contents' highlight; this gives it the
+          header's height without the old navbar's styles. */}
+      <span className="navbar mkt-header__probe" aria-hidden="true" />
       <div className="mkt-header__inner">
         <Link className="mkt-header__brand" to="/" aria-label="Marmot home">
           <span className="mm-wordmark">

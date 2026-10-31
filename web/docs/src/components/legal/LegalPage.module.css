@@ -1,0 +1,49 @@
+/* The DPA schedule opens with its own h1, which sits in the body like a section heading. */
+.body h1 {
+  margin: var(--space-12) 0 var(--space-3);
+  font: var(--text-heading);
+}
+
+/* Archive index: one row per version, divided by thin rules. */
+.versions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.versions li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-6);
+  align-items: baseline;
+  margin: 0;
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--mm-rule);
+}
+.versions li + li {
+  margin: 0;
+}
+.version {
+  min-inline-size: 8ch;
+}
+.versionDetail {
+  color: var(--mm-text-2);
+}
+
+/*
+ * Infima's unlayered table rules (outer borders, zebra rows, shaded header) win over the
+ * layered document styles, so restate the thin-rule table here with enough weight to apply.
+ */
+.body table,
+.body thead,
+.body thead tr,
+.body tr,
+.body tr:nth-child(2n) {
+  border: 0;
+  background: none;
+}
+.body table :is(th, td) {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  border: 0;
+  border-block-end: 1px solid var(--mm-rule);
+  background: none;
+}

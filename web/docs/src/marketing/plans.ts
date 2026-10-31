@@ -43,7 +43,7 @@ export const PLAN_LIST: Plan[] = [
 		features: [
 			'All plugins included',
 			'Federated secret stores',
-			'Shared MCP endpoint for AI agents',
+			'MCP endpoint for AI agents',
 			'Community support'
 		],
 		sso: false,

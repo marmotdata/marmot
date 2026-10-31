@@ -10,10 +10,10 @@ ignoredBuiltDependencies:
   - core-js-pure
 
 minimumReleaseAgeExclude:
-  - '@marmotdata/css@0.1.1'
-  - '@marmotdata/elements@0.1.1'
-  - '@marmotdata/icons@0.1.1'
-  - '@marmotdata/tokens@0.1.1'
+  - '@marmotdata/css@0.1.2'
+  - '@marmotdata/elements@0.1.2'
+  - '@marmotdata/icons@0.1.2'
+  - '@marmotdata/tokens@0.1.2'
 
 overrides:
   node-forge: ">=1.4.0"
@@ -61,8 +61,3 @@ overrides:
   tinypool: "^2.1.2"
   proxy-addr: "^2.0.8"
   follow-redirects: "^1.16.1"
-  # Temporary: .mm-wordmark, .mm-btn--icon, the wider mm-topography and the lineage canvas's
-  # modifier-zoom are not released yet. Remove once the design system publishes them; CI has no
-  # ../../../design-system checkout.
-  "@marmotdata/css": link:../../../design-system/packages/css
-  "@marmotdata/elements": link:../../../design-system/packages/elements

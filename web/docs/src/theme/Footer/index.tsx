@@ -38,9 +38,9 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "GitHub discussions", href: "https://github.com/marmotdata/marmot/discussions" },
       { label: "Contact us", href: "mailto:support@marmotdata.io" },
       { label: "Security and disclosure", href: "/security" },
-      { label: "Privacy policy", href: "https://cloud.marmotdata.io/privacy" },
-      { label: "Terms of service", href: "https://cloud.marmotdata.io/terms" },
-      { label: "Data processing agreement", href: "https://cloud.marmotdata.io/dpa" },
+      { label: "Privacy policy", href: "/privacy" },
+      { label: "Terms of service", href: "/terms" },
+      { label: "Data processing agreement", href: "/dpa" },
     ],
   },
 ];

@@ -1,0 +1,108 @@
+/*
+ * The security policy: a document page (document.css) with a header that carries the one thing
+ * people come here to do, report a vulnerability, beside the security-officer mascot on a faint
+ * contour field. Below it the policy is set to a reading measure with a quiet contents list.
+ */
+
+/* Header: full width so the contour field runs edge to edge; the text keeps its own measure. */
+.head {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	padding-block: calc(var(--space-12) * 1.5) var(--space-12);
+	border-block-end: 1px solid var(--mm-rule);
+}
+.headGrid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--space-12);
+}
+.headText {
+	max-width: 64ch;
+}
+.title {
+	max-width: 22ch;
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+	margin-block-start: var(--space-8);
+}
+.mascot {
+	display: block;
+	inline-size: 208px;
+	block-size: auto;
+	margin-inline-end: var(--space-12);
+}
+
+/* Body: the policy at a reading measure, with the contents list to the side on wide screens. */
+.doc {
+	padding-block-start: var(--space-12);
+}
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, 72ch) minmax(12rem, 16rem);
+	justify-content: space-between;
+	gap: var(--space-12);
+	align-items: start;
+}
+.toc {
+	position: sticky;
+	top: calc(var(--ifm-navbar-height, 57px) + var(--space-8));
+}
+.tocTitle {
+	margin: 0 0 var(--space-3);
+	font: var(--text-label);
+	color: var(--mm-text-2);
+}
+.tocList {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-inline-start: 1px solid var(--mm-rule);
+	font: var(--text-dense);
+}
+.tocList a {
+	display: block;
+	padding: var(--space-1) 0 var(--space-1) var(--space-4);
+	color: var(--mm-text-2);
+	text-decoration: none;
+}
+.tocList a:hover {
+	color: var(--mm-text);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+	.layout {
+		grid-template-columns: minmax(0, 72ch);
+	}
+	.toc {
+		display: none;
+	}
+}
+
+@media (max-width: 720px) {
+	.head {
+		padding-block: var(--space-8) var(--space-8);
+	}
+	.headGrid {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-5);
+	}
+	/* On a phone the mascot leads, small, so the title and the actions stay near the top. */
+	.mascot {
+		order: -1;
+		inline-size: 112px;
+		margin: 0;
+	}
+	.actions {
+		margin-block-start: var(--space-6);
+	}
+	.doc {
+		padding-block-start: var(--space-8);
+	}
+}
