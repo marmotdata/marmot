@@ -339,7 +339,7 @@ func (s *Source) getMappings(ctx context.Context, indexNames []string) (map[stri
 	}
 
 	result := make(map[string]map[string]interface{})
-	for indexName, indexMapping := range resp.Indices {
+	for indexName, indexMapping := range resp.GetIndices() {
 		var parsed struct {
 			Properties map[string]interface{} `json:"properties"`
 		}

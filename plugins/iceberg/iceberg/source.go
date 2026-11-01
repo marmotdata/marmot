@@ -196,7 +196,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 				gluecat.CatalogIdKey: config.GlueCatalogID,
 			}))
 		}
-		s.cat = gluecat.NewCatalog(glueOpts...)
+		glueCat, err := gluecat.NewCatalog(glueOpts...)
+		if err != nil {
+			return nil, fmt.Errorf("creating Glue catalog: %w", err)
+		}
+		s.cat = glueCat
 	}
 
 	nsAssets, namespaces, err := s.discoverNamespaces(ctx)

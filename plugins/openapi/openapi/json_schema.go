@@ -188,6 +188,11 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 			} 
 		}
 		jSchema.Example = string(mock)
+		// libopenapi renders scalar mocks as JSON, so a string example arrives quoted; unquote it so it reads as the value.
+		var scalar string
+		if json.Unmarshal(mock, &scalar) == nil {
+			jSchema.Example = scalar
+		}
 
 		return jSchema, nil
 	}
