@@ -2,288 +2,288 @@
   "registry": "ghcr.io/marmotdata/plugins",
   "plugins": {
     "airflow": {
-      "version": "0.1.1",
-      "digest": "sha256:91846d7342b1cfc13e6d8d2c75ef5d7e222f8f6d82ba5fc9d40cdc3584853199"
+      "version": "0.3.0",
+      "digest": "sha256:582f2749fedf88f7276ef5d7470df4721790978a7d8d6412862bc1f1a86e7768"
     },
     "amundsen": {
-      "version": "0.1.1",
-      "digest": "sha256:29659889eb7469bd5a7c5154040cdbc06f933396a97d61c5cb168d227a35d91a"
+      "version": "0.3.0",
+      "digest": "sha256:547dbef67f35cc319ac7ff492619c5e8b6eebf2fad872292f08d783226f9a6e2"
     },
     "asyncapi": {
-      "version": "0.1.1",
-      "digest": "sha256:3856eb7d71bc2b5f424548e826fdbad54abd55ccd045f395b2208518544cfa39"
+      "version": "0.3.0",
+      "digest": "sha256:f7fd9daf49f8ad636a9ddce5fb193ed05a419b1a3ffa24c4534962fffdb0e596"
     },
     "athena": {
-      "version": "0.1.2",
-      "digest": "sha256:fc99fd613042f056e358bbc890b40d162bbdcf1376f21711eb889b6607ad160f"
+      "version": "0.3.0",
+      "digest": "sha256:46b95a3223ce67758718cdd8aaf03e9a9597cb978f5bb08bd2ac1110c9950932"
     },
     "azureblob": {
-      "version": "0.1.2",
-      "digest": "sha256:f2f07ff63a005eb0f947304b23e0a2d100fced394849f3e1b8d8a602f615caf4"
+      "version": "0.3.0",
+      "digest": "sha256:c3147d578098be8d0970a59cc1dda0c2d670018118e56f3fb040289fc781cd50"
     },
     "bigquery": {
-      "version": "0.1.2",
-      "digest": "sha256:9e033bbf77b70342023965a222967e334ee53011c92c5ecf4b584bd1303a2b9d"
+      "version": "0.3.0",
+      "digest": "sha256:908e443a1502cf30316f8cd6d5377bf30ae781900330d22076393baff31d2a01"
     },
     "bigtable": {
-      "version": "0.1.2",
-      "digest": "sha256:30e14e07cc8cc9f2a84a50e5bbed90a1ffe5aaf3d7a23bdb6d7c72307f4fdcb8"
+      "version": "0.3.0",
+      "digest": "sha256:d8fa86af16fbaafe028000360e84a9d644feb19c1ea51b384b17620c897d624c"
     },
     "cassandra": {
-      "version": "0.1.1",
-      "digest": "sha256:43a3599b617960f2bc4c68a2e7c736a6a660969069a2e1ea8efd0081abf70509"
+      "version": "0.3.0",
+      "digest": "sha256:e08b5ea5100bf4dc4c3ee3fa2a6a85301a0295e8cf720ebfb581c89de27ade14"
     },
     "clickhouse": {
-      "version": "0.1.1",
-      "digest": "sha256:48d34aeae7966af714bb9d0b2a8da5d5bc35339f99d688edac711c68427b6eb4"
+      "version": "0.3.0",
+      "digest": "sha256:b7db3a54d21438a47b71d983e2476081a01aacc2aa833e87baba0832166b2648"
     },
     "cloudrun": {
-      "version": "0.1.2",
-      "digest": "sha256:2514286ae45ea1fc7e2bc30d5ac229b0260fa94b0ad50cd8521a6e86fe64a256"
+      "version": "0.3.0",
+      "digest": "sha256:0a1b57d61aa9c375fe049b91977249a7502fded1b63d6a3632ab12d002fc8c97"
     },
     "cockroachdb": {
-      "version": "0.1.1",
-      "digest": "sha256:8dc44460688f17cb5beecf8dec2e688abd5a8d22fd33e1b40f40c9571453b6c6"
+      "version": "0.3.0",
+      "digest": "sha256:edef0a787563bc77cf275226d9c3dbef31aa7cfc4952e5974ccdb40ff0d75b76"
     },
     "confluent": {
-      "version": "0.1.1",
-      "digest": "sha256:da30d249e65a932387ad98bab901494c77e091f0cc5409ab8acb2c806e98669f"
+      "version": "0.3.0",
+      "digest": "sha256:250b86ac0242d9b9f296351a27c5865319e4e9b80c9f57ef6079d8ea31351c9e"
     },
     "couchbase": {
-      "version": "0.1.1",
-      "digest": "sha256:9e98afb189af409fe3626b21b89b8a26ac28f3bc3b9633b1d59b093896084aa0"
+      "version": "0.3.0",
+      "digest": "sha256:cc643904e766cd5877d51e050cd8554afae7170734fe2e073312225710deb794"
     },
     "dagster": {
-      "version": "0.1.1",
-      "digest": "sha256:7a75a91ca84c96b2711b22204d79e80a0128cc7d7f307d22ccc68cd1c1eb87d2"
+      "version": "0.3.0",
+      "digest": "sha256:7ecf36527cac7228356461d7a04a4b053f4593fb0c14354cb22c3b632ee8918f"
     },
     "dbt": {
-      "version": "0.1.1",
-      "digest": "sha256:4c6945ade804467d9a0a7058f11c3bbfeded6845b289e5b1639e7b6d3c29249b"
+      "version": "0.3.0",
+      "digest": "sha256:0032b0d1cee8d6bc7948541ca8dbb9eb7caf547ccaa6b90914c0ee6e60275f32"
     },
     "deltalake": {
-      "version": "0.1.1",
-      "digest": "sha256:fdbc13217037be52a1802af710dd22f605e2b08c52ee49ff574b9e9ccddd5c10"
+      "version": "0.3.0",
+      "digest": "sha256:21ae1500f6b134f58cc5716e13e7230989140cfc72a5d61b93295972e2244ab5"
     },
     "doris": {
-      "version": "0.1.1",
-      "digest": "sha256:53d28b24b7f0f5eb87e1eabd66c10b57da27ff0db77f91aa18b644def472ba3b"
+      "version": "0.3.0",
+      "digest": "sha256:2dcbf4d2556d486fe9482ac214596f97c77c49a7f8e79b7edd0586f3045b5f44"
     },
     "duckdb": {
-      "version": "0.1.1",
-      "digest": "sha256:61ee4cbea18537fbc0ef08a1316202b3d5a3792946fead400fbbf5f46abc4c4f"
+      "version": "0.3.0",
+      "digest": "sha256:4e86e96b282da82c3f15be8938ea2fbeae0e8e73716f4b30585d2b60eee11855"
     },
     "dynamodb": {
-      "version": "0.1.2",
-      "digest": "sha256:006c49faae29e9a1179f96052f46be4e1a440cce519a9a379b5282446641f231"
+      "version": "0.3.0",
+      "digest": "sha256:58efefd8350eabcfdb5190c2fc8c8ab53a5da296d4e59ceca31a35f1f698392c"
     },
     "eks": {
-      "version": "0.1.2",
-      "digest": "sha256:7cc43a3100a496dcd3fd0f090e20c3fdaa4a8e3c71c9d2f5c5cd6c994c2a8f26"
+      "version": "0.3.0",
+      "digest": "sha256:424976c9b329b6033f6500565afadadd8b8fcbdbabd9ff8eb2aa9de71c9a3b65"
     },
     "elasticsearch": {
-      "version": "0.1.1",
-      "digest": "sha256:f8fb1edb3fe43e1d337a4544b79890d961b83b62e32bb3ea82f8d71f16f8f79c"
+      "version": "0.3.0",
+      "digest": "sha256:2779f7472e143704e144940071e7b9771e8455540efb648a75abc89a224fc1ee"
     },
     "firebase": {
-      "version": "0.1.2",
-      "digest": "sha256:b9cea7c6549655b5efb389910b9762b81941cbefe30edf0bcd80683b314cfd3d"
+      "version": "0.3.0",
+      "digest": "sha256:65f8b2618f649181bd8a21008015002878c786849cc98a8dceb3fe0872520e04"
     },
     "firehose": {
-      "version": "0.1.2",
-      "digest": "sha256:42f3a784a4986b70b370ea6e353d2e1274ea8914d4c8744ea7445c9f8e8ec3cc"
+      "version": "0.3.0",
+      "digest": "sha256:8ad91fdb6ab11f0ab5e414bc772dda4de540ab59dcacc39e164240423329e5fa"
     },
     "flink": {
-      "version": "0.1.1",
-      "digest": "sha256:6bc5aaf2e320d5a74bd9374282700f9984995e8016b84c1f0dbdb4020b61391d"
+      "version": "0.3.0",
+      "digest": "sha256:90b771a74d634823843e286f5d7952750f8c2d42c8e0be11445c8a1c7e02e994"
     },
     "gcs": {
-      "version": "0.1.3",
-      "digest": "sha256:82b410f4ee8f872f38feecb56f19151a85d1237bce0472b92ceb0d44b7a95cdd"
+      "version": "0.3.0",
+      "digest": "sha256:ea5a9b578c3587b50dc309f759e6e67a9b93d78c286b6e4d28d1072f996b4b9d"
     },
     "gke": {
-      "version": "0.1.2",
-      "digest": "sha256:ab8b3eeab5940d639dd25ae0bac7368983e2a53f1e6d54b0cce2a20bbb673e2a"
+      "version": "0.3.0",
+      "digest": "sha256:b6c193a7334732ed81c29a64b87b7c5f2c34051f52df2e57e6b7e4cb0c3de233"
     },
     "glue": {
-      "version": "0.1.2",
-      "digest": "sha256:a7e3dbe7f03d161c6e81429ec6c4d43e132a46da0b4f162e67db98456decd96a"
+      "version": "0.3.0",
+      "digest": "sha256:82307fda1c5dc927ed91f0401d346130c007652ff61a5d88c76f31082869ab2f"
     },
     "gluepipeline": {
-      "version": "0.1.2",
-      "digest": "sha256:6d82269f6defca68d9a95d14664759601bdb310cd7d7802d21699c0a583709bc"
+      "version": "0.3.0",
+      "digest": "sha256:98bae94a59a4fa848f88162c0691cb205ab8e0d2ac921ae0d627767b05a8d366"
     },
     "googledrive": {
-      "version": "0.1.1",
-      "digest": "sha256:bcff232cf23e6ac3306257773e7e80dae9f36a1918eb6a6fa63e7a31f4b70d65"
+      "version": "0.3.0",
+      "digest": "sha256:d401acbdedcab6d74884a8eef1ad6bce0d1802894e9e3455777a7ed5d7dd181f"
     },
     "grafana": {
-      "version": "0.1.1",
-      "digest": "sha256:6758650a14aa0780d334dd327ec0e2282463507b9b9da235a8d7289edbbc244b"
+      "version": "0.3.0",
+      "digest": "sha256:c31ac70bb52ba4131c2394ad36d7681c3e2bd84fcedfd43e358bf36d314a8b5c"
     },
     "hive": {
-      "version": "0.1.1",
-      "digest": "sha256:d5788531276527248cd6aa95b062aab5edd4edec7f06d40c5c29d864f3862c6c"
+      "version": "0.3.0",
+      "digest": "sha256:17911c32af92371a2b7124bfab0f6770e27170f17ed9e468d0fb23bac8d3e508"
     },
     "iceberg": {
-      "version": "0.1.2",
-      "digest": "sha256:249cca376e22a84827aadb48175d83b07df7b739a460a5855dd9e40f6eba76de"
+      "version": "0.3.0",
+      "digest": "sha256:4d03aa69c029a162408d1161e6470b5486f5e1332b2d427b56227cd40d9c74f0"
     },
     "kafka": {
-      "version": "0.1.1",
-      "digest": "sha256:03a747d401f3a1869b23047b09a6335fb03e7d7bc6d6dff870b102df53d44793"
+      "version": "0.3.0",
+      "digest": "sha256:77d0f8d77cb203b89fe154c87212f61cf9c98567fa827a2e98a7084b5c1ffe84"
     },
     "kafkaconnect": {
-      "version": "0.1.1",
-      "digest": "sha256:0644fcfa1a794b847b33f362b13076139caec45db540de12b01f265df4f0d4a5"
+      "version": "0.3.0",
+      "digest": "sha256:6a878db51199633858612d1177717ba1261368186962ffed77cba8049ecb2251"
     },
     "kinesis": {
-      "version": "0.1.2",
-      "digest": "sha256:6d0e0cc1ee012dbc29701357ad0343f819ab70b46ed6874d420a05b74afd6d4a"
+      "version": "0.3.0",
+      "digest": "sha256:488ff2c458617a92377f931adafc2d46dbeb183351d223fe7350ba978b8eb23e"
     },
     "kubernetes": {
-      "version": "0.1.1",
-      "digest": "sha256:45ceccb81961aaecb08d7641a27a89733b2ca65b614bcb771b023d9a133414fa"
+      "version": "0.3.0",
+      "digest": "sha256:a93c88362d3a5e1b996785bef2331d2652604bf2cba9530d563e63a9c49394b0"
     },
     "lambda": {
-      "version": "0.1.2",
-      "digest": "sha256:1bd0198ba3c734f548dd490d31087aa14d4b227afb14ec0d12687f19f285ae2a"
+      "version": "0.3.0",
+      "digest": "sha256:95aac5e08a764e1c433c8e97bdda9f4d93ffaa81b3374a03c35cdb9f1cf28378"
     },
     "mariadb": {
-      "version": "0.1.1",
-      "digest": "sha256:efae114c68daeb7e3ec5ca8f27f07acc0c77fb15815227bc3b9ac1c848c870a9"
+      "version": "0.3.0",
+      "digest": "sha256:82144b3d48b85262e69fe69294a219acf149f6d3340bc8014b7758415a1814cb"
     },
     "metabase": {
-      "version": "0.1.1",
-      "digest": "sha256:cc8a2be83d1e042d50dba48a08c943fbe76ea63b62373e236b2a803771b9f9ac"
+      "version": "0.3.0",
+      "digest": "sha256:868e68d40e862196ac1a15a2dc3752ac6320ca5a3e9afd5965671c87a396f00d"
     },
     "mlflow": {
-      "version": "0.1.1",
-      "digest": "sha256:53f17907ede6b6ff00f6646b9ebdcd37af4f414189339fc56043a59327df045d"
+      "version": "0.3.0",
+      "digest": "sha256:e0893649dce5241ecc601b643fbf199ca0b58ad18d98799f403b2625feee5a7f"
     },
     "mongodb": {
-      "version": "0.1.1",
-      "digest": "sha256:88d648a7650b714383430e1cfbaf2558a98a511395465506768e1b8ed6f22049"
+      "version": "0.3.0",
+      "digest": "sha256:30eaa2670adc4a7d504e3957a9ebaebe725468e6b7f2d2a93c9c1fe3cfa3ea50"
     },
     "mssql": {
-      "version": "0.1.1",
-      "digest": "sha256:d96d349c4fde9278621dba7126bf9c06b1a77aefa205dcd65bd4e3550ce9ecc4"
+      "version": "0.3.0",
+      "digest": "sha256:1754cc56328d827587623eaebc8c69468488e15bdc8db297bb258e4eee22299d"
     },
     "mysql": {
-      "version": "0.1.1",
-      "digest": "sha256:2d8978d57bd8c77a62f04d99563928913b6c15c82663487ad44d9de043402049"
+      "version": "0.3.0",
+      "digest": "sha256:eb7113c84dd4704c0d46a017c20c944cca865b7fd4edc8bde834dc7751eedc2e"
     },
     "nats": {
-      "version": "0.1.1",
-      "digest": "sha256:a0a3345d89749cbe1ab274ee31277f72ba88d276962120f7bd974813f6946d67"
+      "version": "0.3.0",
+      "digest": "sha256:2372206de7516bfddaedda7ebabd24c3cacb81d7efcc63197853f90d70b73037"
     },
     "nifi": {
-      "version": "0.1.1",
-      "digest": "sha256:989c00032091bd35a8cbedd97c1b16046faa1618d2e1870acb521ee5c11c2958"
+      "version": "0.3.0",
+      "digest": "sha256:a013d47ed239d942f535721b6182c16db756c6810f5c41007b39d8dd2b05604f"
     },
     "openapi": {
-      "version": "0.1.1",
-      "digest": "sha256:e94bd8262385f74c4c46df2642f92c30786ab5253c3bdec1983aac6a509b46dc"
+      "version": "0.3.0",
+      "digest": "sha256:f00c4d104a861a7ff472dada39bfa6f768340160a99d2f6efe674fdd42b6cfbb"
     },
     "openmetadata": {
-      "version": "0.1.0",
-      "digest": "sha256:9432dc78a087f61eea27f2145245daed1da723ce5e78a90954de9e2490722cb3"
+      "version": "0.3.0",
+      "digest": "sha256:332f1f0f79cf6dc96a72379277436200ccb6d128a1a09a314e1427aeb1bfaf59"
     },
     "opensearch": {
-      "version": "0.1.1",
-      "digest": "sha256:99e58d9257c73993e7ef55ea04fc47165be5480514a7f886b3ee5080fedab58a"
+      "version": "0.3.0",
+      "digest": "sha256:c39814503fcc6d4e71b2754060041f371b76362101d06bd3e50e414141f4ce7d"
     },
     "oracle": {
-      "version": "0.1.1",
-      "digest": "sha256:1339051c79339ab9c2a281321457c76f7ad8d35bb126e3a8e0f4f73e063a4170"
+      "version": "0.3.0",
+      "digest": "sha256:63339f475c001058ed450aec4a71b821627274954ba9a532d96714b76c4f279e"
     },
     "pinot": {
-      "version": "0.1.1",
-      "digest": "sha256:f39ff14077c2fa88a617b80819470fe38e60fa9052161f5dd1871dcef57f2fa1"
+      "version": "0.3.0",
+      "digest": "sha256:866c6476972e0d600ec9e959b347da590d570c8b48dc6d0e929b603720ce7795"
     },
     "postgresql": {
-      "version": "0.1.2",
-      "digest": "sha256:22fcab37ccfa4b5db2d3e93252e40046962ed7d626b1f8fadb6225d0ebd4c25f"
+      "version": "0.3.0",
+      "digest": "sha256:45fae4a5460b00221bebfa4471c403ca2de4d715efc5d7519cc348a67319ef7c"
     },
     "prefect": {
-      "version": "0.1.1",
-      "digest": "sha256:a9c1844df5a046f894dae47daae89787314a2d157ad78ce64e4ea1771e9e7cf5"
+      "version": "0.3.0",
+      "digest": "sha256:772e5b5959719b30a8aa226d02a22f23a8e97b092c488de23b9349b9d4e3a861"
     },
     "presto": {
-      "version": "0.1.1",
-      "digest": "sha256:95f93652e452edecdd44adc6a63d843b8250812aeb6d0154be1bd9cb8a8511c1"
+      "version": "0.3.0",
+      "digest": "sha256:7e13744262b9145f11348f33b7d2de72152f2a51ee88c2fc8a9677af7bea2bcd"
     },
     "pubsub": {
-      "version": "0.1.2",
-      "digest": "sha256:5e0b81b1041748b61024df619a05e41bfba43affca2ce3b18ebfebd0b1ab2872"
+      "version": "0.3.0",
+      "digest": "sha256:226d0d2d71a7130b76d7ac9c9b354351720324a7c5e20d90205d54cd1196dacb"
     },
     "questdb": {
-      "version": "0.1.1",
-      "digest": "sha256:e756ad74067b41e03befaed8aaea14d6b3ddfc00e331b83ab613a7a77bfd8ea6"
+      "version": "0.3.0",
+      "digest": "sha256:6a98a431bfa89ab1b318bda2ef6c66299ee022428ab555572645dd16174f9e79"
     },
     "redash": {
-      "version": "0.1.1",
-      "digest": "sha256:cac9b79210e7b8c674d8f63aa9ac2b2db4640aeaf801e0844582903e226a07ee"
+      "version": "0.3.0",
+      "digest": "sha256:1d6b0815cfea5544efc2558f5bd45618e994f81bede0362c1c485e687c7ef5ac"
     },
     "redis": {
-      "version": "0.1.1",
-      "digest": "sha256:1c6bc0810d9c041bcb437b7c6f9cfdd1bba7aa4a05f19f44b15a1ad9f81f52dd"
+      "version": "0.3.0",
+      "digest": "sha256:b0e47cc435ac87d24f60340b736a93702fd3cdde54cbe3d77bb468524616e74e"
     },
     "redpanda": {
-      "version": "0.1.1",
-      "digest": "sha256:11acb2c260ad03ba1b06155a87814da170c0ea44708768657ac6dee1fe8cd7b0"
+      "version": "0.3.0",
+      "digest": "sha256:a9673389657d03477598938297022ba573e206d3834527c523f96a08da285409"
     },
     "s3": {
-      "version": "0.1.2",
-      "digest": "sha256:2187e66f61911456d47282b6a3676b76469106bd537dc1042f6fd0b9929a4e66"
+      "version": "0.3.0",
+      "digest": "sha256:29bd113b414438f513169af8d0dba12aa2b49c210c6e8206d84146e04d8f3924"
     },
     "sagemaker": {
-      "version": "0.1.2",
-      "digest": "sha256:46dcd6b2084d515d7206580d8f760bdff72d0faeb57dd5ad534693a3e461e479"
+      "version": "0.3.0",
+      "digest": "sha256:3fc92a18bc01a01542fbd2a6b6c798850d782438db2622b4b50a282d1becfe26"
     },
     "sftp": {
-      "version": "0.1.1",
-      "digest": "sha256:4ecb85ec2bab9f43d477c9186eb9908650e1c65d20a7f4cb77d4bf7e91b25db9"
+      "version": "0.3.0",
+      "digest": "sha256:c0caebf92bf3ef27300b1911a72f4a7fb3d656837ce53431e7fd5945c9411eed"
     },
     "sns": {
-      "version": "0.1.2",
-      "digest": "sha256:884435ec45c3400f7f7f6e205a2550086b241f2b5f95982725b56b898fc6c6ae"
+      "version": "0.3.0",
+      "digest": "sha256:33f17f70dd59b2d1ca690fdb8c118e20c1e0e28456784dc436fc5d07a1b3e2bc"
     },
     "spline": {
-      "version": "0.1.1",
-      "digest": "sha256:23243ec930e1832702aba0362876e68b0db22c12d38280dca3dc0b82319c1658"
+      "version": "0.3.0",
+      "digest": "sha256:c630885c77d7553a7ee027da0e2008c6d58f79f791a2de49036021a9b8fdec31"
     },
     "sqlite": {
-      "version": "0.1.0",
-      "digest": "sha256:44f83605fb712cdb9660deef838ae73ac7b22f096e3c6a8fe605fc62e2764254"
+      "version": "0.3.0",
+      "digest": "sha256:fb14be8aa5500e3f6fad2d7b9f94104adcc0422a75a72bd8bee1552ad42a294f"
     },
     "sqs": {
-      "version": "0.1.2",
-      "digest": "sha256:8353b88d0795a1b365d55653dbd1512106474e4b1f7bd09a661a1b8f87b69b6c"
+      "version": "0.3.0",
+      "digest": "sha256:3513e583f4484b98de20b801a95b78a794994765bdad98b292fbe00bea7c5e1d"
     },
     "starrocks": {
-      "version": "0.1.1",
-      "digest": "sha256:9ed2c2f83e4e394bd8ad68fdbfb62aca699ece15abfd37a910907541597ea372"
+      "version": "0.3.0",
+      "digest": "sha256:df01b9a2cc7ac8274a8d7f743d5ca89076f708b1f5773272832db6ef26d1b840"
     },
     "superset": {
-      "version": "0.1.1",
-      "digest": "sha256:c55a72644a4be5e5699f5c8d71882787ae64dc3cd6ec1dad5bf2949cdc6c961b"
+      "version": "0.3.0",
+      "digest": "sha256:590c82197ef9b7c9792ac9a6ca501402a91731e38ec5cad50fcb35b9a315c315"
     },
     "timescale": {
-      "version": "0.1.1",
-      "digest": "sha256:4bb491729f7509406ed549b1e1f901a2b6adbd2f9b37a37c4c028cb9b7ee2cc9"
+      "version": "0.3.0",
+      "digest": "sha256:b5196d7a079778bf6d5fad7dc689ca8a38f76ac6302bb429e77997684e866536"
     },
     "trino": {
-      "version": "0.1.1",
-      "digest": "sha256:0280d9194d74a580d6a672dd64566ddcaafe7f983e5f54ea1e7864edf604bd00"
+      "version": "0.3.0",
+      "digest": "sha256:f6066e46dd217c43951dd9b0a4ff7d16f4d65660205930f6b4c558bed31fce3d"
     },
     "unitycatalog": {
-      "version": "0.1.1",
-      "digest": "sha256:4df6c256a6c7aaa7dd063265ea766cb680352e2d3945a718a8a87cd22f30f462"
+      "version": "0.3.0",
+      "digest": "sha256:5b47ec38e9ebf35403ea89b85e29b45f2eaf9806b43ad1bc8b18b93ddc137eec"
     },
     "vertexai": {
-      "version": "0.1.2",
-      "digest": "sha256:4a97e592413d140042085eb5e9325efb8f950ecd7017586fe03d9154b1b8ced1"
+      "version": "0.3.0",
+      "digest": "sha256:5f3edc7740203455c860bbccf967a7a7e04267787b9ca1700b3512b850f36d02"
     }
   }
 }
