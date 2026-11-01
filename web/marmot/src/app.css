@@ -30,7 +30,14 @@ body {
 }
 
 /* Web components are undefined for a frame before their module runs; hiding them avoids a flash of slotted text. */
-:not(:defined):is(mm-app-shell, mm-sidebar-nav, mm-top-bar, mm-command-palette, mm-page-header, mm-panel) {
+:not(:defined):is(
+	mm-app-shell,
+	mm-sidebar-nav,
+	mm-top-bar,
+	mm-command-palette,
+	mm-page-header,
+	mm-panel
+) {
 	visibility: hidden;
 }
 

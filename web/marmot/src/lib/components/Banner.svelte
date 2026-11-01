@@ -12,9 +12,6 @@
 
 	let visible = false;
 
-
-
-
 	onMount(() => {
 		if (!enabled || !browser) {
 			return;
@@ -82,11 +79,8 @@
 		{#each messageParts as part, i (i)}
 			{#if part.type === 'link'}
 				{#if part.url?.startsWith('http')}
-					<a
-						href={part.url}
-						class="mm-link"
-						target="_blank"
-						rel="external noopener noreferrer">{part.content}</a
+					<a href={part.url} class="mm-link" target="_blank" rel="external noopener noreferrer"
+						>{part.content}</a
 					>
 				{:else}
 					<a href={resolve((part.url ?? '/') as '/')} class="mm-link">{part.content}</a>
