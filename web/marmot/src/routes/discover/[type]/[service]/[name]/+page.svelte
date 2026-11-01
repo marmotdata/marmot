@@ -100,6 +100,7 @@
 		const a = asset;
 		const envCount = a.environments ? Object.keys(a.environments).length : 0;
 		const all: (TabDef & { show: boolean })[] = [
+			{ id: 'metadata', label: m.discover_tab_metadata(), icon: 'data-object', show: !isAgent },
 			{
 				id: 'documentation',
 				label: m.common_documentation(),
@@ -113,7 +114,6 @@
 				count: counts?.agent_runs || undefined,
 				show: isAgent
 			},
-			{ id: 'metadata', label: m.discover_tab_metadata(), icon: 'data-object', show: !isAgent },
 			{
 				id: 'schema',
 				label: m.discover_tab_schema(),
@@ -174,7 +174,7 @@
 	let activeTab = $derived.by((): TabId => {
 		const ids = tabs.map((t) => t.id);
 		if (requestedTab && ids.includes(requestedTab as TabId)) return requestedTab as TabId;
-		return isAgent ? 'runs' : 'documentation';
+		return isAgent ? 'runs' : 'metadata';
 	});
 
 	const wideTabs = new Set<TabId>([
