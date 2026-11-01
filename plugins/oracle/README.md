@@ -33,3 +33,11 @@ GRANT SELECT ANY DICTIONARY TO marmot_reader;
 ```
 
 Sample data previews read the table directly, so they need `SELECT` on it.
+
+## Querying
+
+The plugin lets Marmot run read-only SQL against the source. Only a single `SELECT` or `WITH` statement is accepted; PL/SQL blocks, `CALL`, `EXEC`, `ALTER SESSION`, `LOCK TABLE`, `SELECT ... FOR UPDATE`, every DML and DDL statement, a `WITH` clause that declares an inline `FUNCTION` or `PROCEDURE`, and a trailing semicolon or a second statement are all refused before anything reaches Oracle. The statement that gets through still runs inside a transaction that issues Oracle's own `SET TRANSACTION READ ONLY` as its first statement and is always rolled back afterwards, never committed. Oracle's `BeginTx` has no read-only transaction option of its own, and DDL auto-commits and ends a transaction regardless of the mode it started in, which is why statements are refused up front rather than relied on to fail inside the transaction.
+
+Oracle gives no side-effect-free way to ask what a statement would read: `EXPLAIN PLAN FOR` writes its result to `PLAN_TABLE`, and `V$SQL_PLAN` only knows a statement after it has already run. The plugin therefore never plans a statement at the table level, so Marmot falls back to requiring a grant on the whole source for Oracle queries, rather than on the individual tables a statement touches. Because of that, the Oracle user the source connects as is the access boundary that actually matters: it should be granted only `SELECT` on the schemas and objects callers are meant to query through Marmot, for example with a dedicated read-only user rather than one holding `SELECT ANY TABLE`.
+
+A stored function marked `PRAGMA AUTONOMOUS_TRANSACTION` can write and commit even when called from a plain `SELECT`, because its transaction is independent of the read-only one the statement runs in; there is no way to tell from the statement text alone whether a function it calls does this, so it cannot be refused lexically the way an inline `WITH` clause function can. The connecting user must not hold `EXECUTE` on any function or package that writes, for the same reason it should not hold write grants on tables: the account's own privileges, not the query gate, are what actually stop a write.

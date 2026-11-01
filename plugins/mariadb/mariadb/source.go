@@ -67,6 +67,9 @@ type Config struct {
 	IncludeRowCounts    bool `json:"include_row_counts" group:"Advanced" description:"Whether to include approximate row counts in table metadata" default:"true"`
 	IncludeStatistics   bool `json:"include_statistics" group:"Advanced" description:"Whether to emit row count, size and column count statistics" default:"true"`
 	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+
+	// QueryDatabase is the database data queries run against; it defaults to Database, since that is the database this source's MRNs are rooted in.
+	QueryDatabase string `json:"query_database" label:"Query Database" description:"Database that data queries run against when this source answers queries; defaults to the database field"`
 }
 
 // Example configuration for the plugin
@@ -88,10 +91,27 @@ tags:
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// query is the connection cache data queries share across calls.
+	query queryConns
 }
 
 // Validate validates and normalises the plugin configuration.
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so the query path, which the SDK calls concurrently for
+// several sources at once, never races with Validate or with another query
+// call over s.config.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
@@ -106,13 +126,15 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	if config.TLS == "" {
 		config.TLS = "false"
 	}
+	if config.QueryDatabase == "" {
+		config.QueryDatabase = config.Database
+	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 // Discover discovers the configured database with its tables, views and

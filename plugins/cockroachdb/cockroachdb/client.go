@@ -49,27 +49,34 @@ func (s *Source) connect(ctx context.Context, database string) (*pgx.Conn, error
 // connString builds a libpq-style URL. Going through url.URL keeps a
 // password with reserved characters from breaking the parse.
 func (s *Source) connString(database string) string {
+	return connString(s.config, database)
+}
+
+// connString is the package-level form connString(database) delegates to.
+// The query path works from a config it parsed locally rather than the
+// Source's, so it needs this without a Source to hang the method off.
+func connString(config *Config, database string) string {
 	u := url.URL{
 		Scheme: "postgres",
-		Host:   net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port)),
+		Host:   net.JoinHostPort(config.Host, strconv.Itoa(config.Port)),
 		Path:   "/" + database,
 	}
-	if s.config.Password != "" {
-		u.User = url.UserPassword(s.config.User, s.config.Password)
+	if config.Password != "" {
+		u.User = url.UserPassword(config.User, config.Password)
 	} else {
-		u.User = url.User(s.config.User)
+		u.User = url.User(config.User)
 	}
 
 	query := url.Values{}
-	query.Set("sslmode", s.config.SSLMode)
-	if s.config.SSLRootCert != "" {
-		query.Set("sslrootcert", s.config.SSLRootCert)
+	query.Set("sslmode", config.SSLMode)
+	if config.SSLRootCert != "" {
+		query.Set("sslrootcert", config.SSLRootCert)
 	}
-	if s.config.SSLCert != "" {
-		query.Set("sslcert", s.config.SSLCert)
+	if config.SSLCert != "" {
+		query.Set("sslcert", config.SSLCert)
 	}
-	if s.config.SSLKey != "" {
-		query.Set("sslkey", s.config.SSLKey)
+	if config.SSLKey != "" {
+		query.Set("sslkey", config.SSLKey)
 	}
 	u.RawQuery = query.Encode()
 

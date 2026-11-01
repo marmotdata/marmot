@@ -8,14 +8,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/google/uuid"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
+	"github.com/shopspring/decimal"
 )
 
 // Meta describes the plugin to the Marmot host.
@@ -86,10 +89,24 @@ tags:
 type Source struct {
 	config *Config
 	conn   clickhouse.Conn
+
+	// query holds the connections data queries use, kept separate from conn because discovery and queries run concurrently against the same long-lived plugin process.
+	query queryConns
 }
 
 // Validate validates and normalizes the plugin configuration.
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching the Source, so concurrent query calls can each work from their own copy rather than the one Validate or Discover last set.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
@@ -107,8 +124,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 // Discover discovers ClickHouse databases, tables, and views.
@@ -610,16 +626,28 @@ func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig
 	return columnNames, dataRows, nil
 }
 
-// convertClickHouseValue converts ClickHouse-specific types to JSON-friendly formats.
+// convertClickHouseValue converts ClickHouse-specific types to JSON-friendly formats. Nullable columns scan into a pointer, so a nil pointer becomes nil and a non-nil one is converted by its pointee's own case below.
 func convertClickHouseValue(val interface{}) interface{} {
 	if val == nil {
 		return nil
+	}
+	if rv := reflect.ValueOf(val); rv.Kind() == reflect.Pointer {
+		if rv.IsNil() {
+			return nil
+		}
+		return convertClickHouseValue(rv.Elem().Interface())
 	}
 	switch v := val.(type) {
 	case []byte:
 		return fmt.Sprintf("0x%x", v)
 	case time.Time:
 		return v.Format(time.RFC3339)
+	case decimal.Decimal:
+		return v.String()
+	case uuid.UUID:
+		return v.String()
+	case net.IP:
+		return v.String()
 	default:
 		return val
 	}

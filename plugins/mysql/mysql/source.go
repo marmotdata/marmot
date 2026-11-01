@@ -70,9 +70,25 @@ tags:
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// query is the connection data queries share across calls.
+	query queryConns
 }
 
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent data query calls can each work from their own
+// copy rather than one call's config racing another's.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
@@ -89,8 +105,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {

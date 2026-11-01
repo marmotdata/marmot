@@ -40,12 +40,25 @@ func buildConnectionURL(c *Config) string {
 func (s *Source) initConnection(ctx context.Context) error {
 	s.closeConnection()
 
+	db, err := openConnection(ctx, s.config)
+	if err != nil {
+		return err
+	}
+	s.db = db
+	return nil
+}
+
+// openConnection opens and pings an Oracle connection for config. It backs
+// both the discovery and sample data path's long-lived connection, through
+// initConnection, and the per-config connections the query path caches,
+// through connect.
+func openConnection(ctx context.Context, config *Config) (*sql.DB, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	db, err := sql.Open("oracle", buildConnectionURL(s.config))
+	db, err := sql.Open("oracle", buildConnectionURL(config))
 	if err != nil {
-		return fmt.Errorf("opening connection: %w", err)
+		return nil, fmt.Errorf("opening connection: %w", err)
 	}
 
 	db.SetMaxOpenConns(5)
@@ -55,18 +68,17 @@ func (s *Source) initConnection(ctx context.Context) error {
 
 	if err := db.PingContext(timeoutCtx); err != nil {
 		db.Close()
-		return fmt.Errorf("pinging database: %w", err)
+		return nil, fmt.Errorf("pinging database: %w", err)
 	}
 
 	log.Debug().
-		Str("host", s.config.Host).
-		Int("port", s.config.Port).
-		Str("service_name", s.config.ServiceName).
-		Str("sid", s.config.SID).
+		Str("host", config.Host).
+		Int("port", config.Port).
+		Str("service_name", config.ServiceName).
+		Str("sid", config.SID).
 		Msg("Successfully connected to Oracle")
 
-	s.db = db
-	return nil
+	return db, nil
 }
 
 func (s *Source) closeConnection() {

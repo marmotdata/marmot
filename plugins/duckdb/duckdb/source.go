@@ -58,6 +58,9 @@ func Meta() pluginsdk.Meta {
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// query caches the connections ExecuteQuery and PlanQuery open, one per source config, independently of the config Discover last validated.
+	query queryConns
 }
 
 // Validate validates and normalises the plugin configuration.
@@ -155,12 +158,20 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	}, nil
 }
 
+// readOnlyDSN builds the DSN both discovery and the query path open a DuckDB file with. access_mode=read_only is the hard boundary a statement cannot lift; enable_external_access=false additionally blocks file and network table functions, ATTACH, COPY and extension loading, and autoinstall_known_extensions/autoload_known_extensions=false stop an extension loading itself as a side effect of calling an unrecognised function. lock_configuration=true, applied last, stops a statement from turning any of the above back on with its own SET. DuckDB caches at most one open database per file path within a process and refuses a second connection that asks for different settings while the first is still open, so discovery and the query path must agree on this DSN byte for byte; readOnlyDSN is the single place it is built so the two can never drift apart.
+func readOnlyDSN(path string) string {
+	return path +
+		"?access_mode=read_only" +
+		"&enable_external_access=false" +
+		"&autoinstall_known_extensions=false" +
+		"&autoload_known_extensions=false" +
+		"&lock_configuration=true"
+}
+
 func (s *Source) initConnection(ctx context.Context) error {
 	s.closeConnection()
 
-	dsn := s.config.Path + "?access_mode=read_only"
-
-	db, err := sql.Open("duckdb", dsn)
+	db, err := sql.Open("duckdb", readOnlyDSN(s.config.Path))
 	if err != nil {
 		return fmt.Errorf("opening database: %w", err)
 	}

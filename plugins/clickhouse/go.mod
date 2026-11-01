@@ -4,8 +4,10 @@ go 1.26.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.50.0
+	github.com/google/uuid v1.6.0
 	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
 	github.com/rs/zerolog v1.35.1
+	github.com/shopspring/decimal v1.5.0
 	github.com/stretchr/testify v1.12.1
 )
 
@@ -41,7 +43,6 @@ require (
 	github.com/go-playground/validator/v10 v10.30.3 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.8.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
@@ -56,7 +57,6 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.27 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/shopspring/decimal v1.5.0 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect

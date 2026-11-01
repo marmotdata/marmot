@@ -16,6 +16,16 @@ GRANT USAGE ON SCHEMA public TO marmot_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO marmot_reader;
 ```
 
+## Querying
+
+This plugin lets Marmot run read-only SQL against a TimescaleDB source for data queries. Every statement is planned with `EXPLAIN (FORMAT JSON, VERBOSE)` and then run inside a `READ ONLY` transaction over the extended query protocol, which also refuses more than one statement per call, so a statement can neither write nor smuggle a `COMMIT` to escape the transaction. The plan is walked for `ModifyTable` and `LockRows` nodes, which catches a data-modifying CTE hidden inside an otherwise read-only `SELECT`.
+
+TimescaleDB plans a query over a hypertable as a scan of its chunk tables, and a query over a continuous aggregate as a scan of its hidden materialization hypertable's chunks. The plugin resolves these back to the hypertable or continuous aggregate discovery catalogued, using `timescaledb_information.chunks` and `timescaledb_information.continuous_aggregates`, so grants written against a catalog asset bind on the query path too.
+
+None of this is a substitute for database-level permissions: the `READ ONLY` transaction stops a statement from writing, but the connecting user's own privileges are the real boundary on what it can read. Use a dedicated read-only role for `marmot_reader` rather than relying on Marmot alone.
+
+`query_database` sets the database queries connect to. It defaults to whatever `database` is set to, or `postgres` when `database` is left empty and discovery reads every database on the server.
+
 ## Tests
 
 Unit tests run anywhere. The end to end tests need a real server:

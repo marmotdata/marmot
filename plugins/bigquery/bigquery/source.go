@@ -60,6 +60,8 @@ type Config struct {
 	IncludeExternalTables bool `json:"include_external_tables" group:"Discovery" description:"Whether to discover external tables" default:"true"`
 	ExcludeSystemDatasets bool `json:"exclude_system_datasets" group:"Discovery" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
 	MaxConcurrentRequests int  `json:"max_concurrent_requests" group:"Advanced" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
+
+	MaxBytesBilled int64 `json:"max_bytes_billed,omitempty" group:"Advanced" label:"Max Bytes Billed" description:"Caps the bytes a data query may bill for; BigQuery fails the query rather than exceed it. Defaults to 10GiB (10737418240); set to 0 to fall back to the project's own default limit instead" default:"10737418240" validate:"omitempty,min=0"`
 }
 
 // Example configuration for the plugin
@@ -87,6 +89,9 @@ func (c *Config) gcpCredentials() *pluginsdk.GCPCredentials {
 type Source struct {
 	config *Config
 	client *bigquery.Client
+
+	// query is the client data queries share across calls.
+	query queryClients
 }
 
 // bigqueryReadOnlyScope is all discovery needs; the IAM role bound to
@@ -121,9 +126,13 @@ func (c *Config) ApplyDefaults(rawConfig pluginsdk.RawConfig) {
 	if _, exists := rawConfig["exclude_system_datasets"]; !exists {
 		c.ExcludeSystemDatasets = true
 	}
+	if _, exists := rawConfig["max_bytes_billed"]; !exists {
+		c.MaxBytesBilled = defaultMaxBytesBilled
+	}
 }
 
-func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+// parseConfig decodes, defaults and validates a raw config without touching the Source, so a query call can build its own copy independently of whatever Validate or Discover last stored.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
@@ -132,6 +141,14 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	config.ApplyDefaults(rawConfig)
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
 		return nil, err
 	}
 
@@ -232,7 +249,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}, nil
 }
 
-func (s *Source) initClient(ctx context.Context) error {
+// newClient builds a BigQuery client for config, authenticated for scope.
+// BIGQUERY_EMULATOR_HOST takes over from every other auth field when set, so
+// discovery, sample data and data queries alike run unauthenticated against
+// an emulator in tests.
+func newClient(ctx context.Context, config *Config, scope string) (*bigquery.Client, error) {
 	var opts []option.ClientOption
 
 	if emulatorHost := os.Getenv("BIGQUERY_EMULATOR_HOST"); emulatorHost != "" {
@@ -241,27 +262,34 @@ func (s *Source) initClient(ctx context.Context) error {
 		}
 		opts = append(opts, option.WithEndpoint(emulatorHost))
 		opts = append(opts, option.WithoutAuthentication())
-	} else if s.config.WorkloadIdentityProvider != "" {
+	} else if config.WorkloadIdentityProvider != "" {
 		// The Marmot identity token the host minted for this run is
 		// exchanged at Google STS; the SDK reads it from the file the
 		// host keeps fresh, so a long run follows the refreshes.
-		creds := s.config.gcpCredentials()
-		ts, err := creds.TokenSource(ctx, bigqueryReadOnlyScope)
+		creds := config.gcpCredentials()
+		ts, err := creds.TokenSource(ctx, scope)
 		if err != nil {
-			return fmt.Errorf("configuring workload identity federation: %w", err)
+			return nil, fmt.Errorf("configuring workload identity federation: %w", err)
 		}
 		opts = append(opts, option.WithTokenSource(ts))
-	} else if s.config.CredentialsPath != "" {
-		opts = append(opts, option.WithCredentialsFile(s.config.CredentialsPath))
-	} else if s.config.CredentialsJSON != "" {
-		opts = append(opts, option.WithCredentialsJSON([]byte(s.config.CredentialsJSON)))
+	} else if config.CredentialsPath != "" {
+		opts = append(opts, option.WithCredentialsFile(config.CredentialsPath))
+	} else if config.CredentialsJSON != "" {
+		opts = append(opts, option.WithCredentialsJSON([]byte(config.CredentialsJSON)))
 	}
 
-	client, err := bigquery.NewClient(ctx, s.config.ProjectID, opts...)
+	client, err := bigquery.NewClient(ctx, config.ProjectID, opts...)
 	if err != nil {
-		return fmt.Errorf("creating BigQuery client: %w", err)
+		return nil, fmt.Errorf("creating BigQuery client: %w", err)
 	}
+	return client, nil
+}
 
+func (s *Source) initClient(ctx context.Context) error {
+	client, err := newClient(ctx, s.config, bigqueryReadOnlyScope)
+	if err != nil {
+		return err
+	}
 	s.client = client
 
 	it := client.Datasets(ctx)

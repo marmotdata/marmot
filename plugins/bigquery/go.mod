@@ -3,6 +3,7 @@ module github.com/marmotdata/marmot/plugins/bigquery
 go 1.26.5
 
 require (
+	cloud.google.com/go v0.123.0
 	cloud.google.com/go/bigquery v1.86.1
 	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
 	github.com/rs/zerolog v1.35.1
@@ -11,7 +12,6 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.24.1-0.20261001053825-dbc26066f70a // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.3.0 // indirect
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect

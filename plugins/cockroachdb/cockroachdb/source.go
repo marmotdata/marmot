@@ -39,6 +39,12 @@ type Config struct {
 	IncludeViews        bool `json:"include_views" group:"Discovery" description:"Whether to discover views and materialized views" default:"true"`
 	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
 	IncludeStatistics   bool `json:"include_statistics" group:"Advanced" description:"Whether to include row counts, column counts and table sizes" default:"true"`
+
+	// QueryDatabase is the database data queries connect to. It defaults to
+	// Database when discovery is scoped to one database, or to defaultdb when
+	// discovery spans the whole cluster, since that default mirrors the
+	// bootstrap database listDatabases itself falls back to.
+	QueryDatabase string `json:"query_database,omitempty" group:"Discovery" label:"Query Database" description:"Database that data queries run against when this source answers queries. Defaults to the configured database, or defaultdb when every database is discovered" default:"defaultdb"`
 }
 
 // Example configuration for the plugin
@@ -83,10 +89,26 @@ func Meta() pluginsdk.Meta {
 // Source represents the CockroachDB plugin.
 type Source struct {
 	config *Config
+
+	// query is the connection pool data queries share across calls.
+	query queryPools
 }
 
 // Validate validates and normalises the plugin configuration.
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent data query calls can each work from their own
+// copy rather than the config the host last validated through Validate.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
@@ -94,12 +116,18 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	pluginsdk.ApplyDefaults(config, rawConfig)
 
+	// The static default tag cannot express "fall back to Database", so a
+	// single-database setup is handled here once the tag has already filled
+	// in defaultdb for the common, cluster-wide case.
+	if _, ok := rawConfig["query_database"]; !ok && config.Database != "" {
+		config.QueryDatabase = config.Database
+	}
+
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 // Discover discovers databases, tables, views and their relationships.

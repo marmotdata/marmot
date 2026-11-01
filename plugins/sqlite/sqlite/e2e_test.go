@@ -70,6 +70,7 @@ func TestE2E_Meta(t *testing.T) {
 	assert.Equal(t, "database", meta.Category)
 	assert.Contains(t, meta.Features, "Assets")
 	assert.Contains(t, meta.Features, "Lineage")
+	assert.True(t, meta.SupportsQuery, "Serve sets SupportsQuery because Source implements Querier")
 }
 
 func TestE2E_ValidateMissingPathFails(t *testing.T) {
@@ -108,4 +109,38 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 	assert.True(t, foundFK, "expected orders->users foreign key edge")
 
 	assert.NotEmpty(t, result.Statistics, "expected row/column count statistics")
+}
+
+func TestE2E_QueryOverTheWire(t *testing.T) {
+	bin := buildBinary(t)
+	path := newE2ETestDB(t)
+	config := pluginsdk.RawConfig{"path": path}
+
+	plan, chunks, err := bin.Query(t.Context(), config, pluginsdk.QueryRequest{
+		Statement: "SELECT id, name FROM users ORDER BY id",
+	})
+	require.NoError(t, err)
+
+	require.NotNil(t, plan)
+	assert.Equal(t, []string{"mrn://table/sqlite/users"}, plan.ReferencedMRNs)
+
+	require.Len(t, chunks, 1)
+	require.Equal(t, []pluginsdk.QueryColumn{
+		{Name: "id", Type: "integer"},
+		{Name: "name", Type: "text"},
+	}, chunks[0].Columns)
+	require.Len(t, chunks[0].Rows, 2)
+	assert.EqualValues(t, 1, chunks[0].Rows[0][0])
+	assert.Equal(t, "alice", chunks[0].Rows[0][1])
+}
+
+func TestE2E_QueryRefusesAWriteOverTheWire(t *testing.T) {
+	bin := buildBinary(t)
+	path := newE2ETestDB(t)
+	config := pluginsdk.RawConfig{"path": path}
+
+	_, _, err := bin.Query(t.Context(), config, pluginsdk.QueryRequest{
+		Statement: "DELETE FROM users",
+	})
+	require.Error(t, err)
 }

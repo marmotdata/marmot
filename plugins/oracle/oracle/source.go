@@ -90,10 +90,25 @@ func Meta() pluginsdk.Meta {
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// query is the connection data queries share across calls.
+	query queryConns
 }
 
 // Validate validates and normalises the plugin configuration.
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent query calls can each work from their own copy.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
@@ -116,8 +131,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 // Discover discovers Oracle schemas and the objects they own.

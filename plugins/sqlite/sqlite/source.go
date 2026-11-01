@@ -60,10 +60,13 @@ func Meta() pluginsdk.Meta {
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// query caches the read-only connections the data query path opens; see the package comment in query.go for why that path parses its own copy of the config through parseConfig rather than reading this struct's config field.
+	query queryConns
 }
 
-// Validate validates and normalises the plugin configuration.
-func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+// parseConfig unmarshals and defaults rawConfig into a Config. It is kept free of Source state so the query path can parse a request's own raw config without touching the field Validate populates.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
@@ -84,6 +87,15 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// Validate validates and normalises the plugin configuration.
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
 		return nil, err
 	}
 

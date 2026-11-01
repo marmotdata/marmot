@@ -70,6 +70,9 @@ type Config struct {
 	IncludeContinuousAggregates bool `json:"include_continuous_aggregates" group:"Discovery" description:"Whether to record continuous aggregates and their source hypertable lineage" default:"true"`
 	IncludeCompression          bool `json:"include_compression" group:"Discovery" description:"Whether to record compression segment and order columns" default:"true"`
 	IncludeChunks               bool `json:"include_chunks" group:"Discovery" description:"Whether to read the oldest and newest chunk range. Off by default because a busy hypertable has thousands of chunks" default:"false"`
+
+	// Data query configuration
+	QueryDatabase string `json:"query_database" label:"Query Database" description:"Database that data queries run against when this source answers queries" default:"postgres"`
 }
 
 // Example configuration for the plugin
@@ -90,10 +93,25 @@ tags:
 type Source struct {
 	config *Config
 	pool   *pgxpool.Pool
+
+	// query is the connection pool data queries share across calls.
+	query queryPools
 }
 
 // Validate validates and normalises the plugin configuration.
 func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := parseConfig(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// parseConfig decodes, defaults and validates a raw config without touching
+// the Source, so concurrent query calls can each work from their own copy.
+func parseConfig(rawConfig pluginsdk.RawConfig) (*Config, error) {
 	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
@@ -101,12 +119,22 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 
 	pluginsdk.ApplyDefaults(config, rawConfig)
 
+	// Queries need one database to connect to. Left unset, they run against
+	// whatever discovery was pointed at, or "postgres" when discovery reads
+	// every database on the server.
+	if _, set := rawConfig["query_database"]; !set {
+		if config.Database != "" {
+			config.QueryDatabase = config.Database
+		} else {
+			config.QueryDatabase = "postgres"
+		}
+	}
+
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	s.config = config
-	return rawConfig, nil
+	return config, nil
 }
 
 // Discover discovers databases, tables, views and TimescaleDB objects.

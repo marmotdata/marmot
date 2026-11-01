@@ -98,6 +98,30 @@ var seedStatements = []string{
 		viewed_at TIMESTAMPTZ
 	)`,
 	`UPSERT INTO analytics.public.page_views (id, path, viewed_at) VALUES (1, '/', now())`,
+
+	// Two tables sharing a name across schemas, so a statement that joins
+	// both cannot be told apart by table name alone: EXPLAIN (VERBOSE) never
+	// qualifies a scanned table with its schema. Named apart from the rest
+	// of the fixture so this ambiguity does not leak into tables other
+	// tests rely on being unambiguous, such as customers and orders.
+	`CREATE TABLE IF NOT EXISTS shop.public.widgets (id INT PRIMARY KEY, label STRING)`,
+	`CREATE TABLE IF NOT EXISTS shop.sales.widgets (id INT PRIMARY KEY, region STRING)`,
+	`UPSERT INTO shop.public.widgets (id, label) VALUES (1, 'gadget')`,
+	`UPSERT INTO shop.sales.widgets (id, region) VALUES (1, 'eu')`,
+
+	// A sequence to call setval on: setval mutates persisted sequence state
+	// rather than reading it, so a statement calling it must be refused
+	// outright rather than merely marked incomplete.
+	`CREATE SEQUENCE IF NOT EXISTS shop.public.leak_seq`,
+
+	// A user-defined function that reads a table of its own: the plan never
+	// shows that read, so a statement calling it needs a whole-source grant.
+	// A function body can only reference objects in its own database, so the
+	// session has to switch into shop first.
+	`SET database = shop`,
+	`CREATE OR REPLACE FUNCTION shop.public.order_count(cid INT) RETURNS INT AS $$
+		SELECT count(*) FROM shop.public.orders WHERE customer_id = cid
+	$$ LANGUAGE SQL`,
 }
 
 type e2eEnv struct {
@@ -131,6 +155,15 @@ func (e e2eEnv) config() pluginsdk.RawConfig {
 		"port": e.port,
 		"user": "root",
 	}
+}
+
+// queryConfig is config scoped to the shop database, the one the query
+// fixture lives in, so a statement can name its tables without a database
+// prefix the way a real source's queries would.
+func (e e2eEnv) queryConfig() pluginsdk.RawConfig {
+	config := e.config()
+	config["query_database"] = "shop"
+	return config
 }
 
 var (
