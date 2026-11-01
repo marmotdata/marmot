@@ -17,14 +17,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "gluepipeline",
-		Name:        "AWS Glue Pipelines",
-		Description: "Discover workflows, tasks and run history from AWS Glue",
-		Icon:        "glue",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "gluepipeline",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Glue Pipelines",
+		Description:   "Discover workflows, tasks and run history from AWS Glue",
+		Icon:          "glue",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PipelineFields{}, "Pipeline",
 				"The metadata a workflow Pipeline asset carries."),

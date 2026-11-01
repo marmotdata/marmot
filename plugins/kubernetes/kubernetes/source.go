@@ -517,14 +517,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "kubernetes",
-		Name:        "Kubernetes",
-		Description: "Discover namespaces, services, workloads, and cron jobs from Kubernetes clusters",
-		Icon:        "kubernetes",
-		Category:    "compute",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "kubernetes",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Kubernetes",
+		Description:   "Discover namespaces, services, workloads, and cron jobs from Kubernetes clusters",
+		Icon:          "kubernetes",
+		Category:      "compute",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(ClusterFields{}, "Cluster",
 				"Kubernetes cluster metadata fields"),

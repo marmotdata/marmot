@@ -50,14 +50,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "metabase",
-		Name:        "Metabase",
-		Description: "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
-		Icon:        "metabase",
-		Category:    "dashboard",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "metabase",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Metabase",
+		Description:   "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
+		Icon:          "metabase",
+		Category:      "dashboard",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(MetabaseDashboardFields{}, "Dashboard",
 				"The metadata fields the plugin emits for Dashboard assets."),

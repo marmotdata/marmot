@@ -54,14 +54,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "nifi",
-		Name:        "Apache NiFi",
-		Description: "Discover process groups, processors and data flow lineage from Apache NiFi",
-		Icon:        "nifi",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "nifi",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache NiFi",
+		Description:   "Discover process groups, processors and data flow lineage from Apache NiFi",
+		Icon:          "nifi",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(NiFiPipelineFields{}, "Pipeline",
 				"The metadata fields the NiFi plugin emits for process group (Pipeline) assets."),

@@ -59,6 +59,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.batch_get_assets_response import BatchGetAssetsResponse
     from marmot.generated.models.batch_lineage_result import BatchLineageResult
     from marmot.generated.models.bucket import Bucket
+    from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse
     from marmot.generated.models.complete_run_request import CompleteRunRequest
     from marmot.generated.models.connected_app import ConnectedApp
     from marmot.generated.models.connected_apps_response import ConnectedAppsResponse
@@ -158,9 +159,15 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.owner_facet_value import OwnerFacetValue
     from marmot.generated.models.owner_request import OwnerRequest
     from marmot.generated.models.permission import Permission
+    from marmot.generated.models.pin_plugin_version_request import PinPluginVersionRequest
+    from marmot.generated.models.plugin_advisory import PluginAdvisory
+    from marmot.generated.models.plugin_index_status import PluginIndexStatus
     from marmot.generated.models.plugin_info import PluginInfo
     from marmot.generated.models.plugin_instance_status import PluginInstanceStatus
+    from marmot.generated.models.plugin_published_version import PluginPublishedVersion
     from marmot.generated.models.plugin_run import PluginRun
+    from marmot.generated.models.plugin_updates_status import PluginUpdatesStatus
+    from marmot.generated.models.plugin_version_status import PluginVersionStatus
     from marmot.generated.models.pluginsdk_asset_field import PluginsdkAssetField
     from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
     from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
@@ -243,6 +250,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.service_account import ServiceAccount
     from marmot.generated.models.service_account_api_key import ServiceAccountAPIKey
     from marmot.generated.models.service_account_agent_ref import ServiceAccountAgentRef
+    from marmot.generated.models.set_plugin_version_request import SetPluginVersionRequest
     from marmot.generated.models.sign_in_settings import SignInSettings
     from marmot.generated.models.stale_asset import StaleAsset
     from marmot.generated.models.stale_asset_list import StaleAssetList
@@ -344,6 +352,7 @@ from marmot.generated.models.batch_get_assets_request import BatchGetAssetsReque
 from marmot.generated.models.batch_get_assets_response import BatchGetAssetsResponse
 from marmot.generated.models.batch_lineage_result import BatchLineageResult
 from marmot.generated.models.bucket import Bucket
+from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse
 from marmot.generated.models.complete_run_request import CompleteRunRequest
 from marmot.generated.models.connected_app import ConnectedApp
 from marmot.generated.models.connected_apps_response import ConnectedAppsResponse
@@ -439,9 +448,15 @@ from marmot.generated.models.o_auth_scope_description import OAuthScopeDescripti
 from marmot.generated.models.owner_facet_value import OwnerFacetValue
 from marmot.generated.models.owner_request import OwnerRequest
 from marmot.generated.models.permission import Permission
+from marmot.generated.models.pin_plugin_version_request import PinPluginVersionRequest
+from marmot.generated.models.plugin_advisory import PluginAdvisory
+from marmot.generated.models.plugin_index_status import PluginIndexStatus
 from marmot.generated.models.plugin_info import PluginInfo
 from marmot.generated.models.plugin_instance_status import PluginInstanceStatus
+from marmot.generated.models.plugin_published_version import PluginPublishedVersion
 from marmot.generated.models.plugin_run import PluginRun
+from marmot.generated.models.plugin_updates_status import PluginUpdatesStatus
+from marmot.generated.models.plugin_version_status import PluginVersionStatus
 from marmot.generated.models.pluginsdk_asset_field import PluginsdkAssetField
 from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
@@ -522,6 +537,7 @@ from marmot.generated.models.serve_rotate_keys_request import ServeRotateKeysReq
 from marmot.generated.models.service_account import ServiceAccount
 from marmot.generated.models.service_account_api_key import ServiceAccountAPIKey
 from marmot.generated.models.service_account_agent_ref import ServiceAccountAgentRef
+from marmot.generated.models.set_plugin_version_request import SetPluginVersionRequest
 from marmot.generated.models.sign_in_settings import SignInSettings
 from marmot.generated.models.stale_asset import StaleAsset
 from marmot.generated.models.stale_asset_list import StaleAssetList

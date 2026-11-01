@@ -22,12 +22,13 @@ const provider = "Vertex AI"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "vertexai",
-		Name:        "Google Vertex AI",
-		Description: "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
-		Icon:        "vertex-ai",
-		Category:    "ml",
-		Status:      "experimental",
+		ID:            "vertexai",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Vertex AI",
+		Description:   "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
+		Icon:          "vertex-ai",
+		Category:      "ml",
+		Status:        "experimental",
 		// Discover emits FEEDS and PRODUCES edges, and run history for
 		// pipeline jobs, so the manifest declares all three features.
 		Features:   []string{"Assets", "Lineage", "Run History"},

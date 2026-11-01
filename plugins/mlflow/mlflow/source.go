@@ -50,14 +50,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "mlflow",
-		Name:        "MLflow",
-		Description: "Discover registered models, experiments and training datasets from MLflow tracking servers",
-		Icon:        "mlflow",
-		Category:    "ml",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "mlflow",
+		MarmotVersion: ">=0.12.0",
+		Name:          "MLflow",
+		Description:   "Discover registered models, experiments and training datasets from MLflow tracking servers",
+		Icon:          "mlflow",
+		Category:      "ml",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(MLflowModelFields{}, "Model",
 				"The metadata fields the MLflow plugin emits for registered model assets."),

@@ -152,12 +152,13 @@ import (
 func main() {
     pluginsdk.Serve(&pluginsdk.ServeConfig{
         Meta: pluginsdk.Meta{
-            ID:          "helloworld",
-            Name:        "HelloWorld",
-            Description: "A simple plugin that creates hello and world assets with lineage",
-            Icon:        "wave",
-            Category:    "example",
-            ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+            ID:            "helloworld",
+            MarmotVersion: ">=0.12.0",
+            Name:          "HelloWorld",
+            Description:   "A simple plugin that creates hello and world assets with lineage",
+            Icon:          "wave",
+            Category:      "example",
+            ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
         },
         Source: &Source{},
     })
@@ -165,6 +166,8 @@ func main() {
 ```
 
 The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category, and the configuration form rendered in the UI.
+
+`MarmotVersion` is the lowest Marmot release the plugin works with, as a semver constraint such as `">=0.12.0"`. Raise it when the plugin starts relying on something only a newer release provides. Marmot refuses to load a plugin that excludes it, and the plugin index only offers each version to the releases it supports. Plugins in the Marmot repository must set it, and CI fails without it; for your own plugins it's optional, and leaving it empty means every release. See [Plugin Updates](../Configure/plugin-updates.md).
 
 ## 4. Install the Plugin
 

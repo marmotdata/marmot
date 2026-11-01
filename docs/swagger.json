@@ -5347,6 +5347,265 @@
                 }
             }
         },
+        "/api/v1/plugins/versions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "List core plugin versions, available updates and advisories",
+                "operationId": "getPluginVersions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PluginUpdatesStatus"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/versions/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Check the plugin index for new versions and advisories now",
+                "operationId": "checkPluginVersions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/CheckPluginVersionsResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/versions/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Move a core plugin to a version from the plugin index",
+                "operationId": "setPluginVersion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plugin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Version",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SetPluginVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Return a core plugin to the version this Marmot release pins",
+                "operationId": "resetPluginVersion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plugin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/versions/{id}/pin": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Pin or unpin a core plugin at the version it runs",
+                "operationId": "pinPluginVersion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plugin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pinned",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PinPluginVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/versions/{id}/rollback": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Roll a core plugin back to the version it ran before its last change, and pin it",
+                "operationId": "rollbackPluginVersion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plugin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/products/": {
             "post": {
                 "security": [
@@ -12652,6 +12911,14 @@
                 }
             }
         },
+        "CheckPluginVersionsResponse": {
+            "type": "object",
+            "properties": {
+                "updated": {
+                    "type": "boolean"
+                }
+            }
+        },
         "CompleteRunRequest": {
             "type": "object",
             "required": [
@@ -14848,6 +15115,70 @@
                 }
             }
         },
+        "PinPluginVersionRequest": {
+            "type": "object",
+            "properties": {
+                "pinned": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "PluginAdvisory": {
+            "type": "object",
+            "properties": {
+                "affected": {
+                    "description": "Affected is the semver constraint on the plugin versions the advisory applies to, e.g. \"\u003c0.3.1\".",
+                    "type": "string"
+                },
+                "fixed": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "published": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "PluginIndexStatus": {
+            "type": "object",
+            "properties": {
+                "checked_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "expired": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "fetched_at": {
+                    "type": "string"
+                },
+                "generated": {
+                    "type": "string"
+                },
+                "ref": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "PluginInfo": {
             "type": "object",
             "properties": {
@@ -14888,12 +15219,18 @@
                 "id": {
                     "type": "string"
                 },
+                "marmot_version": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
                 "produces_lineage": {
                     "description": "ProducesLineage reports whether the plugin says it discovers lineage between assets.",
                     "type": "boolean"
+                },
+                "protocol_version": {
+                    "type": "integer"
                 },
                 "status": {
                     "type": "string"
@@ -14922,6 +15259,47 @@
                     "type": "integer"
                 },
                 "started_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "PluginPublishedVersion": {
+            "type": "object",
+            "properties": {
+                "advisories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "changelog_url": {
+                    "type": "string"
+                },
+                "compatible": {
+                    "type": "boolean"
+                },
+                "digest": {
+                    "description": "Digest is the sha256 of the version's OCI image index, which is what gets installed.",
+                    "type": "string"
+                },
+                "marmot_version": {
+                    "description": "MarmotVersion is the semver constraint on the Marmot releases this version works with; empty means every release.",
+                    "type": "string"
+                },
+                "protocol_version": {
+                    "type": "integer"
+                },
+                "released": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "yanked": {
+                    "description": "Yanked versions are never offered or installed, though a Marmot already running one keeps it until it moves.",
+                    "type": "boolean"
+                },
+                "yanked_reason": {
                     "type": "string"
                 }
             }
@@ -14961,6 +15339,95 @@
                 },
                 "summary": {
                     "$ref": "#/definitions/RunSummary"
+                }
+            }
+        },
+        "PluginUpdatesStatus": {
+            "type": "object",
+            "properties": {
+                "auto_update": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Enabled reports whether Marmot checks the plugin index for updates.",
+                    "type": "boolean"
+                },
+                "index": {
+                    "$ref": "#/definitions/PluginIndexStatus"
+                },
+                "marmot_version": {
+                    "type": "string"
+                },
+                "plugins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PluginVersionStatus"
+                    }
+                }
+            }
+        },
+        "PluginVersionStatus": {
+            "type": "object",
+            "properties": {
+                "advisories": {
+                    "description": "Advisories are those against the version the plugin runs.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PluginAdvisory"
+                    }
+                },
+                "error": {
+                    "description": "Error is this replica's last failure switching the plugin's version.",
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "latest": {
+                    "description": "Latest is the newest version that supports this Marmot and has no advisory against it.",
+                    "type": "string"
+                },
+                "loaded": {
+                    "description": "Loaded reports whether this replica has the plugin registered.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "origin": {
+                    "description": "Origin is release, manual, auto or local.",
+                    "type": "string"
+                },
+                "pinned": {
+                    "type": "boolean"
+                },
+                "previous_version": {
+                    "type": "string"
+                },
+                "release_version": {
+                    "type": "string"
+                },
+                "update_available": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is the version the plugin should run at; empty for a locally installed override.",
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PluginPublishedVersion"
+                    }
                 }
             }
         },
@@ -16789,6 +17256,14 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "SetPluginVersionRequest": {
+            "type": "object",
+            "properties": {
+                "version": {
                     "type": "string"
                 }
             }

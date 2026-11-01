@@ -13,6 +13,7 @@ import (
 	"context"
 
 	"github.com/marmotdata/marmot/internal/cmd/output"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -137,6 +138,7 @@ func configDir() (string, error) {
 // work; the server has its own startup equivalent driven by its config
 // file.
 func loadPlugins() {
+	plugin.SetHostVersion(Version)
 	opts := install.Options{Registry: os.Getenv("MARMOT_PLUGINS_REGISTRY")}
 	if os.Getenv("MARMOT_PLUGINS_AUTOINSTALL") != "false" {
 		if err := install.EnsureCore(context.Background(), opts); err != nil {

@@ -21,14 +21,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "bigquery",
-		Name:        "Google BigQuery",
-		Description: "Discover datasets and tables from Google BigQuery projects",
-		Icon:        "bigquery",
-		Category:    "data-warehouse",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "bigquery",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google BigQuery",
+		Description:   "Discover datasets and tables from Google BigQuery projects",
+		Icon:          "bigquery",
+		Category:      "data-warehouse",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(BigQueryDatasetFields{}, "Dataset",
 				""),

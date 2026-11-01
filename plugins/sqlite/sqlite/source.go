@@ -34,12 +34,13 @@ type Config struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sqlite",
-		Name:        "SQLite",
-		Description: "Discover tables, views and foreign key relationships from SQLite database files",
-		Icon:        "sqlite",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "sqlite",
+		MarmotVersion: ">=0.12.0",
+		Name:          "SQLite",
+		Description:   "Discover tables, views and foreign key relationships from SQLite database files",
+		Icon:          "sqlite",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits FOREIGN_KEY lineage edges, so the manifest declares
 		// Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

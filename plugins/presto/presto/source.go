@@ -21,14 +21,15 @@ const provider = "Presto"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "presto",
-		Name:        "Presto",
-		Description: "Discover catalogs, schemas, tables and views from Presto clusters",
-		Icon:        "presto",
-		Category:    "data-warehouse",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "presto",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Presto",
+		Description:   "Discover catalogs, schemas, tables and views from Presto clusters",
+		Icon:          "presto",
+		Category:      "data-warehouse",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PrestoCatalogFields{}, "Catalog",
 				"The metadata fields emitted for catalog assets."),

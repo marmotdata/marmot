@@ -38,14 +38,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "asyncapi",
-		Name:        "AsyncAPI",
-		Description: "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
-		Icon:        "asyncapi",
-		Category:    "api",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "asyncapi",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AsyncAPI",
+		Description:   "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
+		Icon:          "asyncapi",
+		Category:      "api",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(SharedFields{}, "Shared",
 				"Common metadata fields across all AsyncAPI resources"),

@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -40,11 +40,13 @@ class PluginInfo(BaseModel):
     features: list[StrictStr] | None = None
     icon: StrictStr | None = None
     id: StrictStr | None = None
+    marmot_version: StrictStr | None = None
     name: StrictStr | None = None
     produces_lineage: StrictBool | None = Field(
         default=None,
         description="ProducesLineage reports whether the plugin says it discovers lineage between assets.",
     )
+    protocol_version: StrictInt | None = None
     status: StrictStr | None = None
     supports_data_preview: StrictBool | None = None
     supports_query: StrictBool | None = None
@@ -57,8 +59,10 @@ class PluginInfo(BaseModel):
         "features",
         "icon",
         "id",
+        "marmot_version",
         "name",
         "produces_lineage",
+        "protocol_version",
         "status",
         "supports_data_preview",
         "supports_query",
@@ -144,8 +148,10 @@ class PluginInfo(BaseModel):
                 "features": obj.get("features"),
                 "icon": obj.get("icon"),
                 "id": obj.get("id"),
+                "marmot_version": obj.get("marmot_version"),
                 "name": obj.get("name"),
                 "produces_lineage": obj.get("produces_lineage"),
+                "protocol_version": obj.get("protocol_version"),
                 "status": obj.get("status"),
                 "supports_data_preview": obj.get("supports_data_preview"),
                 "supports_query": obj.get("supports_query"),

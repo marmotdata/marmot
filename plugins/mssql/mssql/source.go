@@ -17,12 +17,13 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "mssql",
-		Name:        "Microsoft SQL Server",
-		Description: "Discover databases, tables, views and routines from Microsoft SQL Server instances",
-		Icon:        "sql-server",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "mssql",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Microsoft SQL Server",
+		Description:   "Discover databases, tables, views and routines from Microsoft SQL Server instances",
+		Icon:          "sql-server",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits CONTAINS, FOREIGN_KEY and VIEW_OF edges, so the
 		// manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

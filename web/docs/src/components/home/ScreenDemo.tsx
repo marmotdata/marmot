@@ -9,6 +9,31 @@ const H = 760;
 // Scrollbars belong to someone using the app, not to a picture of it. Most scroll areas are inside
 // the elements' shadow roots, which page CSS cannot reach, so each root gets this sheet directly.
 let hideScrollbars: CSSStyleSheet | undefined;
+
+// The screen is the app on a desktop with a mouse, whatever device is looking at it. Media queries
+// answer for the visitor's device, not the 1280px stage, so on a phone the elements would grow
+// their touch targets and inputs and reflow the picture. Each element's sheets are swapped for a
+// copy without its pointer and viewport-width rules. The copies are cached, and the originals are
+// left alone because Lit shares them with the same elements elsewhere on the page.
+const deviceRule = /pointer|hover|max-width/;
+const desktopSheets = new WeakMap<CSSStyleSheet, CSSStyleSheet>();
+function desktopOnly(sheet: CSSStyleSheet): CSSStyleSheet {
+  let copy = desktopSheets.get(sheet);
+  if (copy) return copy;
+  try {
+    const rules = [...sheet.cssRules].filter((r) => !(r instanceof CSSMediaRule && deviceRule.test(r.media.mediaText)));
+    if (rules.length === sheet.cssRules.length) copy = sheet;
+    else {
+      copy = new CSSStyleSheet();
+      copy.replaceSync(rules.map((r) => r.cssText).join("\n"));
+    }
+  } catch {
+    copy = sheet;
+  }
+  desktopSheets.set(sheet, copy);
+  return copy;
+}
+
 function quietScrollbars(root: Element | ShadowRoot, seen: WeakSet<ShadowRoot>) {
   if (typeof CSSStyleSheet === "undefined") return;
   hideScrollbars ??= (() => {
@@ -21,7 +46,7 @@ function quietScrollbars(root: Element | ShadowRoot, seen: WeakSet<ShadowRoot>) 
     if (!shadow) continue;
     if (!seen.has(shadow)) {
       seen.add(shadow);
-      shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, hideScrollbars];
+      shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets.map(desktopOnly), hideScrollbars];
     }
     quietScrollbars(shadow, seen);
   }

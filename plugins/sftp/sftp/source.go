@@ -27,14 +27,15 @@ const provider = "SFTP"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sftp",
-		Name:        "SFTP",
-		Description: "Discover directories and files from an SFTP server",
-		Icon:        "sftp",
-		Category:    "storage",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "sftp",
+		MarmotVersion: ">=0.12.0",
+		Name:          "SFTP",
+		Description:   "Discover directories and files from an SFTP server",
+		Icon:          "sftp",
+		Category:      "storage",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(FolderFields{}, "Folder",
 				"The metadata fields the SFTP plugin emits for a Folder asset.  The counts and the size cover a folder's immediate contents, not its whole subtree."),

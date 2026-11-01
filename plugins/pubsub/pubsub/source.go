@@ -65,12 +65,13 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "pubsub",
-		Name:        "Google Pub/Sub",
-		Description: "Discover topics and subscriptions from Google Cloud Pub/Sub",
-		Icon:        "googlepubsub",
-		Category:    "messaging",
-		Status:      "experimental",
+		ID:            "pubsub",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Pub/Sub",
+		Description:   "Discover topics and subscriptions from Google Cloud Pub/Sub",
+		Icon:          "googlepubsub",
+		Category:      "messaging",
+		Status:        "experimental",
 		// Discover links topics to subscriptions and subscriptions to their
 		// export destinations, so the manifest declares Lineage too.
 		Features:   []string{"Assets", "Lineage"},

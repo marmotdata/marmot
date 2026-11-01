@@ -22,14 +22,15 @@ const maxPartitionValues = 20
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "hive",
-		Name:        "Apache Hive",
-		Description: "Discover databases, tables and views from Apache Hive through HiveServer2",
-		Icon:        "hive",
-		Category:    "data-warehouse",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "hive",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Hive",
+		Description:   "Discover databases, tables and views from Apache Hive through HiveServer2",
+		Icon:          "hive",
+		Category:      "data-warehouse",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(HiveDatabaseFields{}, "Database",
 				"The metadata fields the Hive plugin emits for database assets."),

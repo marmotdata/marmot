@@ -17,14 +17,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "redis",
-		Name:        "Redis",
-		Description: "Discover databases from Redis instances",
-		Icon:        "redis",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "redis",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Redis",
+		Description:   "Discover databases from Redis instances",
+		Icon:          "redis",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(RedisDatabaseFields{}, "Database",
 				"RedisDatabaseFields defines metadata fields for Redis databases"),

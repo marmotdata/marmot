@@ -57,7 +57,7 @@ export const pricingFaq: FaqItem[] = [
   },
   {
     q: 'What is a compute unit?',
-    a: 'The capacity your instance runs on. Each unit holds 5,000 assets and gives Marmot a dedicated vCPU and 2 GiB of memory, 100 requests a second, 40 Mbit/s of bandwidth and 25 GiB of database storage. Compute and requests burst to twice that, so a spike lands on headroom you already have. You need enough units for your catalog or your agent traffic, whichever is bigger. Team holds 1 to 3 units, and Scale 4 or more, at the same $595 per unit.',
+    a: 'The capacity your instance runs on. Each unit holds 5,000 assets and comes with the dedicated compute to serve them, with headroom for bursts, so a spike lands on capacity you already have. You need enough units for your catalog or your agent traffic, whichever is bigger. Team holds 1 to 3 units, and Scale 4 or more, at the same $595 per unit.',
   },
   {
     q: 'Why don’t you charge per user?',

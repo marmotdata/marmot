@@ -700,6 +700,20 @@
 			transition: none;
 		}
 	}
+	/* The design system's splits also stack when the visitor's viewport is narrow, but the screen
+	   is a 1280px desktop at any size. Inside it they answer only to their container, as the app's
+	   own container rule does. */
+	@container (min-width: 880.02px) {
+		.mkt-screen__stage .mm-split {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+		}
+		.mkt-screen__stage .mm-split--sidebar {
+			grid-template-columns: 15rem minmax(0, 1fr);
+		}
+		.mkt-screen__stage .mm-split--even {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+	}
 
 	/* The unit estimator: one panel split by a hairline, the inputs and then what they come to. */
 	/* The estimator: inputs on the left with their values set large as they move, and the result

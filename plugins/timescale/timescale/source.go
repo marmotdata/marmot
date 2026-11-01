@@ -22,12 +22,13 @@ const provider = "PostgreSQL"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "timescale",
-		Name:        "TimescaleDB",
-		Description: "Discover databases, tables, hypertables and continuous aggregates from TimescaleDB instances",
-		Icon:        "postgresql",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "timescale",
+		MarmotVersion: ">=0.12.0",
+		Name:          "TimescaleDB",
+		Description:   "Discover databases, tables, hypertables and continuous aggregates from TimescaleDB instances",
+		Icon:          "postgresql",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits CONTAINS, FOREIGN_KEY and VIEW_OF edges, so the
 		// manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

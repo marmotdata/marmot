@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sync"
@@ -31,6 +32,8 @@ type InstanceManager struct {
 	restarts  map[string]int
 	// starting serialises the health check and start of each plugin's process, so a slow start blocks only queries to that plugin.
 	starting map[string]*sync.Mutex
+	// retired holds instances of a plugin version that has since been replaced, kept alive only until their in-flight queries finish.
+	retired  map[*pluginsdk.PluginProcess]*instance
 	idleTTL  time.Duration
 	stop     chan struct{}
 	stopOnce sync.Once
@@ -38,6 +41,7 @@ type InstanceManager struct {
 
 type instance struct {
 	process   *pluginsdk.PluginProcess
+	sha256    []byte
 	startedAt time.Time
 	lastUsed  time.Time
 	active    int
@@ -48,6 +52,7 @@ func NewInstanceManager(idleTTL time.Duration) *InstanceManager {
 		instances: make(map[string]*instance),
 		restarts:  make(map[string]int),
 		starting:  make(map[string]*sync.Mutex),
+		retired:   make(map[*pluginsdk.PluginProcess]*instance),
 		idleTTL:   idleTTL,
 		stop:      make(chan struct{}),
 	}
@@ -64,6 +69,10 @@ func (m *InstanceManager) Stop() {
 	for id, inst := range m.instances {
 		inst.process.Kill()
 		delete(m.instances, id)
+	}
+	for process := range m.retired {
+		process.Kill()
+		delete(m.retired, process)
 	}
 }
 
@@ -118,6 +127,17 @@ func (m *InstanceManager) acquire(pluginID string, source Source) (*pluginsdk.Pl
 	// Marking the instance busy before pinging it keeps the reaper from killing it in between.
 	m.mu.Lock()
 	inst, ok := m.instances[pluginID]
+	if ok && !bytes.Equal(inst.sha256, external.Binary().SHA256) {
+		// The plugin moved to another version: new queries start the new binary and the old process goes once its last query finishes.
+		log.Info().Str("plugin", pluginID).Msg("Plugin version changed, retiring instance")
+		delete(m.instances, pluginID)
+		if inst.active == 0 {
+			inst.process.Kill()
+		} else {
+			m.retired[inst.process] = inst
+		}
+		ok = false
+	}
 	if ok {
 		inst.active++
 	}
@@ -137,8 +157,13 @@ func (m *InstanceManager) acquire(pluginID string, source Source) (*pluginsdk.Pl
 			delete(m.instances, pluginID)
 			m.restarts[pluginID]++
 		}
+		// Another query may still be streaming from this process after a ping that merely timed out, so it is only killed once nobody is using it.
+		if inst.active == 0 {
+			inst.process.Kill()
+		} else {
+			m.retired[inst.process] = inst
+		}
 		m.mu.Unlock()
-		inst.process.Kill()
 	}
 
 	process, err := external.Binary().open()
@@ -148,6 +173,7 @@ func (m *InstanceManager) acquire(pluginID string, source Source) (*pluginsdk.Pl
 	m.mu.Lock()
 	m.instances[pluginID] = &instance{
 		process:   process,
+		sha256:    external.Binary().SHA256,
 		startedAt: time.Now(),
 		lastUsed:  time.Now(),
 		active:    1,
@@ -174,6 +200,14 @@ func (m *InstanceManager) release(pluginID string, process *pluginsdk.PluginProc
 	if inst, ok := m.instances[pluginID]; ok && inst.process == process && inst.active > 0 {
 		inst.active--
 		inst.lastUsed = time.Now()
+		return
+	}
+	if inst, ok := m.retired[process]; ok {
+		inst.active--
+		if inst.active <= 0 {
+			process.Kill()
+			delete(m.retired, process)
+		}
 	}
 }
 

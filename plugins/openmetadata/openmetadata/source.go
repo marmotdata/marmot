@@ -33,14 +33,15 @@ const (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "openmetadata",
-		Name:        "OpenMetadata",
-		Description: "Import tables, topics, dashboards, pipelines, models, glossary and lineage from an OpenMetadata instance",
-		Icon:        "openmetadata",
-		Category:    "catalog",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History", "Glossary"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "openmetadata",
+		MarmotVersion: ">=0.12.0",
+		Name:          "OpenMetadata",
+		Description:   "Import tables, topics, dashboards, pipelines, models, glossary and lineage from an OpenMetadata instance",
+		Icon:          "openmetadata",
+		Category:      "catalog",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History", "Glossary"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(OpenMetadataFields{}, "OpenMetadata",
 				"OpenMetadataFields records where in OpenMetadata an asset came from. It is set on every asset this plugin creates."),

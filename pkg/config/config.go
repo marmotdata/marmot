@@ -161,6 +161,17 @@ type Config struct {
 		// Autoinstall pulls missing core plugins from the registry at
 		// startup. Defaults to true.
 		Autoinstall bool `mapstructure:"autoinstall"`
+		// Updates lets core plugins move to newer versions without a Marmot upgrade.
+		Updates struct {
+			// Enabled turns on checking the signed plugin index for new versions and advisories. Defaults to true.
+			Enabled bool `mapstructure:"enabled"`
+			// Index overrides where the plugin index is read from: an OCI reference, by default <registry>/index:latest, or an https:// URL such as https://plugins.marmotdata.io/index.json.
+			Index string `mapstructure:"index"`
+			// AutoUpdate is off, security (move off versions with an advisory, the default) or patch (also apply patch releases).
+			AutoUpdate string `mapstructure:"auto_update"`
+			// CheckInterval is how often the index is checked, in seconds. Defaults to 12 hours.
+			CheckInterval int `mapstructure:"check_interval"`
+		} `mapstructure:"updates"`
 	} `mapstructure:"plugins"`
 
 	// Query lets agents and users query queryable sources through Marmot.
@@ -481,6 +492,10 @@ func setDefaults(v *viper.Viper) {
 
 	v.SetDefault("plugins.autoinstall", true)
 	v.SetDefault("plugins.registry", "")
+	v.SetDefault("plugins.updates.enabled", true)
+	v.SetDefault("plugins.updates.index", "")
+	v.SetDefault("plugins.updates.auto_update", "security")
+	v.SetDefault("plugins.updates.check_interval", 43200)
 
 	// Auth defaults
 	v.SetDefault("auth.okta.type", "okta")

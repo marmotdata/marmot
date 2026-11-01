@@ -48,14 +48,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "superset",
-		Name:        "Apache Superset",
-		Description: "Discover dashboards, charts, datasets and database connections from Apache Superset",
-		Icon:        "superset",
-		Category:    "dashboard",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "superset",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Superset",
+		Description:   "Discover dashboards, charts, datasets and database connections from Apache Superset",
+		Icon:          "superset",
+		Category:      "dashboard",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(SupersetDashboardFields{}, "Dashboard",
 				"The metadata fields the plugin emits for Dashboard assets."),

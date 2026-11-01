@@ -18,12 +18,13 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "questdb",
-		Name:        "QuestDB",
-		Description: "Discover tables, views and materialized views from QuestDB instances",
-		Icon:        "questdb",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "questdb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "QuestDB",
+		Description:   "Discover tables, views and materialized views from QuestDB instances",
+		Icon:          "questdb",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits VIEW_OF lineage edges, so the manifest declares
 		// Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

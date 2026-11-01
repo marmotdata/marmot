@@ -46,14 +46,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "grafana",
-		Name:        "Grafana",
-		Description: "Discover dashboards, panels and data sources from Grafana",
-		Icon:        "grafana",
-		Category:    "dashboard",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "grafana",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Grafana",
+		Description:   "Discover dashboards, panels and data sources from Grafana",
+		Icon:          "grafana",
+		Category:      "dashboard",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(GrafanaDashboardFields{}, "Dashboard",
 				"The metadata fields the Grafana plugin emits for Dashboard assets."),

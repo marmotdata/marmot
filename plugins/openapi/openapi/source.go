@@ -22,14 +22,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "openapi",
-		Name:        "OpenAPI",
-		Description: "Discover OpenAPI v3 specifications",
-		Icon:        "openapi",
-		Category:    "api",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "openapi",
+		MarmotVersion: ">=0.12.0",
+		Name:          "OpenAPI",
+		Description:   "Discover OpenAPI v3 specifications",
+		Icon:          "openapi",
+		Category:      "api",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(OpenAPIFields{}, "OpenAPI",
 				"OpenAPI-specific metadata fields"),

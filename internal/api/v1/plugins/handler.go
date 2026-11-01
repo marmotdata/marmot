@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/internal/plugin/updates"
 	"github.com/marmotdata/marmot/pkg/config"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
@@ -17,6 +18,7 @@ type Handler struct {
 	userService user.Service
 	authService auth.Service
 	config      *config.Config
+	versions    *updates.Manager
 }
 
 func NewHandler(userService user.Service, authService auth.Service, config *config.Config) *Handler {
@@ -27,7 +29,7 @@ func NewHandler(userService user.Service, authService auth.Service, config *conf
 // registered, and whether it holds AWS credentials. Neither is public.
 func (h *Handler) Routes() []common.Route {
 	authenticated := common.WithAuth(h.userService, h.authService, h.config)
-	return []common.Route{
+	return append(h.versionRoutes(), []common.Route{
 		{
 			Path:   "/api/v1/plugins",
 			Method: http.MethodGet,
@@ -48,7 +50,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 			Handler: h.awsCredentialStatus,
 		},
-	}
+	}...)
 }
 
 // ListPluginsResponse wraps the registered plugin list with a Loading

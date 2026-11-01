@@ -42,11 +42,17 @@ type PluginInfo struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// marmot version
+	MarmotVersion string `json:"marmot_version,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
 	// ProducesLineage reports whether the plugin says it discovers lineage between assets.
 	ProducesLineage bool `json:"produces_lineage,omitempty"`
+
+	// protocol version
+	ProtocolVersion int64 `json:"protocol_version,omitempty"`
 
 	// status
 	Status string `json:"status,omitempty"`

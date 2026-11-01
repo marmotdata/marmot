@@ -56,6 +56,18 @@ type ClientOption func(*runtime.ClientOperation)
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
+	// CheckPluginVersions check the plugin index for new versions and advisories now.
+	CheckPluginVersions(params *CheckPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*CheckPluginVersionsOK, error)
+
+	// CheckPluginVersionsContext check the plugin index for new versions and advisories now.
+	CheckPluginVersionsContext(ctx context.Context, params *CheckPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*CheckPluginVersionsOK, error)
+
+	// GetPluginVersions list core plugin versions available updates and advisories.
+	GetPluginVersions(params *GetPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPluginVersionsOK, error)
+
+	// GetPluginVersionsContext list core plugin versions available updates and advisories.
+	GetPluginVersionsContext(ctx context.Context, params *GetPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPluginVersionsOK, error)
+
 	// GetPlugins list registered plugins.
 	GetPlugins(params *GetPluginsParams, opts ...ClientOption) (*GetPluginsOK, error)
 
@@ -68,7 +80,157 @@ type ClientService interface {
 	// GetPluginsAwsCredentialsStatusContext get a w s credential detection status.
 	GetPluginsAwsCredentialsStatusContext(ctx context.Context, params *GetPluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetPluginsAwsCredentialsStatusOK, error)
 
+	// PinPluginVersion pin or unpin a core plugin at the version it runs.
+	PinPluginVersion(params *PinPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PinPluginVersionNoContent, error)
+
+	// PinPluginVersionContext pin or unpin a core plugin at the version it runs.
+	PinPluginVersionContext(ctx context.Context, params *PinPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PinPluginVersionNoContent, error)
+
+	// ResetPluginVersion return a core plugin to the version this marmot release pins.
+	ResetPluginVersion(params *ResetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ResetPluginVersionNoContent, error)
+
+	// ResetPluginVersionContext return a core plugin to the version this marmot release pins.
+	ResetPluginVersionContext(ctx context.Context, params *ResetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ResetPluginVersionNoContent, error)
+
+	// RollbackPluginVersion roll a core plugin back to the version it ran before its last change and pin it.
+	RollbackPluginVersion(params *RollbackPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RollbackPluginVersionNoContent, error)
+
+	// RollbackPluginVersionContext roll a core plugin back to the version it ran before its last change and pin it.
+	RollbackPluginVersionContext(ctx context.Context, params *RollbackPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RollbackPluginVersionNoContent, error)
+
+	// SetPluginVersion move a core plugin to a version from the plugin index.
+	SetPluginVersion(params *SetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetPluginVersionNoContent, error)
+
+	// SetPluginVersionContext move a core plugin to a version from the plugin index.
+	SetPluginVersionContext(ctx context.Context, params *SetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetPluginVersionNoContent, error)
+
 	SetTransport(transport runtime.ContextualTransport)
+}
+
+// CheckPluginVersions checks the plugin index for new versions and advisories now.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.CheckPluginVersionsContext] instead.
+func (a *Client) CheckPluginVersions(params *CheckPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*CheckPluginVersionsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.CheckPluginVersionsContext(ctx, params, authInfo, opts...)
+}
+
+// CheckPluginVersionsContext checks the plugin index for new versions and advisories now.
+//
+// Do not use the deprecated [CheckPluginVersionsParams.Context] with this method: it would be ignored.
+func (a *Client) CheckPluginVersionsContext(ctx context.Context, params *CheckPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*CheckPluginVersionsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewCheckPluginVersionsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "checkPluginVersions",
+		Method:             "POST",
+		PathPattern:        "/api/v1/plugins/versions/check",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &CheckPluginVersionsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*CheckPluginVersionsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for checkPluginVersions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetPluginVersions lists core plugin versions available updates and advisories.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetPluginVersionsContext] instead.
+func (a *Client) GetPluginVersions(params *GetPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPluginVersionsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetPluginVersionsContext(ctx, params, authInfo, opts...)
+}
+
+// GetPluginVersionsContext lists core plugin versions available updates and advisories.
+//
+// Do not use the deprecated [GetPluginVersionsParams.Context] with this method: it would be ignored.
+func (a *Client) GetPluginVersionsContext(ctx context.Context, params *GetPluginVersionsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetPluginVersionsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetPluginVersionsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getPluginVersions",
+		Method:             "GET",
+		PathPattern:        "/api/v1/plugins/versions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPluginVersionsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetPluginVersionsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getPluginVersions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // GetPlugins lists registered plugins.
@@ -196,6 +358,258 @@ func (a *Client) GetPluginsAwsCredentialsStatusContext(ctx context.Context, para
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getPluginsAwsCredentialsStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PinPluginVersion pins or unpin a core plugin at the version it runs.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PinPluginVersionContext] instead.
+func (a *Client) PinPluginVersion(params *PinPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PinPluginVersionNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PinPluginVersionContext(ctx, params, authInfo, opts...)
+}
+
+// PinPluginVersionContext pins or unpin a core plugin at the version it runs.
+//
+// Do not use the deprecated [PinPluginVersionParams.Context] with this method: it would be ignored.
+func (a *Client) PinPluginVersionContext(ctx context.Context, params *PinPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PinPluginVersionNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPinPluginVersionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "pinPluginVersion",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/plugins/versions/{id}/pin",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PinPluginVersionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PinPluginVersionNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for pinPluginVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// ResetPluginVersion returns a core plugin to the version this marmot release pins.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.ResetPluginVersionContext] instead.
+func (a *Client) ResetPluginVersion(params *ResetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ResetPluginVersionNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.ResetPluginVersionContext(ctx, params, authInfo, opts...)
+}
+
+// ResetPluginVersionContext returns a core plugin to the version this marmot release pins.
+//
+// Do not use the deprecated [ResetPluginVersionParams.Context] with this method: it would be ignored.
+func (a *Client) ResetPluginVersionContext(ctx context.Context, params *ResetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ResetPluginVersionNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewResetPluginVersionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "resetPluginVersion",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/plugins/versions/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ResetPluginVersionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*ResetPluginVersionNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for resetPluginVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// RollbackPluginVersion rolls a core plugin back to the version it ran before its last change and pin it.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.RollbackPluginVersionContext] instead.
+func (a *Client) RollbackPluginVersion(params *RollbackPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RollbackPluginVersionNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.RollbackPluginVersionContext(ctx, params, authInfo, opts...)
+}
+
+// RollbackPluginVersionContext rolls a core plugin back to the version it ran before its last change and pin it.
+//
+// Do not use the deprecated [RollbackPluginVersionParams.Context] with this method: it would be ignored.
+func (a *Client) RollbackPluginVersionContext(ctx context.Context, params *RollbackPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RollbackPluginVersionNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewRollbackPluginVersionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "rollbackPluginVersion",
+		Method:             "POST",
+		PathPattern:        "/api/v1/plugins/versions/{id}/rollback",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RollbackPluginVersionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*RollbackPluginVersionNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for rollbackPluginVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// SetPluginVersion moves a core plugin to a version from the plugin index.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.SetPluginVersionContext] instead.
+func (a *Client) SetPluginVersion(params *SetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetPluginVersionNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.SetPluginVersionContext(ctx, params, authInfo, opts...)
+}
+
+// SetPluginVersionContext moves a core plugin to a version from the plugin index.
+//
+// Do not use the deprecated [SetPluginVersionParams.Context] with this method: it would be ignored.
+func (a *Client) SetPluginVersionContext(ctx context.Context, params *SetPluginVersionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*SetPluginVersionNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewSetPluginVersionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "setPluginVersion",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/plugins/versions/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &SetPluginVersionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*SetPluginVersionNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for setPluginVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

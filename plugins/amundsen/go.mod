@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/amundsen
 go 1.26.5
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20261022181949-e1e9cea1ad2e
+	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1

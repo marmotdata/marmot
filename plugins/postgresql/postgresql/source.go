@@ -23,14 +23,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "postgresql",
-		Name:        "PostgreSQL",
-		Description: "Discover databases, schemas, and tables from PostgreSQL instances",
-		Icon:        "postgresql",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "postgresql",
+		MarmotVersion: ">=0.12.0",
+		Name:          "PostgreSQL",
+		Description:   "Discover databases, schemas, and tables from PostgreSQL instances",
+		Icon:          "postgresql",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PostgresFields{}, "Postgres",
 				"PostgreSQL-specific metadata fields"),

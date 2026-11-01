@@ -28,14 +28,15 @@ func Meta() pluginsdk.Meta {
 	}
 
 	return pluginsdk.Meta{
-		ID:          "iceberg",
-		Name:        "Apache Iceberg",
-		Description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
-		Icon:        "iceberg",
-		Category:    "data-lake",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  spec,
+		ID:            "iceberg",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Iceberg",
+		Description:   "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
+		Icon:          "iceberg",
+		Category:      "data-lake",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    spec,
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(IcebergNamespaceFields{}, "Namespace",
 				"Iceberg namespace metadata fields"),

@@ -23,14 +23,15 @@ const provider = "Couchbase"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "couchbase",
-		Name:        "Couchbase",
-		Description: "Discover buckets, scopes and collections from Couchbase clusters",
-		Icon:        "couchbase",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "couchbase",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Couchbase",
+		Description:   "Discover buckets, scopes and collections from Couchbase clusters",
+		Icon:          "couchbase",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(CouchbaseBucketFields{}, "Bucket",
 				"The metadata fields the Couchbase plugin emits for bucket assets."),

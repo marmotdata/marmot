@@ -23,14 +23,15 @@ const provider = "Doris"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "doris",
-		Name:        "Apache Doris",
-		Description: "Discover databases, tables, views and materialized views from Apache Doris clusters",
-		Icon:        "doris",
-		Category:    "data-warehouse",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "doris",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Doris",
+		Description:   "Discover databases, tables, views and materialized views from Apache Doris clusters",
+		Icon:          "doris",
+		Category:      "data-warehouse",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(DorisFields{}, "Apache Doris",
 				"The metadata fields the Doris plugin emits for database, table and view assets."),

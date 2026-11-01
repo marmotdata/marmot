@@ -139,9 +139,24 @@ jobs:
               "marmot-plugin-${PLUGIN}:application/vnd.marmot.plugin.v1+gzip")
             tags+=("${VERSION}-${os}-${arch}")
           done
+          # The plugin index reads which Marmot releases this version supports from these annotations, taken from the plugin's own metadata so they cannot drift from the binary.
+          # cgo plugins are built in a root-owned container, so run a copy the runner owns.
+          host=$(mktemp)
+          cp "$(find "$DIST" -type f -name "marmot-plugin-${PLUGIN}" -path "*_linux_amd64*" | head -n 1)" "$host"
+          chmod +x "$host"
+          meta=$("$host" --dump-metadata)
+          marmot_version=$(jq -r '.marmot_version // ""' <<<"$meta")
+          if [ -z "${marmot_version}" ]; then
+            echo "plugin ${PLUGIN} does not declare the Marmot versions it supports (MarmotVersion in its Meta)" >&2
+            exit 1
+          fi
+          protocol_version=$(jq -r '.protocol_version // 1' <<<"$meta")
           oras manifest index create "${repo}:${VERSION}" "${tags[@]}" \
             --annotation "org.opencontainers.image.version=${VERSION}" \
-            --annotation "org.opencontainers.image.source=${SOURCE}"
+            --annotation "org.opencontainers.image.source=${SOURCE}" \
+            --annotation "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --annotation "io.marmotdata.plugin.marmot-version=${marmot_version}" \
+            --annotation "io.marmotdata.plugin.protocol-version=${protocol_version}"
           echo "index_digest=$(oras resolve "${repo}:${VERSION}")" >> "$GITHUB_OUTPUT"
 
       # plugins.marmotdata.io reads a plugin's docs from an info referrer on the
@@ -167,8 +182,11 @@ jobs:
             echo "no linux/amd64 binary under ${DIST}" >&2
             exit 1
           fi
-          chmod +x "$binary"
-          "$binary" --dump-metadata > "${work}/metadata.json"
+          # cgo plugins are built in a root-owned container, so run a copy the runner owns.
+          cp "$binary" "${work}/plugin"
+          chmod +x "${work}/plugin"
+          "${work}/plugin" --dump-metadata > "${work}/metadata.json"
+          rm "${work}/plugin"
           files+=("metadata.json:application/vnd.marmot.plugin.metadata.v1+json")
 
           if [ -f "${WORKDIR}/README.md" ]; then
@@ -205,3 +223,21 @@ jobs:
             echo "\"${PLUGIN}\": { \"version\": \"${VERSION}\", \"digest\": \"${INDEX_DIGEST}\" }"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The registry (plugins.marmotdata.io) records the new version and republishes the signed
+      # plugin index, which is how running Marmots learn about it. Its daily run catches up if
+      # this is skipped, so a missing token only delays it.
+      - name: Notify the plugin registry
+        env:
+          GH_TOKEN: ${{ secrets.REGISTRY_DISPATCH_TOKEN }}
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "REGISTRY_DISPATCH_TOKEN is not set; the registry picks this up on its daily run" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh api repos/marmotdata/registry/dispatches \
+            -f event_type=plugin-released \
+            -f "client_payload[plugin]=${PLUGIN}" \
+            -f "client_payload[version]=${VERSION}"

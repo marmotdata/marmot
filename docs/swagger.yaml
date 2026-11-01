@@ -656,6 +656,11 @@ definitions:
       success:
         type: integer
     type: object
+  CheckPluginVersionsResponse:
+    properties:
+      updated:
+        type: boolean
+    type: object
   CompleteRunRequest:
     properties:
       error:
@@ -2152,6 +2157,49 @@ definitions:
       resource_type:
         type: string
     type: object
+  PinPluginVersionRequest:
+    properties:
+      pinned:
+        type: boolean
+    type: object
+  PluginAdvisory:
+    properties:
+      affected:
+        description: Affected is the semver constraint on the plugin versions the
+          advisory applies to, e.g. "<0.3.1".
+        type: string
+      fixed:
+        type: string
+      id:
+        type: string
+      published:
+        type: string
+      severity:
+        type: string
+      summary:
+        type: string
+      url:
+        type: string
+    type: object
+  PluginIndexStatus:
+    properties:
+      checked_at:
+        type: string
+      error:
+        type: string
+      expired:
+        type: boolean
+      expires_at:
+        type: string
+      fetched_at:
+        type: string
+      generated:
+        type: string
+      ref:
+        type: string
+      version:
+        type: integer
+    type: object
   PluginInfo:
     properties:
       asset_schemas:
@@ -2180,12 +2228,16 @@ definitions:
         type: string
       id:
         type: string
+      marmot_version:
+        type: string
       name:
         type: string
       produces_lineage:
         description: ProducesLineage reports whether the plugin says it discovers
           lineage between assets.
         type: boolean
+      protocol_version:
+        type: integer
       status:
         type: string
       supports_data_preview:
@@ -2204,6 +2256,37 @@ definitions:
       restarts:
         type: integer
       started_at:
+        type: string
+    type: object
+  PluginPublishedVersion:
+    properties:
+      advisories:
+        items:
+          type: string
+        type: array
+      changelog_url:
+        type: string
+      compatible:
+        type: boolean
+      digest:
+        description: Digest is the sha256 of the version's OCI image index, which
+          is what gets installed.
+        type: string
+      marmot_version:
+        description: MarmotVersion is the semver constraint on the Marmot releases
+          this version works with; empty means every release.
+        type: string
+      protocol_version:
+        type: integer
+      released:
+        type: string
+      version:
+        type: string
+      yanked:
+        description: Yanked versions are never offered or installed, though a Marmot
+          already running one keeps it until it moves.
+        type: boolean
+      yanked_reason:
         type: string
     type: object
   PluginRun:
@@ -2230,6 +2313,69 @@ definitions:
         $ref: '#/definitions/RunStatus'
       summary:
         $ref: '#/definitions/RunSummary'
+    type: object
+  PluginUpdatesStatus:
+    properties:
+      auto_update:
+        type: string
+      enabled:
+        description: Enabled reports whether Marmot checks the plugin index for updates.
+        type: boolean
+      index:
+        $ref: '#/definitions/PluginIndexStatus'
+      marmot_version:
+        type: string
+      plugins:
+        items:
+          $ref: '#/definitions/PluginVersionStatus'
+        type: array
+    type: object
+  PluginVersionStatus:
+    properties:
+      advisories:
+        description: Advisories are those against the version the plugin runs.
+        items:
+          $ref: '#/definitions/PluginAdvisory'
+        type: array
+      error:
+        description: Error is this replica's last failure switching the plugin's version.
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      latest:
+        description: Latest is the newest version that supports this Marmot and has
+          no advisory against it.
+        type: string
+      loaded:
+        description: Loaded reports whether this replica has the plugin registered.
+        type: boolean
+      name:
+        type: string
+      origin:
+        description: Origin is release, manual, auto or local.
+        type: string
+      pinned:
+        type: boolean
+      previous_version:
+        type: string
+      release_version:
+        type: string
+      update_available:
+        type: boolean
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      version:
+        description: Version is the version the plugin should run at; empty for a
+          locally installed override.
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/PluginPublishedVersion'
+        type: array
     type: object
   PreviewRequest:
     properties:
@@ -3493,6 +3639,11 @@ definitions:
       mrn:
         type: string
       name:
+        type: string
+    type: object
+  SetPluginVersionRequest:
+    properties:
+      version:
         type: string
     type: object
   SignInSettings:
@@ -7775,6 +7926,164 @@ paths:
           schema:
             $ref: '#/definitions/AWSCredentialStatus'
       summary: Get AWS credential detection status
+      tags:
+      - plugins
+  /api/v1/plugins/versions:
+    get:
+      operationId: getPluginVersions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PluginUpdatesStatus'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List core plugin versions, available updates and advisories
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}:
+    delete:
+      operationId: resetPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Return a core plugin to the version this Marmot release pins
+      tags:
+      - plugins
+    put:
+      consumes:
+      - application/json
+      operationId: setPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SetPluginVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Move a core plugin to a version from the plugin index
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}/pin:
+    put:
+      consumes:
+      - application/json
+      operationId: pinPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pinned
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/PinPluginVersionRequest'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Pin or unpin a core plugin at the version it runs
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}/rollback:
+    post:
+      operationId: rollbackPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Roll a core plugin back to the version it ran before its last change,
+        and pin it
+      tags:
+      - plugins
+  /api/v1/plugins/versions/check:
+    post:
+      operationId: checkPluginVersions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CheckPluginVersionsResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Check the plugin index for new versions and advisories now
       tags:
       - plugins
   /api/v1/products/:

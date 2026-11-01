@@ -64,14 +64,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "oracle",
-		Name:        "Oracle Database",
-		Description: "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
-		Icon:        "oracle",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "oracle",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Oracle Database",
+		Description:   "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
+		Icon:          "oracle",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(OracleDatabaseFields{}, "Database",
 				"The metadata fields the Oracle plugin emits for the Database asset created per schema. Oracle users treat a schema as the database, so the asset is named after the schema."),

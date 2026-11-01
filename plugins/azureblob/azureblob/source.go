@@ -17,14 +17,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "azureblob",
-		Name:        "Azure Blob Storage",
-		Description: "Discover containers from Azure Blob Storage accounts",
-		Icon:        "azureblob",
-		Category:    "storage",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "azureblob",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Azure Blob Storage",
+		Description:   "Discover containers from Azure Blob Storage accounts",
+		Icon:          "azureblob",
+		Category:      "storage",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(AzureBlobContainerFields{}, "Container",
 				"AzureBlobContainerFields defines metadata fields for Azure Blob containers"),

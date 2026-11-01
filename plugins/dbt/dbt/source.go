@@ -20,14 +20,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "dbt",
-		Name:        "dbt",
-		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
-		Icon:        "dbt",
-		Category:    "transformation",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "dbt",
+		MarmotVersion: ">=0.12.0",
+		Name:          "dbt",
+		Description:   "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
+		Icon:          "dbt",
+		Category:      "transformation",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(DBTModelFields{}, "Model",
 				"DBT model-specific metadata fields"),

@@ -35,12 +35,13 @@ type Config struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "airflow",
-		Name:        "Apache Airflow",
-		Description: "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
-		Icon:        "airflow",
-		Category:    "orchestration",
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "airflow",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Airflow",
+		Description:   "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
+		Icon:          "airflow",
+		Category:      "orchestration",
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(AirflowDAGFields{}, "DAG",
 				"The metadata fields Airflow emits for a DAG (Pipeline) asset."),

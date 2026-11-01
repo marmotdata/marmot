@@ -16,14 +16,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "dynamodb",
-		Name:        "AWS DynamoDB",
-		Description: "Discover DynamoDB tables from AWS accounts",
-		Icon:        "dynamodb",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "dynamodb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS DynamoDB",
+		Description:   "Discover DynamoDB tables from AWS accounts",
+		Icon:          "dynamodb",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(Fields{}, "",
 				"DynamoDB-specific metadata fields."),

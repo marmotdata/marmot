@@ -22,14 +22,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "opensearch",
-		Name:        "OpenSearch",
-		Description: "Discover indices, data streams, and aliases from OpenSearch clusters",
-		Icon:        "opensearch",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "opensearch",
+		MarmotVersion: ">=0.12.0",
+		Name:          "OpenSearch",
+		Description:   "Discover indices, data streams, and aliases from OpenSearch clusters",
+		Icon:          "opensearch",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(OpenSearchIndexFields{}, "Index",
 				""),

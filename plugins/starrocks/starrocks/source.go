@@ -24,14 +24,15 @@ const (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "starrocks",
-		Name:        "StarRocks",
-		Description: "Discover databases, tables, views and materialized views from StarRocks clusters",
-		Icon:        "starrocks",
-		Category:    "data-warehouse",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "starrocks",
+		MarmotVersion: ">=0.12.0",
+		Name:          "StarRocks",
+		Description:   "Discover databases, tables, views and materialized views from StarRocks clusters",
+		Icon:          "starrocks",
+		Category:      "data-warehouse",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(StarRocksDatabaseFields{}, "Database",
 				"The metadata on a Database asset."),

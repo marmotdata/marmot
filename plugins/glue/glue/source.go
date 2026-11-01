@@ -19,14 +19,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "glue",
-		Name:        "AWS Glue",
-		Description: "Discover jobs, databases, tables and crawlers from AWS Glue",
-		Icon:        "glue",
-		Category:    "etl",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "glue",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Glue",
+		Description:   "Discover jobs, databases, tables and crawlers from AWS Glue",
+		Icon:          "glue",
+		Category:      "etl",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(GlueJobFields{}, "Job",
 				"Glue Job metadata fields"),

@@ -110,29 +110,28 @@ export const understandDemo: DemoConfig<AssetState & Focus> = {
 	}
 };
 
-// The blade's "How it connects to orders_daily" section, where the direction and the declarer show.
-const CONNECTS = 'mm-blade-section[heading^="How it connects"]';
-
+// The blade fills the screen's height, so framing any part of it would hide the graph. The camera
+// stays on the whole screen, graph and blade side by side, and the beats carry what to look at.
 export const traceDemo: DemoConfig<LineageState & Focus> = {
 	label:
 		'The full-screen lineage of orders_daily follows orders from the PostgreSQL table through the Airflow load and the dbt models to the Revenue overview dashboard. An edge declared by the dbt-analytics pipeline and a Spark job reported through OpenLineage open in the blade, then the two dashboards downstream of orders_daily and who to ask about them.',
 	screen: lineageScreen,
-	initial: { focus: 'mm-lineage-canvas', beat: 0 },
+	initial: { beat: 0 },
 	async steps(demo, set) {
 		await demo.wait(1000);
 		for (const id of LINEAGE_PATH) {
 			set({ selected: id });
 			await demo.wait(1150);
 		}
-		set({ selected: LINEAGE_PLUGIN_EDGE, focus: CONNECTS, beat: 1 });
+		set({ selected: LINEAGE_PLUGIN_EDGE, beat: 1 });
 		await demo.wait(2400);
-		set({ selected: LINEAGE_OPENLINEAGE_JOB, focus: 'mm-blade-section[heading="At a glance"]' });
+		set({ selected: LINEAGE_OPENLINEAGE_JOB });
 		await demo.wait(1700);
-		set({ details: true, focus: 'mm-blade-section[heading="More details"]' });
+		set({ details: true });
 		await demo.wait(2500);
-		set({ selected: LINEAGE_DASHBOARDS[0], details: false, focus: 'mm-details-blade', beat: 2 });
+		set({ selected: LINEAGE_DASHBOARDS[0], details: false, beat: 2 });
 		await demo.wait(2800);
-		set({ selected: LINEAGE_DASHBOARDS[1], focus: CONNECTS });
+		set({ selected: LINEAGE_DASHBOARDS[1] });
 		await demo.wait(3400);
 	},
 	rest: 3000

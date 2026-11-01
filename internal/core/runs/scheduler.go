@@ -26,14 +26,15 @@ const (
 )
 
 type Scheduler struct {
-	service       *ScheduleService
-	runsService   Service
-	encryptor     *crypto.Encryptor
-	registry      *plugin.Registry
-	loadState     *plugin.LoadState
-	db            *pgxpool.Pool
-	linkAssets    bool
-	pluginInstall *install.Options
+	service        *ScheduleService
+	runsService    Service
+	encryptor      *crypto.Encryptor
+	registry       *plugin.Registry
+	loadState      *plugin.LoadState
+	db             *pgxpool.Pool
+	linkAssets     bool
+	pluginInstall  *install.Options
+	pluginVersions PluginVersions
 
 	maxWorkers        int
 	schedulerInterval time.Duration
@@ -61,6 +62,8 @@ type SchedulerConfig struct {
 	ClaimExpiry       time.Duration
 	LinkAssets        bool
 	DB                *pgxpool.Pool
+	// PluginVersions, when set, moves a plugin to the version the cluster chose before a job runs it.
+	PluginVersions PluginVersions
 	// PluginInstall configures installing a core plugin on demand when
 	// a job needs one that is not loaded. Nil disables it.
 	PluginInstall *install.Options
@@ -103,6 +106,7 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		db:                config.DB,
 		linkAssets:        config.LinkAssets,
 		pluginInstall:     config.PluginInstall,
+		pluginVersions:    config.PluginVersions,
 		maxWorkers:        maxWorkers,
 		schedulerInterval: schedulerInterval,
 		leaseExpiry:       leaseExpiry,
@@ -216,6 +220,7 @@ func (s *Scheduler) jobDispatcher() {
 				}()
 
 				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry, s.linkAssets, s.pluginInstall)
+				worker.versions = s.pluginVersions
 				worker.id = s.workerID
 				if err := worker.executeJob(s.ctx, j); err != nil {
 					log.Error().
@@ -340,6 +345,12 @@ type worker struct {
 	registry      *plugin.Registry
 	linkAssets    bool
 	pluginInstall *install.Options
+	versions      PluginVersions
+}
+
+// PluginVersions keeps a plugin at the version the cluster chose for it.
+type PluginVersions interface {
+	EnsureCurrent(ctx context.Context, pluginID string) error
 }
 
 func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, linkAssets bool, pluginInstall *install.Options) *worker {
@@ -406,6 +417,12 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	}
 
 	w.markPhase(ctx, run.ID, JobPhaseConnecting)
+	if w.versions != nil {
+		// A failure here leaves the plugin on the version it has, which beats failing the run; the settings page shows the error.
+		if err := w.versions.EnsureCurrent(ctx, schedule.PluginID); err != nil {
+			log.Warn().Err(err).Str("plugin", schedule.PluginID).Msg("Could not move plugin to its chosen version, running the loaded version")
+		}
+	}
 	source, err := w.registry.GetSource(schedule.PluginID)
 	if err != nil && w.pluginInstall != nil {
 		source, err = w.installMissingPlugin(ctx, schedule.PluginID)

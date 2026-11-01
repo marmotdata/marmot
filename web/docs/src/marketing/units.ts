@@ -1,9 +1,9 @@
 import type { PlanId } from './plans';
 
 // The compute unit model behind pricing and the plan picker. What a unit is
-// made of is decided by marmot-instance-operator (internal/controller/units.go)
-// and only mirrored here for display; the console's usage page still runs on
-// mock-usage.ts.
+// made of is decided by marmot-instance-operator (internal/controller/units.go).
+// The compute behind a unit is deliberately abstract: the site names only the
+// assets a unit adds, never its CPU, memory or request rate.
 //
 // A unit is capacity, and an account needs enough of it for whichever is
 // bigger: its catalog, or the traffic its agents send. People are not a
@@ -13,27 +13,6 @@ import type { PlanId } from './plans';
 export const UNIT_PRICE = 595;
 /** Catalog capacity each unit adds: the hard limit. */
 export const ASSETS_PER_UNIT = 5000;
-/** How far above the sustained rate a short burst may go, as a percentage of it. */
-export const BURST_CEILING = 200;
-
-/**
- * What one unit runs on, sustained: dedicated Marmot compute (its database
- * grows alongside), requests the gateway admits, egress and database storage.
- * Compute, memory and requests burst to BURST_CEILING.
- */
-export const UNIT_SPEC = {
-	vcpu: 1,
-	memoryGiB: 2,
-	requestsPerSecond: 100,
-	egressMbps: 40,
-	storageGiB: 25
-} as const;
-
-/** "4 vCPU · 8 GiB · 400 req/s": the compute n units run on. */
-export function unitSpecLine(units: number): string {
-	const n = Math.max(1, Math.round(units));
-	return `${n * UNIT_SPEC.vcpu} vCPU · ${n * UNIT_SPEC.memoryGiB} GiB · ${(n * UNIT_SPEC.requestsPerSecond).toLocaleString('en-US')} req/s`;
-}
 /** The most units the self-serve estimator sizes; past it is Enterprise. */
 export const SLIDER_MAX = 20;
 

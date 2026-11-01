@@ -57,14 +57,15 @@ type SchemaRegistryConfig struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "kafka",
-		Name:        "Apache Kafka",
-		Description: "Discover Kafka topics from Kafka clusters",
-		Icon:        "kafka",
-		Category:    "streaming",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "kafka",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Kafka",
+		Description:   "Discover Kafka topics from Kafka clusters",
+		Icon:          "kafka",
+		Category:      "streaming",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(KafkaTopicFields{}, "Topic",
 				"The metadata fields Kafka emits for a topic asset."),

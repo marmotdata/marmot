@@ -18,14 +18,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "mysql",
-		Name:        "MySQL",
-		Description: "Discover databases and tables from MySQL instances",
-		Icon:        "mysql",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "mysql",
+		MarmotVersion: ">=0.12.0",
+		Name:          "MySQL",
+		Description:   "Discover databases and tables from MySQL instances",
+		Icon:          "mysql",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(MySQLFields{}, "MySQL",
 				"MySQL-specific metadata fields"),

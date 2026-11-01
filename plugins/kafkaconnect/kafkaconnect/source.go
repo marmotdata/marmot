@@ -52,14 +52,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "kafkaconnect",
-		Name:        "Apache Kafka Connect",
-		Description: "Discover connectors, tasks and topics from Kafka Connect clusters with lineage to the systems they move data between",
-		Icon:        "kafka",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "kafkaconnect",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Kafka Connect",
+		Description:   "Discover connectors, tasks and topics from Kafka Connect clusters with lineage to the systems they move data between",
+		Icon:          "kafka",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(KafkaConnectPipelineFields{}, "Pipeline",
 				"The metadata fields the plugin emits for a connector's Pipeline asset."),

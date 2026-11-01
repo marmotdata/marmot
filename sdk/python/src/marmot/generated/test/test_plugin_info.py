@@ -111,8 +111,10 @@ class TestPluginInfo(unittest.TestCase):
                     ],
                 icon = '',
                 id = '',
+                marmot_version = '',
                 name = '',
                 produces_lineage = True,
+                protocol_version = 56,
                 status = '',
                 supports_data_preview = True,
                 supports_query = True

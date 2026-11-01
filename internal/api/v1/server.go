@@ -71,6 +71,7 @@ import (
 	operatorSync "github.com/marmotdata/marmot/internal/operator/sync"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/plugin/install"
+	pluginUpdates "github.com/marmotdata/marmot/internal/plugin/updates"
 	"github.com/marmotdata/marmot/internal/pluginserve"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
@@ -126,6 +127,9 @@ type Server struct {
 
 	// Long-running plugin processes that serve data queries
 	pluginInstances *plugin.InstanceManager
+	// pluginVersions keeps core plugins at the version the cluster chose, nil when plugin updates could not be set up.
+	pluginVersions     *pluginUpdates.Manager
+	stopPluginVersions context.CancelFunc
 
 	// Accepts plugins that serve queries from outside Marmot
 	serveHub *pluginserve.Hub
@@ -321,9 +325,21 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	// scheduler, plugin-triggering endpoints, and /readyz gate on
 	// pluginLoadState until this finishes.
 	installOpts := install.Options{Registry: config.Plugins.Registry}
+	pluginVersions, err := newPluginVersions(config, db, installOpts)
+	if err != nil {
+		log.Error().Err(err).Msg("Plugin updates unavailable; core plugins run the versions this release pins")
+	}
+	pluginVersionsCtx, stopPluginVersions := context.WithCancel(context.Background())
 	pluginLoadState := plugin.GetLoadState()
 	go func() {
 		defer pluginLoadState.MarkReady()
+		// Versions an admin or the auto-update policy chose are read from Postgres before anything is installed, so a replica never starts on a version the cluster has moved off.
+		if pluginVersions != nil {
+			if err := pluginVersions.Load(pluginVersionsCtx); err != nil {
+				log.Warn().Err(err).Msg("Failed to read plugin versions; using the versions this release pins")
+			}
+			installOpts = pluginVersions.InstallOptions()
+		}
 		if config.Plugins.Autoinstall {
 			if err := install.EnsureCore(context.Background(), installOpts); err != nil {
 				log.Warn().Err(err).Msg("Failed to install core plugins; continuing with what is available")
@@ -331,6 +347,10 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		}
 		if err := install.LoadPlugins(installOpts); err != nil {
 			log.Error().Err(err).Msg("Failed to load external plugins")
+		}
+		if pluginVersions != nil {
+			pluginVersions.MarkLoaded()
+			pluginVersions.Start(pluginVersionsCtx)
 		}
 		if scheduleEncryptor != nil {
 			if err := scheduleSvc.EncryptPlaintextSecrets(context.Background(), scheduleEncryptor); err != nil {
@@ -353,7 +373,14 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		DB:         db,
 	}
 	if config.Plugins.Autoinstall {
-		schedulerConfig.PluginInstall = &install.Options{Registry: config.Plugins.Registry}
+		pluginInstall := install.Options{Registry: config.Plugins.Registry}
+		if pluginVersions != nil {
+			pluginInstall = pluginVersions.InstallOptions()
+		}
+		schedulerConfig.PluginInstall = &pluginInstall
+	}
+	if pluginVersions != nil {
+		schedulerConfig.PluginVersions = pluginVersions
 	}
 	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, pluginLoadState, schedulerConfig)
 
@@ -606,6 +633,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		webhookDispatcher:          webhookDispatcher,
 		esIndexer:                  esClient,
 		syncService:                syncSvc,
+		pluginVersions:             pluginVersions,
+		stopPluginVersions:         stopPluginVersions,
 	}
 
 	schedulesHandler := schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured)
@@ -635,7 +664,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		websocket.NewHandler(wsHub, config),
 		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
 		serviceaccountsAPI.NewHandler(serviceAccountSvc, userSvc, authSvc, config),
-		plugins.NewHandler(userSvc, authSvc, config),
+		plugins.NewHandler(userSvc, authSvc, config).WithVersions(pluginVersions),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config).With(adminAPI.Extras{DB: db, Settings: settingsStore, OAuth: oauthManager, Teams: teamSvc, Roles: roleSvc}),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
@@ -721,12 +750,34 @@ func (s *Server) Stop() {
 	if s.metricsService != nil {
 		s.metricsService.Stop()
 	}
+	if s.stopPluginVersions != nil {
+		s.stopPluginVersions()
+	}
+	if s.pluginVersions != nil {
+		s.pluginVersions.Stop()
+	}
 	if s.pluginInstances != nil {
 		s.pluginInstances.Stop()
 	}
 	if s.serveHub != nil {
 		s.serveHub.Stop()
 	}
+}
+
+// newPluginVersions sets up moving core plugins to other versions without a Marmot upgrade.
+func newPluginVersions(cfg *config.Config, db *pgxpool.Pool, opts install.Options) (*pluginUpdates.Manager, error) {
+	policy, err := pluginUpdates.ParsePolicy(cfg.Plugins.Updates.AutoUpdate)
+	if err != nil {
+		return nil, err
+	}
+	return pluginUpdates.New(pluginUpdates.Config{
+		DB:            db,
+		Install:       opts,
+		IndexEnabled:  cfg.Plugins.Updates.Enabled,
+		IndexRef:      cfg.Plugins.Updates.Index,
+		AutoUpdate:    policy,
+		CheckInterval: time.Duration(cfg.Plugins.Updates.CheckInterval) * time.Second,
+	})
 }
 
 // startServeHub starts accepting plugins that serve queries from outside Marmot. Serving was explicitly enabled, so a missing encryption key or an unusable listener stops startup rather than silently leaving served sources unreachable.

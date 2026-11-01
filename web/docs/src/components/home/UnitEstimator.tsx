@@ -9,7 +9,6 @@ import {
   UNIT_PRICE,
   formatAssets,
   quote,
-  unitSpecLine,
   unitsForAgents,
   unitsForAssets,
   type ActivityId,
@@ -128,7 +127,7 @@ export default function UnitEstimator(): JSX.Element {
             <p className="mkt-calc__sum">
               {units} {units === 1 ? "unit" : "units"} × {formatMoney(UNIT_PRICE)}, sized by {sizedBy}
             </p>
-            <p className="mkt-calc__spec">{unitSpecLine(units)}, bursting to twice that</p>
+            <p className="mkt-calc__spec">{formatAssets(units * ASSETS_PER_UNIT)} assets on dedicated compute</p>
             {/* Always there, empty unless the estimate has moved to Scale, so the panel never jumps. */}
             <p className="mkt-calc__spec mkt-calc__spec--note">
               {q.plan.id === "scale" ? `Team holds up to ${UNIT_PLANS.team.max} units, so this is Scale.` : ""}

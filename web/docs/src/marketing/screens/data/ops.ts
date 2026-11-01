@@ -37,7 +37,7 @@ export const clock = (iso: string) => new Date(iso).toISOString().slice(11, 19);
  * last saw (with a PII badge when the table is tagged PII) and columns show their type in mono.
  * The demo queries orders_daily, which lives in snowflake-finance.
  */
-const ORDERS_DAILY = 'mrn://table/dbt/analytics.marts.orders_daily';
+const ORDERS_DAILY = 'mrn://table/snowflake/analytics.marts.orders_daily';
 const col = (table: string, name: string, type: string) => ({
 	id: `c:snowflake-finance:${table}:${name}`,
 	label: name,
@@ -77,7 +77,7 @@ export const sourceTree = [
 						ordersDailySchema.map((c) => col(ORDERS_DAILY, c.name, c.type))
 					),
 					table('mrn://table/snowflake/analytics.marts.customers_dim', 'customers_dim', '418K', true),
-					table('mrn://table/dbt/analytics.marts.refund_rates', 'refund_rates', '6,240'),
+					table('mrn://table/snowflake/analytics.marts.refund_rates', 'refund_rates', '6,240'),
 					table('mrn://table/snowflake/analytics.marts.order_payments', 'order_payments', '1.28M')
 				]
 			},
@@ -92,11 +92,8 @@ export const sourceTree = [
 	},
 	{ id: 's:bigquery-web', label: 'bigquery-web', provider: 'bigquery', secondary: '8', hasChildren: true }
 ];
-export const treeExpanded = [
-	's:snowflake-finance',
-	'sc:snowflake-finance:analytics.marts',
-	`t:snowflake-finance:${ORDERS_DAILY}`
-];
+/** Open down to the tables, so the explorer lists them with their row counts rather than a column of truncated field names. */
+export const treeExpanded = ['s:snowflake-finance', 'sc:snowflake-finance:analytics.marts'];
 /** The app selects the source queries run against, not a table. */
 export const treeSelected = 's:snowflake-finance';
 
@@ -184,7 +181,7 @@ export const tablesRead = [
 	{
 		id: 'orders_daily',
 		name: 'analytics.marts.orders_daily',
-		mrn: 'mrn://table/dbt/analytics.marts.orders_daily',
+		mrn: 'mrn://table/snowflake/analytics.marts.orders_daily',
 		owner: 'Analytics Engineering',
 		rows: 1_284,
 		columnsRead: 5,

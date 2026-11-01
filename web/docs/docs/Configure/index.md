@@ -262,3 +262,9 @@ See [Table Preview](./table-preview.md) before enabling this.
 | --------------------- | --------------------------------------------------------------------- | ------- |
 | `plugins.registry`    | OCI registry namespace to install core plugins from, e.g. an internal mirror | -       |
 | `plugins.autoinstall` | Pull missing core plugins from the registry at startup                | `true`  |
+| `plugins.updates.enabled` | Check the signed plugin index for new plugin versions and advisories | `true` |
+| `plugins.updates.auto_update` | Plugin updates Marmot applies by itself: `off`, `security` or `patch` | `security` |
+| `plugins.updates.check_interval` | Seconds between plugin index checks | `43200` |
+| `plugins.updates.index` | OCI reference or `https://` URL of the plugin index | `<registry>/index:latest` |
+
+See [Plugin Updates](./plugin-updates.md) for how plugin versions are chosen and changed.

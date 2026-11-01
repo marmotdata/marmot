@@ -21,12 +21,13 @@ func main() {
 
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
 		Meta: pluginsdk.Meta{
-			ID:          "confluent",
-			Name:        "Confluent Cloud",
-			Description: "Discover Kafka topics from Confluent Cloud clusters",
-			Icon:        "confluent",
-			Category:    "streaming",
-			ConfigSpec:  spec,
+			ID:            "confluent",
+			MarmotVersion: ">=0.12.0",
+			Name:          "Confluent Cloud",
+			Description:   "Discover Kafka topics from Confluent Cloud clusters",
+			Icon:          "confluent",
+			Category:      "streaming",
+			ConfigSpec:    spec,
 		},
 		Source: &kafka.Source{},
 	})

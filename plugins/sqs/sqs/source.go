@@ -18,14 +18,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sqs",
-		Name:        "AWS SQS",
-		Description: "Discover SQS queues from AWS accounts",
-		Icon:        "sqs",
-		Category:    "messaging",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "sqs",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS SQS",
+		Description:   "Discover SQS queues from AWS accounts",
+		Icon:          "sqs",
+		Category:      "messaging",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(SQSFields{}, "AWS SQS",
 				"SQS-specific metadata fields"),

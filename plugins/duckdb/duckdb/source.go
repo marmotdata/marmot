@@ -32,12 +32,13 @@ type Config struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "duckdb",
-		Name:        "DuckDB",
-		Description: "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
-		Icon:        "duckdb",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "duckdb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "DuckDB",
+		Description:   "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
+		Icon:          "duckdb",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover returns CONTAINS edges for schemas and DEPENDS_ON edges
 		// for foreign keys, so the manifest declares Lineage.
 		Features:   []string{"Assets", "Lineage"},

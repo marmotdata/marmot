@@ -31,12 +31,13 @@ const (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "athena",
-		Name:        "AWS Athena",
-		Description: "Discover databases, tables, workgroups and saved queries from Amazon Athena",
-		Icon:        "athena",
-		Category:    "data-warehouse",
-		Status:      "experimental",
+		ID:            "athena",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Athena",
+		Description:   "Discover databases, tables, workgroups and saved queries from Amazon Athena",
+		Icon:          "athena",
+		Category:      "data-warehouse",
+		Status:        "experimental",
 		// Discover emits CONTAINS, FEEDS and PRODUCES edges, so the manifest
 		// declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

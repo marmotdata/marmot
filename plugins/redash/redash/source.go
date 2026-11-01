@@ -52,14 +52,15 @@ type Config struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "redash",
-		Name:        "Redash",
-		Description: "Discover dashboards, charts, queries and data sources from Redash",
-		Icon:        "redash",
-		Category:    "dashboard",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "redash",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Redash",
+		Description:   "Discover dashboards, charts, queries and data sources from Redash",
+		Icon:          "redash",
+		Category:      "dashboard",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(RedashDashboardFields{}, "Dashboard",
 				"The metadata on a Dashboard asset."),

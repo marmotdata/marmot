@@ -100,3 +100,31 @@ func TestPinnedPathsSortsByPluginName(t *testing.T) {
 
 	assert.Equal(t, []string{gcs, s3}, pinnedPaths(opts, manifest))
 }
+
+type staticPins map[string]ManifestPlugin
+
+func (p staticPins) Pin(name string) (ManifestPlugin, bool) {
+	pin, ok := p[name]
+	return pin, ok
+}
+
+func TestPinnedPathsPrefersOverride(t *testing.T) {
+	opts := Options{CacheDir: t.TempDir(), Pins: staticPins{"gcs": {Version: "1.3.0"}}}
+	manifest := testManifest(map[string]ManifestPlugin{"gcs": {Version: "1.2.0"}})
+
+	writeFakeBinary(t, CachedPath(opts.CacheDir, manifest.Registry, "gcs", "1.2.0"))
+	override := CachedPath(opts.CacheDir, manifest.Registry, "gcs", "1.3.0")
+	writeFakeBinary(t, override)
+
+	assert.Equal(t, []string{override}, pinnedPaths(opts, manifest))
+}
+
+func TestPinnedPathsFallsBackToReleasePinWhenOverrideMissing(t *testing.T) {
+	opts := Options{CacheDir: t.TempDir(), Pins: staticPins{"gcs": {Version: "1.3.0"}}}
+	manifest := testManifest(map[string]ManifestPlugin{"gcs": {Version: "1.2.0"}})
+
+	release := CachedPath(opts.CacheDir, manifest.Registry, "gcs", "1.2.0")
+	writeFakeBinary(t, release)
+
+	assert.Equal(t, []string{release}, pinnedPaths(opts, manifest))
+}

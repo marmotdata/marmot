@@ -17,14 +17,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "s3",
-		Name:        "AWS S3",
-		Description: "Discover S3 buckets from AWS accounts",
-		Icon:        "s3",
-		Category:    "storage",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "s3",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS S3",
+		Description:   "Discover S3 buckets from AWS accounts",
+		Icon:          "s3",
+		Category:      "storage",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(S3Fields{}, "AWS S3",
 				"S3-specific metadata fields"),

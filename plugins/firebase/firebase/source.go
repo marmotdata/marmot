@@ -52,12 +52,13 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "firebase",
-		Name:        "Google Firebase",
-		Description: "Discover Firestore collections and Realtime Database instances from Firebase projects",
-		Icon:        "firebase",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "firebase",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Firebase",
+		Description:   "Discover Firestore collections and Realtime Database instances from Firebase projects",
+		Icon:          "firebase",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits CONTAINS edges from databases to collections and
 		// from collections to their subcollections.
 		Features:   []string{"Assets", "Lineage"},

@@ -26,14 +26,15 @@ const provider = "MariaDB"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "mariadb",
-		Name:        "MariaDB",
-		Description: "Discover databases, tables, views and sequences from MariaDB servers",
-		Icon:        "mariadb",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "mariadb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "MariaDB",
+		Description:   "Discover databases, tables, views and sequences from MariaDB servers",
+		Icon:          "mariadb",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(MariaDBDatabaseFields{}, "Database",
 				"The metadata fields the plugin emits for the database asset."),

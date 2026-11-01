@@ -51,14 +51,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "prefect",
-		Name:        "Prefect",
-		Description: "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
-		Icon:        "prefect",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "prefect",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Prefect",
+		Description:   "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
+		Icon:          "prefect",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PrefectPipelineFields{}, "Pipeline",
 				"The metadata fields the Prefect plugin emits for a flow (Pipeline) asset."),

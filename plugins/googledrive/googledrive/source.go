@@ -27,14 +27,15 @@ const provider = "GoogleDrive"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "googledrive",
-		Name:        "Google Drive",
-		Description: "Discover folders, files and spreadsheets from Google Drive",
-		Icon:        "googledrive",
-		Category:    "storage",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "googledrive",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Drive",
+		Description:   "Discover folders, files and spreadsheets from Google Drive",
+		Icon:          "googledrive",
+		Category:      "storage",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }
 

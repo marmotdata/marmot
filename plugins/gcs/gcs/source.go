@@ -36,12 +36,13 @@ type Config struct {
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "gcs",
-		Name:        "Google Cloud Storage",
-		Description: "Discover buckets from Google Cloud Storage",
-		Icon:        "gcs",
-		Category:    "storage",
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "gcs",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Cloud Storage",
+		Description:   "Discover buckets from Google Cloud Storage",
+		Icon:          "gcs",
+		Category:      "storage",
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(GCSBucketFields{}, "Bucket",
 				"GCSBucketFields defines metadata fields for GCS buckets"),

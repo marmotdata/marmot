@@ -24,9 +24,10 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "amundsen",
-		Name:        "Amundsen",
-		Description: "Import tables, columns, owners, usage, dashboards and lineage from an Amundsen metadata graph",
+		ID:            "amundsen",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Amundsen",
+		Description:   "Import tables, columns, owners, usage, dashboards and lineage from an Amundsen metadata graph",
 		// iconloader.ts has no amundsen entry, so this borrows the
 		// generic catalog icon the OpenMetadata import already uses.
 		Icon:       "openmetadata",

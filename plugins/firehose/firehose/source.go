@@ -27,12 +27,13 @@ const assetType = "DeliveryStream"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "firehose",
-		Name:        "AWS Firehose",
-		Description: "Discover Amazon Data Firehose delivery streams from AWS accounts",
-		Icon:        "firehose",
-		Category:    "messaging",
-		Status:      "experimental",
+		ID:            "firehose",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Firehose",
+		Description:   "Discover Amazon Data Firehose delivery streams from AWS accounts",
+		Icon:          "firehose",
+		Category:      "messaging",
+		Status:        "experimental",
 		// Discover links each stream to the Kinesis stream or Kafka topic
 		// it reads and to the tables and buckets it writes, so the manifest
 		// declares Lineage alongside Assets.

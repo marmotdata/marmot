@@ -16,14 +16,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "mongodb",
-		Name:        "MongoDB",
-		Description: "Discover databases and collections from MongoDB instances",
-		Icon:        "mongodb",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "mongodb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "MongoDB",
+		Description:   "Discover databases and collections from MongoDB instances",
+		Icon:          "mongodb",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(MongoDBFields{}, "MongoDB",
 				"MongoDB-specific metadata fields"),

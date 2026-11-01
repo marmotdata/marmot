@@ -22,14 +22,15 @@ const provider = "Kinesis"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "kinesis",
-		Name:        "AWS Kinesis",
-		Description: "Discover Kinesis Data Streams from AWS accounts",
-		Icon:        "kinesis",
-		Category:    "messaging",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "kinesis",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Kinesis",
+		Description:   "Discover Kinesis Data Streams from AWS accounts",
+		Icon:          "kinesis",
+		Category:      "messaging",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(KinesisStreamFields{}, "Stream",
 				"The metadata fields the Kinesis plugin emits for Stream assets."),

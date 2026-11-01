@@ -58,3 +58,18 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      # Every core plugin says which Marmot releases it works with, so the plugin index only offers
+      # each version to Marmots that can run it. A lower bound only: incompatible host changes bump
+      # the plugin protocol instead.
+      - name: Check supported Marmot versions are declared
+        run: |
+          set -euo pipefail
+          meta=$(go run . --dump-metadata)
+          constraint=$(jq -r '.marmot_version // ""' <<<"$meta")
+          if ! [[ "$constraint" =~ ^\>=[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=plugins/${{ matrix.plugin }}::MarmotVersion must be set in the plugin's Meta as a lower bound such as \">=0.12.0\" (got \"${constraint}\")"
+            exit 1
+          fi
+          echo "Supports Marmot ${constraint}" >> "$GITHUB_STEP_SUMMARY"
+

@@ -65,12 +65,13 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "dagster",
-		Name:        "Dagster",
-		Description: "Discover jobs, ops and software-defined assets from Dagster",
-		Icon:        "dagster",
-		Category:    "orchestration",
-		Status:      "experimental",
+		ID:            "dagster",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Dagster",
+		Description:   "Discover jobs, ops and software-defined assets from Dagster",
+		Icon:          "dagster",
+		Category:      "orchestration",
+		Status:        "experimental",
 		// Discover emits CONTAINS, DEPENDS_ON, FEEDS and PRODUCES edges and
 		// converts job runs into run history, so all three are declared.
 		Features:   []string{"Assets", "Lineage", "Run History"},

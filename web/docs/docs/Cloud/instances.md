@@ -33,17 +33,11 @@ Most accounts should run one. Add a second only for a catalog that must be genui
 
 Choose the region closest to the systems you catalog, not to the people reading the catalog. A pipeline spends its time on round trips to your database or warehouse; the UI is a handful of requests per page and is fine from anywhere. Data residency in an unlisted region is part of Enterprise, so [talk to us](mailto:support@marmotdata.io) before launching.
 
-### Sizes
+### Compute units
 
-| Size | vCPU | Memory | Good for |
-| --- | --- | --- | --- |
-| Standard | 1 | 2 GB | Evaluation and small catalogs. |
-| Performance | 2 | 8 GB | Day-to-day use by a team. |
-| Max | 4 | 16 GB | Large catalogs, deep lineage, many agents at once. |
+An instance's capacity is measured in compute units. Each unit adds room for 5,000 assets and the dedicated compute to serve them, with headroom for bursts. Team holds 1 to 3 units and Scale 4 or more; Free runs on shared compute with up to 500 assets. Add units from Billing in the console when you near your asset limit, or when search or the lineage graph feels slow while the instance is busy.
 
-Size sets CPU and memory. The asset limit comes from your plan and is independent of size. Start on Standard and size up when search or the lineage graph feels slow specifically while the instance is busy.
-
-<TipBox variant="info" title="Changing size or version">
+<TipBox variant="info" title="Changing version">
 Not yet self-service. [Email support](mailto:support@marmotdata.io) and we schedule it. Data, configuration and hostname are unaffected.
 </TipBox>
 

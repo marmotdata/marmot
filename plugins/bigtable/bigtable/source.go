@@ -56,12 +56,13 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "bigtable",
-		Name:        "Google Bigtable",
-		Description: "Discover instances, tables and column families from Google Cloud Bigtable",
-		Icon:        "bigtable",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "bigtable",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Bigtable",
+		Description:   "Discover instances, tables and column families from Google Cloud Bigtable",
+		Icon:          "bigtable",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits CONTAINS edges from an instance to its tables, so
 		// the manifest declares Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},

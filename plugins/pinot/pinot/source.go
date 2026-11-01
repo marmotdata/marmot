@@ -53,14 +53,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "pinot",
-		Name:        "Apache Pinot",
-		Description: "Discover tables, schemas and stream lineage from Apache Pinot clusters",
-		Icon:        "pinot",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "pinot",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Pinot",
+		Description:   "Discover tables, schemas and stream lineage from Apache Pinot clusters",
+		Icon:          "pinot",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PinotTableFields{}, "Table",
 				"The metadata fields the Pinot plugin emits for table assets."),

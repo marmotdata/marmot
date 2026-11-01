@@ -61,14 +61,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "spline",
-		Name:        "Spline",
-		Description: "Discover Spark applications and their lineage from a Spline server",
-		Icon:        "spark",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "spline",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Spline",
+		Description:   "Discover Spark applications and their lineage from a Spline server",
+		Icon:          "spark",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(SplineFields{}, "Spline",
 				"The metadata fields the Spline plugin emits for Pipeline assets."),

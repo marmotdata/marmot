@@ -58,14 +58,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "unitycatalog",
-		Name:        "Unity Catalog",
-		Description: "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
-		Icon:        "databricks",
-		Category:    "catalog",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "unitycatalog",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Unity Catalog",
+		Description:   "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
+		Icon:          "databricks",
+		Category:      "catalog",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(UnityCatalogCatalogFields{}, "Catalog",
 				"The metadata fields emitted for catalog assets."),

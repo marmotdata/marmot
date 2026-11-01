@@ -60,14 +60,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "cockroachdb",
-		Name:        "CockroachDB",
-		Description: "Discover databases, tables, views and foreign key relationships from CockroachDB clusters",
-		Icon:        "cockroachdb",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "cockroachdb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "CockroachDB",
+		Description:   "Discover databases, tables, views and foreign key relationships from CockroachDB clusters",
+		Icon:          "cockroachdb",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(CockroachDBDatabaseFields{}, "Database",
 				"The metadata fields the plugin emits for database assets."),

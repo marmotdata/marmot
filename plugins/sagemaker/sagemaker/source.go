@@ -20,12 +20,13 @@ const provider = "SageMaker"
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sagemaker",
-		Name:        "AWS SageMaker",
-		Description: "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
-		Icon:        "sagemaker",
-		Category:    "ml",
-		Status:      "experimental",
+		ID:            "sagemaker",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS SageMaker",
+		Description:   "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
+		Icon:          "sagemaker",
+		Category:      "ml",
+		Status:        "experimental",
 		// Discover emits FEEDS and PRODUCES edges, and run history for
 		// training jobs, so the manifest declares all three features.
 		Features:   []string{"Assets", "Lineage", "Run History"},

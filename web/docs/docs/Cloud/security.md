@@ -45,7 +45,7 @@ A wildcard matches one label. The same list works additively in Internet mode, w
 
 ## Limits
 
-Request limits at the gateway cover requests per second, burst, in-flight requests and body size, for all clients of an instance together. Egress bandwidth is capped per pod by plan and [instance size](instances.md#sizes); traffic above the cap is queued, not dropped. Inbound traffic from your own systems is not throttled.
+Request limits at the gateway cover requests per second, burst, in-flight requests and body size, for all clients of an instance together. Egress bandwidth is capped per pod by plan and [compute units](instances.md#compute-units); traffic above the cap is queued, not dropped. Inbound traffic from your own systems is not throttled.
 
 ## Encryption and backups
 

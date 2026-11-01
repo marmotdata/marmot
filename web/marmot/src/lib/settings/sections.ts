@@ -11,6 +11,7 @@ export type SettingsHref =
 	| '/settings/service-accounts'
 	| '/settings/roles'
 	| '/settings/authentication'
+	| '/settings/plugins'
 	| '/settings/system';
 
 export interface SettingsItem {
@@ -100,6 +101,16 @@ export const settingsGroups: SettingsGroup[] = [
 		id: 'system',
 		label: m.settings_group_system,
 		items: [
+			{
+				id: 'plugins',
+				href: '/settings/plugins',
+				label: m.settings_plugins,
+				description: m.settings_plugins_description,
+				summary: m.settings_plugins_summary,
+				keywords: m.settings_plugins_keywords,
+				icon: 'material-symbols:extension-outline',
+				anyOf: ['ingestion:view', 'ingestion:manage']
+			},
 			{
 				id: 'system',
 				href: '/settings/system',

@@ -19,14 +19,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "trino",
-		Name:        "Trino",
-		Description: "Discover catalogs, schemas, and tables from Trino clusters",
-		Icon:        "trino",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "trino",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Trino",
+		Description:   "Discover catalogs, schemas, and tables from Trino clusters",
+		Icon:          "trino",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(TrinoCatalogFields{}, "Catalog",
 				"Trino catalog metadata fields"),

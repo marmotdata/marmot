@@ -48,14 +48,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "flink",
-		Name:        "Apache Flink",
-		Description: "Discover jobs and their vertices from an Apache Flink JobManager",
-		Icon:        "flink",
-		Category:    "orchestration",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "flink",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Flink",
+		Description:   "Discover jobs and their vertices from an Apache Flink JobManager",
+		Icon:          "flink",
+		Category:      "orchestration",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(FlinkPipelineFields{}, "Pipeline",
 				"The metadata fields the Flink plugin emits for Pipeline assets (one per job)."),

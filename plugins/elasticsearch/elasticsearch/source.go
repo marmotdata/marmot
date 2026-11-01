@@ -22,14 +22,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "elasticsearch",
-		Name:        "Elasticsearch",
-		Description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
-		Icon:        "elasticsearch",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "elasticsearch",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Elasticsearch",
+		Description:   "Discover indices, data streams, and aliases from Elasticsearch clusters",
+		Icon:          "elasticsearch",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(IndexFields{}, "Index",
 				"Elasticsearch index metadata fields."),

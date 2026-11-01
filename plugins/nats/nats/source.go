@@ -17,14 +17,15 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "nats",
-		Name:        "NATS",
-		Description: "Discover JetStream streams from NATS servers",
-		Icon:        "nats",
-		Category:    "messaging",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "nats",
+		MarmotVersion: ">=0.12.0",
+		Name:          "NATS",
+		Description:   "Discover JetStream streams from NATS servers",
+		Icon:          "nats",
+		Category:      "messaging",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(NATSStreamFields{}, "Stream",
 				"NATSStreamFields defines metadata fields for NATS JetStream streams"),

@@ -66,12 +66,13 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "cloudrun",
-		Name:        "Google Cloud Run",
-		Description: "Discover services and jobs from Google Cloud Run",
-		Icon:        "cloud-run",
-		Category:    "container",
-		Status:      "experimental",
+		ID:            "cloudrun",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google Cloud Run",
+		Description:   "Discover services and jobs from Google Cloud Run",
+		Icon:          "cloud-run",
+		Category:      "container",
+		Status:        "experimental",
 		// Discover links mounted GCS buckets to the workload that reads them
 		// and reports job executions, so the manifest declares all three.
 		Features:   []string{"Assets", "Lineage", "Run History"},

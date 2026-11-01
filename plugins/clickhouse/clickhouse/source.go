@@ -21,12 +21,13 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "clickhouse",
-		Name:        "ClickHouse",
-		Description: "Discover databases, tables, and views from ClickHouse instances",
-		Icon:        "clickhouse",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "clickhouse",
+		MarmotVersion: ">=0.12.0",
+		Name:          "ClickHouse",
+		Description:   "Discover databases, tables, and views from ClickHouse instances",
+		Icon:          "clickhouse",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover returns a CONTAINS edge for every table it finds, so the
 		// manifest has to declare Lineage the way postgresql and mysql do.
 		Features:   []string{"Assets", "Lineage"},

@@ -22,6 +22,8 @@
 	import { recordView, viewedItem } from '$lib/home/api';
 	import { chrome, mmIcon, type Crumb } from '$lib/mm';
 	import Banner from '$lib/components/Banner.svelte';
+	import PluginAdvisoryBanner from '$lib/components/PluginAdvisoryBanner.svelte';
+	import { advisoryBanner } from '$lib/plugins/advisoryBanner.svelte';
 	import ToastContainer from '$components/ui/ToastContainer.svelte';
 	import type {
 		MmCommandPalette,
@@ -86,6 +88,16 @@
 	const canViewQueryLog = $derived(browser && !!$auth && holdsAtRoot($myAccess, 'access:view'));
 	const settingsItems = $derived(browser && $auth ? visibleItems($myAccess) : []);
 	const canSeeSettings = $derived(settingsItems.length > 0);
+	const canManagePlugins = $derived(
+		browser && !!$auth && holdsAtRoot($myAccess, 'ingestion:manage')
+	);
+
+	// Fetched once per session; a security advisory against a running plugin takes the one banner
+	// slot over the server-configured one, since it is the more urgent message.
+	$effect(() => {
+		if (canManagePlugins) advisoryBanner.load();
+	});
+	const activeAdvisory = $derived(canManagePlugins ? advisoryBanner.current : undefined);
 
 	// Re-checked on navigation, at most every few minutes, so the dot clears without a reload once things are fixed
 	$effect(() => {
@@ -387,7 +399,14 @@
 		{@render children()}
 	{:else}
 		<mm-app-shell {bleed}>
-			{#if bannerConfig}
+			{#if activeAdvisory}
+				<div slot="banner">
+					<PluginAdvisoryBanner
+						entry={activeAdvisory}
+						onDismiss={() => advisoryBanner.dismiss(activeAdvisory?.id ?? '')}
+					/>
+				</div>
+			{:else if bannerConfig}
 				<div slot="banner">
 					<Banner
 						enabled={bannerConfig.enabled}

@@ -50,14 +50,15 @@ tags:
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "gke",
-		Name:        "Google GKE",
-		Description: "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
-		Icon:        "gke",
-		Category:    "compute",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "gke",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Google GKE",
+		Description:   "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
+		Icon:          "gke",
+		Category:      "compute",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage", "Run History"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }
 
