@@ -33,6 +33,15 @@ class TestCreateLineageRequest(unittest.TestCase):
         model = CreateLineageRequest()
         if include_optional:
             return CreateLineageRequest(
+                column_lineage = [
+                    marmot.generated.models.column_edge.ColumnEdge(
+                        confidence = 1.337,
+                        from_columns = [
+                            ''
+                            ],
+                        to_column = '',
+                        transform = '', )
+                    ],
                 job_mrn = '',
                 source = '',
                 target = '',

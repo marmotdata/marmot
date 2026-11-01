@@ -107,10 +107,11 @@ type DocumentationResult struct {
 }
 
 type LineageInput struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"`
-	JobMRN string `json:"job_mrn,omitempty"`
+	Source        string               `json:"source"`
+	Target        string               `json:"target"`
+	Type          string               `json:"type"`
+	JobMRN        string               `json:"job_mrn,omitempty"`
+	ColumnLineage []lineage.ColumnEdge `json:"column_lineage,omitempty"`
 }
 
 type DocumentationInput struct {
@@ -494,7 +495,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		// alone used to be taken as proof the edge was already there, so
 		// the edge was never written again under that pipeline name.
 		// Writing an edge that exists returns the existing one.
-		if _, err := s.lineageService.CreateDeclaredLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN, pipelineName); err != nil {
+		if _, err := s.lineageService.CreateDeclaredLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN, pipelineName, lin.ColumnLineage); err != nil {
 			log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
 			status = StatusFailed
 		}

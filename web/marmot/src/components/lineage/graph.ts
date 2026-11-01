@@ -1,4 +1,5 @@
 import type {
+	LineageColumnMapping,
 	LineageEdgeKind,
 	LineageEdgeOrigin,
 	LineageGraph,
@@ -32,6 +33,18 @@ export function edgeKind(type: string | undefined): LineageEdgeKind {
 function edgeOrigin(e: LineageEdge): LineageEdgeOrigin {
 	if (e.origin) return e.origin;
 	return edgeKind(e.type) === 'AGENT_LOOKUP' ? 'observed' : 'declared';
+}
+
+/** Column-level lineage in the canvas's shape, or nothing when the edge has none. */
+function edgeColumns(e: LineageEdge): { columns: LineageColumnMapping[] } | Record<string, never> {
+	if (!e.column_lineage?.length) return {};
+	return {
+		columns: e.column_lineage.map((c) => ({
+			from: c.from_columns ?? [],
+			to: c.to_column,
+			...(c.transform ? { transform: c.transform } : {})
+		}))
+	};
 }
 
 /** The asset's first provider, which picks its logo. */
@@ -95,7 +108,8 @@ export function buildGraph(
 		origin: edgeOrigin(e),
 		...(e.observation_count ? { observations: e.observation_count } : {}),
 		...(e.last_seen_at ? { lastSeen: e.last_seen_at } : {}),
-		...(e.job_mrn ? { job: e.job_mrn } : {})
+		...(e.job_mrn ? { job: e.job_mrn } : {}),
+		...edgeColumns(e)
 	}));
 
 	if (opts.groupNeighbours) {
@@ -150,6 +164,8 @@ export function buildGraph(
 				if (e.lastSeen && (!prev.lastSeen || e.lastSeen > prev.lastSeen))
 					prev.lastSeen = e.lastSeen;
 				if (prev.job !== e.job) delete prev.job;
+				// A merged line stands for several assets, so no single set of columns applies to it.
+				delete prev.columns;
 			}
 			edges = [...merged.values()];
 		}

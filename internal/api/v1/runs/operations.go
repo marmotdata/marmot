@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
@@ -85,10 +86,11 @@ type CreateStatRequest struct {
 } // @name CreateStatRequest
 
 type CreateLineageRequest struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"`
-	JobMRN string `json:"job_mrn,omitempty"`
+	Source        string               `json:"source"`
+	Target        string               `json:"target"`
+	Type          string               `json:"type"`
+	JobMRN        string               `json:"job_mrn,omitempty"`
+	ColumnLineage []lineage.ColumnEdge `json:"column_lineage,omitempty"`
 } // @name CreateLineageRequest
 
 type CreateDocRequest struct {
@@ -278,12 +280,13 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	lineageRequests := make([]runs.LineageInput, len(req.Lineage))
-	for i, lineage := range req.Lineage {
+	for i, l := range req.Lineage {
 		lineageRequests[i] = runs.LineageInput{
-			Source: lineage.Source,
-			Target: lineage.Target,
-			Type:   lineage.Type,
-			JobMRN: lineage.JobMRN,
+			Source:        l.Source,
+			Target:        l.Target,
+			Type:          l.Type,
+			JobMRN:        l.JobMRN,
+			ColumnLineage: l.ColumnLineage,
 		}
 	}
 	docRequests := make([]runs.DocumentationInput, len(req.Documentation))

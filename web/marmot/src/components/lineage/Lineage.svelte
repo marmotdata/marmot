@@ -92,6 +92,27 @@
 		return () => clearTimeout(refetchTimer);
 	});
 
+	// On the tab the canvas runs from where it starts down to the bottom of the window (with the page scrolled to the top), so the graph gets the room below it without the page scrolling.
+	let body = $state<HTMLDivElement>();
+	let fillHeight = $state(0);
+	function measure() {
+		if (!body) return;
+		let scroller: HTMLElement | null = body.parentElement;
+		while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY))
+			scroller = scroller.parentElement;
+		const scrolled = scroller ? scroller.scrollTop : window.scrollY;
+		const top = body.getBoundingClientRect().top + scrolled;
+		const viewport = scroller ? scroller.getBoundingClientRect().bottom : window.innerHeight;
+		// Leaves the page's bottom gutter (space-8) below the canvas.
+		fillHeight = Math.round(viewport - top - 32);
+	}
+	$effect(() => {
+		if (!body) return;
+		measure();
+		window.addEventListener('resize', measure);
+		return () => window.removeEventListener('resize', measure);
+	});
+
 	let graph = $derived(
 		buildGraph(lineageData, currentAsset, {
 			groupNeighbours: isAgentAsset,
@@ -286,7 +307,11 @@
 			</mm-page-header>
 		</div>
 	{/if}
-	<div class="lineage__body">
+	<div
+		class="lineage__body"
+		bind:this={body}
+		style:--lineage-fill={fillHeight ? `${fillHeight}px` : null}
+	>
 		<mm-lineage-canvas
 			bind:this={canvas}
 			class="lineage__canvas"
@@ -356,7 +381,7 @@
 	.lineage__canvas {
 		flex: 1;
 		min-width: 0;
-		--mm-lineage-height: 540px;
+		--mm-lineage-height: max(540px, var(--lineage-fill, 540px));
 	}
 	.lineage--full {
 		position: fixed;

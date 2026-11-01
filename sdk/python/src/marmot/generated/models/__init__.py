@@ -60,6 +60,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.batch_lineage_result import BatchLineageResult
     from marmot.generated.models.bucket import Bucket
     from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse
+    from marmot.generated.models.column_edge import ColumnEdge
     from marmot.generated.models.complete_run_request import CompleteRunRequest
     from marmot.generated.models.connected_app import ConnectedApp
     from marmot.generated.models.connected_apps_response import ConnectedAppsResponse
@@ -353,6 +354,7 @@ from marmot.generated.models.batch_get_assets_response import BatchGetAssetsResp
 from marmot.generated.models.batch_lineage_result import BatchLineageResult
 from marmot.generated.models.bucket import Bucket
 from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse
+from marmot.generated.models.column_edge import ColumnEdge
 from marmot.generated.models.complete_run_request import CompleteRunRequest
 from marmot.generated.models.connected_app import ConnectedApp
 from marmot.generated.models.connected_apps_response import ConnectedAppsResponse

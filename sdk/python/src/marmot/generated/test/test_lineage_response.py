@@ -35,6 +35,15 @@ class TestLineageResponse(unittest.TestCase):
             return LineageResponse(
                 edges = [
                     marmot.generated.models.lineage_edge.LineageEdge(
+                        column_lineage = [
+                            marmot.generated.models.column_edge.ColumnEdge(
+                                confidence = 1.337,
+                                from_columns = [
+                                    ''
+                                    ],
+                                to_column = '',
+                                transform = '', )
+                            ],
                         declared_by = '',
                         id = '',
                         job_mrn = '',

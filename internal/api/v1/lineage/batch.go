@@ -56,20 +56,8 @@ func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if exists {
-			results = append(results, BatchLineageResult{
-				Edge:   edge,
-				Status: "existing",
-			})
-			continue
-		}
-
-		// Use edge.Type if provided, otherwise default to empty string
-		lineageType := ""
-		if edge.Type != "" {
-			lineageType = edge.Type
-		}
-		if _, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN, declarerOf(r)); err != nil {
+		// Existing edges are written too, so a re-sent edge refreshes its column lineage and declarer.
+		if _, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, edge.Type, edge.JobMRN, declarerOf(r), edge.ColumnLineage); err != nil {
 			log.Error().Err(err).
 				Str("source", edge.Source).
 				Str("target", edge.Target).
@@ -77,9 +65,13 @@ func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		status := "created"
+		if exists {
+			status = "existing"
+		}
 		results = append(results, BatchLineageResult{
 			Edge:   edge,
-			Status: "created",
+			Status: status,
 		})
 	}
 

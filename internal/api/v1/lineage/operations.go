@@ -95,7 +95,7 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 	if edge.Type != "" {
 		lineageType = edge.Type
 	}
-	edgeID, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN, declarerOf(r))
+	edgeID, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN, declarerOf(r), nil)
 	if err != nil {
 		log.Error().Err(err).
 			Str("source", edge.Source).

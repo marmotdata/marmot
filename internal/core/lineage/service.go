@@ -20,8 +20,8 @@ type LineageChangeObserver interface {
 type Service interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error)
-	// CreateDeclaredLineage is CreateDirectLineage that also records who declared the edge.
-	CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string) (string, error)
+	// CreateDeclaredLineage is CreateDirectLineage that also records who declared the edge and any column-level mappings.
+	CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string, columnLineage []ColumnEdge) (string, error)
 	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
@@ -81,16 +81,16 @@ func (s *service) GetDirectLineage(ctx context.Context, edgeID string) (*Lineage
 }
 
 func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
-	return s.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, "")
+	return s.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, "", nil)
 }
 
-func (s *service) CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string) (string, error) {
+func (s *service) CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string, columnLineage []ColumnEdge) (string, error) {
 	existed, err := s.repo.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
 		return "", err
 	}
 
-	edgeID, err := s.repo.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, declaredBy)
+	edgeID, err := s.repo.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, declaredBy, columnLineage)
 	if err != nil {
 		return "", err
 	}

@@ -661,6 +661,19 @@ definitions:
       updated:
         type: boolean
     type: object
+  ColumnEdge:
+    properties:
+      confidence:
+        type: number
+      from_columns:
+        items:
+          type: string
+        type: array
+      to_column:
+        type: string
+      transform:
+        type: string
+    type: object
   CompleteRunRequest:
     properties:
       error:
@@ -887,6 +900,10 @@ definitions:
     type: object
   CreateLineageRequest:
     properties:
+      column_lineage:
+        items:
+          $ref: '#/definitions/ColumnEdge'
+        type: array
       job_mrn:
         type: string
       source:
@@ -1881,6 +1898,10 @@ definitions:
     type: object
   LineageEdge:
     properties:
+      column_lineage:
+        items:
+          $ref: '#/definitions/ColumnEdge'
+        type: array
       declared_by:
         description: 'DeclaredBy names who declared the edge: the pipeline whose run
           wrote it, or the person or service account that added it.'
