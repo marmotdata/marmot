@@ -6,7 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/internal/pluginserve"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -223,13 +226,15 @@ func init() {
 	ingestCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to ingestion config file (required)")
 	ingestCmd.Flags().BoolVarP(&quiet, "quiet", "q", true, "Hide info logs, show errors only")
 	ingestCmd.Flags().BoolVarP(&destroy, "destroy", "d", false, "Delete all resources for this pipeline (requires confirmation)")
+	ingestCmd.Flags().BoolVar(&serve, "serve", false, "After ingesting, stay running and answer Marmot's queries for the run marked queryable: true")
 	ingestCmd.MarkFlagRequired("config")
 	rootCmd.AddCommand(ingestCmd)
 }
 
 var ingestCmd = &cobra.Command{
-	Use:   "ingest",
-	Short: "Ingest data from sources into Marmot",
+	Use:     "ingest",
+	Aliases: []string{"plugin"},
+	Short:   "Ingest data from sources into Marmot",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		loadPlugins()
 	},
@@ -245,13 +250,17 @@ type apiClient struct {
 	client    *http.Client
 }
 
-func newAPIClient(baseURL, token string, isSAToken bool) *apiClient {
+func newAPIClient(baseURL, token string, isSAToken bool) (*apiClient, error) {
+	httpClient, err := apiHTTPClient(httpTimeout)
+	if err != nil {
+		return nil, err
+	}
 	return &apiClient{
 		baseURL:   baseURL,
 		token:     token,
 		isSAToken: isSAToken,
-		client:    &http.Client{Timeout: httpTimeout},
-	}
+		client:    httpClient,
+	}, nil
 }
 
 func (c *apiClient) startRun(ctx context.Context, request StartRunRequest) (*plugin.Run, error) {
@@ -337,6 +346,12 @@ func (c *apiClient) do(req *http.Request, v interface{}) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
+		var body struct {
+			Error string `json:"error"`
+		}
+		if json.NewDecoder(io.LimitReader(resp.Body, 64<<10)).Decode(&body) == nil && body.Error != "" {
+			return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, body.Error)
+		}
 		return fmt.Errorf("request failed with status %d", resp.StatusCode)
 	}
 
@@ -365,11 +380,37 @@ func runIngestion(ctx context.Context) error {
 		return fmt.Errorf("pipeline name is required")
 	}
 
+	if err := expandRunsEnv(config.Runs); err != nil {
+		return fmt.Errorf("expanding config: %w", err)
+	}
+
+	queryable, err := takeQueryableRuns(config.Runs)
+	if err != nil {
+		return err
+	}
+
 	token, isSAToken := getAuthToken()
-	client := newAPIClient(getHost(), token, isSAToken)
+	client, err := newAPIClient(getHost(), token, isSAToken)
+	if err != nil {
+		return err
+	}
 
 	if destroy {
+		if serve {
+			return fmt.Errorf("--serve cannot be combined with --destroy")
+		}
 		return runDestroy(ctx, config, client)
+	}
+
+	var served []pluginserve.LocalSource
+	var marmotURL *url.URL
+	if serve {
+		if marmotURL, err = enrolmentURL(getHost()); err != nil {
+			return err
+		}
+		if served, err = servedSources(config.Name, queryable); err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("Pipeline: %s\n\n", config.Name)
@@ -383,6 +424,10 @@ func runIngestion(ctx context.Context) error {
 	}
 
 	printSummary(overallSummary)
+
+	if serve {
+		return serveQueries(ctx, marmotURL, served)
+	}
 	return nil
 }
 
@@ -611,6 +656,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				Assets:        assets,
 				Lineage:       lineageBatch,
 				Documentation: documentation,
+				Statistics:    statisticRequests(result.Statistics),
 				RunHistory:    runHistory,
 				GlossaryTerms: glossaryTerms,
 				Config:        maskedConfig,
@@ -756,6 +802,21 @@ func processGlossaryResult(result *GlossaryResult, runSummary *plugin.RunSummary
 	if result.TermsUpdated > 0 {
 		printChange(symbolUpdate, "glossary", "", fmt.Sprintf("%d terms", result.TermsUpdated), statusUpdated)
 	}
+}
+
+// statisticRequests carries the metrics a plugin measured while it was
+// connected to the source. Only the plugin can take them, so they travel with
+// the batch that carries the assets they belong to.
+func statisticRequests(statistics []plugin.Statistic) []CreateStatisticRequest {
+	requests := make([]CreateStatisticRequest, 0, len(statistics))
+	for _, statistic := range statistics {
+		requests = append(requests, CreateStatisticRequest{
+			AssetMRN:   statistic.AssetMRN,
+			MetricName: statistic.MetricName,
+			Value:      statistic.Value,
+		})
+	}
+	return requests
 }
 
 func convertExternalLinks(links []asset.ExternalLink) []map[string]string {

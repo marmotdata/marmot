@@ -39,3 +39,21 @@ func parseOperator(op string) (Operator, error) {
 		return "", fmt.Errorf("unknown operator: %q", op)
 	}
 }
+
+// MetadataColumnRef builds a JSONB accessor on the metadata column for a dot-separated field path, escaping each key as a SQL string literal so user-supplied paths cannot break out of the expression.
+func MetadataColumnRef(field string) string {
+	path := strings.Split(field, ".")
+	keys := make([]string, len(path))
+	for i, key := range path {
+		keys[i] = QuoteLiteral(key)
+	}
+	if len(keys) == 1 {
+		return "metadata->>" + keys[0]
+	}
+	return "metadata->" + strings.Join(keys[:len(keys)-1], "->") + "->>" + keys[len(keys)-1]
+}
+
+// QuoteLiteral quotes s as a PostgreSQL string literal by doubling embedded single quotes, which is safe because pgx requires standard_conforming_strings to be on.
+func QuoteLiteral(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}

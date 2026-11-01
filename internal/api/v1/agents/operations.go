@@ -10,6 +10,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/agent"
+	"github.com/marmotdata/marmot/internal/core/auth"
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 type RecordRunRequest struct {
 	AgentMRN       string            `json:"agent_mrn"`
 	RunID          string            `json:"run_id"`
+	Prompt         string            `json:"prompt,omitempty"`
 	StartedAt      time.Time         `json:"started_at"`
 	EndedAt        *time.Time        `json:"ended_at,omitempty"`
 	Status         string            `json:"status"`
@@ -39,6 +41,13 @@ type ToolCallPayload struct {
 	StartedAt  time.Time `json:"started_at"`
 	DurationMs *int      `json:"duration_ms,omitempty"`
 	Status     string    `json:"status"`
+	// Detail is the call's argument in a readable form, such as the SQL of a query.
+	Detail string `json:"detail,omitempty"`
+	// Result summarises what came back, such as "5 rows".
+	Result string `json:"result,omitempty"`
+	// Reason and Rule explain a refused or failed call: why, and which policy or rule refused it.
+	Reason string `json:"reason,omitempty"`
+	Rule   string `json:"rule,omitempty"`
 } // @name ToolCallPayload
 
 type RunsResponse struct {
@@ -77,12 +86,23 @@ func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
 			StartedAt:  tc.StartedAt,
 			DurationMs: tc.DurationMs,
 			Status:     tc.Status,
+			Detail:     tc.Detail,
+			Result:     tc.Result,
+			Reason:     tc.Reason,
+			Rule:       tc.Rule,
 		})
+	}
+
+	var serviceAccountID *string
+	if p, ok := common.PrincipalFromContext(r.Context()); ok && p.Type() == auth.PrincipalTypeServiceAccount {
+		id := p.ID()
+		serviceAccountID = &id
 	}
 
 	run, err := h.agentService.RecordRun(r.Context(), agent.RunInput{
 		AgentMRN:       req.AgentMRN,
 		RunID:          req.RunID,
+		Prompt:         req.Prompt,
 		StartedAt:      req.StartedAt,
 		EndedAt:        req.EndedAt,
 		Status:         req.Status,
@@ -92,6 +112,8 @@ func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
 		Error:          req.Error,
 		ToolCalls:      tcs,
 		ObservedAssets: req.ObservedAssets,
+
+		ServiceAccountID: serviceAccountID,
 	})
 	if errors.Is(err, agent.ErrAgentNotFound) {
 		common.RespondError(w, http.StatusNotFound, "agent not found")

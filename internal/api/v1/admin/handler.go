@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -15,6 +15,7 @@ type Handler struct {
 	userService user.Service
 	authService auth.Service
 	config      *config.Config
+	extras      *Extras
 }
 
 func NewHandler(
@@ -37,7 +38,7 @@ func (h *Handler) Routes() []common.Route {
 		common.RequirePermission(h.userService, "users", "manage"),
 	}
 
-	return []common.Route{
+	return append(h.extraRoutes(), []common.Route{
 		{
 			Path:       "/api/v1/admin/search/reindex",
 			Method:     http.MethodPost,
@@ -50,5 +51,5 @@ func (h *Handler) Routes() []common.Route {
 			Handler:    h.getReindexStatus,
 			Middleware: authMiddleware,
 		},
-	}
+	}...)
 }

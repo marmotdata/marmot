@@ -25,12 +25,12 @@ type AWSCredentialStatus struct {
 }
 
 // Validate validates this a w s credential status
-func (m *AWSCredentialStatus) Validate(formats strfmt.Registry) error {
+func (m *AWSCredentialStatus) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this a w s credential status based on context it is used
-func (m *AWSCredentialStatus) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AWSCredentialStatus) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

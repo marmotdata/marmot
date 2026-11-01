@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/marmotdata/marmot/internal/core/runs"
+	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 var runGVR = schema.GroupVersionResource{
@@ -207,13 +208,28 @@ func (s *Syncer) syncRun(ctx context.Context, u *unstructured.Unstructured) erro
 	}
 
 	managedBy := "operator"
-	_, err := s.scheduleSvc.SyncSchedule(ctx, pipelineName, pluginID, config, schedule, managedBy)
+	_, err := s.scheduleSvc.SyncSchedule(ctx, pipelineName, pluginID, maskedConfig(pluginID, config), schedule, managedBy)
+	if errors.Is(err, runs.ErrScheduleNameExists) {
+		log.Warn().Str("run", pipelineName).Msg("A pipeline with this Run's name already exists in Marmot and is not managed by the operator; it was left unchanged. Rename the Run, or delete that pipeline if the operator should own it.")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("syncing schedule for Run %q: %w", pipelineName, err)
 	}
 
 	log.Debug().Str("run", pipelineName).Str("plugin", pluginID).Msg("Synced Run CRD to schedule")
 	return nil
+}
+
+// maskedConfig returns the Run's config with sensitive fields masked, or nil when the plugin's spec is unknown. The server never runs operator-managed pipelines, so it has no reason to hold their credentials, and a config it cannot mask is dropped rather than stored in plaintext.
+func maskedConfig(pluginID string, config map[string]interface{}) map[string]interface{} {
+	<-plugin.GetLoadState().Done()
+
+	entry, err := plugin.GetRegistry().Get(pluginID)
+	if err != nil {
+		return nil
+	}
+	return plugin.MaskSensitiveFieldsFromSpec(config, entry.Meta.ConfigSpec)
 }
 
 func (s *Syncer) deleteSchedule(ctx context.Context, u *unstructured.Unstructured) error {

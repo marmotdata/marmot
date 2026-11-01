@@ -1,9 +1,7 @@
 ---
 slug: data-catalog-without-complex-infrastructure
 title: "Marmot: Data catalog without the complex infrastructure"
-authors:
-  - name: Charlie Haley
-    url: https://github.com/charlie-haley
+authors: [charlie]
 image: /img/marmot-banner.png
 description: "Data catalogs shouldn't need a platform team to run. Meet Marmot, an open source data catalog that needs only PostgreSQL, ships as a single Go binary, and deploys in minutes with no Kafka, Elasticsearch or Airflow."
 tags: [data-catalog, open-source, infrastructure, getting-started]
@@ -27,10 +25,10 @@ Marmot is an open source data catalog that just needs PostgreSQL - no Kafka, no 
 <!-- truncate -->
 
 <CalloutCard
-  title="See Marmot in Action"
-  description="Explore the interface and features with the interactive demo - no installation required."
-  href="https://demo.marmotdata.io"
-  buttonText="Try Live Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 
@@ -49,7 +47,7 @@ Many require external orchestrators, search indexers and message brokers alongsi
 
 ## Architecture
 
-Marmot is built entirely in Go with PostgreSQL being the only external dependency, handling search, job scheduling and metadata storage. It's so lightweight that the public demo at [demo.marmotdata.io](https://demo.marmotdata.io) runs on a single $4/month cloud instance.
+Marmot is built entirely in Go with PostgreSQL being the only external dependency, handling search, job scheduling and metadata storage. It's so lightweight that a full instance runs comfortably on a single $4/month cloud instance.
 
 Unlike traditional catalogs that have opinionated ingestion methods, Marmot lets you populate your catalog however you like. The UI supports manual entries and automated discovery via the plugin system. The CLI uses the same plugin system, so you can run ingestion jobs from your Marmot instance or as part of your CI/CD pipelines. Terraform, Pulumi and the REST API are there for infrastructure-as-code workflows and custom integrations.
 
@@ -106,9 +104,8 @@ Works with Claude Desktop, Claude Code, Cursor, Cline and other MCP-compatible t
 
 ## Try It Out
 
-Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just try the demo and let me know what you think.
+Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just deploy it and let me know what you think.
 
-- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
 - **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs/introduction)
 - **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
 

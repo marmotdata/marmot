@@ -104,7 +104,9 @@ func TestReindexer_RejectsParallel(t *testing.T) {
 	}
 
 	// Wait for first to complete
-	<-done
+	if err := <-done; err != nil {
+		t.Errorf("first RunOnce failed: %v", err)
+	}
 }
 
 func TestReindexer_CancelledContext(t *testing.T) {

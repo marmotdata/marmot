@@ -40,12 +40,12 @@ type UserIdentity struct {
 }
 
 // Validate validates this user identity
-func (m *UserIdentity) Validate(formats strfmt.Registry) error {
+func (m *UserIdentity) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this user identity based on context it is used
-func (m *UserIdentity) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UserIdentity) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

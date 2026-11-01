@@ -52,12 +52,14 @@ class TestListUsersResponse(unittest.TestCase):
                                 updated_at = '',
                                 user_id = '', )
                             ],
+                        invite_expires_at = '',
+                        last_seen_at = '',
                         must_change_password = True,
                         name = '',
                         preferences = { },
                         profile_picture = '',
                         roles = [
-                            marmot.generated.models.role.Role(
+                            marmot.generated.models.user_role.UserRole(
                                 description = '',
                                 id = '',
                                 name = '',
@@ -70,6 +72,8 @@ class TestListUsersResponse(unittest.TestCase):
                                         resource_type = '', )
                                     ], )
                             ],
+                        sessions_invalidated_at = '',
+                        status = '',
                         updated_at = '',
                         username = '', )
                     ]

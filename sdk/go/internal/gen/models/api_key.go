@@ -32,17 +32,20 @@ type APIKey struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Prefix is the start of the key kept in clear so a key can be recognised in a list after its secret is gone; empty for keys issued before it was stored.
+	Prefix string `json:"prefix,omitempty"`
+
 	// user id
 	UserID string `json:"user_id,omitempty"`
 }
 
 // Validate validates this API key
-func (m *APIKey) Validate(formats strfmt.Registry) error {
+func (m *APIKey) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this API key based on context it is used
-func (m *APIKey) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *APIKey) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

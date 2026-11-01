@@ -117,7 +117,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteAssetRulesIDContext] instead.
 func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -176,7 +176,7 @@ func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAs
 
 // GetAssetRulesAssetsID gets assets matched by a rule.
 //
-// Get the list of asset IDs matched by an asset rule.
+// Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -184,7 +184,7 @@ func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAs
 // If you need to pass a specific context, use [Client.GetAssetRulesAssetsIDContext] instead.
 func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -195,7 +195,7 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, auth
 
 // GetAssetRulesAssetsIDContext gets assets matched by a rule.
 //
-// Get the list of asset IDs matched by an asset rule.
+// Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it..
 //
 // Do not use the deprecated [GetAssetRulesAssetsIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
@@ -251,7 +251,7 @@ func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAs
 // If you need to pass a specific context, use [Client.GetAssetRulesIDContext] instead.
 func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -318,7 +318,7 @@ func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRul
 // If you need to pass a specific context, use [Client.GetAssetRulesListContext] instead.
 func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesListOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +385,7 @@ func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetR
 // If you need to pass a specific context, use [Client.GetAssetRulesSearchContext] instead.
 func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -452,7 +452,7 @@ func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAsse
 // If you need to pass a specific context, use [Client.PostAssetRulesContext] instead.
 func (a *Client) PostAssetRules(params *PostAssetRulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -519,7 +519,7 @@ func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRul
 // If you need to pass a specific context, use [Client.PostAssetRulesPreviewContext] instead.
 func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -586,7 +586,7 @@ func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostA
 // If you need to pass a specific context, use [Client.PutAssetRulesIDContext] instead.
 func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

@@ -19,12 +19,12 @@ type AssetsByOwnerResponse struct {
 }
 
 // Validate validates this assets by owner response
-func (m *AssetsByOwnerResponse) Validate(formats strfmt.Registry) error {
+func (m *AssetsByOwnerResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this assets by owner response based on context it is used
-func (m *AssetsByOwnerResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetsByOwnerResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

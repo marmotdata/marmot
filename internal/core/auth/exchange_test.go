@@ -49,7 +49,7 @@ func newTestJWKS(t *testing.T) *testJWKS {
 		case "/.well-known/openid-configuration":
 			disc := map[string]interface{}{
 				"issuer":                 tj.server.URL,
-				"jwks_uri":              tj.server.URL + "/jwks",
+				"jwks_uri":               tj.server.URL + "/jwks",
 				"authorization_endpoint": tj.server.URL + "/auth",
 				"token_endpoint":         tj.server.URL + "/token",
 			}
@@ -122,28 +122,62 @@ func (m *mockUserService) Update(ctx context.Context, id string, input user.Upda
 	return nil, nil
 }
 
-func (m *mockUserService) Delete(_ context.Context, _, _ string) error                           { return nil }
+func (m *mockUserService) Delete(_ context.Context, _, _ string) error { return nil }
 func (m *mockUserService) Get(ctx context.Context, id string) (*user.User, error) {
 	if m.getFn != nil {
 		return m.getFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *mockUserService) GetUserByUsername(_ context.Context, _ string) (*user.User, error)      { return nil, nil }
-func (m *mockUserService) FindSimilarUsernames(_ context.Context, _ string, _ int) ([]string, error) { return nil, nil }
-func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, int, error)      { return nil, 0, nil }
-func (m *mockUserService) Authenticate(_ context.Context, _, _ string) (*user.User, error)       { return nil, nil }
-func (m *mockUserService) ValidateAPIKey(_ context.Context, _ string) (*user.User, error)        { return nil, nil }
-func (m *mockUserService) HasPermission(_ context.Context, _, _ string, _ string) (bool, error)  { return false, nil }
-func (m *mockUserService) GetPermissionsByRoleName(_ context.Context, _ string) ([]user.Permission, error) { return nil, nil }
-func (m *mockUserService) AuthenticateOAuth(_ context.Context, _, _ string, _ map[string]interface{}) (*user.User, error) { return nil, nil }
-func (m *mockUserService) LinkOAuthAccount(_ context.Context, _, _, _ string, _ map[string]interface{}) error { return nil }
-func (m *mockUserService) UnlinkOAuthAccount(_ context.Context, _, _ string) error               { return nil }
-func (m *mockUserService) CreateAPIKey(_ context.Context, _, _ string, _ *time.Duration) (*user.APIKey, error) { return nil, nil }
-func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error                     { return nil }
-func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error)       { return nil, nil }
-func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error { return nil }
-func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error)     { return nil, nil }
+func (m *mockUserService) GetUserByUsername(_ context.Context, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) FindSimilarUsernames(_ context.Context, _ string, _ int) ([]string, error) {
+	return nil, nil
+}
+func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, int, error) {
+	return nil, 0, nil
+}
+func (m *mockUserService) Authenticate(_ context.Context, _, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) InvalidateSessions(_ context.Context, _ string) error { return nil }
+func (m *mockUserService) ValidateAPIKey(_ context.Context, _ string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) HasPermission(_ context.Context, _, _ string, _ string) (bool, error) {
+	return false, nil
+}
+func (m *mockUserService) GetPermissionsByRoleName(_ context.Context, _ string) ([]user.Permission, error) {
+	return nil, nil
+}
+func (m *mockUserService) AuthenticateOAuth(_ context.Context, _, _ string, _ map[string]interface{}) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockUserService) LinkOAuthAccount(_ context.Context, _, _, _ string, _ map[string]interface{}) error {
+	return nil
+}
+func (m *mockUserService) UnlinkOAuthAccount(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) CreateAPIKey(_ context.Context, _, _ string, _ *time.Duration) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) DeleteAPIKey(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) ListAPIKeys(_ context.Context, _ string) ([]*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) RotateAPIKey(_ context.Context, _, _ string) (*user.APIKey, error) {
+	return nil, nil
+}
+func (m *mockUserService) GetProfile(_ context.Context, _ string) (*user.Profile, error) {
+	return &user.Profile{}, nil
+}
+func (m *mockUserService) UpdateJobTitle(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error {
+	return nil
+}
+func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error) {
+	return nil, nil
+}
 
 func TestExchangeIDToken_ExistingUser(t *testing.T) {
 	tjwks := newTestJWKS(t)

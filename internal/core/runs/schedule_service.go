@@ -33,20 +33,68 @@ func (s *ScheduleService) SetBroadcaster(broadcaster EventBroadcaster) {
 
 // Schedule operations
 
-func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, createdBy *string) (*Schedule, error) {
+// ScheduleDetails are the descriptive fields of a pipeline. A nil field is left as it is on update; an empty Description or OwnerType clears it.
+type ScheduleDetails struct {
+	Description *string
+	OwnerType   *string
+	OwnerID     *string
+}
+
+// apply copies the set fields onto a schedule, rejecting an owner that is half given or of an unknown type.
+func (d ScheduleDetails) apply(schedule *Schedule) error {
+	if d.Description != nil {
+		description := *d.Description
+		schedule.Description = &description
+	}
+	if d.OwnerType == nil && d.OwnerID == nil {
+		return nil
+	}
+	ownerType, ownerID := "", ""
+	if d.OwnerType != nil {
+		ownerType = *d.OwnerType
+	}
+	if d.OwnerID != nil {
+		ownerID = *d.OwnerID
+	}
+	if ownerType == "" && ownerID == "" {
+		schedule.OwnerType, schedule.OwnerID, schedule.OwnerName = nil, nil, nil
+		return nil
+	}
+	if (ownerType != ScheduleOwnerUser && ownerType != ScheduleOwnerTeam) || ownerID == "" {
+		return ErrScheduleOwnerNotFound
+	}
+	schedule.OwnerType, schedule.OwnerID, schedule.OwnerName = &ownerType, &ownerID, nil
+	return nil
+}
+
+func (s *ScheduleService) CreateSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool, createdBy *string) (*Schedule, error) {
+	return s.CreateScheduleWithDetails(ctx, name, pluginID, config, cronExpression, enabled, queryable, ingestOnQuery, createdBy, ScheduleDetails{})
+}
+
+// CreateScheduleWithDetails creates a schedule with its description and owner in the same write, so a bad owner never leaves a half-made pipeline behind.
+func (s *ScheduleService) CreateScheduleWithDetails(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool, createdBy *string, details ScheduleDetails) (*Schedule, error) {
 	schedule := &Schedule{
 		Name:           name,
 		PluginID:       pluginID,
 		Config:         config,
 		CronExpression: cronExpression,
 		Enabled:        enabled,
+		Queryable:      queryable,
+		IngestOnQuery:  ingestOnQuery,
 		CreatedBy:      createdBy,
+	}
+	if err := details.apply(schedule); err != nil {
+		return nil, err
 	}
 
 	if err := s.repo.CreateSchedule(ctx, schedule); err != nil {
 		return nil, err
 	}
 
+	// Read back so the response carries the owner's name like every other read.
+	if created, err := s.repo.GetSchedule(ctx, schedule.ID); err == nil {
+		return created, nil
+	}
 	return schedule, nil
 }
 
@@ -66,9 +114,17 @@ func (s *ScheduleService) GetScheduleForAsset(ctx context.Context, assetID strin
 	return s.repo.GetScheduleForAsset(ctx, assetID)
 }
 
-func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool) (*Schedule, error) {
+func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool) (*Schedule, error) {
+	return s.UpdateScheduleWithDetails(ctx, id, name, pluginID, config, cronExpression, enabled, queryable, ingestOnQuery, ScheduleDetails{})
+}
+
+// UpdateScheduleWithDetails updates a schedule, changing its description and owner only where details sets them, so older clients that do not send them keep what is there.
+func (s *ScheduleService) UpdateScheduleWithDetails(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool, queryable, ingestOnQuery bool, details ScheduleDetails) (*Schedule, error) {
 	existing, err := s.repo.GetSchedule(ctx, id)
 	if err != nil {
+		return nil, err
+	}
+	if err := details.apply(existing); err != nil {
 		return nil, err
 	}
 
@@ -77,11 +133,16 @@ func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, p
 	existing.Config = config
 	existing.CronExpression = cronExpression
 	existing.Enabled = enabled
+	existing.Queryable = queryable
+	existing.IngestOnQuery = ingestOnQuery
 
 	if err := s.repo.UpdateSchedule(ctx, existing); err != nil {
 		return nil, err
 	}
 
+	if updated, err := s.repo.GetSchedule(ctx, id); err == nil {
+		return updated, nil
+	}
 	return existing, nil
 }
 
@@ -93,8 +154,28 @@ func (s *ScheduleService) ListSchedules(ctx context.Context, enabled *bool, limi
 	return s.repo.ListSchedules(ctx, enabled, limit, offset)
 }
 
+// SearchSchedules pages through schedules filtered by name, plugin and latest run status.
+func (s *ScheduleService) SearchSchedules(ctx context.Context, filter ScheduleFilter) ([]*Schedule, int, error) {
+	return s.repo.SearchSchedules(ctx, filter)
+}
+
+// CountSchedulesByPlugin counts the pipelines each plugin backs.
+func (s *ScheduleService) CountSchedulesByPlugin(ctx context.Context) (map[string]int, error) {
+	return s.repo.CountSchedulesByPlugin(ctx)
+}
+
 func (s *ScheduleService) GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error) {
 	return s.repo.GetSchedulesDueForRun(ctx, limit)
+}
+
+// ClaimServedSources records, all or nothing, that a plugin running outside Marmot serves the queryable sources the schedules name; see ScheduleRepository.ClaimServedSources for the ownership rule.
+func (s *ScheduleService) ClaimServedSources(ctx context.Context, schedules []*Schedule) error {
+	return s.repo.ClaimServedSources(ctx, schedules)
+}
+
+// ListQueryableSchedules pages through the sources that answer data queries.
+func (s *ScheduleService) ListQueryableSchedules(ctx context.Context, search string, limit, offset int) ([]*Schedule, int, error) {
+	return s.repo.ListQueryableSchedules(ctx, search, limit, offset)
 }
 
 // CalculateNextRun calculates the next run time for a schedule
@@ -237,6 +318,17 @@ func (s *ScheduleService) CancelJobRun(ctx context.Context, id string) error {
 		s.broadcaster.BroadcastJobRunCancelled(run)
 	}
 
+	return nil
+}
+
+// MarkJobRunPhase records that a run reached a phase and tells watchers, so an open run shows it move.
+func (s *ScheduleService) MarkJobRunPhase(ctx context.Context, id, phase string) error {
+	if err := s.repo.MarkJobRunPhase(ctx, id, phase); err != nil {
+		return err
+	}
+	if run, err := s.repo.GetJobRun(ctx, id); err == nil {
+		s.broadcaster.BroadcastJobRunProgress(run)
+	}
 	return nil
 }
 

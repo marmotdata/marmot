@@ -16,15 +16,18 @@ type ErrorResponse struct {
 
 	// error
 	Error string `json:"error,omitempty"`
+
+	// RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // Validate validates this error response
-func (m *ErrorResponse) Validate(formats strfmt.Registry) error {
+func (m *ErrorResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this error response based on context it is used
-func (m *ErrorResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ErrorResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

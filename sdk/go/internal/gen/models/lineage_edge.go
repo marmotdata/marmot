@@ -4,15 +4,25 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // LineageEdge lineage edge
 //
 // swagger:model LineageEdge
 type LineageEdge struct {
+
+	// column lineage
+	ColumnLineage []*ColumnEdge `json:"column_lineage"`
+
+	// DeclaredBy names who declared the edge: the pipeline whose run wrote it, or the person or service account that added it.
+	DeclaredBy string `json:"declared_by,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
@@ -41,11 +51,88 @@ type LineageEdge struct {
 
 // Validate validates this lineage edge
 func (m *LineageEdge) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateColumnLineage(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this lineage edge based on context it is used
+func (m *LineageEdge) validateColumnLineage(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.ColumnLineage) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ColumnLineage); i++ {
+		if typeutils.IsZero(m.ColumnLineage[i]) { // not required
+			continue
+		}
+
+		if m.ColumnLineage[i] != nil {
+			if err := m.ColumnLineage[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this lineage edge based on the context it is used
 func (m *LineageEdge) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateColumnLineage(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *LineageEdge) contextValidateColumnLineage(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ColumnLineage); i++ {
+
+		if m.ColumnLineage[i] != nil {
+
+			if typeutils.IsZero(m.ColumnLineage[i]) { // not required
+				return nil
+			}
+
+			if err := m.ColumnLineage[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

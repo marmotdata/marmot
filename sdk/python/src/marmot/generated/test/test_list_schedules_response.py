@@ -35,20 +35,32 @@ class TestListSchedulesResponse(unittest.TestCase):
             return ListSchedulesResponse(
                 limit = 56,
                 offset = 56,
+                plugin_counts = {
+                    'key' : 56
+                    },
                 schedules = [
                     marmot.generated.models.schedule.Schedule(
+                        asset_count = 56,
                         config = { },
                         created_at = '',
                         created_by = '',
                         cron_expression = '',
+                        description = '',
                         enabled = True,
                         id = '',
+                        ingest_on_query = True,
                         last_run_at = '',
                         last_run_status = '',
                         managed_by = '',
                         name = '',
                         next_run_at = '',
+                        owner_id = '',
+                        owner_name = '',
+                        owner_type = '',
                         plugin_id = '',
+                        queryable = True,
+                        served_by_id = '',
+                        served_by_type = '',
                         updated_at = '', )
                     ],
                 total = 56

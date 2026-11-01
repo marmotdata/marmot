@@ -1,9 +1,7 @@
 ---
 slug: postgres-one-database-to-rule-them-all
 title: "Postgres: One Database to Rule Them All"
-authors:
-  - name: Charlie Haley
-    url: https://github.com/charlie-haley
+authors: [charlie]
 image: /img/postgres-banner.png
 description: "Why PostgreSQL alone can back a production data catalog. How Marmot replaces Kafka, Elasticsearch and a search cluster with one Postgres database, and the infrastructure tax you avoid by doing so."
 tags: [postgres, architecture, data-catalog, infrastructure]

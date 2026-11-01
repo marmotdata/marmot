@@ -3,8 +3,10 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +22,15 @@ type OperatorConfig struct {
 }
 
 // buildConfigMap renders the Run spec into a CLI-compatible pipeline YAML ConfigMap.
+const (
+	// marmotTokenAudience must match the audience Marmot's TokenReview requires.
+	marmotTokenAudience = "marmot"
+	// marmotTokenDir is where the CLI looks for the projected token.
+	marmotTokenDir = "/var/run/secrets/marmot" //nolint:gosec // a mount path, not a credential
+	// marmotTokenLifetime is the projected token's lifetime; the kubelet replaces it at 80% of that, and a serving process rereads it every time it enrols.
+	marmotTokenLifetime = time.Hour
+)
+
 func buildConfigMap(run *runsv1alpha1.Run) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -126,6 +137,36 @@ func buildTeardownJob(run *runsv1alpha1.Run, cfg OperatorConfig) *batchv1.Job {
 }
 
 func buildJobSpec(run *runsv1alpha1.Run, cfg OperatorConfig) batchv1.JobSpec {
+	return batchv1.JobSpec{
+		BackoffLimit:          run.Spec.BackoffLimit,
+		ActiveDeadlineSeconds: run.Spec.ActiveDeadlineSeconds,
+		Template:              buildPodTemplate(run, cfg, ingestCommand(), corev1.RestartPolicyNever),
+	}
+}
+
+// buildDeployment creates the long-running Deployment for a serving Run. One replica is enough: a serving process reconnects by itself, and Marmot routes queries to whichever replica it is connected to.
+func buildDeployment(run *runsv1alpha1.Run, cfg OperatorConfig) *appsv1.Deployment {
+	replicas := int32(1)
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      run.Name,
+			Namespace: run.Namespace,
+			Labels:    commonLabels(run),
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{MatchLabels: commonLabels(run)},
+			Template: buildPodTemplate(run, cfg, append(ingestCommand(), "--serve"), corev1.RestartPolicyAlways),
+		},
+	}
+}
+
+func ingestCommand() []string {
+	return []string{"marmot", "ingest", "-c", "/config/pipeline.yaml", "--host", "$(MARMOT_HOST)"}
+}
+
+// buildPodTemplate is the pod every Run workload runs. It does not mount the ServiceAccount's Kubernetes API token, which ingestion never needs; it mounts a token projected for the Marmot audience instead, which Marmot accepts and the Kubernetes API refuses.
+func buildPodTemplate(run *runsv1alpha1.Run, cfg OperatorConfig, command []string, restart corev1.RestartPolicy) corev1.PodTemplateSpec {
 	resources := corev1.ResourceRequirements{}
 	if run.Spec.Resources != nil {
 		resources = *run.Spec.Resources
@@ -136,54 +177,67 @@ func buildJobSpec(run *runsv1alpha1.Run, cfg OperatorConfig) batchv1.JobSpec {
 		podLabels[k] = v
 	}
 
-	spec := batchv1.JobSpec{
-		BackoffLimit:          run.Spec.BackoffLimit,
-		ActiveDeadlineSeconds: run.Spec.ActiveDeadlineSeconds,
-		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels:      podLabels,
-				Annotations: run.Spec.PodAnnotations,
+	automount := false
+	tokenLifetime := int64(marmotTokenLifetime.Seconds())
+	return corev1.PodTemplateSpec{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      podLabels,
+			Annotations: run.Spec.PodAnnotations,
+		},
+		Spec: corev1.PodSpec{
+			ServiceAccountName:           cfg.IngestServiceAccount,
+			AutomountServiceAccountToken: &automount,
+			RestartPolicy:                restart,
+			Containers: []corev1.Container{
+				{
+					Name:      "marmot-ingest",
+					Image:     cfg.Image,
+					Command:   command,
+					Env:       jobEnv(run, cfg),
+					Resources: resources,
+					VolumeMounts: []corev1.VolumeMount{
+						{Name: "config", MountPath: "/config", ReadOnly: true},
+						{Name: "marmot-token", MountPath: marmotTokenDir, ReadOnly: true},
+					},
+				},
 			},
-			Spec: corev1.PodSpec{
-				ServiceAccountName: cfg.IngestServiceAccount,
-				RestartPolicy:      corev1.RestartPolicyNever,
-				Containers: []corev1.Container{
-					{
-						Name:    "marmot-ingest",
-						Image:   cfg.Image,
-						Command: []string{"marmot", "ingest", "-c", "/config/pipeline.yaml", "--host", "$(MARMOT_HOST)"},
-						Env: []corev1.EnvVar{
-							{
-								Name:  "MARMOT_HOST",
-								Value: cfg.MarmotURL,
-							},
-						},
-						Resources: resources,
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								Name:      "config",
-								MountPath: "/config",
-								ReadOnly:  true,
-							},
+			Volumes: []corev1.Volume{
+				{
+					Name: "config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: configMapName(run)},
 						},
 					},
 				},
-				Volumes: []corev1.Volume{
-					{
-						Name: "config",
-						VolumeSource: corev1.VolumeSource{
-							ConfigMap: &corev1.ConfigMapVolumeSource{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: configMapName(run),
+				{
+					Name: "marmot-token",
+					VolumeSource: corev1.VolumeSource{
+						Projected: &corev1.ProjectedVolumeSource{
+							Sources: []corev1.VolumeProjection{{
+								ServiceAccountToken: &corev1.ServiceAccountTokenProjection{
+									Audience:          marmotTokenAudience,
+									ExpirationSeconds: &tokenLifetime,
+									Path:              "token",
 								},
-							},
+							}},
 						},
 					},
 				},
 			},
 		},
 	}
-	return spec
+}
+
+// jobEnv returns the Run's env followed by the operator's own variables, so a later duplicate can never redirect the Job (and its ServiceAccount token) away from Marmot even if admission validation was bypassed
+func jobEnv(run *runsv1alpha1.Run, cfg OperatorConfig) []corev1.EnvVar {
+	env := make([]corev1.EnvVar, 0, len(run.Spec.Env)+1)
+	for _, e := range run.Spec.Env {
+		if !strings.HasPrefix(e.Name, "MARMOT_") {
+			env = append(env, e)
+		}
+	}
+	return append(env, corev1.EnvVar{Name: "MARMOT_HOST", Value: cfg.MarmotURL})
 }
 
 // renderPipelineYAML produces the CLI-compatible pipeline YAML from the CRD spec.

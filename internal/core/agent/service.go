@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"unicode/utf8"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
@@ -18,6 +19,7 @@ const EdgeTypeAgentLookup = "AGENT_LOOKUP"
 type RunInput struct {
 	AgentMRN  string          `json:"agent_mrn"`
 	RunID     string          `json:"run_id"`
+	Prompt    string          `json:"prompt,omitempty"`
 	StartedAt time.Time       `json:"started_at"`
 	EndedAt   *time.Time      `json:"ended_at,omitempty"`
 	Status    string          `json:"status"`
@@ -31,6 +33,8 @@ type RunInput struct {
 	// outputs (e.g. catalog-traversal tools that return MRNs). The server
 	// emits an AGENT_LOOKUP observed edge for each.
 	ObservedAssets []string `json:"observed_assets,omitempty"`
+	// ServiceAccountID is set by the API from the caller, never from the body, so a run cannot claim an account it did not authenticate as.
+	ServiceAccountID *string `json:"-"`
 }
 
 type ToolCallInput struct {
@@ -39,6 +43,10 @@ type ToolCallInput struct {
 	StartedAt  time.Time `json:"started_at"`
 	DurationMs *int      `json:"duration_ms,omitempty"`
 	Status     string    `json:"status"`
+	Detail     string    `json:"detail,omitempty"`
+	Result     string    `json:"result,omitempty"`
+	Reason     string    `json:"reason,omitempty"`
+	Rule       string    `json:"rule,omitempty"`
 }
 
 type Service interface {
@@ -83,6 +91,7 @@ func (s *service) RecordRun(ctx context.Context, in RunInput) (*Run, error) {
 	run := &Run{
 		AgentID:   agent.ID,
 		RunID:     in.RunID,
+		Prompt:    truncate(in.Prompt, maxPromptLen),
 		StartedAt: in.StartedAt,
 		EndedAt:   in.EndedAt,
 		Status:    in.Status,
@@ -90,6 +99,8 @@ func (s *service) RecordRun(ctx context.Context, in RunInput) (*Run, error) {
 		TokensIn:  in.TokensIn,
 		TokensOut: in.TokensOut,
 		Error:     in.Error,
+
+		ServiceAccountID: in.ServiceAccountID,
 	}
 	if in.EndedAt != nil {
 		ms := int(in.EndedAt.Sub(in.StartedAt) / time.Millisecond)
@@ -104,6 +115,10 @@ func (s *service) RecordRun(ctx context.Context, in RunInput) (*Run, error) {
 			StartedAt:  tc.StartedAt,
 			DurationMs: tc.DurationMs,
 			Status:     tc.Status,
+			Detail:     truncate(tc.Detail, maxDetailLen),
+			Result:     truncate(tc.Result, maxPromptLen),
+			Reason:     truncate(tc.Reason, maxPromptLen),
+			Rule:       truncate(tc.Rule, maxRuleLen),
 		})
 	}
 
@@ -160,6 +175,24 @@ func (s *service) BucketRuns(ctx context.Context, assetID string, period time.Du
 func (s *service) Stats(ctx context.Context, assetID string, period time.Duration) (*Stats, error) {
 	since := time.Now().Add(-period)
 	return s.repo.Stats(ctx, assetID, since)
+}
+
+// Prompts and step text come from agents, so they are capped to keep one chatty run from bloating every listing it appears in.
+const (
+	maxPromptLen = 2000
+	maxDetailLen = 8000
+	maxRuleLen   = 255
+)
+
+// truncate cuts s to at most n bytes without splitting a UTF-8 character.
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	for n > 0 && !utf8.RuneStart(s[n]) {
+		n--
+	}
+	return s[:n]
 }
 
 // IsNotFound returns true if err is one of the package's not-found sentinels.

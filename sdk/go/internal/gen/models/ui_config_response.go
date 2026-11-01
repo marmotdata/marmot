@@ -23,6 +23,9 @@ type UIConfigResponse struct {
 	// banner
 	Banner *BannerResponse `json:"banner,omitempty"`
 
+	// default language
+	DefaultLanguage string `json:"default_language,omitempty"`
+
 	// encryption configured
 	EncryptionConfigured bool `json:"encryption_configured,omitempty"`
 

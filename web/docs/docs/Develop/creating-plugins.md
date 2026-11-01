@@ -152,12 +152,13 @@ import (
 func main() {
     pluginsdk.Serve(&pluginsdk.ServeConfig{
         Meta: pluginsdk.Meta{
-            ID:          "helloworld",
-            Name:        "HelloWorld",
-            Description: "A simple plugin that creates hello and world assets with lineage",
-            Icon:        "wave",
-            Category:    "example",
-            ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+            ID:            "helloworld",
+            MarmotVersion: ">=0.12.0",
+            Name:          "HelloWorld",
+            Description:   "A simple plugin that creates hello and world assets with lineage",
+            Icon:          "wave",
+            Category:      "example",
+            ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
         },
         Source: &Source{},
     })
@@ -165,6 +166,8 @@ func main() {
 ```
 
 The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category, and the configuration form rendered in the UI.
+
+`MarmotVersion` is the lowest Marmot release the plugin works with, as a semver constraint such as `">=0.12.0"`. Raise it when the plugin starts relying on something only a newer release provides. Marmot refuses to load a plugin that excludes it, and the plugin index only offers each version to the releases it supports. Plugins in the Marmot repository must set it, and CI fails without it; for your own plugins it's optional, and leaving it empty means every release. See [Plugin Updates](../Configure/plugin-updates.md).
 
 ## 4. Install the Plugin
 
@@ -201,6 +204,43 @@ After running, you should see two new assets in your catalog:
 1. An asset named "hello"
 2. An asset named "world"
 3. A lineage relationship showing "hello" produces "world"
+
+## 6. Publish the Plugin
+
+Publish your plugin to any OCI registry with [oras](https://oras.land). Build one binary per platform first (GoReleaser works well), then:
+
+```bash
+REPO=ghcr.io/you/plugins/helloworld
+VERSION=0.1.0
+
+for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+  os=${platform%/*}
+  arch=${platform#*/}
+  gzip -c "dist/helloworld_${os}_${arch}/marmot-plugin-helloworld" > marmot-plugin-helloworld
+  oras push "$REPO:$VERSION-$os-$arch" \
+    --artifact-type application/vnd.marmot.plugin.v1 \
+    --artifact-platform "$platform" \
+    marmot-plugin-helloworld:application/vnd.marmot.plugin.v1+gzip
+done
+
+oras manifest index create "$REPO:$VERSION" \
+  "$VERSION-linux-amd64" "$VERSION-linux-arm64" "$VERSION-darwin-amd64" "$VERSION-darwin-arm64"
+```
+
+That pushes one manifest per platform and an index that ties them together. Drop the platforms you do not build for.
+
+### Install a published plugin
+
+On the machine running Marmot, pull the binary into the plugins directory and restart Marmot:
+
+```bash
+tmp=$(mktemp -d)
+oras pull ghcr.io/you/plugins/helloworld:0.1.0 --platform linux/amd64 -o "$tmp"
+gunzip -c "$tmp/marmot-plugin-helloworld" > ~/.marmot/plugins/marmot-plugin-helloworld
+chmod +x ~/.marmot/plugins/marmot-plugin-helloworld
+```
+
+Marmot loads every `marmot-plugin-*` binary in `~/.marmot/plugins` (or `MARMOT_PLUGINS_DIR`) at startup, so the plugin is available after a restart.
 
 ## Configuration Spec Generation
 
@@ -389,6 +429,12 @@ Marmot looks for `marmot-plugin-*` binaries in two places at startup:
 - `~/.marmot/plugins/cache` (`MARMOT_PLUGIN_CACHE_DIR`): core plugins Marmot downloads from `ghcr.io/marmotdata/plugins`
 
 Local plugins load first, so a local binary shadows a downloaded core plugin with the same ID. That makes iterating on a core plugin easy: build it into `~/.marmot/plugins` and Marmot runs your build instead of the released one.
+
+### What Marmot Checks Before Running a Plugin
+
+A plugin runs with the same rights as Marmot, so Marmot refuses any binary another user could have written. The binary and every directory above it, up to the plugins directory, must be owned by you or by root and must not be writable by other users. Group write is accepted only for your own group. `go build` and `mkdir` produce these permissions by default; if Marmot refuses a plugin, the log names the file or directory to fix, usually with `chmod go-w`.
+
+Marmot records each binary's SHA-256 when it loads it and checks it again on every launch, so a binary replaced while Marmot is running is refused until the next restart. Each plugin process talks to Marmot over a Unix socket using mutual TLS with certificates generated for that process alone, and it inherits Marmot's environment without the `MARMOT_` variables, which hold Marmot's own secrets such as its encryption key.
 
 <CalloutCard
   title="Need Help Building a Plugin?"

@@ -41,6 +41,29 @@ type Options struct {
 	CacheDir string
 	// PlainHTTP allows non-TLS registries (local registries in tests).
 	PlainHTTP bool
+	// Pins overrides this release's pin for some plugins, with a version an admin or the auto-update policy moved them to. Nil means every plugin runs the release's pin.
+	Pins PinSource
+}
+
+// PinSource supplies the version a plugin should run at in place of this release's pin.
+type PinSource interface {
+	Pin(name string) (ManifestPlugin, bool)
+}
+
+// pin returns the version a core plugin should run at: the override when there is one, otherwise the release's pin.
+func (o Options) pin(m *Manifest, name string) (ManifestPlugin, bool) {
+	if o.Pins != nil {
+		if p, ok := o.Pins.Pin(name); ok {
+			return p, true
+		}
+	}
+	p, ok := m.Plugins[name]
+	return p, ok
+}
+
+// RegistryFor returns the registry namespace plugins are pulled from, the configured mirror or else the release's registry.
+func (o Options) RegistryFor(m *Manifest) string {
+	return o.registry(m)
 }
 
 func (o Options) registry(m *Manifest) string {
@@ -78,8 +101,9 @@ func EnsureCore(ctx context.Context, opts Options) error {
 	}
 
 	var errs []string
-	for name, pin := range manifest.Plugins {
-		if hasLocalOverride(name) {
+	for name := range manifest.Plugins {
+		pin, _ := opts.pin(manifest, name)
+		if HasLocalOverride(name) {
 			log.Debug().Str("plugin", name).Msg("Local plugin overrides core plugin, skipping install")
 			continue
 		}
@@ -96,17 +120,25 @@ func EnsureCore(ctx context.Context, opts Options) error {
 	return nil
 }
 
-// EnsurePlugin installs the named core plugin if it is not already
-// cached, and returns the path to its binary.
+// EnsurePlugin installs the version the named core plugin should run at if it is not already cached, and returns the path to its binary.
 func EnsurePlugin(ctx context.Context, opts Options, name string) (string, error) {
 	manifest, err := CoreManifest()
 	if err != nil {
 		return "", err
 	}
 
-	pin, ok := manifest.Plugins[name]
+	pin, ok := opts.pin(manifest, name)
 	if !ok {
 		return "", fmt.Errorf("plugin %s is not a known core plugin", name)
+	}
+	return EnsureVersion(ctx, opts, name, pin)
+}
+
+// EnsureVersion installs one version of a plugin, by its digest, if it is not already cached, and returns the path to its binary.
+func EnsureVersion(ctx context.Context, opts Options, name string, pin ManifestPlugin) (string, error) {
+	manifest, err := CoreManifest()
+	if err != nil {
+		return "", err
 	}
 
 	registry := opts.registry(manifest)
@@ -121,16 +153,33 @@ func EnsurePlugin(ctx context.Context, opts Options, name string) (string, error
 	return dest, nil
 }
 
-// Install pulls a plugin from <registry>/<name> at the given version
-// tag (or digest, when set) and writes its binary for the current
-// platform to dest.
+// Install pulls a plugin from <registry>/<name> by the digest this release pins and writes its binary for the current platform to dest. A plugin with no pin is refused: resolving a tag would let whoever controls the registry, or a mirror, choose the code that runs.
 func Install(ctx context.Context, opts Options, registry, name, version, digest, dest string) error {
+	if digest == "" {
+		return fmt.Errorf("plugin %s@%s has no digest pin in this release; refusing to install it by tag", name, version)
+	}
 	repoRef := registry + "/" + name
+	repo, err := opts.repository(repoRef)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Str("plugin", name).Str("version", version).Str("repository", repoRef).
+		Msg("Installing plugin")
+
+	if err := installFromTarget(ctx, repo, digest, dest); err != nil {
+		return fmt.Errorf("installing %s@%s from %s: %w", name, version, repoRef, err)
+	}
+	return nil
+}
+
+// repository opens an OCI repository with the user's Docker credentials, so private mirrors work the way docker pull does.
+func (o Options) repository(repoRef string) (*remote.Repository, error) {
 	repo, err := remote.NewRepository(repoRef)
 	if err != nil {
-		return fmt.Errorf("invalid plugin repository %s: %w", repoRef, err)
+		return nil, fmt.Errorf("invalid plugin repository %s: %w", repoRef, err)
 	}
-	repo.PlainHTTP = opts.PlainHTTP
+	repo.PlainHTTP = o.PlainHTTP
 
 	credStore, err := credentials.NewStoreFromDocker(credentials.StoreOptions{})
 	if err == nil {
@@ -140,22 +189,7 @@ func Install(ctx context.Context, opts Options, registry, name, version, digest,
 			Credential: credentials.Credential(credStore),
 		}
 	}
-
-	ref := version
-	if digest != "" {
-		ref = digest
-	} else {
-		log.Warn().Str("plugin", name).Str("version", version).
-			Msg("Installing plugin without a digest pin; resolving by tag")
-	}
-
-	log.Info().Str("plugin", name).Str("version", version).Str("repository", repoRef).
-		Msg("Installing plugin")
-
-	if err := installFromTarget(ctx, repo, ref, dest); err != nil {
-		return fmt.Errorf("installing %s@%s from %s: %w", name, version, repoRef, err)
-	}
-	return nil
+	return repo, nil
 }
 
 // installFromTarget resolves ref, follows the multi-platform index to
@@ -286,10 +320,10 @@ func writeAtomic(dest string, data []byte) error {
 	return nil
 }
 
-// hasLocalOverride reports whether a locally installed plugin with
+// HasLocalOverride reports whether a locally installed plugin with
 // this name exists; local plugins take precedence over downloaded ones,
 // so there is nothing to install.
-func hasLocalOverride(name string) bool {
+func HasLocalOverride(name string) bool {
 	info, err := os.Stat(filepath.Join(plugin.PluginsDir(), pluginBinaryPrefix+name))
 	return err == nil && !info.IsDir() && info.Mode()&0o111 != 0
 }

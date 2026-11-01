@@ -42,7 +42,7 @@ func (s *Source) discoverViewLineage(ctx context.Context, dbName string, dbAsset
 		return nil, nil
 	}
 
-	extractor := sqllineage.New()
+	var extractor sqllineage.Extractor
 	var edges []pluginsdk.LineageEdge
 
 	for st, sql := range viewDefs {

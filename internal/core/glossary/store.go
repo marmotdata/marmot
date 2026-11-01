@@ -27,6 +27,35 @@ type Repository interface {
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
+	GetRelatedTerms(ctx context.Context, termID string) ([]RelatedTerm, error)
+	SetRelatedTerms(ctx context.Context, termID string, relatedIDs []string) error
+	AddRelatedTerm(ctx context.Context, termID, relatedTermID string) error
+	RemoveRelatedTerm(ctx context.Context, termID, relatedTermID string) error
+	SuggestAssets(ctx context.Context, termID string, words []string, limit int) ([]SuggestedAsset, error)
+}
+
+// termColumns is what every read of a term selects, in the order scanTerm expects. The author's name and the linked asset count are scalar subqueries rather than joins so the callers' unqualified WHERE clauses stay unambiguous.
+const termColumns = `id, name, definition, user_definition, description, parent_term_id,
+		metadata, tags, created_by,
+		(SELECT u.name FROM users u WHERE u.id = glossary_terms.created_by) AS created_by_name,
+		created_at, updated_at, deleted_at,
+		(SELECT COUNT(*) FROM asset_terms at WHERE at.glossary_term_id = glossary_terms.id) AS linked_asset_count`
+
+func scanTerm(row pgx.Row) (*GlossaryTerm, error) {
+	var term GlossaryTerm
+	var metadataJSON []byte
+	if err := row.Scan(
+		&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
+		&term.Description, &term.ParentTermID,
+		&metadataJSON, &term.Tags, &term.CreatedBy, &term.CreatedByName,
+		&term.CreatedAt, &term.UpdatedAt, &term.DeletedAt, &term.LinkedAssetCount,
+	); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
+		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+	}
+	return &term, nil
 }
 
 type PostgresRepository struct {
@@ -124,14 +153,14 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 	query := `
 		INSERT INTO glossary_terms (
 			name, definition, description, parent_term_id,
-			metadata, tags, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			metadata, tags, created_by, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, query,
 		term.Name, term.Definition, term.Description,
 		term.ParentTermID, metadataJSON, term.Tags,
-		term.CreatedAt, term.UpdatedAt,
+		term.CreatedBy, term.CreatedAt, term.UpdatedAt,
 	).Scan(&term.ID)
 
 	if err != nil {
@@ -161,20 +190,11 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm, error) {
 	start := time.Now()
 
-	query := `
-		SELECT id, name, definition, user_definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+	query := `SELECT ` + termColumns + `
 		FROM glossary_terms
 		WHERE id = $1`
 
-	var term GlossaryTerm
-	var metadataJSON []byte
-
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
-		&term.Description, &term.ParentTermID,
-		&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
-	)
+	term, err := scanTerm(r.db.QueryRow(ctx, query, id))
 
 	duration := time.Since(start)
 
@@ -187,11 +207,6 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 		return nil, fmt.Errorf("getting glossary term: %w", err)
 	}
 
-	if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
-		r.recorder.RecordDBQuery(ctx, "glossary_get", duration, false)
-		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
-	}
-
 	term.Owners, err = r.loadOwners(ctx, id)
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "glossary_get", duration, false)
@@ -199,7 +214,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	}
 
 	r.recorder.RecordDBQuery(ctx, "glossary_get", duration, true)
-	return &term, nil
+	return term, nil
 }
 
 // GetByName looks a term up by the name a source system knows it by.
@@ -335,9 +350,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		return nil, fmt.Errorf("counting glossary terms: %w", err)
 	}
 
-	query := `
-		SELECT id, name, definition, user_definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+	query := `SELECT ` + termColumns + `
 		FROM glossary_terms
 		WHERE deleted_at IS NULL
 		ORDER BY name ASC
@@ -352,21 +365,10 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 
 	terms := []*GlossaryTerm{}
 	for rows.Next() {
-		var term GlossaryTerm
-		var metadataJSON []byte
-
-		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
-			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
-		); err != nil {
+		term, err := scanTerm(rows)
+		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
 			return nil, fmt.Errorf("scanning glossary term: %w", err)
-		}
-
-		if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
-			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
-			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 
 		term.Owners, err = r.loadOwners(ctx, term.ID)
@@ -375,7 +377,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
 		}
 
-		terms = append(terms, &term)
+		terms = append(terms, term)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -433,13 +435,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		return nil, fmt.Errorf("counting search results: %w", err)
 	}
 
-	query := fmt.Sprintf(`
-		SELECT id, name, definition, user_definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+	query := fmt.Sprintf(`SELECT %s
 		FROM glossary_terms
 		%s
 		ORDER BY name ASC
-		LIMIT $%d OFFSET $%d`, where, argCount, argCount+1)
+		LIMIT $%d OFFSET $%d`, termColumns, where, argCount, argCount+1)
 
 	args = append(args, filter.Limit, filter.Offset)
 
@@ -452,21 +452,10 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 
 	terms := []*GlossaryTerm{}
 	for rows.Next() {
-		var term GlossaryTerm
-		var metadataJSON []byte
-
-		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
-			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
-		); err != nil {
+		term, err := scanTerm(rows)
+		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
 			return nil, fmt.Errorf("scanning search result: %w", err)
-		}
-
-		if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
-			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
-			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 
 		// Load owners from join table
@@ -476,7 +465,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
 		}
 
-		terms = append(terms, &term)
+		terms = append(terms, term)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -491,9 +480,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error) {
 	start := time.Now()
 
-	query := `
-		SELECT id, name, definition, user_definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+	query := `SELECT ` + termColumns + `
 		FROM glossary_terms
 		WHERE parent_term_id = $1 AND deleted_at IS NULL
 		ORDER BY name ASC`
@@ -507,21 +494,10 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 
 	terms := []*GlossaryTerm{}
 	for rows.Next() {
-		var term GlossaryTerm
-		var metadataJSON []byte
-
-		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
-			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
-		); err != nil {
+		term, err := scanTerm(rows)
+		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), false)
 			return nil, fmt.Errorf("scanning child term: %w", err)
-		}
-
-		if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
-			r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), false)
-			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 
 		// Load owners from join table
@@ -531,7 +507,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
 		}
 
-		terms = append(terms, &term)
+		terms = append(terms, term)
 	}
 
 	if err := rows.Err(); err != nil {

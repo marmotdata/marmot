@@ -96,7 +96,7 @@ func (m *OAuthLinkRequest) validateUserInfo(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this o auth link request based on context it is used
-func (m *OAuthLinkRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *OAuthLinkRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -13,6 +13,11 @@ definitions:
         type: string
       name:
         type: string
+      prefix:
+        description: Prefix is the start of the key kept in clear so a key can be
+          recognised in a list after its secret is gone; empty for keys issued before
+          it was stored.
+        type: string
       user_id:
         type: string
     type: object
@@ -26,6 +31,13 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  AcceptInviteRequest:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
     type: object
   ActivityResponse:
     properties:
@@ -50,6 +62,13 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  AddRelatedTermRequest:
+    properties:
+      term_id:
+        type: string
+    required:
+    - term_id
     type: object
   AddTermsRequest:
     properties:
@@ -76,6 +95,10 @@ definitions:
       id:
         type: string
       model:
+        type: string
+      prompt:
+        description: Prompt is what the run was asked, such as a ticket's subject,
+          so a list of runs reads as the questions they answered.
         type: string
       run_id:
         type: string
@@ -207,6 +230,8 @@ definitions:
         type: string
       created_by:
         type: string
+      created_by_name:
+        type: string
       description:
         type: string
       id:
@@ -243,6 +268,38 @@ definitions:
         type: array
       updated_at:
         type: string
+      updated_by:
+        type: string
+      updated_by_name:
+        type: string
+    type: object
+  AssetRuleAsset:
+    properties:
+      id:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  AssetRuleAssetsResponse:
+    properties:
+      asset_ids:
+        items:
+          type: string
+        type: array
+      assets:
+        items:
+          $ref: '#/definitions/AssetRuleAsset'
+        type: array
+      total:
+        type: integer
     type: object
   AssetRuleExternalLink:
     properties:
@@ -304,6 +361,23 @@ definitions:
           $ref: '#/definitions/AssetTypeSummary'
         type: object
     type: object
+  AssetTabCounts:
+    properties:
+      agent_runs:
+        description: AgentRuns counts the runs of an agent asset.
+        type: integer
+      lineage:
+        description: Lineage counts the distinct assets one edge away, upstream or
+          downstream.
+        type: integer
+      queries:
+        description: Queries counts queries through Marmot that read the asset in
+          the last 14 days.
+        type: integer
+      runs:
+        description: Runs counts the distinct pipeline runs recorded against the asset.
+        type: integer
+    type: object
   AssetTerm:
     properties:
       created_at:
@@ -320,6 +394,29 @@ definitions:
       term_id:
         type: string
       term_name:
+        type: string
+    type: object
+  AssetTermLink:
+    properties:
+      asset_id:
+        type: string
+      rule_id:
+        type: string
+      rule_name:
+        type: string
+      source:
+        description: Source is "manual" or "rule".
+        type: string
+    type: object
+  AssetTermLinkGroup:
+    properties:
+      count:
+        type: integer
+      rule_id:
+        type: string
+      rule_name:
+        type: string
+      source:
         type: string
     type: object
   AssetTypeSummary:
@@ -345,6 +442,23 @@ definitions:
           type: integer
         type: object
     type: object
+  AssetsByTermResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/Asset'
+        type: array
+      groups:
+        items:
+          $ref: '#/definitions/AssetTermLinkGroup'
+        type: array
+      links:
+        items:
+          $ref: '#/definitions/AssetTermLink'
+        type: array
+      total:
+        type: integer
+    type: object
   AssetsByTypeResponse:
     properties:
       assets:
@@ -352,6 +466,15 @@ definitions:
           format: int64
           type: integer
         type: object
+    type: object
+  AssetsOwnedResponse:
+    properties:
+      count:
+        type: integer
+      percentage:
+        type: number
+      total:
+        type: integer
     type: object
   AssetsWithSchemasResponse:
     properties:
@@ -499,6 +622,23 @@ definitions:
       status:
         type: string
     type: object
+  BatchGetAssetsRequest:
+    properties:
+      ids:
+        items:
+          type: string
+        maxItems: 200
+        type: array
+    required:
+    - ids
+    type: object
+  BatchGetAssetsResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/Asset'
+        type: array
+    type: object
   BatchLineageResult:
     properties:
       edge:
@@ -515,6 +655,11 @@ definitions:
         type: string
       success:
         type: integer
+    type: object
+  CheckPluginVersionsResponse:
+    properties:
+      updated:
+        type: boolean
     type: object
   ColumnEdge:
     properties:
@@ -543,6 +688,59 @@ definitions:
     - run_id
     - status
     type: object
+  ConnectedApp:
+    properties:
+      client_id:
+        type: string
+      client_name:
+        type: string
+      created_at:
+        type: string
+      expires_at:
+        description: ExpiresAt is when the newest token issued under the grant stops
+          working, after which the client has to ask again.
+        type: string
+      last_authorised_at:
+        type: string
+      redirect_uri:
+        type: string
+      scope_descriptions:
+        items:
+          $ref: '#/definitions/OAuthScopeDescription'
+        type: array
+      scopes:
+        items:
+          type: string
+        type: array
+    type: object
+  ConnectedAppsResponse:
+    properties:
+      apps:
+        items:
+          $ref: '#/definitions/ConnectedApp'
+        type: array
+    type: object
+  ConnectionTestResult:
+    properties:
+      asset_types:
+        additionalProperties:
+          type: integer
+        type: object
+      assets:
+        type: integer
+      duration_ms:
+        type: integer
+      error:
+        type: string
+      lineage:
+        type: integer
+      succeeded:
+        type: boolean
+      tables:
+        type: integer
+      timed_out:
+        type: boolean
+    type: object
   CreateAPIKeyRequest:
     properties:
       expires_in_days:
@@ -551,6 +749,16 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  CreateAssetOwner:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
     type: object
   CreateAssetRequest:
     properties:
@@ -569,6 +777,11 @@ definitions:
         type: object
       name:
         type: string
+      owners:
+        description: Owners are the users and teams to own the asset.
+        items:
+          $ref: '#/definitions/CreateAssetOwner'
+        type: array
       providers:
         items:
           type: string
@@ -585,7 +798,16 @@ definitions:
         items:
           type: string
         type: array
+      terms:
+        description: Terms are the IDs of glossary terms to link the asset to.
+        items:
+          type: string
+        type: array
       type:
+        type: string
+      user_description:
+        description: UserDescription is the people-written description, kept apart
+          from the source's own.
         type: string
     required:
     - name
@@ -718,6 +940,10 @@ definitions:
         type: string
       provider:
         type: string
+      role_id:
+        description: RoleID is the Marmot role the group's members get at every sign-in,
+          in place of the default role.
+        type: string
       sso_group_name:
         type: string
       team_id:
@@ -730,12 +956,33 @@ definitions:
         type: object
       cron_expression:
         type: string
+      description:
+        description: Description says what the pipeline catalogs. Omit it to leave
+          it unchanged; an empty string clears it.
+        type: string
       enabled:
+        type: boolean
+      ingest_on_query:
+        description: |-
+          IngestOnQuery refreshes the source's catalog in the background after
+          data queries, rate-limited per source.
         type: boolean
       name:
         type: string
+      owner_id:
+        type: string
+      owner_type:
+        description: OwnerType is "user" or "team" and, with OwnerID, names who is
+          told when a run fails. Omit both to leave the owner unchanged; send both
+          empty to clear it.
+        type: string
       plugin_id:
         type: string
+      queryable:
+        description: |-
+          Queryable lets agents and users query this source through Marmot; the
+          plugin must support queries.
+        type: boolean
     type: object
   CreateServiceAccountAPIKeyRequest:
     properties:
@@ -792,6 +1039,16 @@ definitions:
         type: array
       parent_term_id:
         type: string
+      related_term_ids:
+        description: RelatedTermIDs links the new term to existing terms, in both
+          directions.
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
     required:
     - definition
     - name
@@ -826,10 +1083,70 @@ definitions:
     - role_names
     - username
     type: object
+  CurrentUser:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      id:
+        type: string
+      identities:
+        items:
+          $ref: '#/definitions/UserIdentity'
+        type: array
+      invite_expires_at:
+        type: string
+      job_title:
+        type: string
+      last_seen_at:
+        description: LastSeenAt is refreshed at most every LastSeenInterval, so it
+          is accurate to a few minutes.
+        type: string
+      must_change_password:
+        type: boolean
+      name:
+        type: string
+      preferences:
+        additionalProperties: true
+        type: object
+      profile_picture:
+        type: string
+      role_sources:
+        items:
+          $ref: '#/definitions/ProfileRoleSource'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/UserRole'
+        type: array
+      sessions_invalidated_at:
+        description: Tokens issued before this moment are rejected at validation,
+          so setting it to now signs the user out of every session at once.
+        type: string
+      status:
+        description: Status is active, invited or deactivated. An invited member has
+          an account waiting for them but has not used their link yet.
+        type: string
+      teams:
+        items:
+          $ref: '#/definitions/ProfileTeam'
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
   DataProduct:
     properties:
       asset_count:
         type: integer
+      asset_types:
+        description: AssetTypes counts the product's assets by type and is only filled
+          in by Get.
+        items:
+          $ref: '#/definitions/DataProductTypeCount'
+        type: array
       created_at:
         type: string
       created_by:
@@ -851,6 +1168,10 @@ definitions:
         items:
           $ref: '#/definitions/DataProductOwner'
         type: array
+      popularity:
+        description: Popularity is a level from 0 to 4 from its assets' views over
+          the last 30 days. It is filled in by the filtered list and by Get.
+        type: integer
       rule_asset_count:
         type: integer
       rules:
@@ -873,11 +1194,64 @@ definitions:
       total:
         type: integer
     type: object
+  DataProductFacets:
+    properties:
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwnerFacet'
+        type: array
+      tags:
+        items:
+          $ref: '#/definitions/DataProductTagFacet'
+        type: array
+    type: object
   DataProductListResult:
     properties:
       data_products:
         items:
           $ref: '#/definitions/DataProduct'
+        type: array
+      total:
+        type: integer
+    type: object
+  DataProductMember:
+    properties:
+      added_at:
+        type: string
+      asset_id:
+        type: string
+      description:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      owner_names:
+        items:
+          type: string
+        type: array
+      popularity:
+        description: Popularity is the asset's level from 0 to 4, as assetsignal defines
+          it.
+        type: integer
+      providers:
+        items:
+          type: string
+        type: array
+      rule_id:
+        type: string
+      rule_name:
+        type: string
+      source:
+        type: string
+      type:
+        type: string
+    type: object
+  DataProductMembersResult:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/DataProductMember'
         type: array
       total:
         type: integer
@@ -895,6 +1269,17 @@ definitions:
       type:
         type: string
       username:
+        type: string
+    type: object
+  DataProductOwnerFacet:
+    properties:
+      count:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      type:
         type: string
     type: object
   DataProductOwnerRequest:
@@ -949,6 +1334,10 @@ definitions:
         type: string
       pattern_value:
         type: string
+      position:
+        description: Position is where the rule sits in the product's hand-set order,
+          starting at 0.
+        type: integer
       priority:
         type: integer
       query_expression:
@@ -1012,6 +1401,20 @@ definitions:
       total:
         type: integer
     type: object
+  DataProductTagFacet:
+    properties:
+      count:
+        type: integer
+      tag:
+        type: string
+    type: object
+  DataProductTypeCount:
+    properties:
+      count:
+        type: integer
+      type:
+        type: string
+    type: object
   Dataset:
     properties:
       facets:
@@ -1040,6 +1443,24 @@ definitions:
         type: integer
       lineage_deleted:
         type: integer
+    type: object
+  DocumentErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/DocumentFieldError'
+        type: array
+    type: object
+  DocumentFieldError:
+    properties:
+      message:
+        type: string
+      path:
+        description: Path is a JSONPath-style location such as bindings[2].members[0],
+          or empty for the document as a whole.
+        type: string
     type: object
   Documentation:
     properties:
@@ -1098,6 +1519,10 @@ definitions:
     properties:
       error:
         type: string
+      request_id:
+        description: RequestID matches the X-Request-Id header and the server log
+          line, so someone reporting a failure can quote it.
+        type: string
     type: object
   FacetValue:
     properties:
@@ -1112,6 +1537,10 @@ definitions:
         items:
           $ref: '#/definitions/FacetValue'
         type: array
+      owners:
+        items:
+          $ref: '#/definitions/OwnerFacetValue'
+        type: array
       providers:
         items:
           $ref: '#/definitions/FacetValue'
@@ -1124,6 +1553,61 @@ definitions:
         additionalProperties:
           type: integer
         type: object
+    type: object
+  FieldAnnotation:
+    properties:
+      certified:
+        type: boolean
+      description:
+        type: string
+      glossary_terms:
+        items:
+          $ref: '#/definitions/FieldAnnotationTerm'
+        type: array
+      path:
+        description: Path is the field's dotted path, such as customer.email.
+        type: string
+      pii:
+        type: boolean
+      schema:
+        description: Schema is the key of the schema the field belongs to, as in the
+          asset's schema map.
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  FieldAnnotationInput:
+    properties:
+      certified:
+        type: boolean
+      description:
+        type: string
+      glossary_term_ids:
+        items:
+          type: string
+        type: array
+      path:
+        type: string
+      pii:
+        type: boolean
+      schema:
+        type: string
+    type: object
+  FieldAnnotationTerm:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  FieldAnnotationsResponse:
+    properties:
+      annotations:
+        items:
+          $ref: '#/definitions/FieldAnnotation'
+        type: array
     type: object
   GetMetricsRequest:
     properties:
@@ -1179,9 +1663,48 @@ definitions:
         description: Only for user owners
         type: string
     type: object
+  GlossaryRelatedTerm:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  GlossarySuggestedAsset:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  GlossarySuggestedAssetsResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/GlossarySuggestedAsset'
+        type: array
+      total:
+        type: integer
+    type: object
   GlossaryTerm:
     properties:
       created_at:
+        type: string
+      created_by:
+        description: CreatedBy is the person who wrote the term, absent for terms
+          an ingestion brought in and for those made before authors were recorded.
+        type: string
+      created_by_name:
         type: string
       definition:
         description: |-
@@ -1195,6 +1718,10 @@ definitions:
         type: string
       id:
         type: string
+      linked_asset_count:
+        description: LinkedAssetCount counts every asset linked to the term, by hand
+          or by an asset rule, so a tree can show it without a request per term.
+        type: integer
       metadata:
         additionalProperties: true
         type: object
@@ -1206,6 +1733,11 @@ definitions:
         type: array
       parent_term_id:
         type: string
+      related_terms:
+        description: RelatedTerms is only filled in when a single term is read.
+        items:
+          $ref: '#/definitions/GlossaryRelatedTerm'
+        type: array
       tags:
         items:
           type: string
@@ -1252,6 +1784,51 @@ definitions:
     x-enum-varnames:
     - ImagePurposeIcon
     - ImagePurposeHeader
+  InviteInfo:
+    properties:
+      email:
+        type: string
+      expires_at:
+        type: string
+      name:
+        type: string
+      password_sign_in:
+        description: PasswordSignIn says whether accepting can set a password; when
+          false the person signs in with single sign-on instead.
+        type: boolean
+    type: object
+  InviteRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      role_names:
+        items:
+          type: string
+        type: array
+      team_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  InviteResponse:
+    properties:
+      expires_at:
+        type: string
+      failed_team_ids:
+        description: FailedTeamIDs are the teams the person could not be added to,
+          such as teams whose membership comes from single sign-on.
+        items:
+          type: string
+        type: array
+      invite_url:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/User'
+    type: object
   Job:
     properties:
       facets:
@@ -1277,6 +1854,11 @@ definitions:
       config:
         additionalProperties: true
         type: object
+      connecting_at:
+        description: ConnectingAt, ExtractingAt and WritingAt record when the worker
+          began launching the plugin, asked it to discover and began writing to the
+          catalog; empty when the run never got there or predates them.
+        type: string
       created_at:
         type: string
       created_by:
@@ -1284,6 +1866,8 @@ definitions:
       documentation_added:
         type: integer
       error_message:
+        type: string
+      extracting_at:
         type: string
       finished_at:
         type: string
@@ -1309,6 +1893,8 @@ definitions:
         type: string
       updated_at:
         type: string
+      writing_at:
+        type: string
     type: object
   LineageEdge:
     properties:
@@ -1316,6 +1902,10 @@ definitions:
         items:
           $ref: '#/definitions/ColumnEdge'
         type: array
+      declared_by:
+        description: 'DeclaredBy names who declared the edge: the pipeline whose run
+          wrote it, or the person or service account that added it.'
+        type: string
       id:
         type: string
       job_mrn:
@@ -1340,6 +1930,10 @@ definitions:
       depth:
         type: integer
       id:
+        type: string
+      last_run_status:
+        description: 'LastRunStatus is the outcome of the latest run recorded against
+          the asset: succeeded, failed or running. Empty when it has no runs.'
         type: string
       type:
         type: string
@@ -1402,7 +1996,14 @@ definitions:
         type: boolean
       plugins:
         items:
-          $ref: '#/definitions/pluginsdk.Meta'
+          $ref: '#/definitions/PluginInfo'
+        type: array
+    type: object
+  ListRecentResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/RecentItem'
         type: array
     type: object
   ListSSOMappingsResponse:
@@ -1412,12 +2013,27 @@ definitions:
           $ref: '#/definitions/SSOTeamMapping'
         type: array
     type: object
+  ListSavedQueriesResponse:
+    properties:
+      queries:
+        items:
+          $ref: '#/definitions/SavedQuery'
+        type: array
+      total:
+        type: integer
+    type: object
   ListSchedulesResponse:
     properties:
       limit:
         type: integer
       offset:
         type: integer
+      plugin_counts:
+        additionalProperties:
+          type: integer
+        description: PluginCounts counts every pipeline by plugin, whatever the filters,
+          so the plugin gallery can say how many of each are connected.
+        type: object
       schedules:
         items:
           $ref: '#/definitions/Schedule'
@@ -1433,7 +2049,7 @@ definitions:
         type: integer
       teams:
         items:
-          $ref: '#/definitions/Team'
+          $ref: '#/definitions/TeamSummary'
         type: array
       total:
         type: integer
@@ -1517,6 +2133,25 @@ definitions:
     - user_id
     - user_info
     type: object
+  OAuthScopeDescription:
+    properties:
+      scope:
+        type: string
+      summary:
+        type: string
+    type: object
+  OwnerFacetValue:
+    properties:
+      count:
+        type: integer
+      kind:
+        description: '"user" or "team"'
+        type: string
+      label:
+        type: string
+      value:
+        type: string
+    type: object
   OwnerRequest:
     properties:
       id:
@@ -1543,6 +2178,138 @@ definitions:
       resource_type:
         type: string
     type: object
+  PinPluginVersionRequest:
+    properties:
+      pinned:
+        type: boolean
+    type: object
+  PluginAdvisory:
+    properties:
+      affected:
+        description: Affected is the semver constraint on the plugin versions the
+          advisory applies to, e.g. "<0.3.1".
+        type: string
+      fixed:
+        type: string
+      id:
+        type: string
+      published:
+        type: string
+      severity:
+        type: string
+      summary:
+        type: string
+      url:
+        type: string
+    type: object
+  PluginIndexStatus:
+    properties:
+      checked_at:
+        type: string
+      error:
+        type: string
+      expired:
+        type: boolean
+      expires_at:
+        type: string
+      fetched_at:
+        type: string
+      generated:
+        type: string
+      ref:
+        type: string
+      version:
+        type: integer
+    type: object
+  PluginInfo:
+    properties:
+      asset_schemas:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetSchema'
+        type: array
+      catalogs:
+        description: Catalogs names the kinds of asset the plugin documents, in the
+          order it lists them.
+        items:
+          type: string
+        type: array
+      category:
+        type: string
+      config_spec:
+        items:
+          $ref: '#/definitions/pluginsdk.ConfigField'
+        type: array
+      description:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      icon:
+        type: string
+      id:
+        type: string
+      marmot_version:
+        type: string
+      name:
+        type: string
+      produces_lineage:
+        description: ProducesLineage reports whether the plugin says it discovers
+          lineage between assets.
+        type: boolean
+      protocol_version:
+        type: integer
+      status:
+        type: string
+      supports_data_preview:
+        type: boolean
+      supports_query:
+        type: boolean
+    type: object
+  PluginInstanceStatus:
+    properties:
+      active_queries:
+        type: integer
+      last_used_at:
+        type: string
+      plugin_id:
+        type: string
+      restarts:
+        type: integer
+      started_at:
+        type: string
+    type: object
+  PluginPublishedVersion:
+    properties:
+      advisories:
+        items:
+          type: string
+        type: array
+      changelog_url:
+        type: string
+      compatible:
+        type: boolean
+      digest:
+        description: Digest is the sha256 of the version's OCI image index, which
+          is what gets installed.
+        type: string
+      marmot_version:
+        description: MarmotVersion is the semver constraint on the Marmot releases
+          this version works with; empty means every release.
+        type: string
+      protocol_version:
+        type: integer
+      released:
+        type: string
+      version:
+        type: string
+      yanked:
+        description: Yanked versions are never offered or installed, though a Marmot
+          already running one keeps it until it moves.
+        type: boolean
+      yanked_reason:
+        type: string
+    type: object
   PluginRun:
     properties:
       completed_at:
@@ -1567,6 +2334,69 @@ definitions:
         $ref: '#/definitions/RunStatus'
       summary:
         $ref: '#/definitions/RunSummary'
+    type: object
+  PluginUpdatesStatus:
+    properties:
+      auto_update:
+        type: string
+      enabled:
+        description: Enabled reports whether Marmot checks the plugin index for updates.
+        type: boolean
+      index:
+        $ref: '#/definitions/PluginIndexStatus'
+      marmot_version:
+        type: string
+      plugins:
+        items:
+          $ref: '#/definitions/PluginVersionStatus'
+        type: array
+    type: object
+  PluginVersionStatus:
+    properties:
+      advisories:
+        description: Advisories are those against the version the plugin runs.
+        items:
+          $ref: '#/definitions/PluginAdvisory'
+        type: array
+      error:
+        description: Error is this replica's last failure switching the plugin's version.
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      latest:
+        description: Latest is the newest version that supports this Marmot and has
+          no advisory against it.
+        type: string
+      loaded:
+        description: Loaded reports whether this replica has the plugin registered.
+        type: boolean
+      name:
+        type: string
+      origin:
+        description: Origin is release, manual, auto or local.
+        type: string
+      pinned:
+        type: boolean
+      previous_version:
+        type: string
+      release_version:
+        type: string
+      update_available:
+        type: boolean
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      version:
+        description: Version is the version the plugin should run at; empty for a
+          locally installed override.
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/PluginPublishedVersion'
+        type: array
     type: object
   PreviewRequest:
     properties:
@@ -1616,6 +2446,174 @@ definitions:
       url:
         type: string
     type: object
+  ProfileRoleSource:
+    properties:
+      group:
+        type: string
+      provider:
+        type: string
+      role:
+        type: string
+    type: object
+  ProfileTeam:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      source:
+        type: string
+      sso_group:
+        type: string
+      sso_provider:
+        type: string
+    type: object
+  QueryAccessRequest:
+    properties:
+      audit_subject:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      needed:
+        type: string
+      notified:
+        description: Notified counts the people told about this request; Repeat is
+          set when an identical request made within the last day was returned instead,
+          and nobody was told again.
+        type: integer
+      permission:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      query_id:
+        type: string
+      repeat:
+        type: boolean
+      source_name:
+        type: string
+    type: object
+  QueryAccessRequestInput:
+    properties:
+      message:
+        maxLength: 2000
+        type: string
+      query_id:
+        type: string
+      source:
+        type: string
+    type: object
+  QueryAgentSummariesResponse:
+    properties:
+      agents:
+        items:
+          $ref: '#/definitions/QueryAgentSummary'
+        type: array
+    type: object
+  QueryAgentSummary:
+    properties:
+      audit_subject:
+        type: string
+      last_active_at:
+        type: string
+      name:
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      queries_7d:
+        type: integer
+      queries_24h:
+        type: integer
+      refused_7d:
+        type: integer
+      refused_24h:
+        type: integer
+      tables_read_7d:
+        type: integer
+    type: object
+  QueryAssetContext:
+    properties:
+      asset_id:
+        type: string
+      certified:
+        type: boolean
+      columns_read:
+        type: integer
+      description:
+        type: string
+      last_sync_at:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      owners:
+        description: 'What the catalog says about the table as data: who owns it,
+          how big it is, which of its columns hold personal data and whether it is
+          certified. ColumnsRead counts the table''s catalogued columns among the
+          result''s columns, matched by name, so it is nil when the catalog has no
+          columns for the table.'
+        items:
+          type: string
+        type: array
+      personal_data:
+        items:
+          $ref: '#/definitions/QueryPersonalDataColumn'
+        type: array
+      providers:
+        items:
+          type: string
+        type: array
+      row_count:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  QueryAssetStats:
+    properties:
+      agents:
+        type: integer
+      denied:
+        type: integer
+      from:
+        type: string
+      median_duration_ms:
+        type: integer
+      mrn:
+        type: string
+      people:
+        type: integer
+      per_day:
+        description: PerDay counts queries per UTC day across the window, oldest first,
+          with empty days as zero.
+        items:
+          type: integer
+        type: array
+      queries:
+        type: integer
+      to:
+        type: string
+    type: object
+  QueryColumn:
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+    type: object
   QueryCount:
     properties:
       count:
@@ -1624,9 +2622,364 @@ definitions:
         type: string
       query_type:
         type: string
+      result_count:
+        description: ResultCount is set on the zero-result list, where it is always
+          0; ordinary top queries leave it out because only searches that found nothing
+          are recorded with their result count
+        type: integer
+    type: object
+  QueryHistoryResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      queries:
+        items:
+          $ref: '#/definitions/QueryRecord'
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryListSourcesResponse:
+    properties:
+      sources:
+        items:
+          $ref: '#/definitions/QuerySource'
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryPersonalDataColumn:
+    properties:
+      name:
+        type: string
+      read:
+        type: boolean
+    type: object
+  QueryRecord:
+    properties:
+      agent:
+        type: string
+      audit_subject:
+        type: string
+      client:
+        type: string
+      completed_at:
+        type: string
+      context:
+        items:
+          $ref: '#/definitions/QueryAssetContext'
+        type: array
+      credential:
+        type: string
+      decision:
+        type: string
+      decision_detail:
+        additionalProperties: {}
+        type: object
+      error:
+        type: string
+      id:
+        type: string
+      outcome_reason:
+        description: OutcomeReason refines the decision and status, such as role,
+          permission, policy, source_error, timeout, unreachable or cancelled.
+        type: string
+      principal_id:
+        type: string
+      principal_type:
+        type: string
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      rows_returned:
+        type: integer
+      service_account:
+        description: ServiceAccount names the service account a machine caller ran
+          as, Agent the client that identified itself on its behalf (an MCP client's
+          name) and Credential how the request authenticated.
+        type: string
+      source_id:
+        type: string
+      source_name:
+        type: string
+      source_provider:
+        description: SourceProvider is the plugin behind the source, such as snowflake,
+          so the UI can show its logo; empty once the source is deleted.
+        type: string
+      started_at:
+        type: string
+      statement:
+        type: string
+      status:
+        type: string
+      truncated:
+        type: boolean
+    type: object
+  QueryRefusal:
+    properties:
+      decided_at:
+        type: string
+      needed:
+        description: Needed says what would allow the query, such as "assets:query
+          on warehouse".
+        type: string
+      permission:
+        type: string
+      policy:
+        type: string
+      query_id:
+        type: string
+      reason:
+        type: string
+      resources:
+        items:
+          type: string
+        type: array
+      roles:
+        items:
+          type: string
+        type: array
+      rule:
+        description: 'Rule is the outcome reason: permission when the caller lacks
+          a permission, policy when a policy refused the statement.'
+        type: string
+      source:
+        type: string
+    type: object
+  QueryRefusedResponse:
+    properties:
+      code:
+        type: string
+      error:
+        type: string
+      refusal:
+        $ref: '#/definitions/QueryRefusal'
+    type: object
+  QueryResult:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/QueryColumn'
+        type: array
+      context:
+        items:
+          $ref: '#/definitions/QueryAssetContext'
+        type: array
+      query_id:
+        type: string
+      referenced_mrns:
+        items:
+          type: string
+        type: array
+      row_count:
+        type: integer
+      rows:
+        items:
+          items: {}
+          type: array
+        type: array
+      truncated:
+        type: boolean
+    type: object
+  QueryRunInput:
+    properties:
+      max_rows:
+        type: integer
+      source:
+        type: string
+      statement:
+        type: string
+    required:
+    - source
+    - statement
+    type: object
+  QuerySource:
+    properties:
+      id:
+        type: string
+      ingest_on_query:
+        type: boolean
+      last_queried_at:
+        type: string
+      name:
+        type: string
+      plugin_id:
+        type: string
+      queries_last_week:
+        type: integer
+      served:
+        description: Served is set when a plugin running outside Marmot answers this
+          source's queries; Marmot then holds no usable config for it.
+        type: boolean
+      table_count:
+        description: Activity, filled in when sources are listed.
+        type: integer
+    type: object
+  QuerySourceStats:
+    properties:
+      allowed:
+        type: integer
+      failed:
+        type: integer
+      from:
+        type: string
+      queries:
+        type: integer
+      refused:
+        type: integer
+      source:
+        type: string
+      to:
+        type: string
+    type: object
+  QuerySourceTable:
+    properties:
+      asset_id:
+        type: string
+      description:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      queries:
+        type: integer
+      row_count:
+        description: RowCount is the table's size as its plugin last reported it in
+          the catalog, when it reports one.
+        type: integer
+      sample_statement:
+        type: string
+      schema:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  QueryStats:
+    properties:
+      from:
+        type: string
+      interval:
+        type: string
+      series:
+        items:
+          $ref: '#/definitions/QueryStatsPoint'
+        type: array
+      to:
+        type: string
+      top_callers:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      top_sources:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      top_tables:
+        items:
+          $ref: '#/definitions/QueryStatsGroup'
+        type: array
+      totals:
+        $ref: '#/definitions/QueryStatsTotals'
+    type: object
+  QueryStatsGroup:
+    properties:
+      allowed:
+        type: integer
+      denied:
+        type: integer
+      key:
+        type: string
+      label:
+        type: string
+      plugin_id:
+        type: string
+      principal_type:
+        type: string
+      schedule_id:
+        description: ScheduleID is the ingestion schedule behind a source, so a busy
+          source can link to its pipeline
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
+  QueryStatsPoint:
+    properties:
+      bucket:
+        type: string
+      denied:
+        type: integer
+      failed:
+        type: integer
+      succeeded:
+        type: integer
+    type: object
+  QueryStatsTotals:
+    properties:
+      allowed:
+        type: integer
+      callers:
+        type: integer
+      denied:
+        type: integer
+      failed:
+        type: integer
+      queries:
+        type: integer
+      tables:
+        type: integer
+    type: object
+  QueryStatusResponse:
+    properties:
+      instances:
+        items:
+          $ref: '#/definitions/PluginInstanceStatus'
+        type: array
     type: object
   RawPluginConfig:
     additionalProperties: true
+    type: object
+  RecentItem:
+    properties:
+      id:
+        type: string
+      kind:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+      type:
+        type: string
+      viewed_at:
+        type: string
+    type: object
+  RecordRecentViewRequest:
+    properties:
+      id:
+        type: string
+      kind:
+        example: asset
+        type: string
+      name:
+        type: string
+      service:
+        type: string
+      type:
+        type: string
     type: object
   RecordRunRequest:
     properties:
@@ -1642,6 +2995,8 @@ definitions:
         items:
           type: string
         type: array
+      prompt:
+        type: string
       run_id:
         type: string
       started_at:
@@ -1673,6 +3028,15 @@ definitions:
       running:
         type: boolean
     type: object
+  RelatedTermsResponse:
+    properties:
+      related_terms:
+        items:
+          $ref: '#/definitions/GlossaryRelatedTerm'
+        type: array
+      total:
+        type: integer
+    type: object
   RemoveTermRequest:
     properties:
       term_id:
@@ -1680,19 +3044,60 @@ definitions:
     required:
     - term_id
     type: object
+  ReorderDataProductRulesRequest:
+    properties:
+      rule_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - rule_ids
+    type: object
   Result:
     properties:
+      asset_count:
+        description: AssetCount is how many assets a data product holds or a team
+          owns.
+        type: integer
+      column_count:
+        description: ColumnCount is how many columns or top-level fields an asset's
+          schema has, where it can be read.
+        type: integer
       description:
         type: string
       id:
         type: string
+      linked_asset_count:
+        description: LinkedAssetCount is how many assets a glossary term is linked
+          to.
+        type: integer
+      member_count:
+        description: MemberCount is how many people are in a team.
+        type: integer
       metadata:
         additionalProperties: true
         type: object
       name:
         type: string
+      owners:
+        description: Owners are the people and teams that own an asset, glossary term
+          or data product.
+        items:
+          $ref: '#/definitions/SearchResultOwner'
+        type: array
+      popularity:
+        description: Popularity is an asset's level from 0 to 4, from its views over
+          the last 30 days.
+        type: integer
       rank:
         type: number
+      row_count:
+        description: RowCount is an asset's row count where its source reports one.
+        type: integer
+      stale:
+        description: 'Stale is set on assets: true when the pipeline that refreshes
+          it has missed more than two runs'' worth of time.'
+        type: boolean
       type:
         $ref: '#/definitions/ResultType'
       updated_at:
@@ -1714,16 +3119,39 @@ definitions:
     - ResultTypeDataProduct
   Role:
     properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
       description:
         type: string
       id:
         type: string
+      is_system:
+        type: boolean
       name:
         type: string
+      permission_keys:
+        description: PermissionKeys are the same permissions as resource_type:action
+          keys, the form a role document is written in.
+        items:
+          type: string
+        type: array
       permissions:
         items:
-          $ref: '#/definitions/Permission'
+          $ref: '#/definitions/RolePermission'
         type: array
+      updated_at:
+        type: string
+      user_count:
+        type: integer
+    type: object
+  RoleDocumentProblem:
+    properties:
+      message:
+        type: string
+      path:
+        type: string
     type: object
   RolePermission:
     properties:
@@ -1939,14 +3367,54 @@ definitions:
       total:
         type: integer
     type: object
+  SSOGroupRef:
+    properties:
+      provider:
+        type: string
+      role_name:
+        description: RoleName is the Marmot role the same mapping gives, if any.
+        type: string
+      sso_group_name:
+        type: string
+    type: object
   SSOProvider:
     properties:
+      enabled:
+        description: Enabled is false when an administrator has switched the provider
+          off in Settings.
+        type: boolean
       issuer_url:
         type: string
       name:
         type: string
       type:
         type: string
+    type: object
+  SSOProviderStatus:
+    properties:
+      enabled:
+        description: Enabled is false when an administrator has switched the provider
+          off here; its configuration is kept.
+        type: boolean
+      issuer_url:
+        type: string
+      member_count:
+        description: MemberCount is how many members have signed in with the provider
+          at least once.
+        type: integer
+      name:
+        type: string
+      protocol:
+        type: string
+      type:
+        type: string
+    type: object
+  SSOProviderStatusList:
+    properties:
+      providers:
+        items:
+          $ref: '#/definitions/SSOProviderStatus'
+        type: array
     type: object
   SSOProvidersResponse:
     properties:
@@ -1965,15 +3433,55 @@ definitions:
         type: string
       provider:
         type: string
+      role_id:
+        description: RoleID is the Marmot role members of the group get, replacing
+          the default role at every sign-in.
+        type: string
+      role_name:
+        type: string
       sso_group_name:
         type: string
       team_id:
+        description: TeamID is empty when the mapping only gives a role.
+        type: string
+      team_name:
         type: string
       updated_at:
         type: string
     type: object
+  SavedQuery:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      last_run_at:
+        type: string
+      name:
+        type: string
+      source:
+        type: string
+      sql:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  SavedQueryInput:
+    properties:
+      name:
+        type: string
+      source:
+        type: string
+      sql:
+        type: string
+    type: object
   Schedule:
     properties:
+      asset_count:
+        description: AssetCount counts the assets the pipeline's latest successful
+          run cataloged that are still in the catalog; it is only filled in when schedules
+          are read one at a time or listed.
+        type: integer
       config:
         additionalProperties: true
         type: object
@@ -1983,10 +3491,16 @@ definitions:
         type: string
       cron_expression:
         type: string
+      description:
+        description: Description says what the pipeline catalogs, in the words of
+          whoever set it up.
+        type: string
       enabled:
         type: boolean
       id:
         type: string
+      ingest_on_query:
+        type: boolean
       last_run_at:
         type: string
       last_run_status:
@@ -1997,7 +3511,24 @@ definitions:
         type: string
       next_run_at:
         type: string
+      owner_id:
+        type: string
+      owner_name:
+        type: string
+      owner_type:
+        description: OwnerType is "user" or "team" and names, with OwnerID, who is
+          told when a run fails; both are nil for an unowned pipeline.
+        type: string
       plugin_id:
+        type: string
+      queryable:
+        type: boolean
+      served_by_id:
+        type: string
+      served_by_type:
+        description: ServedByType and ServedByID name the principal whose plugin,
+          running outside Marmot, serves this source's queries; nil when Marmot runs
+          the plugin itself.
         type: string
       updated_at:
         type: string
@@ -2024,17 +3555,67 @@ definitions:
       total:
         type: integer
     type: object
+  SearchResultOwner:
+    properties:
+      id:
+        type: string
+      kind:
+        description: '"user" or "team"'
+        type: string
+      name:
+        type: string
+    type: object
+  ServeKeyGeneration:
+    properties:
+      activates_at:
+        type: string
+      active:
+        type: boolean
+      id:
+        type: string
+      retires_at:
+        type: string
+      storage:
+        type: string
+    type: object
+  ServeRotateKeysRequest:
+    properties:
+      ca_key_uri:
+        description: CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty
+          to have Marmot generate keys it stores encrypted, which is refused when
+          the current keys are in a KMS.
+        type: string
+      immediate:
+        description: Immediate switches to the new keys at once and stops trusting
+          the old ones, for a suspected compromise; serving plugins must then be restarted.
+        type: boolean
+      signing_key_uri:
+        type: string
+    type: object
   ServiceAccount:
     properties:
       active:
         type: boolean
+      api_key_count:
+        type: integer
+      calls_last_7_days:
+        description: CallsLast7Days counts authenticated requests made with the account's
+          keys over the last seven days, including today.
+        type: integer
       created_at:
         type: string
       created_by:
         type: string
+      created_by_name:
+        description: CreatedByName is the creator's display name, empty once that
+          user is deleted.
+        type: string
       description:
         type: string
       id:
+        type: string
+      last_used_at:
+        description: LastUsedAt is the latest use of any of the account's keys.
         type: string
       name:
         type: string
@@ -2044,6 +3625,12 @@ definitions:
         type: array
       updated_at:
         type: string
+      used_by:
+        description: UsedBy lists the agents that have reported runs with one of this
+          account's keys.
+        items:
+          $ref: '#/definitions/ServiceAccountAgentRef'
+        type: array
     type: object
   ServiceAccountAPIKey:
     properties:
@@ -2059,8 +3646,73 @@ definitions:
         type: string
       name:
         type: string
+      prefix:
+        description: Prefix is the start of the key kept in clear so it can be recognised
+          later; empty for keys issued before it was stored.
+        type: string
       service_account_id:
         type: string
+    type: object
+  ServiceAccountAgentRef:
+    properties:
+      id:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+    type: object
+  SetPluginVersionRequest:
+    properties:
+      version:
+        type: string
+    type: object
+  SignInSettings:
+    properties:
+      allow_password_sign_in:
+        description: AllowPasswordSignIn lets members sign in with a password. Administrators
+          always can, so an outage at the identity provider cannot lock everyone out.
+        type: boolean
+      create_on_first_sso:
+        description: CreateOnFirstSSO lets anyone the identity provider vouches for
+          become a member by signing in; when off only invited people can.
+        type: boolean
+      default_role:
+        description: DefaultRole is given to a new member when none of their groups
+          is mapped to a role.
+        type: string
+      default_team_id:
+        description: DefaultTeamID is the team a new single sign-on member joins,
+          empty for none.
+        type: string
+    type: object
+  StaleAsset:
+    properties:
+      id:
+        type: string
+      last_refreshed_at:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      pipeline_name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  StaleAssetList:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/StaleAsset'
+        type: array
+      total:
+        type: integer
     type: object
   StartRunRequest:
     properties:
@@ -2087,6 +3739,30 @@ definitions:
       tokens_in:
         type: integer
       tokens_out:
+        type: integer
+    type: object
+  SystemResponse:
+    properties:
+      build:
+        $ref: '#/definitions/sysinfo.Build'
+      database:
+        $ref: '#/definitions/sysinfo.Database'
+      search_index:
+        $ref: '#/definitions/SystemSearchIndex'
+    type: object
+  SystemSearchIndex:
+    properties:
+      backend:
+        description: Backend is postgres, or elasticsearch when Elasticsearch serves
+          searches from a copy of the index.
+        type: string
+      documents:
+        type: integer
+      last_full_reindex:
+        type: string
+      reindex_running:
+        type: boolean
+      size_bytes:
         type: integer
     type: object
   TagRequest:
@@ -2162,6 +3838,63 @@ definitions:
       username:
         type: string
     type: object
+  TeamSummary:
+    properties:
+      asset_count:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      created_via_sso:
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      member_count:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      sso_groups:
+        items:
+          $ref: '#/definitions/SSOGroupRef'
+        type: array
+      sso_provider:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      webhook_count:
+        type: integer
+    type: object
+  TestConnectionRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      plugin_id:
+        type: string
+      schedule_id:
+        type: string
+    type: object
+  TestConnectionResponse:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/ValidationErrorDetail'
+        type: array
+      result:
+        $ref: '#/definitions/ConnectionTestResult'
+      valid:
+        type: boolean
+    type: object
   TokenExchangeResponse:
     properties:
       access_token:
@@ -2186,10 +3919,23 @@ definitions:
     type: object
   ToolCall:
     properties:
+      detail:
+        description: Detail is the call's argument in a readable form, such as the
+          SQL of a query or the text of a search.
+        type: string
       duration_ms:
         type: integer
       ordinal:
         type: integer
+      reason:
+        description: Reason says why a refused or failed call did not go through,
+          and Rule names the policy or rule that refused it.
+        type: string
+      result:
+        description: Result summarises what came back, such as "5 rows".
+        type: string
+      rule:
+        type: string
       started_at:
         type: string
       status:
@@ -2201,8 +3947,21 @@ definitions:
     type: object
   ToolCallPayload:
     properties:
+      detail:
+        description: Detail is the call's argument in a readable form, such as the
+          SQL of a query.
+        type: string
       duration_ms:
         type: integer
+      reason:
+        description: 'Reason and Rule explain a refused or failed call: why, and which
+          policy or rule refused it.'
+        type: string
+      result:
+        description: Result summarises what came back, such as "5 rows".
+        type: string
+      rule:
+        type: string
       started_at:
         type: string
       status:
@@ -2223,6 +3982,8 @@ definitions:
         type: boolean
       banner:
         $ref: '#/definitions/BannerResponse'
+      default_language:
+        type: string
       encryption_configured:
         type: boolean
       table_preview_enabled:
@@ -2326,12 +4087,24 @@ definitions:
     required:
     - new_password
     type: object
+  UpdateProfileRequest:
+    properties:
+      job_title:
+        type: string
+    type: object
   UpdateSSOMappingRequest:
     properties:
       member_role:
         type: string
+      role_id:
+        type: string
       team_id:
         type: string
+    type: object
+  UpdateSSOProviderRequest:
+    properties:
+      enabled:
+        type: boolean
     type: object
   UpdateScheduleRequest:
     properties:
@@ -2340,12 +4113,33 @@ definitions:
         type: object
       cron_expression:
         type: string
+      description:
+        description: Description says what the pipeline catalogs. Omit it to leave
+          it unchanged; an empty string clears it.
+        type: string
       enabled:
+        type: boolean
+      ingest_on_query:
+        description: |-
+          IngestOnQuery refreshes the source's catalog in the background after
+          data queries, rate-limited per source.
         type: boolean
       name:
         type: string
+      owner_id:
+        type: string
+      owner_type:
+        description: OwnerType is "user" or "team" and, with OwnerID, names who is
+          told when a run fails. Omit both to leave the owner unchanged; send both
+          empty to clear it.
+        type: string
       plugin_id:
         type: string
+      queryable:
+        description: |-
+          Queryable lets agents and users query this source through Marmot; the
+          plugin must support queries.
+        type: boolean
     type: object
   UpdateServiceAccountRequest:
     properties:
@@ -2391,6 +4185,16 @@ definitions:
         type: array
       parent_term_id:
         type: string
+      related_term_ids:
+        description: RelatedTermIDs replaces the term's related terms when present;
+          an empty list clears them.
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   UpdateUserInput:
     properties:
@@ -2426,6 +4230,12 @@ definitions:
         items:
           $ref: '#/definitions/UserIdentity'
         type: array
+      invite_expires_at:
+        type: string
+      last_seen_at:
+        description: LastSeenAt is refreshed at most every LastSeenInterval, so it
+          is accurate to a few minutes.
+        type: string
       must_change_password:
         type: boolean
       name:
@@ -2437,8 +4247,16 @@ definitions:
         type: string
       roles:
         items:
-          $ref: '#/definitions/Role'
+          $ref: '#/definitions/UserRole'
         type: array
+      sessions_invalidated_at:
+        description: Tokens issued before this moment are rejected at validation,
+          so setting it to now signs the user out of every session at once.
+        type: string
+      status:
+        description: Status is active, invited or deactivated. An invited member has
+          an account waiting for them but has not used their link yet.
+        type: string
       updated_at:
         type: string
       username:
@@ -2464,6 +4282,19 @@ definitions:
       user_id:
         type: string
     type: object
+  UserRole:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/Permission'
+        type: array
+    type: object
   ValidateConfigRequest:
     properties:
       config:
@@ -2481,11 +4312,51 @@ definitions:
       valid:
         type: boolean
     type: object
+  ValidateRoleResponse:
+    properties:
+      problems:
+        items:
+          $ref: '#/definitions/RoleDocumentProblem'
+        type: array
+      valid:
+        type: boolean
+    type: object
   ValidationErrorDetail:
     properties:
       field:
         type: string
       message:
+        type: string
+    type: object
+  ValidationErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/ValidationErrorDetail'
+        type: array
+    type: object
+  pluginsdk.AssetField:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  pluginsdk.AssetSchema:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/pluginsdk.AssetField'
+        type: array
+      struct_name:
         type: string
     type: object
   pluginsdk.ConfigField:
@@ -2497,6 +4368,11 @@ definitions:
         items:
           $ref: '#/definitions/pluginsdk.ConfigField'
         type: array
+      group:
+        description: Group names the section a field belongs to in the UI, such as
+          "Authentication" or "Advanced"; fields without one are shown first and each
+          group renders as its own collapsed section
+        type: string
       hidden:
         type: boolean
       is_array:
@@ -2547,31 +4423,6 @@ definitions:
     - FieldTypeMultiselect
     - FieldTypePassword
     - FieldTypeObject
-  pluginsdk.Meta:
-    properties:
-      category:
-        type: string
-      config_spec:
-        items:
-          $ref: '#/definitions/pluginsdk.ConfigField'
-        type: array
-      description:
-        type: string
-      features:
-        items:
-          type: string
-        type: array
-      icon:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      status:
-        type: string
-      supports_data_preview:
-        type: boolean
-    type: object
   pluginsdk.ShowWhen:
     properties:
       field:
@@ -2592,6 +4443,69 @@ definitions:
       pattern:
         type: string
     type: object
+  pluginserve.EnrolInput:
+    properties:
+      csr:
+        type: string
+      sources:
+        items:
+          $ref: '#/definitions/pluginserve.EnrolSource'
+        type: array
+    type: object
+  pluginserve.EnrolResult:
+    properties:
+      address:
+        description: Address is the host:port to dial; when empty the serving process
+          uses its Marmot host name with Port.
+        type: string
+      ca_bundle:
+        type: string
+      certificate:
+        type: string
+      enrolment_id:
+        type: string
+      expires_at:
+        type: string
+      instance_id:
+        type: string
+      port:
+        type: string
+      signing_keys:
+        items:
+          type: string
+        type: array
+    type: object
+  pluginserve.EnrolSource:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  sysinfo.Build:
+    properties:
+      built_at:
+        type: string
+      commit:
+        type: string
+      go_version:
+        type: string
+      modified:
+        type: boolean
+      version:
+        type: string
+    type: object
+  sysinfo.Database:
+    properties:
+      size_bytes:
+        description: SizeBytes is the size of the whole Marmot database.
+        type: integer
+      version:
+        type: string
+    type: object
   v1_roles.createRoleRequest:
     properties:
       description:
@@ -2602,10 +4516,22 @@ definitions:
         items:
           type: string
         type: array
+      permission_keys:
+        description: PermissionKeys names permissions as resource_type:action keys,
+          the form a hand-written role document uses.
+        items:
+          type: string
+        type: array
     type: object
   v1_roles.replacePermissionsRequest:
     properties:
       permission_ids:
+        items:
+          type: string
+        type: array
+      permission_keys:
+        description: PermissionKeys names permissions as resource_type:action keys.
+          They are added to PermIDs.
         items:
           type: string
         type: array
@@ -2626,6 +4552,126 @@ info:
   title: Marmot API
   version: "0.1"
 paths:
+  /api/v1/admin/auth/providers:
+    get:
+      description: Every provider configured in the server config, whether it is switched
+        on and how many members have signed in with it.
+      operationId: getAdminAuthProviders
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SSOProviderStatusList'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List single sign-on providers with their status
+      tags:
+      - admin
+  /api/v1/admin/auth/providers/{type}:
+    put:
+      consumes:
+      - application/json
+      description: Providers are configured in the server config; this switches one
+        off without removing its configuration, or back on. Members who signed in
+        with it keep their accounts.
+      operationId: putAdminAuthProvidersType
+      parameters:
+      - description: Provider type, such as okta
+        in: path
+        name: type
+        required: true
+        type: string
+      - description: Whether the provider is on
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateSSOProviderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SSOProviderStatus'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Switch a single sign-on provider on or off
+      tags:
+      - admin
+  /api/v1/admin/auth/settings:
+    get:
+      description: Whether single sign-on creates new members, the role and team they
+        start with, and whether members may sign in with a password.
+      operationId: getAdminAuthSettings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInSettings'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get sign-in settings
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Replaces the sign-in settings. Administrators can always sign in
+        with a password, so turning password sign-in off cannot lock everyone out;
+        it is refused while no single sign-on provider is on.
+      operationId: putAdminAuthSettings
+      parameters:
+      - description: Sign-in settings
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SignInSettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SignInSettings'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update sign-in settings
+      tags:
+      - admin
   /api/v1/admin/search/reindex:
     get:
       description: Check whether a search reindex is currently running and whether
@@ -2683,6 +4729,32 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Start search reindex
+      tags:
+      - admin
+  /api/v1/admin/system:
+    get:
+      description: Product version and build, the Postgres version and the size of
+        the search index. Admin only.
+      operationId: getAdminSystem
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SystemResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get system information
       tags:
       - admin
   /api/v1/agents/{asset_id}/activity:
@@ -2935,13 +5007,19 @@ paths:
       - asset-rules
   /api/v1/asset-rules/assets/{id}:
     get:
-      description: Get the list of asset IDs matched by an asset rule
+      description: Page through the assets an asset rule applies to, by name, with
+        each asset's name, MRN, type and providers. q narrows the page to assets whose
+        name or MRN contains it.
       operationId: getAssetRulesAssetsID
       parameters:
       - description: Asset rule ID
         in: path
         name: id
         required: true
+        type: string
+      - description: Match the asset name or MRN
+        in: query
+        name: q
         type: string
       - default: 50
         description: Number of items to return
@@ -2959,8 +5037,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/AssetRuleAssetsResponse'
         "404":
           description: Not Found
           schema:
@@ -3081,7 +5158,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new asset in the system
+      description: Create a new asset in the system. Owners, a user description and
+        glossary terms can be set in the same request; if any of them cannot be applied
+        the asset is not kept.
       operationId: postAssets
       parameters:
       - description: Asset creation request
@@ -3224,15 +5303,58 @@ paths:
       summary: Update an asset
       tags:
       - assets
+  /api/v1/assets/batch:
+    post:
+      consumes:
+      - application/json
+      description: Read up to 200 assets by id in one request, in the order asked
+        for. Ids that match no asset are left out. Unlike reading one asset, this
+        does not count as a view.
+      operationId: postAssetsBatch
+      parameters:
+      - description: Asset ids
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/BatchGetAssetsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/BatchGetAssetsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get several assets
+      tags:
+      - assets
   /api/v1/assets/by-glossary-term/{term_id}:
     get:
-      description: Retrieve all assets associated with a specific glossary term
+      description: Retrieve the assets linked to a glossary term. links says how each
+        asset on the page was linked (manually or by which asset rule) and groups
+        counts all of the term's assets by how they were linked. Pass link=manual
+        or link=rule:<rule id> to page through one group.
       operationId: getAssetsByGlossaryTermTermID
       parameters:
       - description: Glossary Term ID
         in: path
         name: term_id
         required: true
+        type: string
+      - description: 'Only assets linked this way: manual, or rule:<asset rule id>'
+        in: query
+        name: link
         type: string
       - default: 20
         description: Maximum number of assets
@@ -3250,8 +5372,11 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/AssetsByTermResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -3260,6 +5385,40 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get assets by glossary term
+      tags:
+      - assets
+  /api/v1/assets/counts/{id}:
+    get:
+      description: 'Counts shown beside the asset page''s tabs: lineage neighbours
+        one edge away, pipeline runs, agent runs and queries through Marmot in the
+        last 14 days. queries is left out for callers who may not read the query log;
+        callers who may query but not read the whole log only count their own queries.'
+      operationId: getAssetsCountsID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AssetTabCounts'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get asset tab counts
       tags:
       - assets
   /api/v1/assets/documentation/:
@@ -3362,6 +5521,123 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Batch create documentation
+      tags:
+      - assets
+  /api/v1/assets/field-annotations/{id}:
+    delete:
+      description: Removes every marker from one schema field.
+      operationId: deleteAssetsFieldAnnotationsID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Schema key the field belongs to
+        in: query
+        name: schema
+        type: string
+      - description: Dotted path of the field
+        in: query
+        name: path
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete a field annotation
+      tags:
+      - assets
+    get:
+      description: 'Lists the markers people set on an asset''s schema fields: personal
+        data, certified, an edited description and glossary terms. The asset response
+        carries the same list as field_annotations.'
+      operationId: getAssetsFieldAnnotationsID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/FieldAnnotationsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List field annotations
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: 'Sets the markers on one schema field, merging into what is there:
+        omitted markers keep their value, an empty description clears an edited one
+        and a field left with no markers is removed. Returns every annotated field
+        of the asset.'
+      operationId: putAssetsFieldAnnotationsID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Field markers
+        in: body
+        name: annotation
+        required: true
+        schema:
+          $ref: '#/definitions/FieldAnnotationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/FieldAnnotationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Set a field annotation
       tags:
       - assets
   /api/v1/assets/lookup/{type}/{service}/{name}:
@@ -3708,6 +5984,40 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Search assets
+      tags:
+      - assets
+  /api/v1/assets/stale:
+    get:
+      description: List assets whose pipeline has not refreshed them for more than
+        twice its schedule interval, longest unrefreshed first. Assets no enabled
+        pipeline refreshes are never stale.
+      operationId: getAssetsStale
+      parameters:
+      - default: 20
+        description: Maximum number of assets to return (1 to 100)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of assets to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/StaleAssetList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List stale assets
       tags:
       - assets
   /api/v1/assets/suggestions/metadata/fields:
@@ -4277,6 +6587,116 @@ paths:
       summary: List glossary terms
       tags:
       - glossary
+  /api/v1/glossary/related/{id}:
+    get:
+      description: List the terms related to a glossary term
+      operationId: getGlossaryRelatedID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RelatedTermsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get related terms
+      tags:
+      - glossary
+    post:
+      consumes:
+      - application/json
+      description: Relate two glossary terms to each other. The link shows on both
+        terms.
+      operationId: postGlossaryRelatedID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term to relate
+        in: body
+        name: term
+        required: true
+        schema:
+          $ref: '#/definitions/AddRelatedTermRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RelatedTermsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Add a related term
+      tags:
+      - glossary
+  /api/v1/glossary/related/{id}/{related_id}:
+    delete:
+      description: Unrelate two glossary terms. The link goes from both terms.
+      operationId: deleteGlossaryRelatedIDRelatedID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Related Term ID
+        in: path
+        name: related_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RelatedTermsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Remove a related term
+      tags:
+      - glossary
   /api/v1/glossary/search:
     get:
       description: Search for glossary terms by query string and filters
@@ -4319,6 +6739,43 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Search glossary terms
+      tags:
+      - glossary
+  /api/v1/glossary/suggested-assets/{id}:
+    get:
+      description: Assets whose name, tags or description mention the term's name
+        and that are not linked to it yet, best match first
+      operationId: getGlossarySuggestedAssetsID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Maximum number of assets to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GlossarySuggestedAssetsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Suggest assets for a term
       tags:
       - glossary
   /api/v1/ingestion/runs:
@@ -4477,6 +6934,15 @@ paths:
         in: query
         name: enabled
         type: boolean
+      - description: Match pipeline name or plugin, case-insensitively
+        in: query
+        name: search
+        type: string
+      - description: 'Latest run status: failed, succeeded, cancelled, running (queued
+          or under way) or never (no runs)'
+        in: query
+        name: status
+        type: string
       - description: Limit
         in: query
         name: limit
@@ -4682,6 +7148,59 @@ paths:
       summary: Manually trigger an ingestion schedule
       tags:
       - ingestion
+  /api/v1/ingestion/test-connection:
+    post:
+      consumes:
+      - application/json
+      description: Validates the settings, then starts the plugin and runs a discovery
+        that is thrown away, stopping after 30 seconds. Nothing is written to the
+        catalog. Plugins have no separate connect step, so this is the closest check
+        that the settings work.
+      operationId: postIngestionTestConnection
+      parameters:
+      - description: Plugin and settings to test
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/TestConnectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TestConnectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Test a plugin connection
+      tags:
+      - ingestion
   /api/v1/ingestion/validate:
     post:
       consumes:
@@ -4715,6 +7234,76 @@ paths:
       summary: Validate plugin configuration
       tags:
       - ingestion
+  /api/v1/invites/{token}:
+    get:
+      description: 'Returns who an invitation link is for, so the accept page can
+        greet them. Needs no sign-in: the link''s token is the credential.'
+      operationId: getInvitesToken
+      parameters:
+      - description: Invitation token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/InviteInfo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Look up an invitation
+      tags:
+      - users
+  /api/v1/invites/{token}/accept:
+    post:
+      consumes:
+      - application/json
+      description: Sets the invited member's password, activates them and signs them
+        in. The link cannot be used again.
+      operationId: postInvitesTokenAccept
+      parameters:
+      - description: Invitation token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: The new password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AcceptInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ValidationErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Accept an invitation
+      tags:
+      - users
   /api/v1/lineage:
     post:
       consumes:
@@ -5086,6 +7675,24 @@ paths:
       summary: Get assets by type
       tags:
       - metrics
+  /api/v1/metrics/assets/owned:
+    get:
+      description: Get how many catalogued assets have at least one owning user or
+        team, out of all catalogued assets
+      operationId: getMetricsAssetsOwned
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AssetsOwnedResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get owned assets count
+      tags:
+      - metrics
   /api/v1/metrics/assets/total:
     get:
       description: Get the total number of assets
@@ -5157,7 +7764,9 @@ paths:
       - metrics
   /api/v1/metrics/top-queries:
     get:
-      description: Get the most popular search queries
+      description: Get the most popular search queries. With zero_results=true, get
+        the most frequent searches that found nothing instead, each with a result_count
+        of 0.
       operationId: getMetricsTopQueries
       parameters:
       - description: Start time (ISO 8601)
@@ -5175,6 +7784,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Only searches that found nothing
+        in: query
+        name: zero_results
+        type: boolean
       produces:
       - application/json
       responses:
@@ -5190,6 +7803,40 @@ paths:
       summary: Get top search queries
       tags:
       - metrics
+  /api/v1/notifications/item/{id}/mark-unread:
+    post:
+      description: Put a notification the current user has read back into their unread
+        count
+      operationId: postNotificationsItemIDMarkUnread
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Mark notification as unread
+      tags:
+      - notifications
   /api/v1/owners/search:
     get:
       consumes:
@@ -5300,6 +7947,164 @@ paths:
           schema:
             $ref: '#/definitions/AWSCredentialStatus'
       summary: Get AWS credential detection status
+      tags:
+      - plugins
+  /api/v1/plugins/versions:
+    get:
+      operationId: getPluginVersions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PluginUpdatesStatus'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List core plugin versions, available updates and advisories
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}:
+    delete:
+      operationId: resetPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Return a core plugin to the version this Marmot release pins
+      tags:
+      - plugins
+    put:
+      consumes:
+      - application/json
+      operationId: setPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SetPluginVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Move a core plugin to a version from the plugin index
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}/pin:
+    put:
+      consumes:
+      - application/json
+      operationId: pinPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pinned
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/PinPluginVersionRequest'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Pin or unpin a core plugin at the version it runs
+      tags:
+      - plugins
+  /api/v1/plugins/versions/{id}/rollback:
+    post:
+      operationId: rollbackPluginVersion
+      parameters:
+      - description: Plugin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Roll a core plugin back to the version it ran before its last change,
+        and pin it
+      tags:
+      - plugins
+  /api/v1/plugins/versions/check:
+    post:
+      operationId: checkPluginVersions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CheckPluginVersionsResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Check the plugin index for new versions and advisories now
       tags:
       - plugins
   /api/v1/products/:
@@ -5596,6 +8401,28 @@ paths:
       summary: Remove data product asset
       tags:
       - products
+  /api/v1/products/facets:
+    get:
+      description: List the owners and tags in use on data products, for filtering
+        the list
+      operationId: getProductsFacets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductFacets'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Data product filter values
+      tags:
+      - products
   /api/v1/products/images/{id}:
     get:
       description: List all images for a data product
@@ -5752,10 +8579,33 @@ paths:
       - products
   /api/v1/products/list:
     get:
-      description: Retrieve a paginated list of data products
+      description: Retrieve a paginated list of data products, optionally searched,
+        filtered and sorted on the server. Each product carries its popularity, a
+        level from 0 to 4.
       operationId: getProductsList
       parameters:
-      - default: 20
+      - description: Search name, description and tags
+        in: query
+        name: q
+        type: string
+      - description: Comma-separated user or team ids; keeps products any of them
+          own
+        in: query
+        name: owners
+        type: string
+      - description: Comma-separated tags; keeps products carrying any of them
+        in: query
+        name: tags
+        type: string
+      - description: 'only: products you or your teams own; exclude: everything else'
+        in: query
+        name: mine
+        type: string
+      - description: name (default), updated or popular
+        in: query
+        name: sort
+        type: string
+      - default: 50
         description: Maximum number of data products to return
         in: query
         name: limit
@@ -5772,6 +8622,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DataProductListResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -5780,6 +8634,72 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: List data products
+      tags:
+      - products
+  /api/v1/products/members/{id}:
+    get:
+      description: 'Page through a data product''s assets with each asset''s name,
+        type, owners and popularity and how it joined: manually or through which rule'
+      operationId: getProductsMembersID
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: manual or rule
+        in: query
+        name: source
+        type: string
+      - description: Only assets this rule brought in
+        in: query
+        name: rule_id
+        type: string
+      - description: Match the asset name or MRN
+        in: query
+        name: q
+        type: string
+      - description: Only assets of this type
+        in: query
+        name: type
+        type: string
+      - description: name (default) or popular
+        in: query
+        name: sort
+        type: string
+      - default: 50
+        description: Maximum number of assets to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of assets to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductMembersResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get data product members
       tags:
       - products
   /api/v1/products/resolved-assets/{id}:
@@ -5826,6 +8746,50 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get resolved data product assets
+      tags:
+      - products
+  /api/v1/products/rule-order/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Set the order of a data product's rules. rule_ids must name every
+        rule of the product once.
+      operationId: putProductsRuleOrderID
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule ids in their new order
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/ReorderDataProductRulesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductRulesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Reorder data product rules
       tags:
       - products
   /api/v1/products/rule-preview:
@@ -6077,6 +9041,741 @@ paths:
       summary: Search data products
       tags:
       - products
+  /api/v1/query/access-requests:
+    post:
+      consumes:
+      - application/json
+      description: Asks the people who can grant access for what a refused query needed,
+        and notifies them in Marmot. Pass the refused query's id, or a source when
+        there is no query. Asking again for the same access within a day returns the
+        earlier request without notifying anyone again.
+      parameters:
+      - description: Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/QueryAccessRequestInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: An identical recent request
+          schema:
+            $ref: '#/definitions/QueryAccessRequest'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/QueryAccessRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Request query access
+      tags:
+      - query
+  /api/v1/query/agents:
+    get:
+      description: Lists the service accounts agents query as, busiest first over
+        the last 7 days, with queries and refusals in the last 24 hours and 7 days,
+        the tables read and when each last queried. Pass principal_id for one account.
+        Callers without access:view only see their own activity. Each row's principal_type
+        and principal_id filter GET /query/history to that agent's queries.
+      parameters:
+      - description: One service account
+        in: query
+        name: principal_id
+        type: string
+      - default: 10
+        description: At most 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryAgentSummariesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Summarise agents' queries
+      tags:
+      - query
+  /api/v1/query/asset-stats:
+    get:
+      description: 'Summarises the queries through Marmot that read an asset over
+        a window, the last 14 days by default: how many, how many distinct people
+        and agents asked, the median run time, how many policy denied and a count
+        per day. Callers without access:view see only their own queries.'
+      parameters:
+      - description: Asset MRN
+        in: query
+        name: mrn
+        required: true
+        type: string
+      - description: Window start, RFC 3339; defaults to 14 days before to
+        in: query
+        name: from
+        type: string
+      - description: Window end, RFC 3339; defaults to now
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryAssetStats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query stats for one asset
+      tags:
+      - query
+  /api/v1/query/history:
+    get:
+      description: Lists the query log, newest first. Callers without access:view
+        only see their own queries. Every filter can be passed in a link, so other
+        pages can open the audit already filtered.
+      parameters:
+      - description: Only the query with this id
+        in: query
+        name: id
+        type: string
+      - description: Source name
+        in: query
+        name: source
+        type: string
+      - description: A caller as principal_type:principal_id or as its audit subject,
+          such as user:alice
+        in: query
+        name: caller
+        type: string
+      - description: allowed (ran to completion), denied, failed, cancelled or running
+        in: query
+        name: outcome
+        type: string
+      - description: 'Outcome reason: role, permission, policy, source_error, timeout,
+          unreachable or cancelled'
+        in: query
+        name: reason
+        type: string
+      - description: allowed or denied
+        in: query
+        name: decision
+        type: string
+      - description: running, completed, failed, cancelled or denied
+        in: query
+        name: status
+        type: string
+      - description: Only queries that referenced this MRN
+        in: query
+        name: mrn
+        type: string
+      - description: Principal type
+        in: query
+        name: principal_type
+        type: string
+      - description: Principal ID
+        in: query
+        name: principal_id
+        type: string
+      - description: Only the caller's own queries
+        in: query
+        name: mine
+        type: boolean
+      - description: 'Comma-separated clients to include: api, mcp, cli or editor'
+        in: query
+        name: client
+        type: string
+      - description: Only queries started at or after this time (RFC 3339)
+        in: query
+        name: from
+        type: string
+      - description: Only queries started before this time (RFC 3339)
+        in: query
+        name: to
+        type: string
+      - description: Matches the caller, agent, service account, source, statement
+          or a referenced MRN
+        in: query
+        name: q
+        type: string
+      - default: 50
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List queries
+      tags:
+      - query
+  /api/v1/query/history/{id}:
+    get:
+      description: Returns one query from the log, including the catalog context recorded
+        when it ran. Callers without access:view can only read their own queries.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryRecord'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a query
+      tags:
+      - query
+  /api/v1/query/history/{id}/cancel:
+    post:
+      description: Stops a running query. The query must be the caller's own unless
+        the caller holds access:manage. A query runs on one replica, which is the
+        only one that can stop it; elsewhere this answers 409, and the caller can
+        still stop its own query by closing the request that runs it.
+      parameters:
+      - description: Query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: The query is not running here
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Cancel a query
+      tags:
+      - query
+  /api/v1/query/history/export:
+    get:
+      description: Streams the query log as CSV, newest first, with the same filters
+        as the listing (limit and offset are ignored). Callers without access:view
+        only export their own queries. At most 100,000 rows are written.
+      parameters:
+      - default: csv
+        description: csv
+        in: query
+        name: format
+        type: string
+      - description: Only the query with this id
+        in: query
+        name: id
+        type: string
+      - description: Source name
+        in: query
+        name: source
+        type: string
+      - description: A caller as principal_type:principal_id or as its audit subject
+        in: query
+        name: caller
+        type: string
+      - description: allowed, denied, failed, cancelled or running
+        in: query
+        name: outcome
+        type: string
+      - description: Outcome reason
+        in: query
+        name: reason
+        type: string
+      - description: Comma-separated clients
+        in: query
+        name: client
+        type: string
+      - description: RFC 3339
+        in: query
+        name: from
+        type: string
+      - description: RFC 3339
+        in: query
+        name: to
+        type: string
+      - description: Search
+        in: query
+        name: q
+        type: string
+      - description: Only the caller's own queries
+        in: query
+        name: mine
+        type: boolean
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: CSV
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Export queries
+      tags:
+      - query
+  /api/v1/query/run:
+    post:
+      consumes:
+      - application/json
+      description: Runs a read-only statement against a queryable source as the caller.
+        The statement is planned first and refused unless the caller may query every
+        table it references. Every attempt is recorded in the query log.
+      parameters:
+      - description: Query
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/QueryRunInput'
+      - description: editor (or web) when the query comes from the web UI's query
+          editor
+        in: header
+        name: X-Marmot-Client
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/QueryRefusedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: The query was cancelled
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Run a query
+      tags:
+      - query
+  /api/v1/query/saved:
+    get:
+      description: Lists the current person's saved queries, the most recently run
+        or edited first.
+      parameters:
+      - default: 50
+        description: Page size, at most 500
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListSavedQueriesResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List saved queries
+      tags:
+      - query
+    post:
+      consumes:
+      - application/json
+      description: Saves a statement and the source it runs against for the current
+        person to run again.
+      parameters:
+      - description: Saved query
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SavedQueryInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/SavedQuery'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Save a query
+      tags:
+      - query
+  /api/v1/query/saved/{id}:
+    delete:
+      description: Deletes one of the current person's saved queries. The query log
+        keeps every run.
+      parameters:
+      - description: Saved query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete a saved query
+      tags:
+      - query
+    get:
+      description: Returns one of the current person's saved queries.
+      parameters:
+      - description: Saved query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SavedQuery'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a saved query
+      tags:
+      - query
+    put:
+      consumes:
+      - application/json
+      description: Replaces the name, statement and source of one of the current person's
+        saved queries.
+      parameters:
+      - description: Saved query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Saved query
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SavedQueryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SavedQuery'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update a saved query
+      tags:
+      - query
+  /api/v1/query/saved/{id}/run:
+    post:
+      description: Records that the current person ran a saved query, setting its
+        last_run_at. The statement itself runs through POST /query/run, which checks
+        access and logs it like any other.
+      parameters:
+      - description: Saved query ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SavedQuery'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Mark a saved query as run
+      tags:
+      - query
+  /api/v1/query/sources:
+    get:
+      description: Pages through the sources that answer data queries, in name order.
+        Use a source's name as the "source" of a query.
+      parameters:
+      - description: Search by source name or plugin
+        in: query
+        name: q
+        type: string
+      - default: 50
+        description: Page size, at most 200
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryListSourcesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List queryable sources
+      tags:
+      - query
+  /api/v1/query/sources/{name}/stats:
+    get:
+      description: 'Counts a source''s queries over a window, the last seven days
+        by default: how many were asked, refused by policy and failed at the source.
+        Callers without access:view see only their own queries.'
+      parameters:
+      - description: Source name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Window start, RFC 3339; defaults to seven days before to
+        in: query
+        name: from
+        type: string
+      - description: Window end, RFC 3339; defaults to now
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QuerySourceStats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query stats for one source
+      tags:
+      - query
+  /api/v1/query/sources/{name}/tables:
+    get:
+      description: Lists the catalogued tables a queryable source can reach, busiest
+        first, each with a statement that previews it in the source's own dialect.
+      parameters:
+      - description: Source name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Search by table name
+        in: query
+        name: q
+        type: string
+      - default: 25
+        description: At most 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/QuerySourceTable'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List a source's tables
+      tags:
+      - query
+  /api/v1/query/stats:
+    get:
+      description: 'Summarises data query activity over a window from hourly rollups:
+        totals, a series and the busiest callers, sources and tables. Callers without
+        access:view only see their own activity. The window defaults to the last 24
+        hours.'
+      parameters:
+      - description: Start of the window, RFC 3339
+        in: query
+        name: from
+        type: string
+      - description: End of the window, RFC 3339
+        in: query
+        name: to
+        type: string
+      - description: hour or day; defaults by window length
+        in: query
+        name: interval
+        type: string
+      - default: 6
+        description: Entries in each top list
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryStats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query statistics
+      tags:
+      - query
+  /api/v1/query/status:
+    get:
+      description: Reports the long-running plugin processes that serve data queries.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryStatusResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Query plugin instance status
+      tags:
+      - query
   /api/v1/roles:
     get:
       description: List all active roles with user counts and permissions
@@ -6103,7 +9802,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new role with optional initial permissions
+      - application/yaml
+      description: Create a new role with optional initial permissions, named by id
+        or by resource_type:action key. The body may be JSON or YAML.
       operationId: postRoles
       parameters:
       - description: Role creation request
@@ -6114,6 +9815,7 @@ paths:
           $ref: '#/definitions/v1_roles.createRoleRequest'
       produces:
       - application/json
+      - application/yaml
       responses:
         "200":
           description: OK
@@ -6235,8 +9937,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Atomically replace all permissions on a role. System roles enforce
-        a minimum permission floor.
+      description: Atomically replace all permissions on a role, named by id or by
+        resource_type:action key. System roles enforce a minimum permission floor.
       operationId: postRolesIDPermissions
       parameters:
       - description: Role ID
@@ -6273,6 +9975,62 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Replace role permissions
+      tags:
+      - roles
+  /api/v1/roles/schema:
+    get:
+      description: The JSON Schema a role document follows, for editors and tooling.
+      operationId: getRolesSchema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Role document schema
+      tags:
+      - roles
+  /api/v1/roles/validate:
+    post:
+      consumes:
+      - application/json
+      - application/yaml
+      description: Checks a role document, in JSON or YAML, without saving it, and
+        lists every problem found with where it is, so an editor can mark each one.
+        Pass id to check an edit to an existing role, so it keeping its own name is
+        not reported as a clash.
+      operationId: postRolesValidate
+      parameters:
+      - description: ID of the role being edited
+        in: query
+        name: id
+        type: string
+      - description: Role document
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ValidateRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DocumentErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Validate a role document
       tags:
       - roles
   /api/v1/runs:
@@ -6504,6 +10262,33 @@ paths:
           type: string
         name: types
         type: array
+      - description: Comma-separated asset types to filter assets by
+        in: query
+        name: asset_types
+        type: string
+      - description: Comma-separated providers to filter assets by
+        in: query
+        name: providers
+        type: string
+      - description: Comma-separated tags to filter by
+        in: query
+        name: tags
+        type: string
+      - description: Comma-separated user or team IDs; matches assets, glossary terms
+          and data products they own
+        in: query
+        name: owner
+        type: string
+      - default: relevance
+        description: Result order
+        enum:
+        - relevance
+        - popular
+        - updated
+        - name
+        in: query
+        name: sort
+        type: string
       - default: 20
         description: Limit
         in: query
@@ -6755,6 +10540,40 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Delete an API key
+      tags:
+      - service_accounts
+  /api/v1/service-accounts/{id}/api-keys/{keyId}/rotate:
+    post:
+      description: Issue a new secret for a service account API key, keeping its name
+        and expiry. The old secret stops working at once and the new key is returned
+        only in this response.
+      operationId: postServiceAccountsIDAPIKeysKeyIDRotate
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: API key ID
+        in: path
+        name: keyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceAccountAPIKey'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Rotate an API key
       tags:
       - service_accounts
   /api/v1/sso-providers:
@@ -7072,7 +10891,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Team'
+            $ref: '#/definitions/TeamSummary'
         "404":
           description: Not Found
           schema:
@@ -7382,6 +11201,18 @@ paths:
         in: query
         name: active
         type: boolean
+      - description: 'Filter by member status: active, invited or deactivated'
+        enum:
+        - active
+        - invited
+        - deactivated
+        in: query
+        name: status
+        type: string
+      - description: Pass none to keep only members who belong to no team
+        in: query
+        name: team
+        type: string
       produces:
       - application/json
       responses:
@@ -7421,7 +11252,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ValidationErrorResponse'
         "409":
           description: Conflict
           schema:
@@ -7451,6 +11282,10 @@ paths:
           description: No Content
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
         "500":
@@ -7522,9 +11357,13 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/ValidationErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -7608,10 +11447,131 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Delete API key
+      tags:
+      - users
+  /api/v1/users/apikeys/{id}/rotate:
+    post:
+      description: Issue a new secret for one of the current user's API keys, keeping
+        its name and expiry. The old secret stops working at once and the new key
+        is returned only in this response.
+      operationId: postUsersApikeysIDRotate
+      parameters:
+      - description: API key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIKey'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Rotate API key
+      tags:
+      - users
+  /api/v1/users/invites:
+    post:
+      consumes:
+      - application/json
+      description: 'Creates a pending member with the given roles and teams and returns
+        a one-time link for them to set a password. Marmot sends no email: pass the
+        link on yourself. The link works for 7 days.'
+      operationId: postUsersInvites
+      parameters:
+      - description: Who to invite
+        in: body
+        name: invite
+        required: true
+        schema:
+          $ref: '#/definitions/InviteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/InviteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ValidationErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Invite a member
+      tags:
+      - users
+  /api/v1/users/invites/{id}:
+    delete:
+      description: Withdraws a pending invitation and removes the pending member it
+        created.
+      operationId: deleteUsersIDInvite
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Withdraw an invitation
+      tags:
+      - users
+  /api/v1/users/invites/{id}/renew:
+    post:
+      description: Replaces a pending member's invitation link with a new one that
+        works for another 7 days. The old link stops working.
+      operationId: postUsersIDInvite
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/InviteResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Renew an invitation
       tags:
       - users
   /api/v1/users/login:
@@ -7657,7 +11617,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/CurrentUser'
         "401":
           description: Unauthorized
           schema:
@@ -7666,6 +11626,150 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get current user profile
+      tags:
+      - users
+  /api/v1/users/me/connected-apps:
+    get:
+      description: List the OAuth clients, such as MCP clients and the CLI, that the
+        current user has allowed and that still hold a valid token
+      operationId: getUsersMeConnectedApps
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ConnectedAppsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List connected apps
+      tags:
+      - users
+  /api/v1/users/me/connected-apps/{client_id}:
+    delete:
+      description: Revoke an OAuth client's access to the current user's account.
+        Tokens already issued to it stop working at once; the client has to ask again
+        to get back in.
+      operationId: deleteUsersMeConnectedAppsClientID
+      parameters:
+      - description: OAuth client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Revoke a connected app
+      tags:
+      - users
+  /api/v1/users/me/profile:
+    put:
+      consumes:
+      - application/json
+      description: Update the profile fields the current user may set about themselves,
+        such as job title
+      operationId: putUsersMeProfile
+      parameters:
+      - description: Profile fields
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CurrentUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ValidationErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - users
+  /api/v1/users/me/recent:
+    get:
+      description: 'Returns what the current person opened most recently in the UI:
+        assets, glossary terms, data products and their saved queries, newest first,
+        described as they are now. Items since deleted, and kinds the caller can no
+        longer view, are left out. Callers without a user account get an empty list.'
+      operationId: listRecentItems
+      parameters:
+      - default: 10
+        description: Number of items, at most 50
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListRecentResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List recently viewed items
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Notes that the current person opened an item, for their recently
+        viewed list. Repeat views within a minute are ignored and only the latest
+        50 items are kept. Callers without a user account are accepted and nothing
+        is stored.
+      operationId: recordRecentView
+      parameters:
+      - description: The item viewed
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RecordRecentViewRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Record a view
       tags:
       - users
   /api/v1/users/oauth/link:
@@ -7755,6 +11859,56 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Update user preferences
+      tags:
+      - users
+  /api/v1/users/sign-out:
+    post:
+      description: 'Revokes the bearer token the request is sent with, so a copy of
+        it stops working before it expires. Only that token is revoked: the person''s
+        other sessions and API keys are untouched. A token that is already invalid
+        has nothing left to revoke, so that is a 204 too.'
+      operationId: postUsersSignOut
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sign out
+      tags:
+      - users
+  /api/v1/users/sign-out-all/{id}:
+    post:
+      description: Rejects every token issued to the user before now. Their password
+        and API keys are untouched, so this is the response to a leaked or overexposed
+        token rather than a lost credential.
+      operationId: postUsersIDSignOutAll
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Sign a user out of all sessions
       tags:
       - users
   /api/v1/users/update-password:
@@ -7920,6 +12074,94 @@ paths:
       summary: OAuth token endpoint
       tags:
       - auth
+  /query/serve/enrol:
+    post:
+      consumes:
+      - application/json
+      description: Issues a short-lived client certificate for a plugin running outside
+        Marmot to connect and serve queries for the named sources. The caller must
+        hold ingestion:serve, and each source must be free or already served by the
+        caller.
+      parameters:
+      - description: Certificate request and sources
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pluginserve.EnrolInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pluginserve.EnrolResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Enrol a serving plugin
+      tags:
+      - query
+  /query/serve/keys:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServeKeyGeneration'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List serving key generations
+      tags:
+      - query
+  /query/serve/keys/rotate:
+    post:
+      consumes:
+      - application/json
+      description: 'Starts a new generation of the CA and query signing keys that
+        secure serving plugins. A graceful rotation publishes the new keys, uses them
+        after the overlap and then retires the old ones, without interrupting serving
+        plugins. An immediate rotation is for a suspected compromise: it switches
+        at once and serving plugins must be restarted.'
+      parameters:
+      - description: Rotation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ServeRotateKeysRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServeKeyGeneration'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Rotate serving keys
+      tags:
+      - query
 securityDefinitions:
   ApiKeyAuth:
     in: header

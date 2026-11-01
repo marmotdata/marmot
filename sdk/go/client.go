@@ -60,7 +60,9 @@ type Client struct {
 	Lineage         *LineageService
 	Metrics         *MetricsService
 	Owners          *OwnersService
+	Plugins         *PluginsService
 	Runs            *RunsService
+	Query           *QueryService
 	Search          *SearchService
 	ServiceAccounts *ServiceAccountsService
 	Teams           *TeamsService
@@ -120,7 +122,9 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		Lineage:         &LineageService{gen: gen},
 		Metrics:         &MetricsService{gen: gen},
 		Owners:          &OwnersService{gen: gen},
+		Plugins:         &PluginsService{gen: gen},
 		Runs:            &RunsService{gen: gen},
+		Query:           &QueryService{gen: gen},
 		Search:          &SearchService{gen: gen},
 		ServiceAccounts: &ServiceAccountsService{gen: gen},
 		Teams:           &TeamsService{gen: gen},

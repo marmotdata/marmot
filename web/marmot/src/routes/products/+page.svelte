@@ -1,379 +1,441 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { writable, type Writable } from 'svelte/store';
-	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
+	import '@marmotdata/elements/multiselect.js';
+	import '@marmotdata/elements/popularity.js';
+	import '@marmotdata/elements/toolbar.js';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
-	import type { DataProduct } from '$lib/dataproducts/types';
-	import ProductBlade from '$components/product/ProductBlade.svelte';
-	import IconifyIcon from '@iconify/svelte';
-	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
-	import Button from '$components/ui/Button.svelte';
+	import { fetchApi } from '$lib/api';
+	import { setCrumbs } from '$lib/mm';
 	import { auth } from '$lib/stores/auth';
+	import { m } from '$lib/paraglide/messages';
+	import type { DataProduct, ProductFacets, ProductSort } from '$lib/dataproducts/types';
+	import { getProductFacets, queryDataProducts } from '$lib/dataproducts/api';
+	import { normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
+	import ProductBlade from '$components/product/ProductBlade.svelte';
+	import ProductIcon from '$components/product/ProductIcon.svelte';
 
-	const recentProducts: Writable<DataProduct[]> = writable([]);
-	const allProducts: Writable<DataProduct[]> = writable([]);
-	const totalProducts: Writable<number> = writable(0);
-	const isLoading: Writable<boolean> = writable(true);
-	const error: Writable<{ status: number; message: string } | null> = writable(null);
+	const PAGE = 25;
+	const YOURS_MAX = 5;
 
-	let selectedProduct = $state<DataProduct | null>(null);
-	let canManageProducts = $derived(auth.hasPermission('assets', 'manage'));
+	setCrumbs([{ label: m.products_heading() }]);
+
+	// Searching, filtering, sorting and paging all happen on the server, so the page never reads the whole catalog
+	let yours = $state<DataProduct[]>([]);
+	let yoursTotal = $state(0);
+	let rows = $state<DataProduct[]>([]);
+	let rowsTotal = $state(0);
+	let catalogTotal = $state<number | null>(null);
+	let facets = $state<ProductFacets>({ owners: [], tags: [] });
+	let loading = $state(true);
+	let failed = $state<string | null>(null);
+	let selected = $state<DataProduct | null>(null);
+
+	let search = $state('');
+	let query = $state('');
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
+	let ownerFilter = $state<string[]>([]);
+	let tagFilter = $state<string[]>([]);
+	let mineOnly = $state(false);
+	let sort = $state<ProductSort>('popular');
+	let page = $state(1);
+	let seq = 0;
+
+	const canManage = auth.hasPermission('assets', 'manage');
+	const me = auth.getCurrentUserId();
+
+	let filtering = $derived(!!query || ownerFilter.length > 0 || tagFilter.length > 0 || mineOnly);
 
 	$effect(() => {
-		if (browser) {
-			fetchProducts();
-		}
+		if (!browser) return;
+		getProductFacets()
+			.then((f) => (facets = f))
+			.catch(() => {});
 	});
 
-	async function fetchProducts() {
-		$isLoading = true;
-		$error = null;
+	$effect(() => {
+		if (!browser) return;
+		const params = {
+			q: query,
+			owners: [...ownerFilter],
+			tags: [...tagFilter],
+			mine: mineOnly,
+			sort,
+			page
+		};
+		untrack(() => load(params));
+	});
 
+	async function load(p: {
+		q: string;
+		owners: string[];
+		tags: string[];
+		mine: boolean;
+		sort: ProductSort;
+		page: number;
+	}) {
+		const mine = ++seq;
+		loading = true;
+		failed = null;
+		const offset = (p.page - 1) * PAGE;
 		try {
-			const response = await fetchApi('/products/list?limit=100');
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw {
-					status: response.status,
-					message: errorData.error || 'Unable to complete your request'
-				};
-			}
-
-			const data = await response.json();
-
-			const products = (data.data_products || []).map((product: DataProduct) => ({
-				...product,
-				tags: product.tags || [],
-				metadata: product.metadata || {},
-				owners: product.owners || [],
-				rules: product.rules || []
-			}));
-
-			$totalProducts = data.total || 0;
-
-			// Sort by updated_at for recent products (most recent first)
-			const sortedByRecent = [...products].sort(
-				(a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-			);
-
-			$recentProducts = sortedByRecent.slice(0, 4);
-			$allProducts = sortedByRecent;
-		} catch (e: unknown) {
-			const err = e as { status?: number; message?: string };
-			const errorStatus = err.status || 500;
-			$error = { status: errorStatus, message: err.message || 'Unknown error' };
-			console.error('Error fetching products:', e);
-		} finally {
-			$isLoading = false;
-		}
-	}
-
-	async function handleProductClick(productId: string) {
-		try {
-			const response = await fetchApi(`/products/${productId}`);
-			if (response.ok) {
-				const product: DataProduct = await response.json();
-				product.tags = product.tags || [];
-				product.owners = product.owners || [];
-				product.rules = product.rules || [];
-				selectedProduct = product;
+			if (p.q || p.owners.length || p.tags.length || p.mine) {
+				const res = await queryDataProducts({
+					q: p.q,
+					owners: p.owners,
+					tags: p.tags,
+					mine: p.mine ? 'only' : undefined,
+					sort: p.sort,
+					offset,
+					limit: PAGE
+				});
+				if (mine !== seq) return;
+				rows = (res.data_products ?? []).map(normaliseProduct);
+				rowsTotal = res.total ?? rows.length;
+			} else if (me) {
+				// Products the person's teams own come first, so each product appears once
+				const [own, rest] = await Promise.all([
+					queryDataProducts({ mine: 'only', sort: p.sort, limit: YOURS_MAX }),
+					queryDataProducts({ mine: 'exclude', sort: p.sort, offset, limit: PAGE })
+				]);
+				if (mine !== seq) return;
+				yours = (own.data_products ?? []).map(normaliseProduct);
+				yoursTotal = own.total ?? yours.length;
+				rows = (rest.data_products ?? []).map(normaliseProduct);
+				rowsTotal = rest.total ?? rows.length;
+				catalogTotal = yoursTotal + rowsTotal;
 			} else {
-				console.error('Failed to load product');
+				const res = await queryDataProducts({ sort: p.sort, offset, limit: PAGE });
+				if (mine !== seq) return;
+				yours = [];
+				yoursTotal = 0;
+				rows = (res.data_products ?? []).map(normaliseProduct);
+				rowsTotal = res.total ?? rows.length;
+				catalogTotal = rowsTotal;
 			}
-		} catch (err) {
-			console.error('Error loading product:', err);
+		} catch (e) {
+			if (mine !== seq) return;
+			const status = (e as { status?: number }).status ?? 0;
+			failed =
+				status >= 500
+					? m.products_error_server()
+					: e instanceof Error
+						? e.message
+						: m.products_error_unknown();
+		} finally {
+			if (mine === seq) loading = false;
 		}
 	}
 
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
+	function retry() {
+		load({
+			q: query,
+			owners: ownerFilter,
+			tags: tagFilter,
+			mine: mineOnly,
+			sort,
+			page
 		});
 	}
 
-	function formatRelativeTime(dateString: string): string {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
+	function onSearch(value: string) {
+		search = value;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			query = search.trim();
+			page = 1;
+		}, 250);
+	}
 
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-		return formatDate(dateString);
+	function plain(text?: string): string {
+		return (text ?? '').replace(/<[^>]*>/g, '');
+	}
+
+	function ownerNames(p: DataProduct): string[] {
+		return p.owners.map((o) => o.name || o.username || o.id);
+	}
+
+	async function preview(event: MouseEvent, product: DataProduct) {
+		// Modified clicks keep the browser's own behaviour, so the page can still open in a new tab.
+		if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+		event.preventDefault();
+		selected = product;
+		try {
+			const res = await fetchApi(`/products/${product.id}`);
+			if (res.ok && selected?.id === product.id) selected = normaliseProduct(await res.json());
+		} catch {
+			// The list entry is enough to preview while the full record is unavailable.
+		}
+	}
+
+	function clearFilters() {
+		search = '';
+		query = '';
+		ownerFilter = [];
+		tagFilter = [];
+		mineOnly = false;
+		page = 1;
+	}
+
+	function showAllYours() {
+		mineOnly = true;
+		page = 1;
 	}
 </script>
 
 <svelte:head>
-	<title>Data Products - Marmot</title>
+	<title>{m.products_page_title()}</title>
 </svelte:head>
 
-<div class="h-full overflow-y-auto">
-	<div class="max-w-6xl mx-auto px-6 py-6">
-		<!-- Header -->
-		<div class="flex items-center justify-between mb-6">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Data Products</h1>
-				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					Logical groupings of related data assets
-				</p>
-			</div>
-			{#if canManageProducts}
-				<Button
-					click={() => goto(resolve('/products/new'))}
-					icon="material-symbols:add"
-					text="New Product"
-					variant="filled"
-				/>
+{#snippet row(p: DataProduct)}
+	<li aria-current={selected?.id === p.id ? 'true' : undefined}>
+		<ProductIcon iconUrl={p.icon_url} />
+		<div class="mm-stack body">
+			<a
+				class="mm-link mm-link--quiet name"
+				href={resolve('/products/[id]', { id: p.id })}
+				onclick={(e) => preview(e, p)}>{p.name}</a
+			>
+			{#if p.description}
+				<mm-text variant="dense" tone="secondary" block class="truncate"
+					>{plain(p.description)}</mm-text
+				>
+			{/if}
+			{#if p.owners.length > 0 || p.tags.length > 0}
+				<mm-text variant="caption" tone="secondary" block class="truncate"
+					>{[...ownerNames(p), ...p.tags].join(' · ')}</mm-text
+				>
 			{/if}
 		</div>
+		<div class="mm-stack side">
+			{#if popularityLevel(p.popularity)}
+				<mm-popularity level={popularityLevel(p.popularity)}></mm-popularity>
+			{/if}
+			<mm-text variant="caption" tone="secondary" numeric
+				>{m.products_assets_count({ count: p.asset_count ?? 0 })}</mm-text
+			>
+		</div>
+	</li>
+{/snippet}
 
-		{#if $error}
-			{#if String($error.status).startsWith('5')}
-				<div
-					class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-100 px-4 py-3 rounded-lg"
+{#snippet list(label: string, rows: DataProduct[])}
+	<ul class="mm-list products" aria-label={label}>
+		{#each rows as p (p.id)}
+			{@render row(p)}
+		{/each}
+	</ul>
+{/snippet}
+
+{#snippet allRows()}
+	<div class="mm-stack" style="--mm-gap: var(--space-3)">
+		{@render list(m.products_all(), rows)}
+		{@render pager(rowsTotal)}
+	</div>
+{/snippet}
+
+{#snippet pager(count: number)}
+	{#if count > PAGE}
+		<mm-pagination
+			total={count}
+			page-size={PAGE}
+			{page}
+			label={m.products_pages_label()}
+			onmm-page-change={(e: CustomEvent<{ page: number }>) => (page = e.detail.page)}
+		></mm-pagination>
+	{/if}
+{/snippet}
+
+<div class="mm-stack" style="--mm-gap: var(--space-5)">
+	<mm-page-header
+		heading={m.products_heading()}
+		compact
+		count={failed || catalogTotal === null ? undefined : catalogTotal}
+	>
+		{#if canManage && catalogTotal !== 0}
+			<mm-button slot="actions" variant="primary" icon="add" href={resolve('/products/new')}
+				>{m.products_create()}</mm-button
+			>
+		{/if}
+	</mm-page-header>
+
+	{#if !loading && !failed && catalogTotal === 0 && !filtering}
+		<mm-empty-state
+			heading={m.products_empty_title()}
+			description={m.products_empty_description()}
+			seed={5}
+		>
+			{#if canManage}
+				<mm-button slot="action" variant="primary" icon="add" href={resolve('/products/new')}
+					>{m.products_create()}</mm-button
 				>
-					Something went wrong on our end. Please try again later.
+			{/if}
+		</mm-empty-state>
+	{:else}
+		<mm-toolbar label={m.products_filter_label()}>
+			<mm-search-field
+				class="search"
+				label={m.products_search_placeholder()}
+				hide-label
+				placeholder={m.products_search_hint()}
+				shortcut="/"
+				value={search}
+				onmm-input={(e: CustomEvent<{ value: string }>) => onSearch(e.detail.value)}
+			></mm-search-field>
+			<mm-multiselect
+				class="filter"
+				label={m.common_owners()}
+				hide-label
+				placeholder={m.products_any_owner()}
+				max-tags={1}
+				value={ownerFilter}
+				onmm-change={(e: CustomEvent<{ value: string[] }>) => {
+					ownerFilter = e.detail.value;
+					page = 1;
+				}}
+			>
+				{#each facets.owners as o (o.id)}
+					<mm-option
+						value={o.id}
+						label={o.name || o.id}
+						icon={o.type === 'team' ? 'groups' : 'person'}
+					></mm-option>
+				{/each}
+			</mm-multiselect>
+			<mm-multiselect
+				class="filter"
+				label={m.common_tags()}
+				hide-label
+				placeholder={m.products_any_tag()}
+				max-tags={1}
+				value={tagFilter}
+				onmm-change={(e: CustomEvent<{ value: string[] }>) => {
+					tagFilter = e.detail.value;
+					page = 1;
+				}}
+			>
+				{#each facets.tags as t (t.tag)}
+					<mm-option value={t.tag} label={t.tag}></mm-option>
+				{/each}
+			</mm-multiselect>
+			<mm-select
+				slot="end"
+				class="sort"
+				label={m.products_sort_label()}
+				hide-label
+				value={sort}
+				onmm-change={(e: CustomEvent<{ value: string }>) => {
+					sort =
+						(['popular', 'updated', 'name'] as const).find((v) => v === e.detail.value) ??
+						'popular';
+					page = 1;
+				}}
+			>
+				<mm-option value="popular">{m.products_sort_popular()}</mm-option>
+				<mm-option value="updated">{m.products_sort_updated()}</mm-option>
+				<mm-option value="name">{m.products_sort_name()}</mm-option>
+			</mm-select>
+		</mm-toolbar>
+
+		<div>
+			{#if failed}
+				<mm-callout tone="danger" heading={m.products_load_failed()}>
+					{failed}
+					<mm-button slot="actions" size="sm" icon="refresh" onclick={retry}
+						>{m.products_try_again()}</mm-button
+					>
+				</mm-callout>
+			{:else if loading && rows.length === 0 && yours.length === 0}
+				<mm-skeleton loading count={6}></mm-skeleton>
+			{:else if filtering && rowsTotal === 0}
+				<mm-empty-state
+					heading={m.products_no_match_title()}
+					description={m.products_no_match_description()}
+					seed={3}
+				>
+					<mm-button slot="action" onclick={clearFilters}>{m.products_clear_search()}</mm-button>
+				</mm-empty-state>
+			{:else if filtering}
+				<!-- Searching or filtering shows one ranked list, so results are not split across sections. -->
+				<div class="mm-stack" style="--mm-gap: var(--space-3)">
+					<div class="mm-cluster mm-cluster--between">
+						<mm-text variant="dense" tone="secondary" role="status"
+							>{mineOnly
+								? m.products_results_yours({ count: rowsTotal })
+								: m.products_results({ count: rowsTotal })}</mm-text
+						>
+						{#if mineOnly}
+							<mm-button size="sm" variant="ghost" onclick={clearFilters}
+								>{m.products_show_every_product()}</mm-button
+							>
+						{/if}
+					</div>
+					{@render list(m.products_search_results(), rows)}
+					{@render pager(rowsTotal)}
 				</div>
 			{:else}
-				<div
-					class="bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900 border border-earthy-terracotta-200 dark:border-earthy-terracotta-800 px-4 py-3 rounded-lg flex items-center gap-3"
-				>
-					<IconifyIcon
-						icon="mdi:alert-circle-outline"
-						class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
-					/>
-					<span class="text-earthy-terracotta-700 dark:text-earthy-terracotta-100">
-						{$error.message}
-					</span>
-				</div>
-			{/if}
-		{:else if $isLoading}
-			<!-- Loading State -->
-			<div class="space-y-6">
-				<!-- Featured Cards Skeleton -->
-				<div>
-					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-						{#each Array(4) as _, i (i)}
-							<div
-								class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse"
+				{#if yours.length > 0}
+					<mm-section heading={m.products_yours()}>
+						{#if yoursTotal > YOURS_MAX}
+							<mm-button slot="actions" variant="ghost" size="sm" onclick={showAllYours}
+								>{m.products_show_all_count({ count: yoursTotal })}</mm-button
 							>
-								<div class="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg mb-3"></div>
-								<div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-								<div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-3"></div>
-								<div class="flex gap-2">
-									<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-									<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-				<!-- List Skeleton -->
-				<div>
-					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
-					{#each Array(5) as _, i (i)}
-						<div
-							class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-3 animate-pulse"
-						>
-							<div class="flex items-center gap-3">
-								<div class="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
-								<div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
-								<div class="flex-1"></div>
-								<div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		{:else if $allProducts.length === 0}
-			<!-- Empty State -->
-			<div class="flex flex-col items-center justify-center py-16">
-				<div
-					class="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4"
-				>
-					<IconifyIcon
-						icon="mdi:package-variant-closed"
-						class="text-4xl text-gray-400 dark:text-gray-500"
-					/>
-				</div>
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-					No data products yet
-				</h2>
-				<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-					Data products help you organize and share curated collections of data assets with your
-					team.
-				</p>
-				{#if canManageProducts}
-					<Button
-						click={() => goto(resolve('/products/new'))}
-						icon="material-symbols:add"
-						text="Create your first product"
-						variant="filled"
-					/>
+						{/if}
+						{@render list(m.products_yours(), yours)}
+					</mm-section>
 				{/if}
-			</div>
-		{:else}
-			<!-- Recently Updated Section -->
-			<section class="mb-8">
-				<h2
-					class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4"
-				>
-					Recently Updated
-				</h2>
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-					{#each $recentProducts as product (product.id)}
-						<button
-							onclick={() => handleProductClick(product.id)}
-							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-lg hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
-						>
-							<div
-								class="w-10 h-10 rounded-lg bg-gradient-to-br from-earthy-terracotta-100 to-earthy-terracotta-200 dark:from-earthy-terracotta-900/50 dark:to-earthy-terracotta-800/30 flex items-center justify-center mb-3 overflow-hidden"
-							>
-								{#if product.icon_url}
-									<AuthenticatedImage
-										src={product.icon_url}
-										alt="{product.name} icon"
-										class="w-full h-full object-cover"
-									/>
-								{:else}
-									<IconifyIcon
-										icon="mdi:package-variant-closed"
-										class="text-xl text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-									/>
-								{/if}
-							</div>
-							<h3
-								class="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors mb-1"
-							>
-								{product.name}
-							</h3>
-							{#if product.description}
-								<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
-									{product.description.replace(/<[^>]*>/g, '').slice(0, 80)}
-								</p>
-							{:else}
-								<p class="text-xs text-gray-400 dark:text-gray-500 italic mb-3">No description</p>
-							{/if}
-							<div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-								<span class="flex items-center gap-1">
-									<IconifyIcon icon="material-symbols:database" class="w-3.5 h-3.5" />
-									{product.asset_count || 0}
-								</span>
-								{#if product.owners && product.owners.length > 0}
-									<span class="flex items-center gap-1">
-										<IconifyIcon icon="material-symbols:person" class="w-3.5 h-3.5" />
-										{product.owners.length}
-									</span>
-								{/if}
-								<span class="flex-1"></span>
-								<span class="text-gray-400 dark:text-gray-500">
-									{formatRelativeTime(product.updated_at)}
-								</span>
-							</div>
-						</button>
-					{/each}
-				</div>
-			</section>
-
-			<!-- All Products List -->
-			<section>
-				<div class="flex items-center justify-between mb-4">
-					<h2
-						class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
-					>
-						All Products
-					</h2>
-					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{$totalProducts}
-						{$totalProducts === 1 ? 'product' : 'products'}
-					</span>
-				</div>
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-				>
-					{#each $allProducts as product, index (product.id)}
-						<button
-							onclick={() => handleProductClick(product.id)}
-							class="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group {index !==
-							$allProducts.length - 1
-								? 'border-b border-gray-100 dark:border-gray-700'
-								: ''}"
-						>
-							<div
-								class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden"
-							>
-								{#if product.icon_url}
-									<AuthenticatedImage
-										src={product.icon_url}
-										alt="{product.name} icon"
-										class="w-full h-full object-cover"
-									/>
-								{:else}
-									<IconifyIcon
-										icon="mdi:package-variant-closed"
-										class="text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-									/>
-								{/if}
-							</div>
-							<div class="flex-1 min-w-0">
-								<h3
-									class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors"
-								>
-									{product.name}
-								</h3>
-							</div>
-							<div class="flex items-center gap-4 flex-shrink-0">
-								<span
-									class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-									title="Assets"
-								>
-									<IconifyIcon icon="material-symbols:database" class="w-3.5 h-3.5" />
-									{product.asset_count || 0}
-								</span>
-								{#if product.tags && product.tags.length > 0}
-									<div class="hidden sm:flex items-center gap-1">
-										{#each product.tags.slice(0, 2) as tag (tag)}
-											<span
-												class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
-											>
-												{tag}
-											</span>
-										{/each}
-										{#if product.tags.length > 2}
-											<span class="text-xs text-gray-400 dark:text-gray-500">
-												+{product.tags.length - 2}
-											</span>
-										{/if}
-									</div>
-								{/if}
-								<span
-									class="text-xs text-gray-400 dark:text-gray-500 w-16 text-right"
-									title={formatDate(product.updated_at)}
-								>
-									{formatRelativeTime(product.updated_at)}
-								</span>
-								<IconifyIcon
-									icon="mdi:chevron-right"
-									class="w-4 h-4 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"
-								/>
-							</div>
-						</button>
-					{/each}
-				</div>
-			</section>
-		{/if}
-	</div>
+				{#if yours.length > 0}
+					<mm-section heading={m.products_all()}>
+						{@render allRows()}
+					</mm-section>
+				{:else}
+					{@render allRows()}
+				{/if}
+			{/if}
+		</div>
+	{/if}
 </div>
 
-{#if selectedProduct}
-	<ProductBlade bind:product={selectedProduct} onClose={() => (selectedProduct = null)} />
+{#if selected}
+	<ProductBlade bind:product={selected} onClose={() => (selected = null)} />
 {/if}
+
+<style>
+	.search {
+		width: 20rem;
+		max-width: 100%;
+	}
+	.filter {
+		width: 14rem;
+	}
+	.sort {
+		width: 12rem;
+	}
+	.products {
+		border-block: 1px solid var(--mm-rule);
+	}
+	.products > li {
+		gap: var(--space-4);
+		padding-block: var(--space-4);
+	}
+	.products > li[aria-current='true'] {
+		background: var(--mm-selected);
+	}
+	.body {
+		--mm-gap: var(--space-1);
+		flex: 1;
+		min-width: 0;
+	}
+	.name {
+		font: var(--text-heading-sm);
+	}
+	.truncate {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.side {
+		--mm-gap: var(--space-2);
+		align-items: flex-end;
+		flex: none;
+	}
+</style>

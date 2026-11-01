@@ -36,19 +36,28 @@ class TestListTeamsResponse(unittest.TestCase):
                 limit = 56,
                 offset = 56,
                 teams = [
-                    marmot.generated.models.team.Team(
+                    marmot.generated.models.team_summary.TeamSummary(
+                        asset_count = 56,
                         created_at = '',
                         created_by = '',
                         created_via_sso = True,
                         description = '',
                         id = '',
+                        member_count = 56,
                         metadata = { },
                         name = '',
+                        sso_groups = [
+                            marmot.generated.models.sso_group_ref.SSOGroupRef(
+                                provider = '',
+                                role_name = '',
+                                sso_group_name = '', )
+                            ],
                         sso_provider = '',
                         tags = [
                             ''
                             ],
-                        updated_at = '', )
+                        updated_at = '',
+                        webhook_count = 56, )
                     ],
                 total = 56
             )

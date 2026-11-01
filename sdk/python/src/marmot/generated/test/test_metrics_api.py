@@ -71,6 +71,18 @@ class TestMetricsApi(unittest.IsolatedAsyncioTestCase):
         Get assets by type
         """
 
+    async def test_get_metrics_assets_owned(self) -> None:
+        """Test case for get_metrics_assets_owned
+
+        Get owned assets count
+        """
+
+    def test_get_metrics_assets_owned_sync(self) -> None:
+        """Test case for get_metrics_assets_owned (synchronous)
+
+        Get owned assets count
+        """
+
     async def test_get_metrics_assets_total(self) -> None:
         """Test case for get_metrics_assets_total
 

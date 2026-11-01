@@ -85,6 +85,45 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/glossary/related/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getRelatedTerms,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/related/{id}",
+			Method:  http.MethodPost,
+			Handler: h.addRelatedTerm,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/related/{id}/{related_id}",
+			Method:  http.MethodDelete,
+			Handler: h.removeRelatedTerm,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+			},
+		},
+		{
+			// Suggestions name assets, so reading them needs asset rights as well as glossary rights.
+			Path:    "/api/v1/glossary/suggested-assets/{id}",
+			Method:  http.MethodGet,
+			Handler: h.suggestAssets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 50, 60),
+			},
+		},
+		{
 			Path:    "/api/v1/glossary/{id}",
 			Method:  http.MethodGet,
 			Handler: h.getTerm,

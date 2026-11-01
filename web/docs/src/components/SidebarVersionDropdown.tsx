@@ -1,28 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useId } from "react";
 import {
   useVersions,
   useActiveDocContext,
   useDocsVersionCandidates,
 } from "@docusaurus/plugin-content-docs/client";
 import { useHistory } from "@docusaurus/router";
+import ExpandMore from "~icons/material-symbols/expand-more";
 
+/** The docs version picker at the top of the sidebar: a native select in the design system's style. */
 export default function SidebarVersionDropdown(): JSX.Element | null {
   const versions = useVersions();
   const activeDocContext = useActiveDocContext();
   const candidates = useDocsVersionCandidates();
   const history = useHistory();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const id = useId();
 
   if (versions.length <= 1) {
     return null;
@@ -38,56 +29,29 @@ export default function SidebarVersionDropdown(): JSX.Element | null {
   }
 
   return (
-    <div className="sidebar-version-dropdown" ref={ref}>
-      <span className="sidebar-version-label">Version</span>
-      <button
-        className="sidebar-version-button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-      >
-        <span>{activeVersion.label}</span>
-        <svg
-          className={`sidebar-version-chevron${open ? " sidebar-version-chevron--open" : ""}`}
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          aria-hidden="true"
+    <div className="sidebar-version">
+      <label className="sidebar-version__label" htmlFor={id}>
+        Version
+      </label>
+      <div className="sidebar-version__control">
+        <select
+          id={id}
+          className="sidebar-version__select"
+          value={activeVersion.name}
+          onChange={(e) => {
+            const version = versions.find((v) => v.name === e.target.value);
+            const targetDoc = version && getVersionTargetDoc(version);
+            if (targetDoc) history.push(targetDoc.path);
+          }}
         >
-          <path
-            d="M3 4.5L6 7.5L9 4.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {open && (
-        <ul className="sidebar-version-menu" role="listbox">
-          {versions.map((version) => {
-            const isActive = version.name === activeVersion.name;
-            return (
-              <li
-                key={version.name}
-                role="option"
-                aria-selected={isActive}
-                className={`sidebar-version-option${isActive ? " sidebar-version-option--active" : ""}`}
-                onClick={() => {
-                  const targetDoc = getVersionTargetDoc(version);
-                  if (targetDoc) {
-                    history.push(targetDoc.path);
-                  }
-                  setOpen(false);
-                }}
-              >
-                {version.label}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+          {versions.map((version) => (
+            <option key={version.name} value={version.name}>
+              {version.label}
+            </option>
+          ))}
+        </select>
+        <ExpandMore aria-hidden="true" className="sidebar-version__caret" />
+      </div>
     </div>
   );
 }

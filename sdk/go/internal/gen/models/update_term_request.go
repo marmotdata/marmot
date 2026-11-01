@@ -35,6 +35,12 @@ type UpdateTermRequest struct {
 
 	// parent term id
 	ParentTermID string `json:"parent_term_id,omitempty"`
+
+	// RelatedTermIDs replaces the term's related terms when present; an empty list clears them.
+	RelatedTermIds []string `json:"related_term_ids"`
+
+	// tags
+	Tags []string `json:"tags"`
 }
 
 // Validate validates this update term request

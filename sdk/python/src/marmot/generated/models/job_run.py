@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -32,10 +32,15 @@ class JobRun(BaseModel):
     claimed_at: StrictStr | None = None
     claimed_by: StrictStr | None = None
     config: dict[str, Any] | None = None
+    connecting_at: StrictStr | None = Field(
+        default=None,
+        description="ConnectingAt, ExtractingAt and WritingAt record when the worker began launching the plugin, asked it to discover and began writing to the catalog; empty when the run never got there or predates them.",
+    )
     created_at: StrictStr | None = None
     created_by: StrictStr | None = None
     documentation_added: StrictInt | None = None
     error_message: StrictStr | None = None
+    extracting_at: StrictStr | None = None
     finished_at: StrictStr | None = None
     id: StrictStr | None = None
     lineage_created: StrictInt | None = None
@@ -48,6 +53,7 @@ class JobRun(BaseModel):
     started_at: StrictStr | None = None
     status: StrictStr | None = None
     updated_at: StrictStr | None = None
+    writing_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "assets_created",
         "assets_deleted",
@@ -55,10 +61,12 @@ class JobRun(BaseModel):
         "claimed_at",
         "claimed_by",
         "config",
+        "connecting_at",
         "created_at",
         "created_by",
         "documentation_added",
         "error_message",
+        "extracting_at",
         "finished_at",
         "id",
         "lineage_created",
@@ -71,6 +79,7 @@ class JobRun(BaseModel):
         "started_at",
         "status",
         "updated_at",
+        "writing_at",
     ]
 
     model_config = ConfigDict(
@@ -128,10 +137,12 @@ class JobRun(BaseModel):
                 "claimed_at": obj.get("claimed_at"),
                 "claimed_by": obj.get("claimed_by"),
                 "config": obj.get("config"),
+                "connecting_at": obj.get("connecting_at"),
                 "created_at": obj.get("created_at"),
                 "created_by": obj.get("created_by"),
                 "documentation_added": obj.get("documentation_added"),
                 "error_message": obj.get("error_message"),
+                "extracting_at": obj.get("extracting_at"),
                 "finished_at": obj.get("finished_at"),
                 "id": obj.get("id"),
                 "lineage_created": obj.get("lineage_created"),
@@ -144,5 +155,6 @@ class JobRun(BaseModel):
                 "started_at": obj.get("started_at"),
                 "status": obj.get("status"),
                 "updated_at": obj.get("updated_at"),
+                "writing_at": obj.get("writing_at"),
             }
         )

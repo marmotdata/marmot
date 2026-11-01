@@ -48,6 +48,8 @@ type Repository interface {
 	DeleteSSOMapping(ctx context.Context, id string) error
 	ListSSOMappings(ctx context.Context, provider string) ([]*SSOTeamMapping, error)
 	GetMappingsForGroups(ctx context.Context, provider string, groups []string) ([]*SSOTeamMapping, error)
+	UpdateGroupMapping(ctx context.Context, id, teamID, roleID, memberRole string) error
+	SummariseTeams(ctx context.Context, teams []*Team) ([]*TeamSummary, error)
 
 	AddAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error
 	RemoveAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error
@@ -614,14 +616,15 @@ func (r *PostgresRepository) ConvertMemberToManual(ctx context.Context, teamID, 
 
 func (r *PostgresRepository) CreateSSOMapping(ctx context.Context, mapping *SSOTeamMapping) error {
 	query := `
-		INSERT INTO sso_team_mappings (provider, sso_group_name, team_id, member_role)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO sso_team_mappings (provider, sso_group_name, team_id, role_id, member_role)
+		VALUES ($1, $2, NULLIF($3, '')::uuid, $4, $5)
 		RETURNING id, created_at, updated_at`
 
 	err := r.db.QueryRow(ctx, query,
 		mapping.Provider,
 		mapping.SSOGroupName,
 		mapping.TeamID,
+		mapping.RoleID,
 		mapping.MemberRole,
 	).Scan(&mapping.ID, &mapping.CreatedAt, &mapping.UpdatedAt)
 
@@ -636,23 +639,51 @@ func (r *PostgresRepository) CreateSSOMapping(ctx context.Context, mapping *SSOT
 	return nil
 }
 
-func (r *PostgresRepository) GetSSOMapping(ctx context.Context, id string) (*SSOTeamMapping, error) {
-	query := `
-		SELECT id, provider, sso_group_name, team_id, member_role, created_at, updated_at
-		FROM sso_team_mappings
-		WHERE id = $1`
+// mappingSelect reads a mapping with the names of its team and role, so a list of mappings can be shown without a lookup per row.
+const mappingSelect = `
+		SELECT m.id, m.provider, m.sso_group_name, COALESCE(m.team_id::text, ''), t.name, m.role_id::text, ro.name, m.member_role, m.created_at, m.updated_at
+		FROM sso_team_mappings m
+		LEFT JOIN teams t ON t.id = m.team_id
+		LEFT JOIN roles ro ON ro.id = m.role_id`
 
+func scanMapping(row pgx.Row) (*SSOTeamMapping, error) {
 	mapping := &SSOTeamMapping{}
-	err := r.db.QueryRow(ctx, query, id).Scan(
+	err := row.Scan(
 		&mapping.ID,
 		&mapping.Provider,
 		&mapping.SSOGroupName,
 		&mapping.TeamID,
+		&mapping.TeamName,
+		&mapping.RoleID,
+		&mapping.RoleName,
 		&mapping.MemberRole,
 		&mapping.CreatedAt,
 		&mapping.UpdatedAt,
 	)
+	return mapping, err
+}
 
+func (r *PostgresRepository) queryMappings(ctx context.Context, query string, args ...any) ([]*SSOTeamMapping, error) {
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list sso mappings: %w", err)
+	}
+	defer rows.Close()
+
+	mappings := []*SSOTeamMapping{}
+	for rows.Next() {
+		mapping, err := scanMapping(rows)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan sso mapping: %w", err)
+		}
+		mappings = append(mappings, mapping)
+	}
+
+	return mappings, rows.Err()
+}
+
+func (r *PostgresRepository) GetSSOMapping(ctx context.Context, id string) (*SSOTeamMapping, error) {
+	mapping, err := scanMapping(r.db.QueryRow(ctx, mappingSelect+` WHERE m.id = $1`, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrMappingNotFound
@@ -683,6 +714,22 @@ func (r *PostgresRepository) UpdateSSOMapping(ctx context.Context, id, teamID, m
 	return nil
 }
 
+func (r *PostgresRepository) UpdateGroupMapping(ctx context.Context, id, teamID, roleID, memberRole string) error {
+	var returnedID string
+	err := r.db.QueryRow(ctx, `
+		UPDATE sso_team_mappings
+		SET team_id = NULLIF($1, '')::uuid, role_id = NULLIF($2, '')::uuid, member_role = $3, updated_at = NOW()
+		WHERE id = $4
+		RETURNING id`, teamID, roleID, memberRole, id).Scan(&returnedID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrMappingNotFound
+		}
+		return fmt.Errorf("failed to update sso mapping: %w", err)
+	}
+	return nil
+}
+
 func (r *PostgresRepository) DeleteSSOMapping(ctx context.Context, id string) error {
 	query := `DELETE FROM sso_team_mappings WHERE id = $1 RETURNING id`
 
@@ -699,71 +746,80 @@ func (r *PostgresRepository) DeleteSSOMapping(ctx context.Context, id string) er
 	return nil
 }
 
+// ListSSOMappings lists one provider's mappings, or every provider's when provider is empty.
 func (r *PostgresRepository) ListSSOMappings(ctx context.Context, provider string) ([]*SSOTeamMapping, error) {
-	query := `
-		SELECT id, provider, sso_group_name, team_id, member_role, created_at, updated_at
-		FROM sso_team_mappings
-		WHERE provider = $1
-		ORDER BY sso_group_name`
-
-	rows, err := r.db.Query(ctx, query, provider)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list sso mappings: %w", err)
-	}
-	defer rows.Close()
-
-	mappings := []*SSOTeamMapping{}
-	for rows.Next() {
-		mapping := &SSOTeamMapping{}
-		err := rows.Scan(
-			&mapping.ID,
-			&mapping.Provider,
-			&mapping.SSOGroupName,
-			&mapping.TeamID,
-			&mapping.MemberRole,
-			&mapping.CreatedAt,
-			&mapping.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan sso mapping: %w", err)
-		}
-		mappings = append(mappings, mapping)
-	}
-
-	return mappings, nil
+	return r.queryMappings(ctx, mappingSelect+`
+		WHERE $1 = '' OR m.provider = $1
+		ORDER BY m.provider, m.sso_group_name`, provider)
 }
 
 func (r *PostgresRepository) GetMappingsForGroups(ctx context.Context, provider string, groups []string) ([]*SSOTeamMapping, error) {
-	query := `
-		SELECT id, provider, sso_group_name, team_id, member_role, created_at, updated_at
-		FROM sso_team_mappings
-		WHERE provider = $1 AND sso_group_name = ANY($2)`
+	return r.queryMappings(ctx, mappingSelect+`
+		WHERE m.provider = $1 AND m.sso_group_name = ANY($2)`, provider, groups)
+}
 
-	rows, err := r.db.Query(ctx, query, provider, groups)
+// SummariseTeams counts each team's members, owned assets and webhooks and lists the groups that feed it, in a fixed number of queries however many teams are asked for.
+func (r *PostgresRepository) SummariseTeams(ctx context.Context, teams []*Team) ([]*TeamSummary, error) {
+	out := make([]*TeamSummary, 0, len(teams))
+	if len(teams) == 0 {
+		return out, nil
+	}
+	ids := make([]string, 0, len(teams))
+	byID := make(map[string]*TeamSummary, len(teams))
+	for _, t := range teams {
+		sum := &TeamSummary{Team: *t, SSOGroups: []SSOGroupRef{}}
+		out = append(out, sum)
+		byID[t.ID] = sum
+		ids = append(ids, t.ID)
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT t.id,
+		       (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id),
+		       (SELECT COUNT(*) FROM asset_owners ao WHERE ao.team_id = t.id),
+		       (SELECT COUNT(*) FROM team_webhooks w WHERE w.team_id = t.id)
+		FROM teams t
+		WHERE t.id = ANY($1)`, ids)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get mappings for groups: %w", err)
+		return nil, fmt.Errorf("counting team members, assets and webhooks: %w", err)
+	}
+	for rows.Next() {
+		var id string
+		var members, assets, webhooks int
+		if err := rows.Scan(&id, &members, &assets, &webhooks); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("scanning team counts: %w", err)
+		}
+		if sum := byID[id]; sum != nil {
+			sum.MemberCount, sum.AssetCount, sum.WebhookCount = members, assets, webhooks
+		}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("reading team counts: %w", err)
+	}
+
+	rows, err = r.db.Query(ctx, `
+		SELECT m.team_id::text, m.provider, m.sso_group_name, ro.name
+		FROM sso_team_mappings m
+		LEFT JOIN roles ro ON ro.id = m.role_id
+		WHERE m.team_id = ANY($1)
+		ORDER BY m.sso_group_name`, ids)
+	if err != nil {
+		return nil, fmt.Errorf("listing team group mappings: %w", err)
 	}
 	defer rows.Close()
-
-	mappings := []*SSOTeamMapping{}
 	for rows.Next() {
-		mapping := &SSOTeamMapping{}
-		err := rows.Scan(
-			&mapping.ID,
-			&mapping.Provider,
-			&mapping.SSOGroupName,
-			&mapping.TeamID,
-			&mapping.MemberRole,
-			&mapping.CreatedAt,
-			&mapping.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan sso mapping: %w", err)
+		var id string
+		var ref SSOGroupRef
+		if err := rows.Scan(&id, &ref.Provider, &ref.SSOGroupName, &ref.RoleName); err != nil {
+			return nil, fmt.Errorf("scanning team group mapping: %w", err)
 		}
-		mappings = append(mappings, mapping)
+		if sum := byID[id]; sum != nil {
+			sum.SSOGroups = append(sum.SSOGroups, ref)
+		}
 	}
-
-	return mappings, nil
+	return out, rows.Err()
 }
 
 func (r *PostgresRepository) AddAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error {

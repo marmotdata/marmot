@@ -48,7 +48,7 @@ func (m *CreateAPIKeyRequest) validateName(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this create API key request based on context it is used
-func (m *CreateAPIKeyRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateAPIKeyRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

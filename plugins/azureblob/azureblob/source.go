@@ -17,30 +17,38 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "azureblob",
-		Name:        "Azure Blob Storage",
-		Description: "Discover containers from Azure Blob Storage accounts",
-		Icon:        "azureblob",
-		Category:    "storage",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "azureblob",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Azure Blob Storage",
+		Description:   "Discover containers from Azure Blob Storage accounts",
+		Icon:          "azureblob",
+		Category:      "storage",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(AzureBlobContainerFields{}, "Container",
+				"AzureBlobContainerFields defines metadata fields for Azure Blob containers"),
+		},
 	}
 }
 
 // Config for Azure Blob Storage plugin
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	// Connection options (choose one)
 	ConnectionString string `json:"connection_string,omitempty" description:"Azure Storage connection string" sensitive:"true"`
 	AccountName      string `json:"account_name,omitempty" description:"Azure Storage account name"`
 	AccountKey       string `json:"account_key,omitempty" description:"Azure Storage account key" sensitive:"true"`
-	Endpoint         string `json:"endpoint,omitempty" description:"Custom endpoint URL (for Azurite or other emulators)"`
+	TenantID         string `json:"tenant_id,omitempty" group:"Authentication" label:"Tenant ID" description:"Entra tenant of the identity the Marmot identity token is exchanged for. Set with client_id and account_name to federate: no key is needed; grant the identity Storage Blob Data Reader on the account"`
+	ClientID         string `json:"client_id,omitempty" group:"Authentication" label:"Client ID" description:"Application (client) ID of the app registration or user-assigned managed identity whose federated credential trusts the Marmot issuer"`
+	Endpoint         string `json:"endpoint,omitempty" group:"Advanced" description:"Custom endpoint URL (for Azurite or other emulators)"`
 
 	// Discovery options
-	IncludeMetadata  bool `json:"include_metadata" description:"Include container metadata" default:"true"`
-	IncludeBlobCount bool `json:"include_blob_count" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
+	IncludeMetadata  bool `json:"include_metadata" group:"Discovery" description:"Include container metadata" default:"true"`
+	IncludeBlobCount bool `json:"include_blob_count" group:"Discovery" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
 }
 
 // Example configuration for the plugin
@@ -69,12 +77,19 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	if config.ConnectionString == "" && config.AccountName == "" {
-		return nil, fmt.Errorf("either connection_string or account_name must be provided")
+	creds := config.azureCredentials()
+	if err := creds.Federate(rawConfig); err != nil {
+		return nil, err
 	}
-
-	if config.AccountName != "" && config.AccountKey == "" && config.ConnectionString == "" {
-		return nil, fmt.Errorf("account_key is required when using account_name")
+	switch {
+	case config.ConnectionString != "" && creds.Federated():
+		return nil, fmt.Errorf("connection_string excludes tenant_id and client_id")
+	case config.ConnectionString == "" && config.AccountName == "":
+		return nil, fmt.Errorf("either connection_string or account_name must be provided")
+	case creds.Federated() && config.AccountKey != "":
+		return nil, fmt.Errorf("tenant_id and client_id exclude account_key; a federated pipeline needs no key")
+	case config.ConnectionString == "" && config.AccountKey == "" && !creds.Federated():
+		return nil, fmt.Errorf("account_key is required when using account_name, unless tenant_id and client_id federate")
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
@@ -92,7 +107,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}
 	s.config = config
 
-	client, err := s.createClient()
+	client, err := s.createClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("creating Azure Blob client: %w", err)
 	}
@@ -123,7 +138,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}, nil
 }
 
-func (s *Source) createClient() (*azblob.Client, error) {
+func (s *Source) createClient(ctx context.Context) (*azblob.Client, error) {
 	if s.config.ConnectionString != "" {
 		return azblob.NewClientFromConnectionString(s.config.ConnectionString, nil)
 	}
@@ -131,6 +146,14 @@ func (s *Source) createClient() (*azblob.Client, error) {
 	endpoint := s.config.Endpoint
 	if endpoint == "" {
 		endpoint = fmt.Sprintf("https://%s.blob.core.windows.net/", s.config.AccountName)
+	}
+
+	if creds := s.config.azureCredentials(); creds.Federated() {
+		cred, err := creds.Credential(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return azblob.NewClient(endpoint, cred, nil)
 	}
 
 	cred, err := azblob.NewSharedKeyCredential(s.config.AccountName, s.config.AccountKey)
@@ -253,4 +276,10 @@ func (s *Source) countBlobs(ctx context.Context, containerName string) (int64, e
 	}
 
 	return count, nil
+}
+
+// azureCredentials is the plugin's flat identity fields in the SDK's
+// shape, which knows how to federate.
+func (c *Config) azureCredentials() *pluginsdk.AzureCredentials {
+	return &pluginsdk.AzureCredentials{TenantID: c.TenantID, ClientID: c.ClientID}
 }

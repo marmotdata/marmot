@@ -1,6 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import { fetchApi } from '$lib/api';
 import { browser } from '$app/environment';
+import { m } from '$lib/paraglide/messages';
 
 export interface Notification {
 	id: string;
@@ -19,6 +20,9 @@ export interface Notification {
 export interface NotificationSummary {
 	unread_count: number;
 	total_count: number;
+	/** How long pruning keeps read notifications, and all notifications, in days */
+	read_retention_days?: number;
+	retention_days?: number;
 }
 
 export interface NotificationsState {
@@ -93,7 +97,7 @@ function createNotificationsStore() {
 				update((state) => ({
 					...state,
 					loading: false,
-					error: 'Failed to load notifications'
+					error: m.ui_notifications_load_error()
 				}));
 			}
 		} catch (err) {
@@ -123,6 +127,25 @@ function createNotificationsStore() {
 			}
 		} catch (err) {
 			console.error('Failed to mark notification as read:', err);
+		}
+	}
+
+	async function markAsUnread(id: string) {
+		try {
+			const response = await fetchApi(`/notifications/item/${id}/mark-unread`, { method: 'POST' });
+			if (response.ok) {
+				update((state) => ({
+					...state,
+					notifications: state.notifications.map((n) =>
+						n.id === id ? { ...n, read: false, read_at: undefined } : n
+					),
+					summary: { ...state.summary, unread_count: state.summary.unread_count + 1 }
+				}));
+			}
+			return response.ok;
+		} catch (err) {
+			console.error('Failed to mark notification as unread:', err);
+			return false;
 		}
 	}
 
@@ -156,6 +179,7 @@ function createNotificationsStore() {
 						...state,
 						notifications: state.notifications.filter((n) => n.id !== id),
 						summary: {
+							...state.summary,
 							unread_count: wasUnread
 								? Math.max(0, state.summary.unread_count - 1)
 								: state.summary.unread_count,
@@ -215,6 +239,7 @@ function createNotificationsStore() {
 		fetchSummary,
 		fetchNotifications,
 		markAsRead,
+		markAsUnread,
 		markAllAsRead,
 		deleteNotification,
 		clearRead,

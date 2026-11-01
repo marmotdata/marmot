@@ -9,10 +9,10 @@ import { CalloutCard } from '@site/src/components/DocCard';
 The Glossary lets you define business terms and create a shared vocabulary across your organisation. Instead of different teams using different names for the same concept, the glossary establishes standard terminology that everyone can reference.
 
 <CalloutCard
-  title="Try It Out"
-  description="See the Glossary in action with the interactive demo."
-  href="https://demo.marmotdata.io/glossary"
-  buttonText="View Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 

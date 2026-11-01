@@ -32,17 +32,20 @@ type ServiceAccountAPIKey struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Prefix is the start of the key kept in clear so it can be recognised later; empty for keys issued before it was stored.
+	Prefix string `json:"prefix,omitempty"`
+
 	// service account id
 	ServiceAccountID string `json:"service_account_id,omitempty"`
 }
 
 // Validate validates this service account API key
-func (m *ServiceAccountAPIKey) Validate(formats strfmt.Registry) error {
+func (m *ServiceAccountAPIKey) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this service account API key based on context it is used
-func (m *ServiceAccountAPIKey) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ServiceAccountAPIKey) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

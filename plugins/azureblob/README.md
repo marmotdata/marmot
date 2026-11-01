@@ -42,3 +42,7 @@ Or use a custom role with these permissions:
 
 - `Microsoft.Storage/storageAccounts/blobServices/containers/read`
 - `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read`
+
+## Keyless authentication
+
+On Marmot Cloud or Marmot Enterprise the pipeline can present its own identity instead of an account key. Add a federated identity credential to an app registration or user-assigned managed identity with your Marmot instance as issuer, the pipeline's subject, `pipeline:<name>` as reported by the pipeline API, and audience `api://AzureADTokenExchange`; grant that identity Storage Blob Data Reader on the account; set `account_name`, `tenant_id` and `client_id`. No key exists anywhere; Marmot mints a short-lived token for each run.

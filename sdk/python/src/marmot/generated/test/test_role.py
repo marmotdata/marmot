@@ -33,17 +33,25 @@ class TestRole(unittest.TestCase):
         model = Role()
         if include_optional:
             return Role(
+                created_at = '',
+                deleted_at = '',
                 description = '',
                 id = '',
+                is_system = True,
                 name = '',
+                permission_keys = [
+                    ''
+                    ],
                 permissions = [
-                    marmot.generated.models.permission.Permission(
+                    marmot.generated.models.role_permission.RolePermission(
                         action = '',
                         description = '',
                         id = '',
                         name = '',
                         resource_type = '', )
-                    ]
+                    ],
+                updated_at = '',
+                user_count = 56
             )
         else:
             return Role(

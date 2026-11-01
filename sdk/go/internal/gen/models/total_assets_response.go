@@ -19,12 +19,12 @@ type TotalAssetsResponse struct {
 }
 
 // Validate validates this total assets response
-func (m *TotalAssetsResponse) Validate(formats strfmt.Registry) error {
+func (m *TotalAssetsResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this total assets response based on context it is used
-func (m *TotalAssetsResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *TotalAssetsResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

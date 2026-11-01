@@ -28,12 +28,12 @@ type UpdateTeamRequest struct {
 }
 
 // Validate validates this update team request
-func (m *UpdateTeamRequest) Validate(formats strfmt.Registry) error {
+func (m *UpdateTeamRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this update team request based on context it is used
-func (m *UpdateTeamRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateTeamRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -17,6 +17,7 @@ type MembershipRepository interface {
 	DeleteMembershipsByRule(ctx context.Context, ruleID string) error
 	DeleteMembershipsBatch(ctx context.Context, ruleID string, assetIDs []string) error
 	GetMembershipAssetIDs(ctx context.Context, ruleID string, limit, offset int) ([]string, int, error)
+	SearchMembershipAssets(ctx context.Context, ruleID, query string, limit, offset int) ([]RuleAsset, int, error)
 	GetExistingMembershipAssetIDs(ctx context.Context, ruleID string) (map[string]struct{}, error)
 
 	// Writes to asset_terms with source='rule:<id>'

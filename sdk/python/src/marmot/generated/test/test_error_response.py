@@ -33,7 +33,8 @@ class TestErrorResponse(unittest.TestCase):
         model = ErrorResponse()
         if include_optional:
             return ErrorResponse(
-                error = ''
+                error = '',
+                request_id = ''
             )
         else:
             return ErrorResponse(

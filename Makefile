@@ -10,8 +10,21 @@ GO_FILES=$(shell find . -name '*.go')
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo "v0.0.0")
 LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)"
 
-swagger:
-	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
+SWAG_VERSION := v1.16.6
+GO_SWAGGER_VERSION := v0.36.5
+UV_VERSION := 0.12
+SWAG := $(shell go env GOPATH)/bin/swag
+
+$(SWAG):
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
+
+GO_SWAGGER := $(shell go env GOPATH)/bin/swagger
+
+$(GO_SWAGGER):
+	go install github.com/go-swagger/go-swagger/cmd/swagger@$(GO_SWAGGER_VERSION)
+
+swagger: $(SWAG)
+	$(SWAG) init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
 	rm -f $(SDK_OPENAPI3)
 
 build:
@@ -58,6 +71,9 @@ frontend-lint:
 frontend-typecheck:
 	cd web/marmot && pnpm install && pnpm run check
 
+frontend-i18n-check:
+	cd web/marmot && pnpm install && pnpm run i18n:check
+
 fix:
 	cd web/marmot && pnpm run format
 
@@ -68,11 +84,12 @@ docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
 
 dev-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.9.0
-	go install github.com/swaggo/swag/cmd/swag@latest
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.15.0
+	go install github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
+	go install github.com/go-swagger/go-swagger/cmd/swagger@$(GO_SWAGGER_VERSION)
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
-sdk: sdk-go sdk-py sdk-ts
+sdk: sdk-generate
 sdk-generate: sdk-go-generate sdk-py-generate sdk-ts-generate
 sdk-lint: sdk-go-lint sdk-py-lint sdk-ts-lint
 sdk-test: sdk-go-test sdk-py-test sdk-ts-test
@@ -84,20 +101,20 @@ SDK_PY_DIR := sdk/python
 SDK_TS_DIR := sdk/ts
 SDK_OPENAPI3 := docs/.openapi3.yaml
 
-sdk-go-generate: swagger
+sdk-go-generate: swagger $(GO_SWAGGER)
 	rm -rf $(SDK_GO_DIR)/internal/gen
 	mkdir -p $(SDK_GO_DIR)/internal/gen
-	swagger generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
-	cd $(SDK_GO_DIR) && go mod tidy
+	$(GO_SWAGGER) generate client -f docs/swagger.yaml -A marmot --target $(SDK_GO_DIR)/internal/gen
+	cd $(SDK_GO_DIR) && GOWORK=off go mod tidy
 
 sdk-go-lint:
-	cd $(SDK_GO_DIR) && $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
+	cd $(SDK_GO_DIR) && GOWORK=off $$(go env GOPATH)/bin/golangci-lint run --config=$(CURDIR)/.github/.golangci.yaml ./... -v
 
 sdk-go-test:
-	cd $(SDK_GO_DIR) && go test ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go test ./...
 
 sdk-go-build:
-	cd $(SDK_GO_DIR) && go build ./...
+	cd $(SDK_GO_DIR) && GOWORK=off go build ./...
 
 sdk-go-clean:
 	rm -rf $(SDK_GO_DIR)/internal/gen
@@ -106,7 +123,7 @@ $(SDK_OPENAPI3): docs/swagger.yaml
 	npx --yes swagger2openapi@7 docs/swagger.yaml --outfile $(SDK_OPENAPI3) --yaml
 
 sdk-py-deps:
-	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh)
+	@command -v uv >/dev/null 2>&1 || (echo "Installing uv $(UV_VERSION)..." && curl -LsSf https://astral.sh/uv/install.sh | UV_VERSION=$(UV_VERSION) sh)
 
 sdk-py-install: sdk-py-deps
 	cd $(SDK_PY_DIR) && uv sync --all-extras
@@ -136,7 +153,14 @@ sdk-py-lint: sdk-py-install
 	cd $(SDK_PY_DIR) && uv run ruff format --check .
 	cd $(SDK_PY_DIR) && uv run mypy src/marmot
 	cd $(SDK_PY_DIR) && uv run mypy examples
-	cd $(SDK_PY_DIR) && uv run pip-audit --skip-editable
+	@cd $(SDK_PY_DIR) && for attempt in 1 2 3; do \
+		if uv run pip-audit --skip-editable; then exit 0; fi; \
+		if [ "$$attempt" -lt 3 ]; then \
+			echo "pip-audit attempt $$attempt failed, retrying in $$((attempt * 10))s"; \
+			sleep $$((attempt * 10)); \
+		fi; \
+	done; \
+	echo "pip-audit failed after 3 attempts" >&2; exit 1
 
 sdk-py-test: sdk-py-install
 	cd $(SDK_PY_DIR) && uv run pytest

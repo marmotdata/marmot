@@ -16,9 +16,20 @@ export interface GlossaryTerm {
 	owners: Owner[];
 	metadata: Record<string, unknown>;
 	tags: string[];
+	created_by?: string;
+	created_by_name?: string;
 	created_at: string;
 	updated_at: string;
 	deleted_at?: string;
+	/** Every asset linked to the term, by hand or by an asset rule. */
+	linked_asset_count?: number;
+	/** Only present when a single term is read. */
+	related_terms?: RelatedTerm[];
+}
+
+export interface RelatedTerm {
+	id: string;
+	name: string;
 }
 
 export interface OwnerInput {
@@ -34,6 +45,7 @@ export interface CreateTermInput {
 	owners?: OwnerInput[];
 	metadata?: Record<string, unknown>;
 	tags?: string[];
+	related_term_ids?: string[];
 }
 
 export interface UpdateTermInput {
@@ -44,6 +56,7 @@ export interface UpdateTermInput {
 	owners?: OwnerInput[];
 	metadata?: Record<string, unknown>;
 	tags?: string[];
+	related_term_ids?: string[];
 }
 
 export interface TermsListResponse {

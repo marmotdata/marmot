@@ -98,7 +98,7 @@ func (m *DataProductOwnerRequest) validateType(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this data product owner request based on context it is used
-func (m *DataProductOwnerRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProductOwnerRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

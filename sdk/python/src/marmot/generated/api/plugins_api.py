@@ -16,7 +16,11 @@ from pydantic import Field, StrictFloat, StrictInt, StrictStr, validate_call
 from marmot.generated.api_client import ApiClient, RequestSerialized
 from marmot.generated.api_response import ApiResponse
 from marmot.generated.models.aws_credential_status import AWSCredentialStatus
+from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse
 from marmot.generated.models.list_plugins_response import ListPluginsResponse
+from marmot.generated.models.pin_plugin_version_request import PinPluginVersionRequest
+from marmot.generated.models.plugin_updates_status import PluginUpdatesStatus
+from marmot.generated.models.set_plugin_version_request import SetPluginVersionRequest
 from marmot.generated.rest import RESTResponseType
 from marmot.generated.sync_helper import run_sync
 
@@ -32,6 +36,575 @@ class PluginsApi:
         if api_client is None:
             api_client = ApiClient.get_default()
         self.api_client = api_client
+
+    @validate_call
+    async def check_plugin_versions(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> CheckPluginVersionsResponse:
+        """Check the plugin index for new versions and advisories now
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._check_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "CheckPluginVersionsResponse",
+            "409": "ErrorResponse",
+            "502": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def check_plugin_versions_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[CheckPluginVersionsResponse]:
+        """Check the plugin index for new versions and advisories now
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._check_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "CheckPluginVersionsResponse",
+            "409": "ErrorResponse",
+            "502": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def check_plugin_versions_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Check the plugin index for new versions and advisories now
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._check_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "CheckPluginVersionsResponse",
+            "409": "ErrorResponse",
+            "502": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def check_plugin_versions_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> CheckPluginVersionsResponse:
+        """Check the plugin index for new versions and advisories now (synchronous)
+
+        Synchronous variant of :meth:`check_plugin_versions`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.check_plugin_versions(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def check_plugin_versions_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[CheckPluginVersionsResponse]:
+        """Check the plugin index for new versions and advisories now (synchronous)
+
+        Synchronous variant of :meth:`check_plugin_versions_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.check_plugin_versions_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def check_plugin_versions_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Check the plugin index for new versions and advisories now (synchronous)
+
+        Synchronous variant of :meth:`check_plugin_versions_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.check_plugin_versions_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _check_plugin_versions_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/plugins/versions/check",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_plugin_versions(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> PluginUpdatesStatus:
+        """List core plugin versions, available updates and advisories
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginUpdatesStatus",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_plugin_versions_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[PluginUpdatesStatus]:
+        """List core plugin versions, available updates and advisories
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginUpdatesStatus",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_plugin_versions_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List core plugin versions, available updates and advisories
+
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_plugin_versions_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "PluginUpdatesStatus",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_plugin_versions_sync(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> PluginUpdatesStatus:
+        """List core plugin versions, available updates and advisories (synchronous)
+
+        Synchronous variant of :meth:`get_plugin_versions`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_plugin_versions(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_plugin_versions_sync_with_http_info(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[PluginUpdatesStatus]:
+        """List core plugin versions, available updates and advisories (synchronous)
+
+        Synchronous variant of :meth:`get_plugin_versions_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_plugin_versions_with_http_info(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_plugin_versions_sync_without_preload_content(
+        self,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List core plugin versions, available updates and advisories (synchronous)
+
+        Synchronous variant of :meth:`get_plugin_versions_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_plugin_versions_without_preload_content(
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_plugin_versions_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/plugins/versions",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
 
     @validate_call
     async def get_plugins(
@@ -584,6 +1157,1298 @@ class PluginsApi:
         return self.api_client.param_serialize(
             method="GET",
             resource_path="/api/v1/plugins/aws/credentials/status",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def pin_plugin_version(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Pin or unpin a core plugin at the version it runs
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param pin_plugin_version_request: Pinned (required)
+        :type pin_plugin_version_request: PinPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._pin_plugin_version_serialize(
+            id=id,
+            pin_plugin_version_request=pin_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def pin_plugin_version_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Pin or unpin a core plugin at the version it runs
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param pin_plugin_version_request: Pinned (required)
+        :type pin_plugin_version_request: PinPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._pin_plugin_version_serialize(
+            id=id,
+            pin_plugin_version_request=pin_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def pin_plugin_version_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Pin or unpin a core plugin at the version it runs
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param pin_plugin_version_request: Pinned (required)
+        :type pin_plugin_version_request: PinPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._pin_plugin_version_serialize(
+            id=id,
+            pin_plugin_version_request=pin_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def pin_plugin_version_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Pin or unpin a core plugin at the version it runs (synchronous)
+
+        Synchronous variant of :meth:`pin_plugin_version`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.pin_plugin_version(
+                id=id,
+                pin_plugin_version_request=pin_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def pin_plugin_version_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Pin or unpin a core plugin at the version it runs (synchronous)
+
+        Synchronous variant of :meth:`pin_plugin_version_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.pin_plugin_version_with_http_info(
+                id=id,
+                pin_plugin_version_request=pin_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def pin_plugin_version_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        pin_plugin_version_request: Annotated[PinPluginVersionRequest, Field(description="Pinned")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Pin or unpin a core plugin at the version it runs (synchronous)
+
+        Synchronous variant of :meth:`pin_plugin_version_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.pin_plugin_version_without_preload_content(
+                id=id,
+                pin_plugin_version_request=pin_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _pin_plugin_version_serialize(
+        self,
+        id,
+        pin_plugin_version_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if pin_plugin_version_request is not None:
+            _body_params = pin_plugin_version_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="PUT",
+            resource_path="/api/v1/plugins/versions/{id}/pin",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def reset_plugin_version(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Return a core plugin to the version this Marmot release pins
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._reset_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def reset_plugin_version_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Return a core plugin to the version this Marmot release pins
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._reset_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def reset_plugin_version_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Return a core plugin to the version this Marmot release pins
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._reset_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def reset_plugin_version_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Return a core plugin to the version this Marmot release pins (synchronous)
+
+        Synchronous variant of :meth:`reset_plugin_version`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.reset_plugin_version(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def reset_plugin_version_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Return a core plugin to the version this Marmot release pins (synchronous)
+
+        Synchronous variant of :meth:`reset_plugin_version_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.reset_plugin_version_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def reset_plugin_version_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Return a core plugin to the version this Marmot release pins (synchronous)
+
+        Synchronous variant of :meth:`reset_plugin_version_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.reset_plugin_version_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _reset_plugin_version_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/plugins/versions/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def rollback_plugin_version(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Roll a core plugin back to the version it ran before its last change, and pin it
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._rollback_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def rollback_plugin_version_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Roll a core plugin back to the version it ran before its last change, and pin it
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._rollback_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def rollback_plugin_version_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Roll a core plugin back to the version it ran before its last change, and pin it
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._rollback_plugin_version_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "404": "ErrorResponse",
+            "409": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def rollback_plugin_version_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Roll a core plugin back to the version it ran before its last change, and pin it (synchronous)
+
+        Synchronous variant of :meth:`rollback_plugin_version`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.rollback_plugin_version(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def rollback_plugin_version_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Roll a core plugin back to the version it ran before its last change, and pin it (synchronous)
+
+        Synchronous variant of :meth:`rollback_plugin_version_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.rollback_plugin_version_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def rollback_plugin_version_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Roll a core plugin back to the version it ran before its last change, and pin it (synchronous)
+
+        Synchronous variant of :meth:`rollback_plugin_version_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.rollback_plugin_version_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _rollback_plugin_version_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["*/*"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/plugins/versions/{id}/rollback",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def set_plugin_version(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Move a core plugin to a version from the plugin index
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param set_plugin_version_request: Version (required)
+        :type set_plugin_version_request: SetPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._set_plugin_version_serialize(
+            id=id,
+            set_plugin_version_request=set_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def set_plugin_version_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Move a core plugin to a version from the plugin index
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param set_plugin_version_request: Version (required)
+        :type set_plugin_version_request: SetPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._set_plugin_version_serialize(
+            id=id,
+            set_plugin_version_request=set_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def set_plugin_version_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Move a core plugin to a version from the plugin index
+
+
+        :param id: Plugin ID (required)
+        :type id: str
+        :param set_plugin_version_request: Version (required)
+        :type set_plugin_version_request: SetPluginVersionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._set_plugin_version_serialize(
+            id=id,
+            set_plugin_version_request=set_plugin_version_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "204": None,
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def set_plugin_version_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> None:
+        """Move a core plugin to a version from the plugin index (synchronous)
+
+        Synchronous variant of :meth:`set_plugin_version`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.set_plugin_version(
+                id=id,
+                set_plugin_version_request=set_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def set_plugin_version_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[None]:
+        """Move a core plugin to a version from the plugin index (synchronous)
+
+        Synchronous variant of :meth:`set_plugin_version_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.set_plugin_version_with_http_info(
+                id=id,
+                set_plugin_version_request=set_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def set_plugin_version_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Plugin ID")],
+        set_plugin_version_request: Annotated[
+            SetPluginVersionRequest, Field(description="Version")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Move a core plugin to a version from the plugin index (synchronous)
+
+        Synchronous variant of :meth:`set_plugin_version_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.set_plugin_version_without_preload_content(
+                id=id,
+                set_plugin_version_request=set_plugin_version_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _set_plugin_version_serialize(
+        self,
+        id,
+        set_plugin_version_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if set_plugin_version_request is not None:
+            _body_params = set_plugin_version_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="PUT",
+            resource_path="/api/v1/plugins/versions/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

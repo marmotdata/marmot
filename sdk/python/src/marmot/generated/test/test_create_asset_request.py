@@ -48,6 +48,11 @@ class TestCreateAssetRequest(unittest.TestCase):
                     ],
                 metadata = { },
                 name = '',
+                owners = [
+                    marmot.generated.models.create_asset_owner.CreateAssetOwner(
+                        id = '',
+                        type = 'user', )
+                    ],
                 providers = [
                     ''
                     ],
@@ -64,7 +69,11 @@ class TestCreateAssetRequest(unittest.TestCase):
                 tags = [
                     ''
                     ],
-                type = ''
+                terms = [
+                    ''
+                    ],
+                type = '',
+                user_description = ''
             )
         else:
             return CreateAssetRequest(

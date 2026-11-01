@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,13 +53,23 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user from context
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
+	// created_by is a foreign key into users, so only a person belongs there and
+	// passing a service account id fails the insert. Machine identities are named
+	// in source instead, and created_by is left NULL.
+	source := "user"
+	author := ""
+	if usr := principal.AsUser(); usr != nil {
+		author = usr.ID
+	} else {
+		source = string(principal.Type())
+	}
 
-	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, "user", usr.ID); err != nil {
+	if err := h.assetService.AddTerms(r.Context(), id, input.TermIDs, source, author); err != nil {
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
@@ -163,16 +173,26 @@ func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, terms)
 }
 
+// AssetsByTermResponse is a page of a term's linked assets, with how each was linked and how many came each way.
+type AssetsByTermResponse struct {
+	Assets []*asset.Asset        `json:"assets"`
+	Total  int                   `json:"total"`
+	Links  []asset.TermLink      `json:"links"`
+	Groups []asset.TermLinkGroup `json:"groups"`
+} // @name AssetsByTermResponse
+
 // @Summary Get assets by glossary term
-// @Description Retrieve all assets associated with a specific glossary term
+// @Description Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group.
 // @Tags assets
 // @Produce json
 // @Param term_id path string true "Glossary Term ID"
+// @Param link query string false "Only assets linked this way: manual, or rule:<asset rule id>"
 // @Param limit query int false "Maximum number of assets" default(20)
 // @Param offset query int false "Pagination offset" default(0)
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} AssetsByTermResponse
+// @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
 // @ID getAssetsByGlossaryTermTermID
 // @Router /api/v1/assets/by-glossary-term/{term_id} [get]
@@ -193,17 +213,40 @@ func (h *Handler) getAssetsByTerm(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	assets, total, err := h.assetService.GetAssetsByTerm(r.Context(), termID, limit, offset)
+	link := r.URL.Query().Get("link")
+	if link != "" && link != asset.TermLinkManual && (!strings.HasPrefix(link, "rule:") || len(link) <= len("rule:")) {
+		common.RespondError(w, http.StatusBadRequest, "link must be manual or rule:<asset rule id>")
+		return
+	}
+
+	assets, total, err := h.assetService.GetAssetsByTermLink(r.Context(), termID, link, limit, offset)
 	if err != nil {
 		log.Error().Err(err).Str("term_id", termID).Msg("Failed to get assets by term")
 		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	response := map[string]interface{}{
-		"assets": assets,
-		"total":  total,
+	ids := make([]string, len(assets))
+	for i, a := range assets {
+		ids[i] = a.ID
+	}
+	links, err := h.assetService.GetTermLinks(r.Context(), termID, ids)
+	if err != nil {
+		log.Error().Err(err).Str("term_id", termID).Msg("Failed to get term links")
+		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	groups, err := h.assetService.GetTermLinkGroups(r.Context(), termID)
+	if err != nil {
+		log.Error().Err(err).Str("term_id", termID).Msg("Failed to group term links")
+		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, response)
+	common.RespondJSON(w, http.StatusOK, AssetsByTermResponse{
+		Assets: assets,
+		Total:  total,
+		Links:  links,
+		Groups: groups,
+	})
 }

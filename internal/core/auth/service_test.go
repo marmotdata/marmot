@@ -163,3 +163,29 @@ func TestValidateToken_ExpiredTokenRejected(t *testing.T) {
 		t.Error("ValidateToken should reject an expired token")
 	}
 }
+
+// Every token carries a jti so a single token can be named in logs and, later,
+// revoked individually without another change to the token format.
+func TestGenerateToken_CarriesUniqueJTI(t *testing.T) {
+	svc := newTestAuthService(t)
+	u := &user.User{ID: "u-1", Username: "alice", Active: true}
+
+	seen := map[string]bool{}
+	for i := 0; i < 3; i++ {
+		tokenString, err := svc.GenerateToken(context.Background(), u, nil)
+		if err != nil {
+			t.Fatalf("GenerateToken: %v", err)
+		}
+		claims, err := svc.ValidateToken(context.Background(), tokenString)
+		if err != nil {
+			t.Fatalf("ValidateToken: %v", err)
+		}
+		if claims.ID == "" {
+			t.Fatal("token has no jti")
+		}
+		if seen[claims.ID] {
+			t.Fatalf("jti %q repeated", claims.ID)
+		}
+		seen[claims.ID] = true
+	}
+}

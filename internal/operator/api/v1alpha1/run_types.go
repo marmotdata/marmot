@@ -8,11 +8,16 @@ import (
 )
 
 // RunSpec defines the desired state of a Run.
+// +kubebuilder:validation:XValidation:rule="!(has(self.serve) && self.serve) || !has(self.schedule) || size(self.schedule) == 0",message="a serving Run cannot have a schedule"
 type RunSpec struct {
 	// Runs is the list of source configurations, identical to CLI YAML format.
 	// Each entry maps a source name to its raw configuration.
 	// +kubebuilder:validation:Required
 	Runs []apiextensionsv1.JSON `json:"runs"`
+
+	// Serve runs the pipeline as a Deployment that ingests when it starts and then stays up answering Marmot's queries for the run marked queryable: true. It dials out to Marmot and listens on no port.
+	// +optional
+	Serve bool `json:"serve,omitempty"`
 
 	// Schedule is a cron expression. When set, a CronJob is created instead of a one-shot Job.
 	// +optional
@@ -49,6 +54,11 @@ type RunSpec struct {
 	// +kubebuilder:default=1
 	// +optional
 	FailedJobsHistoryLimit *int32 `json:"failedJobsHistoryLimit,omitempty"`
+
+	// Env sets environment variables on the ingestion container. Reference credentials from a Secret with valueFrom.secretKeyRef and use them in runs as ${NAME}, so they never appear in the Run or its rendered config.
+	// +kubebuilder:validation:XValidation:rule="self.all(e, !e.name.startsWith('MARMOT_'))",message="env must not set MARMOT_ variables; the operator owns them"
+	// +optional
+	Env []corev1.EnvVar `json:"env,omitempty"`
 
 	// Resources overrides the container resource requirements for the ingestion Job pod.
 	// +optional

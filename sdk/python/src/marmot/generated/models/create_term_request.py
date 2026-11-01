@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -34,6 +34,11 @@ class CreateTermRequest(BaseModel):
     name: StrictStr
     owners: list[OwnerRequest] | None = None
     parent_term_id: StrictStr | None = None
+    related_term_ids: list[StrictStr] | None = Field(
+        default=None,
+        description="RelatedTermIDs links the new term to existing terms, in both directions.",
+    )
+    tags: list[StrictStr] | None = None
     __properties: ClassVar[list[str]] = [
         "definition",
         "description",
@@ -41,6 +46,8 @@ class CreateTermRequest(BaseModel):
         "name",
         "owners",
         "parent_term_id",
+        "related_term_ids",
+        "tags",
     ]
 
     model_config = ConfigDict(
@@ -108,5 +115,7 @@ class CreateTermRequest(BaseModel):
                 if obj.get("owners") is not None
                 else None,
                 "parent_term_id": obj.get("parent_term_id"),
+                "related_term_ids": obj.get("related_term_ids"),
+                "tags": obj.get("tags"),
             }
         )

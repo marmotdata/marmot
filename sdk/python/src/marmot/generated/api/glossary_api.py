@@ -15,9 +15,14 @@ from pydantic import Field, StrictFloat, StrictInt, StrictStr, validate_call
 
 from marmot.generated.api_client import ApiClient, RequestSerialized
 from marmot.generated.api_response import ApiResponse
+from marmot.generated.models.add_related_term_request import AddRelatedTermRequest
 from marmot.generated.models.create_term_request import CreateTermRequest
 from marmot.generated.models.glossary_list_result import GlossaryListResult
+from marmot.generated.models.glossary_suggested_assets_response import (
+    GlossarySuggestedAssetsResponse,
+)
 from marmot.generated.models.glossary_term import GlossaryTerm
+from marmot.generated.models.related_terms_response import RelatedTermsResponse
 from marmot.generated.models.update_term_request import UpdateTermRequest
 from marmot.generated.rest import RESTResponseType
 from marmot.generated.sync_helper import run_sync
@@ -336,6 +341,337 @@ class GlossaryApi:
         return self.api_client.param_serialize(
             method="DELETE",
             resource_path="/api/v1/glossary/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def delete_glossary_related_id_related_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Remove a related term
+
+        Unrelate two glossary terms. The link goes from both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param related_id: Related Term ID (required)
+        :type related_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_glossary_related_id_related_id_serialize(
+            id=id,
+            related_id=related_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def delete_glossary_related_id_related_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Remove a related term
+
+        Unrelate two glossary terms. The link goes from both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param related_id: Related Term ID (required)
+        :type related_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_glossary_related_id_related_id_serialize(
+            id=id,
+            related_id=related_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def delete_glossary_related_id_related_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove a related term
+
+        Unrelate two glossary terms. The link goes from both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param related_id: Related Term ID (required)
+        :type related_id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._delete_glossary_related_id_related_id_serialize(
+            id=id,
+            related_id=related_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def delete_glossary_related_id_related_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Remove a related term (synchronous)
+
+        Synchronous variant of :meth:`delete_glossary_related_id_related_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_glossary_related_id_related_id(
+                id=id,
+                related_id=related_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_glossary_related_id_related_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Remove a related term (synchronous)
+
+        Synchronous variant of :meth:`delete_glossary_related_id_related_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_glossary_related_id_related_id_with_http_info(
+                id=id,
+                related_id=related_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def delete_glossary_related_id_related_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        related_id: Annotated[StrictStr, Field(description="Related Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Remove a related term (synchronous)
+
+        Synchronous variant of :meth:`delete_glossary_related_id_related_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.delete_glossary_related_id_related_id_without_preload_content(
+                id=id,
+                related_id=related_id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _delete_glossary_related_id_related_id_serialize(
+        self,
+        id,
+        related_id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        if related_id is not None:
+            _path_params["related_id"] = related_id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="DELETE",
+            resource_path="/api/v1/glossary/related/{id}/{related_id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1630,6 +1966,316 @@ class GlossaryApi:
         )
 
     @validate_call
+    async def get_glossary_related_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Get related terms
+
+        List the terms related to a glossary term
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_related_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_glossary_related_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Get related terms
+
+        List the terms related to a glossary term
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_related_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_glossary_related_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get related terms
+
+        List the terms related to a glossary term
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_related_id_serialize(
+            id=id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_glossary_related_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Get related terms (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_related_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_related_id(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_glossary_related_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Get related terms (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_related_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_related_id_with_http_info(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_glossary_related_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get related terms (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_related_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_related_id_without_preload_content(
+                id=id,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_glossary_related_id_serialize(
+        self,
+        id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/glossary/related/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
     async def get_glossary_search(
         self,
         q: Annotated[StrictStr | None, Field(description="Search query")] = None,
@@ -2031,6 +2677,350 @@ class GlossaryApi:
         )
 
     @validate_call
+    async def get_glossary_suggested_assets_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> GlossarySuggestedAssetsResponse:
+        """Suggest assets for a term
+
+        Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_suggested_assets_id_serialize(
+            id=id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "GlossarySuggestedAssetsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_glossary_suggested_assets_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[GlossarySuggestedAssetsResponse]:
+        """Suggest assets for a term
+
+        Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_suggested_assets_id_serialize(
+            id=id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "GlossarySuggestedAssetsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_glossary_suggested_assets_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Suggest assets for a term
+
+        Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param limit: Maximum number of assets to return
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_glossary_suggested_assets_id_serialize(
+            id=id,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "GlossarySuggestedAssetsResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_glossary_suggested_assets_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> GlossarySuggestedAssetsResponse:
+        """Suggest assets for a term (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_suggested_assets_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_suggested_assets_id(
+                id=id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_glossary_suggested_assets_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[GlossarySuggestedAssetsResponse]:
+        """Suggest assets for a term (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_suggested_assets_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_suggested_assets_id_with_http_info(
+                id=id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_glossary_suggested_assets_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        limit: Annotated[
+            StrictInt | None, Field(description="Maximum number of assets to return")
+        ] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Suggest assets for a term (synchronous)
+
+        Synchronous variant of :meth:`get_glossary_suggested_assets_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_glossary_suggested_assets_id_without_preload_content(
+                id=id,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_glossary_suggested_assets_id_serialize(
+        self,
+        id,
+        limit,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/glossary/suggested-assets/{id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
     async def post_glossary(
         self,
         create_term_request: Annotated[
@@ -2354,6 +3344,360 @@ class GlossaryApi:
         return self.api_client.param_serialize(
             method="POST",
             resource_path="/api/v1/glossary/",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_glossary_related_id(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Add a related term
+
+        Relate two glossary terms to each other. The link shows on both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param add_related_term_request: Term to relate (required)
+        :type add_related_term_request: AddRelatedTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_glossary_related_id_serialize(
+            id=id,
+            add_related_term_request=add_related_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_glossary_related_id_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Add a related term
+
+        Relate two glossary terms to each other. The link shows on both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param add_related_term_request: Term to relate (required)
+        :type add_related_term_request: AddRelatedTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_glossary_related_id_serialize(
+            id=id,
+            add_related_term_request=add_related_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_glossary_related_id_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Add a related term
+
+        Relate two glossary terms to each other. The link shows on both terms.
+
+        :param id: Glossary Term ID (required)
+        :type id: str
+        :param add_related_term_request: Term to relate (required)
+        :type add_related_term_request: AddRelatedTermRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_glossary_related_id_serialize(
+            id=id,
+            add_related_term_request=add_related_term_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "RelatedTermsResponse",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+            "500": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_glossary_related_id_sync(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RelatedTermsResponse:
+        """Add a related term (synchronous)
+
+        Synchronous variant of :meth:`post_glossary_related_id`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_glossary_related_id(
+                id=id,
+                add_related_term_request=add_related_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_glossary_related_id_sync_with_http_info(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[RelatedTermsResponse]:
+        """Add a related term (synchronous)
+
+        Synchronous variant of :meth:`post_glossary_related_id_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_glossary_related_id_with_http_info(
+                id=id,
+                add_related_term_request=add_related_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_glossary_related_id_sync_without_preload_content(
+        self,
+        id: Annotated[StrictStr, Field(description="Glossary Term ID")],
+        add_related_term_request: Annotated[
+            AddRelatedTermRequest, Field(description="Term to relate")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Add a related term (synchronous)
+
+        Synchronous variant of :meth:`post_glossary_related_id_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_glossary_related_id_without_preload_content(
+                id=id,
+                add_related_term_request=add_related_term_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_glossary_related_id_serialize(
+        self,
+        id,
+        add_related_term_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if id is not None:
+            _path_params["id"] = id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if add_related_term_request is not None:
+            _body_params = add_related_term_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/glossary/related/{id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

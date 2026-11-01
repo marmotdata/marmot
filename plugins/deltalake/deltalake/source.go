@@ -15,14 +15,19 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "deltalake",
-		Name:        "Delta Lake",
-		Description: "Discover tables from Delta Lake transaction logs on local filesystems",
-		Icon:        "deltalake",
-		Category:    "data-lake",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "deltalake",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Delta Lake",
+		Description:   "Discover tables from Delta Lake transaction logs on local filesystems",
+		Icon:          "deltalake",
+		Category:      "data-lake",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DeltaLakeTableFields{}, "Table",
+				"Delta Lake table metadata fields"),
+		},
 	}
 }
 

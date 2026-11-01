@@ -39,8 +39,11 @@ class TestListSSOMappingsResponse(unittest.TestCase):
                         id = '',
                         member_role = '',
                         provider = '',
+                        role_id = '',
+                        role_name = '',
                         sso_group_name = '',
                         team_id = '',
+                        team_name = '',
                         updated_at = '', )
                     ]
             )

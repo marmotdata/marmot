@@ -76,6 +76,6 @@ func (m RunStatus) Validate(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this run status based on context it is used
-func (m RunStatus) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m RunStatus) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }

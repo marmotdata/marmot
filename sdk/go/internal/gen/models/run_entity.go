@@ -40,12 +40,12 @@ type RunEntity struct {
 }
 
 // Validate validates this run entity
-func (m *RunEntity) Validate(formats strfmt.Registry) error {
+func (m *RunEntity) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this run entity based on context it is used
-func (m *RunEntity) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *RunEntity) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

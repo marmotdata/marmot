@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import Icons from 'unplugin-icons/vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { generateIconBundle } from './scripts/generate-icon-bundle.mjs';
 import { dirname } from 'path';
@@ -21,14 +21,17 @@ function iconBundlePlugin() {
 	};
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
 	plugins: [
 		iconBundlePlugin(),
-		sveltekit(),
-		Icons({
-			compiler: 'svelte',
-			autoInstall: true
+		paraglideVitePlugin({
+			project: './project.inlang',
+			outdir: './src/lib/paraglide',
+			strategy: ['localStorage', 'preferredLanguage', 'baseLocale'],
+			// One module per message tree-shakes best for production, but the dev server serves modules unbundled, so it would fetch thousands of them on every page load. One module per locale keeps dev to a handful of requests.
+			outputStructure: command === 'build' ? 'message-modules' : 'locale-modules'
 		}),
+		sveltekit(),
 		nodePolyfills({
 			protocolImports: true
 		})
@@ -58,4 +61,4 @@ export default defineConfig({
 			}
 		}
 	}
-});
+}));

@@ -1,17 +1,36 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { fetchApi } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import { formatDateTime, formatNumber } from '$lib/utils';
 	import { websocketService, type SearchReindexEvent } from '$lib/websocket';
+	import '@marmotdata/elements/progress.js';
 
-	let running = false;
-	let esConfigured = false;
-	let loading = true;
-	let error: string | null = null;
+	import { formatBytes, type SystemSearchIndex } from '$lib/settings/system';
 
-	let indexed = 0;
-	let errors = 0;
-	let total = 0;
-	let status: 'idle' | 'running' | 'completed' | 'failed' = 'idle';
+	// The index's size comes from the System page's admin-only read; the reindex progress comes over the websocket
+	let { index, onReindexed }: { index?: SystemSearchIndex; onReindexed?: () => void } = $props();
+
+	type Status = 'idle' | 'running' | 'completed' | 'failed';
+
+	let running = $state(false);
+	let esConfigured = $state(false);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+
+	let indexed = $state(0);
+	let errors = $state(0);
+	let total = $state(0);
+	let status = $state<Status>('idle');
+
+	let statusLabel = $derived(
+		{
+			idle: m.admin_search_status_idle(),
+			running: m.admin_search_status_running(),
+			completed: m.admin_search_status_completed(),
+			failed: m.admin_search_status_failed()
+		}[status]
+	);
 
 	let unsubscribe: (() => void) | null = null;
 
@@ -35,6 +54,7 @@
 			case 'search_reindex_completed':
 				status = 'completed';
 				running = false;
+				onReindexed?.();
 				indexed = p.indexed ?? indexed;
 				errors = p.errors ?? errors;
 				total = p.total ?? total;
@@ -45,7 +65,7 @@
 				indexed = p.indexed ?? indexed;
 				errors = p.errors ?? errors;
 				total = p.total ?? total;
-				error = p.error ?? 'Reindex failed';
+				error = p.error ?? m.admin_reindex_failed();
 				break;
 		}
 	}
@@ -59,7 +79,7 @@
 			if (running) {
 				status = 'running';
 			}
-		} catch (err) {
+		} catch {
 			// Non-critical - we'll still show the UI
 		} finally {
 			loading = false;
@@ -72,7 +92,7 @@
 			const response = await fetchApi('/admin/search/reindex', { method: 'POST' });
 			if (!response.ok) {
 				const data = await response.json();
-				error = data.error || 'Failed to start reindex';
+				error = data.error || m.admin_reindex_start_error();
 				return;
 			}
 			status = 'running';
@@ -81,7 +101,7 @@
 			errors = 0;
 			total = 0;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to start reindex';
+			error = err instanceof Error ? err.message : m.admin_reindex_start_error();
 		}
 	}
 
@@ -94,83 +114,101 @@
 		if (unsubscribe) unsubscribe();
 	});
 
-	$: progress = total > 0 ? Math.round((indexed / total) * 100) : 0;
+	// Counts only mean something once a reindex has reported them, so an idle index shows just its status
+	let counted = $derived(status !== 'idle' || total > 0 || indexed > 0);
 </script>
 
-<div
-	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
->
-	<div class="p-6">
-		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Search Index</h3>
+<mm-section heading={m.admin_search_index_heading()} description={m.admin_reindex_description()}>
+	{#if !loading && esConfigured}
+		<mm-button
+			slot="actions"
+			icon="refresh"
+			loading={running}
+			disabled={running}
+			onclick={startReindex}
+			>{running ? m.admin_reindexing_label() : m.admin_start_reindex()}</mm-button
+		>
+	{/if}
 
-		{#if loading}
-			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
-			</div>
-		{:else if !esConfigured}
-			<div
-				class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-yellow-700 dark:text-yellow-300"
-			>
-				Elasticsearch is not configured. Search reindexing is unavailable.
-			</div>
-		{:else}
-			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Rebuild the search index from the database. This is useful if the search index has become
-				out of sync.
-			</p>
+	{#if index}
+		<mm-description-list layout="inline-grid" columns={4}>
+			<mm-description term={m.admin_search_documents()}>
+				<span class="mm-num">{formatNumber(index.documents)}</span>
+			</mm-description>
+			<mm-description term={m.admin_search_size()}>
+				<span class="mm-num">{formatBytes(index.size_bytes)}</span>
+			</mm-description>
+			{#if esConfigured}
+				<mm-description term={m.admin_search_last_full_reindex()}>
+					{index.last_full_reindex
+						? formatDateTime(index.last_full_reindex)
+						: m.admin_search_never_reindexed()}
+				</mm-description>
+			{/if}
+			<mm-description term={m.common_status()}>
+				{#if status === 'failed'}
+					<mm-status-pill status="danger" icon="error">{statusLabel}</mm-status-pill>
+				{:else if running}
+					{m.admin_search_status_running()}
+				{:else}
+					{m.admin_search_up_to_date()}
+				{/if}
+			</mm-description>
+		</mm-description-list>
+	{/if}
 
-			<button
-				class="px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 disabled:opacity-50 disabled:cursor-not-allowed"
-				disabled={running}
-				on:click={startReindex}
-			>
-				{running ? 'Reindexing...' : 'Start Reindex'}
-			</button>
+	{#if loading}
+		<mm-skeleton loading count={2}></mm-skeleton>
+	{:else if !esConfigured}
+		{#if !index}
+			<mm-callout tone="info" compact heading={m.admin_es_not_configured()}></mm-callout>
+		{/if}
+	{:else}
+		<div class="mm-stack" style="--mm-gap: var(--space-5)">
+			{#if !index || counted}
+				<mm-description-list layout="inline-grid" columns={3}>
+					{#if !index}
+						<mm-description term={m.common_status()}>
+							{#if status === 'failed'}
+								<mm-status-pill status="danger" icon="error">{statusLabel}</mm-status-pill>
+							{:else}
+								{statusLabel}
+							{/if}
+						</mm-description>
+					{/if}
+					{#if counted}
+						<mm-description term={m.admin_search_indexed_label()}>
+							<span class="mm-num">{formatNumber(indexed)}</span>
+						</mm-description>
+						<mm-description term={m.admin_search_errors_label()}>
+							<span class="mm-num">{formatNumber(errors)}</span>
+						</mm-description>
+					{/if}
+				</mm-description-list>
+			{/if}
 
 			{#if status === 'running'}
-				<div class="mt-4">
-					<div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-						<span>Indexing documents...</span>
-						<span>
-							{indexed.toLocaleString()}{total > 0 ? ` / ${total.toLocaleString()}` : ''}
-							{errors > 0 ? ` (${errors} errors)` : ''}
-						</span>
-					</div>
-					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-						<div
-							class="bg-earthy-terracotta-700 h-2.5 rounded-full transition-all duration-300"
-							style="width: {progress}%"
-						/>
-					</div>
-				</div>
+				<mm-progress
+					label={m.admin_indexing_documents()}
+					value={indexed}
+					max={total || 1}
+					indeterminate={total === 0}
+					unit={m.admin_search_documents_unit()}
+				></mm-progress>
 			{/if}
 
-			{#if status === 'completed'}
-				<div
-					class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-green-700 dark:text-green-300"
-				>
-					Reindex complete: {indexed.toLocaleString()} documents indexed{errors > 0
-						? `, ${errors} errors`
-						: ''}.
-				</div>
+			{#if status === 'completed' && errors > 0}
+				<mm-callout tone="warning" compact heading={m.admin_reindex_finished_with_errors()}
+				></mm-callout>
 			{/if}
 
-			{#if status === 'failed'}
-				<div
-					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
-				>
-					Reindex failed: {error}
-					{indexed > 0 ? ` (${indexed.toLocaleString()} documents indexed before failure)` : ''}
-				</div>
+			{#if status === 'failed' || error}
+				<mm-callout
+					tone="danger"
+					compact
+					heading={m.admin_reindex_failed_message({ error: error ?? m.admin_reindex_failed() })}
+				></mm-callout>
 			{/if}
-
-			{#if error && status !== 'failed'}
-				<div
-					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
-				>
-					{error}
-				</div>
-			{/if}
-		{/if}
-	</div>
-</div>
+		</div>
+	{/if}
+</mm-section>

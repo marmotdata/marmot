@@ -56,10 +56,10 @@ A minimal agent that searches the catalog, registers itself and writes lineage:
 import asyncio
 import sys
 
-from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient, ResultMessage, TextBlock
 
-from marmot import AuthenticatedApiClient, SecurityScheme, mcp_url
-from marmot.auth import resolve_credential, resolve_host
+from marmot import AuthenticatedApiClient, mcp_url
+from marmot.auth import SecurityScheme, resolve_credential, resolve_host
 from marmot.integrations import MarmotCatalog
 from marmot.integrations.claude_agent import MarmotAgentTracker
 
@@ -70,7 +70,9 @@ SYSTEM_PROMPT = (
 
 
 async def main() -> None:
-    client = AuthenticatedApiClient.connect()
+    host = resolve_host()
+    credential = resolve_credential(host)
+    client = AuthenticatedApiClient(host, credential)
     tracker = MarmotAgentTracker(
         MarmotCatalog(client),
         name="catalog-explorer",
@@ -103,10 +105,14 @@ async def main() -> None:
 
     async with ClaudeSDKClient(options=options) as agent:
         await agent.query("Find a postgres table about orders and summarise it.")
-        async for _ in agent.receive_response():
-            pass
+        async for message in agent.receive_response():
+            for block in getattr(message, "content", None) or []:
+                if isinstance(block, TextBlock):
+                    print(block.text)
+            if isinstance(message, ResultMessage) and message.is_error:
+                print(f"agent error: {message.errors or message.result}", file=sys.stderr)
 
-    print("agent registered as:", tracker.agent_mrn, file=sys.stderr)
+    print("agent registered as:", tracker.agent_mrn or "(not yet registered)")
 
 
 asyncio.run(main())
@@ -162,7 +168,7 @@ The Marmot MCP server exposes the catalog as tools, namespaced `mcp__marmot__*`:
 
 | Tool             | Purpose                                                       |
 | ---------------- | ------------------------------------------------------------- |
-| `discover_data`  | Find or browse assets — by name, type, provider, tags, or MRN |
+| `discover_data`  | Find or browse assets by name, type, provider, tags, or MRN |
 | `find_ownership` | Resolve who owns an asset, or what a team/user owns           |
 | `lookup_term`    | Search the business glossary for term definitions             |
 
@@ -209,11 +215,11 @@ Two ways to attribute lineage from tools you ship as your own MCP server alongsi
 
 ### MRNs in tool output
 
-If your tool returns objects with `mrn` fields — `{ mrn, ... }` or `{ results: [{ mrn, ... }] }` — or text bodies that mention `mrn://...` URIs, the tracker picks them up on every `PostToolUse` hook. This is the same mechanism that captures MRNs from Marmot's MCP responses.
+If your tool returns objects with `mrn` fields (`{ mrn, ... }` or `{ results: [{ mrn, ... }] }`), or text bodies that mention `mrn://...` URIs, the tracker picks them up on every `PostToolUse` hook. This is the same mechanism that captures MRNs from Marmot's MCP responses.
 
 ### Manual `record_source`
 
-Use this when the upstream is only known at runtime — for example a tool that picks one of several tables:
+Use this when the upstream is only known at runtime, for example a tool that picks one of several tables:
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },

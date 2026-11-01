@@ -58,6 +58,14 @@ type Service interface {
 	GetResolvedAssets(ctx context.Context, dataProductID string, limit, offset int) (*ResolvedAssets, error)
 	GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error)
 
+	// ListFiltered searches, filters, sorts and pages products on the server.
+	ListFiltered(ctx context.Context, filter ListFilter) (*ListResult, error)
+	GetFacets(ctx context.Context) (*Facets, error)
+	// GetMembers pages through a product's assets with how each got there.
+	GetMembers(ctx context.Context, dataProductID string, filter MemberFilter) (*MembersResult, error)
+	// ReorderRules sets the order of a product's rules; ruleIDs must name each rule once.
+	ReorderRules(ctx context.Context, dataProductID string, ruleIDs []string) ([]Rule, error)
+
 	// Image methods
 	UploadImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImageMeta, error)
 	GetImage(ctx context.Context, imageID string) (*ProductImage, error)
@@ -154,7 +162,17 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, 
 }
 
 func (s *service) Get(ctx context.Context, id string) (*DataProduct, error) {
-	return s.repo.Get(ctx, id)
+	dp, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if dp.AssetTypes, err = s.repo.GetAssetTypes(ctx, id); err != nil {
+		return nil, err
+	}
+	if err := s.repo.FillPopularity(ctx, []*DataProduct{dp}); err != nil {
+		return nil, err
+	}
+	return dp, nil
 }
 
 func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*DataProduct, error) {
@@ -501,4 +519,65 @@ func (s *service) validateRule(input RuleInput) error {
 	}
 
 	return nil
+}
+
+func (s *service) ListFiltered(ctx context.Context, filter ListFilter) (*ListResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = DefaultLimit
+	} else if filter.Limit > MaxLimit {
+		filter.Limit = MaxLimit
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	switch filter.Sort {
+	case "", SortName, SortUpdated, SortPopular:
+	default:
+		return nil, fmt.Errorf("%w: sort must be name, updated or popular", ErrInvalidInput)
+	}
+	switch filter.Mine {
+	case "", MineOnly, MineExclude:
+	default:
+		return nil, fmt.Errorf("%w: mine must be only or exclude", ErrInvalidInput)
+	}
+	return s.repo.ListFiltered(ctx, filter)
+}
+
+func (s *service) GetFacets(ctx context.Context) (*Facets, error) {
+	return s.repo.GetFacets(ctx)
+}
+
+func (s *service) GetMembers(ctx context.Context, dataProductID string, filter MemberFilter) (*MembersResult, error) {
+	if _, err := s.repo.Get(ctx, dataProductID); err != nil {
+		return nil, err
+	}
+	if filter.Limit <= 0 {
+		filter.Limit = DefaultLimit
+	} else if filter.Limit > MaxLimit {
+		filter.Limit = MaxLimit
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	switch filter.Source {
+	case "", SourceManual, SourceRule:
+	default:
+		return nil, fmt.Errorf("%w: source must be manual or rule", ErrInvalidInput)
+	}
+	switch filter.Sort {
+	case "", SortName, SortPopular:
+	default:
+		return nil, fmt.Errorf("%w: sort must be name or popular", ErrInvalidInput)
+	}
+	return s.repo.GetMembers(ctx, dataProductID, filter)
+}
+
+func (s *service) ReorderRules(ctx context.Context, dataProductID string, ruleIDs []string) ([]Rule, error) {
+	if _, err := s.repo.Get(ctx, dataProductID); err != nil {
+		return nil, err
+	}
+	if err := s.repo.ReorderRules(ctx, dataProductID, ruleIDs); err != nil {
+		return nil, err
+	}
+	return s.repo.GetRules(ctx, dataProductID)
 }

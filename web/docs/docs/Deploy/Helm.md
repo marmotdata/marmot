@@ -240,6 +240,21 @@ This stores all credentials in plaintext. Never use this in production.
 
 ---
 
+## Serving Plugins
+
+To let plugins that run in your own networks answer data queries, enable the serve listener. It needs the encryption key above.
+
+```yaml
+config:
+  query:
+    serve:
+      enabled: true
+serveService:
+  type: LoadBalancer
+```
+
+The chart opens port 8443, creates a separate `<release>-serve` Service for it and tells each replica the address its peers forward queries to. Expose the Service with a TCP load balancer or TLS passthrough, never one that terminates TLS. See [Serving Queries from Your Network](../Configure/serving-plugins.md).
+
 ## Reference
 
 For all available configuration options, view the chart's defaults:

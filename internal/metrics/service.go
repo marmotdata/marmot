@@ -49,6 +49,28 @@ func (s *Service) GetTopQueries(ctx context.Context, timeRange TimeRange, limit 
 	return s.store.GetTopQueries(ctx, timeRange, limit)
 }
 
+// GetZeroResultQueries returns the most frequent searches that found nothing.
+func (s *Service) GetZeroResultQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error) {
+	return s.store.GetZeroResultQueries(ctx, timeRange, limit)
+}
+
+// RecordSearch records a search with how many results it found. Searches that found something feed the top searches as before and those that found nothing feed the zero-result list, so neither skews the other.
+func (s *Service) RecordSearch(queryType, query string, results int64) {
+	if query == "" {
+		return
+	}
+	if results > 0 {
+		s.collector.RecordSearchQuery(queryType, query)
+		return
+	}
+	s.collector.RecordEmptySearch(queryType, query)
+}
+
+// GetAssetsOwned returns how many catalogued assets have an owner, out of all of them.
+func (s *Service) GetAssetsOwned(ctx context.Context) (int64, int64, error) {
+	return s.store.GetAssetsOwned(ctx)
+}
+
 func (s *Service) GetMetrics(ctx context.Context, opts QueryOptions) ([]AggregatedMetric, error) {
 	// All queries now use aggregated data from the timeseries table
 	return s.store.GetAggregatedMetrics(ctx, opts)

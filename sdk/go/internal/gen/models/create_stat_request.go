@@ -79,7 +79,7 @@ func (m *CreateStatRequest) validateValue(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this create stat request based on context it is used
-func (m *CreateStatRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateStatRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

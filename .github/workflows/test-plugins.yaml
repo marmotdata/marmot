@@ -15,11 +15,26 @@ permissions:
   contents: read
 
 jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.list.outputs.plugins }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: List plugins
+        id: list
+        run: |
+          plugins=$(find plugins -mindepth 2 -maxdepth 2 -name go.mod -printf '%h\n' | xargs -n1 basename | sort | jq -Rsc 'split("\n") | map(select(length > 0))')
+          echo "plugins=$plugins" >> "$GITHUB_OUTPUT"
+
   test:
+    needs: discover
     strategy:
       fail-fast: false
       matrix:
-        plugin: [kafka, confluent, redpanda, airflow, duckdb, asyncapi, dbt, azureblob, bigquery, clickhouse, deltalake, dynamodb, elasticsearch, gcs, glue, iceberg, lambda, mongodb, mysql, nats, openapi, opensearch, postgresql, redis, s3, sns, sqlite, sqs, trino, kubernetes, eks, gke, openmetadata, googledrive]
+        plugin: ${{ fromJSON(needs.discover.outputs.plugins) }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,7 +44,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: plugins/${{ matrix.plugin }}/go.mod
           cache: true
@@ -43,3 +58,18 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      # Every core plugin says which Marmot releases it works with, so the plugin index only offers
+      # each version to Marmots that can run it. A lower bound only: incompatible host changes bump
+      # the plugin protocol instead.
+      - name: Check supported Marmot versions are declared
+        run: |
+          set -euo pipefail
+          meta=$(go run . --dump-metadata)
+          constraint=$(jq -r '.marmot_version // ""' <<<"$meta")
+          if ! [[ "$constraint" =~ ^\>=[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=plugins/${{ matrix.plugin }}::MarmotVersion must be set in the plugin's Meta as a lower bound such as \">=0.12.0\" (got \"${constraint}\")"
+            exit 1
+          fi
+          echo "Supports Marmot ${constraint}" >> "$GITHUB_STEP_SUMMARY"
+

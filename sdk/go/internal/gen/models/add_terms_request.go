@@ -52,7 +52,7 @@ func (m *AddTermsRequest) validateTermIds(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this add terms request based on context it is used
-func (m *AddTermsRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AddTermsRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

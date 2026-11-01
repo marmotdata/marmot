@@ -20,6 +20,8 @@ from marmot.generated.models.job_run import JobRun
 from marmot.generated.models.list_job_runs_response import ListJobRunsResponse
 from marmot.generated.models.list_schedules_response import ListSchedulesResponse
 from marmot.generated.models.schedule import Schedule
+from marmot.generated.models.test_connection_request import TestConnectionRequest
+from marmot.generated.models.test_connection_response import TestConnectionResponse
 from marmot.generated.models.update_schedule_request import UpdateScheduleRequest
 from marmot.generated.models.validate_config_request import ValidateConfigRequest
 from marmot.generated.models.validate_config_response import ValidateConfigResponse
@@ -1391,6 +1393,15 @@ class IngestionApi:
     async def get_ingestion_schedules(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1406,6 +1417,10 @@ class IngestionApi:
 
         :param enabled: Filter by enabled status
         :type enabled: bool
+        :param search: Match pipeline name or plugin, case-insensitively
+        :type search: str
+        :param status: Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)
+        :type status: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -1434,6 +1449,8 @@ class IngestionApi:
 
         _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
+            search=search,
+            status=status,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -1458,6 +1475,15 @@ class IngestionApi:
     async def get_ingestion_schedules_with_http_info(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1473,6 +1499,10 @@ class IngestionApi:
 
         :param enabled: Filter by enabled status
         :type enabled: bool
+        :param search: Match pipeline name or plugin, case-insensitively
+        :type search: str
+        :param status: Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)
+        :type status: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -1501,6 +1531,8 @@ class IngestionApi:
 
         _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
+            search=search,
+            status=status,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -1525,6 +1557,15 @@ class IngestionApi:
     async def get_ingestion_schedules_without_preload_content(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1540,6 +1581,10 @@ class IngestionApi:
 
         :param enabled: Filter by enabled status
         :type enabled: bool
+        :param search: Match pipeline name or plugin, case-insensitively
+        :type search: str
+        :param status: Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)
+        :type status: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -1568,6 +1613,8 @@ class IngestionApi:
 
         _param = self._get_ingestion_schedules_serialize(
             enabled=enabled,
+            search=search,
+            status=status,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -1588,6 +1635,15 @@ class IngestionApi:
     def get_ingestion_schedules_sync(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1606,6 +1662,8 @@ class IngestionApi:
         return run_sync(
             self.get_ingestion_schedules(
                 enabled=enabled,
+                search=search,
+                status=status,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -1620,6 +1678,15 @@ class IngestionApi:
     def get_ingestion_schedules_sync_with_http_info(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1638,6 +1705,8 @@ class IngestionApi:
         return run_sync(
             self.get_ingestion_schedules_with_http_info(
                 enabled=enabled,
+                search=search,
+                status=status,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -1652,6 +1721,15 @@ class IngestionApi:
     def get_ingestion_schedules_sync_without_preload_content(
         self,
         enabled: Annotated[StrictBool | None, Field(description="Filter by enabled status")] = None,
+        search: Annotated[
+            StrictStr | None, Field(description="Match pipeline name or plugin, case-insensitively")
+        ] = None,
+        status: Annotated[
+            StrictStr | None,
+            Field(
+                description="Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)"
+            ),
+        ] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -1670,6 +1748,8 @@ class IngestionApi:
         return run_sync(
             self.get_ingestion_schedules_without_preload_content(
                 enabled=enabled,
+                search=search,
+                status=status,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -1683,6 +1763,8 @@ class IngestionApi:
     def _get_ingestion_schedules_serialize(
         self,
         enabled,
+        search,
+        status,
         limit,
         offset,
         _request_auth,
@@ -1706,6 +1788,12 @@ class IngestionApi:
         # process the query parameters
         if enabled is not None:
             _query_params.append(("enabled", enabled))
+
+        if search is not None:
+            _query_params.append(("search", search))
+
+        if status is not None:
+            _query_params.append(("status", status))
 
         if limit is not None:
             _query_params.append(("limit", limit))
@@ -2987,6 +3075,348 @@ class IngestionApi:
         return self.api_client.param_serialize(
             method="POST",
             resource_path="/api/v1/ingestion/schedules/{id}/trigger",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def post_ingestion_test_connection(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TestConnectionResponse:
+        """Test a plugin connection
+
+        Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work.
+
+        :param test_connection_request: Plugin and settings to test (required)
+        :type test_connection_request: TestConnectionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_test_connection_serialize(
+            test_connection_request=test_connection_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TestConnectionResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "429": "ErrorResponse",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def post_ingestion_test_connection_with_http_info(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TestConnectionResponse]:
+        """Test a plugin connection
+
+        Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work.
+
+        :param test_connection_request: Plugin and settings to test (required)
+        :type test_connection_request: TestConnectionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_test_connection_serialize(
+            test_connection_request=test_connection_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TestConnectionResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "429": "ErrorResponse",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def post_ingestion_test_connection_without_preload_content(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Test a plugin connection
+
+        Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work.
+
+        :param test_connection_request: Plugin and settings to test (required)
+        :type test_connection_request: TestConnectionRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._post_ingestion_test_connection_serialize(
+            test_connection_request=test_connection_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "TestConnectionResponse",
+            "400": "ErrorResponse",
+            "401": "ErrorResponse",
+            "403": "ErrorResponse",
+            "404": "ErrorResponse",
+            "429": "ErrorResponse",
+            "503": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def post_ingestion_test_connection_sync(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> TestConnectionResponse:
+        """Test a plugin connection (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_test_connection`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_test_connection(
+                test_connection_request=test_connection_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_test_connection_sync_with_http_info(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[TestConnectionResponse]:
+        """Test a plugin connection (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_test_connection_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_test_connection_with_http_info(
+                test_connection_request=test_connection_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def post_ingestion_test_connection_sync_without_preload_content(
+        self,
+        test_connection_request: Annotated[
+            TestConnectionRequest, Field(description="Plugin and settings to test")
+        ],
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Test a plugin connection (synchronous)
+
+        Synchronous variant of :meth:`post_ingestion_test_connection_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.post_ingestion_test_connection_without_preload_content(
+                test_connection_request=test_connection_request,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _post_ingestion_test_connection_serialize(
+        self,
+        test_connection_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if test_connection_request is not None:
+            _body_params = test_connection_request
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params["Content-Type"] = _content_type
+        else:
+            _default_content_type = self.api_client.select_header_content_type(["application/json"])
+            if _default_content_type is not None:
+                _header_params["Content-Type"] = _default_content_type
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="POST",
+            resource_path="/api/v1/ingestion/test-connection",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

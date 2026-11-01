@@ -1,0 +1,39 @@
+event_id	bigint	
+customer_id	int	
+payload	string	
+		
+# Partition Information		
+# col_name	data_type	comment
+dt	string	Event date
+		
+# Detailed Table Information		
+Database:           	sales               	
+OwnerType:          	USER                	
+Owner:              	hive                	
+CreateTime:         	Tue Sep 08 02:21:24 UTC 2026	
+LastAccessTime:     	UNKNOWN             	
+Retention:          	0                   	
+Location:           	file:/tmp/marmot-hive-events	
+Table Type:         	EXTERNAL_TABLE      	
+Table Parameters:		
+	COLUMN_STATS_ACCURATE	{"BASIC_STATS":"true"}
+	EXTERNAL            	TRUE                
+	bucketing_version   	2                   
+	comment             	Raw events          
+	numFiles            	0                   
+	numPartitions       	2                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+	transient_lastDdlTime	1788834084          
+		
+# Storage Information		
+SerDe Library:      	org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe	
+InputFormat:        	org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat	
+OutputFormat:       	org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat	
+Compressed:         	No                  	
+Num Buckets:        	-1                  	
+Bucket Columns:     	[]                  	
+Sort Columns:       	[]                  	
+Storage Desc Params:		
+	serialization.format	1                   

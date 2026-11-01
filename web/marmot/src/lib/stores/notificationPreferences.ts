@@ -11,7 +11,8 @@ export type NotificationType =
 	| 'upstream_schema_change'
 	| 'downstream_schema_change'
 	| 'lineage_change'
-	| 'asset_deleted';
+	| 'asset_deleted'
+	| 'access_expiry';
 
 export interface NotificationPreferences {
 	system: boolean;
@@ -23,6 +24,7 @@ export interface NotificationPreferences {
 	downstream_schema_change: boolean;
 	lineage_change: boolean;
 	asset_deleted: boolean;
+	access_expiry: boolean;
 }
 
 const defaultPreferences: NotificationPreferences = {
@@ -34,7 +36,8 @@ const defaultPreferences: NotificationPreferences = {
 	upstream_schema_change: true,
 	downstream_schema_change: true,
 	lineage_change: true,
-	asset_deleted: true
+	asset_deleted: true,
+	access_expiry: true
 };
 
 function createNotificationPreferencesStore() {

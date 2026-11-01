@@ -85,6 +85,15 @@ class TestBatchCreateRequest(unittest.TestCase):
                     ],
                 lineage = [
                     marmot.generated.models.create_lineage_request.CreateLineageRequest(
+                        column_lineage = [
+                            marmot.generated.models.column_edge.ColumnEdge(
+                                confidence = 1.337,
+                                from_columns = [
+                                    ''
+                                    ],
+                                to_column = '',
+                                transform = '', )
+                            ],
                         job_mrn = '',
                         source = '',
                         target = '',

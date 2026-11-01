@@ -1,37 +1,97 @@
 version: 2
+
+multi-ecosystem-groups:
+  all:
+    schedule:
+      interval: "weekly"
+  plugins:
+    schedule:
+      interval: "weekly"
+
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "kind/dependency"
-      - "area/server"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/server"]
+
+  - package-ecosystem: "gomod"
+    directory: "/sdk/go"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
 
   - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "kind/dependency"
-      - "area/frontend"
+    directories:
+      - "/web/marmot"
+      - "/web/docs"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/frontend"]
 
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "kind/dependency"
-      - "area/sdk"
+  - package-ecosystem: "npm"
+    directory: "/sdk/ts"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
+
+  - package-ecosystem: "uv"
+    directory: "/sdk/python"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "kind/dependency"
-      - "area/build"
+    multi-ecosystem-group: "all"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/build"]
+
+  # plugins a-d
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/a*"
+      - "/plugins/b*"
+      - "/plugins/c*"
+      - "/plugins/d*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins e-l
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/e*"
+      - "/plugins/f*"
+      - "/plugins/g*"
+      - "/plugins/h*"
+      - "/plugins/i*"
+      - "/plugins/k*"
+      - "/plugins/l*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins m-p
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/m*"
+      - "/plugins/n*"
+      - "/plugins/o*"
+      - "/plugins/p*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins q-v
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/q*"
+      - "/plugins/r*"
+      - "/plugins/s*"
+      - "/plugins/t*"
+      - "/plugins/u*"
+      - "/plugins/v*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]

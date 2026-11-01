@@ -101,6 +101,29 @@ MCP uses the same authentication as Marmot's REST API. You'll need an API key to
 
 The AI assistant will have the same permissions as your user account, respecting all role-based access controls.
 
+An agent that runs on its own identity uses a service account key instead. Create the service account on the **Service Accounts** page (`/service-accounts`), give it a role with `assets:view`, `glossary:view` and `teams:view`, and put one of its keys in the MCP client configuration. The agent then has the service account's permissions, not any person's.
+
+### Hosted clients (OAuth)
+
+MCP clients can also sign in through OAuth instead of an API key. The client registers itself with Marmot using OAuth dynamic client registration and completes a browser sign-in, so no manual client setup is needed. By default Marmot only accepts loopback redirect URIs (`http://localhost`, `http://127.0.0.1` or `http://[::1]`), which covers clients running on your own machine.
+
+Hosted clients such as claude.ai run in the cloud and use an `https` callback, so their callback host must be allowlisted in your server configuration:
+
+```yaml
+auth:
+  dcr:
+    allowed_redirect_hosts:
+      - claude.ai
+```
+
+The same setting is available as an environment variable, with multiple hosts separated by commas:
+
+```bash
+MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS=claude.ai
+```
+
+Hosts on this list can receive OAuth authorization codes for your Marmot instance, so only add hosts you trust.
+
 ## Available Tools
 
 Marmot's MCP server provides these tools to AI assistants:

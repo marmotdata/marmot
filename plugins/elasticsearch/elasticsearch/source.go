@@ -22,14 +22,23 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "elasticsearch",
-		Name:        "Elasticsearch",
-		Description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
-		Icon:        "elasticsearch",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "elasticsearch",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Elasticsearch",
+		Description:   "Discover indices, data streams, and aliases from Elasticsearch clusters",
+		Icon:          "elasticsearch",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(IndexFields{}, "Index",
+				"Elasticsearch index metadata fields."),
+			pluginsdk.AssetSchemaOf(DataStreamFields{}, "Data Stream",
+				"Elasticsearch data stream metadata fields."),
+			pluginsdk.AssetSchemaOf(AliasFields{}, "Alias",
+				"Elasticsearch alias metadata fields."),
+		},
 	}
 }
 
@@ -42,15 +51,15 @@ type Config struct {
 
 	Username string `json:"username" description:"Username for basic authentication"`
 	Password string `json:"password" description:"Password for basic authentication" sensitive:"true"`
-	APIKey   string `json:"api_key" label:"API Key" description:"API key for authentication (mutually exclusive with username/password)" sensitive:"true"`
+	APIKey   string `json:"api_key" group:"Authentication" label:"API Key" description:"API key for authentication (mutually exclusive with username/password)" sensitive:"true"`
 
-	TLSSkipVerify bool   `json:"tls_skip_verify" label:"TLS Skip Verify" description:"Skip TLS certificate verification" default:"false"`
-	CACertPath    string `json:"ca_cert_path" label:"CA Certificate Path" description:"Path to a custom CA certificate file"`
+	TLSSkipVerify bool   `json:"tls_skip_verify" group:"Authentication" label:"TLS Skip Verify" description:"Skip TLS certificate verification" default:"false"`
+	CACertPath    string `json:"ca_cert_path" group:"Authentication" label:"CA Certificate Path" description:"Path to a custom CA certificate file"`
 
-	IncludeDataStreams   bool `json:"include_data_streams" description:"Discover data streams" default:"true"`
-	IncludeAliases       bool `json:"include_aliases" description:"Discover aliases" default:"true"`
-	IncludeIndexStats    bool `json:"include_index_stats" description:"Collect document count and store size metrics" default:"true"`
-	IncludeSystemIndices bool `json:"include_system_indices" description:"Include system indices (prefixed with .)" default:"false"`
+	IncludeDataStreams   bool `json:"include_data_streams" group:"Discovery" description:"Discover data streams" default:"true"`
+	IncludeAliases       bool `json:"include_aliases" group:"Discovery" description:"Discover aliases" default:"true"`
+	IncludeIndexStats    bool `json:"include_index_stats" group:"Advanced" description:"Collect document count and store size metrics" default:"true"`
+	IncludeSystemIndices bool `json:"include_system_indices" group:"Discovery" description:"Include system indices (prefixed with .)" default:"false"`
 }
 
 // Example configuration for the plugin.

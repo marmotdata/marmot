@@ -1,6 +1,8 @@
 import { auth } from './stores/auth';
 import { goto } from '$app/navigation';
+import { error } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
+import { m } from '$lib/paraglide/messages';
 
 interface FetchApiOptions extends RequestInit {
 	skipAuth?: boolean;
@@ -37,6 +39,22 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 	return response;
 }
 
+/**
+ * Turns a failed API response into the error page, carrying the server's request reference so a 500 can be quoted to an admin. For load functions; components show failures inline instead.
+ */
+export async function throwApiError(response: Response): Promise<never> {
+	let message = m.toast_request_failed({ status: response.status });
+	let requestId = response.headers.get('X-Request-Id') ?? undefined;
+	try {
+		const data = await response.json();
+		if (typeof data.error === 'string') message = data.error;
+		if (typeof data.request_id === 'string') requestId = data.request_id;
+	} catch {
+		// non-JSON body; keep the default message
+	}
+	error(response.status, { message, requestId });
+}
+
 export interface AssetPreviewResponse {
 	column_names: string[];
 	rows: unknown[][];
@@ -51,7 +69,7 @@ export async function fetchAssetPreview(assetId: string): Promise<AssetPreviewRe
 	const response = await fetchApi(`/assets/preview/${assetId}`);
 	if (!response.ok) {
 		const errorData = await response.json();
-		const error: ApiError = new Error(errorData.error || 'Failed to fetch preview');
+		const error: ApiError = new Error(errorData.error || m.ui_preview_fetch_error());
 		error.status = response.status;
 		throw error;
 	}

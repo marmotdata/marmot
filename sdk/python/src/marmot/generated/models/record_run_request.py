@@ -33,6 +33,7 @@ class RecordRunRequest(BaseModel):
     error: StrictStr | None = None
     model: StrictStr | None = None
     observed_assets: list[StrictStr] | None = None
+    prompt: StrictStr | None = None
     run_id: StrictStr | None = None
     started_at: StrictStr | None = None
     status: StrictStr | None = None
@@ -45,6 +46,7 @@ class RecordRunRequest(BaseModel):
         "error",
         "model",
         "observed_assets",
+        "prompt",
         "run_id",
         "started_at",
         "status",
@@ -115,6 +117,7 @@ class RecordRunRequest(BaseModel):
                 "error": obj.get("error"),
                 "model": obj.get("model"),
                 "observed_assets": obj.get("observed_assets"),
+                "prompt": obj.get("prompt"),
                 "run_id": obj.get("run_id"),
                 "started_at": obj.get("started_at"),
                 "status": obj.get("status"),

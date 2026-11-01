@@ -27,8 +27,9 @@ class UpdateSSOMappingRequest(BaseModel):
     """
 
     member_role: StrictStr | None = None
+    role_id: StrictStr | None = None
     team_id: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["member_role", "team_id"]
+    __properties: ClassVar[list[str]] = ["member_role", "role_id", "team_id"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -78,5 +79,9 @@ class UpdateSSOMappingRequest(BaseModel):
             return cls.model_validate(obj)
 
         return cls.model_validate(
-            {"member_role": obj.get("member_role"), "team_id": obj.get("team_id")}
+            {
+                "member_role": obj.get("member_role"),
+                "role_id": obj.get("role_id"),
+                "team_id": obj.get("team_id"),
+            }
         )

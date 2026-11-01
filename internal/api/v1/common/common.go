@@ -9,13 +9,16 @@ import (
 type ContextKey string
 
 const (
-	UserContextKey      ContextKey = "user"
-	PrincipalContextKey ContextKey = "principal"
+	UserContextKey       ContextKey = "user"
+	PrincipalContextKey  ContextKey = "principal"
+	credentialContextKey ContextKey = "credential"
 )
 
 // ErrorResponse represents an API error response
 type ErrorResponse struct {
 	Error string `json:"error"`
+	// RequestID matches the X-Request-Id header and the server log line, so someone reporting a failure can quote it.
+	RequestID string `json:"request_id,omitempty"`
 } // @name ErrorResponse
 
 // LimitErrorResponse is returned with HTTP 403 when a create is refused
@@ -33,7 +36,7 @@ type LimitErrorResponse struct {
 type ValidationErrorResponse struct {
 	Error  string            `json:"error"`
 	Fields []ValidationError `json:"fields,omitempty"`
-}
+} // @name ValidationErrorResponse
 
 // ValidationError represents a field-level validation error
 type ValidationError struct {

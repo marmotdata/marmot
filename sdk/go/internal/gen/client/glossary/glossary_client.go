@@ -62,6 +62,12 @@ type ClientService interface {
 	// DeleteGlossaryIDContext delete glossary term.
 	DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryIDOK, error)
 
+	// DeleteGlossaryRelatedIDRelatedID remove a related term.
+	DeleteGlossaryRelatedIDRelatedID(params *DeleteGlossaryRelatedIDRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryRelatedIDRelatedIDOK, error)
+
+	// DeleteGlossaryRelatedIDRelatedIDContext remove a related term.
+	DeleteGlossaryRelatedIDRelatedIDContext(ctx context.Context, params *DeleteGlossaryRelatedIDRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryRelatedIDRelatedIDOK, error)
+
 	// GetGlossaryAncestorsID get ancestor terms.
 	GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error)
 
@@ -86,17 +92,35 @@ type ClientService interface {
 	// GetGlossaryListContext list glossary terms.
 	GetGlossaryListContext(ctx context.Context, params *GetGlossaryListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryListOK, error)
 
+	// GetGlossaryRelatedID get related terms.
+	GetGlossaryRelatedID(params *GetGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryRelatedIDOK, error)
+
+	// GetGlossaryRelatedIDContext get related terms.
+	GetGlossaryRelatedIDContext(ctx context.Context, params *GetGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryRelatedIDOK, error)
+
 	// GetGlossarySearch search glossary terms.
 	GetGlossarySearch(params *GetGlossarySearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySearchOK, error)
 
 	// GetGlossarySearchContext search glossary terms.
 	GetGlossarySearchContext(ctx context.Context, params *GetGlossarySearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySearchOK, error)
 
+	// GetGlossarySuggestedAssetsID suggest assets for a term.
+	GetGlossarySuggestedAssetsID(params *GetGlossarySuggestedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySuggestedAssetsIDOK, error)
+
+	// GetGlossarySuggestedAssetsIDContext suggest assets for a term.
+	GetGlossarySuggestedAssetsIDContext(ctx context.Context, params *GetGlossarySuggestedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySuggestedAssetsIDOK, error)
+
 	// PostGlossary create glossary term.
 	PostGlossary(params *PostGlossaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryCreated, error)
 
 	// PostGlossaryContext create glossary term.
 	PostGlossaryContext(ctx context.Context, params *PostGlossaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryCreated, error)
+
+	// PostGlossaryRelatedID add a related term.
+	PostGlossaryRelatedID(params *PostGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryRelatedIDOK, error)
+
+	// PostGlossaryRelatedIDContext add a related term.
+	PostGlossaryRelatedIDContext(ctx context.Context, params *PostGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryRelatedIDOK, error)
 
 	// PutGlossaryID update glossary term.
 	PutGlossaryID(params *PutGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutGlossaryIDOK, error)
@@ -117,7 +141,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteGlossaryIDContext] instead.
 func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -174,6 +198,73 @@ func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlos
 	panic(msg)
 }
 
+// DeleteGlossaryRelatedIDRelatedID removes a related term.
+//
+// Unrelate two glossary terms. The link goes from both terms..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteGlossaryRelatedIDRelatedIDContext] instead.
+func (a *Client) DeleteGlossaryRelatedIDRelatedID(params *DeleteGlossaryRelatedIDRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryRelatedIDRelatedIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteGlossaryRelatedIDRelatedIDContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteGlossaryRelatedIDRelatedIDContext removes a related term.
+//
+// Unrelate two glossary terms. The link goes from both terms..
+//
+// Do not use the deprecated [DeleteGlossaryRelatedIDRelatedIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteGlossaryRelatedIDRelatedIDContext(ctx context.Context, params *DeleteGlossaryRelatedIDRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteGlossaryRelatedIDRelatedIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteGlossaryRelatedIDRelatedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "deleteGlossaryRelatedIDRelatedID",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/glossary/related/{id}/{related_id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteGlossaryRelatedIDRelatedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteGlossaryRelatedIDRelatedIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteGlossaryRelatedIDRelatedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetGlossaryAncestorsID gets ancestor terms.
 //
 // Retrieve all ancestor terms of a glossary term (parent chain).
@@ -184,7 +275,7 @@ func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlos
 // If you need to pass a specific context, use [Client.GetGlossaryAncestorsIDContext] instead.
 func (a *Client) GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -251,7 +342,7 @@ func (a *Client) GetGlossaryAncestorsIDContext(ctx context.Context, params *GetG
 // If you need to pass a specific context, use [Client.GetGlossaryChildrenIDContext] instead.
 func (a *Client) GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -318,7 +409,7 @@ func (a *Client) GetGlossaryChildrenIDContext(ctx context.Context, params *GetGl
 // If you need to pass a specific context, use [Client.GetGlossaryIDContext] instead.
 func (a *Client) GetGlossaryID(params *GetGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +476,7 @@ func (a *Client) GetGlossaryIDContext(ctx context.Context, params *GetGlossaryID
 // If you need to pass a specific context, use [Client.GetGlossaryListContext] instead.
 func (a *Client) GetGlossaryList(params *GetGlossaryListParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryListOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -442,6 +533,73 @@ func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossary
 	panic(msg)
 }
 
+// GetGlossaryRelatedID gets related terms.
+//
+// List the terms related to a glossary term.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossaryRelatedIDContext] instead.
+func (a *Client) GetGlossaryRelatedID(params *GetGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryRelatedIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossaryRelatedIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetGlossaryRelatedIDContext gets related terms.
+//
+// List the terms related to a glossary term.
+//
+// Do not use the deprecated [GetGlossaryRelatedIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossaryRelatedIDContext(ctx context.Context, params *GetGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossaryRelatedIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetGlossaryRelatedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getGlossaryRelatedID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/glossary/related/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetGlossaryRelatedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetGlossaryRelatedIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getGlossaryRelatedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetGlossarySearch searches glossary terms.
 //
 // Search for glossary terms by query string and filters.
@@ -452,7 +610,7 @@ func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossary
 // If you need to pass a specific context, use [Client.GetGlossarySearchContext] instead.
 func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -509,6 +667,73 @@ func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossa
 	panic(msg)
 }
 
+// GetGlossarySuggestedAssetsID suggests assets for a term.
+//
+// Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossarySuggestedAssetsIDContext] instead.
+func (a *Client) GetGlossarySuggestedAssetsID(params *GetGlossarySuggestedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySuggestedAssetsIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossarySuggestedAssetsIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetGlossarySuggestedAssetsIDContext suggests assets for a term.
+//
+// Assets whose name, tags or description mention the term's name and that are not linked to it yet, best match first.
+//
+// Do not use the deprecated [GetGlossarySuggestedAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossarySuggestedAssetsIDContext(ctx context.Context, params *GetGlossarySuggestedAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetGlossarySuggestedAssetsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetGlossarySuggestedAssetsIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getGlossarySuggestedAssetsID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/glossary/suggested-assets/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetGlossarySuggestedAssetsIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetGlossarySuggestedAssetsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getGlossarySuggestedAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostGlossary creates glossary term.
 //
 // Create a new glossary term with name, definition, and optional metadata.
@@ -519,7 +744,7 @@ func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossa
 // If you need to pass a specific context, use [Client.PostGlossaryContext] instead.
 func (a *Client) PostGlossary(params *PostGlossaryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -576,6 +801,73 @@ func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryPa
 	panic(msg)
 }
 
+// PostGlossaryRelatedID adds a related term.
+//
+// Relate two glossary terms to each other. The link shows on both terms..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostGlossaryRelatedIDContext] instead.
+func (a *Client) PostGlossaryRelatedID(params *PostGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryRelatedIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostGlossaryRelatedIDContext(ctx, params, authInfo, opts...)
+}
+
+// PostGlossaryRelatedIDContext adds a related term.
+//
+// Relate two glossary terms to each other. The link shows on both terms..
+//
+// Do not use the deprecated [PostGlossaryRelatedIDParams.Context] with this method: it would be ignored.
+func (a *Client) PostGlossaryRelatedIDContext(ctx context.Context, params *PostGlossaryRelatedIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostGlossaryRelatedIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostGlossaryRelatedIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postGlossaryRelatedID",
+		Method:             "POST",
+		PathPattern:        "/api/v1/glossary/related/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostGlossaryRelatedIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostGlossaryRelatedIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postGlossaryRelatedID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PutGlossaryID updates glossary term.
 //
 // Update an existing glossary term by its ID.
@@ -586,7 +878,7 @@ func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryPa
 // If you need to pass a specific context, use [Client.PutGlossaryIDContext] instead.
 func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutGlossaryIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

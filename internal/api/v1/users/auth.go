@@ -2,10 +2,12 @@ package users
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -53,13 +55,18 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 	authenticatedUser, err := h.userService.Authenticate(r.Context(), input.Username, input.Password)
 	if err != nil {
-		switch err {
-		case user.ErrInvalidPassword, user.ErrUnauthorized:
+		// errors.Is, not ==: these are bare today, but the rest of core/user
+		// wraps its sentinels and a value comparison would silently rot.
+		if errors.Is(err, user.ErrInvalidPassword) || errors.Is(err, user.ErrUnauthorized) {
 			common.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
-		default:
-			log.Error().Err(err).Str("username", input.Username).Msg("Authentication failed")
-			common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
+			return
 		}
+		if errors.Is(err, user.ErrPasswordSignInDisabled) {
+			common.RespondError(w, http.StatusForbidden, "Password sign-in is turned off. Sign in with single sign-on.")
+			return
+		}
+		log.Error().Err(err).Str("username", input.Username).Msg("Authentication failed")
+		common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
 		return
 	}
 
@@ -89,6 +96,29 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)
+}
+
+// @Summary Sign out
+// @Description Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too.
+// @Tags users
+// @Security BearerAuth
+// @Success 204
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID postUsersSignOut
+// @Router /api/v1/users/sign-out [post]
+func (h *Handler) signOut(w http.ResponseWriter, r *http.Request) {
+	token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !ok || token == "" {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+	if err := h.authService.RevokeToken(r.Context(), token); err != nil && !errors.Is(err, auth.ErrInvalidToken) {
+		log.Error().Err(err).Msg("Failed to revoke token on sign-out")
+		common.RespondError(w, http.StatusInternalServerError, "Could not sign you out")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // @Summary Link OAuth account
@@ -159,6 +189,37 @@ func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Sign a user out of all sessions
+// @Description Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential.
+// @Tags users
+// @Produce json
+// @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 204
+// @Failure 404 {object} common.ErrorResponse
+// @ID postUsersIDSignOutAll
+// @Router /api/v1/users/sign-out-all/{id} [post]
+func (h *Handler) signOutAllSessions(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := h.userService.InvalidateSessions(r.Context(), id); err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			common.RespondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		log.Error().Err(err).Str("user_id", id).Msg("Failed to invalidate sessions")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to sign out sessions")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // @Summary Update user password
 // @Description Update current user's password
 // @Tags users
@@ -187,6 +248,9 @@ func (h *Handler) updatePassword(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser, err := h.userService.UpdatePassword(r.Context(), usr.ID, input.NewPassword)
 	if err != nil {
+		if respondUserError(w, err) {
+			return
+		}
 		log.Error().Err(err).Str("user_id", usr.ID).Msg("Failed to update password")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to update password")
 		return

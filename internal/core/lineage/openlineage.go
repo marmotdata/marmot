@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -156,11 +157,7 @@ func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, job
 			return nil
 		}
 
-		dagMRN := fmt.Sprintf("mrn://%s/%s/%s.%s",
-			strings.ToLower(AssetTypeDAG),
-			strings.ToLower(provider),
-			parentNamespace,
-			parentJobName)
+		dagMRN := openLineageMRN(AssetTypeDAG, provider, parentNamespace, parentJobName)
 
 		err := s.ensureDAGAssetExists(ctx, dagMRN, parentJobName, parentNamespace, provider, createdBy)
 		if err != nil {
@@ -246,11 +243,7 @@ func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent
 	}
 
 	projectJobName := extractSimpleJobName(parentJobName)
-	projectMRN := fmt.Sprintf("mrn://%s/%s/%s.%s",
-		strings.ToLower(AssetTypeProject),
-		strings.ToLower(provider),
-		parentNamespace,
-		projectJobName)
+	projectMRN := openLineageMRN(AssetTypeProject, provider, parentNamespace, projectJobName)
 
 	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS", ""); err != nil{
 		log.Warn().Err(err).
@@ -267,11 +260,7 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 	jobName := extractSimpleJobName(event.Job.Name)
 	assetType := inferJobType(event, provider)
 
-	mrn := fmt.Sprintf("mrn://%s/%s/%s.%s",
-		strings.ToLower(assetType),
-		strings.ToLower(provider),
-		event.Job.Namespace,
-		jobName)
+	jobMRN := openLineageMRN(assetType, provider, event.Job.Namespace, jobName)
 
 	desc := fmt.Sprintf("%s from %s namespace", assetType, event.Job.Namespace)
 	if event.Job.Facets != nil {
@@ -308,7 +297,7 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 
 	createInput := asset.CreateInput{
 		Name:          &jobName,
-		MRN:           &mrn,
+		MRN:           &jobMRN,
 		Type:          assetType,
 		Providers:     []string{provider},
 		Description:   &desc,
@@ -328,7 +317,7 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 	_, err := s.assetSvc.Create(ctx, createInput)
 	if err != nil {
 		if errors.Is(err, asset.ErrAlreadyExists) {
-			existingAsset, getErr := s.assetSvc.GetByMRN(ctx, mrn)
+			existingAsset, getErr := s.assetSvc.GetByMRN(ctx, jobMRN)
 			if getErr != nil {
 				return "", fmt.Errorf("failed to get existing asset: %w", getErr)
 			}
@@ -353,12 +342,12 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 				log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing job asset")
 			}
 
-			return mrn, nil
+			return jobMRN, nil
 		}
 		return "", fmt.Errorf("failed to create job asset: %w", err)
 	}
 
-	return mrn, nil
+	return jobMRN, nil
 }
 
 func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAssetMRN string, createdBy string) error {
@@ -414,11 +403,7 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 	name := dataset.Name
 	namespace := dataset.Namespace
 
-	mrn := fmt.Sprintf("mrn://%s/%s/%s.%s",
-		strings.ToLower(assetType),
-		strings.ToLower(provider),
-		namespace,
-		name)
+	datasetMRN := openLineageMRN(assetType, provider, namespace, name)
 
 	desc := fmt.Sprintf("%s from %s namespace (%s)", assetType, namespace, role)
 
@@ -440,7 +425,7 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 
 	runMetadata := datasetRunMetadata
 
-	existingAsset, err := s.assetSvc.GetByMRN(ctx, mrn)
+	existingAsset, err := s.assetSvc.GetByMRN(ctx, datasetMRN)
 	if err == nil {
 		updateInput := asset.UpdateInput{
 			Metadata: metadata,
@@ -463,12 +448,12 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 			log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing dataset asset")
 		}
 
-		return mrn, nil
+		return datasetMRN, nil
 	}
 
 	createInput := asset.CreateInput{
 		Name:        &name,
-		MRN:         &mrn,
+		MRN:         &datasetMRN,
 		Type:        assetType,
 		Providers:   []string{provider},
 		Description: &desc,
@@ -495,7 +480,7 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 		return "", fmt.Errorf("failed to create stub asset: %w", err)
 	}
 
-	return mrn, nil
+	return datasetMRN, nil
 }
 
 func (s *service) storeRunHistory(ctx context.Context, event *RunEvent, jobAssetID string) error {
@@ -659,6 +644,16 @@ func extractDatasetMetadata(metadata map[string]interface{}, facets, inputFacets
 	}
 
 	return schema
+}
+
+// openLineageMRN builds the MRN for an asset an OpenLineage event describes.
+// A namespace is whatever the producer chose to send, commonly a connection
+// URI or a scheduler name, so it goes through mrn.New rather than into the
+// string directly: mrn.New is what the rest of Marmot uses to turn a type,
+// a provider and a name into an identity, and it is the only thing that
+// guarantees no space or stray slash reaches the MRN.
+func openLineageMRN(assetType, provider, namespace, name string) string {
+	return mrn.New(assetType, provider, namespace+"."+name)
 }
 
 func inferJobType(event *RunEvent, provider string) string {

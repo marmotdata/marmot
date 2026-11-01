@@ -53,12 +53,12 @@ type RunSummary struct {
 }
 
 // Validate validates this run summary
-func (m *RunSummary) Validate(formats strfmt.Registry) error {
+func (m *RunSummary) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this run summary based on context it is used
-func (m *RunSummary) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *RunSummary) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

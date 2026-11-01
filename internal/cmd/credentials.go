@@ -69,24 +69,34 @@ func saveCredentials(store *CredentialStore) error {
 	return os.WriteFile(p, data, 0o600)
 }
 
-// getCachedToken returns the cached access token for a context if it exists
-// and is not expired (with a 30-second safety margin).
+// getCachedToken returns the access token for a context if it has not
+// expired, with a 30-second safety margin.
 func getCachedToken(contextName string) (string, bool) {
-	store, err := loadCredentials()
-	if err != nil {
-		return "", false
-	}
-
-	entry, ok := store.Tokens[contextName]
+	entry, ok := getCachedTokenEntry(contextName)
 	if !ok {
 		return "", false
 	}
-
-	if time.Now().Add(30 * time.Second).After(entry.ExpiresAt) {
-		return "", false
-	}
-
 	return entry.AccessToken, true
+}
+
+func getCachedTokenEntry(contextName string) (*TokenEntry, bool) {
+	store, err := loadCredentials()
+	if err != nil {
+		return nil, false
+	}
+	entry, ok := store.Tokens[contextName]
+	if !ok || time.Now().Add(30*time.Second).After(entry.ExpiresAt) {
+		return nil, false
+	}
+	return entry, true
+}
+
+func newTokenEntry(token, tokenType string, expiresIn int) *TokenEntry {
+	return &TokenEntry{
+		AccessToken: token,
+		TokenType:   tokenType,
+		ExpiresAt:   time.Now().Add(time.Duration(expiresIn) * time.Second),
+	}
 }
 
 // setCachedToken stores a token for the given context.
@@ -96,11 +106,7 @@ func setCachedToken(contextName, token, tokenType string, expiresIn int) error {
 		return err
 	}
 
-	store.Tokens[contextName] = &TokenEntry{
-		AccessToken: token,
-		TokenType:   tokenType,
-		ExpiresAt:   time.Now().Add(time.Duration(expiresIn) * time.Second),
-	}
+	store.Tokens[contextName] = newTokenEntry(token, tokenType, expiresIn)
 
 	return saveCredentials(store)
 }

@@ -17,14 +17,19 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "lambda",
-		Name:        "AWS Lambda",
-		Description: "Discover Lambda functions from AWS accounts",
-		Icon:        "lambda",
-		Category:    "compute",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "lambda",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Lambda",
+		Description:   "Discover Lambda functions from AWS accounts",
+		Icon:          "lambda",
+		Category:      "compute",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(LambdaFields{}, "AWS Lambda",
+				"Lambda-specific metadata fields"),
+		},
 	}
 }
 
@@ -32,6 +37,7 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 }
 
 // Example configuration for the plugin
@@ -56,6 +62,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

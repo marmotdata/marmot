@@ -16,6 +16,11 @@ import (
 // @Produce json
 // @Param q query string true "Search query"
 // @Param types query []string false "Filter by result types (asset, glossary, team, user)"
+// @Param asset_types query string false "Comma-separated asset types to filter assets by"
+// @Param providers query string false "Comma-separated providers to filter assets by"
+// @Param tags query string false "Comma-separated tags to filter by"
+// @Param owner query string false "Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+// @Param sort query string false "Result order" Enums(relevance, popular, updated, name) default(relevance)
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
 // @Security ApiKeyAuth
@@ -84,12 +89,29 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var owners []string
+	for _, param := range append(queryValues["owner"], queryValues["owners"]...) {
+		for _, o := range strings.Split(param, ",") {
+			if o = strings.TrimSpace(o); o != "" {
+				owners = append(owners, o)
+			}
+		}
+	}
+
+	sort, ok := search.ParseSort(strings.TrimSpace(queryValues.Get("sort")))
+	if !ok {
+		common.RespondError(w, http.StatusBadRequest, "sort must be one of relevance, popular, updated or name")
+		return
+	}
+
 	filter := search.Filter{
 		Query:      query,
 		Types:      types,
 		AssetTypes: assetTypes,
 		Providers:  providers,
 		Tags:       tags,
+		Owners:     owners,
+		Sort:       sort,
 		Limit:      limit,
 		Offset:     offset,
 	}
@@ -101,13 +123,13 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if query != "" && response.Total > 0 {
-		recorder := h.metricsService.GetRecorder()
+	// Searches that found nothing are recorded too, apart from the rest, for the zero-result list in Insights
+	if query != "" {
 		queryType := "full_text"
-		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
+		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 || len(filter.Owners) > 0 {
 			queryType = "filtered"
 		}
-		recorder.RecordSearchQuery(r.Context(), queryType, query)
+		h.metricsService.RecordSearch(queryType, query, int64(response.Total))
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

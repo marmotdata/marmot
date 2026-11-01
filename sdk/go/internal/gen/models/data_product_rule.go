@@ -47,6 +47,9 @@ type DataProductRule struct {
 	// pattern value
 	PatternValue string `json:"pattern_value,omitempty"`
 
+	// Position is where the rule sits in the product's hand-set order, starting at 0.
+	Position int64 `json:"position,omitempty"`
+
 	// priority
 	Priority int64 `json:"priority,omitempty"`
 

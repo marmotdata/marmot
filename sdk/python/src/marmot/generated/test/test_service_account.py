@@ -34,26 +34,44 @@ class TestServiceAccount(unittest.TestCase):
         if include_optional:
             return ServiceAccount(
                 active = True,
+                api_key_count = 56,
+                calls_last_7_days = 56,
                 created_at = '',
                 created_by = '',
+                created_by_name = '',
                 description = '',
                 id = '',
+                last_used_at = '',
                 name = '',
                 roles = [
                     marmot.generated.models.role.Role(
+                        created_at = '',
+                        deleted_at = '',
                         description = '',
                         id = '',
+                        is_system = True,
                         name = '',
+                        permission_keys = [
+                            ''
+                            ],
                         permissions = [
-                            marmot.generated.models.permission.Permission(
+                            marmot.generated.models.role_permission.RolePermission(
                                 action = '',
                                 description = '',
                                 id = '',
                                 name = '',
                                 resource_type = '', )
-                            ], )
+                            ],
+                        updated_at = '',
+                        user_count = 56, )
                     ],
-                updated_at = ''
+                updated_at = '',
+                used_by = [
+                    marmot.generated.models.service_account_agent_ref.ServiceAccountAgentRef(
+                        id = '',
+                        mrn = '',
+                        name = '', )
+                    ]
             )
         else:
             return ServiceAccount(

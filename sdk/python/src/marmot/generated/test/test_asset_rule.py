@@ -35,6 +35,7 @@ class TestAssetRule(unittest.TestCase):
             return AssetRule(
                 created_at = '',
                 created_by = '',
+                created_by_name = '',
                 description = '',
                 id = '',
                 is_enabled = True,
@@ -57,7 +58,9 @@ class TestAssetRule(unittest.TestCase):
                 term_ids = [
                     ''
                     ],
-                updated_at = ''
+                updated_at = '',
+                updated_by = '',
+                updated_by_name = ''
             )
         else:
             return AssetRule(

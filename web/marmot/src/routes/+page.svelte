@@ -1,40 +1,46 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
+	import '@marmotdata/elements/kpi-tile.js';
+	import '@marmotdata/elements/activity-feed.js';
+	import '@marmotdata/elements/run-strip.js';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Icon from '@iconify/svelte';
-	import GettingStarted from '$components/ui/GettingStarted.svelte';
-	import AssetBlade from '$components/asset/AssetBlade.svelte';
-	import IconComponent from '$components/ui/Icon.svelte';
-	import type { Asset } from '$lib/assets/types';
+	import { setCrumbs } from '$lib/mm';
+	import ConnectDrawer, { type ConnectTab } from '$components/home/ConnectDrawer.svelte';
+	import SetupChecklist, { type SetupStep } from '$components/home/SetupChecklist.svelte';
+	import QueryBlade from '$components/home/QueryBlade.svelte';
+	import { fetchApi } from '$lib/api';
+	import { auth } from '$lib/stores/auth';
+	import { userProfile } from '$lib/stores/user';
+	import { setupHidden, setupRemoved, skippedSteps } from '$lib/stores/setup.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
+	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
+	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
+	import type { QueryHistory, QueryRecord, QueryStats } from '$lib/dataquery/types';
+	import {
+		listAgentSummaries,
+		listRecent,
+		listStaleAssets,
+		type AgentSummary,
+		type RecentItem,
+		type StaleAsset
+	} from '$lib/home/api';
+	import { listSavedQueries, savedQueryHref, type SavedQuery } from '$lib/savedqueries/api';
 
-	interface QuickStat {
-		label: string;
-		value: number;
-		icon: string;
-		href: string;
+	interface AssetSummary {
+		types: Record<string, { count?: number }>;
+		providers: Record<string, number>;
 	}
 
-	interface QuickAction {
-		title: string;
-		description: string;
-		icon: string;
-		href: string;
-		color: string;
-	}
-
-	interface RecentAsset {
+	interface MyAsset {
 		id: string;
 		name: string;
 		type: string;
-		provider?: string;
 		providers?: string[];
-		updated_at?: string;
 		mrn?: string;
 	}
 
-	interface PopularAsset {
+	interface ViewedAsset {
 		asset_id: string;
 		asset_name: string;
 		asset_type: string;
@@ -42,640 +48,765 @@
 		count: number;
 	}
 
-	interface AssetTypeSummary {
-		count?: number;
-		service?: string;
-	}
+	type RunState = 'pending' | 'claimed' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 
-	interface AssetSummaryResponse {
-		types: { [key: string]: AssetTypeSummary };
-		providers: { [key: string]: number };
-		tags: { [key: string]: number };
-	}
-
-	interface UserProfile {
+	interface PipelineRun {
 		id: string;
-		username: string;
+		schedule_id?: string;
+		status: RunState;
+		started_at?: string;
+		finished_at?: string;
+		created_at: string;
+	}
+
+	interface Pipeline {
+		id: string;
 		name: string;
-		email: string;
-		display_name?: string;
+		plugin_id: string;
+		last_run_at?: string;
+		last_run_status?: string;
 	}
 
-	let summary = $state<AssetSummaryResponse>({
-		types: {},
-		providers: {},
-		tags: {}
-	});
-	let popularAssets = $state<PopularAsset[]>([]);
-	let userAssets = $state<RecentAsset[]>([]);
-	let isLoading = $state(true);
-	let hasLoadedOnce = $state(false);
-	let userProfile = $state<UserProfile | null>(null);
-	let selectedAsset = $state<RecentAsset | PopularAsset | null>(null);
+	setCrumbs([{ label: m.nav_home() }]);
 
-	let totalAssets = $derived(
-		Object.values(summary.types).reduce((sum, type) => sum + (type.count || 0), 0)
+	const canQuery = auth.hasPermission('assets', 'query');
+	const canViewAccess = auth.hasPermission('access', 'view');
+	const canManageIngestion = auth.hasPermission('ingestion', 'manage');
+	const isAdmin = auth.hasRole('admin');
+
+	let loading = $state(true);
+	let unreachable = $state(false);
+	let summary = $state<AssetSummary>({ types: {}, providers: {} });
+	let myAssets = $state<MyAsset[]>([]);
+	let viewed = $state<ViewedAsset[]>([]);
+	let glossaryTotal = $state(0);
+	let productsTotal = $state(0);
+	let usersTotal = $state(1);
+	let history = $state<QueryHistory | null>(null);
+	let agentQueries = $state(0);
+	let failedRuns = $state(0);
+	let day = $state<QueryStats | null>(null);
+	let yesterday = $state<QueryStats | null>(null);
+	let week = $state<QueryStats | null>(null);
+	let pipelines = $state<Pipeline[]>([]);
+	let runs = $state<PipelineRun[]>([]);
+	let recents = $state<RecentItem[]>([]);
+	let savedQueries = $state<SavedQuery[]>([]);
+	let agentSummaries = $state<AgentSummary[] | null>(null);
+	let stale = $state<StaleAsset[]>([]);
+	let staleTotal = $state(0);
+
+	let connect = $state<ConnectTab | null>(null);
+	let detailId = $state<string | null>(null);
+	let confirmRemove = $state(false);
+
+	let recent = $derived<QueryRecord[]>(history?.queries ?? []);
+	let queriesTotal = $derived(history?.total ?? 0);
+	// Agent assets are cataloged from agents themselves, so they do not count as a connected source
+	let sourceAssets = $derived(
+		Object.entries(summary.types).reduce(
+			(n, [type, t]) => (type === 'Agent' ? n : n + (t.count ?? 0)),
+			0
+		)
 	);
+	let agentCount = $derived(summary.types['Agent']?.count ?? 0);
 
-	let quickStats = $derived<QuickStat[]>([
-		{
-			label: 'Total Assets',
-			value: totalAssets,
-			icon: 'material-symbols:database',
-			href: '/discover'
-		},
-		{
-			label: 'Asset Types',
-			value: Object.keys(summary.types).length,
-			icon: 'material-symbols:category',
-			href: '/discover'
-		},
-		{
-			label: 'Source Types',
-			value: Object.keys(summary.providers).length,
-			icon: 'material-symbols:cloud',
-			href: '/discover'
+	let done = $derived<Record<SetupStep, boolean>>({
+		source: sourceAssets > 0,
+		// An agent counts once one is catalogued or any query has come through MCP or the CLI, which is how coding agents reach Marmot
+		agent: agentCount > 0 || agentQueries > 0,
+		query: queriesTotal > 0,
+		context: glossaryTotal + productsTotal > 0,
+		team: usersTotal > 1
+	});
+	let setupComplete = $derived(
+		(Object.keys(done) as SetupStep[]).every((k) => done[k] || skippedSteps.steps.includes(k))
+	);
+	// Setup and Pipelines show only before the catalog is in use; the guide goes when hidden, removed or settled
+	let onboarding = $derived(
+		!loading && !unreachable && !setupHidden.value && !setupRemoved.value && !setupComplete
+	);
+	let blank = $derived(sourceAssets === 0);
+
+	// Agents are the service accounts that query; people are left to the activity feed. Each row opens the audit log filtered to that agent for those who may read it.
+	let agents = $derived(
+		agentSummaries
+			? agentSummaries.map((a) => ({
+					key: a.principal_id,
+					name: a.name || subjectParts(a.audit_subject).name,
+					total: a.queries_7d,
+					href: canViewAccess
+						? `${resolve('/query-audit')}?${new URLSearchParams({ caller: `${a.principal_type}:${a.principal_id}`, range: '7d' })}`
+						: ''
+				}))
+			: (week?.top_callers ?? [])
+					.filter((c) => c.principal_type === 'service_account')
+					.slice(0, 4)
+					.map((c) => ({
+						key: c.key,
+						name: subjectParts(c.label).name,
+						total: c.total,
+						href: ''
+					}))
+	);
+	let activeAgentsToday = $derived(
+		(day?.top_callers ?? []).filter((c) => c.principal_type === 'service_account').length
+	);
+	let spark = $derived((day?.series ?? []).map((p) => p.succeeded + p.failed + p.denied));
+	let deniedToday = $derived(day?.totals?.denied ?? 0);
+
+	interface JumpItem {
+		key: string;
+		name: string;
+		caption: string;
+		href: string;
+		provider?: string;
+		icon?: string;
+	}
+
+	const KIND_ICONS: Record<string, string> = {
+		glossary_term: 'menu-book',
+		data_product: 'package-2',
+		saved_query: 'terminal'
+	};
+
+	function kindLabel(r: RecentItem): string {
+		if (r.kind === 'glossary_term') return m.home_jump_kind_term();
+		if (r.kind === 'data_product') return m.home_jump_kind_product();
+		if (r.kind === 'saved_query') return m.home_jump_kind_saved();
+		return r.type || m.home_jump_kind_asset();
+	}
+
+	// Relative times sit mid-caption, so "Just now" drops its capital there
+	function ago(date: string): string {
+		const text = formatRelativeTime(date);
+		return text === m.common_just_now() ? text.toLocaleLowerCase() : text;
+	}
+
+	function recentHref(r: RecentItem): string {
+		if (r.kind === 'glossary_term') return resolve('/glossary/[[id]]', { id: r.id });
+		if (r.kind === 'data_product') return resolve('/products/[id]', { id: r.id });
+		const route = r.mrn ? assetRouteParams(r.mrn) : null;
+		return route ? resolve('/discover/[type]/[service]/[name]', route) : '';
+	}
+
+	// What the viewer opened or ran last, newest first; saved queries count from when they were last run, viewed or saved
+	let recentItems = $derived.by<JumpItem[]>(() => {
+		const viewedAt = new Map(
+			recents.filter((r) => r.kind === 'saved_query').map((r) => [r.id, r.viewed_at])
+		);
+		const dated: { at: number; item: JumpItem }[] = recents
+			.filter((r) => r.kind !== 'saved_query')
+			.map((r) => ({
+				at: new Date(r.viewed_at).getTime(),
+				item: {
+					key: `${r.kind}:${r.id}`,
+					name: r.name,
+					caption: m.home_jump_viewed({
+						kind: kindLabel(r),
+						when: ago(r.viewed_at)
+					}),
+					href: recentHref(r),
+					provider: r.kind === 'asset' ? r.provider?.toLowerCase() || undefined : undefined,
+					icon: KIND_ICONS[r.kind] ?? 'table'
+				}
+			}));
+		for (const q of savedQueries) {
+			const viewed = viewedAt.get(q.id);
+			const ran = q.last_run_at ? new Date(q.last_run_at).getTime() : 0;
+			const seen = viewed ? new Date(viewed).getTime() : 0;
+			const at = Math.max(ran, seen, new Date(q.updated_at).getTime());
+			let caption = m.home_jump_saved({ when: ago(q.updated_at) });
+			if (ran && ran >= seen) caption = m.home_jump_ran({ when: ago(q.last_run_at!) });
+			else if (seen)
+				caption = m.home_jump_viewed({ kind: m.home_jump_kind_saved(), when: ago(viewed!) });
+			dated.push({
+				at,
+				item: {
+					key: `saved_query:${q.id}`,
+					name: q.name,
+					caption,
+					href: savedQueryHref(resolve('/query'), q),
+					icon: KIND_ICONS.saved_query
+				}
+			});
 		}
+		return dated
+			.sort((a, b) => b.at - a.at)
+			.slice(0, 5)
+			.map((d) => d.item);
+	});
+
+	// Before the viewer has opened anything, owned assets then what people open most, so they still have somewhere to go back to
+	let jumpItems = $derived.by<JumpItem[]>(() => {
+		if (recentItems.length > 0) return recentItems;
+		const owned = myAssets.map((a) => ({
+			key: a.id,
+			name: a.name,
+			caption: a.type,
+			provider: a.providers?.[0]?.toLowerCase() || undefined,
+			href: resolve('/discover/[type]/[service]/[name]', myAssetParams(a))
+		}));
+		const popular = viewed
+			.filter((v) => !myAssets.some((a) => a.id === v.asset_id))
+			.map((v) => ({
+				key: v.asset_id,
+				name: v.asset_name,
+				caption: v.asset_type,
+				provider: v.asset_provider?.toLowerCase() || undefined,
+				href: resolve('/discover/[type]/[service]/[name]', {
+					type: v.asset_type,
+					service: v.asset_provider,
+					name: v.asset_name
+				})
+			}));
+		return [...owned, ...popular].slice(0, 5);
+	});
+
+	interface Attention {
+		key: string;
+		label: string;
+		count?: number;
+		secondary?: string;
+		href: string;
+		icon: string;
+		provider?: string;
+	}
+
+	const STALE_SHOWN = 3;
+
+	function staleDetail(a: StaleAsset): string {
+		if (a.last_refreshed_at && a.pipeline_name)
+			return m.home_attention_stale_detail({
+				when: formatRelativeTime(a.last_refreshed_at),
+				pipeline: a.pipeline_name
+			});
+		if (a.pipeline_name) return m.home_attention_stale_pipeline({ pipeline: a.pipeline_name });
+		return '';
+	}
+
+	// Stale assets are named one by one so each links to its page; any beyond the first few are one row that opens the full list in Insights
+	let staleAttention = $derived<Attention[]>([
+		...stale.slice(0, STALE_SHOWN).map((a) => {
+			const route = assetRouteParams(a.mrn);
+			return {
+				key: `stale:${a.id}`,
+				label: m.home_attention_stale({ name: a.name }),
+				secondary: staleDetail(a),
+				href: route ? resolve('/discover/[type]/[service]/[name]', route) : '',
+				icon: 'schedule',
+				provider: a.providers?.[0]?.toLowerCase() || undefined
+			};
+		}),
+		...(staleTotal > STALE_SHOWN
+			? [
+					{
+						key: 'stale:more',
+						label: m.home_attention_stale_more(),
+						count: staleTotal - STALE_SHOWN,
+						href: `${resolve('/insights')}?view=catalog`,
+						icon: 'schedule'
+					}
+				]
+			: [])
 	]);
-
-	const quickActions: QuickAction[] = [
-		{
-			title: 'Explore Assets',
-			description: 'Browse and discover your data assets',
-			icon: 'material-symbols:database',
-			href: '/discover',
-			color: 'terracotta'
-		},
-		{
-			title: 'Check Metrics',
-			description: 'Platform usage and insights',
-			icon: 'material-symbols:area-chart-rounded',
-			href: '/metrics',
-			color: 'green'
-		},
-		{
-			title: 'Browse Glossary',
-			description: 'Business terminology and definitions',
-			icon: 'material-symbols:book',
-			href: '/glossary',
-			color: 'purple'
-		},
-		{
-			title: 'Data Products',
-			description: 'Browse and manage data products',
-			icon: 'material-symbols:inventory-2',
-			href: '/products',
-			color: 'blue'
-		}
-	];
-
-	let topAssetTypes = $derived(
-		Object.entries(summary.types)
-			.map(([type, data]) => ({
-				type,
-				count: data.count || 0,
-				service: data.service
-			}))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 5)
+	let countedAttention = $derived<Attention[]>(
+		[
+			...(canQuery
+				? [
+						{
+							key: 'denied',
+							label: m.home_attention_denied(),
+							count: deniedToday,
+							href: canViewAccess
+								? `${resolve('/query-audit')}?outcome=denied&range=24h`
+								: resolve('/query'),
+							icon: 'block'
+						}
+					]
+				: []),
+			{
+				key: 'runs',
+				label: m.home_attention_failed_runs(),
+				count: failedRuns,
+				href: resolve('/runs'),
+				icon: 'sync-problem'
+			}
+		].filter((a) => a.count > 0)
 	);
 
-	let topProviders = $derived(
-		Object.entries(summary.providers)
-			.map(([provider, count]) => ({ provider, count }))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 5)
+	let attention = $derived<Attention[]>([...countedAttention, ...staleAttention]);
+
+	// Each pipeline with its recent runs, oldest first, for the run strip
+	let pipelineRows = $derived(
+		pipelines.map((p) => ({
+			...p,
+			strip: runs
+				.filter((r) => r.schedule_id === p.id)
+				.slice(0, 20)
+				.reverse()
+				.map((r) => ({
+					id: r.id,
+					status: stripStatus(r.status),
+					startedAt: r.started_at ?? r.created_at,
+					durationMs:
+						r.started_at && r.finished_at
+							? new Date(r.finished_at).getTime() - new Date(r.started_at).getTime()
+							: undefined
+				}))
+		}))
 	);
 
-	let topTags = $derived(
-		Object.entries(summary.tags)
-			.map(([tag, count]) => ({ tag, count }))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 12)
-	);
-
-	let hasAssets = $derived(
-		hasLoadedOnce &&
-			!isLoading &&
-			(Object.keys(summary.types).length > 0 ||
-				Object.keys(summary.providers).length > 0 ||
-				Object.keys(summary.tags).length > 0)
-	);
-
-	let showGettingStarted = $derived(
-		hasLoadedOnce &&
-			!isLoading &&
-			Object.keys(summary.types).length === 0 &&
-			Object.keys(summary.providers).length === 0 &&
-			Object.keys(summary.tags).length === 0
-	);
-
-	function capitalizeFirstLetter(str: string): string {
-		return str.charAt(0).toUpperCase() + str.slice(1);
-	}
-
-	function getIconType(asset: RecentAsset): string {
-		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
-			return asset.providers[0];
-		}
-		if (asset.provider) {
-			return asset.provider;
-		}
-		return asset.type;
-	}
-
-	let displayName = $derived.by(() => {
-		if (userProfile?.name) {
-			const firstName = userProfile.name.split(' ')[0];
-			return capitalizeFirstLetter(firstName);
-		}
-		return capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || 'there');
+	let firstName = $derived.by(() => {
+		const profile = $userProfile;
+		if (!profile) return null;
+		const name = profile.name?.split(' ')[0] || profile.display_name || profile.username;
+		return name ? name.charAt(0).toUpperCase() + name.slice(1) : null;
 	});
 
-	async function fetchData() {
-		try {
-			const [summaryRes, userAssetsRes] = await Promise.all([
-				fetchApi('/assets/summary'),
-				fetchApi('/assets/my-assets?limit=6')
-			]);
-
-			if (summaryRes.ok) {
-				summary = await summaryRes.json();
-			}
-			if (userAssetsRes.ok) {
-				const userData = await userAssetsRes.json();
-				userAssets = userData.assets || [];
-			}
-
-			try {
-				const now = new Date();
-				const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-				const popularRes = await fetchApi(
-					`/metrics/top-assets?start=${thirtyDaysAgo.toISOString()}&end=${now.toISOString()}&limit=6`
-				);
-				if (popularRes.ok) {
-					const data = await popularRes.json();
-					popularAssets = data.assets || [];
-				}
-			} catch {
-				// Metrics are optional
-			}
-
-			try {
-				const profileRes = await fetchApi('/users/me');
-				if (profileRes.ok) {
-					userProfile = await profileRes.json();
-				}
-			} catch {
-				// Profile fetch is optional
-			}
-		} catch (err) {
-			console.error('Error fetching data:', err);
-		} finally {
-			isLoading = false;
-			hasLoadedOnce = true;
+	let greeting = $derived.by(() => {
+		const hour = new Date().getHours();
+		const part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+		if (firstName) {
+			if (part === 'morning') return m.home_greeting_morning({ name: firstName });
+			if (part === 'afternoon') return m.home_greeting_afternoon({ name: firstName });
+			return m.home_greeting_evening({ name: firstName });
 		}
+		if (part === 'morning') return m.home_greeting_morning_anonymous();
+		if (part === 'afternoon') return m.home_greeting_afternoon_anonymous();
+		return m.home_greeting_evening_anonymous();
+	});
+
+	function stripStatus(s: RunState): 'succeeded' | 'failed' | 'running' | 'queued' | 'skipped' {
+		if (s === 'succeeded' || s === 'failed' || s === 'running') return s;
+		if (s === 'cancelled') return 'skipped';
+		return 'queued';
 	}
 
-	function handleAssetClick(asset: RecentAsset | PopularAsset) {
-		selectedAsset = asset;
+	function myAssetParams(a: MyAsset) {
+		const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
+		if (parts.length >= 3)
+			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
+		return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
 	}
 
-	function getAssetPath(asset: RecentAsset | PopularAsset): string | null {
-		// Extract type, service, and full name from MRN
-		let mrn = '';
-		if ('mrn' in asset && asset.mrn) {
-			mrn = asset.mrn;
-		}
-
-		if (!mrn) {
-			// Fallback for assets without MRN
-			const type = 'asset_type' in asset ? asset.asset_type : asset.type;
-			const name = 'asset_name' in asset ? asset.asset_name : asset.name;
-			let provider = '';
-			if ('asset_provider' in asset) {
-				provider = asset.asset_provider;
-			} else if ('provider' in asset && asset.provider) {
-				provider = asset.provider;
-			} else if ('providers' in asset && asset.providers && asset.providers.length > 0) {
-				provider = asset.providers[0];
-			}
-			return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(provider)}/${encodeURIComponent(name)}`;
-		}
-
-		// Parse MRN: mrn://type/service/full.qualified.name
-		const mrnParts = mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return null;
-		const type = mrnParts[0];
-		const service = mrnParts[1];
-		const fullName = mrnParts.slice(2).join('/');
-		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
-	}
-
-	function navigateToAsset(asset: RecentAsset | PopularAsset) {
-		const path = getAssetPath(asset);
-		if (path) goto(resolve(path));
-	}
-
-	function navigateToType(type: string) {
-		goto(resolve(`/discover?types=${encodeURIComponent(type)}`));
-	}
-
-	function navigateToProvider(provider: string) {
-		goto(resolve(`/discover?providers=${encodeURIComponent(provider)}`));
-	}
-
-	function navigateToTag(tag: string) {
-		goto(resolve(`/discover?tags=${encodeURIComponent(tag)}`));
-	}
-
-	function getColorClasses(color: string) {
-		const colors: Record<string, { bg: string; text: string }> = {
-			terracotta: {
-				bg: 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20',
-				text: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-500'
-			},
-			blue: {
-				bg: 'bg-blue-100 dark:bg-blue-900/20',
-				text: 'text-blue-700 dark:text-blue-500'
-			},
-			green: {
-				bg: 'bg-green-100 dark:bg-green-900/20',
-				text: 'text-green-700 dark:text-green-500'
-			},
-			purple: {
-				bg: 'bg-purple-100 dark:bg-purple-900/20',
-				text: 'text-purple-700 dark:text-purple-500'
-			}
+	// The first table a query read names it in the feed, falling back to its source
+	function activityTarget(q: QueryRecord): { name: string; href: string } {
+		const mrn = q.referenced_mrns?.[0];
+		if (!mrn) return { name: q.source_name, href: '' };
+		const context = q.context?.find((c) => c.mrn === mrn);
+		const route = context?.asset_id ? assetRouteParams(mrn) : null;
+		return {
+			name: context?.name || mrn.split('/').pop() || mrn,
+			href: route ? resolve('/discover/[type]/[service]/[name]', route) : ''
 		};
-		return colors[color] || colors.terracotta;
 	}
 
-	onMount(fetchData);
+	async function json<T>(path: string): Promise<T | null> {
+		try {
+			const res = await fetchApi(path);
+			return res.ok ? ((await res.json()) as T) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	async function load() {
+		const now = new Date();
+		const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
+		const dayAgo = new Date(now.getTime() - 86_400_000);
+		const twoDaysAgo = new Date(now.getTime() - 2 * 86_400_000);
+		const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+		const [
+			sum,
+			mine,
+			top,
+			glossary,
+			products,
+			users,
+			hist,
+			stats,
+			prevStats,
+			weekStats,
+			failed,
+			schedules,
+			latestRuns,
+			agentHistory,
+			recentViews,
+			saved,
+			agentRows,
+			staleAssets
+		] = await Promise.all([
+			json<AssetSummary>('/assets/summary'),
+			json<{ assets?: MyAsset[] }>('/assets/my-assets?limit=5'),
+			json<ViewedAsset[] | { assets?: ViewedAsset[] }>(
+				`/metrics/top-assets?start=${monthAgo.toISOString()}&end=${now.toISOString()}&limit=5`
+			),
+			json<{ total: number }>('/glossary/list?limit=1'),
+			json<{ total: number }>('/products/list?limit=1'),
+			json<{ total: number }>('/users?limit=1'),
+			canQuery ? listQueryHistory({ limit: 8 }).catch(() => null) : Promise.resolve(null),
+			canQuery ? getQueryStats(dayAgo).catch(() => null) : Promise.resolve(null),
+			canQuery ? getQueryStats(twoDaysAgo, dayAgo).catch(() => null) : Promise.resolve(null),
+			canQuery ? getQueryStats(weekAgo).catch(() => null) : Promise.resolve(null),
+			json<{ total: number }>('/ingestion/runs?status=failed&limit=1'),
+			json<{ schedules?: Pipeline[] }>('/ingestion/schedules?limit=5'),
+			json<{ runs?: PipelineRun[] }>('/ingestion/runs?limit=100'),
+			canQuery
+				? listQueryHistory({ client: 'mcp,cli', limit: 1 }).catch(() => null)
+				: Promise.resolve(null),
+			listRecent(10).catch(() => []),
+			canQuery ? listSavedQueries(20).catch(() => null) : Promise.resolve(null),
+			canQuery ? listAgentSummaries(4).catch(() => null) : Promise.resolve(null),
+			listStaleAssets(STALE_SHOWN).catch(() => null)
+		]);
+		// The asset summary backs every view, so without it the API is taken to be unreachable
+		unreachable = sum === null;
+		summary = { types: sum?.types ?? {}, providers: sum?.providers ?? {} };
+		myAssets = mine?.assets ?? [];
+		viewed = Array.isArray(top) ? top : (top?.assets ?? []);
+		glossaryTotal = glossary?.total ?? 0;
+		productsTotal = products?.total ?? 0;
+		usersTotal = users?.total ?? 1;
+		history = hist;
+		agentQueries = agentHistory?.total ?? 0;
+		day = stats;
+		yesterday = prevStats;
+		week = weekStats;
+		failedRuns = failed?.total ?? 0;
+		pipelines = schedules?.schedules ?? [];
+		runs = latestRuns?.runs ?? [];
+		recents = recentViews;
+		savedQueries = saved?.queries ?? [];
+		agentSummaries = agentRows;
+		stale = staleAssets?.assets ?? [];
+		staleTotal = staleAssets?.total ?? 0;
+		loading = false;
+	}
+
+	function retry() {
+		loading = true;
+		load();
+	}
+
+	onMount(() => {
+		userProfile.load();
+		load();
+		// Coming back to the tab, after connecting an agent or running a pipeline elsewhere, refreshes the page so finished steps tick off without a reload
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') load();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => document.removeEventListener('visibilitychange', onVisible);
+	});
 </script>
 
-<div class="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-	{#if !showGettingStarted}
-		<!-- Greeting -->
-		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				Hi {displayName} 👋
-			</h1>
-			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
-		</div>
+<svelte:head>
+	<title>{m.home_page_title()}</title>
+</svelte:head>
 
-		<!-- Quick Stats -->
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-			{#each quickStats as stat (stat.label)}
-				<a href={resolve(stat.href)} class="group glass-card-interactive rounded-xl p-6 block">
-					<div class="flex items-center justify-between mb-2">
-						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
-					</div>
-					{#if !isLoading}
-						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-							{stat.value.toLocaleString()}
-						</div>
-					{:else}
-						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
-					{/if}
-					<p
-						class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+{#snippet kpis()}
+	<mm-kpi-row label={m.home_kpi_last_day()}>
+		{#if canQuery}
+			<mm-kpi-tile
+				label={m.home_kpi_queries()}
+				value={day?.totals?.queries ?? 0}
+				{spark}
+				delta={day && yesterday ? day.totals.queries - yesterday.totals.queries : undefined}
+				context={day && yesterday ? m.home_kpi_on_yesterday() : m.home_kpi_last_day()}
+				error={day ? '' : m.home_kpi_error()}
+			></mm-kpi-tile>
+			<mm-kpi-tile label={m.home_kpi_agents()} value={activeAgentsToday}></mm-kpi-tile>
+			<mm-kpi-tile
+				label={m.home_kpi_refused()}
+				value={deniedToday}
+				delta={day && yesterday ? deniedToday - yesterday.totals.denied : undefined}
+				trend="bad"
+				context={day && yesterday ? m.home_kpi_on_yesterday() : ''}
+			></mm-kpi-tile>
+		{/if}
+		<mm-kpi-tile label={m.home_kpi_assets()} value={sourceAssets}></mm-kpi-tile>
+	</mm-kpi-row>
+{/snippet}
+
+{#snippet activity()}
+	{#if !canQuery}
+		<mm-panel heading={m.home_activity_heading()} icon="history" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_needs_query()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel
+			heading={m.home_activity_heading()}
+			icon="history"
+			link-href={recent.length > 0 ? resolve(canViewAccess ? '/query-audit' : '/query') : ''}
+			link-label={m.home_activity_link()}
+		>
+			<mm-activity-feed
+				error={history ? '' : m.home_activity_error()}
+				empty-heading={m.home_activity_empty_heading()}
+				empty-description={m.home_activity_empty()}
+				onmm-retry={retry}
+			>
+				{#each recent as q (q.id)}
+					{@const target = activityTarget(q)}
+					<mm-activity-item
+						interactive
+						selected={detailId === q.id}
+						actor={subjectParts(q.audit_subject).name}
+						actor-kind={q.principal_type === 'user' ? 'person' : 'agent'}
+						verb={m.home_activity_verb()}
+						target={target.name}
+						target-href={target.href}
+						time={q.started_at}
+						status={q.decision === 'denied' ? 'denied' : q.status === 'failed' ? 'failed' : ''}
+						onmm-activate={() => (detailId = q.id)}
+					></mm-activity-item>
+				{/each}
+			</mm-activity-feed>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet jumpBackIn()}
+	{#if jumpItems.length > 0}
+		<mm-panel heading={m.home_jump_heading()} icon="history">
+			<mm-list aria-label={m.home_jump_heading()}>
+				{#each jumpItems as a (a.key)}
+					<mm-list-item href={a.href || undefined} secondary={a.caption}>
+						{#if a.provider}
+							<mm-provider-logo slot="start" provider={a.provider} size="20" decorative
+							></mm-provider-logo>
+						{:else}
+							<mm-icon slot="start" name={a.icon ?? 'table'} aria-hidden="true"></mm-icon>
+						{/if}
+						{a.name}
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet needsAttention()}
+	{#if attention.length === 0}
+		<mm-panel heading={m.home_attention_heading()} icon="flag" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_attention_clear()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel heading={m.home_attention_heading()} icon="flag" count={attention.length}>
+			<mm-list>
+				{#each attention as a (a.key)}
+					<mm-list-item href={a.href || undefined} secondary={a.secondary || undefined}>
+						{#if a.provider}
+							<mm-provider-logo slot="start" provider={a.provider} size="20" decorative
+							></mm-provider-logo>
+						{:else}
+							<mm-icon slot="start" name={a.icon} aria-hidden="true"></mm-icon>
+						{/if}
+						{a.label}
+						{#if a.count !== undefined}
+							<mm-text slot="end" variant="dense" numeric>{formatNumber(a.count)}</mm-text>
+						{/if}
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
+
+{#snippet agentsPanel()}
+	{#if canQuery}
+		{#if agents.length === 0}
+			<mm-panel heading={m.home_agents_heading()} icon="smart-toy" empty>
+				<mm-empty-state
+					slot="empty"
+					compact
+					seed={11}
+					heading={m.home_agents_empty_heading()}
+					description={m.home_agents_empty()}
+				>
+					<mm-button slot="action" icon="smart-toy" onclick={() => (connect = 'agent')}
+						>{m.home_step_agent_action()}</mm-button
 					>
-						{stat.label}
-					</p>
-				</a>
-			{/each}
-		</div>
-
-		<!-- Quick Actions -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-			{#each quickActions as action (action.title)}
-				{@const colors = getColorClasses(action.color)}
-				<a href={resolve(action.href)} class="group glass-card-interactive rounded-xl p-5">
-					<div class="flex items-start gap-4">
-						<div
-							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
+				</mm-empty-state>
+			</mm-panel>
+		{:else}
+			<mm-panel
+				heading={m.home_agents_heading()}
+				icon="smart-toy"
+				link-href={resolve('/insights')}
+				link-label={m.home_agents_link()}
+			>
+				<mm-list>
+					{#each agents as a (a.key)}
+						<mm-list-item
+							href={a.href || undefined}
+							secondary={m.home_agents_queries({ count: formatNumber(a.total) })}
 						>
-							<Icon icon={action.icon} class="w-6 h-6 {colors.text}" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<h3
-								class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-							>
-								{action.title}
-							</h3>
-							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-								{action.description}
-							</p>
-						</div>
-					</div>
-				</a>
-			{/each}
-		</div>
+							<mm-avatar slot="start" kind="agent" name={a.name} decorative></mm-avatar>
+							{a.name}
+						</mm-list-item>
+					{/each}
+				</mm-list>
+			</mm-panel>
+		{/if}
+	{/if}
+{/snippet}
 
-		{#if hasAssets}
-			<!-- Two Column Layout -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-				<!-- Popular Assets -->
-				{#if popularAssets.length > 0}
-					<div>
-						<div class="flex items-center justify-between mb-4">
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Most Viewed</h2>
-							<a
-								href={resolve('/metrics')}
-								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
-							>
-								See all →
-							</a>
-						</div>
-						<div class="glass-card rounded-xl divide-y divide-gray-200 dark:divide-gray-700">
-							{#each popularAssets as asset (asset.asset_id)}
-								<button
-									onclick={() => navigateToAsset(asset)}
-									class="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
-								>
-									<div
-										class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"
-									>
-										<IconComponent name={asset.asset_provider} size="sm" showLabel={false} />
-									</div>
-									<div class="flex-1 min-w-0 text-left">
-										<h3
-											class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-										>
-											{asset.asset_name}
-										</h3>
-										<p class="text-xs text-gray-600 dark:text-gray-400 capitalize">
-											{asset.asset_type}
-										</p>
-									</div>
-									<div class="flex items-center gap-2 flex-shrink-0">
-										<Icon icon="material-symbols:visibility" class="w-4 h-4 text-gray-400" />
-										<span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-											{asset.count.toLocaleString()}
-										</span>
-									</div>
-								</button>
-							{/each}
-						</div>
-					</div>
-				{:else}
-					<!-- User Assets fallback -->
-					<div>
-						<div class="flex items-center justify-between mb-4">
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Your Assets</h2>
-							<a
-								href={resolve('/discover')}
-								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
-							>
-								View all →
-							</a>
-						</div>
-						<div class="glass-card rounded-xl">
-							{#if userAssets.length > 0}
-								<div class="divide-y divide-gray-200 dark:divide-gray-700">
-									{#each userAssets as asset (asset.id)}
-										{@const assetPath = getAssetPath(asset)}
-										<a
-											href={assetPath ? resolve(assetPath) : '#'}
-											onclick={(e) => {
-												e.preventDefault();
-												handleAssetClick(asset);
-											}}
-											class="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
-										>
-											<div class="flex-shrink-0">
-												<IconComponent name={getIconType(asset)} showLabel={false} size="sm" />
-											</div>
-											<div class="flex-1 min-w-0 text-left">
-												<h3
-													class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-												>
-													{asset.name}
-												</h3>
-												<p class="text-xs text-gray-600 dark:text-gray-400 truncate font-mono">
-													{asset.mrn}
-												</p>
-											</div>
-											<span
-												class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-											>
-												{asset.type}
-											</span>
-										</a>
-									{/each}
-								</div>
-							{:else}
-								<div class="flex flex-col items-center justify-center py-12 px-4">
-									<div
-										class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4"
-									>
-										<Icon
-											icon="material-symbols:inbox"
-											class="w-8 h-8 text-gray-400 dark:text-gray-500"
-										/>
-									</div>
-									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-										No assets currently assigned to you
-									</p>
-									<p class="text-xs text-gray-600 dark:text-gray-400">
-										Check back later or browse all assets
-									</p>
-								</div>
+{#snippet pipelinesPanel()}
+	{#if pipelineRows.length === 0}
+		<mm-panel heading={m.home_pipelines_heading()} icon="extension" padding="default">
+			<mm-text variant="dense" tone="secondary" block>{m.home_pipelines_empty()}</mm-text>
+		</mm-panel>
+	{:else}
+		<mm-panel
+			heading={m.home_pipelines_heading()}
+			icon="extension"
+			link-href={resolve('/runs')}
+			link-label={m.home_pipelines_link()}
+		>
+			<mm-list>
+				{#each pipelineRows as p (p.id)}
+					<mm-list-item
+						href={resolve('/runs/[id]', { id: p.id })}
+						secondary={p.last_run_at ? formatRelativeTime(p.last_run_at) : ''}
+					>
+						<mm-provider-logo slot="start" provider={p.plugin_id} size="20" decorative
+						></mm-provider-logo>
+						{p.name}
+						<span slot="end" class="mm-cluster" style="--mm-gap: var(--space-3); flex-wrap: nowrap">
+							{#if p.strip.length > 0}
+								<span class="hidden sm:inline">
+									<mm-run-strip
+										runs={p.strip}
+										label={m.home_pipelines_strip_label({ name: p.name })}
+										live={p.last_run_status === 'running'}
+									></mm-run-strip>
+								</span>
 							{/if}
-						</div>
-					</div>
-				{/if}
+							{#if p.last_run_status === 'failed'}
+								<mm-status-pill state="failed"></mm-status-pill>
+							{:else if p.last_run_status === 'running'}
+								<mm-status-pill state="running" live></mm-status-pill>
+							{/if}
+						</span>
+					</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-panel>
+	{/if}
+{/snippet}
 
-				<!-- Data Breakdown -->
-				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Overview</h2>
-					<div class="glass-card rounded-xl p-6">
-						<!-- Asset Types -->
-						<div class="mb-6">
-							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-								Top Asset Types
-							</h3>
-							<div class="space-y-3">
-								{#each topAssetTypes as item (item.type)}
-									<button
-										onclick={() => navigateToType(item.type)}
-										class="w-full flex items-center justify-between group"
-									>
-										<span
-											class="text-sm text-gray-900 dark:text-gray-100 capitalize group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-										>
-											{item.type}
-										</span>
-										<div class="flex items-center gap-3">
-											<div
-												class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
-											>
-												<div
-													class="h-full bg-earthy-terracotta-500 transition-all"
-													style="width: {(item.count / totalAssets) * 100}%"
-												></div>
-											</div>
-											<span
-												class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right"
-											>
-												{item.count}
-											</span>
-										</div>
-									</button>
-								{/each}
-							</div>
-						</div>
-
-						<!-- Data Sources -->
-						<div>
-							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-								Top Data Sources
-							</h3>
-							<div class="space-y-3">
-								{#each topProviders as item (item.provider)}
-									<button
-										onclick={() => navigateToProvider(item.provider)}
-										class="w-full flex items-center justify-between group"
-									>
-										<div class="flex items-center gap-2">
-											<IconComponent name={item.provider} size="xs" showLabel={false} />
-											<span
-												class="text-sm text-gray-900 dark:text-gray-100 capitalize group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-											>
-												{item.provider}
-											</span>
-										</div>
-										<div class="flex items-center gap-3">
-											<div
-												class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
-											>
-												<div
-													class="h-full bg-blue-500 transition-all"
-													style="width: {(item.count / totalAssets) * 100}%"
-												></div>
-											</div>
-											<span
-												class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right"
-											>
-												{item.count}
-											</span>
-										</div>
-									</button>
-								{/each}
-							</div>
-						</div>
-					</div>
+{#if loading}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}></mm-page-header>
+		<mm-kpi-row label={m.home_kpi_last_day()}>
+			{#each [m.home_kpi_queries(), m.home_kpi_agents(), m.home_kpi_refused(), m.home_kpi_assets()] as label (label)}
+				<mm-kpi-tile {label} loading></mm-kpi-tile>
+			{/each}
+		</mm-kpi-row>
+		<div class="mm-split">
+			<mm-panel heading={m.home_activity_heading()} icon="history" loading></mm-panel>
+			<mm-panel heading={m.home_attention_heading()} icon="flag" loading></mm-panel>
+		</div>
+	</div>
+{:else if unreachable}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}></mm-page-header>
+		<mm-callout tone="danger" heading={m.home_unreachable_heading()}>
+			{m.home_unreachable_body()}
+			<mm-button slot="actions" size="sm" icon="refresh" onclick={retry}>{m.home_retry()}</mm-button
+			>
+		</mm-callout>
+	</div>
+{:else if onboarding}
+	<div class="mm-stack">
+		<!-- The welcome and setup sit on a faint contour field, the one decoration Home allows, and only before setup is done -->
+		<section class="welcome">
+			<mm-topography seed={7} fade="edges"></mm-topography>
+			<div class="mm-stack">
+				<mm-page-header
+					heading={firstName ? m.home_welcome({ name: firstName }) : m.home_welcome_anonymous()}
+					description={blank ? m.home_welcome_empty() : m.home_welcome_first_run()}
+				>
+					<mm-button slot="actions" icon="link" onclick={() => (connect = 'agent')}
+						>{m.home_connect_button()}</mm-button
+					>
+				</mm-page-header>
+				<div class="max-w-[44rem]">
+					<SetupChecklist
+						{done}
+						onConnectAgent={() => (connect = 'agent')}
+						onHide={() => setupHidden.set(true)}
+						onRemove={() => (confirmRemove = true)}
+						{canManageIngestion}
+						{canQuery}
+						{isAdmin}
+					/>
 				</div>
 			</div>
-
-			<!-- Popular Tags -->
-			{#if topTags.length > 0}
-				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Popular Tags</h2>
-					<div class="glass-card rounded-xl p-6">
-						<div class="flex flex-wrap gap-2">
-							{#each topTags as item (item.tag)}
-								<button
-									onclick={() => navigateToTag(item.tag)}
-									class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/20 rounded-full transition-colors group"
-								>
-									<Icon
-										icon="material-symbols:label"
-										class="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500"
-									/>
-									<span
-										class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500"
-									>
-										{item.tag}
-									</span>
-									<span
-										class="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded-full"
-									>
-										{item.count}
-									</span>
-								</button>
-							{/each}
-						</div>
-					</div>
-				</div>
-			{/if}
-		{:else}
-			<!-- Getting Started - shown in two column layout -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-				<div class="lg:col-span-2">
-					<GettingStarted condensed={false} />
-				</div>
+		</section>
+		<!-- Before the catalog is in use, panels that can only say "nothing yet" stay hidden -->
+		{#if !blank}
+			{@render kpis()}
+			<div class="mm-split">
+				<div class="mm-stack">{@render activity()}</div>
+				<div class="mm-stack">{@render pipelinesPanel()}</div>
 			</div>
 		{/if}
-	{:else}
-		<!-- Greeting -->
-		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				Hi {displayName} 👋
-			</h1>
-			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
-		</div>
-
-		<!-- Quick Stats -->
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-			{#each quickStats as stat (stat.label)}
-				<a href={resolve(stat.href)} class="group glass-card-interactive rounded-xl p-6 block">
-					<div class="flex items-center justify-between mb-2">
-						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
-					</div>
-					{#if !isLoading}
-						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-							{stat.value.toLocaleString()}
-						</div>
-					{:else}
-						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
-					{/if}
-					<p
-						class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-					>
-						{stat.label}
-					</p>
-				</a>
-			{/each}
-		</div>
-
-		<!-- Quick Actions -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-			{#each quickActions as action (action.title)}
-				{@const colors = getColorClasses(action.color)}
-				<a href={resolve(action.href)} class="group glass-card-interactive rounded-xl p-5">
-					<div class="flex items-start gap-4">
-						<div
-							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
-						>
-							<Icon icon={action.icon} class="w-6 h-6 {colors.text}" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<h3
-								class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
-							>
-								{action.title}
-							</h3>
-							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-								{action.description}
-							</p>
-						</div>
-					</div>
-				</a>
-			{/each}
-		</div>
-
-		<!-- Getting Started - shown in two column layout -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-			<div class="lg:col-span-2">
-				<GettingStarted condensed={false} />
+	</div>
+{:else}
+	<div class="mm-stack">
+		<mm-page-header heading={greeting}>
+			{#if setupHidden.value && !setupComplete && !setupRemoved.value}
+				<mm-menu-button slot="actions" icon="more-horiz" icon-only label={m.home_more_actions()}>
+					<mm-menu onmm-select={() => setupHidden.set(false)}>
+						<mm-menu-item value="setup" icon="checklist">{m.home_setup_show()}</mm-menu-item>
+					</mm-menu>
+				</mm-menu-button>
+			{/if}
+			<mm-button slot="actions" icon="link" onclick={() => (connect = 'agent')}
+				>{m.home_connect_button()}</mm-button
+			>
+		</mm-page-header>
+		{@render kpis()}
+		<div class="mm-split">
+			<div class="mm-stack">
+				{@render jumpBackIn()}
+				{@render activity()}
+			</div>
+			<div class="mm-stack">
+				{@render needsAttention()}
+				{@render agentsPanel()}
 			</div>
 		</div>
-	{/if}
-</div>
-
-{#if selectedAsset}
-	{@const bladeAsset = selectedAsset as unknown as Asset}
-	<AssetBlade asset={bladeAsset} onClose={() => (selectedAsset = null)} />
+	</div>
 {/if}
+
+<mm-confirm-dialog
+	open={confirmRemove}
+	heading={m.home_setup_remove_title()}
+	body={m.home_setup_remove_body()}
+	confirm-label={m.home_setup_remove_confirm()}
+	tone="default"
+	onmm-confirm={() => setupRemoved.set(true)}
+	onmm-close={() => (confirmRemove = false)}
+></mm-confirm-dialog>
+
+{#if connect}
+	<ConnectDrawer tab={connect} onClose={() => (connect = null)} />
+{/if}
+
+{#if detailId}
+	<QueryBlade queryId={detailId} onClose={() => (detailId = null)} />
+{/if}
+
+<style>
+	.welcome {
+		position: relative;
+		isolation: isolate;
+		padding: var(--space-6);
+		margin: calc(-1 * var(--space-6));
+		margin-block-end: 0;
+	}
+</style>

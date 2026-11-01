@@ -75,7 +75,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetSearchContext] instead.
 func (a *Client) GetSearch(params *GetSearchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetSearchOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

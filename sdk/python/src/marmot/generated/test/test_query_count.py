@@ -35,7 +35,8 @@ class TestQueryCount(unittest.TestCase):
             return QueryCount(
                 count = 56,
                 query = '',
-                query_type = ''
+                query_type = '',
+                result_count = 56
             )
         else:
             return QueryCount(

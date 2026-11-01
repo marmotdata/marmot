@@ -56,7 +56,8 @@ func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if _, err := h.lineageService.CreateLineageEdgeWithColumns(r.Context(), edge.Source, edge.Target, edge.Type, edge.JobMRN, edge.ColumnLineage); err != nil {
+		// Existing edges are written too, so a re-sent edge refreshes its column lineage and declarer.
+		if _, err := h.lineageService.CreateDeclaredLineage(r.Context(), edge.Source, edge.Target, edge.Type, edge.JobMRN, declarerOf(r), edge.ColumnLineage); err != nil {
 			log.Error().Err(err).
 				Str("source", edge.Source).
 				Str("target", edge.Target).

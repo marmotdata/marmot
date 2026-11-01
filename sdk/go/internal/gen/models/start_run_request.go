@@ -65,7 +65,7 @@ func (m *StartRunRequest) validateSourceName(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this start run request based on context it is used
-func (m *StartRunRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *StartRunRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -9,7 +12,14 @@ import (
 
 // ContextEntry represents a saved server context.
 type ContextEntry struct {
-	Host string `yaml:"host" mapstructure:"host"`
+	Host string `json:"host"`
+}
+
+// ContextStore holds all saved contexts, keyed by context name. Contexts live
+// beside the config rather than in it: names are hostnames, and Viper is
+// dot-delimited, so writing them through Viper splits a name into nested keys.
+type ContextStore struct {
+	Contexts map[string]ContextEntry `json:"contexts"`
 }
 
 var contextCmd = &cobra.Command{
@@ -21,7 +31,10 @@ var contextListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all contexts",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		contexts := getContexts()
+		contexts, err := loadContexts()
+		if err != nil {
+			return err
+		}
 		current := currentContextName()
 
 		if len(contexts) == 0 {
@@ -59,7 +72,10 @@ var contextUseCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
-		contexts := getContexts()
+		contexts, err := loadContexts()
+		if err != nil {
+			return err
+		}
 
 		if _, ok := contexts[name]; !ok {
 			return fmt.Errorf("context %q not found", name)
@@ -81,14 +97,19 @@ var contextDeleteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
-		contexts := getContexts()
+		contexts, err := loadContexts()
+		if err != nil {
+			return err
+		}
 
 		if _, ok := contexts[name]; !ok {
 			return fmt.Errorf("context %q not found", name)
 		}
 
 		delete(contexts, name)
-		viper.Set("contexts", contexts)
+		if err := saveContexts(contexts); err != nil {
+			return err
+		}
 
 		if currentContextName() == name {
 			viper.Set("current_context", "")
@@ -117,7 +138,10 @@ func getActiveContext() (string, *ContextEntry) {
 		return "", nil
 	}
 
-	contexts := getContexts()
+	contexts, err := loadContexts()
+	if err != nil {
+		return "", nil
+	}
 	ctx, ok := contexts[name]
 	if !ok {
 		return "", nil
@@ -126,33 +150,70 @@ func getActiveContext() (string, *ContextEntry) {
 	return name, &ctx
 }
 
-// getContexts returns all configured contexts.
-func getContexts() map[string]ContextEntry {
-	raw := viper.GetStringMap("contexts")
-	result := make(map[string]ContextEntry)
-
-	for name, v := range raw {
-		if entry, ok := v.(map[string]interface{}); ok {
-			host, _ := entry["host"].(string)
-			result[name] = ContextEntry{Host: host}
-		}
+func contextsPath() (string, error) {
+	dir, err := configDir()
+	if err != nil {
+		return "", err
 	}
-
-	return result
+	return filepath.Join(dir, "contexts.json"), nil
 }
 
-// setContext adds or updates a context in config and writes it.
+// loadContexts returns all saved contexts.
+func loadContexts() (map[string]ContextEntry, error) {
+	p, err := contextsPath()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return make(map[string]ContextEntry), nil
+		}
+		return nil, err
+	}
+
+	var store ContextStore
+	if err := json.Unmarshal(data, &store); err != nil {
+		return nil, fmt.Errorf("parsing %s: %w", p, err)
+	}
+	if store.Contexts == nil {
+		store.Contexts = make(map[string]ContextEntry)
+	}
+	return store.Contexts, nil
+}
+
+func saveContexts(contexts map[string]ContextEntry) error {
+	p, err := contextsPath()
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(ContextStore{Contexts: contexts}, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(p, data, 0o600)
+}
+
+// setContext adds or updates a context and makes it current.
 func setContext(name string, ctx ContextEntry) error {
-	contexts := getContexts()
+	contexts, err := loadContexts()
+	if err != nil {
+		return err
+	}
 	contexts[name] = ctx
 
-	raw := make(map[string]interface{})
-	for k, v := range contexts {
-		raw[k] = map[string]interface{}{"host": v.Host}
+	if err := saveContexts(contexts); err != nil {
+		return err
 	}
-	viper.Set("contexts", raw)
-	viper.Set("current_context", name)
 
+	viper.Set("current_context", name)
 	return writeConfig()
 }
 

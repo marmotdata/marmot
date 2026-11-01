@@ -17,14 +17,19 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "nats",
-		Name:        "NATS",
-		Description: "Discover JetStream streams from NATS servers",
-		Icon:        "nats",
-		Category:    "messaging",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "nats",
+		MarmotVersion: ">=0.12.0",
+		Name:          "NATS",
+		Description:   "Discover JetStream streams from NATS servers",
+		Icon:          "nats",
+		Category:      "messaging",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(NATSStreamFields{}, "Stream",
+				"NATSStreamFields defines metadata fields for NATS JetStream streams"),
+		},
 	}
 }
 
@@ -35,12 +40,12 @@ type Config struct {
 	// Connection options
 	Host            string `json:"host" description:"NATS server hostname or IP address" validate:"required"`
 	Port            int    `json:"port,omitempty" description:"NATS server port" default:"4222" validate:"omitempty,min=1,max=65535"`
-	Token           string `json:"token,omitempty" description:"Authentication token" sensitive:"true"`
+	Token           string `json:"token,omitempty" group:"Authentication" description:"Authentication token" sensitive:"true"`
 	Username        string `json:"username,omitempty" description:"Username for authentication"`
 	Password        string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
-	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to NATS credentials file (.creds)"`
-	TLS             bool   `json:"tls,omitempty" description:"Enable TLS connection"`
-	TLSInsecure     bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
+	CredentialsFile string `json:"credentials_file,omitempty" group:"Authentication" description:"Path to NATS credentials file (.creds)"`
+	TLS             bool   `json:"tls,omitempty" group:"Authentication" description:"Enable TLS connection" default:"true"`
+	TLSInsecure     bool   `json:"tls_insecure,omitempty" group:"Authentication" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 }
 
 // Example configuration for the plugin

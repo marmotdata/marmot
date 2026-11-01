@@ -1,0 +1,50 @@
+order_id	bigint	
+customer_id	int	References customers.id
+amount	decimal(16,4)	
+ordered_at	timestamp	
+		
+# Detailed Table Information		
+Database:           	sales               	
+OwnerType:          	USER                	
+Owner:              	hive                	
+CreateTime:         	Tue Sep 08 02:21:25 UTC 2026	
+LastAccessTime:     	UNKNOWN             	
+Retention:          	0                   	
+Location:           	file:/opt/hive/data/warehouse/sales.db/orders	
+Table Type:         	EXTERNAL_TABLE      	
+Table Parameters:		
+	COLUMN_STATS_ACCURATE	{"BASIC_STATS":"true","COLUMN_STATS":{"amount":"true","customer_id":"true","order_id":"true","ordered_at":"true"}}
+	EXTERNAL            	TRUE                
+	TRANSLATED_TO_EXTERNAL	TRUE                
+	bucketing_version   	2                   
+	comment             	Orders              
+	external.table.purge	TRUE                
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+	transient_lastDdlTime	1788834085          
+		
+# Storage Information		
+SerDe Library:      	org.apache.hadoop.hive.ql.io.orc.OrcSerde	
+InputFormat:        	org.apache.hadoop.hive.ql.io.orc.OrcInputFormat	
+OutputFormat:       	org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat	
+Compressed:         	No                  	
+Num Buckets:        	4                   	
+Bucket Columns:     	[customer_id]       	
+Sort Columns:       	[]                  	
+Storage Desc Params:		
+	serialization.format	1                   
+		
+# Constraints		
+		
+# Primary Key		
+Table:              	sales.orders        	
+Constraint Name:    	pk_93152910_1788834085099_0	
+Column Name:        	order_id            	
+		
+# Foreign Keys		
+Table:              	sales.orders        	
+Constraint Name:    	fk_orders_customer  	
+Parent Column Name:sales.customers.id	Column Name:customer_id	Key Sequence:1      
+		

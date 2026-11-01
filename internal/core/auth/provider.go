@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/core/team"
@@ -68,7 +70,70 @@ func trimIssuer(s string) string {
 }
 
 type OAuthManager struct {
-	providers map[string]OAuthProvider
+	providers   map[string]OAuthProvider
+	teamService *team.Service
+	switches    ProviderSwitches
+
+	mu        sync.Mutex
+	disabled  map[string]bool
+	checkedAt time.Time
+}
+
+// ProviderSwitches reports which configured providers an administrator has switched off.
+type ProviderSwitches interface {
+	DisabledProviders(ctx context.Context) (map[string]bool, error)
+}
+
+// providerSwitchTTL is how long a switch may take to reach a server that did not make the change, which keeps every sign-in from reading the database.
+const providerSwitchTTL = 30 * time.Second
+
+// SetTeamService is passed to providers registered afterwards that create members without group sync, so those members can still join the default team.
+func (m *OAuthManager) SetTeamService(t *team.Service) {
+	m.teamService = t
+}
+
+// SetProviderSwitches lets an administrator switch configured providers off without editing the config file.
+func (m *OAuthManager) SetProviderSwitches(s ProviderSwitches) {
+	m.switches = s
+	m.Refresh()
+}
+
+// Refresh drops the cached switches so the next lookup reads them again, for the server that just changed them.
+func (m *OAuthManager) Refresh() {
+	m.mu.Lock()
+	m.checkedAt = time.Time{}
+	m.mu.Unlock()
+}
+
+func (m *OAuthManager) isDisabled(providerType string) bool {
+	if m.switches == nil {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if time.Since(m.checkedAt) > providerSwitchTTL {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		disabled, err := m.switches.DisabledProviders(ctx)
+		cancel()
+		if err != nil {
+			// Keep the last answer rather than switching every provider back on because the database blinked.
+			log.Warn().Err(err).Msg("Failed to read single sign-on provider switches")
+		} else {
+			m.disabled = disabled
+		}
+		m.checkedAt = time.Now()
+	}
+	return m.disabled[providerType]
+}
+
+// Enabled reports whether a configured provider is switched on.
+func (m *OAuthManager) Enabled(providerType string) bool {
+	return !m.isDisabled(providerType)
+}
+
+// AllProviders returns every configured provider, including those switched off, for the settings that list them.
+func (m *OAuthManager) AllProviders() map[string]OAuthProvider {
+	return m.providers
 }
 
 func NewOAuthManager() *OAuthManager {
@@ -78,24 +143,43 @@ func NewOAuthManager() *OAuthManager {
 }
 
 func (m *OAuthManager) RegisterProvider(provider OAuthProvider) {
+	if ts, ok := provider.(interface{ SetTeamService(*team.Service) }); ok && m.teamService != nil {
+		ts.SetTeamService(m.teamService)
+	}
 	m.providers[provider.Type()] = provider
 }
 
+// GetProvider returns a provider that is configured and switched on.
 func (m *OAuthManager) GetProvider(providerType string) (OAuthProvider, bool) {
 	provider, exists := m.providers[providerType]
-	return provider, exists
+	if !exists || m.isDisabled(providerType) {
+		return nil, false
+	}
+	return provider, true
 }
 
+// GetProviderNames lists the providers people can sign in with, leaving out those switched off.
 func (m *OAuthManager) GetProviderNames() []string {
 	names := make([]string, 0, len(m.providers))
 	for name := range m.providers {
+		if m.isDisabled(name) {
+			continue
+		}
 		names = append(names, name)
 	}
 	return names
 }
 
+// GetProviders returns the providers switched on, so tokens from one switched off are not accepted either.
 func (m *OAuthManager) GetProviders() map[string]OAuthProvider {
-	return m.providers
+	out := make(map[string]OAuthProvider, len(m.providers))
+	for name, p := range m.providers {
+		if m.isDisabled(name) {
+			continue
+		}
+		out[name] = p
+	}
+	return out
 }
 
 type oidcExchangeParams struct {
@@ -211,10 +295,12 @@ func resolveUserFromClaims(ctx context.Context, providerType, providerName strin
 			RoleNames:         []string{"user"},
 		}
 
-		usr, err = userSvc.Create(ctx, newUser)
+		var created bool
+		usr, created, err = userSvc.ProvisionSSO(ctx, newUser)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
+		applyNewMemberDefaults(ctx, userSvc, teamSvc, usr, created)
 		log.Debug().Str("user_id", usr.ID).Str("email", email).Msg("created new user via token exchange")
 	default:
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
@@ -229,7 +315,7 @@ func resolveUserFromClaims(ctx context.Context, providerType, providerName strin
 		groups := extractGroups(claims, groupClaim)
 		if len(groups) > 0 {
 			log.Debug().Strs("groups", groups).Str("user_id", usr.ID).Msg("syncing team memberships from token exchange")
-			if err := teamSvc.SyncUserTeamsFromSSO(ctx, usr.ID, providerType, groups, teamSync); err != nil {
+			if err := syncSSOGroups(ctx, userSvc, teamSvc, usr.ID, providerType, groups, teamSync); err != nil {
 				log.Error().Err(err).Str("user_id", usr.ID).Msg("failed to sync teams from SSO")
 			}
 		}
@@ -269,3 +355,31 @@ func exchangeAudiences(cfg *config.OAuthProviderConfig) []string {
 	return []string{cfg.ClientID}
 }
 
+// applyNewMemberDefaults puts a member that single sign-on has just created into the default team. It runs before group sync, and the membership is manual, so a mapped group adds to it rather than replacing it.
+func applyNewMemberDefaults(ctx context.Context, userSvc user.Service, teamSvc *team.Service, usr *user.User, created bool) {
+	if !created || teamSvc == nil || usr == nil {
+		return
+	}
+	teamID := userSvc.SignInSettings(ctx).DefaultTeamID
+	if teamID == "" {
+		return
+	}
+	if err := teamSvc.AddDefaultMember(ctx, teamID, usr.ID); err != nil {
+		log.Warn().Err(err).Str("user_id", usr.ID).Str("team_id", teamID).Msg("Failed to add new member to the default team")
+	}
+}
+
+// syncSSOGroups applies a member's group mappings at sign-in: the teams their groups feed and, when any group is mapped to a role, those roles in place of whatever they had.
+func syncSSOGroups(ctx context.Context, userSvc user.Service, teamSvc *team.Service, userID, provider string, groups []string, teamSync config.TeamSyncConfig) error {
+	if err := teamSvc.SyncUserTeamsFromSSO(ctx, userID, provider, groups, teamSync); err != nil {
+		return err
+	}
+	roles, err := teamSvc.RoleNamesForGroups(ctx, provider, groups)
+	if err != nil {
+		return fmt.Errorf("reading role mappings: %w", err)
+	}
+	if err := userSvc.SetRolesFromSSO(ctx, userID, roles); err != nil {
+		return fmt.Errorf("applying mapped roles: %w", err)
+	}
+	return nil
+}

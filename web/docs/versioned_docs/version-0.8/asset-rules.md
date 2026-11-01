@@ -9,10 +9,10 @@ import { CalloutCard } from '@site/src/components/DocCard';
 Asset Rules automatically apply enrichments to assets matching specific criteria. Define a rule once and Marmot keeps everything in sync as your Catalog changes, including new assets that match.
 
 <CalloutCard
-  title="Try It Out"
-  description="See Asset Rules in action with the interactive demo."
-  href="https://demo.marmotdata.io/asset-rules"
-  buttonText="View Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 
@@ -30,8 +30,8 @@ Give your rule a unique name and an optional description.
 
 Choose what to apply to matching assets. A rule must include at least one of:
 
-- **External links** — runbooks, dashboards, wiki pages or monitoring URLs. Each link has a name, URL and optional icon.
-- **Glossary terms** — select one or more terms from your existing glossary to associate with matching assets.
+- **External links**: runbooks, dashboards, wiki pages or monitoring URLs. Each link has a name, URL and optional icon.
+- **Glossary terms**: select one or more terms from your existing glossary to associate with matching assets.
 
 <img src="/img/asset-rules-enrichments.png" alt="Enrichments" />
 
@@ -39,9 +39,9 @@ Choose what to apply to matching assets. A rule must include at least one of:
 
 Define which assets the rule should match using Marmot's query language (the same syntax used in search). For example:
 
-- `@type: "table" AND @provider: "postgres"` — all PostgreSQL tables
-- `@tag: "pii"` — any asset tagged as PII
-- `@metadata.owner = "platform-team"` — assets owned by a specific team
+- `@type: "table" AND @provider: "postgres"` matches all PostgreSQL tables
+- `@tag: "pii"` matches any asset tagged as PII
+- `@metadata.owner = "platform-team"` matches assets owned by a specific team
 
 Use the **Preview** button to see which assets currently match before saving.
 

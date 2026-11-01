@@ -8,13 +8,12 @@ keywords:
   - open source atlan alternative
   - atlan mcp
   - data catalog for AI agents
-image: /img/resources/marmot-vs-atlan.png
 date: 2026-06-30
 hide_table_of_contents: false
+image: /img/resources/marmot-vs-atlan.png
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';
-import { ResourceBanner } from '@site/src/components/ResourceCard';
 import { ComparisonTable } from '@site/src/components/ComparisonTable';
 import Head from '@docusaurus/Head';
 
@@ -25,11 +24,9 @@ import Head from '@docusaurus/Head';
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Marmot vs Atlan: AI Context Layer Comparison (2026)" />
   <meta name="twitter:description" content="An open source catalog you self-host as a single Go binary versus Atlan's fully managed, enterprise SaaS context layer." />
-  <meta name="twitter:image" content="https://marmotdata.io/img/resources/marmot-vs-atlan.png" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="Marmot vs Atlan: AI Context Layer Comparison (2026)" />
   <meta property="og:description" content="Marmot vs Atlan compared as AI context layers for agents, on MCP, hosting, cost, connectors and compliance." />
-  <meta property="og:image" content="https://marmotdata.io/img/resources/marmot-vs-atlan.png" />
   <meta property="og:url" content="https://marmotdata.io/resources/marmot-vs-atlan" />
   <script type="application/ld+json">
     {JSON.stringify({
@@ -89,10 +86,6 @@ import Head from '@docusaurus/Head';
   </script>
 </Head>
 
-[← All resources](/resources)
-
-<ResourceBanner href="/resources/marmot-vs-atlan" />
-
 How Marmot and Atlan compare as AI context layers: an open source catalog you self-host as a single Go binary versus Atlan's fully managed, enterprise SaaS context layer.
 
 Both expose governed metadata to AI agents over a native MCP server, so on the agent-facing capability they are closer than they look. The real decision is a different one: whether you want to own and run the catalog yourself, or hand hosting, scale and compliance to a vendor. This page compares them on exactly that. For the full field, see [the data catalog AI context layer comparison](/resources/data-catalogs-for-ai-agents).
@@ -131,7 +124,7 @@ Both expose governed metadata to AI agents over a native MCP server, so on the a
       { status: "yes", text: "Via MCP and API, column-level" },
     ]},
     { feature: "Connectors", cells: [
-      "~28 plugins, plus catalog-as-code",
+      "70+ plugins, plus catalog-as-code",
       "Large managed library",
     ]},
     { feature: "Ingestion methods", cells: [
@@ -203,7 +196,7 @@ Marmot runs every MCP and API query with the permissions of the API key behind i
 
 **Atlan ships a large managed connector library with nothing for you to deploy.** Its hosted connectors span warehouses, databases, dashboards and pipelines, and because the platform is managed, keeping them running is the vendor's job rather than yours.
 
-Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. The trade is real: if you want the most of your stack catalogued by a managed service with no work, Atlan leads on out-of-the-box breadth. If you provision with Terraform or Pulumi, the gap closes quickly, and you keep the whole thing in your own infrastructure.
+Marmot ships 70+ plugins spanning databases, warehouses, lakes, object storage, streaming, orchestration, compute, BI and search. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. Atlan still leads on managed breadth, and you are paying it to do the connector work for you. The trade is narrower than it was: with 70+ plugins plus catalog-as-code you cover the same ground yourself, and you keep the whole thing in your own infrastructure.
 
 ---
 
@@ -277,6 +270,6 @@ For most teams standing up an AI context layer, Marmot is the faster path: nativ
 
 ---
 
-- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
+- **Marmot Cloud:** [cloud.marmotdata.io](https://cloud.marmotdata.io) - hosted Marmot, free account, $49 per instance per month
 - **Docs:** [marmotdata.io/docs](/docs/introduction)
 - **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)

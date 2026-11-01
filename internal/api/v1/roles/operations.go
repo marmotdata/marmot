@@ -1,9 +1,9 @@
 package roles
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/role"
@@ -27,7 +27,7 @@ func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusInternalServerError, "Failed to list roles")
 		return
 	}
-	common.RespondJSON(w, http.StatusOK, roles)
+	common.RespondDocument(w, r, http.StatusOK, roles)
 }
 
 // @Summary Get a role
@@ -59,20 +59,24 @@ func (h *Handler) getRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondDocument(w, r, http.StatusOK, result)
 }
 
 type createRoleRequest struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	PermIDs     []string `json:"permission_ids,omitempty"`
+	// PermissionKeys names permissions as resource_type:action keys, the form a hand-written role document uses.
+	PermissionKeys []string `json:"permission_keys,omitempty"`
 }
 
 // @Summary Create a role
-// @Description Create a new role with optional initial permissions
+// @Description Create a new role with optional initial permissions, named by id or by resource_type:action key. The body may be JSON or YAML.
 // @Tags roles
 // @Accept json
+// @Accept application/yaml
 // @Produce json
+// @Produce application/yaml
 // @Param role body createRoleRequest true "Role creation request"
 // @Security ApiKeyAuth
 // @Security BearerAuth
@@ -83,8 +87,8 @@ type createRoleRequest struct {
 // @Router /api/v1/roles [post]
 func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
 	var req createRoleRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+	if err := common.DecodeDocument(r, &req); err != nil {
+		common.RespondDocumentError(w, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 	if req.Name == "" {
@@ -93,13 +97,18 @@ func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.roleService.Create(r.Context(), role.CreateInput{
-		Name:        req.Name,
-		Description: req.Description,
-		PermIDs:     req.PermIDs,
+		Name:           req.Name,
+		Description:    req.Description,
+		PermIDs:        req.PermIDs,
+		PermissionKeys: req.PermissionKeys,
 	})
 	if err != nil {
 		if errors.Is(err, role.ErrAlreadyExists) {
 			common.RespondError(w, http.StatusConflict, "Role already exists")
+			return
+		}
+		if errors.Is(err, role.ErrUnknownPermission) {
+			common.RespondDocumentError(w, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
 		log.Error().Err(err).Msg("Failed to create role")
@@ -107,7 +116,7 @@ func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondDocument(w, r, http.StatusOK, result)
 }
 
 type updateRoleRequest struct {
@@ -138,8 +147,8 @@ func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req updateRoleRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+	if err := common.DecodeDocument(r, &req); err != nil {
+		common.RespondDocumentError(w, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 
@@ -160,7 +169,7 @@ func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondDocument(w, r, http.StatusOK, result)
 }
 
 // @Summary Delete a role
@@ -202,11 +211,13 @@ func (h *Handler) deleteRole(w http.ResponseWriter, r *http.Request) {
 }
 
 type replacePermissionsRequest struct {
-	PermIDs []string `json:"permission_ids"`
+	PermIDs []string `json:"permission_ids,omitempty"`
+	// PermissionKeys names permissions as resource_type:action keys. They are added to PermIDs.
+	PermissionKeys []string `json:"permission_keys,omitempty"`
 }
 
 // @Summary Replace role permissions
-// @Description Atomically replace all permissions on a role. System roles enforce a minimum permission floor.
+// @Description Atomically replace all permissions on a role, named by id or by resource_type:action key. System roles enforce a minimum permission floor.
 // @Tags roles
 // @Accept json
 // @Produce json
@@ -228,12 +239,30 @@ func (h *Handler) replacePermissions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req replacePermissionsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+	if err := common.DecodeDocument(r, &req); err != nil {
+		common.RespondDocumentError(w, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
+	permIDs := req.PermIDs
+	if len(req.PermissionKeys) > 0 {
+		ids, err := h.roleService.ResolvePermissionKeys(r.Context(), req.PermissionKeys)
+		if err != nil {
+			if errors.Is(err, role.ErrUnknownPermission) {
+				common.RespondDocumentError(w, http.StatusBadRequest, err.Error(), nil)
+				return
+			}
+			log.Error().Err(err).Str("id", id).Msg("Failed to resolve permission keys")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to replace permissions")
+			return
+		}
+		for _, pid := range ids {
+			if !slices.Contains(permIDs, pid) {
+				permIDs = append(permIDs, pid)
+			}
+		}
+	}
 
-	if err := h.roleService.ReplacePermissions(r.Context(), id, req.PermIDs); err != nil {
+	if err := h.roleService.ReplacePermissions(r.Context(), id, permIDs); err != nil {
 		switch {
 		case errors.Is(err, role.ErrNotFound):
 			http.NotFound(w, r)
@@ -253,7 +282,7 @@ func (h *Handler) replacePermissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondDocument(w, r, http.StatusOK, result)
 }
 
 // @Summary List all permissions

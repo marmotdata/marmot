@@ -131,6 +131,18 @@ class TestIngestionApi(unittest.IsolatedAsyncioTestCase):
         Manually trigger an ingestion schedule
         """
 
+    async def test_post_ingestion_test_connection(self) -> None:
+        """Test case for post_ingestion_test_connection
+
+        Test a plugin connection
+        """
+
+    def test_post_ingestion_test_connection_sync(self) -> None:
+        """Test case for post_ingestion_test_connection (synchronous)
+
+        Test a plugin connection
+        """
+
     async def test_post_ingestion_validate(self) -> None:
         """Test case for post_ingestion_validate
 

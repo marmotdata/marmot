@@ -6,8 +6,10 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdetail"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/assetsignal"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/team"
@@ -30,6 +32,8 @@ type Handler struct {
 	encryptor        *crypto.Encryptor
 	config           *config.Config
 	lookups          lookups.Recorder
+	details          *assetdetail.Store
+	signals          *assetsignal.Service
 }
 
 func NewHandler(
@@ -60,6 +64,18 @@ func NewHandler(
 		config:           config,
 		lookups:          lookupsRecorder,
 	}
+}
+
+// WithDetails adds field annotations and tab counts to the asset page's endpoints; without it those endpoints are not registered.
+func (h *Handler) WithDetails(details *assetdetail.Store) *Handler {
+	h.details = details
+	return h
+}
+
+// WithSignals adds staleness and popularity to asset responses and registers the stale assets listing; without it neither is served.
+func (h *Handler) WithSignals(signals *assetsignal.Service) *Handler {
+	h.signals = signals
+	return h
 }
 
 func (h *Handler) Routes() []common.Route {
@@ -282,6 +298,16 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/assets/batch",
+			Method:  http.MethodPost,
+			Handler: h.batchGetAssets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 100, 60),
+			},
+		},
+		{
 			Path:    "/api/v1/assets/by-glossary-term/{term_id}",
 			Method:  http.MethodGet,
 			Handler: h.getAssetsByTerm,
@@ -317,6 +343,22 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
+	}
+
+	if h.details != nil {
+		routes = append(routes, h.detailRoutes()...)
+	}
+
+	if h.signals != nil {
+		routes = append(routes, common.Route{
+			Path:    "/api/v1/assets/stale",
+			Method:  http.MethodGet,
+			Handler: h.listStaleAssets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		})
 	}
 
 	if h.config.Experimental.TablePreview {

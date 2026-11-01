@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -104,6 +106,10 @@ type Config struct {
 		Slack       *OAuthProviderConfig `mapstructure:"slack"`
 		Auth0       *OAuthProviderConfig `mapstructure:"auth0"`
 		Anonymous   AnonymousAuthConfig  `mapstructure:"anonymous"`
+		DCR         struct {
+			// AllowedRedirectHosts permits https redirect URIs on these hosts; empty keeps DCR loopback-only.
+			AllowedRedirectHosts []string `mapstructure:"allowed_redirect_hosts"`
+		} `mapstructure:"dcr"`
 	} `mapstructure:"auth"`
 
 	OpenLineage struct {
@@ -116,6 +122,8 @@ type Config struct {
 
 	UI struct {
 		Banner BannerConfig `mapstructure:"banner"`
+		// DefaultLanguage is the BCP 47 tag the web UI falls back to when a user has no language preference, empty means detect from the browser
+		DefaultLanguage string `mapstructure:"default_language"`
 	} `mapstructure:"ui"`
 
 	Search struct {
@@ -153,7 +161,46 @@ type Config struct {
 		// Autoinstall pulls missing core plugins from the registry at
 		// startup. Defaults to true.
 		Autoinstall bool `mapstructure:"autoinstall"`
+		// Updates lets core plugins move to newer versions without a Marmot upgrade.
+		Updates struct {
+			// Enabled turns on checking the signed plugin index for new versions and advisories. Defaults to true.
+			Enabled bool `mapstructure:"enabled"`
+			// Index overrides where the plugin index is read from: an OCI reference, by default <registry>/index:latest, or an https:// URL such as https://plugins.marmotdata.io/index.json.
+			Index string `mapstructure:"index"`
+			// AutoUpdate is off, security (move off versions with an advisory, the default) or patch (also apply patch releases).
+			AutoUpdate string `mapstructure:"auto_update"`
+			// CheckInterval is how often the index is checked, in seconds. Defaults to 12 hours.
+			CheckInterval int `mapstructure:"check_interval"`
+		} `mapstructure:"updates"`
 	} `mapstructure:"plugins"`
+
+	// Query lets agents and users query queryable sources through Marmot.
+	Query struct {
+		Enabled        bool  `mapstructure:"enabled"`
+		QueryTimeout   int   `mapstructure:"query_timeout"` // seconds
+		MaxRowsDefault int64 `mapstructure:"max_rows_default"`
+		MaxRowsCap     int64 `mapstructure:"max_rows_cap"`
+		// InstanceIdleTTL is how long an unused plugin process is kept
+		// alive between queries, in seconds.
+		InstanceIdleTTL int `mapstructure:"instance_idle_ttl"`
+		// Ingest-on-query rate limits, in seconds: the minimum gap between
+		// query-triggered refreshes of one source, and between any two.
+		IngestOnQuerySourceInterval int `mapstructure:"ingest_on_query_source_interval"`
+		IngestOnQueryGlobalInterval int `mapstructure:"ingest_on_query_global_interval"`
+		// Serve accepts mutual TLS connections from plugins that run outside Marmot (`marmot ingest --serve`) so they can answer queries. Plugins always dial in; Marmot never connects out to them.
+		Serve struct {
+			Enabled bool `mapstructure:"enabled"`
+			// ListenAddress is where the serve listener binds.
+			ListenAddress string `mapstructure:"listen_address"`
+			// PublicAddress is the host:port serving plugins dial, when it differs from the API host on the listen port.
+			PublicAddress string `mapstructure:"public_address"`
+			// ReplicaAddress is the host, or host:port, other Marmot replicas reach this one on to forward queries for plugins connected here; without a port the listen port is used. Needed only with more than one replica.
+			ReplicaAddress string `mapstructure:"replica_address"`
+			// CAKeyURI and SigningKeyURI keep the serving CA key and query signing key in a KMS instead of the database, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://) naming ECDSA P-256 keys. They are used when serving first starts; later keys come from rotations.
+			CAKeyURI      string `mapstructure:"ca_key_uri"`
+			SigningKeyURI string `mapstructure:"signing_key_uri"`
+		} `mapstructure:"serve"`
+	} `mapstructure:"query"`
 }
 
 type BannerConfig struct {
@@ -327,6 +374,8 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
 
+	v.BindEnv("auth.dcr.allowed_redirect_hosts")
+
 	v.BindEnv("openlineage.auth.enabled")
 
 	v.BindEnv("server.root_url")
@@ -357,6 +406,21 @@ func loadConfig(configPath string) error {
 	v.BindEnv("operator.enabled")
 	v.BindEnv("operator.namespace")
 	v.BindEnv("operator.service_account")
+
+	// Data query env vars
+	v.BindEnv("query.enabled")
+	v.BindEnv("query.query_timeout")
+	v.BindEnv("query.max_rows_default")
+	v.BindEnv("query.max_rows_cap")
+	v.BindEnv("query.instance_idle_ttl")
+	v.BindEnv("query.ingest_on_query_source_interval")
+	v.BindEnv("query.ingest_on_query_global_interval")
+	v.BindEnv("query.serve.enabled")
+	v.BindEnv("query.serve.listen_address")
+	v.BindEnv("query.serve.public_address")
+	v.BindEnv("query.serve.replica_address")
+	v.BindEnv("query.serve.ca_key_uri")
+	v.BindEnv("query.serve.signing_key_uri")
 
 	// Telemetry env vars
 	v.BindEnv("telemetry.enabled")
@@ -428,6 +492,10 @@ func setDefaults(v *viper.Viper) {
 
 	v.SetDefault("plugins.autoinstall", true)
 	v.SetDefault("plugins.registry", "")
+	v.SetDefault("plugins.updates.enabled", true)
+	v.SetDefault("plugins.updates.index", "")
+	v.SetDefault("plugins.updates.auto_update", "security")
+	v.SetDefault("plugins.updates.check_interval", 43200)
 
 	// Auth defaults
 	v.SetDefault("auth.okta.type", "okta")
@@ -494,6 +562,17 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pipelines.scheduler_interval", 60)
 	v.SetDefault("pipelines.lease_expiry", 300)
 	v.SetDefault("pipelines.claim_expiry", 30)
+
+	// Data query defaults
+	v.SetDefault("query.enabled", true)
+	v.SetDefault("query.query_timeout", 60)
+	v.SetDefault("query.max_rows_default", 1000)
+	v.SetDefault("query.max_rows_cap", 10000)
+	v.SetDefault("query.instance_idle_ttl", 300)
+	v.SetDefault("query.ingest_on_query_source_interval", 3600)
+	v.SetDefault("query.ingest_on_query_global_interval", 60)
+	v.SetDefault("query.serve.enabled", false)
+	v.SetDefault("query.serve.listen_address", ":8443")
 
 	// Operator defaults
 	v.SetDefault("operator.service_account", "marmot-ingest")
@@ -587,5 +666,37 @@ func validate(cfg *Config) error {
 		return fmt.Errorf("invalid pipelines.claim_expiry: must be at least 1 second")
 	}
 
+	for i, entry := range cfg.Auth.DCR.AllowedRedirectHosts {
+		normalised := strings.ToLower(strings.TrimSpace(entry))
+		host := normalised
+		if strings.Contains(normalised, ":") {
+			h, port, err := net.SplitHostPort(normalised)
+			if err != nil {
+				return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: entries must be a hostname or hostname:port", entry)
+			}
+			if n, err := strconv.Atoi(port); err != nil || n < 1 || n > 65535 {
+				return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: port must be between 1 and 65535", entry)
+			}
+			host = h
+		}
+		if !validRedirectHost(host) {
+			return fmt.Errorf("invalid auth.dcr.allowed_redirect_hosts entry %q: entries must be a hostname or hostname:port", entry)
+		}
+		cfg.Auth.DCR.AllowedRedirectHosts[i] = normalised
+	}
+
 	return nil
+}
+
+// validRedirectHost rejects anything that cannot appear in a lowercased DNS hostname, so wildcards and typos fail at load rather than silently never matching.
+func validRedirectHost(host string) bool {
+	if host == "" {
+		return false
+	}
+	for _, r := range host {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '.' && r != '-' {
+			return false
+		}
+	}
+	return true
 }

@@ -28,6 +28,8 @@ const (
 	TypeDownstreamSchemaChange = "downstream_schema_change"
 	TypeLineageChange          = "lineage_change"
 	TypeAssetDeleted           = "asset_deleted"
+	TypeAccessExpiry           = "access_expiry"
+	TypeAccessRequest          = "access_request"
 )
 
 const (
@@ -40,6 +42,9 @@ const (
 	DefaultMaxPerUser       = 500
 	DefaultAggregateWindow  = 2 * time.Minute
 	DefaultAggregateMaxWait = 5 * time.Minute
+
+	// A claim must outlive every notice that could be raised for it again, which callers keep well inside this by only announcing recent events
+	DefaultClaimRetention = 180 * 24 * time.Hour
 )
 
 var (
@@ -91,6 +96,9 @@ type NotificationFilter struct {
 type NotificationSummary struct {
 	UnreadCount int `json:"unread_count"`
 	TotalCount  int `json:"total_count"`
+	// ReadRetentionDays and RetentionDays say how long pruning keeps read and all notifications, so the inbox can tell people before they go.
+	ReadRetentionDays int `json:"read_retention_days"`
+	RetentionDays     int `json:"retention_days"`
 }
 
 // ListResult contains paginated notification results.
@@ -323,7 +331,39 @@ func (s *Service) pruneOldNotifications() error {
 			Msg("Enforced per-user notification limit")
 	}
 
+	// Step 4: Forget once-only claims old enough that nothing will raise them again
+	claimsDeleted, err := s.repo.DeleteClaimsOlderThan(ctx, time.Now().Add(-DefaultClaimRetention))
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to prune old notification claims")
+		if firstErr == nil {
+			firstErr = err
+		}
+	} else if claimsDeleted > 0 {
+		log.Info().Int64("deleted", claimsDeleted).Msg("Pruned old notification claims")
+	}
+
 	return firstErr
+}
+
+// CreateOnce sends a notification the first time it is called with key and does nothing after that, across replicas and restarts. The claim is kept apart from the notifications themselves, so a recipient deleting or reading theirs, or pruning removing it, never causes a resend. It reports whether the notification was sent.
+func (s *Service) CreateOnce(ctx context.Context, key string, input CreateNotificationInput) (bool, error) {
+	if key == "" {
+		return false, errors.New("a key is required")
+	}
+	if len(input.Recipients) == 0 {
+		return false, errors.New("at least one recipient is required")
+	}
+	claimed, err := s.repo.ClaimOnce(ctx, key)
+	if err != nil || !claimed {
+		return false, err
+	}
+	if _, err := s.doFanout(ctx, input); err != nil {
+		if releaseErr := s.repo.ReleaseClaim(ctx, key); releaseErr != nil {
+			log.Warn().Err(releaseErr).Str("key", key).Msg("Failed to release notification claim")
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // Create queues notifications for the specified recipients.
@@ -480,7 +520,13 @@ func (s *Service) List(ctx context.Context, filter NotificationFilter) (*ListRes
 
 // GetSummary returns unread/total count for a user.
 func (s *Service) GetSummary(ctx context.Context, userID string) (*NotificationSummary, error) {
-	return s.repo.GetSummary(ctx, userID)
+	summary, err := s.repo.GetSummary(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	summary.ReadRetentionDays = int(s.config.PruneReadAge / (24 * time.Hour))
+	summary.RetentionDays = int(s.config.PruneAge / (24 * time.Hour))
+	return summary, nil
 }
 
 // MarkAsRead marks a single notification as read.
@@ -493,6 +539,18 @@ func (s *Service) MarkAsRead(ctx context.Context, id, userID string) error {
 		return ErrUnauthorized
 	}
 	return s.repo.MarkAsRead(ctx, id)
+}
+
+// MarkAsUnread puts a notification back in the unread count, for something read in passing that still needs doing.
+func (s *Service) MarkAsUnread(ctx context.Context, id, userID string) error {
+	notification, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if notification.UserID != userID {
+		return ErrUnauthorized
+	}
+	return s.repo.MarkAsUnread(ctx, id)
 }
 
 // MarkAllAsRead marks all notifications for a user as read.

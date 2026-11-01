@@ -17,17 +17,20 @@ type UpdateSSOMappingRequest struct {
 	// member role
 	MemberRole string `json:"member_role,omitempty"`
 
+	// role id
+	RoleID string `json:"role_id,omitempty"`
+
 	// team id
 	TeamID string `json:"team_id,omitempty"`
 }
 
 // Validate validates this update s s o mapping request
-func (m *UpdateSSOMappingRequest) Validate(formats strfmt.Registry) error {
+func (m *UpdateSSOMappingRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this update s s o mapping request based on context it is used
-func (m *UpdateSSOMappingRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateSSOMappingRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/notification"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
+
+// languagePattern accepts BCP 47 style tags such as en, es or pt-BR without coupling the backend to the list of locales built into the frontend
+var languagePattern = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$`)
 
 // swagger type alias
 var _ = user.User{}
@@ -21,7 +25,7 @@ var _ = user.User{}
 // @Produce json
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success 200 {object} user.User
+// @Success 200 {object} CurrentUserResponse
 // @Failure 401 {object} common.ErrorResponse
 // @ID getUsersMe
 // @Router /api/v1/users/me [get]
@@ -39,7 +43,7 @@ func (h *Handler) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, fullUser)
+	common.RespondJSON(w, http.StatusOK, h.withProfile(r, fullUser))
 }
 
 // @Summary Update user preferences
@@ -76,6 +80,14 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if language, ok := input.Preferences["language"]; ok {
+		tag, isString := language.(string)
+		if !isString || !languagePattern.MatchString(tag) {
+			common.RespondError(w, http.StatusBadRequest, "Invalid language value")
+			return
+		}
+	}
+
 	if notifPrefs, ok := input.Preferences["notifications"].(map[string]interface{}); ok {
 		validTypes := map[string]bool{
 			notification.TypeSystem:                 true,
@@ -88,6 +100,8 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 			notification.TypeDownstreamSchemaChange: true,
 			notification.TypeLineageChange:          true,
 			notification.TypeAssetDeleted:           true,
+			notification.TypeAccessExpiry:           true,
+			notification.TypeAccessRequest:          true,
 		}
 		for key, val := range notifPrefs {
 			if !validTypes[key] {

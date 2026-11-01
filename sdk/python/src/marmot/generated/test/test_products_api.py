@@ -83,6 +83,18 @@ class TestProductsApi(unittest.IsolatedAsyncioTestCase):
         Get data product assets
         """
 
+    async def test_get_products_facets(self) -> None:
+        """Test case for get_products_facets
+
+        Data product filter values
+        """
+
+    def test_get_products_facets_sync(self) -> None:
+        """Test case for get_products_facets (synchronous)
+
+        Data product filter values
+        """
+
     async def test_get_products_id(self) -> None:
         """Test case for get_products_id
 
@@ -129,6 +141,18 @@ class TestProductsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for get_products_list (synchronous)
 
         List data products
+        """
+
+    async def test_get_products_members_id(self) -> None:
+        """Test case for get_products_members_id
+
+        Get data product members
+        """
+
+    def test_get_products_members_id_sync(self) -> None:
+        """Test case for get_products_members_id (synchronous)
+
+        Get data product members
         """
 
     async def test_get_products_resolved_assets_id(self) -> None:
@@ -237,6 +261,18 @@ class TestProductsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for put_products_id (synchronous)
 
         Update data product
+        """
+
+    async def test_put_products_rule_order_id(self) -> None:
+        """Test case for put_products_rule_order_id
+
+        Reorder data product rules
+        """
+
+    def test_put_products_rule_order_id_sync(self) -> None:
+        """Test case for put_products_rule_order_id (synchronous)
+
+        Reorder data product rules
         """
 
     async def test_put_products_rules_id_rule_id(self) -> None:

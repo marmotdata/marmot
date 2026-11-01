@@ -25,12 +25,12 @@ type Bucket struct {
 }
 
 // Validate validates this bucket
-func (m *Bucket) Validate(formats strfmt.Registry) error {
+func (m *Bucket) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this bucket based on context it is used
-func (m *Bucket) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Bucket) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

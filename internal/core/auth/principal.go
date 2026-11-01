@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/user"
@@ -130,9 +131,7 @@ func (p userPrincipal) HasPermission(resourceType, action string) bool {
 
 func (p userPrincipal) AsUser() *user.User { return p.u }
 
-// operatorPrincipal replaces the GetOperatorUser singleton at the Principal
-// boundary. The singleton user record is retained in internal/api/v1/common/auth.go
-// for the flag-off path; Phase 6 removes it.
+// operatorPrincipal is the identity of ingestion Jobs the Kubernetes operator launches, which authenticate with their ServiceAccount token. It holds only what `marmot ingest` needs so a token from any pod running as that ServiceAccount cannot administer Marmot.
 type operatorPrincipal struct{}
 
 func NewOperatorPrincipal() Principal { return operatorPrincipal{} }
@@ -141,15 +140,20 @@ func NewOperatorPrincipal() Principal { return operatorPrincipal{} }
 // and any user_id foreign keys remain linkable across the PRINCIPAL_V2 flip.
 const OperatorPrincipalID = "00000000-0000-0000-0000-000000000001"
 
-func (operatorPrincipal) ID() string                     { return OperatorPrincipalID }
-func (operatorPrincipal) Type() PrincipalType            { return PrincipalTypeOperator }
-func (operatorPrincipal) DisplayName() string            { return "Marmot Operator" }
-func (operatorPrincipal) AuditSubject() string           { return "operator" }
-func (operatorPrincipal) Roles() []string                { return []string{AdminRoleName} }
-func (operatorPrincipal) Permissions() []string          { return nil }
-func (operatorPrincipal) IsAdmin() bool                  { return true }
-func (operatorPrincipal) HasPermission(_, _ string) bool { return true }
-func (operatorPrincipal) AsUser() *user.User             { return nil }
+// operatorPermissions are the permissions behind the endpoints `marmot ingest` calls: runs and pipelines need ingestion:manage, lineage and documentation batches need assets:manage, and a serving Run's enrolment needs ingestion:serve
+var operatorPermissions = []string{"ingestion:manage", "assets:manage", "ingestion:serve"}
+
+func (operatorPrincipal) ID() string            { return OperatorPrincipalID }
+func (operatorPrincipal) Type() PrincipalType   { return PrincipalTypeOperator }
+func (operatorPrincipal) DisplayName() string   { return "Marmot Operator" }
+func (operatorPrincipal) AuditSubject() string  { return "operator" }
+func (operatorPrincipal) Roles() []string       { return nil }
+func (operatorPrincipal) Permissions() []string { return slices.Clone(operatorPermissions) }
+func (operatorPrincipal) IsAdmin() bool         { return false }
+func (operatorPrincipal) AsUser() *user.User    { return nil }
+func (operatorPrincipal) HasPermission(resourceType, action string) bool {
+	return slices.Contains(operatorPermissions, resourceType+":"+action)
+}
 
 type serviceAccountPrincipal struct {
 	id          string
@@ -207,4 +211,3 @@ func (p serviceAccountPrincipal) HasPermission(resourceType, action string) bool
 }
 
 func (p serviceAccountPrincipal) AsUser() *user.User { return nil }
-

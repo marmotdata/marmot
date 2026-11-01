@@ -40,12 +40,12 @@ type CreateRunHistoryRequest struct {
 }
 
 // Validate validates this create run history request
-func (m *CreateRunHistoryRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateRunHistoryRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create run history request based on context it is used
-func (m *CreateRunHistoryRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateRunHistoryRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

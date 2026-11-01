@@ -1,23 +1,38 @@
 <script lang="ts">
 	import '$lib/icon-bundle';
-	import { onMount } from 'svelte';
+	import '$lib/mm';
+	import { onMount, type Snippet } from 'svelte';
 	import '../app.css';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { auth, isAnonymousMode } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
-	import { fetchApi } from '$lib/api';
-	import UserIcon from '~icons/heroicons/user-16-solid';
-	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { settingsAttention, refreshSettingsAttention } from '$lib/settings/attention';
+	import { myAccess, loadMyAccess, holdsAtRoot } from '$lib/iam/myAccess';
+	import { visibleItems } from '$lib/settings/sections';
+	import { locale } from '$lib/i18n';
+	import { userProfile } from '$lib/stores/user';
+	import { theme } from '$lib/stores/theme';
+	import { notifications, unreadCount } from '$lib/stores/notifications';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
 	import { tablePreviewEnabled } from '$lib/stores/features';
+	import { fetchApi } from '$lib/api';
+	import { recordView, viewedItem } from '$lib/home/api';
+	import { chrome, mmIcon, type Crumb } from '$lib/mm';
 	import Banner from '$lib/components/Banner.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import GlobalSearch from '$components/query/GlobalSearch.svelte';
-	import Avatar from '$components/user/Avatar.svelte';
+	import PluginAdvisoryBanner from '$lib/components/PluginAdvisoryBanner.svelte';
+	import { advisoryBanner } from '$lib/plugins/advisoryBanner.svelte';
 	import ToastContainer from '$components/ui/ToastContainer.svelte';
-	import NotificationBell from '$components/notifications/NotificationBell.svelte';
+	import type {
+		MmCommandPalette,
+		PaletteCommand,
+		PaletteResult,
+		PaletteSearch
+	} from '@marmotdata/elements/command-palette.js';
+
+	let { children }: { children: Snippet } = $props();
 
 	interface BannerConfig {
 		enabled: boolean;
@@ -27,492 +42,481 @@
 		id: string;
 	}
 
-	interface UserProfile {
-		id: string;
-		username: string;
-		name: string;
-		profile_picture?: string;
-	}
-
-	let bannerConfig: BannerConfig | null = null;
-	let isDropdownOpen = false;
-	let isGovernanceOpen = false;
-	let isAdmin = false;
-	let checkingAnonymousMode = true;
+	let bannerConfig = $state<BannerConfig | null>(null);
+	let checkingAnonymousMode = $state(true);
 	let manualNavigation = false;
-	let showSearchModal = false;
-	let searchInput: GlobalSearch;
-	let userProfile: UserProfile | null = null;
+	let palette = $state<MmCommandPalette>();
 
-	const isMac = browser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+	const path = $derived(page.url.pathname);
+	// Invitation links are opened by people who cannot sign in yet, so they get the bare sign-in layout too
+	const bare = $derived(path.startsWith('/login') || path.startsWith('/invite/'));
 
-	$: currentSearchQuery = $page.url.searchParams.get('q') || '';
+	onMount(() => {
+		init();
+		return () => notifications.stopPolling();
+	});
 
-	function getHighlightedText(text: string): { text: string; class: string }[] {
-		if (!text) return [];
-
-		const regex =
-			/@metadata\.[a-zA-Z0-9_.]+|"[^"]*"|'[^']*'|[:=<>!]+|\b(AND|OR|NOT|contains|range)\b/g;
-		const parts: { text: string; class: string }[] = [];
-		let lastIndex = 0;
-		let match;
-
-		while ((match = regex.exec(text)) !== null) {
-			if (match.index > lastIndex) {
-				parts.push({
-					text: text.slice(lastIndex, match.index),
-					class: 'text-gray-900 dark:text-gray-100'
-				});
-			}
-
-			const matchText = match[0];
-			let colorClass = 'text-gray-900 dark:text-gray-100';
-
-			if (matchText.startsWith('@metadata.')) {
-				colorClass = 'text-blue-500 dark:text-blue-400';
-			} else if (matchText.match(/^["'][^"']*["']$/)) {
-				colorClass = 'text-green-600 dark:text-green-400';
-			} else if (matchText.match(/[:=<>!]+|contains|range/)) {
-				colorClass = 'text-purple-500 dark:text-purple-400';
-			} else if (matchText.match(/\b(AND|OR|NOT)\b/)) {
-				colorClass = 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700';
-			}
-
-			parts.push({
-				text: matchText,
-				class: colorClass
-			});
-
-			lastIndex = match.index + matchText.length;
-		}
-
-		if (lastIndex < text.length) {
-			parts.push({
-				text: text.slice(lastIndex),
-				class: 'text-gray-900 dark:text-gray-100'
-			});
-		}
-
-		return parts;
-	}
-
-	function openSearchModal() {
-		showSearchModal = true;
-		setTimeout(() => {
-			searchInput?.focus();
-		}, 100);
-	}
-
-	function handleGlobalKeydown(event: KeyboardEvent) {
-		const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
-
-		if (isCmdOrCtrl && event.key === 'k') {
-			event.preventDefault();
-
-			if (showSearchModal) {
-				showSearchModal = false;
-			} else {
-				openSearchModal();
-			}
-		}
-
-		if (event.key === 'Escape') {
-			if (showSearchModal) {
-				event.preventDefault();
-				event.stopPropagation();
-				showSearchModal = false;
-			}
-		}
-	}
-
-	onMount(async () => {
+	async function init() {
 		checkingAnonymousMode = true;
 		await auth.checkAnonymousMode();
 		checkingAnonymousMode = false;
 
-		if (browser && $auth) {
-			isAdmin = auth.hasRole('admin');
-
-			try {
-				const profileRes = await fetchApi('/users/me');
-				if (profileRes.ok) {
-					userProfile = await profileRes.json();
-				}
-			} catch (err) {
-				console.error('Failed to fetch user profile:', err);
-			}
+		if ($auth) {
+			userProfile.load();
+			notifications.startPolling();
 		}
 
-		if (browser) {
-			try {
-				const response = await fetch('/api/v1/ui/config');
-				if (response.ok) {
-					const data = await response.json();
-					bannerConfig = data.banner;
-					encryptionConfigured.set(data.encryption_configured ?? true);
-					allowUnencrypted.set(data.allow_unencrypted ?? false);
-					tablePreviewEnabled.set(data.table_preview_enabled ?? false);
-				}
-			} catch (error) {
-				console.error('Failed to fetch UI config:', error);
+		try {
+			const response = await fetch('/api/v1/ui/config');
+			if (response.ok) {
+				const data = await response.json();
+				bannerConfig = data.banner;
+				encryptionConfigured.set(data.encryption_configured ?? true);
+				allowUnencrypted.set(data.allow_unencrypted ?? false);
+				tablePreviewEnabled.set(data.table_preview_enabled ?? false);
 			}
+		} catch (error) {
+			console.error('Failed to fetch UI config:', error);
+		}
+	}
+
+	$effect(() => {
+		if (browser && $auth) loadMyAccess();
+	});
+
+	const canQueryData = $derived(browser && !!$auth && auth.hasPermission('assets', 'query'));
+	const canViewQueryLog = $derived(browser && !!$auth && holdsAtRoot($myAccess, 'access:view'));
+	const settingsItems = $derived(browser && $auth ? visibleItems($myAccess) : []);
+	const canSeeSettings = $derived(settingsItems.length > 0);
+	const canManagePlugins = $derived(
+		browser && !!$auth && holdsAtRoot($myAccess, 'ingestion:manage')
+	);
+
+	// Fetched once per session; a security advisory against a running plugin takes the one banner
+	// slot over the server-configured one, since it is the more urgent message.
+	$effect(() => {
+		if (canManagePlugins) advisoryBanner.load();
+	});
+	const activeAdvisory = $derived(canManagePlugins ? advisoryBanner.current : undefined);
+
+	// Re-checked on navigation, at most every few minutes, so the dot clears without a reload once things are fixed
+	$effect(() => {
+		if (canSeeSettings && $myAccess.checked && path) refreshSettingsAttention($myAccess);
+	});
+
+	// Opening an asset, term, product or saved query puts it on the viewer's Jump back in list on Home
+	$effect(() => {
+		if (browser && $auth) recordView(viewedItem(page.route.id, page.params, page.url.searchParams));
+	});
+
+	$effect(() => {
+		if (!browser || checkingAnonymousMode || manualNavigation) return;
+		const isOAuthPending = page.url.searchParams.has('oauth_pending');
+		if ($auth && path.startsWith('/login') && !isOAuthPending) {
+			goto(resolve('/'));
+		} else if (!$auth && !bare && !$isAnonymousMode) {
+			goto(resolve('/login'));
 		}
 	});
 
-	$: if (browser && $auth) {
-		isAdmin = auth.hasRole('admin');
-	}
-
-	function withManualNav(fn: () => void) {
+	async function signOut() {
+		// Set before the token is cleared so the redirect-to-login effect does not race the reload below
 		manualNavigation = true;
-		fn();
-		setTimeout(() => {
-			manualNavigation = false;
-		}, 100);
+		await auth.signOut();
+		userProfile.clear();
+		window.location.href = '/';
 	}
 
-	$: if (browser && !checkingAnonymousMode && !manualNavigation) {
-		const isOAuthPending = $page.url.searchParams.has('oauth_pending');
-		if ($auth && $page.url.pathname.startsWith('/login') && !isOAuthPending) {
-			goto(resolve('/'));
-		} else if (!$auth && !$page.url.pathname.startsWith('/login') && !$isAnonymousMode) {
-			goto(resolve('/login'));
+	type NavId =
+		| 'home'
+		| 'discover'
+		| 'glossary'
+		| 'products'
+		| 'query'
+		| 'insights'
+		| 'plugins'
+		| 'audit'
+		| 'rules'
+		| 'settings'
+		| 'account'
+		| 'notifications'
+		| 'none';
+
+	const current = $derived.by((): NavId => {
+		if (path === '/') return 'home';
+		const top = path.split('/')[1];
+		switch (top) {
+			case 'discover':
+			case 'search':
+			case 'assets':
+				return 'discover';
+			case 'glossary':
+				return 'glossary';
+			case 'products':
+				return 'products';
+			case 'query':
+				return 'query';
+			case 'insights':
+			case 'metrics':
+				return 'insights';
+			case 'runs':
+			case 'pipelines':
+			case 'plugins':
+				return 'plugins';
+			case 'query-audit':
+				return 'audit';
+			case 'asset-rules':
+				return 'rules';
+			case 'settings':
+			case 'teams':
+			case 'users':
+			case 'roles':
+			case 'service-accounts':
+			case 'admin':
+				return 'settings';
+			case 'account':
+			case 'profile':
+				return 'account';
+			case 'notifications':
+				return 'notifications';
+			default:
+				return 'none';
 		}
-	}
+	});
 
-	function toggleDropdown() {
-		isDropdownOpen = !isDropdownOpen;
-		isGovernanceOpen = false;
-	}
+	const navLabel: Record<NavId, () => string> = {
+		home: m.nav_home,
+		discover: m.nav_discover,
+		glossary: m.nav_glossary,
+		products: m.nav_data_products,
+		query: m.nav_query,
+		insights: m.nav_insights,
+		plugins: m.nav_runs,
+		audit: m.nav_query_audit,
+		rules: m.nav_asset_rules,
+		settings: m.nav_settings,
+		account: m.nav_account,
+		notifications: m.pagetitle_notifications,
+		none: () => ''
+	};
 
-	function toggleGovernance() {
-		isGovernanceOpen = !isGovernanceOpen;
-		isDropdownOpen = false;
-	}
-
-	function closeDropdown() {
-		isDropdownOpen = false;
-		isGovernanceOpen = false;
-	}
-
-	function handleLogout() {
-		withManualNav(() => {
-			auth.clearToken();
-			window.location.href = '/';
-		});
-	}
-
-	function handleLogin() {
-		withManualNav(() => {
-			goto(resolve('/login'));
-		});
-	}
-
-	function capitalizeWord(word: string): string {
-		return word
-			.split('-')
-			.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-			.join(' ');
-	}
-
-	$: pathSegments = $page.url.pathname.split('/').filter(Boolean);
-	$: decodedSegments = pathSegments.map((segment) => decodeURIComponent(segment));
-	$: processedSegments = decodedSegments.map((segment, index) =>
-		index < 2 ? capitalizeWord(segment) : segment
+	// A page that sets its own crumbs wins; otherwise the crumb is the section the route belongs to
+	const crumbs = $derived.by((): Crumb[] => {
+		if ($chrome.path === path && $chrome.crumbs) return $chrome.crumbs;
+		const label = navLabel[current]();
+		return label ? [{ label }] : [];
+	});
+	const bleed = $derived(
+		($chrome.path === path && $chrome.bleed) ||
+			path.startsWith('/query') ||
+			path.startsWith('/glossary')
 	);
-	$: reversedSegments = [...processedSegments].reverse();
-	$: pageTitle = reversedSegments.join(' - ');
-	$: dynamicTitle = $page.url.pathname === '/' ? 'Marmot' : `${pageTitle} - Marmot`;
+
+	const title = $derived.by(() => {
+		void $locale;
+		const names = crumbs.map((c) => c.label).reverse();
+		return names.length && current !== 'home' ? `${names.join(' · ')} · Marmot` : 'Marmot';
+	});
+
+	const settingsLabel = $derived(
+		canSeeSettings && $settingsAttention > 0
+			? m.settings_attention_dot({ count: $settingsAttention })
+			: ''
+	);
+
+	// The palette offers every page the caller may open, from the same definitions as the sidebar and the Settings sub-navigation, so it never offers a page they cannot see
+	const commands = $derived.by((): PaletteCommand[] => {
+		void $locale;
+		const list: PaletteCommand[] = [
+			{ id: 'home', label: m.nav_home(), icon: 'home', href: '/' },
+			{
+				id: 'discover',
+				label: m.nav_discover(),
+				icon: 'travel-explore',
+				href: '/discover',
+				keywords: ['search', 'browse', 'assets']
+			},
+			{
+				id: 'glossary',
+				label: m.nav_glossary(),
+				icon: 'menu-book',
+				href: '/glossary',
+				keywords: ['terms', 'definitions']
+			},
+			{ id: 'products', label: m.nav_data_products(), icon: 'package-2', href: '/products' }
+		];
+		if (canQueryData)
+			list.push({
+				id: 'query',
+				label: m.nav_query(),
+				icon: 'terminal',
+				href: '/query',
+				keywords: ['sql', 'editor']
+			});
+		list.push(
+			{ id: 'insights', label: m.nav_insights(), icon: 'insights', href: '/insights' },
+			{
+				id: 'plugins',
+				label: m.nav_runs(),
+				icon: 'extension',
+				href: '/runs',
+				keywords: ['pipelines', 'ingestion', 'runs']
+			}
+		);
+		if (canViewQueryLog)
+			list.push({ id: 'audit', label: m.nav_query_audit(), icon: 'policy', href: '/query-audit' });
+		list.push({ id: 'rules', label: m.nav_asset_rules(), icon: 'rule', href: '/asset-rules' });
+		if (canSeeSettings) {
+			list.push({
+				id: 'settings',
+				label: m.nav_settings(),
+				icon: 'settings',
+				href: '/settings',
+				group: m.nav_settings()
+			});
+			for (const item of settingsItems)
+				list.push({
+					id: `settings-${item.id}`,
+					label: `${m.nav_settings()} › ${item.label()}`,
+					icon: mmIcon(item.icon),
+					href: item.href,
+					group: m.nav_settings(),
+					keywords: item.keywords().split(/\s+/)
+				});
+		}
+		if ($auth)
+			list.push(
+				{
+					id: 'account',
+					label: m.nav_account(),
+					icon: 'account-circle',
+					href: '/account',
+					group: m.nav_account(),
+					keywords: m.account_profile_keywords().split(/\s+/)
+				},
+				{
+					id: 'account-notifications',
+					label: `${m.nav_account()} › ${m.pagetitle_notifications()}`,
+					icon: 'notifications',
+					href: '/account/notifications',
+					group: m.nav_account()
+				},
+				{
+					id: 'api-keys',
+					label: `${m.nav_account()} › ${m.account_api_keys()}`,
+					icon: 'key',
+					href: '/account/api-keys',
+					group: m.nav_account(),
+					keywords: m.account_api_keys_keywords().split(/\s+/)
+				}
+			);
+		return list;
+	});
+
+	interface SearchResult {
+		type: 'asset' | 'glossary' | 'team' | 'data_product';
+		id: string;
+		name: string;
+		description?: string;
+		metadata?: Record<string, unknown>;
+		url: string;
+	}
+
+	const kindOf: Record<SearchResult['type'], PaletteResult['kind']> = {
+		asset: 'asset',
+		glossary: 'glossary',
+		team: 'team',
+		data_product: 'data-product'
+	};
+
+	const search: PaletteSearch = async (query, signal) => {
+		const response = await fetchApi(`/search?q=${encodeURIComponent(query)}&limit=8`, { signal });
+		if (!response.ok) return [];
+		const data: { results?: SearchResult[] } = await response.json();
+		return (data.results ?? []).map((r): PaletteResult => {
+			const meta = r.metadata ?? {};
+			const providers = meta.providers;
+			const provider =
+				typeof meta.provider === 'string'
+					? meta.provider
+					: Array.isArray(providers) && typeof providers[0] === 'string'
+						? providers[0]
+						: undefined;
+			return {
+				id: `${r.type}:${r.id}`,
+				kind: kindOf[r.type] ?? 'asset',
+				label: r.name,
+				mrn: typeof meta.mrn === 'string' ? meta.mrn : undefined,
+				provider: provider?.toLowerCase(),
+				description: r.type === 'asset' ? undefined : r.description,
+				href: r.url
+			};
+		});
+	};
+
+	// The palette navigates with location by default; routing through SvelteKit keeps the app loaded
+	function onPaletteSelect(e: CustomEvent<{ item: { href?: string; run?: () => void } }>) {
+		const href = e.detail?.item?.href;
+		if (!href || e.detail.item.run) return;
+		e.preventDefault();
+		goto(resolve(href as '/'));
+	}
+
+	function onSearchAll(e: CustomEvent<{ href?: string; query?: string }>) {
+		e.preventDefault();
+		const q = e.detail?.query ?? '';
+		goto(resolve(`/discover?q=${encodeURIComponent(q)}`));
+	}
+
+	function onAvatarSelect(e: CustomEvent<{ value: string }>) {
+		const v = e.detail?.value;
+		if (v === 'account') goto(resolve('/account'));
+		else if (v === 'language') goto(resolve('/account'));
+		else if (v === 'sign-out') signOut();
+	}
+
+	function onThemeChange(e: CustomEvent<{ theme: 'light' | 'dark' | 'system' }>) {
+		e.preventDefault();
+		const next = e.detail.theme === 'system' ? 'auto' : e.detail.theme;
+		theme.set(next);
+		fetchApi('/users/preferences', {
+			method: 'PUT',
+			body: JSON.stringify({ preferences: { theme: next } })
+		}).catch((error) => console.error('Failed to update theme preference:', error));
+	}
+
+	const themeChoice = $derived($theme === 'auto' ? 'system' : $theme);
+	const profileName = $derived($userProfile?.name || $userProfile?.username || '');
 </script>
 
 <svelte:head>
-	<title>{dynamicTitle}</title>
+	<title>{title}</title>
 </svelte:head>
 
-<svelte:window onclick={closeDropdown} onkeydown={handleGlobalKeydown} />
-
-<div class="h-screen flex flex-col">
-	{#if !$page.url.pathname.startsWith('/login') && bannerConfig}
-		<Banner
-			enabled={bannerConfig.enabled}
-			dismissible={bannerConfig.dismissible}
-			variant={bannerConfig.variant}
-			message={bannerConfig.message}
-			id={bannerConfig.id}
-		/>
-	{/if}
-	{#if !$page.url.pathname.startsWith('/login')}
-		<nav class="glass-navbar flex-none sticky top-0 z-40">
-			<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div class="flex items-center justify-between h-16 gap-6">
-					<!-- Logo -->
-					<div class="flex items-center flex-shrink-0">
-						<a href={resolve('/')} class="flex-shrink-0 hover:opacity-80 transition-opacity">
-							<img src="/images/marmot-text.svg" alt="Marmot" class="h-6 dark:invert" />
-						</a>
-					</div>
-
-					<!-- Centered Search (desktop only) -->
-					<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
-						<button
-							onclick={openSearchModal}
-							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-full shadow-sm"
-						>
-							<Icon icon="material-symbols:search" class="w-4 h-4 text-gray-500 dark:text-white" />
-							<span class="flex-1 text-left truncate font-mono">
-								{#if currentSearchQuery}
-									{#each getHighlightedText(currentSearchQuery) as part, i (i)}
-										<span class={part.class}>{part.text}</span>
-									{/each}
-								{:else}
-									<span class="text-gray-600 dark:text-gray-400">Search everything...</span>
-								{/if}
-							</span>
-							<kbd
-								class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0"
-							>
-								{isMac ? '⌘' : 'Ctrl'}K
-							</kbd>
-						</button>
-					</div>
-
-					<!-- Right side: Menu Items -->
-					<div class="flex items-center space-x-4 flex-shrink-0">
-						<!-- Mobile Search Button -->
-						<button
-							onclick={openSearchModal}
-							class="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-							aria-label="Search"
-						>
-							<Icon icon="material-symbols:search" class="w-5 h-5" />
-						</button>
-
-						<a
-							href={resolve('/discover')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/discover'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:database" />
-							</span>
-							<span>Discover</span>
-						</a>
-
-						<a
-							href={resolve('/runs')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/runs'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:play-circle-outline" />
-							</span>
-							<span>Runs</span>
-						</a>
-
-						<a
-							href={resolve('/metrics')}
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/metrics'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:area-chart-rounded" />
-							</span>
-							<span>Metrics</span>
-						</a>
-
-						<div class="relative">
-							<button
-								type="button"
-								onclick={(e) => {
-									e.stopPropagation();
-									toggleGovernance();
-								}}
-								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-									'/glossary'
-								) ||
-								$page.url.pathname.startsWith('/products') ||
-								$page.url.pathname.startsWith('/asset-rules')
-									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-							>
-								<span class="w-4 h-4 mr-1.5">
-									<Icon icon="material-symbols:shield-outline" />
-								</span>
-								<span>Governance</span>
-								<Icon
-									icon="material-symbols:keyboard-arrow-down"
-									class="w-4 h-4 ml-1 transition-transform {isGovernanceOpen ? 'rotate-180' : ''}"
-								/>
-							</button>
-							{#if isGovernanceOpen}
-								<div
-									class="origin-top-left absolute left-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-									role="menu"
-								>
-									<a
-										href={resolve('/glossary')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/glossary'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:book" class="w-4 h-4" />
-										Glossary
-									</a>
-									<a
-										href={resolve('/products')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/products'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:inventory-2" class="w-4 h-4" />
-										Data Products
-									</a>
-									<a
-										href={resolve('/asset-rules')}
-										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
-											'/asset-rules'
-										)
-											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-											: ''}"
-										role="menuitem"
-									>
-										<Icon icon="material-symbols:rule-settings" class="w-4 h-4" />
-										Asset Rules
-									</a>
-								</div>
-							{/if}
-						</div>
-
-						{#if $auth}
-							<NotificationBell />
-						{/if}
-
-						<div class="relative">
-							<div>
-								<button
-									class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500"
-									id="user-menu"
-									aria-haspopup="true"
-									onclick={(e) => {
-										e.stopPropagation();
-										toggleDropdown();
-									}}
-								>
-									{#if userProfile}
-										<Avatar
-											name={userProfile.name || userProfile.username}
-											profilePicture={userProfile.profile_picture}
-											size="sm"
-										/>
-									{:else}
-										<div
-											class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-										>
-											<UserIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
-										</div>
-									{/if}
-								</button>
-							</div>
-							{#if isDropdownOpen}
-								<div
-									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-									role="menu"
-									aria-orientation="vertical"
-									aria-labelledby="user-menu"
-								>
-									{#if $auth}
-										<!-- User is authenticated -->
-										<a
-											href={resolve('/profile')}
-											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-											role="menuitem">Profile</a
-										>
-										{#if isAdmin}
-											<a
-												href={resolve('/admin')}
-												class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-												role="menuitem">Admin</a
-											>
-										{/if}
-										<button
-											type="button"
-											onclick={handleLogout}
-											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-											role="menuitem"
-										>
-											Logout
-										</button>
-									{:else}
-										<!-- User is in anonymous mode -->
-										<button
-											type="button"
-											onclick={handleLogin}
-											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-											role="menuitem"
-										>
-											Login
-										</button>
-									{/if}
-								</div>
-							{/if}
-						</div>
-					</div>
+<!-- Keyed on the locale so a language change re-renders the shell in place instead of reloading the document -->
+{#key $locale}
+	{#if bare}
+		{@render children()}
+	{:else}
+		<mm-app-shell {bleed}>
+			{#if activeAdvisory}
+				<div slot="banner">
+					<PluginAdvisoryBanner
+						entry={activeAdvisory}
+						onDismiss={() => advisoryBanner.dismiss(activeAdvisory?.id ?? '')}
+					/>
 				</div>
-			</div>
-		</nav>
+			{:else if bannerConfig}
+				<div slot="banner">
+					<Banner
+						enabled={bannerConfig.enabled}
+						dismissible={bannerConfig.dismissible}
+						variant={bannerConfig.variant}
+						message={bannerConfig.message}
+						id={bannerConfig.id}
+					/>
+				</div>
+			{/if}
+			<mm-sidebar-nav slot="sidebar" label={m.nav_main_label()}>
+				<a slot="header" href={resolve('/')} aria-label="Marmot">
+					<mm-logo size={24}></mm-logo>
+				</a>
+				<mm-nav-group label={m.nav_group_catalog()}>
+					<mm-nav-item href={resolve('/')} icon="home" current={current === 'home'}
+						>{m.nav_home()}</mm-nav-item
+					>
+					<mm-nav-item
+						href={resolve('/discover')}
+						icon="travel-explore"
+						current={current === 'discover'}>{m.nav_discover()}</mm-nav-item
+					>
+					<mm-nav-item href={resolve('/glossary')} icon="menu-book" current={current === 'glossary'}
+						>{m.nav_glossary()}</mm-nav-item
+					>
+					<mm-nav-item href={resolve('/products')} icon="package-2" current={current === 'products'}
+						>{m.nav_data_products()}</mm-nav-item
+					>
+				</mm-nav-group>
+				<mm-nav-group label={m.nav_group_work()}>
+					{#if canQueryData}
+						<mm-nav-item href={resolve('/query')} icon="terminal" current={current === 'query'}
+							>{m.nav_query()}</mm-nav-item
+						>
+					{/if}
+					<mm-nav-item href={resolve('/insights')} icon="insights" current={current === 'insights'}
+						>{m.nav_insights()}</mm-nav-item
+					>
+				</mm-nav-group>
+				<mm-nav-group label={m.nav_group_operate()}>
+					<mm-nav-item href={resolve('/runs')} icon="extension" current={current === 'plugins'}
+						>{m.nav_runs()}</mm-nav-item
+					>
+					{#if canViewQueryLog}
+						<mm-nav-item href={resolve('/query-audit')} icon="policy" current={current === 'audit'}
+							>{m.nav_query_audit()}</mm-nav-item
+						>
+					{/if}
+					<mm-nav-item href={resolve('/asset-rules')} icon="rule" current={current === 'rules'}
+						>{m.nav_asset_rules()}</mm-nav-item
+					>
+				</mm-nav-group>
+				{#if canSeeSettings}
+					<div slot="footer">
+						<mm-nav-item
+							href={resolve('/settings')}
+							icon="settings"
+							current={current === 'settings'}
+							attention={$settingsAttention > 0 ? $settingsAttention : undefined}
+							attention-label={settingsLabel}>{m.nav_settings()}</mm-nav-item
+						>
+					</div>
+				{/if}
+			</mm-sidebar-nav>
+			<mm-top-bar
+				slot="topbar"
+				placeholder={m.nav_search_everything()}
+				notifications={!!$auth}
+				unread={$auth ? $unreadCount : 0}
+				help-href="https://marmotdata.io/docs"
+				onmm-open-search={() => palette?.show()}
+				onmm-open-notifications={() => goto(resolve('/notifications'))}
+			>
+				{#if crumbs.length}
+					<mm-breadcrumbs slot="start">
+						{#each crumbs as crumb, i (i)}
+							<mm-breadcrumb href={i < crumbs.length - 1 ? (crumb.href ?? '') : ''}
+								>{crumb.label}</mm-breadcrumb
+							>
+						{/each}
+					</mm-breadcrumbs>
+				{/if}
+				{#if $auth}
+					<mm-avatar-menu
+						slot="end"
+						name={profileName}
+						email={$userProfile?.email ?? ''}
+						theme={themeChoice}
+						onmm-select={onAvatarSelect}
+						onmm-theme-change={onThemeChange}
+					></mm-avatar-menu>
+				{:else}
+					<mm-button slot="end" variant="secondary" size="sm" icon="login" href={resolve('/login')}
+						>{m.nav_login()}</mm-button
+					>
+				{/if}
+			</mm-top-bar>
+			<mm-command-palette
+				bind:this={palette}
+				global-shortcut
+				search-href="/discover?q={'{query}'}"
+				{commands}
+				{search}
+				onmm-select={onPaletteSelect}
+				onmm-search-all={onSearchAll}
+			></mm-command-palette>
+			{@render children()}
+		</mm-app-shell>
 	{/if}
-
-	<main class="flex-1 overflow-y-auto flex flex-col">
-		<div class="flex-1">
-			<slot />
-		</div>
-		{#if !$page.url.pathname.startsWith('/login')}
-			<Footer />
-		{/if}
-	</main>
-</div>
-
-<!-- Search Modal -->
-{#if showSearchModal}
-	<div
-		class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh] px-4"
-		onclick={() => (showSearchModal = false)}
-		onkeydown={(e) => e.key === 'Escape' && (showSearchModal = false)}
-		role="button"
-		tabindex="-1"
-	>
-		<div
-			class="w-full max-w-2xl glass-modal rounded-xl shadow-2xl overflow-visible"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			tabindex="-1"
-		>
-			<div class="p-6 search-modal-input">
-				<GlobalSearch
-					bind:this={searchInput}
-					autofocus={true}
-					initialQuery={currentSearchQuery}
-					onNavigate={() => (showSearchModal = false)}
-				/>
-			</div>
-		</div>
-	</div>
-{/if}
+{/key}
 
 <ToastContainer />

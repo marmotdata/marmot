@@ -33,6 +33,12 @@ func (o *DeleteUsersApikeysIDReader) ReadResponse(response runtime.ClientRespons
 			return nil, err
 		}
 		return nil, result
+	case 404:
+		result := NewDeleteUsersApikeysIDNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[DELETE /api/v1/users/apikeys/{id}] deleteUsersApikeysID", response, response.Code())
 	}
@@ -149,6 +155,74 @@ func (o *DeleteUsersApikeysIDBadRequest) GetPayload() *models.ErrorResponse {
 }
 
 func (o *DeleteUsersApikeysIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewDeleteUsersApikeysIDNotFound creates a DeleteUsersApikeysIDNotFound with default headers values
+func NewDeleteUsersApikeysIDNotFound() *DeleteUsersApikeysIDNotFound {
+	return &DeleteUsersApikeysIDNotFound{}
+}
+
+// DeleteUsersApikeysIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
+type DeleteUsersApikeysIDNotFound struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this delete users apikeys Id not found response has a 2xx status code
+func (o *DeleteUsersApikeysIDNotFound) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this delete users apikeys Id not found response has a 3xx status code
+func (o *DeleteUsersApikeysIDNotFound) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this delete users apikeys Id not found response has a 4xx status code
+func (o *DeleteUsersApikeysIDNotFound) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this delete users apikeys Id not found response has a 5xx status code
+func (o *DeleteUsersApikeysIDNotFound) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this delete users apikeys Id not found response a status code equal to that given
+func (o *DeleteUsersApikeysIDNotFound) IsCode(code int) bool {
+	return code == 404
+}
+
+// Code gets the status code for the delete users apikeys Id not found response
+func (o *DeleteUsersApikeysIDNotFound) Code() int {
+	return 404
+}
+
+func (o *DeleteUsersApikeysIDNotFound) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdNotFound %s", 404, payload)
+}
+
+func (o *DeleteUsersApikeysIDNotFound) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/apikeys/{id}][%d] deleteUsersApikeysIdNotFound %s", 404, payload)
+}
+
+func (o *DeleteUsersApikeysIDNotFound) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *DeleteUsersApikeysIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 

@@ -39,6 +39,7 @@ class TestServiceAccountAPIKey(unittest.TestCase):
                 key = '',
                 last_used_at = '',
                 name = '',
+                prefix = '',
                 service_account_id = ''
             )
         else:

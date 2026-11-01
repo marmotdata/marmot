@@ -27,6 +27,12 @@ func (o *GetAssetsByGlossaryTermTermIDReader) ReadResponse(response runtime.Clie
 			return nil, err
 		}
 		return result, nil
+	case 400:
+		result := NewGetAssetsByGlossaryTermTermIDBadRequest()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewGetAssetsByGlossaryTermTermIDInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -47,7 +53,7 @@ func NewGetAssetsByGlossaryTermTermIDOK() *GetAssetsByGlossaryTermTermIDOK {
 //
 // OK
 type GetAssetsByGlossaryTermTermIDOK struct {
-	Payload any
+	Payload *models.AssetsByTermResponse
 }
 
 // IsSuccess returns true when this get assets by glossary term term Id o k response has a 2xx status code
@@ -90,14 +96,84 @@ func (o *GetAssetsByGlossaryTermTermIDOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdOK %s", 200, payload)
 }
 
-func (o *GetAssetsByGlossaryTermTermIDOK) GetPayload() any {
+func (o *GetAssetsByGlossaryTermTermIDOK) GetPayload() *models.AssetsByTermResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsByGlossaryTermTermIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
+	o.Payload = new(models.AssetsByTermResponse)
+
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetAssetsByGlossaryTermTermIDBadRequest creates a GetAssetsByGlossaryTermTermIDBadRequest with default headers values
+func NewGetAssetsByGlossaryTermTermIDBadRequest() *GetAssetsByGlossaryTermTermIDBadRequest {
+	return &GetAssetsByGlossaryTermTermIDBadRequest{}
+}
+
+// GetAssetsByGlossaryTermTermIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
+type GetAssetsByGlossaryTermTermIDBadRequest struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this get assets by glossary term term Id bad request response has a 2xx status code
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this get assets by glossary term term Id bad request response has a 3xx status code
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this get assets by glossary term term Id bad request response has a 4xx status code
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this get assets by glossary term term Id bad request response has a 5xx status code
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this get assets by glossary term term Id bad request response a status code equal to that given
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) IsCode(code int) bool {
+	return code == 400
+}
+
+// Code gets the status code for the get assets by glossary term term Id bad request response
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) Code() int {
+	return 400
+}
+
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdBadRequest %s", 400, payload)
+}
+
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[GET /api/v1/assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdBadRequest %s", 400, payload)
+}
+
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *GetAssetsByGlossaryTermTermIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 

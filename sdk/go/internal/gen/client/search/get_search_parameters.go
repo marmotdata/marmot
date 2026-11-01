@@ -64,6 +64,11 @@ GetSearchParams contains all the parameters to send to the API endpoint
 */
 type GetSearchParams struct {
 
+	// AssetTypes.
+	//
+	// Comma-separated asset types to filter assets by
+	AssetTypes *string
+
 	// Limit.
 	//
 	// Limit
@@ -76,10 +81,32 @@ type GetSearchParams struct {
 	// Offset
 	Offset *int64
 
+	// Owner.
+	//
+	// Comma-separated user or team IDs; matches assets, glossary terms and data products they own
+	Owner *string
+
+	// Providers.
+	//
+	// Comma-separated providers to filter assets by
+	Providers *string
+
 	// Q.
 	//
 	// Search query
 	Q string
+
+	// Sort.
+	//
+	// Result order
+	//
+	// Default: "relevance"
+	Sort *string
+
+	// Tags.
+	//
+	// Comma-separated tags to filter by
+	Tags *string
 
 	// Types.
 	//
@@ -107,11 +134,14 @@ func (o *GetSearchParams) SetDefaults() {
 		limitDefault = int64(20)
 
 		offsetDefault = int64(0)
+
+		sortDefault = string("relevance")
 	)
 
 	val := GetSearchParams{
 		Limit:  &limitDefault,
 		Offset: &offsetDefault,
+		Sort:   &sortDefault,
 	}
 
 	val.inner.timeout = o.inner.timeout
@@ -157,6 +187,17 @@ func (o *GetSearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithAssetTypes adds the assetTypes to the get search params.
+func (o *GetSearchParams) WithAssetTypes(assetTypes *string) *GetSearchParams {
+	o.SetAssetTypes(assetTypes)
+	return o
+}
+
+// SetAssetTypes adds the assetTypes to the get search params.
+func (o *GetSearchParams) SetAssetTypes(assetTypes *string) {
+	o.AssetTypes = assetTypes
+}
+
 // WithLimit adds the limit to the get search params.
 func (o *GetSearchParams) WithLimit(limit *int64) *GetSearchParams {
 	o.SetLimit(limit)
@@ -179,6 +220,28 @@ func (o *GetSearchParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
+// WithOwner adds the owner to the get search params.
+func (o *GetSearchParams) WithOwner(owner *string) *GetSearchParams {
+	o.SetOwner(owner)
+	return o
+}
+
+// SetOwner adds the owner to the get search params.
+func (o *GetSearchParams) SetOwner(owner *string) {
+	o.Owner = owner
+}
+
+// WithProviders adds the providers to the get search params.
+func (o *GetSearchParams) WithProviders(providers *string) *GetSearchParams {
+	o.SetProviders(providers)
+	return o
+}
+
+// SetProviders adds the providers to the get search params.
+func (o *GetSearchParams) SetProviders(providers *string) {
+	o.Providers = providers
+}
+
 // WithQ adds the q to the get search params.
 func (o *GetSearchParams) WithQ(q string) *GetSearchParams {
 	o.SetQ(q)
@@ -188,6 +251,28 @@ func (o *GetSearchParams) WithQ(q string) *GetSearchParams {
 // SetQ adds the q to the get search params.
 func (o *GetSearchParams) SetQ(q string) {
 	o.Q = q
+}
+
+// WithSort adds the sort to the get search params.
+func (o *GetSearchParams) WithSort(sort *string) *GetSearchParams {
+	o.SetSort(sort)
+	return o
+}
+
+// SetSort adds the sort to the get search params.
+func (o *GetSearchParams) SetSort(sort *string) {
+	o.Sort = sort
+}
+
+// WithTags adds the tags to the get search params.
+func (o *GetSearchParams) WithTags(tags *string) *GetSearchParams {
+	o.SetTags(tags)
+	return o
+}
+
+// SetTags adds the tags to the get search params.
+func (o *GetSearchParams) SetTags(tags *string) {
+	o.Tags = tags
 }
 
 // WithTypes adds the types to the get search params.
@@ -207,6 +292,23 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 		return err
 	}
 	var res []error
+
+	if o.AssetTypes != nil {
+
+		// query param asset_types
+		var qrAssetTypes string
+
+		if o.AssetTypes != nil {
+			qrAssetTypes = *o.AssetTypes
+		}
+		qAssetTypes := qrAssetTypes
+		if qAssetTypes != "" {
+
+			if err := r.SetQueryParam("asset_types", qAssetTypes); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.Limit != nil {
 
@@ -242,6 +344,40 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 		}
 	}
 
+	if o.Owner != nil {
+
+		// query param owner
+		var qrOwner string
+
+		if o.Owner != nil {
+			qrOwner = *o.Owner
+		}
+		qOwner := qrOwner
+		if qOwner != "" {
+
+			if err := r.SetQueryParam("owner", qOwner); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Providers != nil {
+
+		// query param providers
+		var qrProviders string
+
+		if o.Providers != nil {
+			qrProviders = *o.Providers
+		}
+		qProviders := qrProviders
+		if qProviders != "" {
+
+			if err := r.SetQueryParam("providers", qProviders); err != nil {
+				return err
+			}
+		}
+	}
+
 	// query param q
 	qrQ := o.Q
 	qQ := qrQ
@@ -249,6 +385,40 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 
 		if err := r.SetQueryParam("q", qQ); err != nil {
 			return err
+		}
+	}
+
+	if o.Sort != nil {
+
+		// query param sort
+		var qrSort string
+
+		if o.Sort != nil {
+			qrSort = *o.Sort
+		}
+		qSort := qrSort
+		if qSort != "" {
+
+			if err := r.SetQueryParam("sort", qSort); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Tags != nil {
+
+		// query param tags
+		var qrTags string
+
+		if o.Tags != nil {
+			qrTags = *o.Tags
+		}
+		qTags := qrTags
+		if qTags != "" {
+
+			if err := r.SetQueryParam("tags", qTags); err != nil {
+				return err
+			}
 		}
 	}
 

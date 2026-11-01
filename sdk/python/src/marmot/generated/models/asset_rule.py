@@ -31,6 +31,7 @@ class AssetRule(BaseModel):
 
     created_at: StrictStr | None = None
     created_by: StrictStr | None = None
+    created_by_name: StrictStr | None = None
     description: StrictStr | None = None
     id: StrictStr | None = None
     is_enabled: StrictBool | None = None
@@ -47,9 +48,12 @@ class AssetRule(BaseModel):
     rule_type: RuleType | None = None
     term_ids: list[StrictStr] | None = None
     updated_at: StrictStr | None = None
+    updated_by: StrictStr | None = None
+    updated_by_name: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "created_at",
         "created_by",
+        "created_by_name",
         "description",
         "id",
         "is_enabled",
@@ -66,6 +70,8 @@ class AssetRule(BaseModel):
         "rule_type",
         "term_ids",
         "updated_at",
+        "updated_by",
+        "updated_by_name",
     ]
 
     model_config = ConfigDict(
@@ -127,6 +133,7 @@ class AssetRule(BaseModel):
             {
                 "created_at": obj.get("created_at"),
                 "created_by": obj.get("created_by"),
+                "created_by_name": obj.get("created_by_name"),
                 "description": obj.get("description"),
                 "id": obj.get("id"),
                 "is_enabled": obj.get("is_enabled"),
@@ -145,5 +152,7 @@ class AssetRule(BaseModel):
                 "rule_type": obj.get("rule_type"),
                 "term_ids": obj.get("term_ids"),
                 "updated_at": obj.get("updated_at"),
+                "updated_by": obj.get("updated_by"),
+                "updated_by_name": obj.get("updated_by_name"),
             }
         )

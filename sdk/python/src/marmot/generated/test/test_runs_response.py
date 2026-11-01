@@ -42,6 +42,7 @@ class TestRunsResponse(unittest.TestCase):
                         error = '',
                         id = '',
                         model = '',
+                        prompt = '',
                         run_id = '',
                         started_at = '',
                         status = '',
@@ -49,8 +50,12 @@ class TestRunsResponse(unittest.TestCase):
                         tokens_out = 56,
                         tool_calls = [
                             marmot.generated.models.tool_call.ToolCall(
+                                detail = '',
                                 duration_ms = 56,
                                 ordinal = 56,
+                                reason = '',
+                                result = '',
+                                rule = '',
                                 started_at = '',
                                 status = '',
                                 target_mrn = '',

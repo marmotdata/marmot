@@ -1,0 +1,122 @@
+/*
+ * Document: a long page that is read rather than scanned, such as the legal pages, the security
+ * policy and the bounty rules. A header with the title and a quiet caption, then prose set to a
+ * readable measure. Plain HTML inside .mkt-doc__body is styled as it comes, so content can be
+ * moved in without adding classes to every element.
+ */
+@layer site {
+	.mkt-doc {
+		padding-block: calc(var(--space-12) * 1.5) calc(var(--space-12) * 2);
+	}
+	.mkt-doc__header {
+		max-width: 72ch;
+		padding-block-end: var(--space-8);
+		margin-block-end: var(--space-8);
+		border-block-end: 1px solid var(--mm-rule);
+	}
+	.mkt-doc__title {
+		margin: 0;
+		font: var(--text-display-title);
+		letter-spacing: var(--tracking-display-title);
+		text-wrap: balance;
+	}
+	.mkt-doc__lede {
+		margin: var(--space-4) 0 0;
+		max-width: 60ch;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+	/* Facts about the document itself: when it was last updated, which version it is. */
+	.mkt-doc__caption {
+		margin: var(--space-3) 0 0;
+		font: var(--text-caption);
+		color: var(--mm-text-2);
+	}
+
+	.mkt-doc__body {
+		max-width: 72ch;
+		font: var(--text-body);
+		color: var(--mm-text);
+	}
+	.mkt-doc__body > :first-child {
+		margin-block-start: 0;
+	}
+	.mkt-doc__body :is(h2, h3, h4) {
+		scroll-margin-block-start: calc(var(--ifm-navbar-height, 57px) + var(--space-4));
+	}
+	.mkt-doc__body h2 {
+		margin: var(--space-12) 0 var(--space-3);
+		font: var(--text-heading);
+	}
+	.mkt-doc__body h3 {
+		margin: var(--space-8) 0 var(--space-2);
+		font: var(--text-heading-sm);
+	}
+	.mkt-doc__body h4 {
+		margin: var(--space-6) 0 var(--space-2);
+		font: var(--text-label);
+	}
+	.mkt-doc__body p {
+		margin: 0 0 var(--space-4);
+	}
+	.mkt-doc__body :is(ul, ol) {
+		margin: 0 0 var(--space-4);
+		padding-inline-start: var(--space-6);
+	}
+	.mkt-doc__body li + li {
+		margin-block-start: var(--space-2);
+	}
+	.mkt-doc__body li::marker {
+		color: var(--mm-text-3);
+	}
+	.mkt-doc__body a:not(.mm-btn) {
+		color: var(--mm-primary);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+		text-decoration-thickness: 1px;
+	}
+	.mkt-doc__body a:not(.mm-btn):hover {
+		text-decoration-thickness: 2px;
+	}
+	.mkt-doc__body strong {
+		font-weight: 600;
+	}
+	.mkt-doc__body hr {
+		margin: var(--space-8) 0;
+		border: 0;
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	/* Tables are read across, so they get the full width a document allows and thin rules only. */
+	.mkt-doc__body table {
+		display: table;
+		inline-size: 100%;
+		margin: 0 0 var(--space-6);
+		border-collapse: collapse;
+		font: var(--text-dense);
+	}
+	.mkt-doc__body :is(th, td) {
+		padding: var(--space-2) var(--space-3) var(--space-2) 0;
+		text-align: start;
+		vertical-align: top;
+		border: 0;
+		border-block-end: 1px solid var(--mm-rule);
+		background: none;
+	}
+	.mkt-doc__body th {
+		font: var(--text-label);
+		color: var(--mm-text-2);
+	}
+	.mkt-doc__body tr {
+		background: none;
+		border: 0;
+	}
+	@media (max-width: 720px) {
+		.mkt-doc {
+			padding-block: var(--space-12) calc(var(--space-12) * 1.5);
+		}
+		.mkt-doc__body table {
+			display: block;
+			overflow-x: auto;
+		}
+	}
+}

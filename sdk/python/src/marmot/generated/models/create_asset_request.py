@@ -22,6 +22,7 @@ from typing_extensions import Self
 
 from marmot.generated.models.asset_external_link import AssetExternalLink
 from marmot.generated.models.asset_source import AssetSource
+from marmot.generated.models.create_asset_owner import CreateAssetOwner
 from marmot.generated.models.environment import Environment
 
 
@@ -35,22 +36,35 @@ class CreateAssetRequest(BaseModel):
     external_links: list[AssetExternalLink] | None = None
     metadata: dict[str, Any] | None = None
     name: StrictStr
+    owners: list[CreateAssetOwner] | None = Field(
+        default=None, description="Owners are the users and teams to own the asset."
+    )
     providers: list[StrictStr]
     var_schema: dict[str, StrictStr] | None = Field(default=None, alias="schema")
     sources: list[AssetSource] | None = None
     tags: list[StrictStr] | None = None
+    terms: list[StrictStr] | None = Field(
+        default=None, description="Terms are the IDs of glossary terms to link the asset to."
+    )
     type: StrictStr
+    user_description: StrictStr | None = Field(
+        default=None,
+        description="UserDescription is the people-written description, kept apart from the source's own.",
+    )
     __properties: ClassVar[list[str]] = [
         "description",
         "environments",
         "external_links",
         "metadata",
         "name",
+        "owners",
         "providers",
         "schema",
         "sources",
         "tags",
+        "terms",
         "type",
+        "user_description",
     ]
 
     model_config = ConfigDict(
@@ -104,6 +118,13 @@ class CreateAssetRequest(BaseModel):
                 if _item_external_links:
                     _items.append(_item_external_links.to_dict())
             _dict["external_links"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in owners (list)
+        _items = []
+        if self.owners:
+            for _item_owners in self.owners:
+                if _item_owners:
+                    _items.append(_item_owners.to_dict())
+            _dict["owners"] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in sources (list)
         _items = []
         if self.sources:
@@ -137,12 +158,17 @@ class CreateAssetRequest(BaseModel):
                 else None,
                 "metadata": obj.get("metadata"),
                 "name": obj.get("name"),
+                "owners": [CreateAssetOwner.from_dict(_item) for _item in obj["owners"]]
+                if obj.get("owners") is not None
+                else None,
                 "providers": obj.get("providers"),
                 "schema": obj.get("schema"),
                 "sources": [AssetSource.from_dict(_item) for _item in obj["sources"]]
                 if obj.get("sources") is not None
                 else None,
                 "tags": obj.get("tags"),
+                "terms": obj.get("terms"),
                 "type": obj.get("type"),
+                "user_description": obj.get("user_description"),
             }
         )

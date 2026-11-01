@@ -119,6 +119,18 @@ class TestServiceAccountsApi(unittest.IsolatedAsyncioTestCase):
         Create API key for a service account
         """
 
+    async def test_post_service_accounts_idapi_keys_key_id_rotate(self) -> None:
+        """Test case for post_service_accounts_idapi_keys_key_id_rotate
+
+        Rotate an API key
+        """
+
+    def test_post_service_accounts_idapi_keys_key_id_rotate_sync(self) -> None:
+        """Test case for post_service_accounts_idapi_keys_key_id_rotate (synchronous)
+
+        Rotate an API key
+        """
+
 
 if __name__ == "__main__":
     unittest.main()

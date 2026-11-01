@@ -16,15 +16,18 @@ type V1RolesReplacePermissionsRequest struct {
 
 	// permission ids
 	PermissionIds []string `json:"permission_ids"`
+
+	// PermissionKeys names permissions as resource_type:action keys. They are added to PermIDs.
+	PermissionKeys []string `json:"permission_keys"`
 }
 
 // Validate validates this v1 roles replace permissions request
-func (m *V1RolesReplacePermissionsRequest) Validate(formats strfmt.Registry) error {
+func (m *V1RolesReplacePermissionsRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this v1 roles replace permissions request based on context it is used
-func (m *V1RolesReplacePermissionsRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *V1RolesReplacePermissionsRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

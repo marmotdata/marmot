@@ -40,6 +40,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -58,6 +74,16 @@ class SearchApi:
         :type q: str
         :param types: Filter by result types (asset, glossary, team, user)
         :type types: List[str]
+        :param asset_types: Comma-separated asset types to filter assets by
+        :type asset_types: str
+        :param providers: Comma-separated providers to filter assets by
+        :type providers: str
+        :param tags: Comma-separated tags to filter by
+        :type tags: str
+        :param owner: Comma-separated user or team IDs; matches assets, glossary terms and data products they own
+        :type owner: str
+        :param sort: Result order
+        :type sort: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -87,6 +113,11 @@ class SearchApi:
         _param = self._get_search_serialize(
             q=q,
             types=types,
+            asset_types=asset_types,
+            providers=providers,
+            tags=tags,
+            owner=owner,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -115,6 +146,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -133,6 +180,16 @@ class SearchApi:
         :type q: str
         :param types: Filter by result types (asset, glossary, team, user)
         :type types: List[str]
+        :param asset_types: Comma-separated asset types to filter assets by
+        :type asset_types: str
+        :param providers: Comma-separated providers to filter assets by
+        :type providers: str
+        :param tags: Comma-separated tags to filter by
+        :type tags: str
+        :param owner: Comma-separated user or team IDs; matches assets, glossary terms and data products they own
+        :type owner: str
+        :param sort: Result order
+        :type sort: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -162,6 +219,11 @@ class SearchApi:
         _param = self._get_search_serialize(
             q=q,
             types=types,
+            asset_types=asset_types,
+            providers=providers,
+            tags=tags,
+            owner=owner,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -190,6 +252,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -208,6 +286,16 @@ class SearchApi:
         :type q: str
         :param types: Filter by result types (asset, glossary, team, user)
         :type types: List[str]
+        :param asset_types: Comma-separated asset types to filter assets by
+        :type asset_types: str
+        :param providers: Comma-separated providers to filter assets by
+        :type providers: str
+        :param tags: Comma-separated tags to filter by
+        :type tags: str
+        :param owner: Comma-separated user or team IDs; matches assets, glossary terms and data products they own
+        :type owner: str
+        :param sort: Result order
+        :type sort: str
         :param limit: Limit
         :type limit: int
         :param offset: Offset
@@ -237,6 +325,11 @@ class SearchApi:
         _param = self._get_search_serialize(
             q=q,
             types=types,
+            asset_types=asset_types,
+            providers=providers,
+            tags=tags,
+            owner=owner,
+            sort=sort,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -261,6 +354,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -280,6 +389,11 @@ class SearchApi:
             self.get_search(
                 q=q,
                 types=types,
+                asset_types=asset_types,
+                providers=providers,
+                tags=tags,
+                owner=owner,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -298,6 +412,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -317,6 +447,11 @@ class SearchApi:
             self.get_search_with_http_info(
                 q=q,
                 types=types,
+                asset_types=asset_types,
+                providers=providers,
+                tags=tags,
+                owner=owner,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -335,6 +470,22 @@ class SearchApi:
             list[StrictStr] | None,
             Field(description="Filter by result types (asset, glossary, team, user)"),
         ] = None,
+        asset_types: Annotated[
+            StrictStr | None, Field(description="Comma-separated asset types to filter assets by")
+        ] = None,
+        providers: Annotated[
+            StrictStr | None, Field(description="Comma-separated providers to filter assets by")
+        ] = None,
+        tags: Annotated[
+            StrictStr | None, Field(description="Comma-separated tags to filter by")
+        ] = None,
+        owner: Annotated[
+            StrictStr | None,
+            Field(
+                description="Comma-separated user or team IDs; matches assets, glossary terms and data products they own"
+            ),
+        ] = None,
+        sort: Annotated[StrictStr | None, Field(description="Result order")] = None,
         limit: Annotated[StrictInt | None, Field(description="Limit")] = None,
         offset: Annotated[StrictInt | None, Field(description="Offset")] = None,
         _request_timeout: None
@@ -354,6 +505,11 @@ class SearchApi:
             self.get_search_without_preload_content(
                 q=q,
                 types=types,
+                asset_types=asset_types,
+                providers=providers,
+                tags=tags,
+                owner=owner,
+                sort=sort,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -368,6 +524,11 @@ class SearchApi:
         self,
         q,
         types,
+        asset_types,
+        providers,
+        tags,
+        owner,
+        sort,
         limit,
         offset,
         _request_auth,
@@ -396,6 +557,21 @@ class SearchApi:
 
         if types is not None:
             _query_params.append(("types", types))
+
+        if asset_types is not None:
+            _query_params.append(("asset_types", asset_types))
+
+        if providers is not None:
+            _query_params.append(("providers", providers))
+
+        if tags is not None:
+            _query_params.append(("tags", tags))
+
+        if owner is not None:
+            _query_params.append(("owner", owner))
+
+        if sort is not None:
+            _query_params.append(("sort", sort))
 
         if limit is not None:
             _query_params.append(("limit", limit))

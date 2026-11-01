@@ -22,15 +22,18 @@ type V1RolesCreateRoleRequest struct {
 
 	// permission ids
 	PermissionIds []string `json:"permission_ids"`
+
+	// PermissionKeys names permissions as resource_type:action keys, the form a hand-written role document uses.
+	PermissionKeys []string `json:"permission_keys"`
 }
 
 // Validate validates this v1 roles create role request
-func (m *V1RolesCreateRoleRequest) Validate(formats strfmt.Registry) error {
+func (m *V1RolesCreateRoleRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this v1 roles create role request based on context it is used
-func (m *V1RolesCreateRoleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *V1RolesCreateRoleRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

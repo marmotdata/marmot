@@ -1,126 +1,54 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
-	import Button from '$components/ui/Button.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { signInProviders } from './providers';
 
-	let enabledProviders = $state<string[]>([]);
-	let loading = $state(true);
-	let error = $state('');
+	let enabled = $state<string[]>([]);
 
+	const providers = $derived(signInProviders.filter((p) => enabled.includes(p.id)));
+
+	// A failed lookup only hides the provider buttons; the username and password form still works
 	onMount(async () => {
 		try {
 			const response = await fetchApi('/auth-providers', { skipAuth: true, prefix: '' });
-			if (!response.ok) {
-				throw new Error('Failed to fetch auth configuration');
-			}
+			if (!response.ok) return;
 			const data = await response.json();
-			enabledProviders = data.enabled_providers;
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load OAuth providers';
-		} finally {
-			loading = false;
+			enabled = data.enabled_providers ?? [];
+		} catch {
+			enabled = [];
 		}
 	});
 
-	function handleOAuthLogin(provider: string) {
+	function signInWith(provider: string) {
 		window.location.href = `/auth/${provider}/login`;
 	}
 </script>
 
-{#if loading}
-	<div class="flex justify-center p-4">
-		<div
-			class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-gray-100"
-		></div>
+{#if providers.length}
+	<div class="mm-stack" style="--mm-gap: var(--space-2)">
+		{#each providers as p (p.id)}
+			<mm-button class="block" onclick={() => signInWith(p.id)}>
+				<mm-provider-logo slot="icon" provider={p.logo} size={16} decorative></mm-provider-logo>
+				{p.name ? m.oauth_signin_with({ provider: p.name }) : m.oauth_signin_sso()}
+			</mm-button>
+		{/each}
 	</div>
-{:else if error}
-	<div class="text-red-600 dark:text-red-400 text-center p-4">
-		{error}
-	</div>
-{:else if enabledProviders.length > 0}
-	<div class="relative my-8">
-		<div class="absolute inset-0 flex items-center">
-			<div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-		</div>
-		<div class="relative flex justify-center text-sm">
-			<span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-				>Or continue with</span
-			>
-		</div>
-	</div>
-
-	<div class="mt-6 space-y-3">
-		{#if enabledProviders.includes('google')}
-			<Button
-				variant="clear"
-				icon="simple-icons:google"
-				text="Sign in with Google"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('google')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('github')}
-			<Button
-				variant="clear"
-				icon="simple-icons:github"
-				text="Sign in with GitHub"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('github')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('gitlab')}
-			<Button
-				variant="clear"
-				icon="simple-icons:gitlab"
-				text="Sign in with GitLab"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('gitlab')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('keycloak')}
-			<Button
-				variant="clear"
-				icon="simple-icons:keycloak"
-				text="Sign in with Keycloak"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('keycloak')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('okta')}
-			<Button
-				variant="clear"
-				icon="simple-icons:okta"
-				text="Sign in with Okta"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('okta')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('slack')}
-			<Button
-				variant="clear"
-				icon="simple-icons:slack"
-				text="Sign in with Slack"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('slack')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('auth0')}
-			<Button
-				variant="clear"
-				icon="simple-icons:auth0"
-				text="Sign in with Auth0"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('auth0')}
-			/>
-		{/if}
-		{#if enabledProviders.includes('generic_oidc')}
-			<Button
-				variant="clear"
-				icon="mdi:shield-key-outline"
-				text="Sign in with SSO"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-				click={() => handleOAuthLogin('generic_oidc')}
-			/>
-		{/if}
+	<div class="divider">
+		<hr class="mm-rule" />
+		<mm-text variant="caption" tone="secondary">{m.oauth_continue_with()}</mm-text>
+		<hr class="mm-rule" />
 	</div>
 {/if}
+
+<style>
+	.block {
+		display: flex;
+	}
+	.divider {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: var(--space-3);
+	}
+</style>

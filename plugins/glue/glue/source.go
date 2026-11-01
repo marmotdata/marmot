@@ -19,14 +19,25 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "glue",
-		Name:        "AWS Glue",
-		Description: "Discover jobs, databases, tables and crawlers from AWS Glue",
-		Icon:        "glue",
-		Category:    "etl",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "glue",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS Glue",
+		Description:   "Discover jobs, databases, tables and crawlers from AWS Glue",
+		Icon:          "glue",
+		Category:      "etl",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(GlueJobFields{}, "Job",
+				"Glue Job metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueDatabaseFields{}, "Database",
+				"Glue Database metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueTableFields{}, "Table",
+				"Glue Table metadata fields"),
+			pluginsdk.AssetSchemaOf(GlueCrawlerFields{}, "Crawler",
+				"Glue Crawler metadata fields"),
+		},
 	}
 }
 
@@ -34,11 +45,12 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
-	DiscoverJobs      bool `json:"discover_jobs" description:"Whether to discover Glue jobs" default:"true"`
-	DiscoverDatabases bool `json:"discover_databases" description:"Whether to discover Glue databases" default:"true"`
-	DiscoverTables    bool `json:"discover_tables" description:"Whether to discover Glue tables" default:"true"`
-	DiscoverCrawlers  bool `json:"discover_crawlers" description:"Whether to discover Glue crawlers" default:"true"`
+	DiscoverJobs      bool `json:"discover_jobs" group:"Discovery" description:"Whether to discover Glue jobs" default:"true"`
+	DiscoverDatabases bool `json:"discover_databases" group:"Discovery" description:"Whether to discover Glue databases" default:"true"`
+	DiscoverTables    bool `json:"discover_tables" group:"Discovery" description:"Whether to discover Glue tables" default:"true"`
+	DiscoverCrawlers  bool `json:"discover_crawlers" group:"Discovery" description:"Whether to discover Glue crawlers" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -80,6 +92,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

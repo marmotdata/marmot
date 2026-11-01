@@ -34,6 +34,7 @@ class TestUpdateSSOMappingRequest(unittest.TestCase):
         if include_optional:
             return UpdateSSOMappingRequest(
                 member_role = '',
+                role_id = '',
                 team_id = ''
             )
         else:

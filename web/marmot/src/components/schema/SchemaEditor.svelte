@@ -1,430 +1,485 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
-	import type { Asset } from '$lib/assets/types';
-	import IconifyIcon from '@iconify/svelte';
-	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import SchemaSummary from './SchemaSummary.svelte';
+	import { toasts } from '$lib/stores/toast';
+	import type { Asset, FieldAnnotation } from '$lib/assets/types';
+	import { m } from '$lib/paraglide/messages';
+	import { applyAnnotations, parseSchema } from './schemaColumns';
+	import FieldTermsDrawer from './FieldTermsDrawer.svelte';
+	import { resolve } from '$app/paths';
+	import { toast } from '@marmotdata/elements/toast.js';
+	import '@marmotdata/elements/schema-table.js';
+	import '@marmotdata/elements/code-sample.js';
+	import type { MenuSelectDetail } from '@marmotdata/elements/classes/menu.js';
+	import type { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
+	import type { MmDialog } from '@marmotdata/elements/classes/dialog.js';
+	import type {
+		MmEditDescriptionDetail,
+		MmSelectFieldDetail
+	} from '@marmotdata/elements/classes/schema-table.js';
 
-	let {
-		asset
-	}: {
-		asset: Asset;
-	} = $props();
+	// The Schema tab: the outline (with its own JSON and YAML views) for the selected schema, and adding, editing or removing a schema in place.
+	let { asset }: { asset: Asset } = $props();
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 
-	// Schema state - just store as Record<string, unknown> like the asset
 	let schemas = $state<Record<string, unknown>>({});
-	let showAddSchema = $state(false);
-	let editingKey = $state<string | null>(null);
-	let activeTab = $state<string>('');
-	let newSchemaName = $state('');
-	let newSchemaContent = $state('');
-	let editSchemaName = $state('');
-	let editSchemaContent = $state('');
+	let activeKey = $state('');
+	let mode = $state<'view' | 'add' | 'edit'>('view');
+	let draftName = $state('');
+	let draftContent = $state('');
+	let nameError = $state('');
+	let contentError = $state('');
 	let saving = $state(false);
-	let showDeleteModal = $state(false);
-	let keyToDelete = $state<string | null>(null);
-	let showRawSchema = $state(false);
+	let deleteDialog = $state<MmConfirmDialog>();
 
-	// Load schemas from asset
+	// The field open in the outline's panel, which the marker buttons act on.
+	let selectedPath = $state('');
+	let fieldSaving = $state(false);
+	let descriptionDialog = $state<MmDialog>();
+	let descriptionPath = $state('');
+	let descriptionDraft = $state('');
+	// The field whose glossary terms are open in the picker, held apart from the selection so the drawer keeps its field
+	let termsField = $state<{ schema: string; path: string } | null>(null);
+	let termBusy = $state<string | null>(null);
+
+	let keys = $derived(Object.keys(schemas));
+	let parsed = $derived(activeKey && activeKey in schemas ? parseSchema(schemas[activeKey]) : null);
+	let exampleText = $derived(
+		parsed?.example && typeof parsed.example === 'object' && Object.keys(parsed.example).length > 0
+			? JSON.stringify(parsed.example, null, 2)
+			: ''
+	);
+
+	let annotations = $derived((asset.field_annotations ?? []).filter((a) => a.schema === activeKey));
+	let columns = $derived(parsed ? applyAnnotations(parsed.columns, annotations) : []);
+	let selectedAnnotation = $derived(annotations.find((a) => a.path === selectedPath));
+	let selectedTerms = $derived(selectedAnnotation?.glossary_terms ?? []);
+	let termsFieldTerms = $derived(
+		termsField ? fieldTerms(termsField.schema, termsField.path) : ([] as FieldTerm[])
+	);
+
+	type FieldTerm = FieldAnnotation['glossary_terms'][number];
+
+	function fieldTerms(schema: string, path: string): FieldTerm[] {
+		return (
+			asset.field_annotations?.find((a) => a.schema === schema && a.path === path)
+				?.glossary_terms ?? []
+		);
+	}
+
+	// Reads only the asset, never the state it writes, so an asset without a schema does not loop on a fresh empty object
 	$effect(() => {
-		if (asset?.schema) {
-			schemas = asset.schema;
-			// Set first schema as active if not set or if current active doesn't exist
-			const schemaKeys = Object.keys(schemas);
-			if (schemaKeys.length > 0 && (!activeTab || !schemas[activeTab])) {
-				activeTab = schemaKeys[0];
-			} else if (schemaKeys.length === 0) {
-				activeTab = '';
-			}
-		}
+		const next = (asset?.schema ?? {}) as Record<string, unknown>;
+		schemas = next;
+		const current = untrack(() => activeKey);
+		if (!current || !(current in next)) activeKey = Object.keys(next)[0] ?? '';
 	});
 
-	async function saveSchemas(updatedSchemas: Record<string, unknown>) {
-		if (!asset?.id) return;
-
+	async function saveSchemas(updated: Record<string, unknown>): Promise<boolean> {
+		if (!asset?.id) return false;
 		saving = true;
 		try {
 			const response = await fetchApi(`/assets/${asset.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					schema: updatedSchemas
-				})
+				body: JSON.stringify({ schema: updated })
 			});
-
-			if (response.ok) {
-				schemas = updatedSchemas;
-				asset.schema = updatedSchemas;
-			} else {
-				const errorData = await response.json();
-				console.error('Failed to update schema:', errorData);
-				alert('Failed to update schema: ' + (errorData.error || 'Unknown error'));
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || m.schema_error_unknown());
 			}
-		} catch (error) {
-			console.error('Error updating schema:', error);
-			alert('Error updating schema: ' + (error instanceof Error ? error.message : 'Unknown error'));
+			schemas = updated;
+			asset.schema = updated;
+			return true;
+		} catch (err) {
+			toasts.error(
+				m.schema_update_error_generic({
+					error: err instanceof Error ? err.message : m.schema_error_unknown()
+				})
+			);
+			return false;
 		} finally {
 			saving = false;
 		}
 	}
 
-	async function addSchema() {
-		if (!newSchemaName.trim() || !newSchemaContent.trim()) {
-			return;
+	function startAdd() {
+		draftName = '';
+		draftContent = '';
+		nameError = '';
+		contentError = '';
+		mode = 'add';
+	}
+
+	function startEdit() {
+		const v = schemas[activeKey];
+		draftName = activeKey;
+		draftContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2);
+		nameError = '';
+		contentError = '';
+		mode = 'edit';
+	}
+
+	async function submit(e: SubmitEvent) {
+		e.preventDefault();
+		const name = draftName.trim();
+		const content = draftContent.trim();
+		nameError = name ? '' : m.asset_page_schema_name_required();
+		contentError = content ? '' : m.asset_page_schema_content_required();
+		if (nameError || contentError) return;
+		const updated = { ...schemas };
+		if (mode === 'edit' && activeKey !== name) delete updated[activeKey];
+		updated[name] = content;
+		if (await saveSchemas(updated)) {
+			activeKey = name;
+			mode = 'view';
 		}
-
-		const schemaName = newSchemaName.trim();
-		const updatedSchemas = {
-			...schemas,
-			[schemaName]: newSchemaContent.trim()
-		};
-
-		await saveSchemas(updatedSchemas);
-
-		newSchemaName = '';
-		newSchemaContent = '';
-		showAddSchema = false;
-		activeTab = schemaName;
 	}
 
-	async function updateSchema(key: string) {
-		if (!editSchemaName.trim() || !editSchemaContent.trim()) {
-			return;
+	function onMore(e: CustomEvent<MenuSelectDetail>) {
+		if (e.detail.value === 'edit') startEdit();
+		if (e.detail.value === 'delete') deleteDialog?.show();
+	}
+
+	async function setField(
+		path: string,
+		change: Partial<Record<'pii' | 'certified', boolean>> & {
+			description?: string;
+			glossary_term_ids?: string[];
+		},
+		schema = activeKey
+	) {
+		if (!asset?.id || !path) return false;
+		fieldSaving = true;
+		try {
+			const response = await fetchApi(`/assets/field-annotations/${encodeURIComponent(asset.id)}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ schema, path, ...change })
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || m.schema_error_unknown());
+			asset.field_annotations = (data.annotations ?? []) as FieldAnnotation[];
+			return true;
+		} catch (err) {
+			toasts.error(
+				m.schema_field_saved_error({
+					error: err instanceof Error ? err.message : m.schema_error_unknown()
+				})
+			);
+			return false;
+		} finally {
+			fieldSaving = false;
 		}
+	}
 
-		const updatedSchemas = { ...schemas };
-		// If name changed, delete old key
-		if (key !== editSchemaName.trim()) {
-			delete updatedSchemas[key];
+	// Each link and unlink saves the field's whole term list at once and offers Undo, which reads the list as it is then so other changes in between survive
+	async function linkTerm(schema: string, path: string, term: FieldTerm, announce = true) {
+		const ids = fieldTerms(schema, path).map((t) => t.id);
+		if (ids.includes(term.id)) return true;
+		termBusy = term.id;
+		const ok = await setField(path, { glossary_term_ids: [...ids, term.id] }, schema);
+		termBusy = null;
+		if (ok && announce) {
+			toast({
+				tone: 'success',
+				message: m.schema_field_term_linked_toast({ term: term.name, path }),
+				action: m.glossary_undo(),
+				duration: 8000,
+				onAction: () => unlinkTerm(schema, path, term, false)
+			});
 		}
-		updatedSchemas[editSchemaName.trim()] = editSchemaContent.trim();
-
-		await saveSchemas(updatedSchemas);
-
-		editingKey = null;
-		editSchemaName = '';
-		editSchemaContent = '';
+		return ok;
 	}
 
-	function startEdit(key: string) {
-		editingKey = key;
-		editSchemaName = key;
-		editSchemaContent =
-			typeof schemas[key] === 'string' ? schemas[key] : JSON.stringify(schemas[key], null, 2);
+	async function unlinkTerm(schema: string, path: string, term: FieldTerm, announce = true) {
+		const ids = fieldTerms(schema, path).map((t) => t.id);
+		if (!ids.includes(term.id)) return true;
+		termBusy = term.id;
+		const ok = await setField(
+			path,
+			{ glossary_term_ids: ids.filter((id) => id !== term.id) },
+			schema
+		);
+		termBusy = null;
+		if (ok && announce) {
+			toast({
+				tone: 'success',
+				message: m.schema_field_term_unlinked_toast({ term: term.name, path }),
+				action: m.glossary_undo(),
+				duration: 8000,
+				onAction: () => linkTerm(schema, path, term, false)
+			});
+		}
+		return ok;
 	}
 
-	function cancelEdit() {
-		editingKey = null;
-		editSchemaName = '';
-		editSchemaContent = '';
+	function editDescription(path: string, current: string) {
+		descriptionPath = path;
+		descriptionDraft = current;
+		descriptionDialog?.show();
 	}
 
-	function cancelAdd() {
-		showAddSchema = false;
-		newSchemaName = '';
-		newSchemaContent = '';
-	}
-
-	function promptDelete(key: string) {
-		keyToDelete = key;
-		showDeleteModal = true;
+	async function saveDescription(e?: Event) {
+		e?.preventDefault();
+		if (await setField(descriptionPath, { description: descriptionDraft.trim() })) {
+			descriptionDialog?.close();
+		}
 	}
 
 	async function confirmDelete() {
-		if (keyToDelete === null) return;
-
-		const updatedSchemas = { ...schemas };
-		delete updatedSchemas[keyToDelete];
-
-		// If deleting active tab, switch to another
-		if (activeTab === keyToDelete) {
-			const remainingKeys = Object.keys(updatedSchemas);
-			activeTab = remainingKeys.length > 0 ? remainingKeys[0] : '';
+		const updated = { ...schemas };
+		delete updated[activeKey];
+		if (await saveSchemas(updated)) {
+			activeKey = Object.keys(updated)[0] ?? '';
 		}
-
-		await saveSchemas(updatedSchemas);
-
-		keyToDelete = null;
-		showDeleteModal = false;
-	}
-
-	function setActiveTab(tabName: string) {
-		activeTab = tabName;
 	}
 </script>
 
-<div class="space-y-4">
-	<div class="flex items-center justify-end">
-		{#if canManageAssets && !showAddSchema && Object.keys(schemas).length === 0}
-			<button
-				onclick={() => (showAddSchema = true)}
-				class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
+{#if mode !== 'view'}
+	<form class="mm-stack mm-measure" style="--mm-gap: var(--space-4)" onsubmit={submit} novalidate>
+		<mm-text-field
+			label={m.schema_name_label()}
+			value={draftName}
+			error={nameError}
+			placeholder={m.schema_name_placeholder()}
+			autofocus
+			onmm-input={(e: CustomEvent<{ value: string }>) => (draftName = e.detail.value)}
+		></mm-text-field>
+		<mm-textarea
+			label={m.schema_content_label()}
+			value={draftContent}
+			error={contentError}
+			rows={14}
+			mono
+			placeholder={m.schema_content_placeholder()}
+			onmm-input={(e: CustomEvent<{ value: string }>) => (draftContent = e.detail.value)}
+		></mm-textarea>
+		<div class="mm-cluster">
+			<mm-button type="submit" variant="primary" loading={saving}
+				>{mode === 'add' ? m.asset_page_add_schema() : m.asset_page_save_schema()}</mm-button
 			>
-				<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-				Add Schema
-			</button>
-		{/if}
-	</div>
-
-	{#if Object.keys(schemas).length === 0 && !showAddSchema}
-		<div
-			class="text-center py-12 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg"
-		>
-			<IconifyIcon
-				icon="material-symbols:schema-outline"
-				class="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-3"
-			/>
-			<p class="text-gray-500 dark:text-gray-400">No schemas defined</p>
-			{#if canManageAssets}
-				<button
-					onclick={() => (showAddSchema = true)}
-					class="mt-3 text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-300"
-				>
-					Add your first schema
-				</button>
-			{/if}
+			<mm-button variant="ghost" disabled={saving} onclick={() => (mode = 'view')}
+				>{m.common_cancel()}</mm-button
+			>
 		</div>
-	{/if}
-
-	{#if Object.keys(schemas).length > 1 || showAddSchema}
-		<!-- Schema Tabs -->
-		<div class="flex items-center justify-between gap-4 mb-4">
-			<div class="flex items-center gap-4">
-				{#if !showAddSchema && !editingKey}
-					<button
-						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
-						onclick={() => (showRawSchema = !showRawSchema)}
+	</form>
+{:else if keys.length === 0}
+	<mm-empty-state
+		heading={m.asset_page_schema_empty_heading()}
+		description={canManageAssets
+			? m.asset_page_schema_empty_body_manage()
+			: m.asset_page_schema_empty_body()}
+		seed={7}
+	>
+		{#if canManageAssets}
+			<mm-button slot="action" variant="secondary" icon="add" onclick={startAdd}
+				>{m.asset_page_add_schema()}</mm-button
+			>
+		{/if}
+	</mm-empty-state>
+{:else}
+	<div class="mm-stack" style="--mm-gap: var(--space-4)">
+		{#if keys.length > 1 || canManageAssets}
+			<div class="mm-cluster mm-cluster--between">
+				{#if keys.length > 1}
+					<mm-segmented-control
+						label={m.asset_page_schema_picker()}
+						hide-label
+						value={activeKey}
+						onmm-change={(e: CustomEvent<{ value: string }>) => {
+							activeKey = e.detail.value;
+							selectedPath = '';
+						}}
 					>
-						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
-					</button>
+						{#each keys as k (k)}
+							<mm-segment value={k}>{k}</mm-segment>
+						{/each}
+					</mm-segmented-control>
+				{:else}
+					<span></span>
 				{/if}
-				<div class="flex flex-wrap gap-2">
-					{#if showAddSchema}
-						<button
-							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
-							aria-selected={true}
+				{#if canManageAssets}
+					<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+						<mm-button variant="ghost" size="sm" icon="add" onclick={startAdd}
+							>{m.asset_page_add_schema()}</mm-button
 						>
-							<IconifyIcon icon="material-symbols:add" class="w-4 h-4 inline-block mr-1" />
-							New Schema
-						</button>
+						<mm-menu-button
+							variant="ghost"
+							size="sm"
+							icon="more-horiz"
+							icon-only
+							label={m.asset_page_schema_more({ name: activeKey })}
+						>
+							<mm-menu onmm-select={onMore}>
+								<mm-menu-item value="edit" icon="edit">{m.asset_page_edit_schema()}</mm-menu-item>
+								<mm-menu-separator></mm-menu-separator>
+								<mm-menu-item value="delete" icon="delete" danger
+									>{m.asset_page_delete_schema()}</mm-menu-item
+								>
+							</mm-menu>
+						</mm-menu-button>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
+		{#if parsed}
+			{#if parsed.warnings.length > 0}
+				<mm-callout tone="warning" heading={m.asset_page_schema_warnings_heading()}>
+					<ul class="warnings">
+						{#each parsed.warnings.slice(0, 3) as w, i (i)}
+							<li>{w}</li>
+						{/each}
+					</ul>
+				</mm-callout>
+			{/if}
+
+			{#if canManageAssets && columns.length > 0}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+					{#if selectedPath}
+						<mm-text variant="caption" tone="secondary"
+							>{m.schema_field_actions({ path: selectedPath })}</mm-text
+						>
+						<mm-button
+							variant="ghost"
+							size="sm"
+							icon="shield"
+							pressed={selectedAnnotation?.pii ? 'true' : 'false'}
+							disabled={fieldSaving}
+							onclick={() => setField(selectedPath, { pii: !selectedAnnotation?.pii })}
+							>{m.schema_mark_pii()}</mm-button
+						>
+						<mm-button
+							variant="ghost"
+							size="sm"
+							icon="verified"
+							pressed={selectedAnnotation?.certified ? 'true' : 'false'}
+							disabled={fieldSaving}
+							onclick={() => setField(selectedPath, { certified: !selectedAnnotation?.certified })}
+							>{m.schema_mark_certified()}</mm-button
+						>
+						<mm-button
+							variant="ghost"
+							size="sm"
+							icon="edit"
+							disabled={fieldSaving}
+							onclick={() => editDescription(selectedPath, selectedAnnotation?.description ?? '')}
+							>{m.schema_edit_field_description()}</mm-button
+						>
+						<mm-button
+							variant="ghost"
+							size="sm"
+							icon="menu-book"
+							disabled={fieldSaving}
+							onclick={() => (termsField = { schema: activeKey, path: selectedPath })}
+							>{m.schema_field_terms_button()}</mm-button
+						>
+					{:else}
+						<mm-text variant="caption" tone="secondary">{m.schema_select_field_hint()}</mm-text>
 					{/if}
-					{#each Object.keys(schemas) as schemaKey (schemaKey)}
-						<button
-							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
-								schemaKey && !showAddSchema
-								? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
-								: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
-							aria-selected={activeTab === schemaKey && !showAddSchema}
-							onclick={() => {
-								showAddSchema = false;
-								setActiveTab(schemaKey);
-							}}
+				</div>
+			{/if}
+
+			{#if selectedPath && selectedTerms.length > 0}
+				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+					<mm-text variant="caption" tone="secondary"
+						>{m.schema_field_terms_of({ path: selectedPath })}</mm-text
+					>
+					{#each selectedTerms as t (t.id)}
+						<mm-tag
+							href={resolve(`/glossary/${t.id}`)}
+							removable={canManageAssets && !fieldSaving}
+							onmm-remove={() => unlinkTerm(activeKey, selectedPath, t)}>{t.name}</mm-tag
 						>
-							{schemaKey}
-						</button>
 					{/each}
 				</div>
-			</div>
-			{#if canManageAssets}
-				<div class="flex gap-2">
-					{#if !showAddSchema}
-						<button
-							onclick={() => (showAddSchema = true)}
-							class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
-							title="Add schema"
-						>
-							<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-							Add Schema
-						</button>
-					{/if}
-					{#if activeTab && !showAddSchema}
-						<button
-							onclick={() => startEdit(activeTab)}
-							class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-							title="Edit schema"
-						>
-							<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
-						</button>
-						<button
-							onclick={() => promptDelete(activeTab)}
-							class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-							title="Delete schema"
-						>
-							<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
-						</button>
-					{/if}
-				</div>
 			{/if}
-		</div>
-	{:else if Object.keys(schemas).length === 1 && canManageAssets}
-		<!-- Single schema - just show action buttons -->
-		<div class="flex items-center justify-between gap-2 mb-4">
-			<div>
-				{#if !showAddSchema && !editingKey}
-					<button
-						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
-						onclick={() => (showRawSchema = !showRawSchema)}
-					>
-						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
-					</button>
-				{/if}
-			</div>
-			<div class="flex items-center gap-2">
-				<button
-					onclick={() => (showAddSchema = true)}
-					class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
-					title="Add schema"
-				>
-					<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-					Add Schema
-				</button>
-				{#if activeTab}
-					<button
-						onclick={() => startEdit(activeTab)}
-						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-						title="Edit schema"
-					>
-						<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
-					</button>
-					<button
-						onclick={() => promptDelete(activeTab)}
-						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-						title="Delete schema"
-					>
-						<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
-					</button>
-				{/if}
-			</div>
-		</div>
-	{:else if Object.keys(schemas).length === 1 && !canManageAssets}
-		<!-- Single schema - non-editable, just show Show Raw button -->
-		<div class="flex items-center mb-4">
-			{#if !showAddSchema && !editingKey}
-				<button
-					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
-					onclick={() => (showRawSchema = !showRawSchema)}
-				>
-					{showRawSchema ? 'Show Formatted' : 'Show Raw'}
-				</button>
+
+			{#key activeKey}
+				<mm-schema-table
+					label={m.asset_page_schema_label({ name: asset.name })}
+					{columns}
+					source={parsed.source}
+					editable={canManageAssets}
+					empty-text={m.schema_no_fields_for({ name: activeKey })}
+					onmm-select-field={(e: CustomEvent<MmSelectFieldDetail>) =>
+						(selectedPath = e.detail.path)}
+					onmm-edit-description={(e: CustomEvent<MmEditDescriptionDetail>) =>
+						editDescription(
+							e.detail.path,
+							annotations.find((a) => a.path === e.detail.path)?.description ?? ''
+						)}
+				></mm-schema-table>
+			{/key}
+
+			{#if parsed.rawText}
+				<mm-disclosure summary={m.asset_page_schema_show_source()}>
+					<mm-code-sample
+						language="text"
+						code={parsed.rawText}
+						label={m.asset_page_schema_source_label({ name: activeKey })}
+					></mm-code-sample>
+				</mm-disclosure>
 			{/if}
-		</div>
-	{/if}
 
-	{#if Object.keys(schemas).length > 0 || showAddSchema}
-		<!-- Active Schema Content -->
-		{#if showAddSchema}
-			<!-- Add New Schema -->
-			<div
-				class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800"
-			>
-				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Name
-					</label>
-					<input
-						type="text"
-						bind:value={newSchemaName}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="e.g., user_schema"
-					/>
-				</div>
-
-				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Content
-					</label>
-					<textarea
-						bind:value={newSchemaContent}
-						rows="12"
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="Paste your schema here (JSON, AVRO, or Protobuf)"
-					></textarea>
-				</div>
-
-				<div class="flex gap-2">
-					<button
-						onclick={addSchema}
-						disabled={saving}
-						class="px-4 py-2 text-sm font-medium rounded-md bg-earthy-terracotta-600 text-white hover:bg-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						{saving ? 'Saving...' : 'Add Schema'}
-					</button>
-					<button
-						onclick={cancelAdd}
-						disabled={saving}
-						class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-		{:else if activeTab && editingKey === activeTab}
-			<!-- Edit mode -->
-			<div
-				class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800"
-			>
-				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Name
-					</label>
-					<input
-						type="text"
-						bind:value={editSchemaName}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="e.g., user_schema"
-					/>
-				</div>
-
-				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						Schema Content
-					</label>
-					<textarea
-						bind:value={editSchemaContent}
-						rows="12"
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500"
-						placeholder="Paste your schema here (JSON, AVRO, or Protobuf)"
-					></textarea>
-				</div>
-
-				<div class="flex gap-2">
-					<button
-						onclick={() => updateSchema(activeTab)}
-						disabled={saving}
-						class="px-4 py-2 text-sm font-medium rounded-md bg-earthy-terracotta-600 text-white hover:bg-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						{saving ? 'Saving...' : 'Save'}
-					</button>
-					<button
-						onclick={cancelEdit}
-						disabled={saving}
-						class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-		{:else if activeTab}
-			<!-- View mode -->
-			<div>
-				{#key activeTab}
-					<SchemaSummary schema={{ [activeTab]: schemas[activeTab] }} {showRawSchema} />
-				{/key}
-			</div>
+			{#if exampleText}
+				<mm-disclosure summary={m.asset_page_schema_show_example()}>
+					<mm-code-sample
+						language="json"
+						code={exampleText}
+						label={m.asset_page_schema_example_label({ name: activeKey })}
+					></mm-code-sample>
+				</mm-disclosure>
+			{/if}
 		{/if}
-	{/if}
-</div>
+	</div>
+{/if}
 
-<DeleteModal
-	show={showDeleteModal}
-	title="Delete Schema"
-	message="Are you sure you want to delete this schema? This action cannot be undone."
-	onConfirm={confirmDelete}
-	onCancel={() => {
-		showDeleteModal = false;
-		keyToDelete = null;
-	}}
-/>
+<mm-dialog bind:this={descriptionDialog} heading={m.schema_edit_field_description()} size="sm">
+	<form class="mm-stack" style="--mm-gap: var(--space-4)" onsubmit={saveDescription}>
+		<mm-textarea
+			label={m.schema_field_description_label({ path: descriptionPath })}
+			help={m.schema_field_description_hint()}
+			rows={4}
+			autosize
+			value={descriptionDraft}
+			onmm-input={(e: CustomEvent<{ value: string }>) => (descriptionDraft = e.detail.value)}
+		></mm-textarea>
+	</form>
+	<mm-button slot="footer" data-close="cancel" disabled={fieldSaving}>{m.common_cancel()}</mm-button
+	>
+	<mm-button slot="footer" variant="primary" loading={fieldSaving} onclick={saveDescription}
+		>{m.common_save()}</mm-button
+	>
+</mm-dialog>
+
+{#if termsField}
+	<FieldTermsDrawer
+		path={termsField.path}
+		terms={termsFieldTerms}
+		busy={termBusy}
+		onLink={(t) =>
+			termsField ? linkTerm(termsField.schema, termsField.path, t) : Promise.resolve(false)}
+		onUnlink={(t) =>
+			termsField ? unlinkTerm(termsField.schema, termsField.path, t) : Promise.resolve(false)}
+		onClose={() => (termsField = null)}
+	/>
+{/if}
+
+<mm-confirm-dialog
+	bind:this={deleteDialog}
+	heading={m.asset_page_delete_schema_heading({ name: activeKey })}
+	body={m.schema_delete_confirm()}
+	confirm-label={m.asset_page_delete_schema()}
+	onmm-confirm={confirmDelete}
+></mm-confirm-dialog>
+
+<style>
+	.warnings {
+		margin: 0;
+		padding-inline-start: var(--space-5);
+	}
+</style>

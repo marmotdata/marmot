@@ -31,14 +31,14 @@ The recommended way to authenticate is with `marmot login`, which opens a browse
 ### Browser Login (Recommended)
 
 ```bash
-# First time — prompts for your Marmot URL, opens browser
+# First time: prompts for your Marmot URL, opens browser
 marmot login
 
 # Or pass the URL directly
 marmot login https://marmot.example.com
 ```
 
-The token is cached locally at `~/.config/marmot/credentials.json` and used automatically by all subsequent commands. Tokens expire after 24 hours — just run `marmot login` again to re-authenticate.
+The token is cached locally at `~/.config/marmot/credentials.json` and used automatically by all subsequent commands. Tokens expire after 24 hours. Run `marmot login` again to re-authenticate.
 
 ```bash
 # Remove cached token

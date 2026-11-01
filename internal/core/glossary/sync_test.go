@@ -433,3 +433,23 @@ func TestParentAssignments_KeepsAChain(t *testing.T) {
 
 	assert.Equal(t, map[string]string{"A": "B", "B": "C"}, assignments)
 }
+
+func (r *fakeRepo) GetRelatedTerms(ctx context.Context, termID string) ([]RelatedTerm, error) {
+	return []RelatedTerm{}, nil
+}
+
+func (r *fakeRepo) SetRelatedTerms(ctx context.Context, termID string, relatedIDs []string) error {
+	return nil
+}
+
+func (r *fakeRepo) AddRelatedTerm(ctx context.Context, termID, relatedTermID string) error {
+	return nil
+}
+
+func (r *fakeRepo) RemoveRelatedTerm(ctx context.Context, termID, relatedTermID string) error {
+	return nil
+}
+
+func (r *fakeRepo) SuggestAssets(ctx context.Context, termID string, words []string, limit int) ([]SuggestedAsset, error) {
+	return []SuggestedAsset{}, nil
+}

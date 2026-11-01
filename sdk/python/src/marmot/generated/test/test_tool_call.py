@@ -33,8 +33,12 @@ class TestToolCall(unittest.TestCase):
         model = ToolCall()
         if include_optional:
             return ToolCall(
+                detail = '',
                 duration_ms = 56,
                 ordinal = 56,
+                reason = '',
+                result = '',
+                rule = '',
                 started_at = '',
                 status = '',
                 target_mrn = '',

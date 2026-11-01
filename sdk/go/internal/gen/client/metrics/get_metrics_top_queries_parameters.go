@@ -80,6 +80,11 @@ type GetMetricsTopQueriesParams struct {
 	// Start time (ISO 8601)
 	Start string
 
+	// ZeroResults.
+	//
+	// Only searches that found nothing
+	ZeroResults *bool
+
 	HTTPClient *http.Client
 
 	inner innerParams
@@ -181,6 +186,17 @@ func (o *GetMetricsTopQueriesParams) SetStart(start string) {
 	o.Start = start
 }
 
+// WithZeroResults adds the zeroResults to the get metrics top queries params.
+func (o *GetMetricsTopQueriesParams) WithZeroResults(zeroResults *bool) *GetMetricsTopQueriesParams {
+	o.SetZeroResults(zeroResults)
+	return o
+}
+
+// SetZeroResults adds the zeroResults to the get metrics top queries params.
+func (o *GetMetricsTopQueriesParams) SetZeroResults(zeroResults *bool) {
+	o.ZeroResults = zeroResults
+}
+
 // WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsTopQueriesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 	if err := r.SetTimeout(o.inner.timeout); err != nil {
@@ -222,6 +238,23 @@ func (o *GetMetricsTopQueriesParams) WriteToRequest(r runtime.ClientRequest, reg
 
 		if err := r.SetQueryParam("start", qStart); err != nil {
 			return err
+		}
+	}
+
+	if o.ZeroResults != nil {
+
+		// query param zero_results
+		var qrZeroResults bool
+
+		if o.ZeroResults != nil {
+			qrZeroResults = *o.ZeroResults
+		}
+		qZeroResults := conv.FormatBool(qrZeroResults)
+		if qZeroResults != "" {
+
+			if err := r.SetQueryParam("zero_results", qZeroResults); err != nil {
+				return err
+			}
 		}
 	}
 

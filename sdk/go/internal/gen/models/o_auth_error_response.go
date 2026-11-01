@@ -22,12 +22,12 @@ type OAuthErrorResponse struct {
 }
 
 // Validate validates this o auth error response
-func (m *OAuthErrorResponse) Validate(formats strfmt.Registry) error {
+func (m *OAuthErrorResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this o auth error response based on context it is used
-func (m *OAuthErrorResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *OAuthErrorResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

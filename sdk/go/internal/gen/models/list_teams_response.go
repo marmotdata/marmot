@@ -25,7 +25,7 @@ type ListTeamsResponse struct {
 	Offset int64 `json:"offset,omitempty"`
 
 	// teams
-	Teams []*Team `json:"teams"`
+	Teams []*TeamSummary `json:"teams"`
 
 	// total
 	Total int64 `json:"total,omitempty"`

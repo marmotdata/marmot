@@ -271,17 +271,15 @@ func TestCreateTableAsset_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
 	}
 }
 
-func TestCreateTableAsset_ProviderWithASpaceLandsInTheMRN(t *testing.T) {
-	// mrn.New sanitizes the name it is given but not the service, so
-	// "Delta Lake" puts a literal space in the MRN. This is ugly and it is
-	// deliberate: it is what the published Trino plugin already emits, and
-	// slugging it here would rename every Delta Lake asset a previous run
-	// wrote without a migration to move them.
+func TestCreateTableAsset_ProviderWithASpaceIsDashedInTheMRN(t *testing.T) {
+	// mrn.New sanitizes every part, so the provider "Delta Lake" becomes
+	// "delta-lake" rather than putting a space in the MRN. The Presto and
+	// OpenMetadata plugins address the same table the same way.
 	s := &Source{config: &Config{Host: "trino.example.com", Port: 8080}}
 
 	a := s.createTableAsset("dl", "default", "events", "BASE TABLE", connectorMap["delta_lake"])
 
-	assert.Equal(t, "mrn://table/delta lake/dl.default.events", *a.MRN)
+	assert.Equal(t, "mrn://table/delta-lake/dl.default.events", *a.MRN)
 	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 }
 

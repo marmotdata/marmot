@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"strings"
 	"time"
@@ -116,9 +117,9 @@ func (s *Service) Create(ctx context.Context, input CreateWebhookInput) (*Webhoo
 	return webhook, nil
 }
 
-// Get retrieves a webhook by ID with the URL decrypted.
-func (s *Service) Get(ctx context.Context, id string) (*Webhook, error) {
-	webhook, err := s.repo.Get(ctx, id)
+// Get retrieves a team's webhook by ID with the URL decrypted.
+func (s *Service) Get(ctx context.Context, teamID, id string) (*Webhook, error) {
+	webhook, err := s.repo.Get(ctx, teamID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -126,9 +127,9 @@ func (s *Service) Get(ctx context.Context, id string) (*Webhook, error) {
 	return webhook, nil
 }
 
-// GetMasked retrieves a webhook by ID with the URL masked.
-func (s *Service) GetMasked(ctx context.Context, id string) (*Webhook, error) {
-	webhook, err := s.Get(ctx, id)
+// GetMasked retrieves a team's webhook by ID with the URL masked.
+func (s *Service) GetMasked(ctx context.Context, teamID, id string) (*Webhook, error) {
+	webhook, err := s.Get(ctx, teamID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +137,8 @@ func (s *Service) GetMasked(ctx context.Context, id string) (*Webhook, error) {
 	return webhook, nil
 }
 
-// Update updates a webhook.
-func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInput) (*Webhook, error) {
+// Update updates a team's webhook.
+func (s *Service) Update(ctx context.Context, teamID, id string, input UpdateWebhookInput) (*Webhook, error) {
 	if err := s.validateUpdate(input); err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInpu
 		input.WebhookURL = &encrypted
 	}
 
-	webhook, err := s.repo.Update(ctx, id, input)
+	webhook, err := s.repo.Update(ctx, teamID, id, input)
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +162,9 @@ func (s *Service) Update(ctx context.Context, id string, input UpdateWebhookInpu
 	return webhook, nil
 }
 
-// Delete deletes a webhook.
-func (s *Service) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+// Delete deletes a team's webhook.
+func (s *Service) Delete(ctx context.Context, teamID, id string) error {
+	return s.repo.Delete(ctx, teamID, id)
 }
 
 // ListByTeam lists all webhooks for a team with masked URLs.
@@ -181,9 +182,9 @@ func (s *Service) ListByTeam(ctx context.Context, teamID string) ([]*Webhook, er
 	return webhooks, nil
 }
 
-// TestWebhook sends a test notification to the webhook.
-func (s *Service) TestWebhook(ctx context.Context, id string) error {
-	webhook, err := s.Get(ctx, id)
+// TestWebhook sends a test notification to a team's webhook.
+func (s *Service) TestWebhook(ctx context.Context, teamID, id string) error {
+	webhook, err := s.Get(ctx, teamID, id)
 	if err != nil {
 		return err
 	}
@@ -307,22 +308,30 @@ func validateWebhookURL(rawURL string) *ValidationError {
 		return &ValidationError{Message: "webhook_url must have a host"}
 	}
 
-	// Block known private/local hostnames
-	if host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "0.0.0.0" {
+	if strings.EqualFold(host, "localhost") {
 		return &ValidationError{Message: "webhook_url cannot target localhost or loopback addresses"}
 	}
 
-	// Resolve and check for private IPs
-	ips, err := net.LookupHost(host)
-	if err == nil {
+	// Delivery re-checks every resolved address at dial time, this early check only gives the caller a clear error
+	var addrs []netip.Addr
+	if ip, err := netip.ParseAddr(host); err == nil {
+		addrs = append(addrs, ip)
+	} else {
+		ips, err := net.LookupHost(host)
+		if err != nil || len(ips) == 0 {
+			return &ValidationError{Message: "webhook_url host could not be resolved"}
+		}
 		for _, ipStr := range ips {
-			ip := net.ParseIP(ipStr)
-			if ip == nil {
-				continue
+			ip, err := netip.ParseAddr(ipStr)
+			if err != nil {
+				return &ValidationError{Message: "webhook_url host could not be resolved"}
 			}
-			if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-				return &ValidationError{Message: "webhook_url cannot target private or internal network addresses"}
-			}
+			addrs = append(addrs, ip)
+		}
+	}
+	for _, ip := range addrs {
+		if isDisallowedIP(ip) {
+			return &ValidationError{Message: "webhook_url cannot target private or internal network addresses"}
 		}
 	}
 

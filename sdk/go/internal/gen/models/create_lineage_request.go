@@ -4,15 +4,22 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // CreateLineageRequest create lineage request
 //
 // swagger:model CreateLineageRequest
 type CreateLineageRequest struct {
+
+	// column lineage
+	ColumnLineage []*ColumnEdge `json:"column_lineage"`
 
 	// job mrn
 	JobMrn string `json:"job_mrn,omitempty"`
@@ -29,11 +36,88 @@ type CreateLineageRequest struct {
 
 // Validate validates this create lineage request
 func (m *CreateLineageRequest) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateColumnLineage(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this create lineage request based on context it is used
+func (m *CreateLineageRequest) validateColumnLineage(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.ColumnLineage) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ColumnLineage); i++ {
+		if typeutils.IsZero(m.ColumnLineage[i]) { // not required
+			continue
+		}
+
+		if m.ColumnLineage[i] != nil {
+			if err := m.ColumnLineage[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this create lineage request based on the context it is used
 func (m *CreateLineageRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateColumnLineage(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *CreateLineageRequest) contextValidateColumnLineage(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ColumnLineage); i++ {
+
+		if m.ColumnLineage[i] != nil {
+
+			if typeutils.IsZero(m.ColumnLineage[i]) { // not required
+				return nil
+			}
+
+			if err := m.ColumnLineage[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("column_lineage" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

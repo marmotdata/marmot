@@ -40,6 +40,10 @@ rules:
   - apiGroups: ["batch"]
     resources: ["jobs", "cronjobs"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Deployments for Runs that serve queries
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # ConfigMaps for pipeline configs
   - apiGroups: [""]
     resources: ["configmaps"]

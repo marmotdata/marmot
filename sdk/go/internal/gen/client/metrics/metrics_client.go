@@ -80,6 +80,12 @@ type ClientService interface {
 	// GetMetricsAssetsByTypeContext get assets by type.
 	GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
 
+	// GetMetricsAssetsOwned get owned assets count.
+	GetMetricsAssetsOwned(params *GetMetricsAssetsOwnedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsOwnedOK, error)
+
+	// GetMetricsAssetsOwnedContext get owned assets count.
+	GetMetricsAssetsOwnedContext(ctx context.Context, params *GetMetricsAssetsOwnedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsOwnedOK, error)
+
 	// GetMetricsAssetsTotal get total assets count.
 	GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
 
@@ -117,7 +123,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.GetMetricsContext] instead.
 func (a *Client) GetMetrics(params *GetMetricsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -184,7 +190,7 @@ func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByOwnerContext] instead.
 func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -251,7 +257,7 @@ func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *Get
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByProviderContext] instead.
 func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -318,7 +324,7 @@ func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetMetricsAssetsByTypeContext] instead.
 func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -375,6 +381,73 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 	panic(msg)
 }
 
+// GetMetricsAssetsOwned gets owned assets count.
+//
+// Get how many catalogued assets have at least one owning user or team, out of all catalogued assets.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsOwnedContext] instead.
+func (a *Client) GetMetricsAssetsOwned(params *GetMetricsAssetsOwnedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsOwnedOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsOwnedContext(ctx, params, authInfo, opts...)
+}
+
+// GetMetricsAssetsOwnedContext gets owned assets count.
+//
+// Get how many catalogued assets have at least one owning user or team, out of all catalogued assets.
+//
+// Do not use the deprecated [GetMetricsAssetsOwnedParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsOwnedContext(ctx context.Context, params *GetMetricsAssetsOwnedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsOwnedOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetMetricsAssetsOwnedParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getMetricsAssetsOwned",
+		Method:             "GET",
+		PathPattern:        "/api/v1/metrics/assets/owned",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetMetricsAssetsOwnedReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetMetricsAssetsOwnedOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getMetricsAssetsOwned: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetMetricsAssetsTotal gets total assets count.
 //
 // Get the total number of assets.
@@ -385,7 +458,7 @@ func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetM
 // If you need to pass a specific context, use [Client.GetMetricsAssetsTotalContext] instead.
 func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -452,7 +525,7 @@ func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMe
 // If you need to pass a specific context, use [Client.GetMetricsAssetsWithSchemasContext] instead.
 func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -519,7 +592,7 @@ func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params 
 // If you need to pass a specific context, use [Client.GetMetricsTopAssetsContext] instead.
 func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -578,7 +651,7 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 
 // GetMetricsTopQueries gets top search queries.
 //
-// Get the most popular search queries.
+// Get the most popular search queries. With zero_results=true, get the most frequent searches that found nothing instead, each with a result_count of 0..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -586,7 +659,7 @@ func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetr
 // If you need to pass a specific context, use [Client.GetMetricsTopQueriesContext] instead.
 func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -597,7 +670,7 @@ func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, authIn
 
 // GetMetricsTopQueriesContext gets top search queries.
 //
-// Get the most popular search queries.
+// Get the most popular search queries. With zero_results=true, get the most frequent searches that found nothing instead, each with a result_count of 0..
 //
 // Do not use the deprecated [GetMetricsTopQueriesParams.Context] with this method: it would be ignored.
 func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {

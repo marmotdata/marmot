@@ -1,0 +1,36 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://marmotdata.io/schemas/role.schema.json",
+	"title": "Marmot role",
+	"description": "A role: a named bundle of permissions you assign to members, teams and service accounts. Write permissions as resource_type:action keys; GET /api/v1/permissions lists them.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["name"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 255,
+			"description": "Unique name of the role."
+		},
+		"description": {
+			"type": "string",
+			"description": "What the role is for."
+		},
+		"permission_keys": {
+			"type": "array",
+			"uniqueItems": true,
+			"description": "Permissions as resource_type:action keys, such as assets:view.",
+			"items": {
+				"type": "string",
+				"pattern": "^[A-Za-z_]+:[A-Za-z_]+$"
+			}
+		},
+		"permission_ids": {
+			"type": "array",
+			"uniqueItems": true,
+			"description": "Permissions by id. Prefer permission_keys, which read the same on every instance.",
+			"items": { "type": "string" }
+		}
+	}
+}

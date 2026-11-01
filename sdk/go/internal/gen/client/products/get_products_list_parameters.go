@@ -67,13 +67,38 @@ type GetProductsListParams struct {
 	//
 	// Maximum number of data products to return
 	//
-	// Default: 20
+	// Default: 50
 	Limit *int64
+
+	// Mine.
+	//
+	// only: products you or your teams own; exclude: everything else
+	Mine *string
 
 	// Offset.
 	//
 	// Number of data products to skip
 	Offset *int64
+
+	// Owners.
+	//
+	// Comma-separated user or team ids; keeps products any of them own
+	Owners *string
+
+	// Q.
+	//
+	// Search name, description and tags
+	Q *string
+
+	// Sort.
+	//
+	// name (default), updated or popular
+	Sort *string
+
+	// Tags.
+	//
+	// Comma-separated tags; keeps products carrying any of them
+	Tags *string
 
 	HTTPClient *http.Client
 
@@ -93,7 +118,7 @@ func (o *GetProductsListParams) WithDefaults() *GetProductsListParams {
 // All values with no default are reset to their zero value.
 func (o *GetProductsListParams) SetDefaults() {
 	var (
-		limitDefault = int64(20)
+		limitDefault = int64(50)
 
 		offsetDefault = int64(0)
 	)
@@ -157,6 +182,17 @@ func (o *GetProductsListParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
+// WithMine adds the mine to the get products list params.
+func (o *GetProductsListParams) WithMine(mine *string) *GetProductsListParams {
+	o.SetMine(mine)
+	return o
+}
+
+// SetMine adds the mine to the get products list params.
+func (o *GetProductsListParams) SetMine(mine *string) {
+	o.Mine = mine
+}
+
 // WithOffset adds the offset to the get products list params.
 func (o *GetProductsListParams) WithOffset(offset *int64) *GetProductsListParams {
 	o.SetOffset(offset)
@@ -166,6 +202,50 @@ func (o *GetProductsListParams) WithOffset(offset *int64) *GetProductsListParams
 // SetOffset adds the offset to the get products list params.
 func (o *GetProductsListParams) SetOffset(offset *int64) {
 	o.Offset = offset
+}
+
+// WithOwners adds the owners to the get products list params.
+func (o *GetProductsListParams) WithOwners(owners *string) *GetProductsListParams {
+	o.SetOwners(owners)
+	return o
+}
+
+// SetOwners adds the owners to the get products list params.
+func (o *GetProductsListParams) SetOwners(owners *string) {
+	o.Owners = owners
+}
+
+// WithQ adds the q to the get products list params.
+func (o *GetProductsListParams) WithQ(q *string) *GetProductsListParams {
+	o.SetQ(q)
+	return o
+}
+
+// SetQ adds the q to the get products list params.
+func (o *GetProductsListParams) SetQ(q *string) {
+	o.Q = q
+}
+
+// WithSort adds the sort to the get products list params.
+func (o *GetProductsListParams) WithSort(sort *string) *GetProductsListParams {
+	o.SetSort(sort)
+	return o
+}
+
+// SetSort adds the sort to the get products list params.
+func (o *GetProductsListParams) SetSort(sort *string) {
+	o.Sort = sort
+}
+
+// WithTags adds the tags to the get products list params.
+func (o *GetProductsListParams) WithTags(tags *string) *GetProductsListParams {
+	o.SetTags(tags)
+	return o
+}
+
+// SetTags adds the tags to the get products list params.
+func (o *GetProductsListParams) SetTags(tags *string) {
+	o.Tags = tags
 }
 
 // WriteToRequest writes these params to a [runtime.ClientRequest].
@@ -192,6 +272,23 @@ func (o *GetProductsListParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		}
 	}
 
+	if o.Mine != nil {
+
+		// query param mine
+		var qrMine string
+
+		if o.Mine != nil {
+			qrMine = *o.Mine
+		}
+		qMine := qrMine
+		if qMine != "" {
+
+			if err := r.SetQueryParam("mine", qMine); err != nil {
+				return err
+			}
+		}
+	}
+
 	if o.Offset != nil {
 
 		// query param offset
@@ -204,6 +301,74 @@ func (o *GetProductsListParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Owners != nil {
+
+		// query param owners
+		var qrOwners string
+
+		if o.Owners != nil {
+			qrOwners = *o.Owners
+		}
+		qOwners := qrOwners
+		if qOwners != "" {
+
+			if err := r.SetQueryParam("owners", qOwners); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Q != nil {
+
+		// query param q
+		var qrQ string
+
+		if o.Q != nil {
+			qrQ = *o.Q
+		}
+		qQ := qrQ
+		if qQ != "" {
+
+			if err := r.SetQueryParam("q", qQ); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Sort != nil {
+
+		// query param sort
+		var qrSort string
+
+		if o.Sort != nil {
+			qrSort = *o.Sort
+		}
+		qSort := qrSort
+		if qSort != "" {
+
+			if err := r.SetQueryParam("sort", qSort); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Tags != nil {
+
+		// query param tags
+		var qrTags string
+
+		if o.Tags != nil {
+			qrTags = *o.Tags
+		}
+		qTags := qrTags
+		if qTags != "" {
+
+			if err := r.SetQueryParam("tags", qTags); err != nil {
 				return err
 			}
 		}

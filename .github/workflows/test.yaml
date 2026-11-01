@@ -13,23 +13,39 @@ jobs:
   test:
     name: Server + Frontend
     runs-on: ubuntu-latest
+    # The OAuth repository tests run real SQL. Without a database they skip,
+    # which would leave the Postgres path uncovered.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: marmot
+          POSTGRES_PASSWORD: marmot
+          POSTGRES_DB: marmot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: "1.26"
+          go-version-file: go.mod
           cache: true
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 11.3.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "pnpm"
@@ -44,6 +60,9 @@ jobs:
       - name: Lint frontend
         run: make frontend-lint
 
+      - name: Check message catalogue
+        run: make frontend-i18n-check
+
       - name: Lint server (Go)
         run: make server-lint
 
@@ -52,3 +71,5 @@ jobs:
 
       - name: Run Go tests
         run: make test
+        env:
+          MARMOT_TEST_POSTGRES_DSN: postgres://marmot:marmot@localhost:5432/marmot_test?sslmode=disable

@@ -87,13 +87,13 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if searchQuery != "" && total > 0 {
-		recorder := h.metricsService.GetRecorder()
+	// Searches that found nothing are recorded too, apart from the rest, for the zero-result list in Insights
+	if searchQuery != "" {
 		queryType := "full_text"
 		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
 			queryType = "filtered"
 		}
-		recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
+		h.metricsService.RecordSearch(queryType, searchQuery, int64(total))
 	}
 
 	response := SearchResponse{
@@ -156,7 +156,14 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 	if typesStr := query.Get("types"); typesStr != "" {
 		types = strings.Split(typesStr, ",")
 	}
-	if providersStr := query.Get("providers"); providersStr != "" {
+	// The documented name of this filter is services, which is what the
+	// generated clients send. The UI has always sent providers. Both name
+	// the same thing, so both are read.
+	providersStr := query.Get("services")
+	if providersStr == "" {
+		providersStr = query.Get("providers")
+	}
+	if providersStr != "" {
 		providers = strings.Split(providersStr, ",")
 	}
 	if tagsStr := query.Get("tags"); tagsStr != "" {

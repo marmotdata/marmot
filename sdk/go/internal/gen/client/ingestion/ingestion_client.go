@@ -110,6 +110,12 @@ type ClientService interface {
 	// PostIngestionSchedulesIDTriggerContext manually trigger an ingestion schedule.
 	PostIngestionSchedulesIDTriggerContext(ctx context.Context, params *PostIngestionSchedulesIDTriggerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesIDTriggerCreated, error)
 
+	// PostIngestionTestConnection test a plugin connection.
+	PostIngestionTestConnection(params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error)
+
+	// PostIngestionTestConnectionContext test a plugin connection.
+	PostIngestionTestConnectionContext(ctx context.Context, params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error)
+
 	// PostIngestionValidate validate plugin configuration.
 	PostIngestionValidate(params *PostIngestionValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionValidateOK, error)
 
@@ -133,7 +139,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteIngestionSchedulesIDContext] instead.
 func (a *Client) DeleteIngestionSchedulesID(params *DeleteIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteIngestionSchedulesIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -196,7 +202,7 @@ func (a *Client) DeleteIngestionSchedulesIDContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetIngestionRunsContext] instead.
 func (a *Client) GetIngestionRuns(params *GetIngestionRunsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -259,7 +265,7 @@ func (a *Client) GetIngestionRunsContext(ctx context.Context, params *GetIngesti
 // If you need to pass a specific context, use [Client.GetIngestionRunsIDContext] instead.
 func (a *Client) GetIngestionRunsID(params *GetIngestionRunsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -322,7 +328,7 @@ func (a *Client) GetIngestionRunsIDContext(ctx context.Context, params *GetInges
 // If you need to pass a specific context, use [Client.GetIngestionRunsIDEntitiesContext] instead.
 func (a *Client) GetIngestionRunsIDEntities(params *GetIngestionRunsIDEntitiesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionRunsIDEntitiesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +391,7 @@ func (a *Client) GetIngestionRunsIDEntitiesContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetIngestionSchedulesContext] instead.
 func (a *Client) GetIngestionSchedules(params *GetIngestionSchedulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionSchedulesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -448,7 +454,7 @@ func (a *Client) GetIngestionSchedulesContext(ctx context.Context, params *GetIn
 // If you need to pass a specific context, use [Client.GetIngestionSchedulesIDContext] instead.
 func (a *Client) GetIngestionSchedulesID(params *GetIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetIngestionSchedulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -511,7 +517,7 @@ func (a *Client) GetIngestionSchedulesIDContext(ctx context.Context, params *Get
 // If you need to pass a specific context, use [Client.PostIngestionRunsIDCancelContext] instead.
 func (a *Client) PostIngestionRunsIDCancel(params *PostIngestionRunsIDCancelParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionRunsIDCancelNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -574,7 +580,7 @@ func (a *Client) PostIngestionRunsIDCancelContext(ctx context.Context, params *P
 // If you need to pass a specific context, use [Client.PostIngestionSchedulesContext] instead.
 func (a *Client) PostIngestionSchedules(params *PostIngestionSchedulesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -637,7 +643,7 @@ func (a *Client) PostIngestionSchedulesContext(ctx context.Context, params *Post
 // If you need to pass a specific context, use [Client.PostIngestionSchedulesIDTriggerContext] instead.
 func (a *Client) PostIngestionSchedulesIDTrigger(params *PostIngestionSchedulesIDTriggerParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionSchedulesIDTriggerCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -692,6 +698,73 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 	panic(msg)
 }
 
+// PostIngestionTestConnection tests a plugin connection.
+//
+// Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostIngestionTestConnectionContext] instead.
+func (a *Client) PostIngestionTestConnection(params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostIngestionTestConnectionContext(ctx, params, authInfo, opts...)
+}
+
+// PostIngestionTestConnectionContext tests a plugin connection.
+//
+// Validates the settings, then starts the plugin and runs a discovery that is thrown away, stopping after 30 seconds. Nothing is written to the catalog. Plugins have no separate connect step, so this is the closest check that the settings work..
+//
+// Do not use the deprecated [PostIngestionTestConnectionParams.Context] with this method: it would be ignored.
+func (a *Client) PostIngestionTestConnectionContext(ctx context.Context, params *PostIngestionTestConnectionParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionTestConnectionOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostIngestionTestConnectionParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postIngestionTestConnection",
+		Method:             "POST",
+		PathPattern:        "/api/v1/ingestion/test-connection",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostIngestionTestConnectionReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostIngestionTestConnectionOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postIngestionTestConnection: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostIngestionValidate validates plugin configuration.
 //
 // This method does not support injected context.
@@ -700,7 +773,7 @@ func (a *Client) PostIngestionSchedulesIDTriggerContext(ctx context.Context, par
 // If you need to pass a specific context, use [Client.PostIngestionValidateContext] instead.
 func (a *Client) PostIngestionValidate(params *PostIngestionValidateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostIngestionValidateOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -763,7 +836,7 @@ func (a *Client) PostIngestionValidateContext(ctx context.Context, params *PostI
 // If you need to pass a specific context, use [Client.PutIngestionSchedulesIDContext] instead.
 func (a *Client) PutIngestionSchedulesID(params *PutIngestionSchedulesIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutIngestionSchedulesIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

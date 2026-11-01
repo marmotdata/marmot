@@ -1,0 +1,21 @@
+/*
+ * The Marmot design system, then the marketing site's layout built on it. Loaded before
+ * custom.css; the design system's layers are lifted by plugins/tailwind-config.cjs so its
+ * classes win over Infima's element styles by specificity.
+ */
+@import "@marmotdata/tokens/index.css";
+@import "@marmotdata/css";
+@import "./marketing.css";
+@import "./document.css";
+@import "./docs.css";
+
+/* Infima reads its fonts and colours from these: point them at the design system's. */
+:root {
+  --ifm-font-family-base: var(--font-text);
+  --ifm-heading-font-family: var(--font-text);
+  --ifm-font-family-monospace: var(--font-mono);
+  --ifm-background-color: var(--mm-paper);
+  --ifm-font-color-base: var(--mm-text);
+  /* The header's height, which the docs' sticky sidebar and table of contents offset by. */
+  --ifm-navbar-height: 57px;
+}

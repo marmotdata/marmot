@@ -19,6 +19,8 @@ import { CalloutCard } from '@site/src/components/DocCard';
 npx skills add marmotdata/marmot
 ```
 
+Or, with the Marmot CLI installed, `marmot skills install`. Run it again after upgrading to keep the skill in step with the CLI.
+
 Once installed, your agent knows how to search assets, explore lineage, look up glossary terms, check ownership and call the Marmot CLI or REST API on your behalf.
 
 For the best experience, pair this with [MCP](/docs/MCP) to give the agent a live connection to your Catalog.

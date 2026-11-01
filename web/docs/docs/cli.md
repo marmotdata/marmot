@@ -26,24 +26,46 @@ import { CliInstall } from '@site/src/components/CliInstall';
 
 ## Authentication
 
-The recommended way to authenticate is with `marmot login`, which opens a browser to sign in using your organisation's identity provider (Google, Okta, Keycloak, etc.) via OAuth 2.0 PKCE. API keys are still fully supported.
-
-### Browser Login (Recommended)
+Sign in once with `marmot login`. It opens your browser, you sign in the way you always do, and the CLI keeps a token for you.
 
 ```bash
-# First time — prompts for your Marmot URL, opens browser
-marmot login
-
-# Or pass the URL directly
 marmot login https://marmot.example.com
 ```
 
-The token is cached locally at `~/.config/marmot/credentials.json` and used automatically by all subsequent commands. Tokens expire after 24 hours — just run `marmot login` again to re-authenticate.
+That is all most people need. Every other command uses the token from then on. It lasts 24 hours; run `marmot login` again when it has expired.
+
+### Useful options
 
 ```bash
-# Remove cached token
+# Skip the browser and print the sign-in link instead.
+# Open it anywhere, then paste the address the browser ends up on back here.
+marmot login https://marmot.example.com --no-launch-browser
+
+# Sign in again even if you still have a valid token
+marmot login https://marmot.example.com --force
+
+# Print the token, for scripts
+marmot login https://marmot.example.com --print-token
+
+# Forget the token
 marmot logout
 ```
+
+### What happens behind the scenes
+
+The CLI opens the Marmot sign-in page in your browser and waits on a local port for the browser to come back with a code. It swaps that code for a token and saves it in `~/.config/marmot/credentials.json`. The token is a signed JWT with your user id, your roles and their permissions, and an expiry. This is plain OAuth 2.0 with PKCE. There is no client secret and nothing to configure.
+
+### Pushing to a registry on your Marmot host
+
+Login also makes the token available to `docker`, `crane` and `oras` for the Marmot host, so those tools can push to a registry served there without a `docker login`.
+
+This needs `docker-credential-marmot` on your `PATH`. It is just the marmot binary under another name, and the install script sets it up. If you installed marmot some other way:
+
+```bash
+ln -s "$(command -v marmot)" "$(dirname "$(command -v marmot)")/docker-credential-marmot"
+```
+
+Without it, login writes the token straight into `~/.docker/config.json`. That works until the token expires, and not at all if Docker Desktop manages your credentials. Login tells you when that is the case.
 
 ### API Keys
 
@@ -64,6 +86,8 @@ When multiple credentials are available, the CLI uses the first one found:
 1. `--api-key` flag or `MARMOT_API_KEY` environment variable
 2. Cached OAuth token from `marmot login` (for the active context)
 3. Kubernetes service account token (auto-detected in-cluster)
+
+A Kubernetes service account token is only accepted from the operator's ingestion ServiceAccount, projected for the `marmot` audience at `/var/run/secrets/marmot/token`, and it can only push ingestion results and serve queries: start and complete runs, write assets, lineage and documentation, and enrol a serving plugin.
 
 ---
 
@@ -122,6 +146,7 @@ This creates `~/.config/marmot/config.yaml` interactively. You can also use `mar
 | --- | --- | --- |
 | `host` | Marmot server URL | `http://localhost:8080` |
 | `api_key` | API key for authentication | (none) |
+| `ca_file` | PEM file of a CA to trust for the Marmot API in addition to the system's, also `--ca-file` or `MARMOT_CA_FILE` | (none) |
 | `output` | Default output format (`table`, `json`, `yaml`) | `table` |
 | `current_context` | Active context name | (none) |
 
@@ -147,11 +172,13 @@ All list commands support `--limit` and `--offset` for pagination. Destructive c
 marmot login [url] [flags]
 ```
 
-Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. If no URL is provided and no context is active, prompts for one. Creates a context automatically.
+Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. A valid cached token is reused. If no URL is provided and no context is active, prompts for one. Creates a context automatically and registers the token with the Docker credential store for the instance's host.
 
 | Flag | Description |
 | --- | --- |
-| `--force` | Re-authenticate even if a valid token exists |
+| `--force` | Sign in again even if a valid token is cached |
+| `--print-token` | Print the access token on stdout; status messages go to stderr |
+| `--no-launch-browser` | Print the sign-in URL instead of opening a browser; the callback URL can be pasted on stdin |
 
 ### marmot logout
 
@@ -159,7 +186,7 @@ Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. If no URL 
 marmot logout
 ```
 
-Remove the cached authentication token for the active context.
+Remove the cached authentication token for the active context, and the registry credential login registered for its host.
 
 ### marmot context
 
@@ -181,7 +208,7 @@ Manage named contexts for switching between Marmot instances. Contexts are creat
 marmot assets <list | get | search | delete | summary | tags | owners> [flags]
 ```
 
-Browse, search and manage assets in your catalog. Use `list` and `search` with `--types`, `--providers` and `--tags` to filter results.
+Browse, search and manage assets in your catalog. Use `list` and `search` with `--types`, `--providers` and `--tags` to filter results. `tags add` and `tags remove` take an asset ID and a tag.
 
 ### marmot search
 
@@ -206,6 +233,14 @@ marmot runs <list | get | entities> [flags]
 ```
 
 View pipeline ingestion runs. Filter with `--pipelines` and `--statuses`.
+
+### marmot query
+
+```
+marmot query <sources | tables | run | history | show | stats> [flags]
+```
+
+Run read-only SQL against catalogued sources as yourself, for example `marmot query run shop-pg --table orders`. It needs the `assets:query` permission, which admins hold by default, and every query is recorded.
 
 ### marmot lineage
 
@@ -250,10 +285,84 @@ View catalog metrics and usage statistics. `top-assets` and `top-queries` requir
 ### marmot admin
 
 ```
-marmot admin <reindex | reindex-status>
+marmot admin <reindex | reindex-status | serve-keys | rotate-serve-keys>
 ```
 
-Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress.
+Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress. `serve-keys` lists the key generations that secure [serving plugins](Configure/serving-plugins.md) and `rotate-serve-keys` rotates them: gracefully by default, or with `--immediate` after a suspected compromise. Pass `--ca-key-uri` and `--signing-key-uri` to rotate to keys held in a KMS.
+
+### marmot service-accounts
+
+```
+marmot service-accounts <list | get | create | delete> [flags]
+marmot service-accounts apikeys <list | create | delete> [flags]
+```
+
+Manage service accounts and their API keys. A service account is a principal with no person behind it: CI, an ingestion job, an agent. Create one with `--name` and an optional `--roles` list of role IDs, then issue it a key. An account holds up to five keys and the key itself is printed once, at creation.
+
+```bash
+marmot service-accounts create --name catalog-copilot \
+  --description "Answers questions in #data-help. Owned by the platform team."
+
+marmot service-accounts apikeys create \
+  --service-account <id> --name production --expires-in-days 90
+```
+
+| Flag | On | Description |
+| --- | --- | --- |
+| `--name` | `create` | Account or key name. Required. |
+| `--description` | `create` | What the account is for and who owns it. |
+| `--roles` | `create` | Comma-separated role IDs to assign. |
+| `--service-account` | `apikeys *` | The account to act on. Required. |
+| `--expires-in-days` | `apikeys create` | Key expiry. `0` never expires. |
+
+See [users, roles and access](Configure/access-control.md) for what to grant.
+
+### marmot ingest
+
+```
+marmot ingest --config <file> [flags]
+```
+
+Run plugins on this machine and push what they find to Marmot, rather than having the server run them. Use it in CI, or when the source is not reachable from the Marmot server. The configuration file lists the plugins to run and their settings; see [populating with the CLI](Populating/CLI.md). `marmot plugin` is an alias and takes the same flags.
+
+| Flag | Description |
+| --- | --- |
+| `--config`, `-c` | Path to the ingestion config file. Required. |
+| `--quiet`, `-q` | Hide info logs and show errors only. On by default. |
+| `--destroy`, `-d` | Delete every asset this pipeline created. Prompts for confirmation. |
+| `--serve` | After ingesting, stay running and answer Marmot's queries for the run marked `queryable: true`. See [serving queries from your network](Configure/serving-plugins.md). |
+
+### marmot generate-encryption-key
+
+```
+marmot generate-encryption-key
+```
+
+Print a new 32-byte key for `server.encryption_key`, which Marmot uses to encrypt pipeline credentials at rest. Losing the key means losing the credentials encrypted with it, so store it wherever you keep your other secrets before starting the server.
+
+### marmot skills
+
+```
+marmot skills install [--project | --dir <path>]
+```
+
+Install the [Marmot skill](/docs/MCP/skills) for your AI agent, matching this version of the CLI.
+
+### marmot credential-helper
+
+```
+marmot credential-helper <get | store | erase | list>
+```
+
+The Docker credential helper protocol, so `docker`, `crane` and `oras` can push to a registry served by your Marmot host using your `marmot login` session. You do not call this yourself: Docker does, through the `docker-credential-marmot` symlink the install script creates. See [authentication](#authentication) above.
+
+### marmot run
+
+```
+marmot run [--config <file>]
+```
+
+Start a Marmot server from the same binary as the CLI. This is what the container image runs. See [deployment](Deploy/index.md) for running it in production.
 
 ### marmot config
 

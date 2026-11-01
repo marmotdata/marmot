@@ -54,10 +54,34 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 	return globalOAuthAuthorizeCompleter
 }
 
+// LastSeenToucher records that a member made a request; it throttles its own writes.
+type LastSeenToucher interface {
+	Touch(userID string)
+}
+
+var globalLastSeen LastSeenToucher
+
+// SetLastSeenTracker registers where WithAuth records members' activity.
+func SetLastSeenTracker(t LastSeenToucher) {
+	globalLastSeen = t
+}
+
+// recordLastSeen notes the activity of members signed in as themselves. The anonymous user is shared by everyone, so it is not anybody's activity.
+func recordLastSeen(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if t := globalLastSeen; t != nil {
+			if u, ok := r.Context().Value(UserContextKey).(*user.User); ok && u.ID != "" && u.Username != "anonymous" {
+				t.Touch(u.ID)
+			}
+		}
+		next(w, r)
+	}
+}
+
 // UpdatePasswordPath is the route passwordChangeGate exempts. RegisterRoutes
 // registers the handler under it, so that drift between the two cannot lock a
 // user with a pending change out of the only endpoint that can clear it.
-const UpdatePasswordPath = "/api/v1/users/update-password"
+const UpdatePasswordPath = "/api/v1/users/update-password" //nolint:gosec // G101: a route path, not a credential
 
 // passwordChangeGate blocks every request from a user whose
 // must_change_password is still set, except the password change itself.
@@ -83,6 +107,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 	k8sValidator := globalK8sValidator
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		next = passwordChangeGate(next)
+		next = recordLastSeen(next)
 		return func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
 
@@ -90,23 +115,21 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				u, err := userService.ValidateAPIKey(r.Context(), apiKey)
 				if err == nil {
 					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialUserAPIKey, Lookup: user.APIKeyLookup(apiKey)})
 					next(w, r.WithContext(ctx))
 					return
 				}
 
-				if errors.Is(err, user.ErrInvalidAPIKey) && globalServiceAccountService != nil {
-					sa, saErr := globalServiceAccountService.ValidateAPIKey(r.Context(), apiKey)
-					if saErr == nil {
-						roleNames := make([]string, 0, len(sa.Roles))
-						permKeys := make([]string, 0)
-						for _, r := range sa.Roles {
-							roleNames = append(roleNames, r.Name)
-							for _, p := range r.Permissions {
-								permKeys = append(permKeys, p.ResourceType+":"+p.Action)
-							}
-						}
-						principal := auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys)
+				if errors.Is(err, user.ErrUserInactive) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "User account is inactive")
+					return
+				}
+
+				if errors.Is(err, user.ErrInvalidAPIKey) {
+					if principal, ok := serviceAccountPrincipal(r.Context(), apiKey); ok {
 						ctx := setPrincipalContext(r.Context(), principal)
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialServiceAccountAPIKey, Lookup: serviceaccount.APIKeyLookup(apiKey)})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -139,7 +162,19 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 						return
 					}
 					ctx := setPrincipalContext(r.Context(), p)
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialSession})
 					next(w, r.WithContext(ctx))
+					return
+				}
+				// A Marmot token that verified but was signed out is not retried as anything else. One whose sign-out state could not be read is refused with a 500, since a 401 would send the client round a sign-in that cannot help.
+				if errors.Is(err, auth.ErrTokenCheck) {
+					log.Error().Err(err).Str("endpoint", r.URL.Path).Msg("Failed to check token sign-out")
+					RespondError(w, http.StatusInternalServerError, "Could not check your sign-in")
+					return
+				}
+				if errors.Is(err, auth.ErrTokenRevoked) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "Invalid token")
 					return
 				}
 
@@ -153,7 +188,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via K8s ServiceAccount token")
 						ctx := setPrincipalContext(r.Context(), auth.NewOperatorPrincipal())
-						ctx = context.WithValue(ctx, UserContextKey, GetOperatorUser())
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialKubernetes})
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -171,24 +206,42 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via OIDC token exchange")
 						ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(exchUser))
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialOIDC})
 						next(w, r.WithContext(ctx))
 						return
 					}
 				}
 
-				// Fall back to API key in Bearer header
+				// Fall back to API key in Bearer header, then to a service-account key
 				u, err := userService.ValidateAPIKey(r.Context(), tokenString)
-				if err != nil {
-					log.Error().Err(err).
-						Str("endpoint", r.URL.Path).
-						Str("method", r.Method).
-						Msg("Failed to validate bearer token as JWT or API key")
-					setWWWAuthenticate(w, cfg)
-					RespondError(w, http.StatusUnauthorized, "Invalid token")
+				if err == nil {
+					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialUserAPIKey, Lookup: user.APIKeyLookup(tokenString)})
+					next(w, r.WithContext(ctx))
 					return
 				}
-				ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
-				next(w, r.WithContext(ctx))
+
+				if errors.Is(err, user.ErrUserInactive) {
+					setWWWAuthenticate(w, cfg)
+					RespondError(w, http.StatusUnauthorized, "User account is inactive")
+					return
+				}
+
+				if errors.Is(err, user.ErrInvalidAPIKey) {
+					if principal, ok := serviceAccountPrincipal(r.Context(), tokenString); ok {
+						ctx := setPrincipalContext(r.Context(), principal)
+						ctx = withCredential(ctx, auth.Credential{Type: auth.CredentialServiceAccountAPIKey, Lookup: serviceaccount.APIKeyLookup(tokenString)})
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+
+				log.Error().Err(err).
+					Str("endpoint", r.URL.Path).
+					Str("method", r.Method).
+					Msg("Failed to validate bearer token as JWT or API key")
+				setWWWAuthenticate(w, cfg)
+				RespondError(w, http.StatusUnauthorized, "Invalid token")
 				return
 			}
 
@@ -210,6 +263,37 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 			RespondError(w, http.StatusUnauthorized, "Authentication required")
 		}
 	}
+}
+
+// serviceAccountPrincipal validates apiKey as a service account key, returning false when no service account service is registered or the key is not one.
+func serviceAccountPrincipal(ctx context.Context, apiKey string) (auth.Principal, bool) {
+	if globalServiceAccountService == nil {
+		return nil, false
+	}
+	sa, err := globalServiceAccountService.ValidateAPIKey(ctx, apiKey)
+	if err != nil {
+		return nil, false
+	}
+	roleNames := make([]string, 0, len(sa.Roles))
+	permKeys := make([]string, 0)
+	for _, r := range sa.Roles {
+		roleNames = append(roleNames, r.Name)
+		for _, p := range r.Permissions {
+			permKeys = append(permKeys, p.ResourceType+":"+p.Action)
+		}
+	}
+	return auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys), true
+}
+
+// withCredential records which credential authenticated the request, for features that must end as soon as it is revoked.
+func withCredential(ctx context.Context, c auth.Credential) context.Context {
+	return context.WithValue(ctx, credentialContextKey, c)
+}
+
+// CredentialFromContext returns the credential that authenticated the request.
+func CredentialFromContext(ctx context.Context) (auth.Credential, bool) {
+	c, ok := ctx.Value(credentialContextKey).(auth.Credential)
+	return c, ok
 }
 
 func setPrincipalContext(ctx context.Context, p auth.Principal) context.Context {

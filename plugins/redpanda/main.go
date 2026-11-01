@@ -15,12 +15,13 @@ func main() {
 
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
 		Meta: pluginsdk.Meta{
-			ID:          "redpanda",
-			Name:        "Redpanda",
-			Description: "Discover topics from Redpanda clusters",
-			Icon:        "redpanda",
-			Category:    "streaming",
-			ConfigSpec:  spec,
+			ID:            "redpanda",
+			MarmotVersion: ">=0.12.0",
+			Name:          "Redpanda",
+			Description:   "Discover topics from Redpanda clusters",
+			Icon:          "redpanda",
+			Category:      "streaming",
+			ConfigSpec:    spec,
 		},
 		Source: &kafka.Source{},
 	})

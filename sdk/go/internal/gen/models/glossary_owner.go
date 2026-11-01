@@ -34,12 +34,12 @@ type GlossaryOwner struct {
 }
 
 // Validate validates this glossary owner
-func (m *GlossaryOwner) Validate(formats strfmt.Registry) error {
+func (m *GlossaryOwner) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this glossary owner based on context it is used
-func (m *GlossaryOwner) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *GlossaryOwner) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

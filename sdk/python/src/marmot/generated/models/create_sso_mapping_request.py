@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -28,9 +28,19 @@ class CreateSSOMappingRequest(BaseModel):
 
     member_role: StrictStr | None = None
     provider: StrictStr | None = None
+    role_id: StrictStr | None = Field(
+        default=None,
+        description="RoleID is the Marmot role the group's members get at every sign-in, in place of the default role.",
+    )
     sso_group_name: StrictStr | None = None
     team_id: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["member_role", "provider", "sso_group_name", "team_id"]
+    __properties: ClassVar[list[str]] = [
+        "member_role",
+        "provider",
+        "role_id",
+        "sso_group_name",
+        "team_id",
+    ]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -83,6 +93,7 @@ class CreateSSOMappingRequest(BaseModel):
             {
                 "member_role": obj.get("member_role"),
                 "provider": obj.get("provider"),
+                "role_id": obj.get("role_id"),
                 "sso_group_name": obj.get("sso_group_name"),
                 "team_id": obj.get("team_id"),
             }

@@ -37,12 +37,12 @@ type CreateGlossaryTermRequest struct {
 }
 
 // Validate validates this create glossary term request
-func (m *CreateGlossaryTermRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateGlossaryTermRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create glossary term request based on context it is used
-func (m *CreateGlossaryTermRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateGlossaryTermRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -25,12 +25,12 @@ type AssetRuleExternalLink struct {
 }
 
 // Validate validates this asset rule external link
-func (m *AssetRuleExternalLink) Validate(formats strfmt.Registry) error {
+func (m *AssetRuleExternalLink) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this asset rule external link based on context it is used
-func (m *AssetRuleExternalLink) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetRuleExternalLink) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

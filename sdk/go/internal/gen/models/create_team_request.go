@@ -22,12 +22,12 @@ type CreateTeamRequest struct {
 }
 
 // Validate validates this create team request
-func (m *CreateTeamRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateTeamRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create team request based on context it is used
-func (m *CreateTeamRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateTeamRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

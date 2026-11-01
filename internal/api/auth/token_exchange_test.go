@@ -41,8 +41,16 @@ func (m *mockAuthService) ValidateToken(ctx context.Context, token string) (*cor
 	return nil, nil
 }
 
+func (m *mockAuthService) RevokeToken(ctx context.Context, token string) error {
+	return nil
+}
+
 func (m *mockAuthService) GetSigningKey(ctx context.Context) ([]byte, error) {
 	return nil, nil
+}
+
+func (m *mockAuthService) GenerateTokenForClient(ctx context.Context, u *user.User, clientID, grantID string) (string, error) {
+	return m.GenerateToken(ctx, u, nil)
 }
 
 type mockOAuthProvider struct {
@@ -50,10 +58,12 @@ type mockOAuthProvider struct {
 	typ  string
 }
 
-func (m *mockOAuthProvider) GetAuthURL(state string) string                                      { return "" }
-func (m *mockOAuthProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) { return nil, nil }
-func (m *mockOAuthProvider) Name() string                                                        { return m.name }
-func (m *mockOAuthProvider) Type() string                                                        { return m.typ }
+func (m *mockOAuthProvider) GetAuthURL(state string) string { return "" }
+func (m *mockOAuthProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	return nil, nil
+}
+func (m *mockOAuthProvider) Name() string { return m.name }
+func (m *mockOAuthProvider) Type() string { return m.typ }
 
 type mockTokenExchangerProvider struct {
 	mockOAuthProvider
@@ -144,6 +154,28 @@ func TestTokenExchange_WrongGrantType(t *testing.T) {
 	resp := decodeOAuthError(t, rec)
 	if resp.Error != "unsupported_grant_type" {
 		t.Fatalf("expected error 'unsupported_grant_type', got %q", resp.Error)
+	}
+}
+
+func TestToken_RejectsClientAssertion(t *testing.T) {
+	h := newTestHandler(nil, nil)
+	form := url.Values{}
+	form.Set("grant_type", "authorization_code")
+	form.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+	form.Set("client_assertion", "x.y.z")
+
+	req := httptest.NewRequest(http.MethodPost, "/oauth/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+
+	h.handleToken(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	resp := decodeOAuthError(t, rec)
+	if resp.Error != "invalid_client" {
+		t.Fatalf("expected error 'invalid_client', got %q", resp.Error)
 	}
 }
 

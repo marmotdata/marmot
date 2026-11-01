@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"context"
 
@@ -15,30 +16,28 @@ import (
 	"github.com/marmotdata/marmot/internal/core/user"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	"github.com/marmotdata/marmot/pkg/config"
-	"github.com/ory/fosite"
 )
 
 func newAuthorizeHandler() *Handler {
 	secret := []byte("test-secret-key-for-authorize--!")
-	provider := marmotOAuth2.NewProvider(secret)
-	store := marmotOAuth2.NewAuthorizeSessionStore()
+	provider := marmotOAuth2.NewProvider(secret, marmotOAuth2.NewMemoryRepository())
 
 	cfg := &config.Config{}
 	cfg.Server.RootURL = "http://localhost:8080"
 
-	provider.Store.RegisterClient(&fosite.DefaultClient{
+	if err := provider.Store.RegisterClient(context.Background(), &marmotOAuth2.ClientRecord{
 		ID:            "test-client-1",
-		Public:        true,
 		RedirectURIs:  []string{"http://localhost:9999/callback"},
 		GrantTypes:    []string{"authorization_code"},
 		ResponseTypes: []string{"code"},
 		Scopes:        []string{"openid"},
-	})
+	}); err != nil {
+		panic(err)
+	}
 
 	return &Handler{
-		oauthProvider:         provider,
-		authorizeSessionStore: store,
-		config:                cfg,
+		oauthProvider: provider,
+		config:        cfg,
 	}
 }
 
@@ -270,5 +269,35 @@ func TestHandleAuthorizeComplete_PasswordChangePending(t *testing.T) {
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("expected 403 for pending password change, got %d", rec.Code)
+	}
+}
+
+// handleAuthorizeComplete authenticates outside WithAuth, so it has to refuse a token revoked by sign-out-all itself, or the revoked token can be swapped for a fresh one.
+func TestHandleAuthorizeComplete_RevokedToken(t *testing.T) {
+	revokedAt := time.Now()
+	issuedAt := revokedAt.Add(-time.Minute)
+
+	h := newAuthorizeHandler()
+	h.authService = &mockAuthService{
+		validateTokenFn: func(_ context.Context, _ string) (*coreauth.Claims, error) {
+			return &coreauth.Claims{RegisteredClaims: jwt.RegisteredClaims{
+				Subject:  "u-1",
+				IssuedAt: jwt.NewNumericDate(issuedAt),
+			}}, nil
+		},
+	}
+	h.userService = &mockUserService{
+		getFn: func(_ context.Context, _ string) (*user.User, error) {
+			return &user.User{ID: "u-1", Username: "alice", Active: true, SessionsInvalidatedAt: &revokedAt}, nil
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/oauth/authorize/complete", nil)
+	req.Header.Set("Authorization", "Bearer revoked-token")
+	rec := httptest.NewRecorder()
+	h.handleAuthorizeComplete(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for revoked token, got %d", rec.Code)
 	}
 }

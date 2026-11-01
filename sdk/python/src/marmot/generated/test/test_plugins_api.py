@@ -23,6 +23,30 @@ class TestPluginsApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
+    async def test_check_plugin_versions(self) -> None:
+        """Test case for check_plugin_versions
+
+        Check the plugin index for new versions and advisories now
+        """
+
+    def test_check_plugin_versions_sync(self) -> None:
+        """Test case for check_plugin_versions (synchronous)
+
+        Check the plugin index for new versions and advisories now
+        """
+
+    async def test_get_plugin_versions(self) -> None:
+        """Test case for get_plugin_versions
+
+        List core plugin versions, available updates and advisories
+        """
+
+    def test_get_plugin_versions_sync(self) -> None:
+        """Test case for get_plugin_versions (synchronous)
+
+        List core plugin versions, available updates and advisories
+        """
+
     async def test_get_plugins(self) -> None:
         """Test case for get_plugins
 
@@ -45,6 +69,54 @@ class TestPluginsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for get_plugins_aws_credentials_status (synchronous)
 
         Get AWS credential detection status
+        """
+
+    async def test_pin_plugin_version(self) -> None:
+        """Test case for pin_plugin_version
+
+        Pin or unpin a core plugin at the version it runs
+        """
+
+    def test_pin_plugin_version_sync(self) -> None:
+        """Test case for pin_plugin_version (synchronous)
+
+        Pin or unpin a core plugin at the version it runs
+        """
+
+    async def test_reset_plugin_version(self) -> None:
+        """Test case for reset_plugin_version
+
+        Return a core plugin to the version this Marmot release pins
+        """
+
+    def test_reset_plugin_version_sync(self) -> None:
+        """Test case for reset_plugin_version (synchronous)
+
+        Return a core plugin to the version this Marmot release pins
+        """
+
+    async def test_rollback_plugin_version(self) -> None:
+        """Test case for rollback_plugin_version
+
+        Roll a core plugin back to the version it ran before its last change, and pin it
+        """
+
+    def test_rollback_plugin_version_sync(self) -> None:
+        """Test case for rollback_plugin_version (synchronous)
+
+        Roll a core plugin back to the version it ran before its last change, and pin it
+        """
+
+    async def test_set_plugin_version(self) -> None:
+        """Test case for set_plugin_version
+
+        Move a core plugin to a version from the plugin index
+        """
+
+    def test_set_plugin_version_sync(self) -> None:
+        """Test case for set_plugin_version (synchronous)
+
+        Move a core plugin to a version from the plugin index
         """
 
 

@@ -18,14 +18,19 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sqs",
-		Name:        "AWS SQS",
-		Description: "Discover SQS queues from AWS accounts",
-		Icon:        "sqs",
-		Category:    "messaging",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "sqs",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AWS SQS",
+		Description:   "Discover SQS queues from AWS accounts",
+		Icon:          "sqs",
+		Category:      "messaging",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SQSFields{}, "AWS SQS",
+				"SQS-specific metadata fields"),
+		},
 	}
 }
 
@@ -33,8 +38,9 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
-	DiscoverDLQ bool `json:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
+	DiscoverDLQ bool `json:"discover_dlq,omitempty" group:"Discovery" description:"Discover Dead Letter Queue relationships"`
 }
 
 // Example configuration for the plugin
@@ -59,6 +65,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
 		return nil, err
 	}
 

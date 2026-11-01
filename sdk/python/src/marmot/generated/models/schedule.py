@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -26,32 +26,62 @@ class Schedule(BaseModel):
     Schedule
     """
 
+    asset_count: StrictInt | None = Field(
+        default=None,
+        description="AssetCount counts the assets the pipeline's latest successful run cataloged that are still in the catalog; it is only filled in when schedules are read one at a time or listed.",
+    )
     config: dict[str, Any] | None = None
     created_at: StrictStr | None = None
     created_by: StrictStr | None = None
     cron_expression: StrictStr | None = None
+    description: StrictStr | None = Field(
+        default=None,
+        description="Description says what the pipeline catalogs, in the words of whoever set it up.",
+    )
     enabled: StrictBool | None = None
     id: StrictStr | None = None
+    ingest_on_query: StrictBool | None = None
     last_run_at: StrictStr | None = None
     last_run_status: StrictStr | None = None
     managed_by: StrictStr | None = None
     name: StrictStr | None = None
     next_run_at: StrictStr | None = None
+    owner_id: StrictStr | None = None
+    owner_name: StrictStr | None = None
+    owner_type: StrictStr | None = Field(
+        default=None,
+        description='OwnerType is "user" or "team" and names, with OwnerID, who is told when a run fails; both are nil for an unowned pipeline.',
+    )
     plugin_id: StrictStr | None = None
+    queryable: StrictBool | None = None
+    served_by_id: StrictStr | None = None
+    served_by_type: StrictStr | None = Field(
+        default=None,
+        description="ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
+    )
     updated_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
+        "asset_count",
         "config",
         "created_at",
         "created_by",
         "cron_expression",
+        "description",
         "enabled",
         "id",
+        "ingest_on_query",
         "last_run_at",
         "last_run_status",
         "managed_by",
         "name",
         "next_run_at",
+        "owner_id",
+        "owner_name",
+        "owner_type",
         "plugin_id",
+        "queryable",
+        "served_by_id",
+        "served_by_type",
         "updated_at",
     ]
 
@@ -104,18 +134,27 @@ class Schedule(BaseModel):
 
         return cls.model_validate(
             {
+                "asset_count": obj.get("asset_count"),
                 "config": obj.get("config"),
                 "created_at": obj.get("created_at"),
                 "created_by": obj.get("created_by"),
                 "cron_expression": obj.get("cron_expression"),
+                "description": obj.get("description"),
                 "enabled": obj.get("enabled"),
                 "id": obj.get("id"),
+                "ingest_on_query": obj.get("ingest_on_query"),
                 "last_run_at": obj.get("last_run_at"),
                 "last_run_status": obj.get("last_run_status"),
                 "managed_by": obj.get("managed_by"),
                 "name": obj.get("name"),
                 "next_run_at": obj.get("next_run_at"),
+                "owner_id": obj.get("owner_id"),
+                "owner_name": obj.get("owner_name"),
+                "owner_type": obj.get("owner_type"),
                 "plugin_id": obj.get("plugin_id"),
+                "queryable": obj.get("queryable"),
+                "served_by_id": obj.get("served_by_id"),
+                "served_by_type": obj.get("served_by_type"),
                 "updated_at": obj.get("updated_at"),
             }
         )

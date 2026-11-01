@@ -38,14 +38,31 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "asyncapi",
-		Name:        "AsyncAPI",
-		Description: "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
-		Icon:        "asyncapi",
-		Category:    "api",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "asyncapi",
+		MarmotVersion: ">=0.12.0",
+		Name:          "AsyncAPI",
+		Description:   "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
+		Icon:          "asyncapi",
+		Category:      "api",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SharedFields{}, "Shared",
+				"Common metadata fields across all AsyncAPI resources"),
+			pluginsdk.AssetSchemaOf(ServiceFields{}, "Service",
+				"AsyncAPI service-specific metadata"),
+			pluginsdk.AssetSchemaOf(KafkaFields{}, "Kafka",
+				"Kafka-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(SNSFields{}, "SNS",
+				"SNS-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(SQSFields{}, "SQS",
+				"SQS-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(AMQPFields{}, "AMQP",
+				"AMQP-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(GooglePubSubFields{}, "Google Pub Sub",
+				"Google Pub/Sub-specific metadata fields"),
+		},
 	}
 }
 
@@ -55,11 +72,11 @@ type Config struct {
 	*filesource.FileSourceConfig `json:",inline"`
 
 	SpecPath    string `json:"spec_path" validate:"required" description:"Path to AsyncAPI spec file or directory containing specs (local path, s3://bucket/prefix or git::url)"`
-	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
+	Environment string `json:"environment,omitempty" group:"Advanced" description:"Environment name (e.g., production, staging)" default:"production"`
 
-	DiscoverServices bool `json:"discover_services" description:"Create service assets from AsyncAPI info" default:"true"`
-	DiscoverChannels bool `json:"discover_channels" description:"Create channel/topic assets from channels and bindings" default:"true"`
-	DiscoverMessages bool `json:"discover_messages" description:"Attach message schemas to channel assets" default:"true"`
+	DiscoverServices bool `json:"discover_services" group:"Discovery" description:"Create service assets from AsyncAPI info" default:"true"`
+	DiscoverChannels bool `json:"discover_channels" group:"Discovery" description:"Create channel/topic assets from channels and bindings" default:"true"`
+	DiscoverMessages bool `json:"discover_messages" group:"Discovery" description:"Attach message schemas to channel assets" default:"true"`
 }
 
 // Example configuration for the plugin

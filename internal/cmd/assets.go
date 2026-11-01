@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
-	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -129,21 +127,12 @@ var assetsDeleteCmd = &cobra.Command{
 	Short: "Delete an asset",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		yes, _ := cmd.Flags().GetBool("yes")
+		if err := confirm(cmd, fmt.Sprintf("Delete asset %s?", args[0])); err != nil {
+			return err
+		}
 		c, err := newClient()
 		if err != nil {
 			return err
-		}
-
-		if !yes {
-			fmt.Printf("Are you sure you want to delete asset %s? (y/N): ", args[0])
-			reader := bufio.NewReader(os.Stdin)
-			response, _ := reader.ReadString('\n')
-			response = strings.TrimSpace(strings.ToLower(response))
-			if response != "y" && response != "yes" {
-				fmt.Println("Cancelled.")
-				return nil
-			}
 		}
 
 		if err := c.Assets.Delete(cmd.Context(), args[0]); err != nil {

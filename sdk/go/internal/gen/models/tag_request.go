@@ -45,7 +45,7 @@ func (m *TagRequest) validateTag(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this tag request based on context it is used
-func (m *TagRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *TagRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

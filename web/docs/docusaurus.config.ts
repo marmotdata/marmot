@@ -2,6 +2,7 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import type * as Redocusaurus from "redocusaurus";
 import tailwindPlugin from "./plugins/tailwind-config.cjs";
+import designSystemFontsPlugin from "./plugins/design-system-fonts.cjs";
 import unpluginIconsPlugin from "./plugins/unplugin-icons.cjs";
 import { lightTheme, darkTheme } from "./src/theme/prismTheme";
 import * as fs from "fs";
@@ -35,27 +36,27 @@ const config: Config = {
   projectName: "marmot",
 
   onBrokenLinks: "warn",
-  onBrokenMarkdownLinks: "warn",
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
+  clientModules: ["./src/clientModules/resize-observer-notice.ts"],
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
   },
-  stylesheets: [
-    {
-      href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&display=swap",
-      type: "text/css",
-    },
-  ],
   headTags: [
     {
       tagName: "meta",
       attributes: {
         name: "theme-color",
-        content: "#fefcfb",
+        content: "#fdfbfa",
         media: "(prefers-color-scheme: light)",
       },
     },
@@ -63,7 +64,7 @@ const config: Config = {
       tagName: "meta",
       attributes: {
         name: "theme-color",
-        content: "#1a1a1a",
+        content: "#151210",
         media: "(prefers-color-scheme: dark)",
       },
     },
@@ -98,7 +99,7 @@ const config: Config = {
             "@id": "https://marmotdata.io/#organization",
             name: "Marmot",
             url: "https://marmotdata.io",
-            logo: "https://marmotdata.io/img/social-card.png",
+            logo: "https://marmotdata.io/img/social-card-light.png",
             sameAs: [
               "https://github.com/marmotdata/marmot",
               "https://discord.gg/TWCk7hVFN4",
@@ -125,12 +126,43 @@ const config: Config = {
             offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
             publisher: { "@id": "https://marmotdata.io/#organization" },
           },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://marmotdata.io/#cloud",
+            name: "Marmot Cloud",
+            description:
+              "Marmot Cloud is the managed edition of Marmot: everything in the open source core, plus SSO, backups, private networking and the features that ship to Cloud first. Provisioning, upgrades and TLS are handled for you. Free account, pay when you launch an instance.",
+            url: "https://cloud.marmotdata.io",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "Web",
+            offers: [
+              {
+                "@type": "Offer",
+                name: "Team",
+                price: "49",
+                priceCurrency: "USD",
+                url: "https://cloud.marmotdata.io/signup",
+                description:
+                  "Per instance, per month. 100 seats, 5,000 assets, all plugins, MCP server, SSO and 30-day backups.",
+              },
+              {
+                "@type": "Offer",
+                name: "Enterprise",
+                priceCurrency: "USD",
+                url: "https://marmotdata.io/pricing",
+                description:
+                  "Custom priced. Unlimited instances, seats and assets, private networking and VPC peering, audit log export, 99.9% uptime SLA and priority support.",
+              },
+            ],
+            publisher: { "@id": "https://marmotdata.io/#organization" },
+          },
         ],
       }),
     },
   ],
   plugins: [
     tailwindPlugin,
+    designSystemFontsPlugin,
     unpluginIconsPlugin,
     [
       "@docusaurus/plugin-content-docs",
@@ -148,7 +180,7 @@ const config: Config = {
       {
         title: "Marmot",
         description:
-          "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team.",
+          "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team. Self-host it free, or run it on Marmot Cloud at cloud.marmotdata.io.",
         docsDir: [
           { path: "docs", routeBasePath: "docs", label: "Documentation" },
           { path: "resources", routeBasePath: "resources", label: "Resources" },
@@ -168,7 +200,6 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           showLastUpdateTime: true,
-          showLastUpdateAuthor: true,
           lastVersion: versions.length > 0 ? versions[0] : "current",
           versions: {
             current: {
@@ -196,7 +227,7 @@ const config: Config = {
           onUntruncatedBlogPosts: "warn",
         },
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: ["./src/css/marmot.css", "./src/css/custom.css"],
         },
         sitemap: {
           lastmod: "date",
@@ -233,7 +264,7 @@ const config: Config = {
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    image: "img/social-card.png",
+    image: "img/social-card-dark.png",
     navbar: {
       title: "",
       logo: {
@@ -262,16 +293,34 @@ const config: Config = {
           className: "header-github-link",
           "aria-label": "GitHub repository",
         },
-        {
-          href: "https://demo.marmotdata.io",
-          label: "Live Demo",
-          position: "right",
-          className: "demo-button",
-        },
+        // The header itself is src/theme/Navbar; these items are what its
+        // narrow-screen sidebar lists, above the docs navigation.
+        { type: "custom-cloudAuth", position: "right" },
       ],
     },
     footer: {
       links: [
+        {
+          title: "Marmot Cloud",
+          items: [
+            {
+              label: "Overview",
+              href: "https://cloud.marmotdata.io",
+            },
+            {
+              label: "Start free",
+              href: "https://cloud.marmotdata.io/signup",
+            },
+            {
+              label: "Sign in",
+              href: "https://cloud.marmotdata.io/login",
+            },
+            {
+              label: "Cloud pricing",
+              href: "https://marmotdata.io/pricing",
+            },
+          ],
+        },
         {
           title: "Docs",
           items: [
@@ -332,11 +381,7 @@ const config: Config = {
             },
             {
               label: "Pricing",
-              to: "/pricing",
-            },
-            {
-              label: "Live Demo",
-              href: "https://demo.marmotdata.io",
+              href: "https://marmotdata.io/pricing",
             },
             {
               label: "API Reference",
@@ -347,20 +392,20 @@ const config: Config = {
               href: "https://github.com/marmotdata/marmot/",
             },
             {
-              label: "Security & Bug Bounty",
+              label: "Security & Disclosure",
               to: "/security",
             },
             {
               label: "Privacy Policy",
-              to: "/privacy",
+              href: "https://cloud.marmotdata.io/privacy",
             },
             {
               label: "Terms of Service",
-              to: "/terms",
+              href: "https://cloud.marmotdata.io/terms",
             },
             {
               label: "Data Processing Agreement",
-              to: "/dpa",
+              href: "https://cloud.marmotdata.io/dpa",
             },
           ],
         },

@@ -20,23 +20,40 @@ type UpdateScheduleRequest struct {
 	// cron expression
 	CronExpression string `json:"cron_expression,omitempty"`
 
+	// Description says what the pipeline catalogs. Omit it to leave it unchanged; an empty string clears it.
+	Description string `json:"description,omitempty"`
+
 	// enabled
 	Enabled bool `json:"enabled,omitempty"`
+
+	// IngestOnQuery refreshes the source's catalog in the background after
+	// data queries, rate-limited per source.
+	IngestOnQuery bool `json:"ingest_on_query,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
 
+	// owner id
+	OwnerID string `json:"owner_id,omitempty"`
+
+	// OwnerType is "user" or "team" and, with OwnerID, names who is told when a run fails. Omit both to leave the owner unchanged; send both empty to clear it.
+	OwnerType string `json:"owner_type,omitempty"`
+
 	// plugin id
 	PluginID string `json:"plugin_id,omitempty"`
+
+	// Queryable lets agents and users query this source through Marmot; the
+	// plugin must support queries.
+	Queryable bool `json:"queryable,omitempty"`
 }
 
 // Validate validates this update schedule request
-func (m *UpdateScheduleRequest) Validate(formats strfmt.Registry) error {
+func (m *UpdateScheduleRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this update schedule request based on context it is used
-func (m *UpdateScheduleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateScheduleRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

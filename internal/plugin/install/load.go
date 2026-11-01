@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/marmotdata/marmot/internal/plugin"
 )
 
@@ -15,7 +17,8 @@ import (
 const pluginBinaryPrefix = "marmot-plugin-"
 
 // LoadPlugins registers locally installed plugin binaries, then the
-// manifest-pinned version of each core plugin found in the cache.
+// pinned version of each core plugin found in the cache: the release's
+// pin, or the override opts.Pins gives for it.
 // Locally installed plugins load first, so they shadow cached ones.
 //
 // Cached versions other than the pin are ignored: several Marmot
@@ -62,20 +65,43 @@ func loadLocalPlugins(dir string) error {
 	return nil
 }
 
-// pinnedPaths returns the cache paths of the manifest-pinned plugin
-// binaries that exist on disk and are executable, sorted by plugin name.
-// A missing binary simply means the plugin was never installed (or
-// installation failed and was warned about already).
+// pinnedPaths returns the cache paths of the pinned plugin binaries
+// that exist on disk and are executable, sorted by plugin name. A
+// missing binary simply means the plugin was never installed (or
+// installation failed and was warned about already). When a plugin's
+// override is not cached, for instance because the registry was down
+// at startup, the release's pin is used if it is cached: the plugin
+// keeps working and the override is retried once Marmot is running.
 func pinnedPaths(opts Options, manifest *Manifest) []string {
 	var paths []string
-	for name, pin := range manifest.Plugins {
+	for name := range manifest.Plugins {
+		pin, _ := opts.pin(manifest, name)
 		path := CachedPath(opts.cacheDir(), opts.registry(manifest), name, pin.Version)
-		info, err := os.Stat(path)
-		if err != nil || info.IsDir() || info.Mode()&0o111 == 0 {
-			continue
+		if !isExecutable(path) {
+			base := manifest.Plugins[name]
+			fallback := CachedPath(opts.cacheDir(), opts.registry(manifest), name, base.Version)
+			if base.Version == pin.Version || !isExecutable(fallback) {
+				continue
+			}
+			log.Warn().Str("plugin", name).Str("want", pin.Version).Str("running", base.Version).Msg("Chosen plugin version is not installed, running the release version until it is")
+			path = fallback
 		}
 		paths = append(paths, path)
 	}
 	sort.Strings(paths)
 	return paths
+}
+
+// Cached reports whether a version of a plugin is in the cache, ready to load.
+func Cached(opts Options, name, version string) bool {
+	manifest, err := CoreManifest()
+	if err != nil {
+		return false
+	}
+	return isExecutable(CachedPath(opts.cacheDir(), opts.registry(manifest), name, version))
+}
+
+func isExecutable(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir() && info.Mode()&0o111 != 0
 }

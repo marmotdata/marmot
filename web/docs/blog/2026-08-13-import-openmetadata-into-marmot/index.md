@@ -1,9 +1,7 @@
 ---
 slug: import-openmetadata-into-marmot
 title: "Migrate from OpenMetadata to Marmot in five minutes"
-authors:
-  - name: Bruno Schaatsbergen
-    url: https://github.com/bschaatsbergen
+authors: [bruno]
 image: /img/marmot-openmetadata-banner.png
 description: "Marmot's new OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, topics, dashboards, pipelines, lineage and the business glossary. Five minutes of setup, and it keeps syncing until the day you switch OpenMetadata off. This post is the migration, start to finish: run both catalogs while you move, adopt native plugins one system at a time, no big bang required."
 tags: [openmetadata, migration, data-catalog, data-discovery]
@@ -19,7 +17,11 @@ import { ThemedImg } from '@site/src/components/ThemedImg';
 import { CalloutCard } from '@site/src/components/DocCard';
 
 <div style={{textAlign: 'center', marginBottom: '2rem'}}>
-  <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
+  <img
+    src="/img/marmot-openmetadata-banner.png"
+    alt="The Marmot mascot in a Marmot bin holding pages of metadata extracted from OpenMetadata"
+    style={{maxWidth: 'min(100%, 272px)'}}
+  />
 </div>
 
 This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](https://plugins.marmotdata.io/marmotdata/openmetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot does all of it for free.

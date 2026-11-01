@@ -28,36 +28,46 @@ func Meta() pluginsdk.Meta {
 	}
 
 	return pluginsdk.Meta{
-		ID:          "iceberg",
-		Name:        "Apache Iceberg",
-		Description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
-		Icon:        "iceberg",
-		Category:    "data-lake",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  spec,
+		ID:            "iceberg",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Apache Iceberg",
+		Description:   "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
+		Icon:          "iceberg",
+		Category:      "data-lake",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    spec,
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(IcebergNamespaceFields{}, "Namespace",
+				"Iceberg namespace metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergTableFields{}, "Table",
+				"Iceberg table metadata fields"),
+			pluginsdk.AssetSchemaOf(IcebergViewFields{}, "View",
+				"Iceberg view metadata fields"),
+		},
 	}
 }
 
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 	*pluginsdk.AWSConfig `json:",inline"`
+	pluginsdk.Federation `json:",inline"`
 
 	CatalogType string `json:"catalog_type" description:"Catalog backend type" default:"rest" validate:"omitempty,oneof=rest glue"`
 
 	// REST catalog fields
 	URI        string            `json:"uri" description:"REST catalog URI (required for catalog_type=rest)" show_when:"catalog_type:rest"`
 	Warehouse  string            `json:"warehouse" description:"Warehouse identifier" show_when:"catalog_type:rest"`
-	Credential string            `json:"credential" description:"Credential for OAuth2 client credentials authentication" sensitive:"true" show_when:"catalog_type:rest"`
-	Token      string            `json:"token" description:"Bearer token for authentication" sensitive:"true" show_when:"catalog_type:rest"`
-	Properties map[string]string `json:"properties" description:"Additional catalog properties" show_when:"catalog_type:rest"`
-	Prefix     string            `json:"prefix" description:"Optional prefix for the REST catalog" show_when:"catalog_type:rest"`
+	Credential string            `json:"credential" group:"Authentication" description:"Credential for OAuth2 client credentials authentication" sensitive:"true" show_when:"catalog_type:rest"`
+	Token      string            `json:"token" group:"Authentication" description:"Bearer token for authentication" sensitive:"true" show_when:"catalog_type:rest"`
+	Properties map[string]string `json:"properties" group:"Advanced" description:"Additional catalog properties" show_when:"catalog_type:rest"`
+	Prefix     string            `json:"prefix" group:"Advanced" description:"Optional prefix for the REST catalog" show_when:"catalog_type:rest"`
 
 	// Glue catalog fields
-	GlueCatalogID string `json:"glue_catalog_id" description:"AWS Glue Data Catalog ID (defaults to caller's account)" show_when:"catalog_type:glue"`
+	GlueCatalogID string `json:"glue_catalog_id" group:"Discovery" description:"AWS Glue Data Catalog ID (defaults to caller's account)" show_when:"catalog_type:glue"`
 
-	IncludeNamespaces bool `json:"include_namespaces" description:"Whether to discover namespaces as assets" default:"true"`
-	IncludeViews      bool `json:"include_views" description:"Whether to discover views" default:"true"`
+	IncludeNamespaces bool `json:"include_namespaces" group:"Discovery" description:"Whether to discover namespaces as assets" default:"true"`
+	IncludeViews      bool `json:"include_views" group:"Discovery" description:"Whether to discover views" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -109,6 +119,13 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 		if err != nil || u.Scheme == "" || u.Host == "" {
 			return nil, fmt.Errorf("uri must be a valid URL")
 		}
+	}
+
+	if config.AWSConfig == nil {
+		config.AWSConfig = &pluginsdk.AWSConfig{}
+	}
+	if err := config.Federate(rawConfig); err != nil {
+		return nil, err
 	}
 
 	s.config = config

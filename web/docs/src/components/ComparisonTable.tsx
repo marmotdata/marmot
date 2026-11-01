@@ -1,5 +1,8 @@
 import React from "react";
-import { Icon } from "@iconify/react";
+import clsx from "clsx";
+import Check from "~icons/material-symbols/check";
+import Close from "~icons/material-symbols/close";
+import Partial from "~icons/material-symbols/remove";
 
 export type CellStatus = "yes" | "no" | "partial";
 
@@ -28,33 +31,19 @@ interface ComparisonTableProps {
 
 const STATUS_META: Record<
   CellStatus,
-  { icon: string; cls: string; label: string }
+  { Icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactNode; tone: string; label: string }
 > = {
-  yes: {
-    icon: "mdi:check-circle",
-    cls: "text-green-600 dark:text-green-400",
-    label: "Yes:",
-  },
-  no: {
-    icon: "mdi:close-circle",
-    cls: "text-gray-400 dark:text-gray-500",
-    label: "No:",
-  },
-  partial: {
-    icon: "mdi:circle-slice-4",
-    cls: "text-amber-500 dark:text-amber-400",
-    label: "Partial:",
-  },
+  yes: { Icon: Check, tone: "is-yes", label: "Yes:" },
+  no: { Icon: Close, tone: "is-no", label: "No:" },
+  partial: { Icon: Partial, tone: "is-partial", label: "Partial:" },
 };
 
 function normaliseCell(cell: ComparisonCell | string): ComparisonCell {
   return typeof cell === "string" ? { text: cell } : cell;
 }
 
-// Reusable, styled comparison matrix. Renders a semantic <table> with real text
-// in every cell (status icons are supplementary, with a visually hidden label),
-// so it stays readable for search crawlers and LLMs while looking better than a
-// plain markdown table.
+// A comparison matrix as a plain table with thin rules. Every cell carries its text; the status
+// icon is supplementary, with a visually hidden word, so nothing relies on colour or shape alone.
 export function ComparisonTable({
   columns,
   rows,
@@ -62,62 +51,33 @@ export function ComparisonTable({
   caption,
 }: ComparisonTableProps): JSX.Element {
   return (
-    <div className="my-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-      <table className="w-full border-collapse text-sm m-0">
-        {caption && <caption className="sr-only">{caption}</caption>}
+    <div className="doc-compare">
+      <table>
+        {caption && <caption className="mm-visually-hidden">{caption}</caption>}
         <thead>
-          <tr className="bg-gray-50 dark:bg-gray-800">
-            <th scope="col" className="px-4 py-3" />
+          <tr>
+            <td />
             {columns.map((col, i) => (
-              <th
-                key={col}
-                scope="col"
-                className={`text-left px-4 py-3 font-bold ${
-                  i === highlightColumn
-                    ? "text-[var(--ifm-color-primary)]"
-                    : "text-gray-900 dark:text-white"
-                }`}
-              >
+              <th key={col} scope="col" className={clsx(i === highlightColumn && "is-highlight")}>
                 {col}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, ri) => (
-            <tr
-              key={row.feature}
-              className={
-                ri % 2 ? "bg-gray-50/60 dark:bg-gray-800/40" : undefined
-              }
-            >
-              <th
-                scope="row"
-                className="text-left align-top px-4 py-3 font-semibold text-gray-700 dark:text-gray-300"
-              >
-                {row.feature}
-              </th>
+          {rows.map((row) => (
+            <tr key={row.feature}>
+              <th scope="row">{row.feature}</th>
               {row.cells.map((raw, ci) => {
                 const cell = normaliseCell(raw);
                 const meta = cell.status ? STATUS_META[cell.status] : null;
                 return (
-                  <td
-                    key={ci}
-                    className={`align-top px-4 py-3 text-gray-700 dark:text-gray-300 ${
-                      ci === highlightColumn
-                        ? "bg-[var(--ifm-color-primary)]/[0.05]"
-                        : ""
-                    }`}
-                  >
-                    <span className="flex items-start gap-2">
+                  <td key={ci} className={clsx(ci === highlightColumn && "is-highlight")}>
+                    <span className="doc-compare__cell">
                       {meta && (
                         <>
-                          <Icon
-                            icon={meta.icon}
-                            aria-hidden="true"
-                            className={`mt-0.5 shrink-0 w-4 h-4 ${meta.cls}`}
-                          />
-                          <span className="sr-only">{meta.label}</span>
+                          <meta.Icon aria-hidden="true" className={clsx("doc-compare__mark", meta.tone)} />
+                          <span className="mm-visually-hidden">{meta.label}</span>
                         </>
                       )}
                       <span>{cell.text}</span>

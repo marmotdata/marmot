@@ -10,7 +10,6 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/limits"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
@@ -27,6 +26,9 @@ type CreateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs links the new term to existing terms, in both directions.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
 } // @name CreateTermRequest
 
 type UpdateTermRequest struct {
@@ -36,7 +38,14 @@ type UpdateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
+	// RelatedTermIDs replaces the term's related terms when present; an empty list clears them.
+	RelatedTermIDs []string `json:"related_term_ids,omitempty"`
 } // @name UpdateTermRequest
+
+type AddRelatedTermRequest struct {
+	TermID string `json:"term_id" validate:"required"`
+} // @name AddRelatedTermRequest
 
 // CreateTerm creates a new glossary term
 // @Summary Create glossary term
@@ -61,9 +70,9 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, ok := r.Context().Value(common.UserContextKey).(*user.User)
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "User context required")
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
 
@@ -76,17 +85,23 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(owners) == 0 {
-		owners = []glossary.OwnerInput{{ID: usr.ID, Type: "user"}}
+		if usr := principal.AsUser(); usr != nil {
+			owners = []glossary.OwnerInput{{ID: usr.ID, Type: "user"}}
+		}
 	}
 
 	input := glossary.CreateTermInput{
-		Name:         req.Name,
-		Definition:   req.Definition,
-		Description:  req.Description,
-		ParentTermID: req.ParentTermID,
-		Owners:       owners,
-		Metadata:     req.Metadata,
+		Name:           req.Name,
+		Definition:     req.Definition,
+		Description:    req.Description,
+		ParentTermID:   req.ParentTermID,
+		Owners:         owners,
+		Metadata:       req.Metadata,
+		Tags:           req.Tags,
+		RelatedTermIDs: req.RelatedTermIDs,
 	}
+	// created_by refers to users, so a machine identity or a synthetic user leaves it empty.
+	input.CreatedBy = common.CreatedBy(r.Context())
 
 	term, err := h.glossaryService.Create(r.Context(), input)
 	if err != nil {
@@ -190,12 +205,14 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := glossary.UpdateTermInput{
-		Name:         req.Name,
-		Definition:   req.Definition,
-		Description:  req.Description,
-		ParentTermID: req.ParentTermID,
-		Owners:       owners,
-		Metadata:     req.Metadata,
+		Name:           req.Name,
+		Definition:     req.Definition,
+		Description:    req.Description,
+		ParentTermID:   req.ParentTermID,
+		Owners:         owners,
+		Metadata:       req.Metadata,
+		Tags:           req.Tags,
+		RelatedTermIDs: req.RelatedTermIDs,
 	}
 
 	term, err := h.glossaryService.Update(r.Context(), id, input)

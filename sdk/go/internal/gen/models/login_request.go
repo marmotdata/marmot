@@ -62,7 +62,7 @@ func (m *LoginRequest) validateUsername(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this login request based on context it is used
-func (m *LoginRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *LoginRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

@@ -37,12 +37,12 @@ type AssetTerm struct {
 }
 
 // Validate validates this asset term
-func (m *AssetTerm) Validate(formats strfmt.Registry) error {
+func (m *AssetTerm) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this asset term based on context it is used
-func (m *AssetTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetTerm) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

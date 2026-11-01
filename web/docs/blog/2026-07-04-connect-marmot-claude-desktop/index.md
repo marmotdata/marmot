@@ -1,9 +1,7 @@
 ---
 slug: connect-marmot-to-claude-desktop
 title: "Connect Claude Desktop to Marmot"
-authors:
-  - name: Bruno Schaatsbergen
-    url: https://github.com/bschaatsbergen
+authors: [bruno]
 image: /img/marmot-claude-desktop-banner.png
 description: "Half the company already has Claude Desktop installed, and the knowledge about your data is scattered across tools, wikis and people's heads. Connect Claude Desktop to Marmot over MCP and anyone can answer their own data questions in seconds, instead of asking around on Slack. This post walks through the full setup."
 tags: [ai-agents, mcp, claude, data-discovery]

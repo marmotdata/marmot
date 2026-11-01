@@ -33,11 +33,24 @@ class TestResult(unittest.TestCase):
         model = Result()
         if include_optional:
             return Result(
+                asset_count = 56,
+                column_count = 56,
                 description = '',
                 id = '',
+                linked_asset_count = 56,
+                member_count = 56,
                 metadata = { },
                 name = '',
+                owners = [
+                    marmot.generated.models.search_result_owner.SearchResultOwner(
+                        id = '',
+                        kind = '',
+                        name = '', )
+                    ],
+                popularity = 56,
                 rank = 1.337,
+                row_count = 56,
+                stale = True,
                 type = 'asset',
                 updated_at = '',
                 url = ''

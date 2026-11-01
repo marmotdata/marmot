@@ -37,6 +37,7 @@ class TestAssetRuleListResult(unittest.TestCase):
                     marmot.generated.models.asset_rule.AssetRule(
                         created_at = '',
                         created_by = '',
+                        created_by_name = '',
                         description = '',
                         id = '',
                         is_enabled = True,
@@ -59,7 +60,9 @@ class TestAssetRuleListResult(unittest.TestCase):
                         term_ids = [
                             ''
                             ],
-                        updated_at = '', )
+                        updated_at = '',
+                        updated_by = '',
+                        updated_by_name = '', )
                     ],
                 total = 56
             )

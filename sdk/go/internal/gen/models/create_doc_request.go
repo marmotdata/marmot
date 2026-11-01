@@ -25,12 +25,12 @@ type CreateDocRequest struct {
 }
 
 // Validate validates this create doc request
-func (m *CreateDocRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateDocRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create doc request based on context it is used
-func (m *CreateDocRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateDocRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

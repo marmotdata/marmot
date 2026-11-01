@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -38,6 +38,10 @@ class DataProductRule(BaseModel):
     name: StrictStr | None = None
     pattern_type: StrictStr | None = None
     pattern_value: StrictStr | None = None
+    position: StrictInt | None = Field(
+        default=None,
+        description="Position is where the rule sits in the product's hand-set order, starting at 0.",
+    )
     priority: StrictInt | None = None
     query_expression: StrictStr | None = None
     rule_type: DataProductRuleType | None = None
@@ -53,6 +57,7 @@ class DataProductRule(BaseModel):
         "name",
         "pattern_type",
         "pattern_value",
+        "position",
         "priority",
         "query_expression",
         "rule_type",
@@ -118,6 +123,7 @@ class DataProductRule(BaseModel):
                 "name": obj.get("name"),
                 "pattern_type": obj.get("pattern_type"),
                 "pattern_value": obj.get("pattern_value"),
+                "position": obj.get("position"),
                 "priority": obj.get("priority"),
                 "query_expression": obj.get("query_expression"),
                 "rule_type": obj.get("rule_type"),

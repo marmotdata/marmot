@@ -38,6 +38,15 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 		parts = append(parts, *a.Description)
 	}
 
+	// user_description is written by whoever edits the asset, a person in
+	// the UI or any caller with assets:manage. Ingestion runs never
+	// overwrite it, which is what makes it worth showing separately.
+	if a.UserDescription != nil && *a.UserDescription != "" {
+		parts = append(parts, "")
+		parts = append(parts, "**User Notes:**")
+		parts = append(parts, *a.UserDescription)
+	}
+
 	// Tags
 	if len(a.Tags) > 0 {
 		parts = append(parts, "")

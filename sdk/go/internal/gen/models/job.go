@@ -25,12 +25,12 @@ type Job struct {
 }
 
 // Validate validates this job
-func (m *Job) Validate(formats strfmt.Registry) error {
+func (m *Job) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this job based on context it is used
-func (m *Job) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Job) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

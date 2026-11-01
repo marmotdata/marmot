@@ -21,6 +21,7 @@ from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.facet_value import FacetValue
+from marmot.generated.models.owner_facet_value import OwnerFacetValue
 
 
 class Facets(BaseModel):
@@ -29,10 +30,11 @@ class Facets(BaseModel):
     """
 
     asset_types: list[FacetValue] | None = None
+    owners: list[OwnerFacetValue] | None = None
     providers: list[FacetValue] | None = None
     tags: list[FacetValue] | None = None
     types: dict[str, StrictInt] | None = None
-    __properties: ClassVar[list[str]] = ["asset_types", "providers", "tags", "types"]
+    __properties: ClassVar[list[str]] = ["asset_types", "owners", "providers", "tags", "types"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -78,6 +80,13 @@ class Facets(BaseModel):
                 if _item_asset_types:
                     _items.append(_item_asset_types.to_dict())
             _dict["asset_types"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in owners (list)
+        _items = []
+        if self.owners:
+            for _item_owners in self.owners:
+                if _item_owners:
+                    _items.append(_item_owners.to_dict())
+            _dict["owners"] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in providers (list)
         _items = []
         if self.providers:
@@ -107,6 +116,9 @@ class Facets(BaseModel):
             {
                 "asset_types": [FacetValue.from_dict(_item) for _item in obj["asset_types"]]
                 if obj.get("asset_types") is not None
+                else None,
+                "owners": [OwnerFacetValue.from_dict(_item) for _item in obj["owners"]]
+                if obj.get("owners") is not None
                 else None,
                 "providers": [FacetValue.from_dict(_item) for _item in obj["providers"]]
                 if obj.get("providers") is not None

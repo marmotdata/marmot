@@ -62,4 +62,4 @@ def default_sources() -> list[WorkloadIdentitySource]:
     return [cls() for cls in WORKLOAD_REGISTRY.values()]
 
 
-from marmot.auth.workload import gcp, github, kubernetes  # noqa: E402, F401, I001 — registration side effect
+from marmot.auth.workload import gcp, github, kubernetes  # noqa: E402, F401 — registration side effect

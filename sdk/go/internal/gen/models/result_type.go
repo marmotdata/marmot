@@ -76,6 +76,6 @@ func (m ResultType) Validate(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this result type based on context it is used
-func (m ResultType) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m ResultType) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }

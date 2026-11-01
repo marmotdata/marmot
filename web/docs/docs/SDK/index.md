@@ -164,7 +164,7 @@ The following sections all assume `client` (and `ctx` for Go) is already constru
 <TipBox>
 
 **Python:** one `AuthenticatedApiClient` is shared by every generated `*Api` class, which
-you construct around it — `UsersApi(client)`, `AssetsApi(client)`, and so on. Method names
+you construct around it: `UsersApi(client)`, `AssetsApi(client)`, and so on. Method names
 follow the operation: `get_assets_id`, `post_lineage_batch`. Each exists twice, as a
 coroutine and with a `_sync` suffix that runs it on a shared event loop, so the snippets
 below stay synchronous. Request bodies are pydantic models from `marmot.generated.models`,

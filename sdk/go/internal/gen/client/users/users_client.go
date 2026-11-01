@@ -68,11 +68,29 @@ type ClientService interface {
 	// DeleteUsersIDContext delete a user.
 	DeleteUsersIDContext(ctx context.Context, params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error)
 
+	// DeleteUsersIDInvite withdraw an invitation.
+	DeleteUsersIDInvite(params *DeleteUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDInviteNoContent, error)
+
+	// DeleteUsersIDInviteContext withdraw an invitation.
+	DeleteUsersIDInviteContext(ctx context.Context, params *DeleteUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDInviteNoContent, error)
+
+	// DeleteUsersMeConnectedAppsClientID revoke a connected app.
+	DeleteUsersMeConnectedAppsClientID(params *DeleteUsersMeConnectedAppsClientIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersMeConnectedAppsClientIDNoContent, error)
+
+	// DeleteUsersMeConnectedAppsClientIDContext revoke a connected app.
+	DeleteUsersMeConnectedAppsClientIDContext(ctx context.Context, params *DeleteUsersMeConnectedAppsClientIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersMeConnectedAppsClientIDNoContent, error)
+
 	// DeleteUsersOauthUnlinkIDProvider unlink o auth account.
 	DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
 
 	// DeleteUsersOauthUnlinkIDProviderContext unlink o auth account.
 	DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error)
+
+	// GetInvitesToken look up an invitation.
+	GetInvitesToken(params *GetInvitesTokenParams, opts ...ClientOption) (*GetInvitesTokenOK, error)
+
+	// GetInvitesTokenContext look up an invitation.
+	GetInvitesTokenContext(ctx context.Context, params *GetInvitesTokenParams, opts ...ClientOption) (*GetInvitesTokenOK, error)
 
 	// GetUsers list users.
 	GetUsers(params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error)
@@ -98,6 +116,24 @@ type ClientService interface {
 	// GetUsersMeContext get current user profile.
 	GetUsersMeContext(ctx context.Context, params *GetUsersMeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeOK, error)
 
+	// GetUsersMeConnectedApps list connected apps.
+	GetUsersMeConnectedApps(params *GetUsersMeConnectedAppsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeConnectedAppsOK, error)
+
+	// GetUsersMeConnectedAppsContext list connected apps.
+	GetUsersMeConnectedAppsContext(ctx context.Context, params *GetUsersMeConnectedAppsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeConnectedAppsOK, error)
+
+	// ListRecentItems list recently viewed items.
+	ListRecentItems(params *ListRecentItemsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ListRecentItemsOK, error)
+
+	// ListRecentItemsContext list recently viewed items.
+	ListRecentItemsContext(ctx context.Context, params *ListRecentItemsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ListRecentItemsOK, error)
+
+	// PostInvitesTokenAccept accept an invitation.
+	PostInvitesTokenAccept(params *PostInvitesTokenAcceptParams, opts ...ClientOption) (*PostInvitesTokenAcceptOK, error)
+
+	// PostInvitesTokenAcceptContext accept an invitation.
+	PostInvitesTokenAcceptContext(ctx context.Context, params *PostInvitesTokenAcceptParams, opts ...ClientOption) (*PostInvitesTokenAcceptOK, error)
+
 	// PostUsers create a new user.
 	PostUsers(params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error)
 
@@ -109,6 +145,30 @@ type ClientService interface {
 
 	// PostUsersApikeysContext create API key.
 	PostUsersApikeysContext(ctx context.Context, params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error)
+
+	// PostUsersApikeysIDRotate rotate API key.
+	PostUsersApikeysIDRotate(params *PostUsersApikeysIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysIDRotateOK, error)
+
+	// PostUsersApikeysIDRotateContext rotate API key.
+	PostUsersApikeysIDRotateContext(ctx context.Context, params *PostUsersApikeysIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysIDRotateOK, error)
+
+	// PostUsersIDInvite renew an invitation.
+	PostUsersIDInvite(params *PostUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDInviteOK, error)
+
+	// PostUsersIDInviteContext renew an invitation.
+	PostUsersIDInviteContext(ctx context.Context, params *PostUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDInviteOK, error)
+
+	// PostUsersIDSignOutAll sign a user out of all sessions.
+	PostUsersIDSignOutAll(params *PostUsersIDSignOutAllParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDSignOutAllNoContent, error)
+
+	// PostUsersIDSignOutAllContext sign a user out of all sessions.
+	PostUsersIDSignOutAllContext(ctx context.Context, params *PostUsersIDSignOutAllParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDSignOutAllNoContent, error)
+
+	// PostUsersInvites invite a member.
+	PostUsersInvites(params *PostUsersInvitesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersInvitesCreated, error)
+
+	// PostUsersInvitesContext invite a member.
+	PostUsersInvitesContext(ctx context.Context, params *PostUsersInvitesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersInvitesCreated, error)
 
 	// PostUsersLogin login user.
 	PostUsersLogin(params *PostUsersLoginParams, opts ...ClientOption) (*PostUsersLoginOK, error)
@@ -122,6 +182,12 @@ type ClientService interface {
 	// PostUsersOauthLinkContext link o auth account.
 	PostUsersOauthLinkContext(ctx context.Context, params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error)
 
+	// PostUsersSignOut sign out.
+	PostUsersSignOut(params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error)
+
+	// PostUsersSignOutContext sign out.
+	PostUsersSignOutContext(ctx context.Context, params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error)
+
 	// PostUsersUpdatePassword update user password.
 	PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error)
 
@@ -134,11 +200,23 @@ type ClientService interface {
 	// PutUsersIDContext update a user.
 	PutUsersIDContext(ctx context.Context, params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error)
 
+	// PutUsersMeProfile update current user profile.
+	PutUsersMeProfile(params *PutUsersMeProfileParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersMeProfileOK, error)
+
+	// PutUsersMeProfileContext update current user profile.
+	PutUsersMeProfileContext(ctx context.Context, params *PutUsersMeProfileParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersMeProfileOK, error)
+
 	// PutUsersPreferences update user preferences.
 	PutUsersPreferences(params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error)
 
 	// PutUsersPreferencesContext update user preferences.
 	PutUsersPreferencesContext(ctx context.Context, params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error)
+
+	// RecordRecentView record a view.
+	RecordRecentView(params *RecordRecentViewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RecordRecentViewNoContent, error)
+
+	// RecordRecentViewContext record a view.
+	RecordRecentViewContext(ctx context.Context, params *RecordRecentViewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RecordRecentViewNoContent, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -153,7 +231,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteUsersApikeysIDContext] instead.
 func (a *Client) DeleteUsersApikeysID(params *DeleteUsersApikeysIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersApikeysIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -220,7 +298,7 @@ func (a *Client) DeleteUsersApikeysIDContext(ctx context.Context, params *Delete
 // If you need to pass a specific context, use [Client.DeleteUsersIDContext] instead.
 func (a *Client) DeleteUsersID(params *DeleteUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -277,6 +355,140 @@ func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersID
 	panic(msg)
 }
 
+// DeleteUsersIDInvite withdraws an invitation.
+//
+// Withdraws a pending invitation and removes the pending member it created..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteUsersIDInviteContext] instead.
+func (a *Client) DeleteUsersIDInvite(params *DeleteUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDInviteNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteUsersIDInviteContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteUsersIDInviteContext withdraws an invitation.
+//
+// Withdraws a pending invitation and removes the pending member it created..
+//
+// Do not use the deprecated [DeleteUsersIDInviteParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteUsersIDInviteContext(ctx context.Context, params *DeleteUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersIDInviteNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteUsersIDInviteParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "deleteUsersIDInvite",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/users/invites/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteUsersIDInviteReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteUsersIDInviteNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteUsersIDInvite: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// DeleteUsersMeConnectedAppsClientID revokes a connected app.
+//
+// Revoke an OAuth client's access to the current user's account. Tokens already issued to it stop working at once; the client has to ask again to get back in..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteUsersMeConnectedAppsClientIDContext] instead.
+func (a *Client) DeleteUsersMeConnectedAppsClientID(params *DeleteUsersMeConnectedAppsClientIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersMeConnectedAppsClientIDNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteUsersMeConnectedAppsClientIDContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteUsersMeConnectedAppsClientIDContext revokes a connected app.
+//
+// Revoke an OAuth client's access to the current user's account. Tokens already issued to it stop working at once; the client has to ask again to get back in..
+//
+// Do not use the deprecated [DeleteUsersMeConnectedAppsClientIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteUsersMeConnectedAppsClientIDContext(ctx context.Context, params *DeleteUsersMeConnectedAppsClientIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersMeConnectedAppsClientIDNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteUsersMeConnectedAppsClientIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "deleteUsersMeConnectedAppsClientID",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/users/me/connected-apps/{client_id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteUsersMeConnectedAppsClientIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteUsersMeConnectedAppsClientIDNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteUsersMeConnectedAppsClientID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // DeleteUsersOauthUnlinkIDProvider unlinks o auth account.
 //
 // Unlink an OAuth account from a user.
@@ -287,7 +499,7 @@ func (a *Client) DeleteUsersIDContext(ctx context.Context, params *DeleteUsersID
 // If you need to pass a specific context, use [Client.DeleteUsersOauthUnlinkIDProviderContext] instead.
 func (a *Client) DeleteUsersOauthUnlinkIDProvider(params *DeleteUsersOauthUnlinkIDProviderParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteUsersOauthUnlinkIDProviderNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -344,6 +556,72 @@ func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, pa
 	panic(msg)
 }
 
+// GetInvitesToken looks up an invitation.
+//
+// Returns who an invitation link is for, so the accept page can greet them. Needs no sign-in: the link's token is the credential..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetInvitesTokenContext] instead.
+func (a *Client) GetInvitesToken(params *GetInvitesTokenParams, opts ...ClientOption) (*GetInvitesTokenOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetInvitesTokenContext(ctx, params, opts...)
+}
+
+// GetInvitesTokenContext looks up an invitation.
+//
+// Returns who an invitation link is for, so the accept page can greet them. Needs no sign-in: the link's token is the credential..
+//
+// Do not use the deprecated [GetInvitesTokenParams.Context] with this method: it would be ignored.
+func (a *Client) GetInvitesTokenContext(ctx context.Context, params *GetInvitesTokenParams, opts ...ClientOption) (*GetInvitesTokenOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetInvitesTokenParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getInvitesToken",
+		Method:             "GET",
+		PathPattern:        "/api/v1/invites/{token}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetInvitesTokenReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetInvitesTokenOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getInvitesToken: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // GetUsers lists users.
 //
 // Get a list of users with optional filtering.
@@ -354,7 +632,7 @@ func (a *Client) DeleteUsersOauthUnlinkIDProviderContext(ctx context.Context, pa
 // If you need to pass a specific context, use [Client.GetUsersContext] instead.
 func (a *Client) GetUsers(params *GetUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -421,7 +699,7 @@ func (a *Client) GetUsersContext(ctx context.Context, params *GetUsersParams, au
 // If you need to pass a specific context, use [Client.GetUsersApikeysContext] instead.
 func (a *Client) GetUsersApikeys(params *GetUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersApikeysOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -488,7 +766,7 @@ func (a *Client) GetUsersApikeysContext(ctx context.Context, params *GetUsersApi
 // If you need to pass a specific context, use [Client.GetUsersIDContext] instead.
 func (a *Client) GetUsersID(params *GetUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -555,7 +833,7 @@ func (a *Client) GetUsersIDContext(ctx context.Context, params *GetUsersIDParams
 // If you need to pass a specific context, use [Client.GetUsersMeContext] instead.
 func (a *Client) GetUsersMe(params *GetUsersMeParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -612,6 +890,206 @@ func (a *Client) GetUsersMeContext(ctx context.Context, params *GetUsersMeParams
 	panic(msg)
 }
 
+// GetUsersMeConnectedApps lists connected apps.
+//
+// List the OAuth clients, such as MCP clients and the CLI, that the current user has allowed and that still hold a valid token.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetUsersMeConnectedAppsContext] instead.
+func (a *Client) GetUsersMeConnectedApps(params *GetUsersMeConnectedAppsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeConnectedAppsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetUsersMeConnectedAppsContext(ctx, params, authInfo, opts...)
+}
+
+// GetUsersMeConnectedAppsContext lists connected apps.
+//
+// List the OAuth clients, such as MCP clients and the CLI, that the current user has allowed and that still hold a valid token.
+//
+// Do not use the deprecated [GetUsersMeConnectedAppsParams.Context] with this method: it would be ignored.
+func (a *Client) GetUsersMeConnectedAppsContext(ctx context.Context, params *GetUsersMeConnectedAppsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetUsersMeConnectedAppsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetUsersMeConnectedAppsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getUsersMeConnectedApps",
+		Method:             "GET",
+		PathPattern:        "/api/v1/users/me/connected-apps",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetUsersMeConnectedAppsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetUsersMeConnectedAppsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getUsersMeConnectedApps: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// ListRecentItems lists recently viewed items.
+//
+// Returns what the current person opened most recently in the UI: assets, glossary terms, data products and their saved queries, newest first, described as they are now. Items since deleted, and kinds the caller can no longer view, are left out. Callers without a user account get an empty list..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.ListRecentItemsContext] instead.
+func (a *Client) ListRecentItems(params *ListRecentItemsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ListRecentItemsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.ListRecentItemsContext(ctx, params, authInfo, opts...)
+}
+
+// ListRecentItemsContext lists recently viewed items.
+//
+// Returns what the current person opened most recently in the UI: assets, glossary terms, data products and their saved queries, newest first, described as they are now. Items since deleted, and kinds the caller can no longer view, are left out. Callers without a user account get an empty list..
+//
+// Do not use the deprecated [ListRecentItemsParams.Context] with this method: it would be ignored.
+func (a *Client) ListRecentItemsContext(ctx context.Context, params *ListRecentItemsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*ListRecentItemsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewListRecentItemsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "listRecentItems",
+		Method:             "GET",
+		PathPattern:        "/api/v1/users/me/recent",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListRecentItemsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*ListRecentItemsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for listRecentItems: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostInvitesTokenAccept accepts an invitation.
+//
+// Sets the invited member's password, activates them and signs them in. The link cannot be used again..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostInvitesTokenAcceptContext] instead.
+func (a *Client) PostInvitesTokenAccept(params *PostInvitesTokenAcceptParams, opts ...ClientOption) (*PostInvitesTokenAcceptOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostInvitesTokenAcceptContext(ctx, params, opts...)
+}
+
+// PostInvitesTokenAcceptContext accepts an invitation.
+//
+// Sets the invited member's password, activates them and signs them in. The link cannot be used again..
+//
+// Do not use the deprecated [PostInvitesTokenAcceptParams.Context] with this method: it would be ignored.
+func (a *Client) PostInvitesTokenAcceptContext(ctx context.Context, params *PostInvitesTokenAcceptParams, opts ...ClientOption) (*PostInvitesTokenAcceptOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostInvitesTokenAcceptParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postInvitesTokenAccept",
+		Method:             "POST",
+		PathPattern:        "/api/v1/invites/{token}/accept",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostInvitesTokenAcceptReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostInvitesTokenAcceptOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postInvitesTokenAccept: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostUsers creates a new user.
 //
 // Create a new user in the system.
@@ -622,7 +1100,7 @@ func (a *Client) GetUsersMeContext(ctx context.Context, params *GetUsersMeParams
 // If you need to pass a specific context, use [Client.PostUsersContext] instead.
 func (a *Client) PostUsers(params *PostUsersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -689,7 +1167,7 @@ func (a *Client) PostUsersContext(ctx context.Context, params *PostUsersParams, 
 // If you need to pass a specific context, use [Client.PostUsersApikeysContext] instead.
 func (a *Client) PostUsersApikeys(params *PostUsersApikeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -746,6 +1224,274 @@ func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersA
 	panic(msg)
 }
 
+// PostUsersApikeysIDRotate rotates API key.
+//
+// Issue a new secret for one of the current user's API keys, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersApikeysIDRotateContext] instead.
+func (a *Client) PostUsersApikeysIDRotate(params *PostUsersApikeysIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysIDRotateOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersApikeysIDRotateContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersApikeysIDRotateContext rotates API key.
+//
+// Issue a new secret for one of the current user's API keys, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response..
+//
+// Do not use the deprecated [PostUsersApikeysIDRotateParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersApikeysIDRotateContext(ctx context.Context, params *PostUsersApikeysIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersApikeysIDRotateOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersApikeysIDRotateParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersApikeysIDRotate",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/apikeys/{id}/rotate",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersApikeysIDRotateReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersApikeysIDRotateOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersApikeysIDRotate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostUsersIDInvite renews an invitation.
+//
+// Replaces a pending member's invitation link with a new one that works for another 7 days. The old link stops working..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersIDInviteContext] instead.
+func (a *Client) PostUsersIDInvite(params *PostUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDInviteOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersIDInviteContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersIDInviteContext renews an invitation.
+//
+// Replaces a pending member's invitation link with a new one that works for another 7 days. The old link stops working..
+//
+// Do not use the deprecated [PostUsersIDInviteParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersIDInviteContext(ctx context.Context, params *PostUsersIDInviteParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDInviteOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersIDInviteParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersIDInvite",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/invites/{id}/renew",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersIDInviteReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersIDInviteOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersIDInvite: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostUsersIDSignOutAll signs a user out of all sessions.
+//
+// Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersIDSignOutAllContext] instead.
+func (a *Client) PostUsersIDSignOutAll(params *PostUsersIDSignOutAllParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDSignOutAllNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersIDSignOutAllContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersIDSignOutAllContext signs a user out of all sessions.
+//
+// Rejects every token issued to the user before now. Their password and API keys are untouched, so this is the response to a leaked or overexposed token rather than a lost credential..
+//
+// Do not use the deprecated [PostUsersIDSignOutAllParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersIDSignOutAllContext(ctx context.Context, params *PostUsersIDSignOutAllParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersIDSignOutAllNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersIDSignOutAllParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersIDSignOutAll",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/sign-out-all/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersIDSignOutAllReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersIDSignOutAllNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersIDSignOutAll: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostUsersInvites invites a member.
+//
+// Creates a pending member with the given roles and teams and returns a one-time link for them to set a password. Marmot sends no email: pass the link on yourself. The link works for 7 days..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersInvitesContext] instead.
+func (a *Client) PostUsersInvites(params *PostUsersInvitesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersInvitesCreated, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersInvitesContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersInvitesContext invites a member.
+//
+// Creates a pending member with the given roles and teams and returns a one-time link for them to set a password. Marmot sends no email: pass the link on yourself. The link works for 7 days..
+//
+// Do not use the deprecated [PostUsersInvitesParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersInvitesContext(ctx context.Context, params *PostUsersInvitesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersInvitesCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersInvitesParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersInvites",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/invites",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersInvitesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersInvitesCreated)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersInvites: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostUsersLogin logins user.
 //
 // Authenticate a user with username/email and password.
@@ -756,7 +1502,7 @@ func (a *Client) PostUsersApikeysContext(ctx context.Context, params *PostUsersA
 // If you need to pass a specific context, use [Client.PostUsersLoginContext] instead.
 func (a *Client) PostUsersLogin(params *PostUsersLoginParams, opts ...ClientOption) (*PostUsersLoginOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -822,7 +1568,7 @@ func (a *Client) PostUsersLoginContext(ctx context.Context, params *PostUsersLog
 // If you need to pass a specific context, use [Client.PostUsersOauthLinkContext] instead.
 func (a *Client) PostUsersOauthLink(params *PostUsersOauthLinkParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersOauthLinkOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -879,6 +1625,73 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 	panic(msg)
 }
 
+// PostUsersSignOut signs out.
+//
+// Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostUsersSignOutContext] instead.
+func (a *Client) PostUsersSignOut(params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostUsersSignOutContext(ctx, params, authInfo, opts...)
+}
+
+// PostUsersSignOutContext signs out.
+//
+// Revokes the bearer token the request is sent with, so a copy of it stops working before it expires. Only that token is revoked: the person's other sessions and API keys are untouched. A token that is already invalid has nothing left to revoke, so that is a 204 too..
+//
+// Do not use the deprecated [PostUsersSignOutParams.Context] with this method: it would be ignored.
+func (a *Client) PostUsersSignOutContext(ctx context.Context, params *PostUsersSignOutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersSignOutNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostUsersSignOutParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postUsersSignOut",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/sign-out",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostUsersSignOutReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostUsersSignOutNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postUsersSignOut: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostUsersUpdatePassword updates user password.
 //
 // Update current user's password.
@@ -889,7 +1702,7 @@ func (a *Client) PostUsersOauthLinkContext(ctx context.Context, params *PostUser
 // If you need to pass a specific context, use [Client.PostUsersUpdatePasswordContext] instead.
 func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -956,7 +1769,7 @@ func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *Pos
 // If you need to pass a specific context, use [Client.PutUsersIDContext] instead.
 func (a *Client) PutUsersID(params *PutUsersIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1013,6 +1826,73 @@ func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams
 	panic(msg)
 }
 
+// PutUsersMeProfile updates current user profile.
+//
+// Update the profile fields the current user may set about themselves, such as job title.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutUsersMeProfileContext] instead.
+func (a *Client) PutUsersMeProfile(params *PutUsersMeProfileParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersMeProfileOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutUsersMeProfileContext(ctx, params, authInfo, opts...)
+}
+
+// PutUsersMeProfileContext updates current user profile.
+//
+// Update the profile fields the current user may set about themselves, such as job title.
+//
+// Do not use the deprecated [PutUsersMeProfileParams.Context] with this method: it would be ignored.
+func (a *Client) PutUsersMeProfileContext(ctx context.Context, params *PutUsersMeProfileParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersMeProfileOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutUsersMeProfileParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putUsersMeProfile",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/users/me/profile",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutUsersMeProfileReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutUsersMeProfileOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for putUsersMeProfile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PutUsersPreferences updates user preferences.
 //
 // Update preferences for the current user.
@@ -1023,7 +1903,7 @@ func (a *Client) PutUsersIDContext(ctx context.Context, params *PutUsersIDParams
 // If you need to pass a specific context, use [Client.PutUsersPreferencesContext] instead.
 func (a *Client) PutUsersPreferences(params *PutUsersPreferencesParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutUsersPreferencesOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -1077,6 +1957,73 @@ func (a *Client) PutUsersPreferencesContext(ctx context.Context, params *PutUser
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for putUsersPreferences: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// RecordRecentView records a view.
+//
+// Notes that the current person opened an item, for their recently viewed list. Repeat views within a minute are ignored and only the latest 50 items are kept. Callers without a user account are accepted and nothing is stored..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.RecordRecentViewContext] instead.
+func (a *Client) RecordRecentView(params *RecordRecentViewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RecordRecentViewNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.RecordRecentViewContext(ctx, params, authInfo, opts...)
+}
+
+// RecordRecentViewContext records a view.
+//
+// Notes that the current person opened an item, for their recently viewed list. Repeat views within a minute are ignored and only the latest 50 items are kept. Callers without a user account are accepted and nothing is stored..
+//
+// Do not use the deprecated [RecordRecentViewParams.Context] with this method: it would be ignored.
+func (a *Client) RecordRecentViewContext(ctx context.Context, params *RecordRecentViewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*RecordRecentViewNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewRecordRecentViewParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "recordRecentView",
+		Method:             "POST",
+		PathPattern:        "/api/v1/users/me/recent",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RecordRecentViewReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*RecordRecentViewNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for recordRecentView: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

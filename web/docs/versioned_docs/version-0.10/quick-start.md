@@ -11,11 +11,12 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
 import { Steps, Step } from '@site/src/components/Steps';
 
 <CalloutCard
-  title="Just Want to Explore?"
-  description="Try the live demo first to see Marmot's features without any setup."
-  href="https://demo.marmotdata.io"
-  buttonText="View Live Demo"
-  icon="mdi:rocket-launch"
+  title="Prefer Kubernetes or a Single Binary?"
+  description="Docker Compose is the fastest route, but Helm and the binary are equally supported."
+  docId="Deploy/index"
+  buttonText="Deployment Options"
+  variant="secondary"
+  icon="mdi:server"
 />
 
 <Steps>

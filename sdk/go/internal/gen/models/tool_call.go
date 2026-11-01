@@ -14,11 +14,23 @@ import (
 // swagger:model ToolCall
 type ToolCall struct {
 
+	// Detail is the call's argument in a readable form, such as the SQL of a query or the text of a search.
+	Detail string `json:"detail,omitempty"`
+
 	// duration ms
 	DurationMs int64 `json:"duration_ms,omitempty"`
 
 	// ordinal
 	Ordinal int64 `json:"ordinal,omitempty"`
+
+	// Reason says why a refused or failed call did not go through, and Rule names the policy or rule that refused it.
+	Reason string `json:"reason,omitempty"`
+
+	// Result summarises what came back, such as "5 rows".
+	Result string `json:"result,omitempty"`
+
+	// rule
+	Rule string `json:"rule,omitempty"`
 
 	// started at
 	StartedAt string `json:"started_at,omitempty"`
@@ -34,12 +46,12 @@ type ToolCall struct {
 }
 
 // Validate validates this tool call
-func (m *ToolCall) Validate(formats strfmt.Registry) error {
+func (m *ToolCall) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this tool call based on context it is used
-func (m *ToolCall) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ToolCall) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

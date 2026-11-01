@@ -38,6 +38,13 @@ class TestFacets(unittest.TestCase):
                         count = 56,
                         value = '', )
                     ],
+                owners = [
+                    marmot.generated.models.owner_facet_value.OwnerFacetValue(
+                        count = 56,
+                        kind = '',
+                        label = '',
+                        value = '', )
+                    ],
                 providers = [
                     marmot.generated.models.facet_value.FacetValue(
                         count = 56,

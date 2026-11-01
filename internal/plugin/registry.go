@@ -46,6 +46,18 @@ func (r *Registry) Register(meta pluginsdk.Meta, source Source) error {
 	return nil
 }
 
+// Replace registers a plugin, swapping out whatever was registered under its ID. It is how a plugin moves to another version while Marmot runs: callers that already hold the old source finish on the old binary, and every later lookup gets the new one.
+func (r *Registry) Replace(meta pluginsdk.Meta, source Source) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.plugins[meta.ID] = &RegistryEntry{
+		Meta:   meta,
+		Source: source,
+	}
+	r.sources[meta.ID] = source
+}
+
 func (r *Registry) Get(id string) (*RegistryEntry, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

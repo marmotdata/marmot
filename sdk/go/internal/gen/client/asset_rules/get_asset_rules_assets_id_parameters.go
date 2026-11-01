@@ -80,6 +80,11 @@ type GetAssetRulesAssetsIDParams struct {
 	// Number of items to skip
 	Offset *int64
 
+	// Q.
+	//
+	// Match the asset name or MRN
+	Q *string
+
 	HTTPClient *http.Client
 
 	inner innerParams
@@ -184,6 +189,17 @@ func (o *GetAssetRulesAssetsIDParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
+// WithQ adds the q to the get asset rules assets ID params.
+func (o *GetAssetRulesAssetsIDParams) WithQ(q *string) *GetAssetRulesAssetsIDParams {
+	o.SetQ(q)
+	return o
+}
+
+// SetQ adds the q to the get asset rules assets ID params.
+func (o *GetAssetRulesAssetsIDParams) SetQ(q *string) {
+	o.Q = q
+}
+
 // WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetRulesAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 	if err := r.SetTimeout(o.inner.timeout); err != nil {
@@ -225,6 +241,23 @@ func (o *GetAssetRulesAssetsIDParams) WriteToRequest(r runtime.ClientRequest, re
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Q != nil {
+
+		// query param q
+		var qrQ string
+
+		if o.Q != nil {
+			qrQ = *o.Q
+		}
+		qQ := qrQ
+		if qQ != "" {
+
+			if err := r.SetQueryParam("q", qQ); err != nil {
 				return err
 			}
 		}

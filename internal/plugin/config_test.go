@@ -3,6 +3,7 @@ package plugin
 import (
 	"testing"
 
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -107,4 +108,45 @@ func TestMaskSensitiveFields(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestRestoreMaskedFieldsFromSpec(t *testing.T) {
+	spec := []pluginsdk.ConfigField{
+		{Name: "host"},
+		{Name: "password", Sensitive: true},
+		{Name: "api_key", Sensitive: true},
+		{Name: "token", Sensitive: true},
+		{Name: "credentials", Type: pluginsdk.FieldTypeObject, Fields: []pluginsdk.ConfigField{
+			{Name: "secret", Sensitive: true},
+		}},
+	}
+	previous := map[string]interface{}{
+		"host":        "db.internal",
+		"password":    "stored-password",
+		"api_key":     "stored-key",
+		"credentials": map[string]interface{}{"secret": "stored-secret"},
+	}
+	config := map[string]interface{}{
+		"host":        "db.internal",
+		"password":    SensitiveMask,
+		"api_key":     "new-key",
+		"token":       SensitiveMask,
+		"credentials": map[string]interface{}{"secret": SensitiveMask},
+	}
+
+	RestoreMaskedFieldsFromSpec(config, previous, spec)
+
+	assert.Equal(t, "stored-password", config["password"], "unchanged secret is restored")
+	assert.Equal(t, "new-key", config["api_key"], "changed secret is kept")
+	assert.NotContains(t, config, "token", "mask with nothing to restore is dropped")
+	assert.Equal(t, "stored-secret", config["credentials"].(map[string]interface{})["secret"], "nested secret is restored")
+}
+
+func TestRestoreMaskedFieldsFromSpec_NoPrevious(t *testing.T) {
+	spec := []pluginsdk.ConfigField{{Name: "password", Sensitive: true}}
+	config := map[string]interface{}{"password": SensitiveMask}
+
+	RestoreMaskedFieldsFromSpec(config, nil, spec)
+
+	assert.NotContains(t, config, "password")
 }

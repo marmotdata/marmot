@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 )
@@ -148,10 +148,12 @@ func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.
 			RoleNames:         []string{"user"},
 		}
 
-		usr, err = p.userService.Create(ctx, newUser)
+		var created bool
+		usr, created, err = p.userService.ProvisionSSO(ctx, newUser)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
+		applyNewMemberDefaults(ctx, p.userService, p.teamService, usr, created)
 		log.Debug().Str("user_id", usr.ID).Str("name", name).Str("email", email).Msg("created new user")
 	default:
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
@@ -168,7 +170,7 @@ func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.
 			groups := extractGroups(userInfo, groupClaim)
 			if len(groups) > 0 {
 				log.Debug().Strs("groups", groups).Str("user_id", usr.ID).Msg("syncing team memberships from SSO")
-				if err := p.teamService.SyncUserTeamsFromSSO(ctx, usr.ID, "auth0", groups, providerCfg.TeamSync); err != nil {
+				if err := syncSSOGroups(ctx, p.userService, p.teamService, usr.ID, "auth0", groups, providerCfg.TeamSync); err != nil {
 					log.Error().Err(err).Str("user_id", usr.ID).Msg("failed to sync teams from SSO")
 				}
 			}

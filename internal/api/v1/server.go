@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
+	queryAPI "github.com/marmotdata/marmot/internal/api/v1/dataquery"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
@@ -27,6 +29,8 @@ import (
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
+	serveAPI "github.com/marmotdata/marmot/internal/api/v1/pluginserve"
+	recentAPI "github.com/marmotdata/marmot/internal/api/v1/recent"
 	rolesAPI "github.com/marmotdata/marmot/internal/api/v1/roles"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
@@ -37,21 +41,27 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
+	"github.com/marmotdata/marmot/internal/core/accessexpiry"
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdetail"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/assetsignal"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
+	queryService "github.com/marmotdata/marmot/internal/core/dataquery"
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
+	recentService "github.com/marmotdata/marmot/internal/core/recent"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
 	serviceaccountService "github.com/marmotdata/marmot/internal/core/serviceaccount"
+	settingsService "github.com/marmotdata/marmot/internal/core/settings"
 	"github.com/marmotdata/marmot/internal/core/subscription"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
 	userService "github.com/marmotdata/marmot/internal/core/user"
@@ -61,6 +71,8 @@ import (
 	operatorSync "github.com/marmotdata/marmot/internal/operator/sync"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/plugin/install"
+	pluginUpdates "github.com/marmotdata/marmot/internal/plugin/updates"
+	"github.com/marmotdata/marmot/internal/pluginserve"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/marmot/internal/websocket"
@@ -93,6 +105,9 @@ type Server struct {
 	membershipService    *dataproductService.MembershipService
 	membershipReconciler *dataproductService.Reconciler
 
+	// Notices for API keys and grants about to expire
+	accessExpiry *accessexpiry.Runner
+
 	// Asset rule membership evaluation
 	assetRuleMembershipService *assetruleService.MembershipService
 	assetRuleReconciler        *assetruleService.Reconciler
@@ -109,6 +124,15 @@ type Server struct {
 
 	// Operator Run CRD syncer
 	operatorSyncer *operatorSync.Syncer
+
+	// Long-running plugin processes that serve data queries
+	pluginInstances *plugin.InstanceManager
+	// pluginVersions keeps core plugins at the version the cluster chose, nil when plugin updates could not be set up.
+	pluginVersions     *pluginUpdates.Manager
+	stopPluginVersions context.CancelFunc
+
+	// Accepts plugins that serve queries from outside Marmot
+	serveHub *pluginserve.Hub
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -130,7 +154,9 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	dataProductRepo := dataproductService.NewPostgresRepository(db, recorder)
 
 	assetSvc := asset.NewService(assetRepo)
-	userSvc := userService.NewService(userRepo)
+	settingsStore := settingsService.NewPostgresStore(db)
+	userSvc := userService.NewService(userRepo, userService.WithSettings(settingsStore))
+	common.SetLastSeenTracker(userService.NewLastSeenTracker(userRepo))
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
 	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
@@ -139,7 +165,12 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
-	authSvc := authService.NewService(authRepo, userSvc)
+	// Grants tie OAuth client tokens to the person's consent, so revoking a connected app ends its tokens before they expire
+	oauthGrants := marmotOAuth2.NewPostgresGrantRepository(db, authService.TokenTTL)
+	// Signed-out tokens are refused before they expire rather than only being forgotten by the browser
+	authSvc := authService.NewService(authRepo, userSvc,
+		authService.WithGrantChecker(oauthGrants),
+		authService.WithRevocationStore(authService.NewPostgresRevocationStore(db)))
 	glossarySvc := glossaryService.NewService(glossaryRepo)
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, glossarySvc, recorder)
 	teamRepo := teamService.NewPostgresRepository(db)
@@ -153,9 +184,12 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		notificationRepo,
 		&teamMembershipAdapter{teamSvc: teamSvc},
 		notificationService.WithDB(db),
-		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc}),
+		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc, db: db}),
 	)
 	notificationSvc.Start(context.Background())
+	// Expiry notices for credentials; an edition with its own grants adds a source for those to the same runner
+	accessExpiry := accessexpiry.NewRunner(db, notificationSvc,
+		accessexpiry.NewKeySource(db, accessexpiry.RoleHolders(db, "service_accounts", "manage")))
 	subscriptionRepo := subscription.NewPostgresRepository(db)
 	subscriptionSvc := subscription.NewService(subscriptionRepo)
 	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
@@ -199,6 +233,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	membershipReconciler.Start(context.Background())
 	assetRuleMemberSvc.Start(context.Background())
 	assetRuleReconciler.Start(context.Background())
+	accessExpiry.Start(context.Background())
 
 	// Register membership service with asset service for event hooks
 	assetSvc.SetMembershipObserver(membershipSvc)
@@ -290,9 +325,21 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	// scheduler, plugin-triggering endpoints, and /readyz gate on
 	// pluginLoadState until this finishes.
 	installOpts := install.Options{Registry: config.Plugins.Registry}
+	pluginVersions, err := newPluginVersions(config, db, installOpts)
+	if err != nil {
+		log.Error().Err(err).Msg("Plugin updates unavailable; core plugins run the versions this release pins")
+	}
+	pluginVersionsCtx, stopPluginVersions := context.WithCancel(context.Background())
 	pluginLoadState := plugin.GetLoadState()
 	go func() {
 		defer pluginLoadState.MarkReady()
+		// Versions an admin or the auto-update policy chose are read from Postgres before anything is installed, so a replica never starts on a version the cluster has moved off.
+		if pluginVersions != nil {
+			if err := pluginVersions.Load(pluginVersionsCtx); err != nil {
+				log.Warn().Err(err).Msg("Failed to read plugin versions; using the versions this release pins")
+			}
+			installOpts = pluginVersions.InstallOptions()
+		}
 		if config.Plugins.Autoinstall {
 			if err := install.EnsureCore(context.Background(), installOpts); err != nil {
 				log.Warn().Err(err).Msg("Failed to install core plugins; continuing with what is available")
@@ -300,6 +347,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		}
 		if err := install.LoadPlugins(installOpts); err != nil {
 			log.Error().Err(err).Msg("Failed to load external plugins")
+		}
+		if pluginVersions != nil {
+			pluginVersions.MarkLoaded()
+			pluginVersions.Start(pluginVersionsCtx)
+		}
+		if scheduleEncryptor != nil {
+			if err := scheduleSvc.EncryptPlaintextSecrets(context.Background(), scheduleEncryptor); err != nil {
+				log.Error().Err(err).Msg("Failed to encrypt plaintext pipeline secrets")
+			}
 		}
 		log.Info().Msg("Plugin loading complete")
 	}()
@@ -311,11 +367,20 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		SchedulerInterval: time.Duration(config.Pipelines.SchedulerInterval) * time.Second,
 		LeaseExpiry:       time.Duration(config.Pipelines.LeaseExpiry) * time.Second,
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
-		LinkAssets:        config.Experimental.TablePreview,
-		DB:                db,
+		// The query API lists a source's tables from these links, so they are kept
+		// whenever data querying is on as well as for table previews.
+		LinkAssets: config.Experimental.TablePreview || config.Query.Enabled,
+		DB:         db,
 	}
 	if config.Plugins.Autoinstall {
-		schedulerConfig.PluginInstall = &install.Options{Registry: config.Plugins.Registry}
+		pluginInstall := install.Options{Registry: config.Plugins.Registry}
+		if pluginVersions != nil {
+			pluginInstall = pluginVersions.InstallOptions()
+		}
+		schedulerConfig.PluginInstall = &pluginInstall
+	}
+	if pluginVersions != nil {
+		schedulerConfig.PluginVersions = pluginVersions
 	}
 	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, pluginLoadState, schedulerConfig)
 
@@ -324,6 +389,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	}
 
 	oauthManager := authService.NewOAuthManager()
+	oauthManager.SetTeamService(teamSvc)
+	oauthManager.SetProviderSwitches(settingsService.Switches{Store: settingsStore})
 
 	if oktaConfig := config.Auth.Okta; oktaConfig != nil && oktaConfig.Enabled {
 		if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
@@ -436,10 +503,12 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	if signingKeyErr != nil {
 		log.Fatal().Err(signingKeyErr).Msg("Failed to get signing key for OAuth2 provider")
 	}
-	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey)
-	authorizeSessionStore := marmotOAuth2.NewAuthorizeSessionStore()
-	oauthFositeProvider.Store.StartCleanup(context.Background(), 5*time.Minute)
-	authorizeSessionStore.StartCleanup(context.Background(), time.Minute)
+	// OAuth flow state lives in Postgres rather than in this process: a sign-in
+	// spans four requests and an instance can serve each from a different replica.
+	oauthRepo := marmotOAuth2.NewPostgresRepository(db)
+	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey, oauthRepo)
+	oauthFositeProvider.Grants = oauthGrants
+	marmotOAuth2.StartCleanup(context.Background(), oauthRepo, 5*time.Minute)
 
 	// Webhook service for external notifications
 	webhookRepo := webhookService.NewPostgresRepository(db)
@@ -501,7 +570,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 				reindexer = searchService.NewReindexer(esClient, searchRepo, esConfig.BulkSize)
 				reindexBroadcaster := websocket.NewSearchReindexBroadcaster(wsHub)
-				reindexer.SetBroadcaster(reindexBroadcaster)
+				reindexer.SetBroadcaster(adminAPI.RecordReindexCompletion(reindexBroadcaster, settingsStore))
 
 				if esConfig.ReindexOnStart {
 					go func() {
@@ -516,6 +585,40 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		}
 	}
 
+	// Data queries: a queryable source is an ingestion source with querying switched
+	// on, resolved through the schedule service, so one connection both
+	// catalogs and answers queries.
+	var querySvc queryService.Service
+	var pluginInstances *plugin.InstanceManager
+	var serveHub *pluginserve.Hub
+	var serveEnroller *pluginserve.Enroller
+	var serveKeyring *pluginserve.Keyring
+	if config.Query.Enabled && config.Query.Serve.Enabled {
+		serveHub, serveEnroller, serveKeyring = startServeHub(config, db, scheduleSvc, scheduleEncryptor, pluginserve.Principals{Users: userSvc, ServiceAccounts: serviceAccountSvc})
+	}
+	if config.Query.Enabled {
+		pluginInstances = plugin.NewInstanceManager(time.Duration(config.Query.InstanceIdleTTL) * time.Second)
+		querySvc = queryService.NewService(
+			queryService.NewPostgresRepository(db),
+			queryAPI.NewScheduleSourceProvider(scheduleSvc),
+			assetSvc,
+			pluginInstances,
+			queryAPI.NewScheduleIngestTrigger(scheduleSvc),
+			scheduleEncryptor,
+			queryService.Options{
+				QueryTimeout:         time.Duration(config.Query.QueryTimeout) * time.Second,
+				MaxRowsDefault:       config.Query.MaxRowsDefault,
+				MaxRowsCap:           config.Query.MaxRowsCap,
+				IngestSourceInterval: time.Duration(config.Query.IngestOnQuerySourceInterval) * time.Second,
+				IngestGlobalInterval: time.Duration(config.Query.IngestOnQueryGlobalInterval) * time.Second,
+				Lineage:              lineageSvc,
+				Served:               servedRunner(serveHub),
+				Notifier:             notificationSvc,
+				Grantors:             queryGrantors(db),
+			},
+		)
+	}
+
 	server := &Server{
 		config:                     config,
 		metricsService:             metricsService,
@@ -523,26 +626,29 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		scheduler:                  scheduler,
 		membershipService:          membershipSvc,
 		membershipReconciler:       membershipReconciler,
+		accessExpiry:               accessExpiry,
 		assetRuleMembershipService: assetRuleMemberSvc,
 		assetRuleReconciler:        assetRuleReconciler,
 		notificationService:        notificationSvc,
 		webhookDispatcher:          webhookDispatcher,
 		esIndexer:                  esClient,
 		syncService:                syncSvc,
+		pluginVersions:             pluginVersions,
+		stopPluginVersions:         stopPluginVersions,
 	}
 
 	schedulesHandler := schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured)
 
-	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider, authorizeSessionStore)
+	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider)
 	common.SetOAuthAuthorizeCompleter(authHandler)
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
-		users.NewHandler(userSvc, authSvc, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder).WithDetails(assetdetail.NewStore(db)).WithSignals(assetsignal.New(db)),
+		users.NewHandler(userSvc, authSvc, config).WithTeams(teamSvc),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
@@ -558,10 +664,20 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		websocket.NewHandler(wsHub, config),
 		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
 		serviceaccountsAPI.NewHandler(serviceAccountSvc, userSvc, authSvc, config),
-		plugins.NewHandler(userSvc, authSvc, config),
+		plugins.NewHandler(userSvc, authSvc, config).WithVersions(pluginVersions),
 		ui.NewHandler(config, encryptionConfigured),
-		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
+		adminAPI.NewHandler(reindexer, userSvc, authSvc, config).With(adminAPI.Extras{DB: db, Settings: settingsStore, OAuth: oauthManager, Teams: teamSvc, Roles: roleSvc}),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+		recentAPI.NewHandler(recentService.NewStore(db), userSvc, authSvc, config),
+	}
+	if querySvc != nil {
+		server.pluginInstances = pluginInstances
+		server.handlers = append(server.handlers, queryAPI.NewHandler(querySvc, userSvc, authSvc, config))
+		server.handlers = append(server.handlers, queryAPI.NewWorkspaceHandler(querySvc, queryService.NewSavedQueryStore(db), queryService.NewPostgresRepository(db), userSvc, authSvc, config))
+	}
+	if serveHub != nil {
+		server.serveHub = serveHub
+		server.handlers = append(server.handlers, serveAPI.NewHandler(serveEnroller, serveKeyring, userSvc, authSvc, config))
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled
@@ -607,6 +723,9 @@ func (s *Server) Stop() {
 	if s.membershipReconciler != nil {
 		s.membershipReconciler.Stop()
 	}
+	if s.accessExpiry != nil {
+		s.accessExpiry.Stop()
+	}
 	if s.membershipService != nil {
 		s.membershipService.Stop()
 	}
@@ -631,6 +750,98 @@ func (s *Server) Stop() {
 	if s.metricsService != nil {
 		s.metricsService.Stop()
 	}
+	if s.stopPluginVersions != nil {
+		s.stopPluginVersions()
+	}
+	if s.pluginVersions != nil {
+		s.pluginVersions.Stop()
+	}
+	if s.pluginInstances != nil {
+		s.pluginInstances.Stop()
+	}
+	if s.serveHub != nil {
+		s.serveHub.Stop()
+	}
+}
+
+// newPluginVersions sets up moving core plugins to other versions without a Marmot upgrade.
+func newPluginVersions(cfg *config.Config, db *pgxpool.Pool, opts install.Options) (*pluginUpdates.Manager, error) {
+	policy, err := pluginUpdates.ParsePolicy(cfg.Plugins.Updates.AutoUpdate)
+	if err != nil {
+		return nil, err
+	}
+	return pluginUpdates.New(pluginUpdates.Config{
+		DB:            db,
+		Install:       opts,
+		IndexEnabled:  cfg.Plugins.Updates.Enabled,
+		IndexRef:      cfg.Plugins.Updates.Index,
+		AutoUpdate:    policy,
+		CheckInterval: time.Duration(cfg.Plugins.Updates.CheckInterval) * time.Second,
+	})
+}
+
+// startServeHub starts accepting plugins that serve queries from outside Marmot. Serving was explicitly enabled, so a missing encryption key or an unusable listener stops startup rather than silently leaving served sources unreachable.
+func startServeHub(cfg *config.Config, db *pgxpool.Pool, schedules *runService.ScheduleService, encryptor *crypto.Encryptor, principals pluginserve.Principals) (*pluginserve.Hub, *pluginserve.Enroller, *pluginserve.Keyring) {
+	store := pluginserve.NewStore(db)
+	keyCfg := pluginserve.KeyConfig{CAKeyURI: cfg.Query.Serve.CAKeyURI, SigningKeyURI: cfg.Query.Serve.SigningKeyURI}
+	keyring, err := pluginserve.LoadKeyring(context.Background(), store, encryptor, keyCfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to load plugin serving keys")
+	}
+	if keyCfg.CAKeyURI != "" && !keyring.UsesKMS() {
+		log.Warn().Msg("query.serve KMS keys are configured but the serving keys in use are stored in the database; rotate the serving keys to move them to the KMS")
+	}
+
+	owners := func(ctx context.Context, source string) (pluginserve.Owner, error) {
+		schedule, err := schedules.GetScheduleByName(ctx, source)
+		if err != nil {
+			return pluginserve.Owner{}, err
+		}
+		if !schedule.Served() {
+			return pluginserve.Owner{}, fmt.Errorf("source %q is not served from outside Marmot", source)
+		}
+		return pluginserve.Owner{Type: *schedule.ServedByType, ID: *schedule.ServedByID}, nil
+	}
+
+	_, port, err := net.SplitHostPort(cfg.Query.Serve.ListenAddress)
+	if err != nil {
+		log.Fatal().Err(err).Str("listen_address", cfg.Query.Serve.ListenAddress).Msg("Invalid query.serve.listen_address")
+	}
+
+	// A replica address without a port, such as a pod IP, uses the listen port; JoinHostPort brackets IPv6 addresses.
+	replicaAddress := cfg.Query.Serve.ReplicaAddress
+	if _, _, err := net.SplitHostPort(replicaAddress); err != nil && replicaAddress != "" {
+		replicaAddress = net.JoinHostPort(replicaAddress, port)
+	}
+
+	hub := pluginserve.NewHub(keyring, store, owners, principals, pluginserve.HubConfig{
+		ListenAddress:  cfg.Query.Serve.ListenAddress,
+		ReplicaAddress: replicaAddress,
+	})
+	if err := hub.Start(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to start plugin serving")
+	}
+	return hub, pluginserve.NewEnroller(keyring, store, schedules, cfg.Query.Serve.PublicAddress, port), keyring
+}
+
+// servedRunner keeps a nil hub a nil interface, so the query service sees serving as disabled rather than calling a nil pointer.
+// queryGrantors names who can give a caller query access in OSS: whoever can change a user's roles for a person, and whoever manages service accounts for a machine caller.
+func queryGrantors(db *pgxpool.Pool) queryService.Grantors {
+	users := accessexpiry.RoleHolders(db, "users", "manage")
+	serviceAccounts := accessexpiry.RoleHolders(db, "service_accounts", "manage")
+	return func(ctx context.Context, principalType string) ([]notificationService.Recipient, error) {
+		if principalType == string(authService.PrincipalTypeServiceAccount) {
+			return serviceAccounts(ctx)
+		}
+		return users(ctx)
+	}
+}
+
+func servedRunner(hub *pluginserve.Hub) queryService.ServedRunner {
+	if hub == nil {
+		return nil
+	}
+	return hub
 }
 
 func (s *Server) RegisterRoutes(mux *http.ServeMux) {
@@ -682,9 +893,17 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 					// via lookups.SourceFrom(ctx).
 					r = r.WithContext(lookups.WithSource(r.Context(), lookups.SourceFromRequest(r)))
 
+					// The reference goes on the response and into any error body, so a failure someone reports can be found in the log below
+					var requestID string
+					r, requestID = common.WithRequestID(w, r)
+
 					// For regular HTTP requests, use the wrapped ResponseWriter for metrics
 					wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 					handler(wrapped, r)
+					if wrapped.statusCode >= http.StatusInternalServerError {
+						log.Warn().Str("request_id", requestID).Str("method", r.Method).Str("path", r.URL.Path).
+							Int("status", wrapped.statusCode).Msg("API request failed")
+					}
 
 					duration := time.Since(start)
 					metricPath := s.getMetricPath(path, r.URL.Path)
@@ -701,7 +920,20 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 	// the SPA the static handler would serve: a client asking for an endpoint
 	// that does not exist must not get HTML and a 200. Registered patterns are
 	// more specific, so they still win.
-	mux.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+		// Access policies are a known endpoint this build does not implement,
+		// which is not the same as a path that means nothing. A bare 404 sends
+		// the caller looking for a mistyped resource id, so name the reason.
+		//
+		// This lives in the fallback rather than in a route of its own so that
+		// a distribution serving the real endpoints shadows it for free: the
+		// fallback only runs when nothing else matched.
+		if strings.HasPrefix(r.URL.Path, "/api/v1/iam/") {
+			common.RespondError(w, http.StatusNotImplemented,
+				"Access policies are not available in this edition of Marmot. "+
+					"They are part of Marmot Cloud and Marmot Enterprise: https://cloud.marmotdata.io")
+			return
+		}
 		common.RespondError(w, http.StatusNotFound, "Not found")
 	})
 
@@ -727,6 +959,7 @@ func (a *teamMembershipAdapter) GetTeamMemberUserIDs(ctx context.Context, teamID
 
 type userPreferencesAdapter struct {
 	userSvc userService.Service
+	db      *pgxpool.Pool
 }
 
 func (a *userPreferencesAdapter) GetNotificationPreferences(ctx context.Context, userID string) (map[string]bool, error) {
@@ -737,26 +970,34 @@ func (a *userPreferencesAdapter) GetNotificationPreferences(ctx context.Context,
 	return a.extractNotificationPrefs(user), nil
 }
 
+// GetNotificationPreferencesBatch reads the preferences of exactly the given users in one query, so a large fan-out still honours each recipient's choices.
 func (a *userPreferencesAdapter) GetNotificationPreferencesBatch(ctx context.Context, userIDs []string) (map[string]map[string]bool, error) {
 	result := make(map[string]map[string]bool, len(userIDs))
+	if len(userIDs) == 0 {
+		return result, nil
+	}
 
-	users, _, err := a.userSvc.List(ctx, userService.Filter{Limit: len(userIDs)})
+	rows, err := a.db.Query(ctx, `SELECT id::text, COALESCE(preferences->'notifications', '{}'::jsonb) FROM users WHERE id::text = ANY($1)`, userIDs)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	userMap := make(map[string]*userService.User, len(users))
-	for _, u := range users {
-		userMap[u.ID] = u
-	}
-
-	for _, id := range userIDs {
-		if user, exists := userMap[id]; exists {
-			result[id] = a.extractNotificationPrefs(user)
+	for rows.Next() {
+		var id string
+		var notifPrefs map[string]interface{}
+		if err := rows.Scan(&id, &notifPrefs); err != nil {
+			return nil, err
 		}
+		prefs := make(map[string]bool, len(notifPrefs))
+		for key, val := range notifPrefs {
+			if boolVal, ok := val.(bool); ok {
+				prefs[key] = boolVal
+			}
+		}
+		result[id] = prefs
 	}
-
-	return result, nil
+	return result, rows.Err()
 }
 
 func (a *userPreferencesAdapter) extractNotificationPrefs(user *userService.User) map[string]bool {
@@ -787,7 +1028,7 @@ type runCompletionNotifier struct {
 func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.Run) {
 	// Skip notifications for system/synthetic users that have no DB entry
 	switch run.CreatedBy {
-	case "scheduler", "system", "operator", "anonymous":
+	case "scheduler", "system", "operator", "anonymous", "query":
 		return
 	}
 
@@ -820,17 +1061,26 @@ func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.
 		return
 	}
 
+	// Everything the message interpolates rides in data so the UI can rebuild the copy in the viewer's language
+	data := map[string]interface{}{
+		"run_id":        run.ID,
+		"pipeline_name": run.PipelineName,
+		"status":        string(run.Status),
+		"link":          fmt.Sprintf("/runs?tab=history&run=%s", run.ID),
+	}
+	if run.Summary != nil && run.Summary.TotalEntities > 0 {
+		data["total_entities"] = run.Summary.TotalEntities
+	}
+	if run.ErrorMessage != "" {
+		data["error_message"] = run.ErrorMessage
+	}
+
 	input := notificationService.CreateNotificationInput{
 		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeUser, ID: user.ID}},
 		Type:       notificationService.TypeJobComplete,
 		Title:      title,
 		Message:    message,
-		Data: map[string]interface{}{
-			"run_id":        run.ID,
-			"pipeline_name": run.PipelineName,
-			"status":        string(run.Status),
-			"link":          fmt.Sprintf("/runs?tab=history&run=%s", run.ID),
-		},
+		Data:       data,
 	}
 
 	if err := n.notificationSvc.Create(ctx, input); err != nil {
@@ -1227,7 +1477,9 @@ func (n *docsMentionNotifier) handleUserMention(ctx context.Context, mention doc
 			"entity_type": entityType,
 			"entity_id":   entityID,
 			"mentioner":   mentionerName,
-			"link":        link,
+			// Distinguishes user and team mentions so the UI can rebuild the copy from type and data
+			"mention_target": "user",
+			"link":           link,
 		},
 	}
 
@@ -1273,7 +1525,9 @@ func (n *docsMentionNotifier) handleTeamMention(ctx context.Context, mention doc
 			"entity_type": entityType,
 			"entity_id":   entityID,
 			"mentioner":   mentionerName,
-			"link":        link,
+			// Distinguishes user and team mentions so the UI can rebuild the copy from type and data
+			"mention_target": "team",
+			"link":           link,
 		},
 	}
 

@@ -103,3 +103,11 @@ func (a *teamServiceAdapter) ListAssetOwners(ctx context.Context, assetID string
 	}
 	return mcpOwners, nil
 }
+
+func (a *teamServiceAdapter) AddAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error {
+	return a.teamService.AddAssetOwner(ctx, assetID, ownerType, ownerID)
+}
+
+func (a *teamServiceAdapter) RemoveAssetOwner(ctx context.Context, assetID, ownerType, ownerID string) error {
+	return a.teamService.RemoveAssetOwner(ctx, assetID, ownerType, ownerID)
+}

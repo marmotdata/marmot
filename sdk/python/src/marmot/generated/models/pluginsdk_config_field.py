@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -34,6 +34,10 @@ class PluginsdkConfigField(BaseModel):
     default: Any | None = None
     description: StrictStr | None = None
     fields: list[PluginsdkConfigField] | None = None
+    group: StrictStr | None = Field(
+        default=None,
+        description='Group names the section a field belongs to in the UI, such as "Authentication" or "Advanced"; fields without one are shown first and each group renders as its own collapsed section',
+    )
     hidden: StrictBool | None = None
     is_array: StrictBool | None = None
     label: StrictStr | None = None
@@ -49,6 +53,7 @@ class PluginsdkConfigField(BaseModel):
         "default",
         "description",
         "fields",
+        "group",
         "hidden",
         "is_array",
         "label",
@@ -142,6 +147,7 @@ class PluginsdkConfigField(BaseModel):
                 "fields": [PluginsdkConfigField.from_dict(_item) for _item in obj["fields"]]
                 if obj.get("fields") is not None
                 else None,
+                "group": obj.get("group"),
                 "hidden": obj.get("hidden"),
                 "is_array": obj.get("is_array"),
                 "label": obj.get("label"),

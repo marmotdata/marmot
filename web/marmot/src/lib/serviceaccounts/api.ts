@@ -82,3 +82,15 @@ export async function deleteAPIKey(saID: string, keyID: string): Promise<void> {
 		throw new Error(data.error || 'Failed to delete API key');
 	}
 }
+
+/** Issues a new secret for a key, keeping its name and expiry; the old secret stops working at once. */
+export async function rotateAPIKey(saID: string, keyID: string): Promise<ServiceAccountAPIKey> {
+	const res = await fetchApi(`/service-accounts/${saID}/api-keys/${keyID}/rotate`, {
+		method: 'POST'
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.error || 'Failed to rotate API key');
+	}
+	return res.json();
+}

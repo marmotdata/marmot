@@ -8,35 +8,44 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/limits"
+	"github.com/marmotdata/marmot/internal/core/settings"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrUserNotFound           = errors.New("user not found")
-	ErrRoleNotFound           = errors.New("role not found")
-	ErrInvalidInput           = errors.New("invalid input")
-	ErrAlreadyExists          = errors.New("user already exists")
-	ErrReservedUsername       = errors.New("reserved username")
-	ErrInvalidPassword        = errors.New("invalid password")
-	ErrUnauthorized           = errors.New("unauthorized")
-	ErrInvalidAPIKey          = errors.New("invalid API key")
-	ErrPasswordRequired       = errors.New("password is required for non-OAuth users")
-	ErrCannotDeleteSelf       = errors.New("user can't delete self")
-	ErrCannotDeleteAdmin      = errors.New("can't delete admin user")
+	ErrUserNotFound      = errors.New("user not found")
+	ErrRoleNotFound      = errors.New("role not found")
+	ErrInvalidInput      = errors.New("invalid input")
+	ErrAlreadyExists     = errors.New("user already exists")
+	ErrReservedUsername  = errors.New("reserved username")
+	ErrInvalidPassword   = errors.New("invalid password")
+	ErrUnauthorized      = errors.New("unauthorized")
+	ErrInvalidAPIKey     = errors.New("invalid API key")
+	ErrUserInactive      = errors.New("user account is inactive")
+	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
+	ErrCannotDeleteSelf  = errors.New("user can't delete self")
+	ErrCannotDeleteAdmin = errors.New("can't delete admin user")
 )
 
 type User struct {
-	ID                 string                 `json:"id"`
-	Username           string                 `json:"username"`
-	Name               string                 `json:"name"`
-	ProfilePicture     string                 `json:"profile_picture,omitempty"`
-	Active             bool                   `json:"active"`
-	MustChangePassword bool                   `json:"must_change_password"`
-	Preferences        map[string]interface{} `json:"preferences"`
-	Roles              []Role                 `json:"roles"`
-	Identities         []UserIdentity         `json:"identities,omitempty"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
+	ID                 string `json:"id"`
+	Username           string `json:"username"`
+	Name               string `json:"name"`
+	ProfilePicture     string `json:"profile_picture,omitempty"`
+	Active             bool   `json:"active"`
+	MustChangePassword bool   `json:"must_change_password"`
+	// Tokens issued before this moment are rejected at validation, so setting it to now signs the user out of every session at once.
+	SessionsInvalidatedAt *time.Time             `json:"sessions_invalidated_at,omitempty"`
+	Preferences           map[string]interface{} `json:"preferences"`
+	Roles                 []Role                 `json:"roles"`
+	Identities            []UserIdentity         `json:"identities,omitempty"`
+	CreatedAt             time.Time              `json:"created_at"`
+	UpdatedAt             time.Time              `json:"updated_at"`
+	// Status is active, invited or deactivated. An invited member has an account waiting for them but has not used their link yet.
+	Status string `json:"status,omitempty"`
+	// LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.
+	LastSeenAt      *time.Time `json:"last_seen_at,omitempty"`
+	InviteExpiresAt *time.Time `json:"invite_expires_at,omitempty"`
 } // @name User
 
 type Role struct {
@@ -44,7 +53,11 @@ type Role struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Permissions []Permission `json:"permissions,omitempty"`
-} // @name Role
+	// Named UserRole in the API docs, not Role: core/role.Role also declared
+	// "@name Role", so swag emitted whichever it saw first and documented the
+	// /roles endpoints with this summary shape instead of the fuller model they
+	// actually return.
+} // @name UserRole
 
 type Permission struct {
 	ID           string `json:"id"`
@@ -80,8 +93,12 @@ type Filter struct {
 	Query   string
 	RoleIDs []string
 	Active  *bool
-	Limit   int
-	Offset  int
+	// Status is active, invited or deactivated, and supersedes Active when set.
+	Status string
+	// NoTeam keeps only members who belong to no team.
+	NoTeam bool
+	Limit  int
+	Offset int
 }
 
 type Service interface {
@@ -109,15 +126,36 @@ type Service interface {
 	CreateAPIKey(ctx context.Context, userID string, name string, expiresIn *time.Duration) (*APIKey, error)
 	DeleteAPIKey(ctx context.Context, userID string, keyID string) error
 	ListAPIKeys(ctx context.Context, userID string) ([]*APIKey, error)
+	RotateAPIKey(ctx context.Context, userID string, keyID string) (*APIKey, error)
+
+	// Account profile
+	GetProfile(ctx context.Context, userID string) (*Profile, error)
+	UpdateJobTitle(ctx context.Context, userID string, jobTitle string) error
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
 	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
+	InvalidateSessions(ctx context.Context, userID string) error
+
+	// Invitations
+	GetMember(ctx context.Context, id string) (*User, error)
+	Invite(ctx context.Context, input InviteInput, invitedBy string) (*Invitation, error)
+	RenewInvite(ctx context.Context, userID, invitedBy string) (*Invitation, error)
+	RevokeInvite(ctx context.Context, userID string) error
+	GetInvite(ctx context.Context, token string) (*InviteInfo, error)
+	AcceptInvite(ctx context.Context, token, password, name string) (*User, error)
+
+	// Single sign-on provisioning
+	SignInSettings(ctx context.Context) settings.SignIn
+	ProvisionSSO(ctx context.Context, input CreateUserInput) (*User, bool, error)
+	SetRolesFromSSO(ctx context.Context, userID string, roleNames []string) error
+	CountIdentitiesByProvider(ctx context.Context) (map[string]int, error)
 }
 
 type service struct {
 	repo      Repository
 	validator *validator.Validate
 	guard     limits.Guard
+	settings  settings.Store
 }
 
 type ServiceOption func(*service)
@@ -125,7 +163,7 @@ type ServiceOption func(*service)
 func NewService(repo Repository, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
-		validator: validator.New(),
+		validator: newValidator(),
 		guard:     limits.NoopGuard{},
 	}
 
@@ -161,12 +199,12 @@ func (s *service) UpdatePreferences(ctx context.Context, userID string, preferen
 func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, error) {
 	if input.OAuthProvider == "" {
 		if err := s.validator.Struct(input); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+			return nil, invalidInput(err)
 		}
 	} else {
-		validate := validator.New()
-		if err := validate.StructExcept(input, "Password"); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		// s.validator, not a fresh one, so the json field names survive here.
+		if err := s.validator.StructExcept(input, "Password"); err != nil {
+			return nil, invalidInput(err)
 		}
 	}
 
@@ -239,7 +277,7 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 
 func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) (*User, error) {
 	if err := s.validator.Struct(input); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return nil, invalidInput(err)
 	}
 
 	updates := make(map[string]interface{})
@@ -370,6 +408,10 @@ func (s *service) List(ctx context.Context, filter Filter) ([]*User, int, error)
 		}
 	}
 
+	if err := s.attachMemberStates(ctx, users...); err != nil {
+		return nil, 0, err
+	}
+
 	return users, total, nil
 }
 
@@ -390,6 +432,11 @@ func (s *service) Authenticate(ctx context.Context, username, password string) (
 		return nil, ErrInvalidPassword
 	}
 
+	// Checked only after the password, so the refusal reveals nothing to someone guessing. Administrators keep password sign-in so an outage at the identity provider cannot lock everyone out.
+	if !s.SignInSettings(ctx).AllowPasswordSignIn && !isAdmin(user) {
+		return nil, ErrPasswordSignInDisabled
+	}
+
 	return user, nil
 }
 
@@ -403,8 +450,13 @@ func (s *service) HasPermission(ctx context.Context, userID string, resourceType
 }
 
 func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error) {
+	// Var validation has no struct field, so the name comes from the request
+	// body rather than being left blank.
 	if err := s.validator.Var(newPassword, "required,min=8"); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return nil, &InvalidInputError{Fields: []FieldError{{
+			Field:   "new_password",
+			Message: "is required and must be at least 8 characters",
+		}}}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
@@ -413,9 +465,10 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	updates := map[string]interface{}{
-		"password_hash":        string(hash),
-		"must_change_password": false,
-		"updated_at":           time.Now(),
+		"password_hash":           string(hash),
+		"must_change_password":    false,
+		"sessions_invalidated_at": time.Now(),
+		"updated_at":              time.Now(),
 	}
 
 	if err := s.repo.UpdateUser(ctx, userID, updates); err != nil {
@@ -423,4 +476,11 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 	}
 
 	return s.Get(ctx, userID)
+}
+
+// InvalidateSessions signs the user out everywhere by rejecting every token
+func (s *service) InvalidateSessions(ctx context.Context, userID string) error {
+	return s.repo.UpdateUser(ctx, userID, map[string]interface{}{
+		"sessions_invalidated_at": time.Now(),
+	})
 }

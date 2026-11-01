@@ -37,12 +37,12 @@ type BatchAssetResult struct {
 }
 
 // Validate validates this batch asset result
-func (m *BatchAssetResult) Validate(formats strfmt.Registry) error {
+func (m *BatchAssetResult) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this batch asset result based on context it is used
-func (m *BatchAssetResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *BatchAssetResult) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

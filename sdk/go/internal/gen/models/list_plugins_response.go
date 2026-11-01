@@ -22,7 +22,7 @@ type ListPluginsResponse struct {
 	Loading bool `json:"loading,omitempty"`
 
 	// plugins
-	Plugins []*PluginsdkMeta `json:"plugins"`
+	Plugins []*PluginInfo `json:"plugins"`
 }
 
 // Validate validates this list plugins response

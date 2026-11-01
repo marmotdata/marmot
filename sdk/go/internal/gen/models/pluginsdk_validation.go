@@ -31,12 +31,12 @@ type PluginsdkValidation struct {
 }
 
 // Validate validates this pluginsdk validation
-func (m *PluginsdkValidation) Validate(formats strfmt.Registry) error {
+func (m *PluginsdkValidation) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this pluginsdk validation based on context it is used
-func (m *PluginsdkValidation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *PluginsdkValidation) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

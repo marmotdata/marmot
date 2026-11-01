@@ -22,12 +22,12 @@ type CreateServiceAccountAPIKeyRequest struct {
 }
 
 // Validate validates this create service account API key request
-func (m *CreateServiceAccountAPIKeyRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateServiceAccountAPIKeyRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create service account API key request based on context it is used
-func (m *CreateServiceAccountAPIKeyRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateServiceAccountAPIKeyRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

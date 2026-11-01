@@ -11,6 +11,9 @@ import (
 // Team is a single team.
 type Team = models.Team
 
+// TeamSummary is a team with its asset, member and webhook counts and SSO group mappings, as returned by TeamsService.Get.
+type TeamSummary = models.TeamSummary
+
 // TeamList is a paginated set of teams.
 type TeamList = models.ListTeamsResponse
 
@@ -59,7 +62,7 @@ func (s *TeamsService) List(ctx context.Context, opts TeamsListOptions) (*TeamLi
 }
 
 // Get fetches a team by ID.
-func (s *TeamsService) Get(ctx context.Context, id string) (*Team, error) {
+func (s *TeamsService) Get(ctx context.Context, id string) (*TeamSummary, error) {
 	p := teams.NewGetTeamsIDParams().WithContext(ctx).WithID(id)
 	resp, err := s.gen.Teams.GetTeamsID(p, nil)
 	if err != nil {
@@ -94,7 +97,7 @@ func (s *TeamsService) Create(ctx context.Context, in CreateTeamInput) (*Team, e
 
 // Update modifies an existing team. The update endpoint returns only a status
 // message, so Update re-fetches the team to return its current state.
-func (s *TeamsService) Update(ctx context.Context, id string, in UpdateTeamInput) (*Team, error) {
+func (s *TeamsService) Update(ctx context.Context, id string, in UpdateTeamInput) (*TeamSummary, error) {
 	body := &models.UpdateTeamRequest{
 		Name:        in.Name,
 		Description: in.Description,

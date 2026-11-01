@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -29,7 +29,11 @@ class QueryCount(BaseModel):
     count: StrictInt | None = None
     query: StrictStr | None = None
     query_type: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["count", "query", "query_type"]
+    result_count: StrictInt | None = Field(
+        default=None,
+        description="ResultCount is set on the zero-result list, where it is always 0; ordinary top queries leave it out because only searches that found nothing are recorded with their result count",
+    )
+    __properties: ClassVar[list[str]] = ["count", "query", "query_type", "result_count"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -83,5 +87,6 @@ class QueryCount(BaseModel):
                 "count": obj.get("count"),
                 "query": obj.get("query"),
                 "query_type": obj.get("query_type"),
+                "result_count": obj.get("result_count"),
             }
         )

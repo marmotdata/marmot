@@ -81,3 +81,17 @@ Resolve the Secret used for embedded PostgreSQL credentials.
 {{- define "marmot.postgresqlSecretName" -}}
 {{- default (include "marmot.postgresqlName" .) .Values.postgresql.auth.existingSecret }}
 {{- end }}
+
+{{/*
+Whether plugins running outside Marmot may connect to serve queries. Empty when off, so it works with if.
+*/}}
+{{- define "marmot.serveEnabled" -}}
+{{- with .Values.config.query }}{{- with .serve }}{{- if .enabled }}true{{- end }}{{- end }}{{- end }}
+{{- end }}
+
+{{/*
+The serve listener's port, taken from config.query.serve.listen_address.
+*/}}
+{{- define "marmot.servePort" -}}
+{{- splitList ":" .Values.config.query.serve.listen_address | last }}
+{{- end }}

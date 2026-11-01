@@ -23,25 +23,34 @@ type Config struct {
 
 	Path string `json:"path" description:"Path to the DuckDB database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
-	IncludeColumns       bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics        bool `json:"enable_metrics" description:"Whether to include table metrics (row counts and sizes)" default:"true"`
-	DiscoverForeignKeys  bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemSchemas bool `json:"exclude_system_schemas" description:"Whether to exclude system schemas (information_schema, pg_catalog)" default:"true"`
+	IncludeColumns       bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics        bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics (row counts and sizes)" default:"true"`
+	DiscoverForeignKeys  bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemSchemas bool `json:"exclude_system_schemas" group:"Discovery" description:"Whether to exclude system schemas (information_schema, pg_catalog)" default:"true"`
 }
 
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "duckdb",
-		Name:        "DuckDB",
-		Description: "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
-		Icon:        "duckdb",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "duckdb",
+		MarmotVersion: ">=0.12.0",
+		Name:          "DuckDB",
+		Description:   "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
+		Icon:          "duckdb",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover returns CONTAINS edges for schemas and DEPENDS_ON edges
 		// for foreign keys, so the manifest declares Lineage.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DuckDBFields{}, "DuckDB",
+				"The metadata fields DuckDB emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(DuckDBColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(DuckDBForeignKeyFields{}, "Foreign Key",
+				"The fields of a discovered foreign key relationship."),
+		},
 	}
 }
 

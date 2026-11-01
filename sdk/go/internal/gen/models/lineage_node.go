@@ -26,6 +26,9 @@ type LineageNode struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// LastRunStatus is the outcome of the latest run recorded against the asset: succeeded, failed or running. Empty when it has no runs.
+	LastRunStatus string `json:"last_run_status,omitempty"`
+
 	// type
 	Type string `json:"type,omitempty"`
 }

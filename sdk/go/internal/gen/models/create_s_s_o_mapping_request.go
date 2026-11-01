@@ -20,6 +20,9 @@ type CreateSSOMappingRequest struct {
 	// provider
 	Provider string `json:"provider,omitempty"`
 
+	// RoleID is the Marmot role the group's members get at every sign-in, in place of the default role.
+	RoleID string `json:"role_id,omitempty"`
+
 	// sso group name
 	SsoGroupName string `json:"sso_group_name,omitempty"`
 
@@ -28,12 +31,12 @@ type CreateSSOMappingRequest struct {
 }
 
 // Validate validates this create s s o mapping request
-func (m *CreateSSOMappingRequest) Validate(formats strfmt.Registry) error {
+func (m *CreateSSOMappingRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this create s s o mapping request based on context it is used
-func (m *CreateSSOMappingRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateSSOMappingRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

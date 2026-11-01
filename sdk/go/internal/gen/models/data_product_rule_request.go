@@ -83,7 +83,7 @@ func (m *DataProductRuleRequest) validateRuleType(formats strfmt.Registry) error
 }
 
 // ContextValidate validates this data product rule request based on context it is used
-func (m *DataProductRuleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProductRuleRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

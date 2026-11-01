@@ -39,6 +39,7 @@ class TestPluginsdkConfigField(unittest.TestCase):
                     marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
                         default = null,
                         description = '',
+                        group = '',
                         hidden = True,
                         is_array = True,
                         label = '',
@@ -62,6 +63,7 @@ class TestPluginsdkConfigField(unittest.TestCase):
                             min_len = 56,
                             pattern = '', ), )
                     ],
+                group = '',
                 hidden = True,
                 is_array = True,
                 label = '',

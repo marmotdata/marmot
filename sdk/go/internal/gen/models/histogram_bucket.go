@@ -37,12 +37,12 @@ type HistogramBucket struct {
 }
 
 // Validate validates this histogram bucket
-func (m *HistogramBucket) Validate(formats strfmt.Registry) error {
+func (m *HistogramBucket) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this histogram bucket based on context it is used
-func (m *HistogramBucket) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *HistogramBucket) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

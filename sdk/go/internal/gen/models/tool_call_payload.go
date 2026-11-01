@@ -14,8 +14,20 @@ import (
 // swagger:model ToolCallPayload
 type ToolCallPayload struct {
 
+	// Detail is the call's argument in a readable form, such as the SQL of a query.
+	Detail string `json:"detail,omitempty"`
+
 	// duration ms
 	DurationMs int64 `json:"duration_ms,omitempty"`
+
+	// Reason and Rule explain a refused or failed call: why, and which policy or rule refused it.
+	Reason string `json:"reason,omitempty"`
+
+	// Result summarises what came back, such as "5 rows".
+	Result string `json:"result,omitempty"`
+
+	// rule
+	Rule string `json:"rule,omitempty"`
 
 	// started at
 	StartedAt string `json:"started_at,omitempty"`
@@ -31,12 +43,12 @@ type ToolCallPayload struct {
 }
 
 // Validate validates this tool call payload
-func (m *ToolCallPayload) Validate(formats strfmt.Registry) error {
+func (m *ToolCallPayload) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this tool call payload based on context it is used
-func (m *ToolCallPayload) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *ToolCallPayload) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

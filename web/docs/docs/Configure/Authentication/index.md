@@ -7,6 +7,10 @@ description: Configure authentication providers
 
 Marmot supports multiple OAuth/OIDC providers for Single Sign-On authentication. You can enable multiple providers simultaneously, and users will see login buttons for all enabled providers.
 
+:::note
+These pages cover signing users in to Marmot through an external identity provider. For AI assistants and MCP clients that authenticate against Marmot's own built-in OAuth server, see [MCP authentication](../../MCP/index.md#hosted-clients-oauth).
+:::
+
 import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 ## Supported Providers

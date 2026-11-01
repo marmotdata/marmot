@@ -19,12 +19,12 @@ type AssetsByProviderResponse struct {
 }
 
 // Validate validates this assets by provider response
-func (m *AssetsByProviderResponse) Validate(formats strfmt.Registry) error {
+func (m *AssetsByProviderResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this assets by provider response based on context it is used
-func (m *AssetsByProviderResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetsByProviderResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

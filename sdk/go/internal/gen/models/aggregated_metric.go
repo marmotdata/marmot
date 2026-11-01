@@ -37,12 +37,12 @@ type AggregatedMetric struct {
 }
 
 // Validate validates this aggregated metric
-func (m *AggregatedMetric) Validate(formats strfmt.Registry) error {
+func (m *AggregatedMetric) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this aggregated metric based on context it is used
-func (m *AggregatedMetric) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AggregatedMetric) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

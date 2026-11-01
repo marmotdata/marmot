@@ -3,11 +3,13 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	coreuser "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
@@ -36,7 +38,7 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 
 	state := generateRandomState()
 
-	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	isSecure := h.cookiesAreSecure(r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
@@ -95,20 +97,19 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := provider.HandleCallback(r.Context(), code)
+	if errors.Is(err, coreuser.ErrSignupDisabled) || errors.Is(err, coreuser.ErrUnverifiedInvitedEmail) {
+		// Not a fault: the instance only admits invited people. The login page shows fixed text for this, so nothing from the provider reaches the page.
+		log.Info().Err(err).Str("provider", providerName).Msg("Single sign-on refused for someone who was not invited")
+		http.Redirect(w, r, "/login?error=not_invited", http.StatusTemporaryRedirect)
+		return
+	}
 	if err != nil {
 		log.Error().Err(err).Str("provider", providerName).Msg("Failed to handle OAuth callback")
 		common.RespondError(w, http.StatusInternalServerError, "Authentication failed")
 		return
 	}
 
-	token, err := h.authService.GenerateToken(r.Context(), user, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate token")
-		common.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
-		return
-	}
-
-	if err := h.issueLoginHandoff(w, r, token); err != nil {
+	if err := h.issueLoginHandoff(w, r, user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to issue login handoff")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to complete login")
 		return

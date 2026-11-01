@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -30,16 +30,27 @@ class SSOTeamMapping(BaseModel):
     id: StrictStr | None = None
     member_role: StrictStr | None = None
     provider: StrictStr | None = None
+    role_id: StrictStr | None = Field(
+        default=None,
+        description="RoleID is the Marmot role members of the group get, replacing the default role at every sign-in.",
+    )
+    role_name: StrictStr | None = None
     sso_group_name: StrictStr | None = None
-    team_id: StrictStr | None = None
+    team_id: StrictStr | None = Field(
+        default=None, description="TeamID is empty when the mapping only gives a role."
+    )
+    team_name: StrictStr | None = None
     updated_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "created_at",
         "id",
         "member_role",
         "provider",
+        "role_id",
+        "role_name",
         "sso_group_name",
         "team_id",
+        "team_name",
         "updated_at",
     ]
 
@@ -96,8 +107,11 @@ class SSOTeamMapping(BaseModel):
                 "id": obj.get("id"),
                 "member_role": obj.get("member_role"),
                 "provider": obj.get("provider"),
+                "role_id": obj.get("role_id"),
+                "role_name": obj.get("role_name"),
                 "sso_group_name": obj.get("sso_group_name"),
                 "team_id": obj.get("team_id"),
+                "team_name": obj.get("team_name"),
                 "updated_at": obj.get("updated_at"),
             }
         )

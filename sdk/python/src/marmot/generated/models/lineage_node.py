@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -31,8 +31,12 @@ class LineageNode(BaseModel):
     asset: Asset | None = None
     depth: StrictInt | None = None
     id: StrictStr | None = None
+    last_run_status: StrictStr | None = Field(
+        default=None,
+        description="LastRunStatus is the outcome of the latest run recorded against the asset: succeeded, failed or running. Empty when it has no runs.",
+    )
     type: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["asset", "depth", "id", "type"]
+    __properties: ClassVar[list[str]] = ["asset", "depth", "id", "last_run_status", "type"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -90,6 +94,7 @@ class LineageNode(BaseModel):
                 "asset": Asset.from_dict(obj["asset"]) if obj.get("asset") is not None else None,
                 "depth": obj.get("depth"),
                 "id": obj.get("id"),
+                "last_run_status": obj.get("last_run_status"),
                 "type": obj.get("type"),
             }
         )

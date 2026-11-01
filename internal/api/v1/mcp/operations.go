@@ -34,10 +34,11 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract authenticated user from context
-	user, ok := common.GetAuthenticatedUser(r.Context())
+	// The principal, not the user: a service account has no user record, and
+	// agents run as service accounts.
+	principal, ok := common.PrincipalFromContext(r.Context())
 	if !ok {
-		log.Warn().Msg("MCP request without authenticated user")
+		log.Warn().Msg("MCP request without authenticated principal")
 		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
@@ -45,8 +46,7 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("method", r.Method).
 		Str("path", r.URL.Path).
-		Str("user_id", user.ID).
-		Str("username", user.Username).
+		Str("principal", principal.AuditSubject()).
 		Str("content-type", r.Header.Get("Content-Type")).
 		Str("accept", r.Header.Get("Accept")).
 		Str("mcp-session-id", r.Header.Get("Mcp-Session-Id")).
@@ -54,11 +54,10 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 
 	mcpHandler := mcpsdk.NewStreamableHTTPHandler(
 		func(req *http.Request) *mcpsdk.Server {
-			server := h.mcpServer.CreateMCPServer(req.Context(), user)
+			server := h.mcpServer.CreateMCPServer(req.Context(), principal)
 			log.Debug().
-				Str("user_id", user.ID).
-				Str("username", user.Username).
-				Msg("MCP server instance created for user")
+				Str("principal", principal.AuditSubject()).
+				Msg("MCP server instance created")
 			return server
 		},
 		&mcpsdk.StreamableHTTPOptions{

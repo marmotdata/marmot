@@ -20,14 +20,29 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "dbt",
-		Name:        "DBT",
-		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
-		Icon:        "dbt",
-		Category:    "transformation",
-		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "dbt",
+		MarmotVersion: ">=0.12.0",
+		Name:          "dbt",
+		Description:   "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
+		Icon:          "dbt",
+		Category:      "transformation",
+		Status:        "experimental",
+		Features:      []string{"Assets", "Lineage"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(DBTModelFields{}, "Model",
+				"DBT model-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTSourceFields{}, "Source",
+				"DBT source-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTSeedFields{}, "Seed",
+				"DBT seed-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTColumnFields{}, "Column",
+				"DBT column-specific metadata fields"),
+			pluginsdk.AssetSchemaOf(DBTConfigFields{}, "Config",
+				"DBT config-specific metadata fields Fields with config_ prefix contain DBT model configuration"),
+			pluginsdk.AssetSchemaOf(DBTStatsFields{}, "Stats",
+				"DBT catalog statistics fields Fields with stat_ prefix contain statistics from database catalog"),
+		},
 	}
 }
 
@@ -39,16 +54,16 @@ type Config struct {
 	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url)" validate:"required"`
 
 	ProjectName string `json:"project_name" description:"DBT project name" validate:"required"`
-	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
+	Environment string `json:"environment,omitempty" group:"Advanced" description:"Environment name (e.g., production, staging)" default:"production"`
 
-	IncludeManifest    bool `json:"include_manifest" description:"Include manifest.json for model definitions" default:"true"`
-	IncludeCatalog     bool `json:"include_catalog" description:"Include catalog.json for table/column descriptions" default:"true"`
-	IncludeRunResults  bool `json:"include_run_results" description:"Include run_results.json for test results" default:"false"`
-	IncludeSourcesJSON bool `json:"include_sources_json" description:"Include sources.json for source definitions" default:"false"`
+	IncludeManifest    bool `json:"include_manifest" group:"Discovery" description:"Include manifest.json for model definitions" default:"true"`
+	IncludeCatalog     bool `json:"include_catalog" group:"Discovery" description:"Include catalog.json for table/column descriptions" default:"true"`
+	IncludeRunResults  bool `json:"include_run_results" group:"Discovery" description:"Include run_results.json for test results" default:"false"`
+	IncludeSourcesJSON bool `json:"include_sources_json" group:"Discovery" description:"Include sources.json for source definitions" default:"false"`
 
-	DiscoverModels  bool `json:"discover_models" description:"Discover DBT models" default:"true"`
-	DiscoverSources bool `json:"discover_sources" description:"Discover DBT sources" default:"true"`
-	DiscoverTests   bool `json:"discover_tests" description:"Discover DBT tests" default:"false"`
+	DiscoverModels  bool `json:"discover_models" group:"Discovery" description:"Discover DBT models" default:"true"`
+	DiscoverSources bool `json:"discover_sources" group:"Discovery" description:"Discover DBT sources" default:"true"`
+	DiscoverTests   bool `json:"discover_tests" group:"Discovery" description:"Discover DBT tests" default:"false"`
 }
 
 // Example configuration for the plugin

@@ -70,8 +70,12 @@ func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 	// we should consider storing plugin id separately.
 	pluginSource, err := plugin.GetRegistry().GetSource(strings.ToLower(providerName))
 	if err != nil {
-		log.Error().Err(err).Str("provider", providerName).Msg("Plugin not found")
-		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("plugin not found for asset provider: %s", providerName))
+		// Not a server fault: this build has no plugin for the provider, which
+		// is the same answer as the plugin not supporting preview below. A 500
+		// here tells an operator their server is broken when it is not.
+		log.Debug().Err(err).Str("provider", providerName).Msg("No plugin for asset provider")
+		common.RespondError(w, http.StatusNotImplemented,
+			fmt.Sprintf("data preview not available for %s assets", providerName))
 		return
 	}
 

@@ -176,9 +176,10 @@ func (h *Handler) createWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getWebhook(w http.ResponseWriter, r *http.Request) {
+	teamID := r.PathValue("id")
 	webhookID := r.PathValue("webhookId")
 
-	result, err := h.webhookService.Get(r.Context(), webhookID)
+	result, err := h.webhookService.GetMasked(r.Context(), teamID, webhookID)
 	if err != nil {
 		if errors.Is(err, webhook.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Webhook not found")
@@ -192,6 +193,7 @@ func (h *Handler) getWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateWebhook(w http.ResponseWriter, r *http.Request) {
+	teamID := r.PathValue("id")
 	webhookID := r.PathValue("webhookId")
 
 	var input webhook.UpdateWebhookInput
@@ -200,7 +202,7 @@ func (h *Handler) updateWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.webhookService.Update(r.Context(), webhookID, input)
+	result, err := h.webhookService.Update(r.Context(), teamID, webhookID, input)
 	if err != nil {
 		if errors.Is(err, webhook.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Webhook not found")
@@ -218,9 +220,10 @@ func (h *Handler) updateWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteWebhook(w http.ResponseWriter, r *http.Request) {
+	teamID := r.PathValue("id")
 	webhookID := r.PathValue("webhookId")
 
-	if err := h.webhookService.Delete(r.Context(), webhookID); err != nil {
+	if err := h.webhookService.Delete(r.Context(), teamID, webhookID); err != nil {
 		if errors.Is(err, webhook.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Webhook not found")
 			return
@@ -233,9 +236,10 @@ func (h *Handler) deleteWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) testWebhook(w http.ResponseWriter, r *http.Request) {
+	teamID := r.PathValue("id")
 	webhookID := r.PathValue("webhookId")
 
-	if err := h.webhookService.TestWebhook(r.Context(), webhookID); err != nil {
+	if err := h.webhookService.TestWebhook(r.Context(), teamID, webhookID); err != nil {
 		if errors.Is(err, webhook.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Webhook not found")
 			return

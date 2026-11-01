@@ -6,8 +6,9 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/marmotdata/marmot/pkg/config"
+	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -23,6 +24,7 @@ type GoogleProvider struct {
 	exchangeVerifier *oidc.IDTokenVerifier
 	oauthConfig      *oauth2.Config
 	oidcProvider     *oidc.Provider
+	teamService      *team.Service
 }
 
 func NewGoogleProvider(cfg *config.Config, userService user.Service) (*GoogleProvider, error) {
@@ -148,10 +150,12 @@ func (p *GoogleProvider) HandleCallback(ctx context.Context, code string) (*user
 		RoleNames:         []string{"user"},
 	}
 
-	usr, err = p.userService.Create(ctx, newUser)
+	var created bool
+	usr, created, err = p.userService.ProvisionSSO(ctx, newUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+	applyNewMemberDefaults(ctx, p.userService, p.teamService, usr, created)
 
 	return usr, nil
 }
@@ -185,4 +189,9 @@ func (p *GoogleProvider) Name() string {
 
 func (p *GoogleProvider) Type() string {
 	return "google"
+}
+
+// SetTeamService lets new members created through this provider join the default team.
+func (p *GoogleProvider) SetTeamService(t *team.Service) {
+	p.teamService = t
 }

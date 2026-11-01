@@ -45,7 +45,7 @@ func (m *RemoveTermRequest) validateTermID(formats strfmt.Registry) error {
 }
 
 // ContextValidate validates this remove term request based on context it is used
-func (m *RemoveTermRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *RemoveTermRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

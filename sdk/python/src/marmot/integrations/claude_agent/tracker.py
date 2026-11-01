@@ -188,14 +188,14 @@ class MarmotAgentTracker:
 
         summary = summarize_transcript(run.transcript_path) if run.transcript_path else None
         ended_at = datetime.now(timezone.utc)
-        await asyncio.to_thread(self._post_run, session_id, run, summary, ended_at)
+        await self._post_run(session_id, run, summary, ended_at)
 
         if run.upstreams:
             edges = [
                 LineageEdge(source=mrn, target=self._agent_mrn) for mrn in sorted(run.upstreams)
             ]
             try:
-                await asyncio.to_thread(self._catalog.write_edges, edges)
+                await self._catalog.awrite_edges(edges)
             except Exception as e:
                 _LOG.warning("failed to write lineage: %s", e)
 
@@ -323,7 +323,7 @@ class MarmotAgentTracker:
     # ------------------------------------------------------------------
     # Run record submission
 
-    def _post_run(
+    async def _post_run(
         self,
         session_id: str | None,
         run: _RunState,
@@ -343,7 +343,7 @@ class MarmotAgentTracker:
             observed_extras = sorted((run.upstreams - explicit) - {self._agent_mrn or ""})
 
         try:
-            self._catalog.record_run(
+            await self._catalog.arecord_run(
                 AgentRunRecord(
                     agent_mrn=self._agent_mrn or "",
                     run_id=run_id,
@@ -370,16 +370,13 @@ class MarmotAgentTracker:
         async with self._register_lock:
             if self._agent_mrn is not None:
                 return
-            await asyncio.to_thread(self._register)
-
-    def _register(self) -> None:
-        try:
-            asset = self._catalog.register_agent(self._spec)
-        except Exception as e:
-            _LOG.warning("failed to register agent asset: %s", e)
-            return
-        self._agent_id = _str_or_none(asset.id)
-        self._agent_mrn = _str_or_none(asset.mrn)
+            try:
+                asset = await self._catalog.aregister_agent(self._spec)
+            except Exception as e:
+                _LOG.warning("failed to register agent asset: %s", e)
+                return
+            self._agent_id = _str_or_none(asset.id)
+            self._agent_mrn = _str_or_none(asset.mrn)
 
 
 def _capture_transcript_path(state: _RunState, input_data: BaseHookInput) -> None:

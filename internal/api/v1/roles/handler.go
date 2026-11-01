@@ -48,6 +48,22 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			// Checking a role document before saving it is part of editing roles, so it needs the same permission.
+			Path:    "/api/v1/roles/validate",
+			Method:  http.MethodPost,
+			Handler: h.validateRole,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				authMiddleware, requireManage,
+			},
+		},
+		{
+			// The schema says what a role document may contain and nothing about this instance, so any signed-in caller may read it.
+			Path:       "/api/v1/roles/schema",
+			Method:     http.MethodGet,
+			Handler:    h.roleSchema,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{authMiddleware},
+		},
+		{
 			Path:    "/api/v1/roles/{id}",
 			Method:  http.MethodGet,
 			Handler: h.getRole,

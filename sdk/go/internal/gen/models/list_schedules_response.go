@@ -24,6 +24,9 @@ type ListSchedulesResponse struct {
 	// offset
 	Offset int64 `json:"offset,omitempty"`
 
+	// PluginCounts counts every pipeline by plugin, whatever the filters, so the plugin gallery can say how many of each are connected.
+	PluginCounts map[string]int64 `json:"plugin_counts,omitempty"`
+
 	// schedules
 	Schedules []*Schedule `json:"schedules"`
 

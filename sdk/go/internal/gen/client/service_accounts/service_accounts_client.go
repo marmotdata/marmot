@@ -104,6 +104,12 @@ type ClientService interface {
 	// PostServiceAccountsIDAPIKeysContext create API key for a service account.
 	PostServiceAccountsIDAPIKeysContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error)
 
+	// PostServiceAccountsIDAPIKeysKeyIDRotate rotate an API key.
+	PostServiceAccountsIDAPIKeysKeyIDRotate(params *PostServiceAccountsIDAPIKeysKeyIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysKeyIDRotateOK, error)
+
+	// PostServiceAccountsIDAPIKeysKeyIDRotateContext rotate an API key.
+	PostServiceAccountsIDAPIKeysKeyIDRotateContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysKeyIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysKeyIDRotateOK, error)
+
 	SetTransport(transport runtime.ContextualTransport)
 }
 
@@ -117,7 +123,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteServiceAccountsIDContext] instead.
 func (a *Client) DeleteServiceAccountsID(params *DeleteServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -184,7 +190,7 @@ func (a *Client) DeleteServiceAccountsIDContext(ctx context.Context, params *Del
 // If you need to pass a specific context, use [Client.DeleteServiceAccountsIDAPIKeysKeyIDContext] instead.
 func (a *Client) DeleteServiceAccountsIDAPIKeysKeyID(params *DeleteServiceAccountsIDAPIKeysKeyIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteServiceAccountsIDAPIKeysKeyIDNoContent, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -251,7 +257,7 @@ func (a *Client) DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx context.Context,
 // If you need to pass a specific context, use [Client.GetServiceAccountsContext] instead.
 func (a *Client) GetServiceAccounts(params *GetServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -318,7 +324,7 @@ func (a *Client) GetServiceAccountsContext(ctx context.Context, params *GetServi
 // If you need to pass a specific context, use [Client.GetServiceAccountsIDContext] instead.
 func (a *Client) GetServiceAccountsID(params *GetServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -385,7 +391,7 @@ func (a *Client) GetServiceAccountsIDContext(ctx context.Context, params *GetSer
 // If you need to pass a specific context, use [Client.GetServiceAccountsIDAPIKeysContext] instead.
 func (a *Client) GetServiceAccountsIDAPIKeys(params *GetServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetServiceAccountsIDAPIKeysOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -452,7 +458,7 @@ func (a *Client) GetServiceAccountsIDAPIKeysContext(ctx context.Context, params 
 // If you need to pass a specific context, use [Client.PatchServiceAccountsIDContext] instead.
 func (a *Client) PatchServiceAccountsID(params *PatchServiceAccountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PatchServiceAccountsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -519,7 +525,7 @@ func (a *Client) PatchServiceAccountsIDContext(ctx context.Context, params *Patc
 // If you need to pass a specific context, use [Client.PostServiceAccountsContext] instead.
 func (a *Client) PostServiceAccounts(params *PostServiceAccountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -586,7 +592,7 @@ func (a *Client) PostServiceAccountsContext(ctx context.Context, params *PostSer
 // If you need to pass a specific context, use [Client.PostServiceAccountsIDAPIKeysContext] instead.
 func (a *Client) PostServiceAccountsIDAPIKeys(params *PostServiceAccountsIDAPIKeysParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -640,6 +646,73 @@ func (a *Client) PostServiceAccountsIDAPIKeysContext(ctx context.Context, params
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postServiceAccountsIDAPIKeys: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostServiceAccountsIDAPIKeysKeyIDRotate rotates an API key.
+//
+// Issue a new secret for a service account API key, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostServiceAccountsIDAPIKeysKeyIDRotateContext] instead.
+func (a *Client) PostServiceAccountsIDAPIKeysKeyIDRotate(params *PostServiceAccountsIDAPIKeysKeyIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysKeyIDRotateOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostServiceAccountsIDAPIKeysKeyIDRotateContext(ctx, params, authInfo, opts...)
+}
+
+// PostServiceAccountsIDAPIKeysKeyIDRotateContext rotates an API key.
+//
+// Issue a new secret for a service account API key, keeping its name and expiry. The old secret stops working at once and the new key is returned only in this response..
+//
+// Do not use the deprecated [PostServiceAccountsIDAPIKeysKeyIDRotateParams.Context] with this method: it would be ignored.
+func (a *Client) PostServiceAccountsIDAPIKeysKeyIDRotateContext(ctx context.Context, params *PostServiceAccountsIDAPIKeysKeyIDRotateParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostServiceAccountsIDAPIKeysKeyIDRotateOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostServiceAccountsIDAPIKeysKeyIDRotateParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postServiceAccountsIDAPIKeysKeyIDRotate",
+		Method:             "POST",
+		PathPattern:        "/api/v1/service-accounts/{id}/api-keys/{keyId}/rotate",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostServiceAccountsIDAPIKeysKeyIDRotateReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostServiceAccountsIDAPIKeysKeyIDRotateOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postServiceAccountsIDAPIKeysKeyIDRotate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -22,12 +22,12 @@ type AssetTypeSummary struct {
 }
 
 // Validate validates this asset type summary
-func (m *AssetTypeSummary) Validate(formats strfmt.Registry) error {
+func (m *AssetTypeSummary) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this asset type summary based on context it is used
-func (m *AssetTypeSummary) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *AssetTypeSummary) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

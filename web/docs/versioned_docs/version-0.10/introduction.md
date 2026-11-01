@@ -15,10 +15,10 @@ Marmot is built so both **humans and agents** can ask that question and get a re
 import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 <CalloutCard
-  title="See Marmot in Action"
-  description="Explore the interface and features with the interactive demo - no installation required."
-  href="https://demo.marmotdata.io"
-  buttonText="Try Live Demo"
+  title="Get Started in Five Minutes"
+  description="Follow the Quick Start Guide to try Marmot out locally."
+  docId="quick-start"
+  buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
 
@@ -64,7 +64,7 @@ Plugins read a source's structure and metadata into PostgreSQL; the data itself 
 <CalloutCard
   title="Building for a regulated environment?"
   description="Run it yourself so nothing leaves your VPC, and read the source to verify exactly what is collected."
-  href="/pricing#contact"
+  href="https://cloud.marmotdata.io/#pricing"
   buttonText="Talk to us"
   variant="secondary"
   icon="mdi:shield-check-outline"

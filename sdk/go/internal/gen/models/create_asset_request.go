@@ -35,6 +35,9 @@ type CreateAssetRequest struct {
 	// Required: true
 	Name *string `json:"name"`
 
+	// Owners are the users and teams to own the asset.
+	Owners []*CreateAssetOwner `json:"owners"`
+
 	// providers
 	// Required: true
 	Providers []string `json:"providers"`
@@ -48,9 +51,15 @@ type CreateAssetRequest struct {
 	// tags
 	Tags []string `json:"tags"`
 
+	// Terms are the IDs of glossary terms to link the asset to.
+	Terms []string `json:"terms"`
+
 	// type
 	// Required: true
 	Type *string `json:"type"`
+
+	// UserDescription is the people-written description, kept apart from the source's own.
+	UserDescription string `json:"user_description,omitempty"`
 }
 
 // Validate validates this create asset request
@@ -66,6 +75,10 @@ func (m *CreateAssetRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateOwners(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -156,6 +169,36 @@ func (m *CreateAssetRequest) validateName(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *CreateAssetRequest) validateOwners(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Owners) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Owners); i++ {
+		if typeutils.IsZero(m.Owners[i]) { // not required
+			continue
+		}
+
+		if m.Owners[i] != nil {
+			if err := m.Owners[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *CreateAssetRequest) validateProviders(formats strfmt.Registry) error {
 
 	if err := validate.Required("providers", "body", m.Providers); err != nil {
@@ -216,6 +259,10 @@ func (m *CreateAssetRequest) ContextValidate(ctx context.Context, formats strfmt
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateOwners(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateSources(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -259,6 +306,35 @@ func (m *CreateAssetRequest) contextValidateExternalLinks(ctx context.Context, f
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("external_links" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *CreateAssetRequest) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Owners); i++ {
+
+		if m.Owners[i] != nil {
+
+			if typeutils.IsZero(m.Owners[i]) { // not required
+				return nil
+			}
+
+			if err := m.Owners[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("owners" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("owners" + "." + strconv.Itoa(i))
 				}
 
 				return err

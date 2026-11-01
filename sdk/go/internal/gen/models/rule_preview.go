@@ -25,12 +25,12 @@ type RulePreview struct {
 }
 
 // Validate validates this rule preview
-func (m *RulePreview) Validate(formats strfmt.Registry) error {
+func (m *RulePreview) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this rule preview based on context it is used
-func (m *RulePreview) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *RulePreview) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

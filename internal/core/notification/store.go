@@ -20,6 +20,7 @@ type Repository interface {
 	ListWithCursor(ctx context.Context, filter NotificationFilter) (*ListResult, error)
 	GetSummary(ctx context.Context, userID string) (*NotificationSummary, error)
 	MarkAsRead(ctx context.Context, id string) error
+	MarkAsUnread(ctx context.Context, id string) error
 	MarkAllAsRead(ctx context.Context, userID string) error
 	MarkAllAsReadChunked(ctx context.Context, userID string, chunkSize int) error
 	Delete(ctx context.Context, id string) error
@@ -27,6 +28,9 @@ type Repository interface {
 	DeleteOlderThan(ctx context.Context, before time.Time) (int64, error)
 	DeleteReadOlderThan(ctx context.Context, before time.Time) (int64, error)
 	EnforcePerUserLimit(ctx context.Context, maxPerUser int) (int64, error)
+	ClaimOnce(ctx context.Context, key string) (bool, error)
+	ReleaseClaim(ctx context.Context, key string) error
+	DeleteClaimsOlderThan(ctx context.Context, before time.Time) (int64, error)
 }
 
 // PostgresRepository implements Repository for PostgreSQL.
@@ -338,6 +342,16 @@ func (r *PostgresRepository) MarkAsRead(ctx context.Context, id string) error {
 	return nil
 }
 
+// MarkAsUnread clears read_at too, so read-retention pruning stops counting from the earlier read.
+func (r *PostgresRepository) MarkAsUnread(ctx context.Context, id string) error {
+	query := `UPDATE notifications SET read = FALSE, read_at = NULL WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("marking notification as unread: %w", err)
+	}
+	return nil
+}
+
 // MarkAllAsRead marks all notifications for a user as read.
 func (r *PostgresRepository) MarkAllAsRead(ctx context.Context, userID string) error {
 	query := `UPDATE notifications SET read = TRUE, read_at = NOW() WHERE user_id = $1 AND read = FALSE`
@@ -435,6 +449,32 @@ func (r *PostgresRepository) EnforcePerUserLimit(ctx context.Context, maxPerUser
 	result, err := r.db.Exec(ctx, query, maxPerUser)
 	if err != nil {
 		return 0, fmt.Errorf("enforcing per-user notification limit: %w", err)
+	}
+	return result.RowsAffected(), nil
+}
+
+// ClaimOnce records key and reports whether this call was the first to do so.
+func (r *PostgresRepository) ClaimOnce(ctx context.Context, key string) (bool, error) {
+	result, err := r.db.Exec(ctx, `INSERT INTO notification_claims (key) VALUES ($1) ON CONFLICT (key) DO NOTHING`, key)
+	if err != nil {
+		return false, fmt.Errorf("claiming notification key: %w", err)
+	}
+	return result.RowsAffected() == 1, nil
+}
+
+// ReleaseClaim forgets key so a notice that failed to send is tried again.
+func (r *PostgresRepository) ReleaseClaim(ctx context.Context, key string) error {
+	if _, err := r.db.Exec(ctx, `DELETE FROM notification_claims WHERE key = $1`, key); err != nil {
+		return fmt.Errorf("releasing notification key: %w", err)
+	}
+	return nil
+}
+
+// DeleteClaimsOlderThan forgets keys claimed before the given time.
+func (r *PostgresRepository) DeleteClaimsOlderThan(ctx context.Context, before time.Time) (int64, error) {
+	result, err := r.db.Exec(ctx, `DELETE FROM notification_claims WHERE created_at < $1`, before)
+	if err != nil {
+		return 0, fmt.Errorf("deleting old notification claims: %w", err)
 	}
 	return result.RowsAffected(), nil
 }

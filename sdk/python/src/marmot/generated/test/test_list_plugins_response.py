@@ -35,39 +35,28 @@ class TestListPluginsResponse(unittest.TestCase):
             return ListPluginsResponse(
                 loading = True,
                 plugins = [
-                    marmot.generated.models.pluginsdk/meta.pluginsdk.Meta(
+                    marmot.generated.models.plugin_info.PluginInfo(
+                        asset_schemas = [
+                            marmot.generated.models.pluginsdk/asset_schema.pluginsdk.AssetSchema(
+                                description = '',
+                                display_name = '',
+                                fields = [
+                                    marmot.generated.models.pluginsdk/asset_field.pluginsdk.AssetField(
+                                        description = '',
+                                        name = '',
+                                        type = '', )
+                                    ],
+                                struct_name = '', )
+                            ],
+                        catalogs = [
+                            ''
+                            ],
                         category = '',
                         config_spec = [
                             marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
                                 default = null,
                                 description = '',
-                                fields = [
-                                    marmot.generated.models.pluginsdk/config_field.pluginsdk.ConfigField(
-                                        default = null,
-                                        description = '',
-                                        hidden = True,
-                                        is_array = True,
-                                        label = '',
-                                        name = '',
-                                        options = [
-                                            marmot.generated.models.pluginsdk/field_option.pluginsdk.FieldOption(
-                                                label = '',
-                                                value = '', )
-                                            ],
-                                        placeholder = '',
-                                        required = True,
-                                        sensitive = True,
-                                        show_when = marmot.generated.models.pluginsdk/show_when.pluginsdk.ShowWhen(
-                                            field = '',
-                                            value = '', ),
-                                        type = 'string',
-                                        validation = marmot.generated.models.pluginsdk/validation.pluginsdk.Validation(
-                                            max = 56,
-                                            max_len = 56,
-                                            min = 56,
-                                            min_len = 56,
-                                            pattern = '', ), )
-                                    ],
+                                group = '',
                                 hidden = True,
                                 is_array = True,
                                 label = '',
@@ -97,9 +86,13 @@ class TestListPluginsResponse(unittest.TestCase):
                             ],
                         icon = '',
                         id = '',
+                        marmot_version = '',
                         name = '',
+                        produces_lineage = True,
+                        protocol_version = 56,
                         status = '',
-                        supports_data_preview = True, )
+                        supports_data_preview = True,
+                        supports_query = True, )
                     ]
             )
         else:

@@ -28,12 +28,12 @@ type UpdateServiceAccountRequest struct {
 }
 
 // Validate validates this update service account request
-func (m *UpdateServiceAccountRequest) Validate(formats strfmt.Registry) error {
+func (m *UpdateServiceAccountRequest) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this update service account request based on context it is used
-func (m *UpdateServiceAccountRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateServiceAccountRequest) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

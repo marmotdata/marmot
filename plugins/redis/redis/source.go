@@ -17,14 +17,19 @@ import (
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "redis",
-		Name:        "Redis",
-		Description: "Discover databases from Redis instances",
-		Icon:        "redis",
-		Category:    "database",
-		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		ID:            "redis",
+		MarmotVersion: ">=0.12.0",
+		Name:          "Redis",
+		Description:   "Discover databases from Redis instances",
+		Icon:          "redis",
+		Category:      "database",
+		Status:        "experimental",
+		Features:      []string{"Assets"},
+		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(RedisDatabaseFields{}, "Database",
+				"RedisDatabaseFields defines metadata fields for Redis databases"),
+		},
 	}
 }
 
@@ -38,11 +43,11 @@ type Config struct {
 	Password    string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
 	Username    string `json:"username,omitempty" description:"Username for ACL authentication"`
 	DB          int    `json:"db,omitempty" description:"Default database number" default:"0" validate:"omitempty,min=0,max=15"`
-	TLS         bool   `json:"tls,omitempty" description:"Enable TLS connection"`
-	TLSInsecure bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
+	TLS         bool   `json:"tls,omitempty" group:"Authentication" description:"Enable TLS connection" default:"true"`
+	TLSInsecure bool   `json:"tls_insecure,omitempty" group:"Authentication" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 
 	// Discovery options
-	DiscoverAllDatabases bool `json:"discover_all_databases" description:"Discover all databases with keys (db0-db15)" default:"true"`
+	DiscoverAllDatabases bool `json:"discover_all_databases" group:"Discovery" description:"Discover all databases with keys (db0-db15)" default:"true"`
 }
 
 // Example configuration for the plugin

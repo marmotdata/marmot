@@ -10,10 +10,10 @@ import (
 var marmotLogoSVG string
 
 type callbackPageData struct {
-	Title    string
-	Message  string
-	Logo     template.HTML
-	IsError  bool
+	Title   string
+	Message string
+	Logo    template.HTML
+	IsError bool
 }
 
 var callbackPageTmpl = template.Must(template.New("cb").Parse(`<!DOCTYPE html>

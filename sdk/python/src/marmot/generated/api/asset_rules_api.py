@@ -16,6 +16,7 @@ from pydantic import Field, StrictFloat, StrictInt, StrictStr, validate_call
 from marmot.generated.api_client import ApiClient, RequestSerialized
 from marmot.generated.api_response import ApiResponse
 from marmot.generated.models.asset_rule import AssetRule
+from marmot.generated.models.asset_rule_assets_response import AssetRuleAssetsResponse
 from marmot.generated.models.asset_rule_list_result import AssetRuleListResult
 from marmot.generated.models.create_asset_rule_request import CreateAssetRuleRequest
 from marmot.generated.models.preview_request import PreviewRequest
@@ -351,6 +352,7 @@ class AssetRulesApi:
     async def get_asset_rules_assets_id(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -360,13 +362,15 @@ class AssetRulesApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, object]:
+    ) -> AssetRuleAssetsResponse:
         """Get assets matched by a rule
 
-        Get the list of asset IDs matched by an asset rule
+        Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it.
 
         :param id: Asset rule ID (required)
         :type id: str
+        :param q: Match the asset name or MRN
+        :type q: str
         :param limit: Number of items to return
         :type limit: int
         :param offset: Number of items to skip
@@ -395,6 +399,7 @@ class AssetRulesApi:
 
         _param = self._get_asset_rules_assets_id_serialize(
             id=id,
+            q=q,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -404,7 +409,7 @@ class AssetRulesApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
+            "200": "AssetRuleAssetsResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -419,6 +424,7 @@ class AssetRulesApi:
     async def get_asset_rules_assets_id_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -428,13 +434,15 @@ class AssetRulesApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, object]]:
+    ) -> ApiResponse[AssetRuleAssetsResponse]:
         """Get assets matched by a rule
 
-        Get the list of asset IDs matched by an asset rule
+        Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it.
 
         :param id: Asset rule ID (required)
         :type id: str
+        :param q: Match the asset name or MRN
+        :type q: str
         :param limit: Number of items to return
         :type limit: int
         :param offset: Number of items to skip
@@ -463,6 +471,7 @@ class AssetRulesApi:
 
         _param = self._get_asset_rules_assets_id_serialize(
             id=id,
+            q=q,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -472,7 +481,7 @@ class AssetRulesApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
+            "200": "AssetRuleAssetsResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -487,6 +496,7 @@ class AssetRulesApi:
     async def get_asset_rules_assets_id_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -499,10 +509,12 @@ class AssetRulesApi:
     ) -> RESTResponseType:
         """Get assets matched by a rule
 
-        Get the list of asset IDs matched by an asset rule
+        Page through the assets an asset rule applies to, by name, with each asset's name, MRN, type and providers. q narrows the page to assets whose name or MRN contains it.
 
         :param id: Asset rule ID (required)
         :type id: str
+        :param q: Match the asset name or MRN
+        :type q: str
         :param limit: Number of items to return
         :type limit: int
         :param offset: Number of items to skip
@@ -531,6 +543,7 @@ class AssetRulesApi:
 
         _param = self._get_asset_rules_assets_id_serialize(
             id=id,
+            q=q,
             limit=limit,
             offset=offset,
             _request_auth=_request_auth,
@@ -540,7 +553,7 @@ class AssetRulesApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "Dict[str, object]",
+            "200": "AssetRuleAssetsResponse",
             "404": "ErrorResponse",
             "500": "ErrorResponse",
         }
@@ -551,6 +564,7 @@ class AssetRulesApi:
     def get_asset_rules_assets_id_sync(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -560,7 +574,7 @@ class AssetRulesApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> dict[str, object]:
+    ) -> AssetRuleAssetsResponse:
         """Get assets matched by a rule (synchronous)
 
         Synchronous variant of :meth:`get_asset_rules_assets_id`. It calls the asynchronous
@@ -569,6 +583,7 @@ class AssetRulesApi:
         return run_sync(
             self.get_asset_rules_assets_id(
                 id=id,
+                q=q,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -583,6 +598,7 @@ class AssetRulesApi:
     def get_asset_rules_assets_id_sync_with_http_info(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -592,7 +608,7 @@ class AssetRulesApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[dict[str, object]]:
+    ) -> ApiResponse[AssetRuleAssetsResponse]:
         """Get assets matched by a rule (synchronous)
 
         Synchronous variant of :meth:`get_asset_rules_assets_id_with_http_info`. It calls the
@@ -601,6 +617,7 @@ class AssetRulesApi:
         return run_sync(
             self.get_asset_rules_assets_id_with_http_info(
                 id=id,
+                q=q,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -615,6 +632,7 @@ class AssetRulesApi:
     def get_asset_rules_assets_id_sync_without_preload_content(
         self,
         id: Annotated[StrictStr, Field(description="Asset rule ID")],
+        q: Annotated[StrictStr | None, Field(description="Match the asset name or MRN")] = None,
         limit: Annotated[StrictInt | None, Field(description="Number of items to return")] = None,
         offset: Annotated[StrictInt | None, Field(description="Number of items to skip")] = None,
         _request_timeout: None
@@ -633,6 +651,7 @@ class AssetRulesApi:
         return run_sync(
             self.get_asset_rules_assets_id_without_preload_content(
                 id=id,
+                q=q,
                 limit=limit,
                 offset=offset,
                 _request_timeout=_request_timeout,
@@ -646,6 +665,7 @@ class AssetRulesApi:
     def _get_asset_rules_assets_id_serialize(
         self,
         id,
+        q,
         limit,
         offset,
         _request_auth,
@@ -669,6 +689,9 @@ class AssetRulesApi:
         if id is not None:
             _path_params["id"] = id
         # process the query parameters
+        if q is not None:
+            _query_params.append(("q", q))
+
         if limit is not None:
             _query_params.append(("limit", limit))
 

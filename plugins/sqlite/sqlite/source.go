@@ -25,25 +25,34 @@ type Config struct {
 
 	Path string `json:"path" description:"Path to the SQLite database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
-	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics       bool `json:"enable_metrics" description:"Whether to include table metrics (row and column counts)" default:"true"`
-	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude SQLite internal tables (sqlite_*)" default:"true"`
+	IncludeColumns      bool `json:"include_columns" group:"Discovery" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics       bool `json:"enable_metrics" group:"Advanced" description:"Whether to include table metrics (row and column counts)" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" group:"Discovery" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" group:"Discovery" description:"Whether to exclude SQLite internal tables (sqlite_*)" default:"true"`
 }
 
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
-		ID:          "sqlite",
-		Name:        "SQLite",
-		Description: "Discover tables, views and foreign key relationships from SQLite database files",
-		Icon:        "sqlite",
-		Category:    "database",
-		Status:      "experimental",
+		ID:            "sqlite",
+		MarmotVersion: ">=0.12.0",
+		Name:          "SQLite",
+		Description:   "Discover tables, views and foreign key relationships from SQLite database files",
+		Icon:          "sqlite",
+		Category:      "database",
+		Status:        "experimental",
 		// Discover emits FOREIGN_KEY lineage edges, so the manifest declares
 		// Lineage alongside Assets.
 		Features:   []string{"Assets", "Lineage"},
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
+		AssetSchemas: []pluginsdk.AssetSchema{
+			pluginsdk.AssetSchemaOf(SQLiteFields{}, "SQLite",
+				"The metadata fields the SQLite plugin emits for table and view assets."),
+			pluginsdk.AssetSchemaOf(SQLiteColumnFields{}, "Column",
+				"The per-column fields embedded in an asset's schema."),
+			pluginsdk.AssetSchemaOf(SQLiteForeignKeyFields{}, "Foreign Key",
+				"The fields of a discovered foreign key relationship."),
+		},
 	}
 }
 

@@ -14,6 +14,9 @@ import (
 // swagger:model Schedule
 type Schedule struct {
 
+	// AssetCount counts the assets the pipeline's latest successful run cataloged that are still in the catalog; it is only filled in when schedules are read one at a time or listed.
+	AssetCount int64 `json:"asset_count,omitempty"`
+
 	// config
 	Config any `json:"config,omitempty"`
 
@@ -26,11 +29,17 @@ type Schedule struct {
 	// cron expression
 	CronExpression string `json:"cron_expression,omitempty"`
 
+	// Description says what the pipeline catalogs, in the words of whoever set it up.
+	Description string `json:"description,omitempty"`
+
 	// enabled
 	Enabled bool `json:"enabled,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
+
+	// ingest on query
+	IngestOnQuery bool `json:"ingest_on_query,omitempty"`
 
 	// last run at
 	LastRunAt string `json:"last_run_at,omitempty"`
@@ -47,20 +56,38 @@ type Schedule struct {
 	// next run at
 	NextRunAt string `json:"next_run_at,omitempty"`
 
+	// owner id
+	OwnerID string `json:"owner_id,omitempty"`
+
+	// owner name
+	OwnerName string `json:"owner_name,omitempty"`
+
+	// OwnerType is "user" or "team" and names, with OwnerID, who is told when a run fails; both are nil for an unowned pipeline.
+	OwnerType string `json:"owner_type,omitempty"`
+
 	// plugin id
 	PluginID string `json:"plugin_id,omitempty"`
+
+	// queryable
+	Queryable bool `json:"queryable,omitempty"`
+
+	// served by id
+	ServedByID string `json:"served_by_id,omitempty"`
+
+	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
+	ServedByType string `json:"served_by_type,omitempty"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
 // Validate validates this schedule
-func (m *Schedule) Validate(formats strfmt.Registry) error {
+func (m *Schedule) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this schedule based on context it is used
-func (m *Schedule) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *Schedule) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

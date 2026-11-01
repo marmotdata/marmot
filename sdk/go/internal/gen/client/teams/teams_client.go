@@ -129,7 +129,7 @@ type ClientService interface {
 // If you need to pass a specific context, use [Client.DeleteTeamsIDContext] instead.
 func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -196,7 +196,7 @@ func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsID
 // If you need to pass a specific context, use [Client.DeleteTeamsIDMembersUserIDContext] instead.
 func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -263,7 +263,7 @@ func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *
 // If you need to pass a specific context, use [Client.GetTeamsContext] instead.
 func (a *Client) GetTeams(params *GetTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -330,7 +330,7 @@ func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, au
 // If you need to pass a specific context, use [Client.GetTeamsIDContext] instead.
 func (a *Client) GetTeamsID(params *GetTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -397,7 +397,7 @@ func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams
 // If you need to pass a specific context, use [Client.GetTeamsIDMembersContext] instead.
 func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -464,7 +464,7 @@ func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsI
 // If you need to pass a specific context, use [Client.PostTeamsContext] instead.
 func (a *Client) PostTeams(params *PostTeamsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -531,7 +531,7 @@ func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, 
 // If you need to pass a specific context, use [Client.PostTeamsIDMembersContext] instead.
 func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -598,7 +598,7 @@ func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeam
 // If you need to pass a specific context, use [Client.PostTeamsIDMembersUserIDConvertToManualContext] instead.
 func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -665,7 +665,7 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Cont
 // If you need to pass a specific context, use [Client.PutTeamsIDContext] instead.
 func (a *Client) PutTeamsID(params *PutTeamsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()
@@ -732,7 +732,7 @@ func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams
 // If you need to pass a specific context, use [Client.PutTeamsIDMembersUserIDRoleContext] instead.
 func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
 	var ctx context.Context
-	if params.inner.ctx != nil {
+	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
 	} else {
 		ctx = context.Background()

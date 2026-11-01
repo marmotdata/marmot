@@ -103,9 +103,12 @@ export async function previewAssetRule(input: {
 export async function getAssetRuleAssets(
 	id: string,
 	offset: number = 0,
-	limit: number = 50
+	limit: number = 50,
+	query: string = ''
 ): Promise<RuleAssetsResponse> {
-	const response = await fetchApi(`/asset-rules/assets/${id}?offset=${offset}&limit=${limit}`);
+	const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+	if (query.trim()) params.set('q', query.trim());
+	const response = await fetchApi(`/asset-rules/assets/${id}?${params.toString()}`);
 	if (!response.ok) {
 		throw new Error('Failed to get asset rule assets');
 	}

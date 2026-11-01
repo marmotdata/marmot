@@ -16,9 +16,9 @@ import (
 
 // RFC 8693 grant type and token type identifiers.
 const (
-	grantTypeTokenExchange = "urn:ietf:params:oauth:grant-type:token-exchange"  //nolint:gosec // OAuth URI, not a credential
-	tokenTypeIDToken       = "urn:ietf:params:oauth:token-type:id_token"        //nolint:gosec // OAuth URI, not a credential
-	tokenTypeAccessToken   = "urn:ietf:params:oauth:token-type:access_token"    //nolint:gosec // OAuth URI, not a credential
+	grantTypeTokenExchange = "urn:ietf:params:oauth:grant-type:token-exchange" //nolint:gosec // OAuth URI, not a credential
+	tokenTypeIDToken       = "urn:ietf:params:oauth:token-type:id_token"       //nolint:gosec // OAuth URI, not a credential
+	tokenTypeAccessToken   = "urn:ietf:params:oauth:token-type:access_token"   //nolint:gosec // OAuth URI, not a credential
 )
 
 // tokenExchangeResponse is the RFC 8693 Section 2.2.1 token response.
@@ -69,6 +69,12 @@ func (h *Handler) handleToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Every client is public with token_endpoint_auth_method "none", so assertion-based client authentication is refused here rather than letting fosite parse an untrusted JWT before it rejects the client.
+	if r.Form.Has("client_assertion") || r.Form.Has("client_assertion_type") {
+		respondOAuthError(w, http.StatusUnauthorized, "invalid_client", "client assertions are not supported")
+		return
+	}
+
 	grantType := r.FormValue("grant_type")
 	switch grantType {
 	case "authorization_code":
@@ -109,11 +115,39 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	token, err := h.authService.GenerateToken(ctx, usr, nil)
+	// The code outlives the sign-in that issued it, so a sign-out-all in between must still stop the exchange
+	if err := coreauth.CheckUserSession(usr, mSession.AuthenticatedAt); err != nil {
+		respondOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization is no longer valid")
+		return
+	}
+
+	clientID := accessReq.GetClient().GetID()
+	var token string
+	if grants := h.oauthProvider.Grants; grants != nil {
+		// The grant is recorded before the token exists, so a token is never issued that the account page cannot show or revoke.
+		grantID, gerr := grants.RecordGrant(ctx, usr.ID, marmotOAuth2.Grant{
+			ClientID:    clientID,
+			ClientName:  h.oauthProvider.Store.ClientName(ctx, clientID),
+			RedirectURI: accessReq.GetRequestForm().Get("redirect_uri"),
+			Scopes:      []string(accessReq.GetGrantedScopes()),
+		})
+		if gerr != nil {
+			log.Error().Err(gerr).Str("client_id", clientID).Msg("Failed to record OAuth grant")
+			respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to record authorisation")
+			return
+		}
+		token, err = h.authService.GenerateTokenForClient(ctx, usr, clientID, grantID)
+	} else {
+		token, err = h.authService.GenerateToken(ctx, usr, nil)
+	}
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate token")
 		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
 		return
+	}
+
+	if err := h.oauthProvider.Store.KeepClientAlive(ctx, clientID); err != nil {
+		log.Error().Err(err).Msg("Failed to extend OAuth client lease")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -122,7 +156,7 @@ func (h *Handler) handleAuthorizationCodeGrant(w http.ResponseWriter, r *http.Re
 	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"access_token": token,
 		"token_type":   "Bearer",
-		"expires_in":   86400,
+		"expires_in":   int(coreauth.TokenTTL.Seconds()),
 	})
 }
 
@@ -201,5 +235,6 @@ func (h *Handler) respondWithMarmotToken(w http.ResponseWriter, r *http.Request,
 		AccessToken:     token,
 		IssuedTokenType: tokenTypeAccessToken,
 		TokenType:       "Bearer",
+		ExpiresIn:       int(coreauth.TokenTTL.Seconds()),
 	})
 }

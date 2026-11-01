@@ -28,12 +28,12 @@ type DestroyRunResponse struct {
 }
 
 // Validate validates this destroy run response
-func (m *DestroyRunResponse) Validate(formats strfmt.Registry) error {
+func (m *DestroyRunResponse) Validate(_ strfmt.Registry) error {
 	return nil
 }
 
 // ContextValidate validates this destroy run response based on context it is used
-func (m *DestroyRunResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *DestroyRunResponse) ContextValidate(_ context.Context, _ strfmt.Registry) error {
 	return nil
 }
 

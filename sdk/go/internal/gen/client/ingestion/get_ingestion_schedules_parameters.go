@@ -78,6 +78,16 @@ type GetIngestionSchedulesParams struct {
 	// Offset
 	Offset *int64
 
+	// Search.
+	//
+	// Match pipeline name or plugin, case-insensitively
+	Search *string
+
+	// Status.
+	//
+	// Latest run status: failed, succeeded, cancelled, running (queued or under way) or never (no runs)
+	Status *string
+
 	HTTPClient *http.Client
 
 	inner innerParams
@@ -168,6 +178,28 @@ func (o *GetIngestionSchedulesParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
+// WithSearch adds the search to the get ingestion schedules params.
+func (o *GetIngestionSchedulesParams) WithSearch(search *string) *GetIngestionSchedulesParams {
+	o.SetSearch(search)
+	return o
+}
+
+// SetSearch adds the search to the get ingestion schedules params.
+func (o *GetIngestionSchedulesParams) SetSearch(search *string) {
+	o.Search = search
+}
+
+// WithStatus adds the status to the get ingestion schedules params.
+func (o *GetIngestionSchedulesParams) WithStatus(status *string) *GetIngestionSchedulesParams {
+	o.SetStatus(status)
+	return o
+}
+
+// SetStatus adds the status to the get ingestion schedules params.
+func (o *GetIngestionSchedulesParams) SetStatus(status *string) {
+	o.Status = status
+}
+
 // WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetIngestionSchedulesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 	if err := r.SetTimeout(o.inner.timeout); err != nil {
@@ -221,6 +253,40 @@ func (o *GetIngestionSchedulesParams) WriteToRequest(r runtime.ClientRequest, re
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Search != nil {
+
+		// query param search
+		var qrSearch string
+
+		if o.Search != nil {
+			qrSearch = *o.Search
+		}
+		qSearch := qrSearch
+		if qSearch != "" {
+
+			if err := r.SetQueryParam("search", qSearch); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Status != nil {
+
+		// query param status
+		var qrStatus string
+
+		if o.Status != nil {
+			qrStatus = *o.Status
+		}
+		qStatus := qrStatus
+		if qStatus != "" {
+
+			if err := r.SetQueryParam("status", qStatus); err != nil {
 				return err
 			}
 		}

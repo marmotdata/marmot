@@ -2,7 +2,9 @@ package runs
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -24,14 +26,15 @@ const (
 )
 
 type Scheduler struct {
-	service       *ScheduleService
-	runsService   Service
-	encryptor     *crypto.Encryptor
-	registry      *plugin.Registry
-	loadState     *plugin.LoadState
-	db            *pgxpool.Pool
-	linkAssets    bool
-	pluginInstall *install.Options
+	service        *ScheduleService
+	runsService    Service
+	encryptor      *crypto.Encryptor
+	registry       *plugin.Registry
+	loadState      *plugin.LoadState
+	db             *pgxpool.Pool
+	linkAssets     bool
+	pluginInstall  *install.Options
+	pluginVersions PluginVersions
 
 	maxWorkers        int
 	schedulerInterval time.Duration
@@ -43,6 +46,9 @@ type Scheduler struct {
 	activeWorkers atomic.Int32
 
 	schedulerTask *background.SingletonTask
+
+	// workerID names this server on the runs it claims, which the run page shows as the worker.
+	workerID string
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -56,6 +62,8 @@ type SchedulerConfig struct {
 	ClaimExpiry       time.Duration
 	LinkAssets        bool
 	DB                *pgxpool.Pool
+	// PluginVersions, when set, moves a plugin to the version the cluster chose before a job runs it.
+	PluginVersions PluginVersions
 	// PluginInstall configures installing a core plugin on demand when
 	// a job needs one that is not loaded. Nil disables it.
 	PluginInstall *install.Options
@@ -98,13 +106,24 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		db:                config.DB,
 		linkAssets:        config.LinkAssets,
 		pluginInstall:     config.PluginInstall,
+		pluginVersions:    config.PluginVersions,
 		maxWorkers:        maxWorkers,
 		schedulerInterval: schedulerInterval,
 		leaseExpiry:       leaseExpiry,
 		claimExpiry:       claimExpiry,
+		workerID:          schedulerWorkerID(),
 		jobQueue:          make(chan *JobRun, 100),
 		semaphore:         make(chan struct{}, maxWorkers),
 	}
+}
+
+// schedulerWorkerID names this server by host, which is what an operator recognises when a run shows where it ran.
+func schedulerWorkerID() string {
+	host, err := os.Hostname()
+	if err != nil || host == "" {
+		return "marmot"
+	}
+	return host
 }
 
 func (s *Scheduler) Start(ctx context.Context) error {
@@ -201,6 +220,8 @@ func (s *Scheduler) jobDispatcher() {
 				}()
 
 				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry, s.linkAssets, s.pluginInstall)
+				worker.versions = s.pluginVersions
+				worker.id = s.workerID
 				if err := worker.executeJob(s.ctx, j); err != nil {
 					log.Error().
 						Err(err).
@@ -317,12 +338,19 @@ func (s *Scheduler) leaseCleanupLoop() {
 }
 
 type worker struct {
+	id            string
 	service       *ScheduleService
 	runsService   Service
 	encryptor     *crypto.Encryptor
 	registry      *plugin.Registry
 	linkAssets    bool
 	pluginInstall *install.Options
+	versions      PluginVersions
+}
+
+// PluginVersions keeps a plugin at the version the cluster chose for it.
+type PluginVersions interface {
+	EnsureCurrent(ctx context.Context, pluginID string) error
 }
 
 func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, linkAssets bool, pluginInstall *install.Options) *worker {
@@ -356,6 +384,16 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("job run has no schedule_id")
 	}
 
+	// The poller hands the same pending run over again until it starts, and every replica polls, so only the worker whose claim lands runs it.
+	if w.id != "" {
+		if _, err := w.service.ClaimJobRun(ctx, run.ID, w.id); err != nil {
+			if errors.Is(err, ErrJobRunNotClaimable) {
+				return nil
+			}
+			return fmt.Errorf("claiming job run: %w", err)
+		}
+	}
+
 	log.Info().
 		Str("run_id", run.ID).
 		Str("schedule_id", *run.ScheduleID).
@@ -378,6 +416,13 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("decrypting config: %w", err)
 	}
 
+	w.markPhase(ctx, run.ID, JobPhaseConnecting)
+	if w.versions != nil {
+		// A failure here leaves the plugin on the version it has, which beats failing the run; the settings page shows the error.
+		if err := w.versions.EnsureCurrent(ctx, schedule.PluginID); err != nil {
+			log.Warn().Err(err).Str("plugin", schedule.PluginID).Msg("Could not move plugin to its chosen version, running the loaded version")
+		}
+	}
 	source, err := w.registry.GetSource(schedule.PluginID)
 	if err != nil && w.pluginInstall != nil {
 		source, err = w.installMissingPlugin(ctx, schedule.PluginID)
@@ -407,6 +452,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		log.Warn().Err(err).Msg("Failed to set plugin run ID on job run")
 	}
 
+	w.markPhase(ctx, run.ID, JobPhaseExtracting)
 	result, err := source.Discover(ctx, validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Plugin discovery failed: %v", err)
@@ -498,6 +544,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		})
 	}
 
+	w.markPhase(ctx, run.ID, JobPhaseWriting)
 	response, err := w.runsService.ProcessEntities(
 		ctx,
 		pluginRun.RunID,
@@ -619,6 +666,13 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		Msg("Job run completed successfully")
 
 	return nil
+}
+
+// markPhase records a phase the run reached; a failure only loses the timestamp, so it never stops the run.
+func (w *worker) markPhase(ctx context.Context, runID, phase string) {
+	if err := w.service.MarkJobRunPhase(ctx, runID, phase); err != nil {
+		log.Warn().Err(err).Str("run_id", runID).Str("phase", phase).Msg("Failed to record job run phase")
+	}
 }
 
 func convertAssetExternalLinks(links []asset.ExternalLink) []map[string]string {

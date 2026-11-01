@@ -12,8 +12,11 @@ import (
 type TableConfig struct {
 	TypeColumn     string // "type" for assets, "asset_type" for search_index
 	ProviderColumn string // "providers" for both
+	TagsColumn     string // "tags" for both
 	NameColumn     string // "name" for both
 	MetadataColumn string // "metadata" for both
+	// IDColumn identifies the asset in the row, so @term can look up the asset's glossary links.
+	IDColumn string // "assets.id" for assets, "search_index.entity_id" for search_index
 }
 
 // DefaultAssetsConfig returns column config for the assets table
@@ -21,8 +24,10 @@ func DefaultAssetsConfig() TableConfig {
 	return TableConfig{
 		TypeColumn:     "type",
 		ProviderColumn: "providers",
+		TagsColumn:     "tags",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
+		IDColumn:       "assets.id",
 	}
 }
 
@@ -31,8 +36,10 @@ func SearchIndexConfig() TableConfig {
 	return TableConfig{
 		TypeColumn:     "asset_type",
 		ProviderColumn: "providers",
+		TagsColumn:     "tags",
 		NameColumn:     "name",
 		MetadataColumn: "metadata",
+		IDColumn:       "search_index.entity_id",
 	}
 }
 
@@ -270,6 +277,14 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		return condition, params, paramCount, nil
 	}
 
+	if filter.FieldType == FieldTerm {
+		return b.termCondition(filter, paramCount)
+	}
+
+	if filter.FieldType == FieldTag {
+		return b.tagCondition(filter, paramCount)
+	}
+
 	// Build column reference based on field type
 	var columnRef string
 	switch filter.FieldType {
@@ -316,7 +331,11 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		// Note: nested BooleanQuery is handled before the increment above
 		switch {
 		case filter.FieldType == FieldProvider:
-			condition = fmt.Sprintf("%s && ARRAY[$%d]::text[]", columnRef, paramCount)
+			// Match case-insensitively, as @type and @name do. An array overlap
+			// against ARRAY[$n] is index-friendly but exact, so `@provider:
+			// "kafka"` missed assets catalogued as "Kafka" and the documented
+			// examples returned nothing.
+			condition = fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE lower(elem) = lower($%d))", columnRef, paramCount)
 			params = append(params, filter.Value)
 		case filter.FieldType == FieldAssetType:
 			// Use lower() for case-insensitive match with functional index
@@ -354,8 +373,9 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 	case OpNotEquals:
 		switch {
 		case filter.FieldType == FieldProvider:
-			// Use negated array overlap for GIN index compatibility
-			condition = fmt.Sprintf("NOT (%s && ARRAY[$%d]::text[])", columnRef, paramCount)
+			// Negation of the case-insensitive match above, so `@provider !=
+			// "kafka"` excludes "Kafka" too.
+			condition = fmt.Sprintf("NOT EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE lower(elem) = lower($%d))", columnRef, paramCount)
 			params = append(params, filter.Value)
 		case filter.FieldType == FieldAssetType:
 			// Use lower() for case-insensitive not-equal with null handling
@@ -488,4 +508,48 @@ func parseJSONValue(s string) interface{} {
 	}
 	// Return as string
 	return s
+}
+
+// termCondition matches rows whose asset is linked to a glossary term with the given name, exactly or by wildcard, ignoring case and deleted terms. Rows that are not assets never match because they have no glossary links.
+func (b *Builder) termCondition(filter Filter, paramCount int) (string, []interface{}, int, error) {
+	if b.config.IDColumn == "" {
+		return "", nil, paramCount, fmt.Errorf("@term is not supported here")
+	}
+	value := fmt.Sprintf("%v", filter.Value)
+	var match string
+	switch filter.Operator {
+	case OpEquals:
+		match = fmt.Sprintf("lower(gt.name) = lower($%d)", paramCount)
+	case OpWildcard:
+		match = fmt.Sprintf("gt.name ILIKE $%d", paramCount)
+		value = strings.ReplaceAll(value, "*", "%")
+	default:
+		return "", nil, paramCount, fmt.Errorf("operator %s is not supported for @term", filter.Operator)
+	}
+	condition := fmt.Sprintf(
+		"EXISTS (SELECT 1 FROM asset_terms at JOIN glossary_terms gt ON gt.id = at.glossary_term_id WHERE at.asset_id::text = %s::text AND gt.deleted_at IS NULL AND %s)",
+		b.config.IDColumn, match,
+	)
+	return condition, []interface{}{value}, paramCount, nil
+}
+
+// tagCondition matches rows carrying a tag, ignoring case like @provider, with * wildcards and partial matches checked against each tag in turn.
+func (b *Builder) tagCondition(filter Filter, paramCount int) (string, []interface{}, int, error) {
+	if b.config.TagsColumn == "" {
+		return "", nil, paramCount, fmt.Errorf("@tag is not supported here")
+	}
+	value := fmt.Sprintf("%v", filter.Value)
+	col := b.config.TagsColumn
+	switch filter.Operator {
+	case OpEquals:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE lower(tag) = lower($%d))", col, paramCount), []interface{}{value}, paramCount, nil
+	case OpNotEquals:
+		return fmt.Sprintf("NOT EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE lower(tag) = lower($%d))", col, paramCount), []interface{}{value}, paramCount, nil
+	case OpWildcard:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE tag ILIKE $%d)", col, paramCount), []interface{}{strings.ReplaceAll(value, "*", "%")}, paramCount, nil
+	case OpContains:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS tag WHERE tag ILIKE $%d)", col, paramCount), []interface{}{"%" + value + "%"}, paramCount, nil
+	default:
+		return "", nil, paramCount, fmt.Errorf("operator %s is not supported for @tag", filter.Operator)
+	}
 }

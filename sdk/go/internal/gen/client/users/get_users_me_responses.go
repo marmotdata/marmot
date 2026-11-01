@@ -47,7 +47,7 @@ func NewGetUsersMeOK() *GetUsersMeOK {
 //
 // OK
 type GetUsersMeOK struct {
-	Payload *models.User
+	Payload *models.CurrentUser
 }
 
 // IsSuccess returns true when this get users me o k response has a 2xx status code
@@ -90,13 +90,13 @@ func (o *GetUsersMeOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/users/me][%d] getUsersMeOK %s", 200, payload)
 }
 
-func (o *GetUsersMeOK) GetPayload() *models.User {
+func (o *GetUsersMeOK) GetPayload() *models.CurrentUser {
 	return o.Payload
 }
 
 func (o *GetUsersMeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.User)
+	o.Payload = new(models.CurrentUser)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
