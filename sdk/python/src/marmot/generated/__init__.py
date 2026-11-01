@@ -96,6 +96,7 @@ __all__ = [
     "BatchLineageResult",
     "Bucket",
     "CheckPluginVersionsResponse",
+    "ColumnEdge",
     "CompleteRunRequest",
     "ConnectedApp",
     "ConnectedAppsResponse",
@@ -464,6 +465,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.check_plugin_versions_response import (
         CheckPluginVersionsResponse as CheckPluginVersionsResponse,
     )
+    from marmot.generated.models.column_edge import ColumnEdge as ColumnEdge
     from marmot.generated.models.complete_run_request import (
         CompleteRunRequest as CompleteRunRequest,
     )
@@ -1014,6 +1016,7 @@ from marmot.generated.models.batch_get_assets_response import BatchGetAssetsResp
 from marmot.generated.models.batch_lineage_result import BatchLineageResult as BatchLineageResult
 from marmot.generated.models.bucket import Bucket as Bucket
 from marmot.generated.models.check_plugin_versions_response import CheckPluginVersionsResponse as CheckPluginVersionsResponse
+from marmot.generated.models.column_edge import ColumnEdge as ColumnEdge
 from marmot.generated.models.complete_run_request import CompleteRunRequest as CompleteRunRequest
 from marmot.generated.models.connected_app import ConnectedApp as ConnectedApp
 from marmot.generated.models.connected_apps_response import ConnectedAppsResponse as ConnectedAppsResponse

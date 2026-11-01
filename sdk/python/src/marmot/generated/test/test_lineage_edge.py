@@ -33,6 +33,15 @@ class TestLineageEdge(unittest.TestCase):
         model = LineageEdge()
         if include_optional:
             return LineageEdge(
+                column_lineage = [
+                    marmot.generated.models.column_edge.ColumnEdge(
+                        confidence = 1.337,
+                        from_columns = [
+                            ''
+                            ],
+                        to_column = '',
+                        transform = '', )
+                    ],
                 declared_by = '',
                 id = '',
                 job_mrn = '',

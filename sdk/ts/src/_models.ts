@@ -55,6 +55,7 @@ export type BatchGetAssetsResponse = S["BatchGetAssetsResponse"];
 export type BatchLineageResult = S["BatchLineageResult"];
 export type Bucket = S["Bucket"];
 export type CheckPluginVersionsResponse = S["CheckPluginVersionsResponse"];
+export type ColumnEdge = S["ColumnEdge"];
 export type CompleteRunRequest = S["CompleteRunRequest"];
 export type ConnectedApp = S["ConnectedApp"];
 export type ConnectedAppsResponse = S["ConnectedAppsResponse"];

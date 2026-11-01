@@ -20,17 +20,20 @@ from pydantic import BaseModel, ConfigDict, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
+from marmot.generated.models.column_edge import ColumnEdge
+
 
 class CreateLineageRequest(BaseModel):
     """
     CreateLineageRequest
     """
 
+    column_lineage: list[ColumnEdge] | None = None
     job_mrn: StrictStr | None = None
     source: StrictStr | None = None
     target: StrictStr | None = None
     type: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["job_mrn", "source", "target", "type"]
+    __properties: ClassVar[list[str]] = ["column_lineage", "job_mrn", "source", "target", "type"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -64,11 +67,19 @@ class CreateLineageRequest(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in column_lineage (list)
+        _items = []
+        if self.column_lineage:
+            for _item_column_lineage in self.column_lineage:
+                if _item_column_lineage:
+                    _items.append(_item_column_lineage.to_dict())
+            _dict["column_lineage"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -81,6 +92,9 @@ class CreateLineageRequest(BaseModel):
 
         return cls.model_validate(
             {
+                "column_lineage": [ColumnEdge.from_dict(_item) for _item in obj["column_lineage"]]
+                if obj.get("column_lineage") is not None
+                else None,
                 "job_mrn": obj.get("job_mrn"),
                 "source": obj.get("source"),
                 "target": obj.get("target"),

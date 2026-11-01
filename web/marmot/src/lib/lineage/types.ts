@@ -9,6 +9,13 @@ export interface LineageNode {
 	last_run_status?: 'succeeded' | 'failed' | 'running';
 }
 
+export interface ColumnEdge {
+	from_columns: string[];
+	to_column: string;
+	transform?: string;
+	confidence?: number;
+}
+
 export interface LineageEdge {
 	id: string;
 	source: string;
@@ -20,6 +27,7 @@ export interface LineageEdge {
 	job_mrn?: string;
 	/** The pipeline, person or service account that declared the edge. */
 	declared_by?: string;
+	column_lineage?: ColumnEdge[];
 }
 
 export interface LineageResponse {
