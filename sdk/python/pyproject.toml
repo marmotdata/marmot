@@ -47,7 +47,7 @@ dev = [
     "mypy>=1.11",
     "types-PyYAML>=6.0",
     "pip>=26.2",
-    "pip-audit>=2.7",
+    "pip-audit>=2.7; python_version >= '3.11'",
 ]
 langchain = [
     "langchain-core>=0.3",

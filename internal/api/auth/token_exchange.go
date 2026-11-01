@@ -69,6 +69,12 @@ func (h *Handler) handleToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Every client is public with token_endpoint_auth_method "none", so assertion-based client authentication is refused here rather than letting fosite parse an untrusted JWT before it rejects the client.
+	if r.Form.Has("client_assertion") || r.Form.Has("client_assertion_type") {
+		respondOAuthError(w, http.StatusUnauthorized, "invalid_client", "client assertions are not supported")
+		return
+	}
+
 	grantType := r.FormValue("grant_type")
 	switch grantType {
 	case "authorization_code":

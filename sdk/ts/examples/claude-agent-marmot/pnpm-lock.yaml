@@ -6,6 +6,7 @@ settings:
 
 overrides:
   esbuild: ^0.28.1
+  zod: '>=4.6.6'
 
 importers:
 
@@ -13,7 +14,7 @@ importers:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
         specifier: ^0.1.0
-        version: 0.1.77(zod@4.4.3)
+        version: 0.1.77(zod@4.6.7)
       '@marmotdata/sdk':
         specifier: link:../..
         version: link:../..
@@ -34,7 +35,7 @@ packages:
     resolution: {integrity: sha512-ZEjWQtkoB2MEY6K16DWMmF+8OhywAynH0m08V265cerbZ8xPD/2Ng2jPzbbO40mPeFSsMDJboShL+a3aObP0Jg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
+      zod: '>=4.6.6'
 
   '@esbuild/aix-ppc64@0.28.1':
     resolution: {integrity: sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ==}
@@ -311,14 +312,14 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
-  '@anthropic-ai/claude-agent-sdk@0.1.77(zod@4.4.3)':
+  '@anthropic-ai/claude-agent-sdk@0.1.77(zod@4.6.7)':
     dependencies:
-      zod: 4.4.3
+      zod: 4.6.7
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
       '@img/sharp-darwin-x64': 0.33.5
@@ -512,4 +513,4 @@ snapshots:
 
   undici-types@6.21.0: {}
 
-  zod@4.4.3: {}
+  zod@4.6.7: {}

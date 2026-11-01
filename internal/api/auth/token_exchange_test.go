@@ -157,6 +157,28 @@ func TestTokenExchange_WrongGrantType(t *testing.T) {
 	}
 }
 
+func TestToken_RejectsClientAssertion(t *testing.T) {
+	h := newTestHandler(nil, nil)
+	form := url.Values{}
+	form.Set("grant_type", "authorization_code")
+	form.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+	form.Set("client_assertion", "x.y.z")
+
+	req := httptest.NewRequest(http.MethodPost, "/oauth/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+
+	h.handleToken(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	resp := decodeOAuthError(t, rec)
+	if resp.Error != "invalid_client" {
+		t.Fatalf("expected error 'invalid_client', got %q", resp.Error)
+	}
+}
+
 func TestTokenExchange_MissingSubjectToken(t *testing.T) {
 	h := newTestHandler(nil, nil)
 	rec := postExchange(h, makeExchangeForm("", tokenTypeIDToken))

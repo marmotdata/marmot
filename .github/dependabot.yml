@@ -4,44 +4,22 @@ multi-ecosystem-groups:
   all:
     schedule:
       interval: "weekly"
-    labels:
-      - "dependencies"
-      - "kind/dependency"
+  plugins:
+    schedule:
+      interval: "weekly"
 
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/server"
-    groups:
-      go-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/server"]
 
   - package-ecosystem: "gomod"
     directory: "/sdk/go"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/sdk"
-    groups:
-      go-sdk-security:
-        applies-to: security-updates
-        patterns: ["*"]
-
-  - package-ecosystem: "gomod"
-    directories:
-      - "/plugins/*"
-    multi-ecosystem-group: "all"
-    patterns: ["*"]
-    labels:
-      - "area/plugins"
-    groups:
-      plugins-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
 
   - package-ecosystem: "npm"
     directories:
@@ -49,42 +27,71 @@ updates:
       - "/web/docs"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/frontend"
-    groups:
-      frontend-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/frontend"]
 
   - package-ecosystem: "npm"
     directory: "/sdk/ts"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/sdk"
-    groups:
-      ts-sdk-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
 
   - package-ecosystem: "uv"
     directory: "/sdk/python"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/sdk"
-    groups:
-      python-sdk-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/sdk"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     multi-ecosystem-group: "all"
     patterns: ["*"]
-    labels:
-      - "area/build"
-    groups:
-      actions-security:
-        applies-to: security-updates
-        patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/build"]
+
+  # plugins a-d
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/a*"
+      - "/plugins/b*"
+      - "/plugins/c*"
+      - "/plugins/d*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins e-l
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/e*"
+      - "/plugins/f*"
+      - "/plugins/g*"
+      - "/plugins/h*"
+      - "/plugins/i*"
+      - "/plugins/k*"
+      - "/plugins/l*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins m-p
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/m*"
+      - "/plugins/n*"
+      - "/plugins/o*"
+      - "/plugins/p*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
+
+  # plugins q-v
+  - package-ecosystem: "gomod"
+    directories:
+      - "/plugins/q*"
+      - "/plugins/r*"
+      - "/plugins/s*"
+      - "/plugins/t*"
+      - "/plugins/u*"
+      - "/plugins/v*"
+    multi-ecosystem-group: "plugins"
+    patterns: ["*"]
+    labels: ["dependencies", "kind/dependency", "area/plugins"]
